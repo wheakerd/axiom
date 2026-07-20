@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+
+.env
+.env.*
+!.env.example
+
+.air/
+.agents/.cache/
+
+node_modules/
+dist/
+build/
+coverage/
+
+*.log
+*.tmp
