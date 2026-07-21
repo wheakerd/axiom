@@ -1,8 +1,3 @@
----
-name: context-evidence
-description: Use when AGENTS Maintenance needs to inspect current task context, a user-specified Codex task ID, compacted history, or delegated evidence extraction before proposing durable AGENTS updates.
----
-
 # Context Evidence
 
 ## Purpose

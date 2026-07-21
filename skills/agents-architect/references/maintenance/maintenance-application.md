@@ -1,8 +1,3 @@
----
-name: maintenance-application
-description: Use when AGENTS Maintenance needs to apply durable update gates, choose canonical homes, reorganize existing AGENTS docs, validate route changes, and report results.
----
-
 # Maintenance Application
 
 ## Purpose
@@ -19,7 +14,7 @@ Apply approved durable AGENTS updates to the smallest correct surface.
 
 - Candidate updates still need context extraction.
 - Non-Axiom or unclear-provenance AGENTS edits are not authorized.
-- The only target is a repo-local skill; use `../repo-local-skills/SKILL.md` first.
+- The only target is a repo-local skill; use `repo-local-skills.md` first.
 
 ## Durable update gate
 
@@ -49,9 +44,9 @@ Reject or report temporary, speculative, duplicated, too broad, unsupported, or 
 
 - For small approved updates, patch the smallest canonical file.
 - Sink each approved update to the closest owning route. Root receives only true global constraints; group indexes receive only next-hop routing; leaves receive scoped executable rules; references receive long supporting material.
-- For inherited, duplicated, oversized, or mixed-responsibility systems, use `../../../migration-policy/SKILL.md`.
-- Use `../../../routing-architecture/SKILL.md` when the approved outcome needs a new or materially changed routed `.agents` tree.
-- Use `../../../project-initialization/SKILL.md` only as a target-shape reference after authorization when reorganizing an existing non-Axiom system. Do not treat it as fresh initialization.
+- For inherited, duplicated, oversized, or mixed-responsibility systems, use `../migration-policy.md`.
+- Use `../routing-architecture.md` when the approved outcome needs a new or materially changed routed `.agents` tree.
+- Use `../project-initialization.md` only as a target-shape reference after authorization when reorganizing an existing non-Axiom system. Do not treat it as fresh initialization.
 - Keep no two independently editable copies of the same rule.
 
 ## Validation and report

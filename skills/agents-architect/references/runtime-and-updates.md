@@ -1,8 +1,3 @@
----
-name: runtime-and-updates
-description: Use only within an active AGENTS Architect workflow when it needs runtime session capsules or durable AGENTS instruction update modes for a target repository.
----
-
 # Runtime And Effective Updates
 
 ## Purpose
@@ -51,7 +46,7 @@ Delete or mark obsolete when complete. Future sessions must not auto-load old ca
 
 ## Effective instruction modes
 
-Treat English trigger definitions as the canonical source of truth. Normalize unambiguous non-English user wording to the matching English trigger before acting. After normalization, refer to the selected mode by its canonical English token. Ask a concise clarification question when wording could map to multiple modes. Do not document localized trigger aliases.
+Treat English trigger definitions as the canonical source of truth. User requests may be written in any language. Normalize unambiguous non-English user wording to the matching English trigger before acting. After normalization, refer to the selected mode by its canonical English token. Ask a concise clarification question only when wording could map to multiple modes. Do not maintain localized alias tables or alternate canonical tokens.
 
 Scope these modes to the active target repository's AGENTS instruction system. Do not update protected Codex plugin or skill metadata unless the user explicitly asks for skill or plugin maintenance.
 

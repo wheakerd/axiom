@@ -1,8 +1,3 @@
----
-name: project-initialization
-description: Use when AGENTS Architect needs to initialize a root AGENTS.md and .agents routing tree for a repository with no existing AGENTS.md, AGENTS.override.md, fallback instruction file, or durable .agents instruction system.
----
-
 # Project Initialization
 
 ## Purpose
@@ -11,7 +6,7 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 
 ## Apply when
 
-- `../../SKILL.md` has triggered.
+- The AGENTS Architect parent skill has triggered.
 - A low-cost metadata inventory confirms there is no existing `AGENTS.md`, `AGENTS.override.md`, configured fallback instruction file, or durable `.agents/` instruction tree.
 - The user asks to initialize, create, generate, or set up AGENTS guidance, a root instruction entry, or a `.agents/` routing tree for the current repository.
 
@@ -25,8 +20,8 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 ## Required actions
 
 - Confirm the fresh-init gate before writing files. Inspect Git root, current directory, Git status, existing AGENTS files, `.agents/`, configured fallback names when visible, source roots, manifests, build config, test config, CI, and candidate project docs.
-- If an existing AGENTS definition appears after scoping starts, stop initialization and route to `../migration-policy/SKILL.md`; do not overwrite or merge by default.
-- Treat `.codex-plugin/**`, `.agents/plugins/**`, `.agents/skills/**`, `skills/*/agents/**`, `<skill-root>/skills/**`, `hooks/**`, `.app.json`, `.mcp.json`, and `assets/**` as protected Codex plugin or skill metadata. Their presence is not a reusable AGENTS routing tree to merge or rewrite, and initialization must not place generated AGENTS leaves under them.
+- If an existing AGENTS definition appears after scoping starts, stop initialization and route to `migration-policy.md`; do not overwrite or merge by default.
+- Treat `.codex-plugin/**`, `.agents/plugins/**`, `.agents/skills/**`, `skills/*/agents/**`, `skills/*/references/**`, `hooks/**`, `.app.json`, `.mcp.json`, and `assets/**` as protected Codex plugin or skill metadata. Their presence is not a reusable AGENTS routing tree to merge or rewrite, and initialization must not place generated AGENTS leaves under them.
 - Derive route groups from real project boundaries. Prefer `domains/`, `workflows/`, `concerns/`, and `integrations/` only when the repository has matching durable boundaries.
 - Split route groups by real responsibility axes such as session, workflow, domain, component, and concern when those axes are present; do not flatten all guidance into one branch.
 - Create no branch, index, leaf, or overlay only for symmetry.
@@ -40,15 +35,15 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 - Use leaf body sections only when useful: Purpose, Apply when, Do not apply when, Required actions, Prohibited actions, Validation, and References.
 - Prefer stable routing facts, ownership boundaries, source links, validation commands, and risk signals over volatile implementation summaries.
 - Make the generated instruction system precise enough to route future work quickly, but require targeted source and test checks before behavior-changing edits.
-- Do not use `project_doc_max_bytes` as a design budget. Treat it only as a truncation guard or visible configuration fact.
-- Keep root `AGENTS.md` under `8 KiB`.
+- Do not use `project_doc_max_bytes` as a design budget. Treat it only as a Codex platform truncation guard or visible configuration fact.
+- Treat root `AGENTS.md` under `8 KiB` as an Axiom default heuristic and quality target, not a Codex platform hard limit. Adjust when project evidence justifies it, and explain any overage in the report.
 - Preserve precise executable rules when size pressure appears by routing detail to the owning leaf, resource, or split responsibility.
 - Keep index files as small jump nodes focused on next-hop routing.
 - Keep leaves and overlays scoped to one responsibility and small enough to load with their parent indexes.
-- Target a normal active set of root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays.
-- Target a complex active set of no more than `6` `.agents` documents unless the final report explains the overage.
-- Load `../routing-architecture/SKILL.md` only when the requested initialization needs custom routing design beyond these defaults.
-- Load `../validation-reporting/SKILL.md` before final reporting when files were changed.
+- Treat a normal active set of root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays as Axiom's default heuristic, not a Codex platform hard limit.
+- Treat a complex active set of no more than `6` `.agents` documents as Axiom's default heuristic, not a Codex platform hard limit. Allow justified exceptions when repository evidence requires them and explain the active document count in the final report.
+- Load `routing-architecture.md` only when the requested initialization needs custom routing design beyond these defaults.
+- Load `validation-reporting.md` before final reporting when files were changed.
 
 ## Prohibited actions
 
@@ -69,13 +64,13 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 - Verify document IDs are unique and each leaf is reachable from exactly one canonical index path.
 - Verify `requires` dependencies have no cycles.
 - Verify indexes do not contain leaf rules and leaves do not duplicate root global rules.
-- Verify root, key indexes, leaves, and scenario active-set bytes fit the initialization limits.
+- Verify root, key indexes, leaves, and scenario active-set bytes fit Axiom's initialization heuristics or have documented project-specific justification.
 - Run representative routing scenarios for feature work, bugfixes, docs-only work, test-only work, cross-domain work, risk-triggered work, and unknown-path troubleshooting.
 - Report validation that could not be run instead of treating it as complete.
 
 ## References
 
-- `../inventory-audit/SKILL.md`
-- `../routing-architecture/SKILL.md`
-- `../migration-policy/SKILL.md`
-- `../validation-reporting/SKILL.md`
+- `inventory-audit.md`
+- `routing-architecture.md`
+- `migration-policy.md`
+- `validation-reporting.md`

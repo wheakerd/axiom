@@ -1,8 +1,3 @@
----
-name: inventory-audit
-description: Use when AGENTS Architect needs repository facts, Codex behavior boundaries, progressive audit, or scoped inventory before designing instructions.
----
-
 # Inventory And Audit
 
 ## Purpose

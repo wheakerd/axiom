@@ -1,8 +1,3 @@
----
-name: migration-policy
-description: Use when AGENTS Architect needs to classify existing instructions, split or migrate durable rules, decide canonical homes, or choose Git handling.
----
-
 # Migration Policy
 
 ## Purpose
@@ -55,7 +50,7 @@ Reject rules that fail any gate.
 
 - Build a migration table before moving files.
 - Track original path, Git status, size, canonical content, duplicate content, target path, operation, and reason.
-- Use the portable AGENTS size model: root `AGENTS.md` under `8 KiB`, index files as jump nodes, leaves and overlays scoped to one responsibility, normal active set of root plus startup or front-door node when present plus `0`-`2` branch indexes plus `1`-`3` leaves or overlays, and complex active set of at most `6` `.agents` documents unless explained.
+- Use the portable AGENTS size model as Axiom heuristic defaults, not Codex platform hard limits: root `AGENTS.md` under `8 KiB`, index files as jump nodes, leaves and overlays scoped to one responsibility, normal active set of root plus startup or front-door node when present plus `0`-`2` branch indexes plus `1`-`3` leaves or overlays, and complex active set of at most `6` `.agents` documents unless explained. Adjust when project evidence justifies it and report the reason.
 - Preserve precise executable rules during migration and move scoped detail to the correct canonical home.
 - Sink each migrated rule to the closest owning route. Use root only for true global constraints, indexes only for next-hop routing, leaves for one scoped owner, overlays for cross-cutting risks, and references for long supporting material.
 - Prefer `git mv` for tracked file moves.

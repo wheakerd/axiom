@@ -1,8 +1,3 @@
----
-name: repo-local-skills
-description: Use when AGENTS Maintenance needs to create, update, split, route, or validate repository-local Codex skills under .agents/skills.
----
-
 # Repo-Local Skills
 
 ## Purpose
@@ -29,10 +24,11 @@ Maintain repository-local Codex skills without confusing them with AGENTS routin
 - Use lowercase hyphen-case for skill folder names and frontmatter `name`.
 - Keep `SKILL.md` frontmatter to `name` and `description`.
 - Put trigger conditions in `description` because the body loads only after the skill triggers.
-- Keep descriptions, routes, examples, and trigger definitions in English only.
-- Do not document localized aliases; allow non-English user wording only when it maps unambiguously to the canonical English trigger.
+- Keep skill folder names, frontmatter `name`, and canonical trigger definitions in English.
+- User requests may be written in any language. Normalize unambiguous non-English wording to the matching English canonical trigger, and ask for clarification only when wording could map to multiple triggers.
+- Do not maintain localized alias tables or broad multilingual trigger catalogs.
 - Keep root skill bodies concise. Move long protocols, schemas, examples, or assets into on-demand references under the skill root only when needed.
-- Add `agents/openai.yaml` only when UI metadata is useful for an intentionally surfaced skill.
+- Add `.agents/skills/<skill-name>/agents/openai.yaml` only when UI metadata is useful for an intentionally surfaced skill.
 
 ## Placement
 
@@ -51,5 +47,5 @@ Maintain repository-local Codex skills without confusing them with AGENTS routin
 - Do not move repo-local skills into AGENTS routing branches.
 - Do not recreate Axiom packaged skills, load policies, triggers, internal routes, validation protocols, or reporting formats as repo-local skills.
 - Do not make a broad catch-all local skill when stable workflows can be separated.
-- Do not add non-English trigger descriptions or examples.
+- Do not add non-English canonical trigger tokens or localized alias tables.
 - Do not create scaffold TODO placeholders that remain after validation.

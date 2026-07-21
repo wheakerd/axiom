@@ -6,8 +6,6 @@ Thumbs.db
 !.env.example
 
 .air/
-.agents/.cache/
-
 node_modules/
 dist/
 build/

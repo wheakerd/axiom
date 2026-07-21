@@ -1,8 +1,3 @@
----
-name: routing-architecture
-description: Use when AGENTS Architect needs to design root AGENTS.md control planes, .agents routing trees, metadata, leaf schemas, instruction splitting, command resolution, or portable size models.
----
-
 # Routing Architecture
 
 ## Purpose
@@ -96,13 +91,13 @@ Do not include full architecture, full project tree, all leaves, all test comman
 
 ## Command resolution
 
-- Define every durable project-local command, trigger phrase, and route condition in English.
+- Keep durable project-local command names, canonical command tokens, route IDs, file and folder names, and frontmatter identifiers in English.
 - Axiom plugin skill triggers belong in the installed plugin, not in target AGENTS files.
 - Treat the English definition as the canonical source of truth.
-- Allow non-English user wording to trigger a canonical command only when the mapping is unambiguous.
+- Allow user requests in any language. Non-English wording may trigger a canonical command when the mapping is unambiguous.
 - Normalize resolved requests to the canonical English command before reasoning, reporting, or updating durable instructions.
-- Ask for clarification when translated or paraphrased wording could map to multiple commands.
-- Do not document localized aliases, multilingual trigger tables, or non-English examples.
+- Ask for clarification only when translated or paraphrased wording could map to multiple commands.
+- Do not maintain localized alias tables or broad multilingual trigger catalogs. Non-English examples are allowed only when they demonstrate unambiguous normalization and do not become alternate canonical tokens.
 - Keep command definitions short and specific to reduce semantic spread during trigger selection.
 
 ## Index rules
@@ -154,13 +149,13 @@ Write short imperative rules. Prefer verifiable actions. Do not invent commands.
 
 ## Size Model
 
-- Do not use `project_doc_max_bytes` as a design budget. Treat it only as a truncation guard or visible configuration fact.
-- Keep root `AGENTS.md` under `8 KiB`.
+- Platform fact: Codex may stop adding project guidance when the configured project document byte guard is reached. Treat visible `project_doc_max_bytes` values only as truncation protection, not as Axiom's design budget.
+- Axiom heuristic: keep root `AGENTS.md` under `8 KiB` by default. This is a quality target, not a Codex platform hard limit; adjust when project evidence justifies it and explain any overage.
 - Do not reduce rule precision, delete executable detail, or merge unrelated responsibilities to satisfy byte targets. Move detail to the owning leaf, resource, or split responsibility.
 - Keep index files as small jump nodes focused on next-hop routing.
 - Keep leaves and overlays scoped to one responsibility and small enough to load with their parent indexes.
-- Normal active set target: root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays.
-- Complex active set target: no more than `6` `.agents` documents unless the final report explains the overage.
+- Axiom heuristic for a normal active set: root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays.
+- Axiom heuristic for a complex active set: no more than `6` `.agents` documents. This is not a Codex platform hard limit; allow justified exceptions and explain the active document count in the report.
 - For AGENTS changes, report root bytes, key index bytes, leaf bytes, and scenario active-set bytes.
 
 ## Prohibited actions

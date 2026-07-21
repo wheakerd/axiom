@@ -9,15 +9,15 @@ Use this skill to build a scoped, low-noise Codex instruction system. The root `
 
 ## Load Policy
 
-Do not load every internal document. Start with a low-cost metadata inventory, then read `skills/index.md` and choose only the matching internal skill or skills.
+Do not load every internal reference. Start with a low-cost metadata inventory, then read `references/index.md` and choose only the matching internal reference or references.
 
 Normal tasks should load:
 
 1. This `SKILL.md`.
-2. `skills/index.md`.
-3. One internal skill.
+2. `references/index.md`.
+3. One internal reference.
 
-Load two internal skills only when the task spans both initialization and custom routing design, both initialization and validation, both design and validation, or both migration and effective-instruction updates.
+Load two internal references only when the task spans both initialization and custom routing design, both initialization and validation, both design and validation, or both migration and effective-instruction updates.
 
 ## First Action
 
@@ -27,7 +27,7 @@ Use the inventory to identify Git root, current directory, Codex config hints, A
 
 ## Routing
 
-After the metadata inventory, read `skills/index.md`, choose the smallest matching internal skill, and stop. Use that index as the canonical next-hop route table.
+After the metadata inventory, read `references/index.md`, choose the smallest matching internal reference, and stop. Use that index as the canonical next-hop route table.
 
 ## Hard Rules
 
@@ -43,6 +43,6 @@ After the metadata inventory, read `skills/index.md`, choose the smallest matchi
 - Do not let an instruction document grow past its routing responsibility; split by workflow, domain/component ownership, cross-cutting concern, or reference material before size alone becomes the only reason.
 - When instruction size strains the active-route model, do not reduce rule precision or remove executable detail to satisfy byte targets; solve the pressure through routing, ownership, document splitting, or resource placement.
 - Do not require a bundled Python helper for basic metadata inventory.
-- Treat `.codex-plugin/**`, `.agents/plugins/**`, `.agents/skills/**`, `skills/*/agents/**`, `<skill-root>/skills/**`, `hooks/**`, `.app.json`, `.mcp.json`, and `assets/**` as protected Codex plugin or skill metadata, not AGENTS routing branches, unless the user explicitly asks for skill or plugin maintenance.
+- Treat `.codex-plugin/**`, `.agents/plugins/**`, `.agents/skills/**`, `skills/*/agents/**`, `skills/*/references/**`, `hooks/**`, `.app.json`, `.mcp.json`, and `assets/**` as protected Codex plugin or skill metadata, not AGENTS routing branches, unless the user explicitly asks for skill or plugin maintenance.
 - Do not persist one-off task discoveries unless an effective-instruction trigger is present.
 - Do not auto-commit or auto-push instruction changes.

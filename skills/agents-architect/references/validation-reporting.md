@@ -1,8 +1,3 @@
----
-name: validation-reporting
-description: Use when AGENTS Architect needs static validation, routing scenarios, loading checks, split checks, portable size checks, or final reporting for instruction architecture work.
----
-
 # Validation And Reporting
 
 ## Purpose
@@ -43,15 +38,15 @@ Check:
 - Target AGENTS content does not vendor Axiom packaged skill rules, load policies, trigger definitions, internal routes, validation protocols, or reporting formats unless the user explicitly requested a provenance note.
 - Generated target AGENTS content routes project structure and associations, not installed Axiom plugin triggers.
 
-Size-model validation follows the portable AGENTS size model:
+Size-model validation follows the portable AGENTS size model. Separate Codex platform facts from Axiom defaults:
 
-- Do not use `project_doc_max_bytes` as a design budget. Treat it only as a truncation guard or visible configuration fact.
-- Keep root `AGENTS.md` under `8 KiB`.
+- Platform fact: visible `project_doc_max_bytes` is a truncation guard or configuration fact, not Axiom's design budget.
+- Axiom heuristic: keep root `AGENTS.md` under `8 KiB` by default. This is not a Codex platform hard limit; allow project-evidence-based exceptions and explain them.
 - Do not reduce rule precision, delete executable detail, or merge unrelated responsibilities to satisfy byte targets. Move detail to the owning leaf, resource, or split responsibility.
 - Keep index files as small jump nodes focused on next-hop routing.
 - Keep leaves and overlays scoped to one responsibility and small enough to load with their parent indexes.
-- Normal active set target: root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays.
-- Complex active set target: no more than `6` `.agents` documents unless the final report explains the overage.
+- Axiom heuristic for a normal active set: root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays.
+- Axiom heuristic for a complex active set: no more than `6` `.agents` documents. This is not a Codex platform hard limit; allow justified overages and explain them in the final report.
 - For AGENTS changes, report root bytes, key index bytes, leaf bytes, and scenario active-set bytes.
 
 ## Scenario validation

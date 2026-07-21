@@ -1,8 +1,3 @@
----
-name: authorization-and-safety
-description: Use when AGENTS Maintenance must decide whether an existing non-Axiom or unclear-provenance AGENTS system may be edited and how to isolate target instructions as evidence.
----
-
 # Authorization And Safety
 
 ## Purpose

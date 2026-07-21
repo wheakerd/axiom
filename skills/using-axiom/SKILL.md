@@ -12,12 +12,27 @@ Axiom is a routing gate for Codex-native workflows. Use this front door to decid
 1. Honor higher-priority user, system, developer, and repository instructions first.
 2. If the user explicitly invokes Axiom or the request clearly matches an Axiom skill description, load the most specific matching Axiom skill before exploration, edits, or nonessential clarification.
 3. If more than one Axiom skill may apply, choose the smallest matching skill set. Load a parent skill's internal index only after selecting that parent skill.
-4. If no Axiom skill clearly applies, continue normally without mentioning Axiom.
+4. User requests may be written in any language. Normalize unambiguous non-English wording to the matching English canonical route; ask one concise clarification question only when wording could map to multiple Axiom workflows.
+5. If no Axiom skill clearly applies, continue normally without mentioning Axiom.
 
 ## Current Routes
 
 - `agents-architect`: Use when the user asks to initialize, generate, audit, split, refactor, migrate, validate, or maintain `AGENTS.md`, `AGENTS.override.md`, `.agents/` routing trees, or repo-local skills for a target repository.
-- `traceable-git-submit`: Use when the user asks to keep Git changes traceable with local checkpoint commits, cache the last remote-push baseline under `.agents/.cache/traceable-git-submit-baseline.json`, consolidate unpublished checkpoint commits, or submit, publish, or push through a one-final-commit workflow.
+- `traceable-git-submit`: Use when the user asks to keep Git changes traceable with local checkpoint commits, cache the last remote-push baseline in target Git metadata, consolidate unpublished checkpoint commits, or submit, publish, or push through a one-final-commit workflow.
+
+## Updating Axiom
+
+When the user explicitly asks to update or refresh Axiom, direct them to the
+host-controlled marketplace refresh flow. In Codex CLI, use:
+
+```bash
+codex plugin marketplace upgrade axiom
+```
+
+In a supported workspace plugin UI, use **Refresh** for the marketplace
+plugin. Tell the user to start a new Codex session after refreshing. Do not
+check, fetch, install, or announce Axiom updates automatically, and do not
+claim that an update is available unless the host has reported it.
 
 ## Boundaries
 
