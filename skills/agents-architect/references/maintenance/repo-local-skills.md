@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Maintain repository-local Codex skills without confusing them with AGENTS routing leaves.
+Maintain repository-local Codex skills without confusing them with routed rule
+documents.
 
 ## Apply when
 
@@ -12,7 +13,8 @@ Maintain repository-local Codex skills without confusing them with AGENTS routin
 
 ## Do not apply when
 
-- The content is a general AGENTS rule, workflow leaf, domain leaf, or risk overlay.
+- The content is a general AGENTS rule, workflow leaf, direct domain entry, or
+  cross-cutting safety or risk rule leaf.
 - The content belongs to a packaged plugin skill under `skills/**`.
 - The requested workflow is one-off, temporary, or better kept in project documentation.
 
@@ -20,7 +22,8 @@ Maintain repository-local Codex skills without confusing them with AGENTS routin
 
 - Create or update repo-local skills only for repeatable user-facing workflows inside the target repository when the user explicitly asks for a repo-local skill or the repository already has that skill boundary.
 - Default ordinary project workflow guidance to `.agents/workflows/**`; use `.agents/skills/**` only for intentionally surfaced project-local capabilities.
-- Keep `.agents/skills/**` as protected skill metadata, not ordinary AGENTS routing leaves.
+- Keep `.agents/skills/**` as protected skill metadata, not ordinary routed
+  rule leaves.
 - Use lowercase hyphen-case for skill folder names and frontmatter `name`.
 - Keep `SKILL.md` frontmatter to `name` and `description`.
 - Put trigger conditions in `description` because the body loads only after the skill triggers.

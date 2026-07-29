@@ -2,166 +2,154 @@
 
 ## Purpose
 
-Design the root control plane and finite on-demand routing tree.
+Design the root control plane and finite on-demand routing topology.
 
-## Apply when
+## Apply When
 
-- Creating or rewriting root `AGENTS.md`.
-- Creating `.agents/` indexes, leaves, overlays, or maintenance docs.
+- Creating or materially changing a routed AGENTS tree.
 - Reducing instruction context noise.
 - Splitting oversized or mixed-responsibility instruction documents.
-- Defining metadata, leaf schemas, or portable size models.
+- Defining route axes, ownership, dependencies, or cross-cutting safety and
+  risk rules.
 
-## Do not apply when
+## Do Not Apply When
 
-- Only moving a single already-classified rule.
-- Only running validation on an existing structure.
+- Only moving one already-classified rule.
+- Only authoring root, group-index, domain-entry, rule-leaf, risk-rule-leaf, or
+  reference schemas without changing topology; use
+  `instruction-document-contracts.md`.
+- Only validating an existing structure.
 
-## Required architecture
+## Architecture Layers
 
-- Native auto-load layer: root `AGENTS.md` plus rare tiny nested `AGENTS.md` files for stable subprojects.
-- On-demand routing layer: `.agents/` indexes and leaves.
-- Cross-cutting overlay layer: `.agents/concerns/` or `.agents/risks/`.
+- Native auto-load layer: root `AGENTS.md` plus rare tiny nested
+  `AGENTS.md` files for stable subprojects.
+- On-demand layer: `.agents/` group indexes, direct domain entries, and rule
+  leaves reached only through explicit `AGENTS.md` routing.
+- Cross-cutting layer: safety or risk rule leaves selected only by explicit
+  concern or risk signals.
 - Runtime layer: `.agents/.runtime/` for temporary session capsules only.
-- Protected metadata layer: `.codex-plugin/**`, `.agents/plugins/**`, `.agents/skills/**`, `skills/*/agents/**`, `<skill-root>/skills/**`, `hooks/**`, `.app.json`, `.mcp.json`, and `assets/**` for Codex plugin and skill configuration. This layer is not part of the AGENTS routing tree.
-- Plugin capability layer: installed Axiom packaged skills own Axiom workflow triggers, load policies, internal routes, validation protocols, and reporting formats. Target repository AGENTS files must not restate or fork that layer.
+- Protected metadata layer: the parent skill's canonical protected-metadata
+  boundary. It is not an AGENTS routing branch.
+- Plugin capability layer: installed Axiom skills own Axiom triggers, load
+  policies, internal routes, validation protocols, and reporting formats.
+  Target repository guidance must not restate that layer.
+
+Only root or justified nested files named `AGENTS.md` belong to the native
+auto-load layer Axiom writes. Every `.agents/**` document is an explicit
+next-hop rule resource, never a Codex native discovery entry.
+
+## Route Roles
+
+- Group index: a route-only jump node for one stable axis with multiple
+  reachable owners. Low-signal tasks may traverse one group index.
+- Direct domain entry: a terminal, rule-bearing domain owner reached directly
+  from root when one evidence-backed path, package, command, or domain signal
+  is unique. It follows the rule-leaf contract and is not a domain summary.
+- Rule leaf: the terminal canonical owner for one workflow, component, or
+  responsibility.
+- Cross-cutting safety or risk rule leaf: a terminal stricter rule set loaded
+  only from an explicit safety or risk signal; it does not own domain behavior.
+- Parent-owned reference: long supporting detail owned and explicitly routed
+  by exactly one terminal rule owner. It is not an entry or second owner.
+- Protected metadata boundary: the parent skill's canonical protected surfaces;
+  none of the preceding route roles may be created inside them.
 
 ## Responsibility Axes
 
-Derive route groups from the repository, not symmetry. Use these axes when the evidence supports them:
+Derive groups from repository evidence, not symmetry:
 
 - `session`: startup, compaction recovery, routing budget, and runtime state.
-- `workflows`: task procedures such as implementation, Git, verification, release, dependency updates, and AGENTS maintenance.
-- `domains`: business behavior ownership, product areas, or bounded contexts.
-- `components`: technical framework, runtime, API, storage, integration, or shared-library boundaries.
-- `concerns` or `risks`: cross-cutting overlays such as security, data integrity, compatibility, performance, observability, and migrations.
+- `workflows`: implementation, Git, verification, release, dependency
+  updates, and AGENTS maintenance.
+- `domains`: business behavior or bounded contexts.
+- `components`: framework, runtime, API, storage, integration, or shared
+  library boundaries.
+- `concerns` or `risks`: security, integrity, compatibility, performance,
+  observability, and migration safety or risk rules.
 
-Indexes route within one axis and act as jump nodes, not rule stores. Leaves own canonical rules. Overlays add risk or concern rules without owning domain behavior. Use `requires` for stable cross-axis dependencies. Prefer deeper targeted routing over loading broad summaries so the system remains usable on smaller model contexts.
+Group indexes route within one stable axis and never store rule bodies. Direct
+domain entries and rule leaves own canonical rules. Cross-cutting safety or
+risk rule leaves add stricter constraints without owning domain behavior. Use
+`requires` only for stable dependencies and avoid cycles.
+
+A unique high-signal match routes directly to its owning domain entry or rule
+leaf. A low-signal match may traverse one group index before reaching one
+terminal owner. Never create a fixed domain branch or empty domain entry merely
+to complete a template.
 
 ## Route Sinking
 
-- Put each durable rule in the closest owning route where it always applies.
-- Keep root `AGENTS.md` for rules that apply to every task in the repository.
-- Use group indexes only when one stable route axis has multiple reachable leaves.
-- Keep group indexes route-only: purpose, enter conditions, exclusion conditions, next hops, and stop-reading conditions.
-- Give each domain, component, workflow, or concern leaf concrete scope evidence such as paths, packages, entry points, commands, source docs, owners, or risk signals.
-- Split a leaf when it mixes independent owners, unrelated route triggers, different validation paths, or rules that make normal tasks load unrelated siblings.
-- Use references or resources for long examples, schemas, inventories, and migration tables; leaves should point to them instead of carrying the full material.
-- When size pressure appears, do not reduce rule precision, delete executable detail, or merge unrelated responsibilities to satisfy byte targets. Solve the pressure through route ownership, leaf splitting, or reference placement.
+- Put each durable rule in the closest route where it always applies.
+- Keep root `AGENTS.md` for repository-wide constraints and routing only.
+- Create a group index only when one stable axis has multiple reachable owners.
+- Give every direct domain entry and rule leaf concrete scope evidence: paths,
+  packages, entry points, commands, source docs, owners, or risk signals.
+- Split a rule leaf when it mixes independent owners, unrelated triggers,
+  different validation paths, or sibling rules that normal work should not
+  load.
+- Put long examples, schemas, inventories, migration tables, and architecture
+  facts in the owning leaf's explicitly routed parent-owned reference.
+- Apply the byte boundary in `instruction-document-contracts.md`. Route-sink
+  at that boundary instead of reducing precision, deleting executable detail,
+  or merging independent responsibilities.
 
-## Root AGENTS.md contract
+## Routing Algorithm
 
-Root `AGENTS.md` is a control plane. Include only:
+1. Parse task type, expected paths, domains, languages, frameworks, and risk
+   signals.
+2. Prefer high-signal evidence: user paths, Git diff, stack traces, entry files,
+   manifests, build configuration, tests, and direct dependencies.
+3. Exclude protected plugin and skill metadata unless the user explicitly
+   scopes skill or plugin maintenance.
+4. Route a unique signal directly to its domain entry or rule leaf; otherwise
+   select at most two top-level axes for genuinely cross-axis work.
+5. Within each selected axis, let a low-signal task read at most one group index
+   before entering one terminal owner.
+6. Load `requires` dependencies only when relevant. If any exact target is
+   missing, unreachable from the current route, or ambiguous, report it. The
+   safe subset is read-only assessment only: do not create, edit, move, or
+   delete instruction structure and do not pass final structural acceptance.
+   Writing or accepting structure requires every exact target to exist and be
+   proven reachable from the current route.
+7. Trigger cross-cutting safety or risk rule leaves only from explicit signals.
+8. Continue with root rules when no terminal owner matches.
+9. Route incrementally when scope expands.
+10. Track loaded paths, load reasons, and key constraints in the active
+    instruction set.
 
-- Short project goal.
-- True global hard constraints.
-- Instruction priority and conflict resolution.
-- Request handling protocol.
-- On-demand routing algorithm.
-- Top-level route table.
-- Portable loading shape and size model.
-- Runtime capsule rule.
-- Project-local durable-update placement rule.
-- Minimum verification.
+Route target repository context from project signals. Never create a target
+AGENTS route whose purpose is to trigger an installed Axiom skill.
 
-Do not include full architecture, full project tree, all leaves, all test commands, README copies, session state, domain details, Axiom skill load policies, Axiom trigger instructions, packaged `SKILL.md` content, or plugin-internal routes.
+Every child index, domain entry, rule leaf, risk-rule leaf, reference, and
+dependency may narrow parent scope or add stricter checks. None may broaden
+authorization, erase an inherited prohibition, or turn missing evidence into
+permission.
 
-## Routing algorithm
+## Nested AGENTS.md
 
-- Parse task type, expected paths, domains, languages, frameworks, and risk signals.
-- Use high-signal sources first: user paths, Git diff, stack traces, entry files, package manifests, build config, tests, and direct dependencies.
-- Exclude protected plugin and skill metadata unless the user explicitly scopes skill or plugin maintenance.
-- Route target repository context from project signals. Do not encode routes whose purpose is to trigger installed Axiom skills.
-- Select at most two top-level branches.
-- Read at most one next-hop index per branch before entering leaves.
-- Read `requires` dependencies only when relevant.
-- Trigger risk overlays only from explicit risk signals.
-- Continue from root rules if no leaf matches.
-- Route incrementally when scope expands.
-- Maintain an internal active instruction set with loaded paths, load reasons, and key constraints.
+Use a nested `AGENTS.md` only when the directory is a stable subproject,
+Codex commonly starts there, and local auto-loaded constraints reduce misloads
+more than they duplicate root rules. Keep it tiny or route to canonical rule
+owners.
 
-## Request handling
+## Document Contract Route
 
-- Treat the newest user message as the active request.
-- Resolve intent, target files, expected outcome, and risk level before acting.
-- Execute clear low-risk requests without asking for confirmation.
-- Ask one concise clarification question before acting on ambiguous, high-risk, destructive, credential-related, or multi-command requests.
-- When the user asks for evaluation or confirmation, state the decision and evidence before changing files.
-- Keep progress updates brief and action-focused during longer work.
+Load `instruction-document-contracts.md` when the task writes or validates
+root, group-index, domain-entry, rule-leaf, risk-rule-leaf, parent-owned
+reference, request-handling, command-resolution, metadata, or portable size
+contracts. Topology-only work should not load it.
 
-## Command resolution
-
-- Keep durable project-local command names, canonical command tokens, route IDs, file and folder names, and frontmatter identifiers in English.
-- Axiom plugin skill triggers belong in the installed plugin, not in target AGENTS files.
-- Treat the English definition as the canonical source of truth.
-- Allow user requests in any language. Non-English wording may trigger a canonical command when the mapping is unambiguous.
-- Normalize resolved requests to the canonical English command before reasoning, reporting, or updating durable instructions.
-- Ask for clarification only when translated or paraphrased wording could map to multiple commands.
-- Do not maintain localized alias tables or broad multilingual trigger catalogs. Non-English examples are allowed only when they demonstrate unambiguous normalization and do not become alternate canonical tokens.
-- Keep command definitions short and specific to reduce semantic spread during trigger selection.
-
-## Index rules
-
-Index files may contain only purpose, enter conditions, exclusion conditions, next hops, and stop-reading conditions.
-
-Index files must not contain coding standards, architecture summaries, copied leaf rules, or flattened descendant catalogs.
-
-## Leaf metadata
-
-Use compact frontmatter:
-
-```yaml
----
-id: domain.example.implementation
-kind: index | leaf | overlay | maintenance
-scope:
-  paths:
-    - "src/example/**"
-  tasks:
-    - feature
-load_when:
-  - "Modify production code under src/example"
-do_not_load_when:
-  - "Only editing unrelated docs"
-requires:
-  - concern.security
-source_of_truth:
-  - "docs/example-architecture.md"
-last_verified: "YYYY-MM-DD"
----
-```
-
-Remove empty fields. Keep IDs globally unique. Avoid circular `requires`.
-
-## Leaf body schema
-
-Use:
-
-- Purpose.
-- Apply when.
-- Do not apply when.
-- Required actions.
-- Prohibited actions.
-- Validation.
-- References.
-
-Write short imperative rules. Prefer verifiable actions. Do not invent commands.
-
-## Size Model
-
-- Platform fact: Codex may stop adding project guidance when the configured project document byte guard is reached. Treat visible `project_doc_max_bytes` values only as truncation protection, not as Axiom's design budget.
-- Axiom heuristic: keep root `AGENTS.md` under `8 KiB` by default. This is a quality target, not a Codex platform hard limit; adjust when project evidence justifies it and explain any overage.
-- Do not reduce rule precision, delete executable detail, or merge unrelated responsibilities to satisfy byte targets. Move detail to the owning leaf, resource, or split responsibility.
-- Keep index files as small jump nodes focused on next-hop routing.
-- Keep leaves and overlays scoped to one responsibility and small enough to load with their parent indexes.
-- Axiom heuristic for a normal active set: root, startup or front-door node when present, `0`-`2` branch indexes, and `1`-`3` leaves or overlays.
-- Axiom heuristic for a complex active set: no more than `6` `.agents` documents. This is not a Codex platform hard limit; allow justified exceptions and explain the active document count in the report.
-- For AGENTS changes, report root bytes, key index bytes, leaf bytes, and scenario active-set bytes.
-
-## Prohibited actions
+## Prohibited Actions
 
 - Do not create empty branches for symmetry.
 - Do not require normal tasks to scan every index.
 - Do not keep multiple canonical indexes for the same rules.
-- Do not design AGENTS routing branches inside protected Codex/plugin metadata directories.
-- Do not write `$agents-architect`, `$using-axiom`, Axiom route names, or Axiom packaged skill protocols into generated target AGENTS content unless the user explicitly requests a provenance note.
+- Do not create AGENTS branches inside protected plugin metadata.
+- Do not put Axiom route names or packaged protocols into generated target
+  guidance unless the user explicitly requests a provenance note.
+
+## References
+
+- `instruction-document-contracts.md`
+- `validation-reporting.md`

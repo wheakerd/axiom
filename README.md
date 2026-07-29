@@ -2,224 +2,176 @@
 
 Think before AI thinks.
 
-Axiom is a Codex-first plugin for community-native AI workflows. It exists to help AI understand user intent before execution, then route the work through durable, high-quality capabilities that feel native in Codex.
+Axiom is a Codex-first plugin for community-native AI workflows. It helps
+Codex resolve user intent before execution, then loads a focused workflow for
+the work that actually needs it.
 
-## Current Capabilities
+Axiom does not take over ordinary tasks. Its session-start gate selects the
+smallest matching bundled skill, honors higher-priority instructions, and
+continues normally when no Axiom workflow applies.
 
-- AGENTS architecture: audit, initialize, and refactor `AGENTS.md`, `AGENTS.override.md`, `.agents/` routing trees, and repo-local skills.
-- Routed instruction trees: split large guidance into scoped references with explicit next-hop routing.
-- Traceable Git submit: checkpoint local work and publish one clean commit when explicitly authorized.
+## Workflows
 
-## Brand Foundations
+### AGENTS Architecture
 
-### Mission
+Use `agents-architect` to initialize, audit, split, migrate, maintain, or
+validate repository instruction systems:
 
-Bridge the gap between user intent and AI execution.
+- Turn root `AGENTS.md` into a small control plane and route scoped guidance on
+  demand.
+- Organize `.agents/` group indexes, domain entries, rule files, cross-cutting
+  safety or risk rules, references, and repo-local skills without recursively
+  loading everything.
+- Separate active instructions and current repository facts from copied,
+  historical, or external evidence.
+- Handle no-Git repositories, unborn branches, nested roots, linked worktrees,
+  ignored instruction files, route dependencies, and oversized documents
+  explicitly.
+- Keep generated guidance project-specific instead of copying Axiom's own
+  triggers, routing protocol, or validation format into the target repository.
 
-### Vision
+### Traceable Git Submit
 
-Make community innovations feel native.
+Use `traceable-git-submit` when local work needs authorized checkpoint commits
+or a one-final-commit publish flow:
 
-### Philosophy
+- Create isolated local checkpoints only after the user authorizes commits.
+- Freeze the exact path set, prove staged-tree identity, and store baseline and
+  provenance state in Git metadata rather than the worktree.
+- Consolidate only the exact authorized unpublished commit series into one
+  final commit while preserving the final tree.
+- Push only after an explicit submit, publish, or push request.
+- Verify every configured push target, require explicit acceptance of
+  non-atomic multi-target risk, and retain recovery state until the refreshed
+  upstream and every target prove the final commit.
 
-If it doesn't feel native, it isn't finished.
+A checkpoint marker is not authority by itself, and a successful Git command
+is not treated as proof that every remote reached the requested state.
 
-### Brand Story
+### Reversible System Change
 
-Axiom is built on the belief that understanding should always come before execution. It represents the principles that guide AI toward the right action before work begins.
+Use `reversible-system-change` to plan, rehearse, or execute an install,
+upgrade, deployment, migration, destructive retention action, or active-version
+promotion with meaningful rollback or data-safety risk:
 
-### Positioning
+- Plan-only work and rehearsals remain strictly read-only.
+- Execution requires one exact target, a frozen write set, and a directly
+  verified, readable, executable rollback path.
+- Candidate preparation and active promotion are separate permissions.
+- Sensitive content requires authorization for the exact asset path and exact
+  read or use action; broad directory access is not enough.
+- Completion requires fresh evidence from every affected materialization,
+  selection, runtime, delivery, behavior, and preservation layer that owns the
+  requested outcome.
 
-Axiom is not named after a platform, a tool category, or an implementation boundary. Codex is the first-class target, but the brand is independent of any single AI surface.
+If usable recovery cannot be verified, this workflow stops. Accepting
+irreversible risk does not satisfy its contract.
 
-### Voice
+## Routing And Safety
 
-- Clear over clever.
-- Native over novel.
-- Durable over flashy.
-- Practical over abstract.
+`using-axiom` is the checked-in session-start routing gate. It:
 
-## Principles
+1. Honors user, system, developer, and repository instructions first.
+2. Matches a request against the most specific bundled skill description.
+3. Loads only the selected route and the references needed for its active
+   phase.
+4. Accepts unambiguous requests in any language while keeping canonical route
+   definitions in English.
+5. Continues without invoking Axiom when no workflow clearly applies.
 
-### Understand First
+Across all workflows:
 
-Before execution, clarify the user's real goal, constraints, context, and success criteria.
+- A narrower route may add checks but cannot broaden authorization.
+- Existing user work is preserved; unrelated state is not reset, hidden,
+  staged, or rewritten to make a check pass.
+- Access, saved credentials, default profiles, or the ability to run a command
+  do not establish authority for a target or action.
+- Completion claims require current direct evidence from the owning system
+  layer. Missing tools, permissions, or observations are unverified, not a
+  pass.
+- Axiom does not commit, push, promote, delete, or mutate a remote environment
+  merely because the corresponding skill was loaded.
 
-### Codex First
+## What Gets Installed
 
-Codex CLI and Codex Desktop are the primary targets. Axiom should fit their interaction model, trust boundaries, and workflow surfaces before optimizing for portability elsewhere.
+Axiom installs four checked-in skills:
 
-### Community Native
+- `using-axiom`, the session-start routing gate.
+- `agents-architect`, `traceable-git-submit`, and
+  `reversible-system-change`, the three user workflows.
 
-Community-built capabilities should feel like they naturally belong in the host product. The user should not need to care whether a capability came from the core product or from Axiom.
+Each workflow loads its supporting Markdown references only when the active
+task needs them. Axiom also installs one `SessionStart` hook that prints a
+short loading message and reads the routing skill from the installed plugin.
 
-### Real Workflows
-
-Capabilities should come from repeated real-world friction, not speculative feature lists.
-
-### Skills Are Implementation Units
-
-Skill files and topic trees are implementation units. Packaged skill IDs can be public handles, but user-facing language should lead with outcomes such as progress, review, Git, Docker, context, workspace, or documentation workflows.
-
-### Language And Routing
-
-Skill IDs, folder names, frontmatter `name` values, and canonical command tokens remain English. User requests can be written in any language; Axiom normalizes unambiguous requests to the matching English canonical route and asks for clarification only when a request could map to more than one workflow.
-
-### Native Is The Quality Bar
-
-If it doesn't feel native, it isn't finished.
-
-## Capability Model
-
-```text
-User request
-    |
-    v
-Axiom
-    |
-    +-- Detect
-    +-- Clarify
-    +-- Route
-    +-- Plan
-    +-- Execute
-```
-
-Axiom should sit before execution, not after it.
-
-## Naming Rules
-
-- Use `Axiom` for the product and brand.
-- Use `axiom` for plugin identifiers, CLI-like examples, marketplace entries, and package namespaces.
-- Keep `AI` uppercase in the tagline.
-- Do not title-case the tagline.
-
-## Project Shape
-
-Axiom is initialized as a single-plugin repository:
-
-- `.codex-plugin/plugin.json` is the required Codex plugin manifest.
-- `skills/` contains packaged skills bundled with the plugin. Only direct child `skills/*/SKILL.md` files are public Skill entry points; `skills/agents-architect/references/` contains internal on-demand reference material.
-- `hooks/hooks.json` loads Axiom's documented routing gate at session start.
-- `.agents/plugins/marketplace.json` exposes this repository as a local marketplace entry.
-
-The plugin identifier is `axiom`. The product and README display name is `Axiom`.
-
-## Bundled Skills
-
-- `using-axiom`: Loads as a session-start routing gate after installation and decides whether a user request should use a more specific Axiom skill. The hook only injects this checked-in skill document; route decisions stay in the skill instructions.
-- `agents-architect`: Initializes fresh repositories with scoped `AGENTS.md` plus `.agents/` routing trees, then audits, maintains, refactors, and validates existing AGENTS instruction systems and repo-local skills through an internal, on-demand skill index.
-- `traceable-git-submit`: Keeps local Git work traceable with checkpoint commits, records the last remote-push baseline in target Git metadata, and publishes one clean consolidated commit when the user explicitly asks to submit, publish, or push.
+There is no background service, automatic updater, private maintenance tool,
+or bundled runtime dependency.
 
 ## Installation
 
-After the repository contents are committed and published, install Axiom from
-its GitHub marketplace source:
+Add the Git marketplace, then install Axiom from its configured snapshot:
 
 ```bash
 codex plugin marketplace add wheakerd/axiom
 codex plugin add axiom@axiom
 ```
 
-In `axiom@axiom`, the first `axiom` is the plugin name and the second `axiom` is the configured marketplace name.
+In `axiom@axiom`, the first `axiom` is the plugin name and the second is the
+configured marketplace name.
 
-Start or restart Codex after installing the plugin. In the new Codex session,
-open the hook review UI:
+Start a new Codex chat or CLI session after installation. Open the hook review
+UI:
 
 ```text
 /hooks
 ```
 
-Review Axiom's `SessionStart` hook from `hooks/hooks.json`. It should match
-these commands.
+Review Axiom's `SessionStart` command before trusting it. The hook should only
+print the Axiom loading message and read
+`skills/using-axiom/SKILL.md` from `PLUGIN_ROOT`.
 
-Linux and macOS:
+## Updating
 
-```bash
-printf '%s\n\n' 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
-```
-
-Windows:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Output 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; Write-Output ''; Get-Content -Raw (Join-Path $env:PLUGIN_ROOT 'skills/using-axiom/SKILL.md')"
-```
-
-Trust the hook only after reviewing the current command. Then start a new Codex
-chat or CLI session so the latest trusted hook and bundled skills are loaded.
-
-## Updating Axiom
-
-Axiom does not check for or install updates automatically. When you choose to
-refresh Axiom from its Git marketplace source, run:
+Axiom does not check for or install updates automatically. Refresh its
+configured Git marketplace snapshot only when you choose to:
 
 ```bash
 codex plugin marketplace upgrade axiom
 ```
 
-This refreshes the configured Git marketplace snapshot named `axiom`. In a
-supported workspace plugin UI, use **Refresh** for the marketplace plugin
-instead. Start a new Codex chat or CLI session after refreshing so the latest
-bundled skills and hook state can load. If Codex asks you to review a changed
-hook, inspect it in `/hooks` before trusting it.
+In a supported workspace plugin UI, use **Refresh** instead. Start a new Codex
+session after refreshing. If the hook definition changed, inspect and trust
+the new definition in `/hooks` before relying on it.
 
-## Hook Security / Trust
+## Hook Trust And Troubleshooting
 
-Axiom bundles a `SessionStart` hook in `hooks/hooks.json`. Codex discovers that
-file by default from the plugin root, so `.codex-plugin/plugin.json` does not
-need a redundant `hooks` field for the current layout.
+The hook runs on `startup`, `resume`, `clear`, and `compact`. It reads a
+checked-in Markdown skill and does not modify files or contact a network
+service.
 
-The hook runs on `startup`, `resume`, `clear`, and `compact`. It prints a short
-Axiom loading message, then reads the checked-in
-`skills/using-axiom/SKILL.md` file from the installed plugin root. It does not
-modify files or contact a network service.
+If the Axiom routing message does not appear:
 
-Hook trust is still a security decision. Review the exact command in `/hooks`
-before trusting it. If the hook definition changes after an Axiom update, Codex
-may mark the hook for review again and skip it until you review and trust the
-new definition.
+1. Open `/hooks` and confirm the Axiom `SessionStart` hook is enabled and
+   trusted.
+2. Review any changed hook definition instead of trusting it automatically.
+3. Start a new Codex session after installation or marketplace refresh.
 
-## Troubleshooting
-
-If Axiom is installed but you do not see the routing load message at session
-start, run `/hooks` and check that the Axiom `SessionStart` hook is enabled and
-trusted.
-
-After updating Axiom, start a new Codex chat or CLI session. Existing sessions
-may keep the previous hook and skill state.
-
-If Axiom skills are available but the `SessionStart` routing message does not
-appear, focus first on the hook trust state in `/hooks`. Plugin-bundled hooks
-are skipped until the current hook definition is reviewed and trusted.
-
-## Distribution Boundary
-
-The repository root is also the plugin root, so published contents must remain
-runtime-relevant and reviewable. Plugin behavior is discovered through supported
-Codex plugin entry points such as `.codex-plugin/plugin.json`, `skills/`, and
-`hooks/hooks.json`.
-
-Do not ship repository-maintenance scripts, test suites, or CI workflow files
-in this plugin root. Define agent behavior in the checked-in Skills and Markdown
-references instead of requiring an interpreter or runner on a user's system.
-Keep maintenance-only validation, private troubleshooting, and workspace-only
-overlays outside the plugin repository.
+Existing sessions may retain earlier hook and skill state.
 
 ## Contributor Review
 
-Axiom's user-facing behavior is defined by its Skills and Markdown references,
-not by bundled maintenance programs. Before publishing, review that:
+Before publishing, confirm that:
 
-- `.codex-plugin/plugin.json` and marketplace metadata remain valid and describe
-  the intended plugin.
-- Only the direct `skills/*/SKILL.md` entries expose public capabilities.
-- The documented `SessionStart` hook reads only the intended routing Skill and
-  has been reviewed through `/hooks`.
-- The plugin root contains no maintenance test suite, custom validator, or CI
-  workflow that would introduce an interpreter or runner dependency.
+- Public descriptions, examples, and installation commands agree with the
+  bundled skills and current Codex plugin interface.
+- The documented `SessionStart` hook reads only the intended routing skill.
+- Use `Axiom` in prose and `axiom` for identifiers and command examples; keep
+  public triggers in English.
+- Published content remains runtime-relevant and reviewable.
 
-Use available platform-native or official Codex validation facilities during
-maintenance, but do not make a specific interpreter, shell, test runner, or
-custom script a plugin installation prerequisite.
+Use available platform-native or official Codex validation during maintenance,
+but do not make a particular interpreter, custom script, shell, or test runner
+an installation prerequisite.
 
 ## License
 

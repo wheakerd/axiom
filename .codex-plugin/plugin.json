@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -21,8 +21,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Axiom",
-    "shortDescription": "Route AGENTS architecture work and traceable Git publishes.",
-    "longDescription": "Axiom packages Codex-native workflows for auditing, initializing, and refactoring AGENTS guidance, plus traceable Git checkpointing that publishes one clean commit.",
+    "shortDescription": "Safe change workflows",
+    "longDescription": "Axiom routes Codex-native AGENTS architecture, traceable Git submission, and reversible persistent system changes.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [
@@ -30,8 +30,8 @@
     ],
     "defaultPrompt": [
       "Audit or refactor this repository's AGENTS guidance.",
-      "Initialize scoped AGENTS guidance for this repository.",
-      "Checkpoint this Git work and publish one clean commit."
+      "Checkpoint this Git work and publish one clean commit.",
+      "Plan or execute this persistent system change with verified rollback."
     ],
     "brandColor": "#111827"
   }

@@ -23,11 +23,18 @@ Select the smallest AGENTS Architect internal reference needed for the current r
 
 ### Initialization
 
-- `project-initialization.md`: initialize root `AGENTS.md` and a `.agents/` routing tree for a repository with no existing AGENTS definition.
+- `project-initialization.md`: initialize root `AGENTS.md` and a `.agents/`
+  routing tree when no existing `AGENTS.md` system or active shadowing source
+  controls the target scope.
 
 ### Design
 
-- `routing-architecture.md`: design root control plane, `.agents` tree, routing graph, metadata, leaf schema, splitting, and portable size model.
+- `routing-architecture.md`: design route topology, responsibility axes,
+  ownership, dependencies, cross-cutting safety or risk rules, and route
+  sinking.
+- `instruction-document-contracts.md`: author or validate root, group index,
+  domain entry, rule leaf, risk-rule leaf, parent-owned reference, metadata,
+  language, and portable size contracts.
 
 ### Migration
 
@@ -35,7 +42,9 @@ Select the smallest AGENTS Architect internal reference needed for the current r
 
 ### Maintenance
 
-- `maintenance/index.md`: inspect current task context or a user-specified task ID for durable AGENTS updates, then maintain existing AGENTS docs, `.agents` routing docs, or repo-local skills after the required authorization gate.
+- `maintenance/index.md`: inspect current task context or a user-specified task
+  ID for durable updates, then maintain existing `AGENTS.md`, `.agents` routing
+  docs, or repo-local skills after the required authorization gate.
 
 ### Runtime
 
@@ -45,6 +54,22 @@ Select the smallest AGENTS Architect internal reference needed for the current r
 
 - `validation-reporting.md`: run static checks, routing scenarios, loading checks, split/size checks, and final reporting.
 
+### Selection precedence
+
+- Existing oversized or mixed-responsibility instruction content routes first
+  to `migration-policy.md`, with `instruction-document-contracts.md` as its
+  required document and size contract. Load `routing-architecture.md` as well
+  only when canonical ownership or topology must change.
+- A pure schema, metadata, reference-ownership, or size audit routes directly
+  to `instruction-document-contracts.md`.
+- A topology-only design routes to `routing-architecture.md`; do not load
+  migration merely because a size boundary exists.
+
 ## Stop reading
 
-Load only the matching internal reference. Load a second internal reference only for cross-phase work. Do not scan every internal reference as a default step.
+Follow one bounded route chain from the parent. A grouped route may load this
+index, one child index, and either one terminal owner or the finite phase chain
+declared by that child index: zero to two prerequisites and exactly one terminal
+owner. A selected owner may then load only the shared contract or validation
+reference it explicitly requires. Do not scan undeclared siblings or adjacent
+references.

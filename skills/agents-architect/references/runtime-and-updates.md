@@ -24,7 +24,9 @@ Handle long-task state and user-triggered durable instruction updates.
 
 ## Runtime capsules
 
-Use `.agents/.runtime/session-<unique-id>.md` only when needed.
+Use `.agents/.runtime/session-<unique-id>.md` only for a mutating, long-running
+AGENTS task that risks losing critical state. Do not create a capsule during a
+strictly read-only task.
 
 Target under 2 KiB; hard target 4 KiB.
 

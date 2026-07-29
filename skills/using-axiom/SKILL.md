@@ -17,8 +17,16 @@ Axiom is a routing gate for Codex-native workflows. Use this front door to decid
 
 ## Current Routes
 
-- `agents-architect`: Use when the user asks to initialize, generate, audit, split, refactor, migrate, validate, or maintain `AGENTS.md`, `AGENTS.override.md`, `.agents/` routing trees, or repo-local skills for a target repository.
+- `agents-architect`: Use when the user asks to initialize, generate, audit,
+  split, refactor, migrate, validate, or maintain an `AGENTS.md` instruction
+  system, its `.agents/` routing tree, or repo-local skills for a target
+  repository.
 - `traceable-git-submit`: Use when the user asks to keep Git changes traceable with local checkpoint commits, cache the last remote-push baseline in target Git metadata, consolidate unpublished checkpoint commits, or submit, publish, or push through a one-final-commit workflow.
+- `reversible-system-change`: Use when the user asks to install, upgrade,
+  deploy, migrate, run destructive retention, promote an active version, or
+  plan or rehearse one of those persistent local or remote changes with
+  rollback, data-safety, service, or promotion risk. Plan-only work stays
+  read-only.
 
 ## Updating Axiom
 
@@ -38,8 +46,16 @@ claim that an update is available unless the host has reported it.
 
 - Do not trigger Axiom from broad AI, coding, documentation, or plugin-maintenance similarity alone.
 - Do not treat every Git request as `traceable-git-submit`; use it only for checkpoint, baseline cache, consolidation, submit, publish, push, or traceable workflow requests.
+- Do not treat ordinary source or configuration edits, Git commits or pushes,
+  conceptual explanations, or pure read-only status/version queries as
+  `reversible-system-change`. A plan or rehearsal for a persistent system
+  change does route there but never authorizes mutation.
 - Do not load every Axiom skill.
 - Do not edit protected plugin metadata unless the selected skill and user request explicitly scope that work.
 - Do not persist one-off task discoveries as durable instructions unless an Axiom skill admits them through its durable-update gate.
-- Keep Axiom skill triggers in this installed plugin and packaged skill descriptions. Do not rely on target repository AGENTS files to trigger Axiom workflows.
-- Ask one concise clarification question when the request could map to multiple Axiom workflows or to no current Axiom workflow.
+- Keep Axiom skill triggers in this installed plugin and packaged skill
+  descriptions. Do not rely on target repository `AGENTS.md` files to trigger
+  Axiom workflows.
+- Ask one concise clarification question only when the request could map to
+  multiple Axiom workflows and the choice would change execution. If no current
+  Axiom workflow applies, continue normally without mentioning Axiom.
