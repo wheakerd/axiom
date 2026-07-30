@@ -79,28 +79,58 @@ version slot, package version retained in a trusted cache, snapshot, backup,
 database restore point, configuration copy with metadata, deployment revision,
 or reversible pointer change.
 
-Before mutation require:
+Keep these evidence states distinct:
+
+- `identified`: the prior state and proposed recovery mechanism are named.
+- `present`: the rollback artifact or prior target currently exists.
+- `readable`: the exact restore principal and mechanism can read it now.
+- `restore-validated`: a current target-native check has actually validated
+  restorability, not merely listed metadata.
+- `rehearsed`: an isolated restoration using the same artifact, mechanism, and
+  required ordering has completed and its result was checked.
+
+Do not call a rollback path `verified`, `usable`, or `restore-ready` by
+collapsing lower states. Before mutation require all of the following:
 
 1. The rollback point represents the directly observed pre-change state.
 2. Its identifier and location are unambiguous and excluded from destructive
    scope.
-3. It is readable by the restore mechanism now, not merely reported as created.
-4. Its required files, metadata, dependencies, and ordering are present.
-5. The restore action and affected write set are bounded and authorized as the
+3. The exact restore principal and current restore mechanism can read it now,
+   not merely see that an artifact or record exists.
+4. The restore tool, credentials, permissions, required files, metadata,
+   dependencies, capacity, and operation ordering are currently available.
+5. Recovery covers every non-forward-compatible effect in the frozen write
+   set. If restoration could discard newer data, define and authorize its
+   preservation or reconciliation; otherwise stop.
+6. A current platform-native validation that actually checks restorability or
+   an isolated restore rehearsal has succeeded against the same rollback point
+   and mechanism. A listing, manifest, checksum, or snapshot status that checks
+   only existence or integrity does not satisfy this requirement.
+7. The restore action and affected write set are bounded and authorized as the
    failure path.
-6. A post-restore check can prove the active state returned to the prior
-   version or behavior.
+8. A post-restore check can prove the active state, runtime, data, and behavior
+   returned to the observed prior state at every affected layer.
+9. The rollback point and all evidence have a recorded current identity and are
+   rechecked immediately before the first write.
 
-When feasible, verify a manifest, native snapshot status, restore listing, or
-isolated restore rehearsal. A copy command's success alone does not prove a
-usable rollback point. Re-downloading a mutable latest artifact is not a
-rollback plan.
+For a pointer-only rollback with no irreversible data effect, an isolated
+equivalent switch plus a behavior check may serve as the rehearsal. Merely
+resolving the prior target proves only presence or readability.
 
-If a readable, executable rollback or recovery path cannot be verified, stop
-this skill. User acceptance of irreversible risk does not satisfy its contract.
-Continue only by explicitly re-routing to another applicable workflow that
-does not promise verified rollback and independently satisfies its authority
-and safety gates.
+An isolated restore rehearsal is itself a persistent write. Freeze its exact
+target and effects and obtain authorization before running it. A plan-only
+workflow rehearsal cannot perform this restore rehearsal.
+
+The following never prove a verified rollback by themselves: a successful
+backup or copy command, a present snapshot, an existing rollback script,
+documentation of restore commands, a checksum, a historical rehearsal, user
+confidence, or a mutable artifact that would need to be downloaded later.
+
+If the complete evidence set cannot be verified, stop this skill before
+execution. Plan-only work may report the gap and stop gate, but user acceptance
+of irreversible risk does not satisfy the contract. Continue only by explicitly
+re-routing to another applicable workflow that does not promise verified
+rollback and independently satisfies its authority and safety gates.
 
 ## Candidate And Dry Run
 

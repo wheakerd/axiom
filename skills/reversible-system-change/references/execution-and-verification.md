@@ -15,11 +15,18 @@ invalidate the plan:
 - Current active version, entry point, configuration, and service state.
 - Frozen write set and destructive root boundaries.
 - Free space, locks, in-progress operations, dependency and migration state.
-- Rollback-point presence, readability, ownership, and restore prerequisites.
+- Rollback-point identity, coverage, ownership, exact restore principal and
+  mechanism, prerequisites, and current restore-validation or rehearsal
+  evidence.
 - Candidate identity, integrity, validation result, and promotion authority.
 
 Stop on drift. Do not repair an unrelated dirty state or widen scope merely to
 make the gate pass.
+
+Rollback evidence is stale if the artifact, prior-state identity, restore tool,
+principal, credentials, dependencies, frozen write set, or affected live state
+changed after validation. Re-run the check that owns the changed fact. A prior
+validation report cannot pass the final gate for a different current state.
 
 ## Apply And Promote
 
@@ -84,6 +91,10 @@ Define the failure gates before mutation. On a required validation failure:
 5. Retain rollback and candidate material when restoration is incomplete or
    evidence is uncertain.
 
+A successful rollback command proves only that command's reported operation.
+Do not claim restoration succeeded until fresh checks pass at every layer that
+owned the prior working state.
+
 If rollback itself would exceed the authorized scope, risk newer user data, or
 target a different live state than preflight observed, stop and request
 direction. Never hide a failed change through an unverified reinstall,
@@ -102,7 +113,7 @@ needed for recovery.
 Report:
 
 - Exact target and authorized effects.
-- Directly observed prior state and verified rollback point.
+- Directly observed prior state and each rollback evidence state.
 - Candidate, dry-run, mutation, and promotion outcomes.
 - Each relevant postcondition layer as passed, failed, not run, or unavailable.
 - Rollback trigger, action, and restored-state evidence when used.
@@ -110,4 +121,6 @@ Report:
 
 Do not expose secret values or private endpoints. Do not claim the requested
 system change completed when any outcome-owning layer remains failed or
-unverified.
+unverified. Use the rollback evidence labels from preflight and do not call a
+path verified when validation or rehearsal is unavailable, stale, or applies
+to a different artifact, mechanism, principal, or target state.

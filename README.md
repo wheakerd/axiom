@@ -10,6 +10,26 @@ Axiom does not take over ordinary tasks. Its session-start gate selects the
 smallest matching bundled skill, honors higher-priority instructions, and
 continues normally when no Axiom workflow applies.
 
+## Axiom In Practice
+
+Suppose you ask:
+
+```text
+Upgrade the staging service to v2.4.1, but do not proceed unless we can restore
+the version running now.
+```
+
+Axiom routes that request to `reversible-system-change`. Codex first identifies
+the exact staging target and intended writes, then distinguishes a backup that
+merely exists from a rollback path whose current restore mechanism has actually
+been validated or rehearsed. Candidate preparation does not grant permission
+to promote it. After an authorized change, Codex checks the selected version,
+runtime, and behavior before claiming completion. If recovery cannot be proven,
+it stops and reports the missing evidence.
+
+An ordinary request such as `Fix this README typo` does not match an Axiom
+workflow and continues normally.
+
 ## Workflows
 
 ### AGENTS Architecture
@@ -54,9 +74,9 @@ Use `reversible-system-change` to plan, rehearse, or execute an install,
 upgrade, deployment, migration, destructive retention action, or active-version
 promotion with meaningful rollback or data-safety risk:
 
-- Plan-only work and rehearsals remain strictly read-only.
-- Execution requires one exact target, a frozen write set, and a directly
-  verified, readable, executable rollback path.
+- Plan-only and workflow-rehearsal requests remain strictly read-only.
+- Execution requires one exact target, a frozen write set, and a current
+  restore-validated or isolated-rehearsed rollback path that covers it.
 - Candidate preparation and active promotion are separate permissions.
 - Sensitive content requires authorization for the exact asset path and exact
   read or use action; broad directory access is not enough.
@@ -94,11 +114,12 @@ Across all workflows:
 
 ## What Gets Installed
 
-Axiom installs four checked-in skills:
+Axiom's release shape is exactly four checked-in public skills:
 
 - `using-axiom`, the session-start routing gate.
-- `agents-architect`, `traceable-git-submit`, and
-  `reversible-system-change`, the three user workflows.
+- `agents-architect`, the repository-instruction workflow.
+- `traceable-git-submit`, the checkpoint and publish workflow.
+- `reversible-system-change`, the persistent-change workflow.
 
 Each workflow loads its supporting Markdown references only when the active
 task needs them. Axiom also installs one `SessionStart` hook that prints a
@@ -130,6 +151,23 @@ Review Axiom's `SessionStart` command before trusting it. The hook should only
 print the Axiom loading message and read
 `skills/using-axiom/SKILL.md` from `PLUGIN_ROOT`.
 
+The checked-in hook definition should match these commands exactly.
+
+Linux and macOS:
+
+```bash
+printf '%s\n\n' 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
+```
+
+Windows:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Output 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; Write-Output ''; Get-Content -Raw (Join-Path $env:PLUGIN_ROOT 'skills/using-axiom/SKILL.md')"
+```
+
+If `/hooks` shows any other command, do not trust it until the installed hook
+and this documented definition have been reconciled.
+
 ## Updating
 
 Axiom does not check for or install updates automatically. Refresh its
@@ -149,6 +187,10 @@ The hook runs on `startup`, `resume`, `clear`, and `compact`. It reads a
 checked-in Markdown skill and does not modify files or contact a network
 service.
 
+That claim is inspectable in the exact commands above: they contain only
+foreground output and a local file read, with no redirection, file-writing,
+background-launch, or network command.
+
 If the Axiom routing message does not appear:
 
 1. Open `/hooks` and confirm the Axiom `SessionStart` hook is enabled and
@@ -162,9 +204,15 @@ Existing sessions may retain earlier hook and skill state.
 
 Before publishing, confirm that:
 
+- The direct public skill entries are exactly `using-axiom`,
+  `agents-architect`, `traceable-git-submit`, and
+  `reversible-system-change`.
 - Public descriptions, examples, and installation commands agree with the
   bundled skills and current Codex plugin interface.
-- The documented `SessionStart` hook reads only the intended routing skill.
+- The parsed `SessionStart` commands match the two documented command blocks
+  exactly and read only the intended routing skill.
+- `using-axiom` still prohibits background services, scheduled refresh work,
+  network update checks, and automatic update downloads or installation.
 - Use `Axiom` in prose and `axiom` for identifiers and command examples; keep
   public triggers in English.
 - Published content remains runtime-relevant and reviewable.

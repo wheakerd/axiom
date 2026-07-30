@@ -1,4 +1,4 @@
 interface:
   display_name: "Reversible System Change"
   short_description: "Plan and verify reversible system changes"
-  default_prompt: "Use $reversible-system-change to plan or execute this persistent change with a verified rollback point and direct postcondition checks; keep plan-only work read-only."
+  default_prompt: "Use $reversible-system-change to plan or execute this persistent change with a current restore-validated rollback path and direct postcondition checks; keep plan-only work read-only."

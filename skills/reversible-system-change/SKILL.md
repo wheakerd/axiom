@@ -68,8 +68,8 @@ Use this sequence:
 2. Observe current state with metadata-only probes and identify sensitive
    boundaries.
 3. Freeze the intended write set and affected runtime layers.
-4. Establish and directly verify a readable rollback point and bounded restore
-   procedure.
+4. Establish a rollback point and prove the complete current restore-readiness
+   standard, including coverage and a restore validation or isolated rehearsal.
 5. Validate a candidate, dry-run, or precondition check without promotion when
    the platform permits it.
 6. Reconfirm live preconditions immediately before the authorized write.
@@ -84,12 +84,19 @@ Do not call a change complete from a successful command exit, upload, queue
 acknowledgement, configuration write, or process start alone. Completion needs
 fresh direct evidence from the system layer that owns the requested outcome.
 
+Treat identified, present, readable, restore-validated, and rehearsed as
+different evidence states. Use `verified rollback` only when every requirement
+in `references/preflight-and-rollback.md` passes with current direct evidence.
+A backup job's success, an artifact or rollback script's presence, a manifest,
+or a historical rehearsal does not prove current restorability. If the required
+restore validation or isolated rehearsal cannot run, execution stops.
+
 ## Safety Rules
 
 - Never discover a destructive target through an unresolved variable, broad
   glob, symlink traversal, or guessed parent directory.
-- Never overwrite or delete the only verified working copy before rollback is
-  readable and its restoration path is known.
+- Never overwrite or delete the only verified working copy before the complete
+  rollback-verification standard passes.
 - Preserve unrelated user state. Stop rather than reset, stash, clean, or
   rewrite a dirty source tree without explicit authorization.
 - Do not print, copy broadly, hash, encode, or persist secret contents merely
@@ -104,8 +111,9 @@ fresh direct evidence from the system layer that owns the requested outcome.
 
 ## Reporting
 
-Report the target, authorized write set, prior-state facts, rollback point and
-its verification, candidate or dry-run result, mutation and promotion result,
+Report the target, authorized write set, prior-state facts, each rollback
+evidence state, candidate or dry-run result, mutation and promotion result,
 layered postcondition evidence, rollback status when used, retained recovery
 material, and final observed state. Distinguish passed, failed, not run, and
-unavailable checks. Redact sensitive values and private endpoints.
+unavailable checks. Never upgrade a lower rollback evidence state to
+`verified`. Redact sensitive values and private endpoints.

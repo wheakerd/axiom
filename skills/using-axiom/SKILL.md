@@ -28,6 +28,17 @@ Axiom is a routing gate for Codex-native workflows. Use this front door to decid
   rollback, data-safety, service, or promotion risk. Plan-only work stays
   read-only.
 
+## Runtime Invariants
+
+Axiom is a foreground, request-routed plugin. It must not install, start, or
+schedule a service, daemon, watcher, polling job, background cache refresh, or
+other persistent process. Session routing must not write files or contact a
+network service.
+
+Axiom has no automatic update channel. It must not check for, fetch, download,
+install, or announce updates unless the user explicitly asks. Refresh remains
+an explicit action performed through the host-controlled marketplace flow.
+
 ## Updating Axiom
 
 When the user explicitly asks to update or refresh Axiom, direct them to the
