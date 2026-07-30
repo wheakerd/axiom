@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "axiom",
+  "displayName": "Axiom",
+  "version": "0.2.1",
+  "description": "Think before AI thinks.",
+  "author": {
+    "name": "wheakerd",
+    "url": "https://github.com/wheakerd"
+  },
+  "homepage": "https://github.com/wheakerd/axiom#readme",
+  "repository": "https://github.com/wheakerd/axiom",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "agents-md",
+    "ai-workflows",
+    "skills",
+    "developer-tools"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/claude-hooks.json"
+}

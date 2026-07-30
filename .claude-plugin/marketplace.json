@@ -1,0 +1,20 @@
+{
+  "name": "axiom",
+  "owner": {
+    "name": "wheakerd",
+    "url": "https://github.com/wheakerd"
+  },
+  "description": "Axiom plugins for focused, safety-first AI workflows.",
+  "plugins": [
+    {
+      "name": "axiom",
+      "source": "./",
+      "category": "productivity",
+      "tags": [
+        "agents-md",
+        "skills",
+        "developer-tools"
+      ]
+    }
+  ]
+}

@@ -2,11 +2,12 @@
 
 Think before AI thinks.
 
-Axiom is a Codex-first plugin for community-native AI workflows. It helps
-Codex resolve user intent before execution, then loads a focused workflow for
-the work that actually needs it.
+Axiom is a Codex-first plugin with parallel Claude Code support for
+community-native AI workflows. It helps the active agent resolve user intent
+before execution, then loads a focused workflow for the work that actually
+needs it.
 
-Axiom does not take over ordinary tasks. Its session-start gate selects the
+Axiom does not take over ordinary tasks. Its startup routing gate selects the
 smallest matching bundled skill, honors higher-priority instructions, and
 continues normally when no Axiom workflow applies.
 
@@ -19,13 +20,13 @@ Upgrade the staging service to v2.4.1, but do not proceed unless we can restore
 the version running now.
 ```
 
-Axiom routes that request to `reversible-system-change`. Codex first identifies
-the exact staging target and intended writes, then distinguishes a backup that
-merely exists from a rollback path whose current restore mechanism has actually
-been validated or rehearsed. Candidate preparation does not grant permission
-to promote it. After an authorized change, Codex checks the selected version,
-runtime, and behavior before claiming completion. If recovery cannot be proven,
-it stops and reports the missing evidence.
+Axiom routes that request to `reversible-system-change`. The agent first
+identifies the exact staging target and intended writes, then distinguishes a
+backup that merely exists from a rollback path whose current restore mechanism
+has actually been validated or rehearsed. Candidate preparation does not grant
+permission to promote it. After an authorized change, the agent checks the
+selected version, runtime, and behavior before claiming completion. If recovery
+cannot be proven, it stops and reports the missing evidence.
 
 An ordinary request such as `Fix this README typo` does not match an Axiom
 workflow and continues normally.
@@ -114,7 +115,10 @@ Across all workflows:
 
 ## What Gets Installed
 
-Axiom's release shape is exactly four checked-in public skills:
+Both platforms install the same checked-in skill source. No `SKILL.md` content
+is copied or forked for a platform.
+
+### Shared skills
 
 - `using-axiom`, the session-start routing gate.
 - `agents-architect`, the repository-instruction workflow.
@@ -122,13 +126,24 @@ Axiom's release shape is exactly four checked-in public skills:
 - `reversible-system-change`, the persistent-change workflow.
 
 Each workflow loads its supporting Markdown references only when the active
-task needs them. Axiom also installs one `SessionStart` hook that prints a
-short loading message and reads the routing skill from the installed plugin.
+task needs them.
+
+### Distribution wrappers
+
+- Codex uses `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`,
+  and `hooks/codex-hooks.json`.
+- Claude Code uses `.claude-plugin/plugin.json`,
+  `.claude-plugin/marketplace.json`, and `hooks/claude-hooks.json`.
+
+Both plugin manifests point at the same `./skills/` directory. Their hooks read
+the same `skills/using-axiom/SKILL.md` routing gate from the installed plugin.
 
 There is no background service, automatic updater, private maintenance tool,
 or bundled runtime dependency.
 
 ## Installation
+
+### Codex
 
 Add the Git marketplace, then install Axiom from its configured snapshot:
 
@@ -168,24 +183,69 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Output 'You have A
 If `/hooks` shows any other command, do not trust it until the installed hook
 and this documented definition have been reconciled.
 
+### Claude Code
+
+Add the Git marketplace and install Axiom from inside Claude Code:
+
+```text
+/plugin marketplace add wheakerd/axiom
+/plugin install axiom@axiom
+/reload-plugins
+```
+
+Open `/hooks` and review the plugin hooks before trusting them. The checked-in
+Claude Code handlers use `${CLAUDE_PLUGIN_ROOT}` and run these commands:
+
+`SessionStart` on `startup`, `resume`, `clear`, and `compact`:
+
+```bash
+echo 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
+```
+
+`PreCompact` on `manual` and `auto`:
+
+```bash
+echo 'You have Axiom. Preserve this routing front door while compacting:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
+```
+
+Claude Code exposes `PreCompact` separately from the post-compaction
+`SessionStart` source. Axiom runs the routing read before manual or automatic
+compaction. Current Claude Code only adds `SessionStart` stdout, not successful
+`PreCompact` stdout, to agent context, so the `SessionStart: compact` handler
+performs the supported post-compaction reinjection as well. If `/hooks` shows
+another command, do not trust it until the installed definition and this
+documentation agree.
+
 ## Updating
 
-Axiom does not check for or install updates automatically. Refresh its
-configured Git marketplace snapshot only when you choose to:
+Axiom does not check for or install updates automatically. Refresh the relevant
+Git marketplace snapshot only when you choose to.
+
+Codex:
 
 ```bash
 codex plugin marketplace upgrade axiom
 ```
 
-In a supported workspace plugin UI, use **Refresh** instead. Start a new Codex
-session after refreshing. If the hook definition changed, inspect and trust
-the new definition in `/hooks` before relying on it.
+Claude Code:
+
+```text
+/plugin marketplace update axiom
+/plugin update axiom@axiom
+/reload-plugins
+```
+
+In a supported Codex workspace plugin UI, use **Refresh** instead. Start a new
+Codex session after refreshing, or run `/reload-plugins` in Claude Code. If the
+hook definition changed, inspect and trust the new definition in `/hooks`
+before relying on it.
 
 ## Hook Trust And Troubleshooting
 
-The hook runs on `startup`, `resume`, `clear`, and `compact`. It reads a
-checked-in Markdown skill and does not modify files or contact a network
-service.
+The Codex hook runs on `startup`, `resume`, `clear`, and `compact`. Claude Code
+runs the corresponding `SessionStart` sources plus `PreCompact` on `manual` and
+`auto`. Every handler reads a checked-in Markdown skill and does not modify
+files or contact a network service.
 
 That claim is inspectable in the exact commands above: they contain only
 foreground output and a local file read, with no redirection, file-writing,
@@ -193,14 +253,20 @@ background-launch, or network command.
 
 If the Axiom routing message does not appear:
 
-1. Open `/hooks` and confirm the Axiom `SessionStart` hook is enabled and
-   trusted.
+1. Open `/hooks` and confirm the Axiom hooks are enabled and trusted.
 2. Review any changed hook definition instead of trusting it automatically.
-3. Start a new Codex session after installation or marketplace refresh.
+3. Start a new Codex session or run `/reload-plugins` in Claude Code after
+   installation or marketplace refresh.
 
 Existing sessions may retain earlier hook and skill state.
 
 ## Contributor Review
+
+The `distribution-drift` CI job runs
+`python3 scripts/check-distribution-drift.py`. It fails with a unified diff if
+the skill directories on disk disagree with either platform manifest, either
+marketplace wrapper, or the shared skill list above. The script is a CI and
+contributor check; it is not an installed runtime dependency.
 
 Before publishing, confirm that:
 
@@ -208,9 +274,9 @@ Before publishing, confirm that:
   `agents-architect`, `traceable-git-submit`, and
   `reversible-system-change`.
 - Public descriptions, examples, and installation commands agree with the
-  bundled skills and current Codex plugin interface.
-- The parsed `SessionStart` commands match the two documented command blocks
-  exactly and read only the intended routing skill.
+  bundled skills and current Codex and Claude Code plugin interfaces.
+- The parsed platform hook commands match the documented command blocks and
+  read only the intended routing skill.
 - `using-axiom` still prohibits background services, scheduled refresh work,
   network update checks, and automatic update downloads or installation.
 - Use `Axiom` in prose and `axiom` for identifiers and command examples; keep
