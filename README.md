@@ -2,190 +2,43 @@
 
 Think before AI thinks.
 
-Axiom is a Codex-first plugin with parallel Claude Code support for
-community-native AI workflows. It helps the active agent resolve user intent
-before execution, then loads a focused workflow for the work that actually
-needs it.
+Axiom is a safety-first, request-routed workflow plugin for Codex and Claude
+Code. It is for developers and maintainers who want repository instructions,
+Git publication, and persistent system changes to begin with explicit scope,
+authority, and evidence without turning every coding request into a special
+workflow.
 
-Axiom does not take over ordinary tasks. Its startup routing gate selects the
-smallest matching bundled skill, honors higher-priority instructions, and
-continues normally when no Axiom workflow applies.
+Capable agents can start executing before the target, permission, rollback, or
+proof of success is clear. Axiom places a small routing gate into the foreground
+session context and loads one focused workflow only when the request matches.
+Codex and Claude Code use the same checked-in skills through separate platform
+wrappers and hooks.
 
-## Axiom In Practice
+Route selection is not action authorization. Loading an Axiom workflow never,
+by itself, permits an edit, commit, push, deployment, deletion, credential use,
+or other mutation.
 
-Suppose you ask:
+| Ask | Observable routing decision |
+| --- | --- |
+| "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, inventory the instruction system, and report findings without changes |
+| "Summarize the purpose of this README. Do not modify files." | Select no Axiom workflow and continue normally without changing files |
 
-```text
-Upgrade the staging service to v2.4.1, but do not proceed unless we can restore
-the version running now.
-```
+## 60-Second Start
 
-Axiom routes that request to `reversible-system-change`. The agent first
-identifies the exact staging target and intended writes, then distinguishes a
-backup that merely exists from a rollback path whose current restore mechanism
-has actually been validated or rehearsed. Candidate preparation does not grant
-permission to promote it. After an authorized change, the agent checks the
-selected version, runtime, and behavior before claiming completion. If recovery
-cannot be proven, it stops and reports the missing evidence.
+Choose one host and install from the Git marketplace.
 
-An ordinary request such as `Fix this README typo` does not match an Axiom
-workflow and continues normally.
-
-## Workflows
-
-### AGENTS Architecture
-
-Use `agents-architect` to initialize, audit, split, migrate, maintain, or
-validate repository instruction systems:
-
-- Turn root `AGENTS.md` into a small control plane and route scoped guidance on
-  demand.
-- Organize `.agents/` group indexes, domain entries, rule files, cross-cutting
-  safety or risk rules, references, and repo-local skills without recursively
-  loading everything.
-- Separate active instructions and current repository facts from copied,
-  historical, or external evidence.
-- Handle no-Git repositories, unborn branches, nested roots, linked worktrees,
-  ignored instruction files, route dependencies, and oversized documents
-  explicitly.
-- Keep generated guidance project-specific instead of copying Axiom's own
-  triggers, routing protocol, or validation format into the target repository.
-
-### Traceable Git Submit
-
-Use `traceable-git-submit` when local work needs authorized checkpoint commits
-or a one-final-commit publish flow:
-
-- Create isolated local checkpoints only after the user authorizes commits.
-- Freeze the exact path set, prove staged-tree identity, and store baseline and
-  provenance state in Git metadata rather than the worktree.
-- Consolidate only the exact authorized unpublished commit series into one
-  final commit while preserving the final tree.
-- Push only after an explicit submit, publish, or push request.
-- Verify every configured push target, require explicit acceptance of
-  non-atomic multi-target risk, and retain recovery state until the refreshed
-  upstream and every target prove the final commit.
-
-A checkpoint marker is not authority by itself, and a successful Git command
-is not treated as proof that every remote reached the requested state.
-
-### Reversible System Change
-
-Use `reversible-system-change` to plan, rehearse, or execute an install,
-upgrade, deployment, migration, destructive retention action, or active-version
-promotion with meaningful rollback or data-safety risk:
-
-- Plan-only and workflow-rehearsal requests remain strictly read-only.
-- Execution requires one exact target, a frozen write set, and a current
-  restore-validated or isolated-rehearsed rollback path that covers it.
-- Candidate preparation and active promotion are separate permissions.
-- Sensitive content requires authorization for the exact asset path and exact
-  read or use action; broad directory access is not enough.
-- Completion requires fresh evidence from every affected materialization,
-  selection, runtime, delivery, behavior, and preservation layer that owns the
-  requested outcome.
-
-If usable recovery cannot be verified, this workflow stops. Accepting
-irreversible risk does not satisfy its contract.
-
-## Routing And Safety
-
-`using-axiom` is the checked-in session-start routing gate. It:
-
-1. Honors user, system, developer, and repository instructions first.
-2. Matches a request against the most specific bundled skill description.
-3. Loads only the selected route and the references needed for its active
-   phase.
-4. Accepts unambiguous requests in any language while keeping canonical route
-   definitions in English.
-5. Continues without invoking Axiom when no workflow clearly applies.
-
-Across all workflows:
-
-- A narrower route may add checks but cannot broaden authorization.
-- Existing user work is preserved; unrelated state is not reset, hidden,
-  staged, or rewritten to make a check pass.
-- Access, saved credentials, default profiles, or the ability to run a command
-  do not establish authority for a target or action.
-- Completion claims require current direct evidence from the owning system
-  layer. Missing tools, permissions, or observations are unverified, not a
-  pass.
-- Axiom does not commit, push, promote, delete, or mutate a remote environment
-  merely because the corresponding skill was loaded.
-
-## What Gets Installed
-
-Both platforms install the same checked-in skill source. No `SKILL.md` content
-is copied or forked for a platform.
-
-### Shared skills
-
-- `using-axiom`, the session-start routing gate.
-- `agents-architect`, the repository-instruction workflow.
-- `traceable-git-submit`, the checkpoint and publish workflow.
-- `reversible-system-change`, the persistent-change workflow.
-
-Each workflow loads its supporting Markdown references only when the active
-task needs them.
-
-### Distribution wrappers
-
-- Codex uses `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`,
-  and `hooks/codex-hooks.json`.
-- Claude Code uses `.claude-plugin/plugin.json`,
-  `.claude-plugin/marketplace.json`, and `hooks/claude-hooks.json`.
-
-Both plugin manifests point at the same `./skills/` directory. Their hooks read
-the same `skills/using-axiom/SKILL.md` routing gate from the installed plugin.
-
-There is no background service, automatic updater, private maintenance tool,
-or bundled runtime dependency.
-
-## Installation
-
-### Codex
-
-Add the Git marketplace, then install Axiom from its configured snapshot:
+Codex:
 
 ```bash
 codex plugin marketplace add wheakerd/axiom
 codex plugin add axiom@axiom
 ```
 
-In `axiom@axiom`, the first `axiom` is the plugin name and the second is the
-configured marketplace name.
+Start a new Codex chat or CLI session. In that fresh session, open `/hooks` and
+compare the installed handler with the
+[exact checked-in commands](#inspect-the-hooks).
 
-Start a new Codex chat or CLI session after installation. Open the hook review
-UI:
-
-```text
-/hooks
-```
-
-Review Axiom's `SessionStart` command before trusting it. The hook should only
-print the Axiom loading message and read
-`skills/using-axiom/SKILL.md` from `PLUGIN_ROOT`.
-
-The checked-in hook definition should match these commands exactly.
-
-Linux and macOS:
-
-```bash
-printf '%s\n\n' 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
-```
-
-Windows:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Output 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; Write-Output ''; Get-Content -Raw (Join-Path $env:PLUGIN_ROOT 'skills/using-axiom/SKILL.md')"
-```
-
-If `/hooks` shows any other command, do not trust it until the installed hook
-and this documented definition have been reconciled.
-
-### Claude Code
-
-Add the Git marketplace and install Axiom from inside Claude Code:
+Claude Code:
 
 ```text
 /plugin marketplace add wheakerd/axiom
@@ -193,33 +46,131 @@ Add the Git marketplace and install Axiom from inside Claude Code:
 /reload-plugins
 ```
 
-Open `/hooks` and review the plugin hooks before trusting them. The checked-in
-Claude Code handlers use `${CLAUDE_PLUGIN_ROOT}` and run these commands:
+After `/reload-plugins`, open `/hooks` and compare the installed handlers with
+the [exact checked-in commands](#inspect-the-hooks).
 
-`SessionStart` on `startup`, `resume`, `clear`, and `compact`:
+Only after reviewing the hook for your host, run the routed request and control
+request above. Expect `agents-architect` to inventory and report only for the
+read-only `AGENTS.md` audit; the README summary request should continue normally
+without changing files.
+
+If either result differs, use the non-destructive checks in
+[Getting Started](docs/getting-started.md) rather than deleting caches or
+rewriting local state.
+
+## Workflows At A Glance
+
+| Route | Select it for | Core boundary |
+| --- | --- | --- |
+| `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, its `.agents/` routes, or repo-local skills | Inspect first; change only the authorized instruction system and keep protected plugin metadata out of scope |
+| `traceable-git-submit` | Authorized checkpoint commits, baseline/provenance tracking, consolidation, or a one-final-commit submit or push flow | Freeze the exact Git root, path set, commit series, and push targets; a checkpoint request does not authorize a push |
+| `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plan-only work stays read-only; mutation requires an exact target, explicit authority, and current rollback evidence |
+
+The startup gate is `using-axiom`. It selects the smallest matching route and
+continues normally when none applies. See [Examples](docs/examples.md) for
+routed requests and non-routing controls.
+
+## Deliberate Non-Goals
+
+Axiom is not a general-purpose memory system, persistent context database,
+autonomous multi-agent framework, background policy daemon, or workflow for
+every coding task. It does not prevent every model error, replace host or
+repository permissions, or turn command success into proof of an outcome.
+
+It also does not start a service, watcher, polling job, or automatic update
+channel. Updates happen only through an explicit host marketplace action.
+
+## How Routing Works
+
+At session start or the configured compaction events, the platform hook reads
+`skills/using-axiom/SKILL.md` into the current session. That gate:
+
+1. Honors higher-priority system, developer, user, and repository instructions.
+2. Matches an explicit Axiom request or a request that clearly fits a bundled
+   route.
+3. Selects the smallest matching skill set.
+4. Loads only the references needed for the active phase.
+5. Continues through the host's normal workflow when no route clearly applies.
+
+The gate decides which instructions are relevant; it does not grant permission
+to act. For example, selecting `reversible-system-change` for a migration plan
+keeps the work read-only, and selecting `traceable-git-submit` does not create
+authority to commit or push unless the user's request supplies it. Read the
+[Architecture](docs/architecture.md) and [Trust Model](docs/trust-model.md) for
+the full boundary.
+
+## What Gets Installed
+
+Both platforms install the same checked-in `skills/` source. No `SKILL.md`
+content is copied or forked for a host.
+
+### Shared skills
+
+- `using-axiom`, the session-start routing gate.
+- `agents-architect`, the repository-instruction workflow.
+- `traceable-git-submit`, the checkpoint and publication workflow.
+- `reversible-system-change`, the persistent-change workflow.
+
+Each task workflow loads its supporting Markdown references on demand.
+
+### Platform wrappers
+
+- Codex uses `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`,
+  and `hooks/codex-hooks.json`.
+- Claude Code uses `.claude-plugin/plugin.json`,
+  `.claude-plugin/marketplace.json`, and `hooks/claude-hooks.json`.
+
+Both manifests point to `./skills/`. The platform-specific hooks read the same
+`skills/using-axiom/SKILL.md` gate from the installed plugin root. There is no
+bundled runtime dependency or private maintenance tool in the release package.
+
+## Inspect The Hooks
+
+Plugin hooks execute commands in the host session, so inspect the installed
+definition in `/hooks` before trusting it. Axiom's checked-in commands perform
+foreground output and one local file read. If the installed definition differs,
+stop trusting that hook until the installed package and this repository have
+been reconciled.
+
+### Codex `SessionStart`
+
+The matcher is `startup|resume|clear|compact`. On Linux and macOS, the exact
+checked-in command is:
+
+```bash
+printf '%s\n\n' 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
+```
+
+On Windows, the exact checked-in command is:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Output 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; Write-Output ''; Get-Content -Raw (Join-Path $env:PLUGIN_ROOT 'skills/using-axiom/SKILL.md')"
+```
+
+### Claude Code `SessionStart`
+
+The matcher is `startup|resume|clear|compact`. The exact checked-in command is:
 
 ```bash
 echo 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
 ```
 
-`PreCompact` on `manual` and `auto`:
+### Claude Code `PreCompact`
+
+The matcher is `manual|auto`. The exact checked-in command is:
 
 ```bash
 echo 'You have Axiom. Preserve this routing front door while compacting:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
 ```
 
-Claude Code exposes `PreCompact` separately from the post-compaction
-`SessionStart` source. Axiom runs the routing read before manual or automatic
-compaction. Current Claude Code only adds `SessionStart` stdout, not successful
-`PreCompact` stdout, to agent context, so the `SessionStart: compact` handler
-performs the supported post-compaction reinjection as well. If `/hooks` shows
-another command, do not trust it until the installed definition and this
-documentation agree.
+These commands contain only `printf` or `echo` plus `cat`, or PowerShell output
+plus `Get-Content`. They contain no file-writing, background-launch, or network
+command. The hook reads the routing gate; the gate makes the route decision.
 
 ## Updating
 
 Axiom does not check for or install updates automatically. Refresh the relevant
-Git marketplace snapshot only when you choose to.
+marketplace only when you choose to.
 
 Codex:
 
@@ -235,57 +186,50 @@ Claude Code:
 /reload-plugins
 ```
 
-In a supported Codex workspace plugin UI, use **Refresh** instead. Start a new
-Codex session after refreshing, or run `/reload-plugins` in Claude Code. If the
-hook definition changed, inspect and trust the new definition in `/hooks`
-before relying on it.
+In a supported Codex workspace plugin UI, use **Refresh**. Start a new Codex
+session after refreshing, or reload Claude Code plugins. Review any changed hook
+again before trusting it.
 
-## Hook Trust And Troubleshooting
+## Troubleshooting
 
-The Codex hook runs on `startup`, `resume`, `clear`, and `compact`. Claude Code
-runs the corresponding `SessionStart` sources plus `PreCompact` on `manual` and
-`auto`. Every handler reads a checked-in Markdown skill and does not modify
-files or contact a network service.
+If the loading message or expected route is missing, first confirm in `/hooks`
+that the plugin hook is installed, enabled, trusted, and identical to the
+checked-in definition. Then start a fresh Codex session or run
+`/reload-plugins` in Claude Code. Existing sessions may retain earlier hook and
+skill state.
 
-That claim is inspectable in the exact commands above: they contain only
-foreground output and a local file read, with no redirection, file-writing,
-background-launch, or network command.
+Do not delete host data, clear caches, edit the installed plugin, or change
+global configuration merely to make routing appear. Follow the bounded
+[troubleshooting sequence](docs/getting-started.md#non-destructive-troubleshooting)
+and report an unavailable validator as unavailable, not passed.
 
-If the Axiom routing message does not appear:
+## Documentation
 
-1. Open `/hooks` and confirm the Axiom hooks are enabled and trusted.
-2. Review any changed hook definition instead of trusting it automatically.
-3. Start a new Codex session or run `/reload-plugins` in Claude Code after
-   installation or marketplace refresh.
+- [Getting Started](docs/getting-started.md): installation, hook review, first
+  route, control request, and non-destructive troubleshooting.
+- [Examples](docs/examples.md): requests, expected routes, safety boundaries,
+  and actions each route does not authorize.
+- [Architecture](docs/architecture.md): wrappers, hooks, routing, on-demand
+  references, and normal continuation.
+- [Trust Model](docs/trust-model.md): authority, credentials, mutation,
+  evidence, and update boundaries.
+- [Compatibility](docs/compatibility.md): checked-in support and validation
+  evidence levels.
+- [Changelog](CHANGELOG.md) and [v0.3.1 release notes](docs/releases/v0.3.1.md):
+  release history and version-specific evidence.
 
-Existing sessions may retain earlier hook and skill state.
+## Contributing
 
-## Contributor Review
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing shared skills, platform
+wrappers, hooks, or public claims. The focused distribution check is:
 
-The `distribution-drift` CI job runs
-`python3 scripts/check-distribution-drift.py`. It fails with a unified diff if
-the skill directories on disk disagree with either platform manifest, either
-marketplace wrapper, or the shared skill list above. The script is a CI and
-contributor check; it is not an installed runtime dependency.
+```bash
+python3 scripts/check-distribution-drift.py
+```
 
-Before publishing, confirm that:
-
-- The direct public skill entries are exactly `using-axiom`,
-  `agents-architect`, `traceable-git-submit`, and
-  `reversible-system-change`.
-- Public descriptions, examples, and installation commands agree with the
-  bundled skills and current Codex and Claude Code plugin interfaces.
-- The parsed platform hook commands match the documented command blocks and
-  read only the intended routing skill.
-- `using-axiom` still prohibits background services, scheduled refresh work,
-  network update checks, and automatic update downloads or installation.
-- Use `Axiom` in prose and `axiom` for identifiers and command examples; keep
-  public triggers in English.
-- Published content remains runtime-relevant and reviewable.
-
-Use available platform-native or official Codex validation during maintenance,
-but do not make a particular interpreter, custom script, shell, or test runner
-an installation prerequisite.
+It compares the skill tree with both manifests, both marketplace wrappers, and
+the four-item `Shared skills` list above. It is a contributor and CI check, not
+an installed runtime dependency.
 
 ## License
 

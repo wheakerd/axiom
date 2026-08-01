@@ -1,0 +1,123 @@
+# Trust Model
+
+Axiom narrows how an agent approaches three sensitive workflow families. It
+does not replace the host's trust model, sandbox the agent, grant credentials,
+or guarantee that a model or external system is correct.
+
+The central rule is simple: selecting a route loads instructions; it does not
+authorize an action.
+
+## Boundary Summary
+
+| Boundary | What Axiom requires | What Axiom does not infer |
+| --- | --- | --- |
+| Instruction authority | System, developer, user, and active repository instructions retain their actual precedence | A selected Axiom skill cannot override a higher-priority rule |
+| Action authorization | The request must authorize the exact material action and target | Route selection, tool access, or an available command is not permission |
+| Scope | Repositories, paths, commits, remotes, environments, assets, and indirect effects are resolved and bounded for the active workflow | A broad directory, default profile, guessed target, or neighboring resource is not automatically in scope |
+| Hook execution | The installed hook must match the inspectable checked-in command and read the intended routing gate | Trust in the repository name does not excuse a changed installed command |
+| Credentials and sensitive data | Existing credentials remain host-managed; sensitive content requires exact-path and exact-use authority where a route needs it | Credential presence, login state, or directory access does not authorize use or disclosure |
+| Mutation | Each workflow keeps its own edit, commit, push, promotion, deletion, or rollback gates | Loading a skill is never mutation authority |
+| Evidence | Completion is based on fresh, direct evidence from the layer that owns the outcome | A successful command, queued operation, present artifact, or missing validator is not proof |
+| Updates | Refresh is an explicit host marketplace action followed by session reload and hook review | Axiom does not check, download, install, or announce updates automatically |
+
+## Hook Trust Boundary
+
+Plugin hooks execute in a host session. Review them before trusting them.
+Axiom's checked-in handlers use the host-provided plugin root, print a loading
+message, and read `skills/using-axiom/SKILL.md`. The exact commands appear in
+[README: Inspect The Hooks](../README.md#inspect-the-hooks).
+
+The command surface is deliberately small: POSIX handlers use `printf` or
+`echo` plus `cat`; the Codex Windows handler uses PowerShell output plus
+`Get-Content`. There is no redirection, write, network command, background
+launch, service installation, or updater in those definitions.
+
+This claim applies to the checked-in files. The installed definition is a
+separate trust decision. If `/hooks` shows another path or any additional
+command, stop trusting that handler until the installed package source and the
+repository definition agree. Do not run a changed command merely to see what it
+does.
+
+## Authority And Authorization
+
+`using-axiom` first honors the active instruction hierarchy, then decides
+whether a request clearly matches a route. A more specific route may add
+preflight checks, evidence requirements, and stop conditions. It cannot expand
+the user's request or remove a higher-priority prohibition.
+
+The workflows make this distinction concrete:
+
+- `agents-architect` may change only the authorized instruction system. It
+  treats host-discovered non-`AGENTS.md` instruction candidates as read-only
+  and keeps protected plugin metadata outside ordinary AGENTS work.
+- `traceable-git-submit` requires explicit commit authority for checkpoints and
+  a separate explicit submit, publish, or push request before any push. It
+  freezes the exact Git root, path set, commit provenance, and remote targets.
+- `reversible-system-change` keeps plans and rehearsals read-only. Candidate
+  preparation, active promotion, sensitive asset use, destructive retention,
+  and rollback are distinct permissions.
+
+If the target, environment, credentials, destructive scope, or promotion
+authority is ambiguous in a way that changes execution, the workflow stops for
+clarification rather than turning ambiguity into permission.
+
+## Credential And Sensitive-Data Boundary
+
+Axiom does not bundle a credential store or authentication service. Credentials
+remain in the host, shell, Git, cloud, or service boundary that already owns
+them. A saved credential, default account, working login, or ability to invoke
+a tool proves access only; it does not prove authority for a target or action.
+
+The Git workflow reports targets without exposing remote URLs, usernames,
+credentials, or private endpoints. The system-change workflow inventories
+sensitive assets through metadata first and requires authorization for the
+exact asset path and exact read or use action before content access. A broad
+directory request is not enough.
+
+## Evidence Boundary
+
+Axiom distinguishes current direct evidence from plans, historical reports,
+manifests, command exit codes, and inferred state.
+
+- Repository completion requires current evidence from the owning Git tree,
+  index, references, and configured targets relevant to the request.
+- Persistent-change completion requires current evidence from every affected
+  materialization, selection, runtime, delivery, behavior, and preservation
+  layer that owns the outcome.
+- A backup, rollback script, or successful backup job is not by itself proof
+  that current restoration works.
+- A missing tool, permission, host, or downstream observation is unavailable or
+  unverified, not passed.
+
+This is an evidence discipline, not a guarantee that every observation or
+external system is trustworthy. Reports should say which checks passed, failed,
+were not run, or were unavailable.
+
+## Mutation And Persistence Boundary
+
+Session routing itself performs no repository or system mutation. It reads a
+checked-in Markdown gate in the foreground and does not contact a network
+service. Axiom installs no daemon, watcher, scheduler, cache refresher, or other
+persistent process.
+
+A selected task workflow may guide a mutation only when the user request and
+active instructions authorize it and its own preconditions pass. A safe stop is
+an expected result when scope, authority, rollback, or evidence is insufficient.
+
+## Update Boundary
+
+Axiom has no automatic update channel. Update checks, marketplace refreshes,
+downloads, and installation remain explicit host-controlled actions. Use the
+commands in [README: Updating](../README.md#updating), then start or reload the
+session and review the installed hook again. A previously trusted hook does not
+make a changed definition automatically trustworthy.
+
+## What This Model Does Not Promise
+
+Axiom does not prevent every hallucination, malicious dependency, compromised
+host, incorrect credential configuration, unsafe user instruction, or external
+service failure. It does not make an unreviewed installed package trustworthy,
+and a no-route result does not certify that an ordinary task is harmless.
+
+For a bounded first-install check, follow [Getting Started](getting-started.md).
+For version and host evidence, see [Compatibility](compatibility.md).

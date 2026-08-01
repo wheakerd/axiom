@@ -1,0 +1,77 @@
+name: Feature request
+description: Propose a focused Axiom workflow or behavior improvement.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the user problem before the implementation. A new route should cover a distinct workflow, not make Axiom intercept ordinary requests. Do not include secrets, private URLs, customer data, or sensitive repository content.
+
+  - type: dropdown
+    id: host_scope
+    attributes:
+      label: Host scope
+      description: Which supported host should this proposal affect?
+      options:
+        - Both Codex and Claude Code
+        - Codex
+        - Claude Code
+        - Host-independent shared behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What concrete task is difficult, unsafe, or unclear today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed workflow or behavior
+      description: Describe the observable routing, evidence, stop condition, or outcome you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: route_gap
+    attributes:
+      label: Why existing routes do not cover it
+      description: Compare the proposal with using-axiom, agents-architect, traceable-git-submit, and reversible-system-change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: authorization_safety
+    attributes:
+      label: Authorization and safety implications
+      description: Explain what the route may inspect, plan, or change; what still needs explicit user authority; and where it must stop.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cross_platform
+    attributes:
+      label: Cross-platform implications
+      description: Explain whether shared skills, platform manifests, marketplaces, hooks, installation, or host behavior would differ.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What existing route, normal host behavior, documentation change, or narrower solution did you consider?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: secret_review
+    attributes:
+      label: Sensitive-data review
+      options:
+        - label: I removed secrets, credentials, private URLs, customer data, and other sensitive content from this request and its attachments.
+          required: true

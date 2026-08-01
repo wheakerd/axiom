@@ -1,0 +1,135 @@
+name: Bug report
+description: Report incorrect Axiom routing, hook, packaging, or workflow behavior.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Axiom. Use the smallest reproducible example you can share. Remove secrets, credentials, private URLs, customer data, and sensitive repository content from requests, logs, screenshots, and attachments.
+
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      description: Where did the behavior occur?
+      options:
+        - Codex
+        - Claude Code
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: host_version
+    attributes:
+      label: Host version
+      description: Provide the exact Codex or Claude Code version when available.
+      placeholder: "Example: Claude Code 2.1.220"
+    validations:
+      required: true
+
+  - type: input
+    id: axiom_version
+    attributes:
+      label: Axiom version or commit
+      description: Provide the installed semantic version, Git tag, or commit SHA.
+      placeholder: "Example: 0.3.1 or an immutable commit ID"
+    validations:
+      required: true
+
+  - type: input
+    id: installation
+    attributes:
+      label: Installation method
+      description: State whether you used a Git marketplace, local checkout, or another method.
+      placeholder: "Example: Codex Git marketplace"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and shell
+      placeholder: "Example: macOS 15 and zsh; Windows 11 and PowerShell 7"
+    validations:
+      required: true
+
+  - type: textarea
+    id: triggering_request
+    attributes:
+      label: Triggering request
+      description: Provide the smallest sanitized user request that demonstrates the issue.
+    validations:
+      required: true
+
+  - type: input
+    id: expected_route
+    attributes:
+      label: Expected route
+      description: Name the expected Axiom route, or say that the request should have continued normally.
+      placeholder: "Example: reversible-system-change"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual route or behavior
+      description: State what route was selected and what happened instead of the expected behavior.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hook_review
+    attributes:
+      label: Hook review result
+      description: Compare the installed hook shown by the host with the checked-in Axiom definition when applicable.
+      options:
+        - Matches the checked-in definition
+        - Differs from the checked-in definition
+        - Hook was not loaded
+        - Not reviewed
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: List the shortest sequence from a new or reloaded session to the issue.
+      placeholder: |
+        1. Install or reload Axiom.
+        2. Review the hook.
+        3. Send the sanitized request above.
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or diagnostics
+      description: Paste only the lines needed to diagnose the issue. Remove secrets and sensitive paths before submitting.
+
+  - type: textarea
+    id: safety_impact
+    attributes:
+      label: Safety implications
+      description: Describe any unexpected authorization, mutation, credential, rollback, or completion-claim impact. Write "None observed" when applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: cross_platform
+    attributes:
+      label: Cross-platform observation
+      description: If possible, say whether the same request behaves differently in the other supported host.
+
+  - type: checkboxes
+    id: secret_review
+    attributes:
+      label: Sensitive-data review
+      options:
+        - label: I removed secrets, credentials, tokens, private URLs, customer data, and other sensitive content from this report and its attachments.
+          required: true
