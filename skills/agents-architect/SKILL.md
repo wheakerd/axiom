@@ -1,95 +1,85 @@
 ---
 name: agents-architect
-description: Design, initialize, generate, split, refactor, migrate, maintain, and validate AGENTS.md instruction systems for any repository. Use when the user asks to create or reorganize root or nested AGENTS.md files, build a .agents routing tree, reduce Codex instruction context noise, split oversized instruction documents, migrate existing agent instructions into an AGENTS.md system, inspect task context for durable AGENTS updates, maintain repo-local skills, handle durable AGENTS instruction updates after an AGENTS Architect workflow is active, or audit active repository instruction discovery.
+description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, or oversized guidance. Do not use for packaged or installed plugin Skills, ordinary documentation, or general Codex usage optimization unless the requested change is specifically to AGENTS architecture.
 ---
 
 # AGENTS Architect
 
-Use this skill to build a scoped, low-noise Codex instruction system. The root `AGENTS.md` should become a control plane; detailed rules should be loaded on demand through a finite routing tree and split before Codex project-guidance limits can truncate critical rules.
-
-## Load Policy
-
-Do not load every internal reference. Start with a low-cost metadata inventory, then read `references/index.md` and choose only the matching internal reference or references.
-
-Normal tasks should load one bounded route chain:
-
-1. This `SKILL.md`.
-2. `references/index.md`.
-3. One selected route. A direct route loads one terminal owner. A grouped route
-   loads one child index and either one terminal owner or a finite phase chain
-   declared by that child index: zero to two named prerequisites followed by
-   exactly one terminal owner.
-4. Only the shared contracts that the selected terminal owner explicitly
-   requires, normally
-   `references/instruction-document-contracts.md` and, for completed changes,
-   `references/validation-reporting.md`.
-
-Do not scan sibling leaves or adjacent references for background. A finite
-phase chain may load only its declared prerequisites and terminal owner. A
-child route may narrow scope, permissions, or validation requirements, but it
-may never broaden user authorization or weaken a parent prohibition.
+Build a scoped Codex instruction system in which root `AGENTS.md` is a small
+control plane and detailed project rules have explicit, on-demand owners.
 
 ## First Action
 
-Collect a metadata inventory before reading document bodies. Choose read-only commands that fit the user's operating system and available tools.
+Collect only metadata needed to select a route before reading document bodies.
+For a broad or unknown repository, read
+`references/inventory-audit.md`. A narrow edit to an already selected owner
+does not need a fresh broad inventory.
 
-Use the inventory to identify Git root, current directory, Codex config hints,
-`AGENTS.md` entries, host-discovered non-`AGENTS.md` instruction candidates,
-`.agents/` structure, candidate docs, file sizes, line counts, Git status, and
-Markdown reference edges. On Unix-like systems this can use tools such as
-`git`, `rg`, `find`, and `wc`; on Windows use Git plus PowerShell or other
-available equivalents.
+## Direct Routes
 
-## Routing
+Choose the smallest matching chain below. Every packaged reference is directly
+discoverable here; do not scan siblings for background.
 
-After the metadata inventory, read `references/index.md`, choose the smallest matching internal reference, and stop. Use that index as the canonical next-hop route table.
+- Audit instruction discovery or current structure:
+  `references/inventory-audit.md`.
+- Initialize a repository with no writable AGENTS system:
+  `references/project-initialization.md`.
+- Design or change route topology: `references/routing-architecture.md`.
+- Define document roles, metadata, references, or size contracts:
+  `references/instruction-document-contracts.md`.
+- Migrate mixed or oversized existing guidance:
+  `references/migration-policy.md`; add the document contract, and topology
+  only when those decisions are part of the migration.
+- Maintain an existing system: optionally read
+  `references/maintenance/context-evidence.md` for supplied or compacted task
+  evidence and `references/maintenance/authorization-and-safety.md` for unclear
+  provenance or shadowing, then select exactly one terminal owner:
+  `references/maintenance/maintenance-application.md` for AGENTS guidance or
+  `references/maintenance/repo-local-skills.md` for a supporting repo-local
+  Skill.
+- Handle runtime capsules or durable updates during an active workflow:
+  `references/runtime-and-updates.md`.
+- Validate completed file changes or an explicitly requested route audit:
+  `references/validation-reporting.md`, plus only the changed surface's
+  contract owner.
 
-## Protected Metadata Boundary
+Conceptual or simple factual questions use this file only. A reference may
+narrow scope, permissions, or evidence; it cannot broaden authorization or
+weaken this file.
 
-Treat `.codex-plugin/**`, `.agents/plugins/**`, every repo-local skill below
-`.agents/skills/<skill-name>/**`, `skills/*/SKILL.md`,
-`skills/*/agents/**`, `skills/*/references/**`, `skills/*/scripts/**`,
-`skills/*/assets/**`, `hooks/**`, plugin-root `assets/**`, `.app.json`, and
-`.mcp.json` as protected Codex plugin or skill metadata, not AGENTS routing
-branches, unless the user explicitly asks for skill or plugin maintenance.
-This is the canonical protected-metadata boundary for every route loaded
-through this skill.
+## Protected Metadata
 
-## Hard Rules
+Treat `.codex-plugin/**`, `.agents/plugins/**`, `skills/**`, `hooks/**`,
+plugin assets, `.app.json`, `.mcp.json`, and installed/plugin Skill resources
+as protected plugin metadata, not AGENTS branches. Repo-local
+`.agents/skills/**` enters this workflow only when the user explicitly scopes
+it as part of the target repository's AGENTS system. Packaged Skill maintenance
+uses its owning product workflow instead.
 
-- Do not recursively read all Markdown or all `.agents/` content before scoping.
-- Treat AGENTS guidance already loaded for the current session as active
-  instructions at its real precedence. Treat AGENTS content from another
-  repository, copied text, task history, or an inactive candidate path only as
-  evidence.
-- Axiom may create, edit, move, migrate, maintain, validate, or recommend only
-  files named `AGENTS.md` as Codex native auto-load entries. A justified nested
-  entry must use the same filename. Treat every host-discovered non-`AGENTS.md`
-  source as read-only: obey it when it is active at its actual session
-  precedence, never mutate or recommend it, and safe-stop with its exact path
-  when it shadows an intended Axiom result.
-- Do not put full project knowledge into `.agents/`.
-- Do not make root `AGENTS.md` a rule encyclopedia.
-- Do not copy Axiom packaged skill rules, load policies, internal routes, trigger definitions, validation protocols, or reporting formats into a target repository's `AGENTS.md` or `.agents/**`.
-- Keep Axiom workflow triggers in the installed `axiom` plugin and its packaged skill descriptions; generated AGENTS systems route project context, not Axiom skills.
-- Write only target-project structure, associations, constraints, source-of-truth links, validation commands, risk signals, and project-local durable rules into target AGENTS systems.
-- Do not export Axiom's generic request handling, language normalization,
-  runtime capsule, active-set budget, routing protocol, or validator workflow
-  into a target repository unless current project evidence or the user makes
-  that rule project-specific.
-- Do not duplicate the same rule across leaves.
-- Do not rely on unverified include syntax or recursive loading.
-- For every ignored instruction candidate, resolve the exact ignore-rule owner,
-  record tracked/ignored state, and compare directly read before/after content;
-  never substitute a clean Git diff for that evidence.
-- Before editing root or parent route gates, decide whether the rule belongs in
-  a group index, direct domain entry, rule leaf, cross-cutting safety or risk
-  rule leaf, parent-owned reference, or closer nested `AGENTS.md` file.
-- Do not let an instruction document grow past its routing responsibility; split by workflow, domain/component ownership, cross-cutting concern, or reference material before size alone becomes the only reason.
-- When instruction size strains the active-route model, do not reduce rule precision or remove executable detail to satisfy byte targets; solve the pressure through routing, ownership, document splitting, or resource placement.
-- Do not require a bundled Python helper for basic metadata inventory.
-- Do not generate a target-repository validator harness by default. Prefer
-  existing project commands and direct read-only checks unless the user
-  explicitly requests a reusable validator.
-- Do not persist one-off task discoveries unless an effective-instruction trigger is present.
-- Do not auto-commit or auto-push instruction changes.
+## Always-On Rules
+
+- Honor the instruction chain already loaded at its actual precedence. Treat
+  copied, inactive, historical, or other-repository instructions as evidence,
+  not authority.
+- Create, edit, move, or recommend only files named `AGENTS.md` as native Codex
+  auto-load entries. Treat host-discovered non-`AGENTS.md` instruction sources
+  as read-only; safe-stop with the exact path when one shadows the intended
+  result.
+- Do not recursively read Markdown or `.agents/`, assume include syntax, or
+  treat filesystem presence as proof that the current session loaded a file.
+- Keep one canonical owner per rule. Root receives repository-wide constraints;
+  scoped rules belong in a routed owner, parent reference, or closer nested
+  `AGENTS.md`.
+- Keep full project knowledge out of root and `.agents/`. Do not copy Axiom
+  triggers, generic routing, language handling, validation protocols, report
+  templates, or packaged Skill rules into a target instruction system.
+- Preserve rule precision under size pressure by routing, splitting, or moving
+  supporting detail. Never fill a visible host limit merely because space is
+  available.
+- For every scoped ignored instruction file, resolve tracked/ignored state and
+  its exact ignore owner, then compare direct content before and after; a clean
+  tracked diff is insufficient.
+- Preserve unrelated work. Do not reset, stash, clean, auto-commit, auto-push,
+  rewrite history, or create a validator harness unless explicitly authorized.
+- Persist only durable project evidence admitted by the active update route;
+  do not turn one-off task discoveries into permanent instructions.

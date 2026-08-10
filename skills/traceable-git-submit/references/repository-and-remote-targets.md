@@ -2,8 +2,9 @@
 
 ## Purpose
 
-Resolve one exact target Git repository and the complete set of destinations a
-named remote will push to without leaking endpoint secrets.
+Resolve one exact target Git repository, validate a direct history-preserving
+submission, and identify every destination a named remote will update without
+leaking endpoint secrets.
 
 ## Exact Repository Root
 
@@ -32,6 +33,24 @@ Stop before changing state when:
 Report the canonical target root and Git common directory with reversible path
 escaping. Do not silently switch to a parent or nested repository. A linked
 worktree is valid when both roots are resolved from Git.
+
+## Direct Submit Preflight
+
+For a direct submit, publish, or push that preserves current history, resolve
+the symbolic branch, upstream, branch remote, merge ref, `HEAD`, upstream SHA,
+ahead/behind state, and in-progress Git-operation paths. Use current Git facts,
+not Axiom cache or provenance metadata.
+
+Stop before network access on detached or unborn `HEAD`, missing upstream or
+remote identity, a local-only remote, behind/diverged history, an in-progress
+merge/rebase/cherry-pick/revert, or a target ref that no longer equals the
+observed upstream baseline. Set `baselineSha` to the current verified target
+ref and `finalSha` to current `HEAD`.
+
+Uncommitted work is not part of a history-preserving push. Do not stage, stash,
+clean, commit, or require a clean worktree merely to push existing commits;
+report it only when it makes repository identity or requested scope ambiguous.
+Never force-push on this route.
 
 ## Push Target Inventory
 
@@ -76,9 +95,9 @@ provenance record, commit message, task report, or plugin directory.
 - Do not select one target from a multi-target remote while still invoking the
   named remote as though only that target will receive the push.
 
-Freeze the authorized fingerprint set before consolidation. Persist target
-fingerprints, never raw URLs, in post-consolidation provenance so recovery can
-detect configuration drift.
+Freeze the authorized fingerprint set before a direct push or consolidation.
+Persist target fingerprints, never raw URLs, only when post-consolidation
+provenance needs recovery state.
 
 ## Immediate Pre-Push Drift Gate
 
@@ -106,6 +125,12 @@ one target does not prove the other push targets were updated.
 If targets disagree, retain the backup ref and provenance record, do not update
 the baseline cache, and report each target only as ordinal/fingerprint plus
 expected and observed ref/SHA.
+
+For a direct history-preserving push, update only the current `branchRef` to
+the resolved `mergeRef`, without force or ref rewriting. Verify every frozen
+target directly afterward and require `mergeRef == finalSha`. If any target
+fails or disagrees, report partial remote state and stop; do not create Axiom
+metadata, retry automatically, or claim completion from the push exit status.
 
 ## Sensitive Reporting
 

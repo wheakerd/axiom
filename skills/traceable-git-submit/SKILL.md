@@ -1,128 +1,105 @@
 ---
 name: traceable-git-submit
-description: Keep Git work traceable with local checkpoint commits and publish one clean consolidated commit. Use when the user asks to enable or run a traceable Git workflow, create local checkpoint commits, cache the last remote-push baseline in Git metadata, compare unpublished commits against upstream, consolidate authorized checkpoint commits, submit/publish/push through a one-final-commit workflow, or recover/audit a working tree before that workflow pushes.
+description: Keep Git checkpoints and submissions traceable. Use when the user explicitly asks for local checkpoint commits, baseline metadata, consolidation of authorized unpublished checkpoints, a one-final-commit workflow, recovery, or to submit, publish, or push Git changes. Do not use for status, diff, ordinary local staging or commits, or conceptual Git questions.
 ---
 
 # Traceable Git Submit
 
-Keep local work reviewable through authorized checkpoint commits while
-publishing a single clean commit only when the user explicitly asks to submit,
-publish, or push.
+Keep local checkpoints reviewable and make every history rewrite, remote
+refresh, push, verification, and cleanup step explicit.
 
-## Load Policy
+## Intent Gate
 
-Load only the references required for the active phase, and read them before
-changing Git state:
+Identify one active phase before Git inspection. Route selection never grants
+action authority. Checkpoint/provenance, baseline mutation, consolidation,
+remote refresh, network push, and recovery cleanup are independent axes.
 
-- Checkpoint work: read `references/repository-and-remote-targets.md`,
+A plain submit, publish, or push request authorizes the named network action,
+not checkpoint creation, Axiom metadata, or history consolidation. If an active
+checkpoint record means the requested push could publish checkpoint history or
+replace it with one final commit, ask one concise question before mutation.
+
+## Load Only The Active Phase
+
+- Explicit baseline metadata or workflow audit: read
+  `references/baseline-and-preflight.md`.
+- Checkpoint creation or append recovery: read
   `references/baseline-and-preflight.md`,
-  `references/checkpoint-execution.md`, and
-  `references/checkpoint-provenance.md`.
-- Normal submit, publish, or push: read
-  `references/repository-and-remote-targets.md`,
+  `references/checkpoint-provenance.md`, and
+  `references/checkpoint-execution.md`.
+- Direct submit, publish, or push that preserves current history: read
+  `references/repository-and-remote-targets.md` only. Do not create or update
+  Axiom metadata.
+- Local checkpoint consolidation: read
   `references/baseline-and-preflight.md`,
   `references/checkpoint-provenance.md`,
   `references/commit-construction.md`, and
-  `references/consolidation-and-push.md`. Before push or cleanup, also read
-  `references/post-consolidation-recovery.md`.
+  `references/consolidation-and-push.md`. Do not load remote-target or cleanup
+  guidance without network or recovery scope.
+- Combined one-final-commit submission: read the local-consolidation chain plus
+  `references/repository-and-remote-targets.md` and
+  `references/post-consolidation-recovery.md` before the first push.
 - Post-consolidation recovery: read
-  `references/repository-and-remote-targets.md`,
   `references/baseline-and-preflight.md`,
   `references/checkpoint-provenance.md`, and
-  `references/post-consolidation-recovery.md` first. Load
-  `references/consolidation-and-push.md` only for an authorized push retry.
+  `references/post-consolidation-recovery.md`; add
+  `references/repository-and-remote-targets.md` only for remote verification or
+  an authorized push retry.
 
-Do not load them for a conceptual answer that will not inspect a repository.
+Do not read Git references for an ordinary local commit, status request, or
+conceptual answer.
 
-## Safety Rules
+## Universal Safety
 
-- Do not commit unless the user asks for a commit or authorizes the traceable
-  checkpoint workflow for the current task or session.
-- Do not push unless the user explicitly asks to submit, publish, or push.
-- Do not use `git reset --hard`.
-- Do not stage unrelated user changes.
-- Freeze authorized paths before staging; use NUL-safe set comparison and
-  require the entire index to be exactly that set. Stop on any pre-existing,
-  extra, or missing staged path without altering unrelated index state.
-- Keep baseline and provenance in Git-resolved metadata paths, never the index,
-  commits, worktree, or installed plugin directory.
-- Do not treat `Axiom-checkpoint: true` as sufficient proof that a commit
-  belongs to the current authorized workflow. Require the active provenance
-  record and its exact ordered SHA list. The marker is required only for
-  workflow-created checkpoints; an exact user-authorized `adoptedShas` entry is
-  an independent allowed provenance path.
-- Do not rewrite, squash, drop, or adopt unclear, non-workflow, pushed, or
-  user-authored commits without exact confirmation.
-- If repository instructions define a different Git policy, follow the
-  higher-priority instructions and report the difference.
+- Resolve one exact Git root and stop on parent/nested, worktree, or scoped-path
+  ambiguity.
+- Commit only with explicit checkpoint or commit authority. Consolidate only
+  with explicit history-replacement authority. Push and fetch only with
+  explicit network push or remote-refresh authority.
+- Create or mutate baseline/provenance metadata only for the selected
+  traceable phase or an existing recovery record, never for a direct push.
+- Preserve unrelated work and any pre-existing index. Never use
+  `git reset --hard`, auto-stash, auto-clean, or broad staging.
+- Freeze checkpoint paths in a NUL-safe set and require the entire index to
+  equal that set before commit.
+- Treat the upstream tracking ref as baseline authority. Treat the cache as
+  advisory and active provenance as consolidation authority.
+- Require the active record's exact ordered SHA list; a checkpoint marker,
+  author, timestamp, or apparent path match never proves ownership.
+- Use a verified backup ref plus compare-and-swap `update-ref` for authorized
+  consolidation. Never re-consolidate a record that contains `newCommit`.
+- Inventory every push target. Multiple targets require authorization of the
+  exact fingerprint set and acknowledgement that sequential pushes can leave
+  partial remote state.
+- Keep endpoints and credentials opaque. Report only sanitized target
+  ordinals/fingerprints, refs, SHAs, and reversibly escaped paths.
 
-## Workflow Contract
+## Phase Outcomes
 
-- Treat `@{u}` as the authoritative remote-tracking baseline.
-- Resolve branch, upstream, remote, merge ref, operation paths, cache, and
-  provenance from Git; do not infer or hand-build them.
-- The baseline cache is advisory; active provenance is consolidation authority.
-- Stop on detached HEAD, an unborn branch, a missing upstream or remote,
-  divergence, an in-progress Git operation, a stale identity or baseline, or
-  unpublished commits not covered by the authorized provenance record.
-- Resolve one exact Git root; stop on cross-root paths or parent/nested ambiguity.
-- For submit, push, or post-consolidation recovery only, inspect every push
-  target configured for the resolved remote. More than one requires explicit
-  authorization of the complete fingerprint set and its non-atomic risk. This
-  gate does not apply to checkpoint-only work, including local upstream `.`.
-- Use only `commit-tree` plus compare-and-swap `update-ref` for consolidation.
-  Preserve the exact final tree and keep a verified backup ref until remote
-  verification and cleanup-state persistence make its deletion safe.
-- Never re-consolidate a record that already contains `newCommit`.
+For a direct history-preserving push, verify current branch/upstream identity,
+operation state, divergence, exact push targets, and immediate remote drift;
+push only the current branch history and verify every authorized target by SHA.
+Do not initialize a cache or provenance record.
 
-## Checkpoint Route
+For a checkpoint, require clean staged state, exact adoption of any existing
+unpublished commits, current baseline identity, a frozen write set, exact index
+equality, verified commit tree, and atomic provenance append. Do not update the
+remote-push cache.
 
-For an authorized checkpoint workflow:
+For consolidation, require every unpublished commit to match active provenance,
+construct one commit with the exact final tree, update the branch with
+compare-and-swap, and persist recoverable state. Without push authority, retain
+the backup and active record and stop locally.
 
-1. Read the checkpoint references selected above.
-2. Resolve the exact repository and run applicable read-only Git preflight.
-3. Before creating a new active record, enumerate existing unpublished commits
-   and stop unless the user explicitly adopts the exact ordered full-SHA list.
-   An existing record follows its own exact identity and list validation; do
-   not re-adopt its recorded commits.
-4. Only then initialize or validate baseline cache and active provenance.
-5. Freeze and report the authorized write set plus current staged, unstaged,
-   and untracked paths.
-6. Validate, stage only intentional paths, and prove exact index equality.
-7. Create and verify one checkpoint commit, then atomically append that exact
-   SHA. If the append fails, use only the bounded recovery gate in
-   `references/checkpoint-execution.md`.
+For a combined submission or recovery, recheck every remote immediately before
+push, verify all target refs and refreshed upstream after push, update the
+baseline only after that evidence, then clean recovery state in the referenced
+order. On drift, partial push, or uncertainty, stop and retain recovery state.
 
-Do not update the baseline cache after local checkpoints. It records the last
-verified remote push, not local progress.
+## Report
 
-## Submit Route
-
-When the user explicitly asks to submit, publish, or push:
-
-1. Read all references selected for the matching normal or recovery path.
-2. Run preflight, fetch the branch remote when available, and refresh facts.
-3. Resolve and freeze the complete push-target fingerprint set. Stop on
-   multiple targets until the user explicitly authorizes that exact set and
-   acknowledges that sequential targets cannot be updated atomically.
-4. Select exactly one path from the active provenance record:
-   - Without `newCommit`: require its ordered SHA list to exactly equal every
-     unpublished commit, then use the normal consolidation path.
-   - With `newCommit`: use only the post-consolidation recovery gate. Do not
-     create checkpoints, create another final commit, or consolidate again.
-5. Validate again before the authorized push or verified cleanup.
-6. Immediately before the first push, require every frozen target's current
-   `mergeRef` to equal `baselineSha`; any drift means zero pushes. After push,
-   require direct SHA verification for every authorized target.
-7. Follow `references/post-consolidation-recovery.md`; never delete the backup
-   before recoverable cleanup state is persisted.
-
-## Reporting
-
-Report observed repository/branch/upstream identity, baseline and HEAD state,
-provenance/checkpoint identity, authorized write and target sets, validation,
-consolidation, push, verification, cleanup, and stop state when present. Show
-endpoints only as ordinal/fingerprint plus ref/SHA; never expose URLs,
-credentials, usernames, or private endpoints. Leave recovery state visible on
-a stop. Render every path with JSON-string, Git C-style, or equivalent
-reversible escaping; never emit raw control characters or newlines.
+Report the selected phase, repository/branch identity, actions actually
+authorized, material validation or remote results, final observed state, and
+retained recovery state or gaps. Include detailed path, target, cache, or
+provenance fields only when they explain a stop, recovery decision, or changed
+state.

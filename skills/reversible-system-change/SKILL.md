@@ -1,119 +1,92 @@
 ---
 name: reversible-system-change
-description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use when the user asks to plan or perform an install, upgrade, deployment, migration, or another persistent local or remote system change with rollback, data-safety, or promotion risk. Plan-only work stays read-only. Do not use for ordinary code or configuration edits, Git commits or pushes, pure status queries, or conceptual explanations.
+description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, or active-version promotion with rollback, data, service, or activation risk. Plan-only work stays read-only. Do not use for ordinary source/configuration edits, Git operations, status queries, or conceptual explanations.
 ---
 
 # Reversible System Change
 
-Make an authorized persistent change without losing the ability to identify,
-verify, and restore the prior working state.
+Make one authorized persistent change without losing the ability to identify,
+restore, and verify the prior working state.
 
-## Boundaries
+## Select One Phase
 
-Use this skill to plan, rehearse, or execute installs, upgrades, deployments,
-migrations, destructive retention work, active-version promotion, or
-comparable local or remote changes. The proposed change must have a concrete
-persistent target and meaningful rollback, data-loss, service, or promotion
-risk.
+- Plan or non-mutating rehearsal: read
+  `references/preflight-and-rollback.md`. Keep the entire phase read-only; do
+  not create a candidate, backup, capsule, cache, remote record, or sensitive
+  content access.
+- Execute a complete authorized change: read
+  `references/preflight-and-rollback.md` first. Read
+  `references/execution-and-verification.md` only after the exact target,
+  write set, promotion authority, rollback coverage, and current restore
+  validation pass.
+- Conceptual explanations and pure status/version/availability queries do not
+  select this skill or load either reference.
 
-Do not use this skill for:
+## Authority Boundary
 
-- Ordinary source or configuration edits and their repository-local tests.
-- Git staging, commits, consolidation, or pushes. Route matching work to
-  `$traceable-git-submit`.
-- Conceptual explanations or pure read-only version, status, and availability
-  queries that do not plan a persistent change.
+Resolve the requested outcome, exact target, authorized actions, and expected
+postcondition before mutation. Ask one concise question only when target,
+environment, destructive scope, credentials, sensitive asset use, promotion,
+or rollback authority would change execution.
 
-A plan-only or rehearsal request for a persistent change does trigger this
-skill, but remains strictly read-only. It must not create a rollback capsule,
-download a candidate, read sensitive asset content, or alter any local or
-remote state.
+Keep candidate preparation, active promotion, service restart/reload, data
+migration, destructive retention, sensitive asset access, and rollback as
+separate actions. Permission for one never implies another. Freeze the exact
+direct and indirect write set; a newly discovered target, dependency, service,
+data store, endpoint, or destructive effect requires renewed authority.
 
-## Load Policy
+Inventory sensitive assets by metadata only. Read or use content only after
+the exact path and exact action are both frozen and authorized. Never print,
+copy broadly, hash, encode, or persist secret contents merely to inventory
+them.
 
-Read only the reference for the active phase:
+## Rollback Gate
 
-- For plan-only work and before any persistent write, read
-  `references/preflight-and-rollback.md`.
-- Before candidate mutation, promotion, rollback, or completion claims, read
-  `references/execution-and-verification.md`.
+Before the first persistent write, require a rollback point that represents the
+observed prior state, covers every non-forward-compatible effect, is currently
+readable by the restore principal with all prerequisites present, and has
+passed a target-native restore validation or an authorized isolated rehearsal.
+Recheck that evidence immediately before mutation.
 
-Read both when one request authorizes the complete change. Do not load either
-for a conceptual answer that will not inspect or change a system.
-
-## Authority And Scope
-
-Resolve the user's requested outcome, exact target, authorized actions, and
-expected postcondition before acting. Ask one concise question when the target,
-environment, destructive scope, credentials, or promotion authority is
-ambiguous.
-
-Treat install and candidate preparation separately from promotion. Permission
-to inspect or build a candidate is not permission to switch an active entry
-point, restart a service, migrate production data, delete retained material,
-or mutate a remote environment.
-
-Freeze the exact write set and declared indirect effects before mutation. A
-new target, dependency, service, data store, endpoint, or destructive action
-requires renewed authority. Inventory a sensitive asset through metadata only;
-before reading its content, freeze and obtain authorization for the exact asset
-path and exact read or use action. A directory-level or generalized request
-does not authorize selecting sensitive content.
+Keep `identified`, `present`, `readable`, `restore-validated`, and `rehearsed`
+as distinct evidence states. A backup job, artifact, script, manifest,
+checksum, historical rehearsal, or user acceptance of risk is not verified
+rollback. If current restore validation or complete coverage cannot run, stop
+execution; a plan may report the gap.
 
 ## Change Contract
 
-Use this sequence:
+1. Observe current target and runtime state with scoped read-only probes.
+2. Freeze persistent effects, destructive roots, and the postcondition layers
+   that own the requested outcome.
+3. Establish the rollback gate and validate an isolated candidate or dry run
+   without promotion when supported.
+4. Refresh drift-sensitive preconditions immediately before the authorized
+   write.
+5. Apply the smallest candidate mutation and promote only through separately
+   authorized actions.
+6. Verify every relevant materialization, selection, runtime, delivery,
+   behavior, and preservation layer with fresh direct evidence.
+7. On a declared failure gate, stop further writes and run only the
+   pre-authorized bounded rollback; then verify the prior state at its owning
+   layers.
 
-1. Resolve the exact local or remote target and applicable instructions.
-2. Observe current state with metadata-only probes and identify sensitive
-   boundaries.
-3. Freeze the intended write set and affected runtime layers.
-4. Establish a rollback point and prove the complete current restore-readiness
-   standard, including coverage and a restore validation or isolated rehearsal.
-5. Validate a candidate, dry-run, or precondition check without promotion when
-   the platform permits it.
-6. Reconfirm live preconditions immediately before the authorized write.
-7. Apply the smallest mutation and promote only after candidate checks pass.
-8. Verify current postconditions at every affected layer.
-9. On failure, stop further promotion and run only the pre-authorized bounded
-   rollback; then verify the restored state.
-10. Report observed final state, retained rollback material, validation gaps,
-    and any manual follow-up.
+Command success, upload acceptance, a configuration write, or process start
+proves only that stage. A failed or unavailable outcome-owning observation is
+unverified, not complete.
 
-Do not call a change complete from a successful command exit, upload, queue
-acknowledgement, configuration write, or process start alone. Completion needs
-fresh direct evidence from the system layer that owns the requested outcome.
+## Safety And Handoff
 
-Treat identified, present, readable, restore-validated, and rehearsed as
-different evidence states. Use `verified rollback` only when every requirement
-in `references/preflight-and-rollback.md` passes with current direct evidence.
-A backup job's success, an artifact or rollback script's presence, a manifest,
-or a historical rehearsal does not prove current restorability. If the required
-restore validation or isolated rehearsal cannot run, execution stops.
+- Resolve destructive targets directly; never use an unresolved variable,
+  broad glob, guessed parent, or symlink traversal.
+- Preserve unrelated state and the only working copy. Do not reset, stash,
+  clean, install adjacent tools, change global configuration, or widen remote
+  permissions to make a gate pass.
+- Delete candidate or rollback material only under explicit cleanup authority
+  after required postconditions pass and another required recovery route
+  remains.
 
-## Safety Rules
-
-- Never discover a destructive target through an unresolved variable, broad
-  glob, symlink traversal, or guessed parent directory.
-- Never overwrite or delete the only verified working copy before the complete
-  rollback-verification standard passes.
-- Preserve unrelated user state. Stop rather than reset, stash, clean, or
-  rewrite a dirty source tree without explicit authorization.
-- Do not print, copy broadly, hash, encode, or persist secret contents merely
-  to inventory them. Report sensitive inputs by role and metadata only.
-- Do not read sensitive content until the exact asset path and exact read or
-  use action are both frozen and authorized. Reconfirm authorization for every
-  newly discovered asset or action.
-- Do not install adjacent tools, change global configuration, or widen remote
-  permissions merely to make validation available.
-- A missing tool, permission, environment, or downstream observation is an
-  unverified layer, never a pass.
-
-## Reporting
-
-Report the target, authorized write set, prior-state facts, each rollback
-evidence state, candidate or dry-run result, mutation and promotion result,
-layered postcondition evidence, rollback status when used, retained recovery
-material, and final observed state. Distinguish passed, failed, not run, and
-unavailable checks. Never upgrade a lower rollback evidence state to
-`verified`. Redact sensitive values and private endpoints.
+Report the target, actions actually authorized, mutation/promotion/rollback
+outcome, material failed or unavailable postconditions, final observed state,
+and retained recovery material. Include detailed successful layers only when
+they support a completion or recovery decision.

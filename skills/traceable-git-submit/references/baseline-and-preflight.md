@@ -2,14 +2,29 @@
 
 ## Purpose
 
-Resolve authoritative Git facts, maintain the advisory remote-push baseline,
-and stop unsafe checkpoint or submit work before repository state changes.
+Resolve authoritative Git facts for an explicitly selected traceable phase,
+maintain the advisory remote-push baseline only when authorized, and stop
+unsafe workflow changes before they occur.
 
 ## Apply when
 
-- Starting an authorized checkpoint, submit, publish, push, or recovery flow.
+- Inspecting an explicitly requested traceable checkpoint, baseline,
+  consolidation, one-final-commit submission, or recovery flow.
 - Initializing, checking, migrating, or updating the baseline cache.
-- Refreshing upstream facts before consolidation or push.
+- Refreshing upstream facts before one-final consolidation or recovery push.
+
+## Authorization Separation
+
+Ordinary local staging and commits do not apply this reference. A direct
+history-preserving submit, publish, or push uses
+`repository-and-remote-targets.md` instead and must not create, migrate, or
+update Axiom metadata. Reading Git facts never authorizes cache mutation. Use
+cache init, check, migration, or update semantics only for the exact selected
+traceable phase.
+
+Do not fetch solely for local consolidation. A remote refresh or network push
+requires its own explicit authorization; otherwise use the current
+remote-tracking ref and report that it was not refreshed.
 
 ## Baseline Cache
 
@@ -41,9 +56,10 @@ Cache schema:
 }
 ```
 
-Use `init` semantics when an authorized workflow starts and the cache may not
-exist. Use `check` semantics before consolidation or push. Use `update`
-semantics only after the remote ref equals the final commit.
+Use `init` semantics only when an authorized checkpoint, baseline, or
+consolidation workflow starts and the cache may not exist. Use `check`
+semantics before consolidation or one-final recovery push. Use `update`
+semantics only after every authorized remote ref equals the final commit.
 
 ### Legacy migration
 
@@ -104,15 +120,16 @@ git -C <repo> rev-parse --path-format=absolute --git-path rebase-merge
 git -C <repo> rev-parse --path-format=absolute --git-path rebase-apply
 ```
 
-Report branch full ref and short name, upstream ref, branch remote, merge ref,
-upstream SHA, `HEAD` SHA, and ahead/behind state. Resolve the remote from
-`branch.<branch>.remote`, never by splitting the upstream string. Display any
-filesystem path only with reversible escaping.
+Retain branch full ref and short name, upstream, branch remote, merge ref,
+upstream SHA, `HEAD` SHA, and ahead/behind state for decisions. Report only the
+fields needed to explain a mutation, stop, or recovery state. Resolve the
+remote from `branch.<branch>.remote`, never by splitting the upstream string.
+Display any filesystem path only with reversible escaping.
 
 When the branch remote is not `.`, require
 `git -C <repo> config --get "remote.<remote>.url"` to confirm that it exists.
 A branch remote of `.` is a valid local upstream for checkpoint-only work but
-is not a network push target; submit, push, and recovery must stop before push
+is not a network push target; workflow push and recovery must stop before push
 target inventory.
 
 ## Operation-State Check
@@ -144,25 +161,26 @@ foreach ($gitState in $gitStates) {
 
 ## Consistency Gates
 
-For a normal checkpoint or submit path, require cached `branch`, `upstream`,
-`remote`, `mergeRef`, and `lastRemotePushSha` to equal the current branch,
-upstream, branch remote, merge ref, and `@{u}` SHA. Stop and report a branch
-change, stale cache, remote configuration change, or moved remote baseline.
+For a normal checkpoint or consolidation path, require cached `branch`,
+`upstream`, `remote`, `mergeRef`, and `lastRemotePushSha` to equal the current
+branch, upstream, branch remote, merge ref, and `@{u}` SHA. Stop and report a
+branch change, stale cache, remote configuration change, or moved baseline.
 
 For a post-consolidation record, defer this baseline decision to the recovery
 gate. The remote may already equal `newCommit` while the cache still records the
 old baseline.
 
-Stop before checkpoint, submit, or push when:
+Stop before checkpoint, baseline mutation, consolidation, workflow push, or
+recovery when:
 
 - `HEAD` is detached or the branch is unborn.
-- The branch lacks an upstream, branch remote, or merge ref; or a submit, push,
+- The branch lacks an upstream, branch remote, or merge ref; or a workflow push
   or recovery flow lacks a configured network remote or push target.
 - A network push is requested while the branch remote is `.`.
 - Merge, rebase, cherry-pick, or revert state exists.
 - Ahead/behind shows divergence rather than only local ahead commits.
 - Normal-path cache identity or baseline facts do not match.
-- Submit or push still has staged, unstaged, or untracked intentional changes
+- Consolidation or workflow push still has staged, unstaged, or untracked intentional changes
   belonging to the work being submitted.
 
 During checkpoint work, report all changed paths before staging and stage only

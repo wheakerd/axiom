@@ -4,9 +4,9 @@ Think before AI thinks.
 
 Axiom is a safety-first, request-routed workflow plugin for Codex and Claude
 Code. It is for developers and maintainers who want repository instructions,
-Git publication, and persistent system changes to begin with explicit scope,
-authority, and evidence without turning every coding request into a special
-workflow.
+Codex usage optimization, Git publication, and persistent system changes to
+begin with explicit scope, authority, and evidence without turning every
+coding request into a special workflow.
 
 Capable agents can start executing before the target, permission, rollback, or
 proof of success is clear. Axiom places a small routing gate into the foreground
@@ -63,7 +63,8 @@ rewriting local state.
 | Route | Select it for | Core boundary |
 | --- | --- | --- |
 | `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, its `.agents/` routes, or repo-local skills | Inspect first; change only the authorized instruction system and keep protected plugin metadata out of scope |
-| `traceable-git-submit` | Authorized checkpoint commits, baseline/provenance tracking, consolidation, or a one-final-commit submit or push flow | Freeze the exact Git root, path set, commit series, and push targets; a checkpoint request does not authorize a push |
+| `optimize-codex-usage` | Explicitly reducing or diagnosing Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool churn, or reporting overhead | Preserve the required quality, safety, authorization, rollback, and evidence bar; label proxies and never invent hidden usage data |
+| `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep checkpoint/provenance, consolidation, remote refresh, push, and cleanup independent; a direct push preserves history and creates no Axiom metadata |
 | `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plan-only work stays read-only; mutation requires an exact target, explicit authority, and current rollback evidence |
 
 The startup gate is `using-axiom`. It selects the smallest matching route and
@@ -94,8 +95,10 @@ At session start or the configured compaction events, the platform hook reads
 
 The gate decides which instructions are relevant; it does not grant permission
 to act. For example, selecting `reversible-system-change` for a migration plan
-keeps the work read-only, and selecting `traceable-git-submit` does not create
-authority to commit or push unless the user's request supplies it. Read the
+keeps the work read-only. An explicit Git submit, publish, or push selects
+`traceable-git-submit`, while checkpoint creation, metadata, consolidation,
+remote refresh, push, and cleanup remain separate actions. A direct push
+preserves history and creates no Axiom metadata. Read the
 [Architecture](docs/architecture.md) and [Trust Model](docs/trust-model.md) for
 the full boundary.
 
@@ -108,7 +111,8 @@ content is copied or forked for a host.
 
 - `using-axiom`, the session-start routing gate.
 - `agents-architect`, the repository-instruction workflow.
-- `traceable-git-submit`, the checkpoint and publication workflow.
+- `optimize-codex-usage`, the explicit Codex consumption workflow.
+- `traceable-git-submit`, the checkpoint and Git submission workflow.
 - `reversible-system-change`, the persistent-change workflow.
 
 Each task workflow loads its supporting Markdown references on demand.
@@ -215,7 +219,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.3.1 release notes](docs/releases/v0.3.1.md):
+- [Changelog](CHANGELOG.md) and [v0.4.0 release notes](docs/releases/v0.4.0.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -228,7 +232,7 @@ python3 scripts/check-distribution-drift.py
 ```
 
 It compares the skill tree with both manifests, both marketplace wrappers, and
-the four-item `Shared skills` list above. It is a contributor and CI check, not
+the five-item `Shared skills` list above. It is a contributor and CI check, not
 an installed runtime dependency.
 
 ## License

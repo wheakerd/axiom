@@ -2,23 +2,29 @@
 
 ## Purpose
 
-Consolidate the exact authorized checkpoint series into one final commit,
-update the current branch with compare-and-swap semantics, push only when
-authorized, and hand verified cleanup to the provenance state machine.
+Consolidate an explicitly authorized checkpoint series into one final commit,
+optionally push under separate authorization, and hand verified cleanup to the
+provenance state machine.
 
-## Submit Flow
+## Authorization And Phase Selection
 
-When the user explicitly asks to submit, publish, or push:
+Load this reference only after the user explicitly authorizes checkpoint
+consolidation or when an active record with `newCommit` requires recovery. An
+ordinary submit, publish, or push request never loads this reference.
+
+Treat consolidation, remote refresh, and network push as independent
+authorization axes:
 
 1. Run Git preflight. Defer a baseline-cache mismatch decision until the active
    record selects the normal or post-consolidation path.
 2. Read or initialize the baseline cache and read the active provenance record.
 3. Select exactly one path:
-   - Without `newCommit`, require the recorded ordered SHA list to equal every
-     unpublished commit before consolidation.
+   - Without `newCommit`, require explicit consolidation authority and require
+     the recorded ordered SHA list to equal every unpublished commit.
    - With `newCommit`, use only the recovery gate in
      `checkpoint-provenance.md`.
-4. Fetch the resolved branch remote when network access is available:
+4. Fetch the resolved branch remote only when the user explicitly authorizes a
+   remote refresh or network push:
 
 ```bash
 git -C <repo> fetch --prune <remote>
@@ -27,12 +33,16 @@ git -C <repo> fetch --prune <remote>
 Resolve `<remote>` from `branch.<branch>.remote`. Stop if it is `.` for a
 network push.
 
-5. Refresh `@{u}`, ahead/behind state, cache comparisons, and provenance after
-   fetch.
+5. After an authorized fetch, refresh `@{u}`, ahead/behind state, cache
+   comparisons, and provenance. Without fetch, use the current remote-tracking
+   ref and report that remote state was not refreshed.
 6. For a normal record, run the consolidation algorithm below.
 7. For a post-consolidation record, retry only the recorded push or verified
    cleanup. Never consolidate again.
-8. Validate again before push or cleanup.
+8. Without push authority, stop after the consolidated commit and recoverable
+   post-consolidation state are persisted. Retain the backup and active record;
+   do not update the remote-push baseline cache or run remote-dependent cleanup.
+9. With push authority, validate again before push or cleanup.
 
 ## Preconditions
 

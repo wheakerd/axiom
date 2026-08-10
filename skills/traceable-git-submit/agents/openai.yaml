@@ -1,4 +1,4 @@
 interface:
   display_name: "Traceable Git Submit"
-  short_description: "Checkpoint locally, push one clean commit"
-  default_prompt: "Use $traceable-git-submit to checkpoint local Git work and publish one clean commit."
+  short_description: "Trace checkpoints and explicit Git submissions"
+  default_prompt: "Use $traceable-git-submit to checkpoint, consolidate, recover, or submit and verify this Git work without inferring extra authority."

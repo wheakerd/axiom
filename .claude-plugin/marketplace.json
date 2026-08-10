@@ -4,7 +4,7 @@
     "name": "wheakerd",
     "url": "https://github.com/wheakerd"
   },
-  "description": "Axiom plugins for focused, safety-first AI workflows.",
+  "description": "Axiom plugins for focused, safety-first, context-efficient AI workflows.",
   "plugins": [
     {
       "name": "axiom",
@@ -13,6 +13,7 @@
       "tags": [
         "agents-md",
         "skills",
+        "context-efficiency",
         "developer-tools"
       ]
     }

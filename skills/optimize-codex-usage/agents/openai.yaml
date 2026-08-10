@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize Codex Usage"
+  short_description: "Reduce Codex context and workflow overhead"
+  default_prompt: "Use $optimize-codex-usage to reduce this workflow's Codex credits, tokens, and context without weakening quality or safety."

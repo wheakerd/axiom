@@ -53,7 +53,7 @@ service, launches background work, or performs an update.
 1. Apply higher-priority system, developer, user, and repository instructions.
 2. Determine whether the user explicitly invoked Axiom or the request clearly
    matches a bundled skill description.
-3. Select the smallest matching skill set.
+3. Select the smallest matching skill set and avoid reading candidate bodies.
 4. Normalize an unambiguous non-English request to the canonical English route,
    or ask one concise question when multiple routes remain plausible.
 5. Continue normally when no Axiom route applies.
@@ -63,12 +63,20 @@ plugin-maintenance similarity do not make a request an Axiom task.
 
 ## 4. Task Skills And On-Demand References
 
-The selected task skill establishes its own phase and evidence contract:
+The selected task skill establishes its own phase and evidence contract. Every
+supporting reference is directly discoverable from its parent `SKILL.md`:
 
-- `agents-architect` performs a metadata inventory, then uses its finite
-  internal index to load one scoped instruction-maintenance path.
-- `traceable-git-submit` loads only the references for checkpoint, normal
-  submit, or recovery state before changing Git state.
+- `agents-architect` performs only the metadata inventory needed to select one
+  direct audit, initialization, design, migration, maintenance, runtime, or
+  validation route.
+- `optimize-codex-usage` keeps conceptual answers in its main Skill and loads
+  one context-audit reference only for measurement or implementation. It uses
+  host metrics when exposed and otherwise labels size and call counts as
+  proxies.
+- `traceable-git-submit` separates direct history-preserving submission from
+  checkpoint, baseline, consolidation, one-final submission, and recovery
+  chains. Direct push loads only repository/target guidance and creates no
+  Axiom metadata.
 - `reversible-system-change` loads preflight and rollback guidance for planning
   and the execution reference only before an authorized mutation, promotion,
   rollback, or completion claim.
@@ -92,8 +100,8 @@ delete data, or promote a version. See the [Trust Model](trust-model.md).
 
 When no skill clearly applies, `using-axiom` tells the agent to continue
 normally without mentioning Axiom. That path is a first-class outcome, not a
-fallback error. It keeps ordinary source edits, tests, explanations, and status
-queries in the host's normal workflow.
+fallback error. It keeps ordinary source edits, tests, explanations, status
+queries, and local Git staging or commits in the host's normal workflow.
 
 ## Lifecycle And Updates
 

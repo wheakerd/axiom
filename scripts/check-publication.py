@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.3.1"
+RELEASE_VERSION = "0.4.0"
 
 REQUIRED_PUBLIC_FILES = (
     "README.md",
@@ -27,6 +27,7 @@ REQUIRED_PUBLIC_FILES = (
     "CONTRIBUTING.md",
     "docs/releases/v0.3.0.md",
     "docs/releases/v0.3.1.md",
+    "docs/releases/v0.4.0.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -56,9 +57,119 @@ HOOK_FILES = (
 )
 EXPECTED_DIRECT_SKILLS = (
     "agents-architect",
+    "optimize-codex-usage",
     "reversible-system-change",
     "traceable-git-submit",
     "using-axiom",
+)
+EXPECTED_README_SKILLS = (
+    "using-axiom",
+    "agents-architect",
+    "optimize-codex-usage",
+    "traceable-git-submit",
+    "reversible-system-change",
+)
+INSTRUCTION_MAX_BYTES = 8192
+
+ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
+    {
+        "name": "readme-summary-no-match",
+        "request": "Summarize this README without changing files.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "small-source-edit-no-match",
+        "request": "Fix this parser typo and run its focused unit test.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "agents-audit",
+        "request": "Audit this repository's AGENTS.md instruction discovery and report findings only.",
+        "route": "agents-architect",
+        "phase": "audit",
+        "references": ("references/inventory-audit.md",),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "local-checkpoint",
+        "request": "Create a local checkpoint commit for these paths and do not push.",
+        "route": "traceable-git-submit",
+        "phase": "checkpoint",
+        "references": (
+            "references/baseline-and-preflight.md",
+            "references/checkpoint-provenance.md",
+            "references/checkpoint-execution.md",
+        ),
+        "authorization": frozenset({"read", "metadata-write", "commit"}),
+    },
+    {
+        "name": "direct-push",
+        "request": "Push the current Git branch without rewriting history.",
+        "route": "traceable-git-submit",
+        "phase": "direct-submit",
+        "references": ("references/repository-and-remote-targets.md",),
+        "authorization": frozenset({"read", "network-push"}),
+    },
+    {
+        "name": "migration-plan",
+        "request": "Prepare a read-only plan for this persistent database migration.",
+        "route": "reversible-system-change",
+        "phase": "plan",
+        "references": ("references/preflight-and-rollback.md",),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "migration-execution",
+        "request": "Execute this authorized persistent database migration with verified rollback.",
+        "route": "reversible-system-change",
+        "phase": "execute",
+        "references": (
+            "references/preflight-and-rollback.md",
+            "references/execution-and-verification.md",
+        ),
+        "authorization": frozenset({"read", "persistent-write"}),
+    },
+    {
+        "name": "explicit-usage-optimization",
+        "request": "Reduce the Codex credits and context used by these Skills without weakening validation.",
+        "route": "optimize-codex-usage",
+        "phase": "audit-implementation",
+        "references": ("references/context-audit.md",),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "material-multi-route-ambiguity",
+        "request": "Reduce Codex usage by either rewriting AGENTS.md or changing deployment defaults; choose one.",
+        "route": "clarify",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "unambiguous-non-english-plan",
+        "request": "只制定持久化数据库迁移计划，不要执行。",
+        "route": "reversible-system-change",
+        "phase": "plan",
+        "references": ("references/preflight-and-rollback.md",),
+        "authorization": frozenset({"read"}),
+    },
+)
+ROLLBACK_EVIDENCE_FIELDS = (
+    "prior_state_bound",
+    "location_unambiguous",
+    "restore_principal_readable",
+    "restore_prerequisites_present",
+    "complete_effect_coverage",
+    "current_restore_validation",
+    "rollback_authorized",
+    "post_restore_checks_defined",
+    "evidence_fresh",
 )
 
 CODEX_COMMAND = (
@@ -124,6 +235,282 @@ def display_path(path: Path) -> str:
         return path.relative_to(REPOSITORY_ROOT).as_posix()
     except ValueError:
         return str(path)
+
+
+def route_contract(request: str) -> dict[str, Any]:
+    """Evaluate the checked-in routing contract for representative prompts."""
+    normalized = request.lower()
+    if "只制定持久化数据库迁移计划" in request and "不要执行" in request:
+        normalized = "prepare a read-only plan for a persistent database migration"
+
+    usage = bool(
+        re.search(r"\bcodex\b.*\b(?:credits?|tokens?|context|usage)\b", normalized)
+        or re.search(r"\b(?:skills?|agents\.md|mcp)\b.*\bcontext\b", normalized)
+    )
+    agents = bool(
+        re.search(r"(?:agents\.md|\.agents)", normalized)
+        and re.search(r"\b(?:audit|design|initialize|split|rewrit|migrat|maintain|validat)\w*\b", normalized)
+    )
+    git = bool(
+        re.search(r"\b(?:checkpoint|baseline metadata|consolidat\w*|one-final|recover\w*)\b", normalized)
+        or re.search(r"\b(?:submit|publish|push)\b.*\b(?:git|branch|changes?|history)\b", normalized)
+        or re.search(r"\b(?:git|branch)\b.*\b(?:submit|publish|push)\b", normalized)
+    )
+    persistent = bool(
+        re.search(r"\b(?:install|upgrade|deploy|deployment|migrat\w*|retention|promot\w*)\b", normalized)
+        and re.search(r"\b(?:persistent|database|system|service|authorized|read-only|plan|execute)\b", normalized)
+    )
+
+    if usage and (agents or persistent) and re.search(r"\b(?:either|choose one)\b", normalized):
+        return {
+            "route": "clarify",
+            "phase": "route-choice",
+            "references": (),
+            "authorization": frozenset({"read"}),
+        }
+
+    if usage:
+        return {
+            "route": "optimize-codex-usage",
+            "phase": "audit-implementation",
+            "references": ("references/context-audit.md",),
+            "authorization": frozenset({"read", "edit", "test"}),
+        }
+
+    if agents:
+        return {
+            "route": "agents-architect",
+            "phase": "audit",
+            "references": ("references/inventory-audit.md",),
+            "authorization": frozenset({"read"}),
+        }
+
+    if git:
+        if "checkpoint" in normalized:
+            return {
+                "route": "traceable-git-submit",
+                "phase": "checkpoint",
+                "references": (
+                    "references/baseline-and-preflight.md",
+                    "references/checkpoint-provenance.md",
+                    "references/checkpoint-execution.md",
+                ),
+                "authorization": frozenset({"read", "metadata-write", "commit"}),
+            }
+        return {
+            "route": "traceable-git-submit",
+            "phase": "direct-submit",
+            "references": ("references/repository-and-remote-targets.md",),
+            "authorization": frozenset({"read", "network-push"}),
+        }
+
+    if persistent:
+        plan_only = bool(re.search(r"\b(?:read-only|plan)\b", normalized)) and "execute" not in normalized
+        return {
+            "route": "reversible-system-change",
+            "phase": "plan" if plan_only else "execute",
+            "references": (
+                ("references/preflight-and-rollback.md",)
+                if plan_only
+                else (
+                    "references/preflight-and-rollback.md",
+                    "references/execution-and-verification.md",
+                )
+            ),
+            "authorization": (
+                frozenset({"read"})
+                if plan_only
+                else frozenset({"read", "persistent-write"})
+            ),
+        }
+
+    authorization = {"read"}
+    if re.search(r"\b(?:fix|edit|change)\b", normalized):
+        authorization.add("edit")
+    if "test" in normalized:
+        authorization.add("test")
+    return {
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset(authorization),
+    }
+
+
+def check_routing_scenarios(failures: list[str]) -> None:
+    for scenario in ROUTING_SCENARIOS:
+        actual = route_contract(scenario["request"])
+        for field in ("route", "phase", "references", "authorization"):
+            if actual[field] != scenario[field]:
+                failures.append(
+                    f"routing scenario {scenario['name']!r} {field} is "
+                    f"{actual[field]!r}; expected {scenario[field]!r}"
+                )
+
+        route = actual["route"]
+        if route in (None, "clarify"):
+            continue
+        main_path = REPOSITORY_ROOT / "skills" / route / "SKILL.md"
+        try:
+            main_text = main_path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"routing scenario {scenario['name']!r} cannot read {display_path(main_path)}: {error}")
+            continue
+        for reference in actual["references"]:
+            if reference not in main_text:
+                failures.append(
+                    f"routing scenario {scenario['name']!r} loads undeclared reference "
+                    f"{reference!r} from {display_path(main_path)}"
+                )
+
+
+def rollback_gate(evidence: dict[str, bool]) -> bool:
+    return all(evidence.get(field, False) for field in ROLLBACK_EVIDENCE_FIELDS)
+
+
+def check_reversible_safety_scenarios(failures: list[str]) -> None:
+    complete = {field: True for field in ROLLBACK_EVIDENCE_FIELDS}
+    if not rollback_gate(complete):
+        failures.append("complete rollback evidence must permit the execution phase")
+
+    for missing_field in ROLLBACK_EVIDENCE_FIELDS:
+        incomplete = dict(complete)
+        incomplete[missing_field] = False
+        if rollback_gate(incomplete):
+            failures.append(
+                f"rollback safety scenario without {missing_field!r} must stop before execution"
+            )
+
+    skill_root = REPOSITORY_ROOT / "skills" / "reversible-system-change"
+    contract_text = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (
+            skill_root / "SKILL.md",
+            skill_root / "references" / "preflight-and-rollback.md",
+            skill_root / "references" / "execution-and-verification.md",
+        )
+    )
+    for evidence_label in (
+        "identified",
+        "present",
+        "readable",
+        "restore-validated",
+        "rehearsed",
+    ):
+        if f"`{evidence_label}`" not in contract_text:
+            failures.append(
+                f"reversible-system-change is missing rollback evidence label {evidence_label!r}"
+            )
+
+
+def parse_skill_frontmatter(path: Path, failures: list[str]) -> dict[str, str] | None:
+    label = display_path(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {label}: {error}")
+        return None
+
+    parts = text.split("---", 2)
+    if len(parts) != 3 or parts[0].strip():
+        failures.append(f"{label} must start with YAML frontmatter")
+        return None
+
+    fields: list[tuple[str, str]] = []
+    for line in parts[1].strip().splitlines():
+        match = re.fullmatch(r"([a-z_]+):\s*(.+)", line)
+        if match is None:
+            failures.append(f"{label} has invalid frontmatter line: {line!r}")
+            return None
+        fields.append((match.group(1), match.group(2).strip().strip('"')))
+
+    if tuple(key for key, _ in fields) != ("name", "description"):
+        failures.append(f"{label} frontmatter must contain only name then description")
+        return None
+    return dict(fields)
+
+
+def check_skill_contracts(failures: list[str]) -> None:
+    for skill_name in EXPECTED_DIRECT_SKILLS:
+        skill_root = REPOSITORY_ROOT / "skills" / skill_name
+        main_path = skill_root / "SKILL.md"
+        fields = parse_skill_frontmatter(main_path, failures)
+        if fields is None:
+            continue
+        if fields["name"] != skill_name:
+            failures.append(
+                f"{display_path(main_path)} name is {fields['name']!r}; expected {skill_name!r}"
+            )
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", fields["name"]):
+            failures.append(f"{display_path(main_path)} has a non-kebab-case name")
+        if not fields["description"] or not fields["description"].isascii():
+            failures.append(f"{display_path(main_path)} description must be non-empty English ASCII")
+
+        main_text = main_path.read_text(encoding="utf-8")
+        for reference in sorted((skill_root / "references").rglob("*.md")) if (skill_root / "references").is_dir() else ():
+            relative_reference = reference.relative_to(skill_root).as_posix()
+            if relative_reference not in main_text:
+                failures.append(
+                    f"{display_path(reference)} is not directly discoverable from {display_path(main_path)}"
+                )
+
+        metadata_path = skill_root / "agents" / "openai.yaml"
+        try:
+            metadata_text = metadata_path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {display_path(metadata_path)}: {error}")
+        else:
+            interface = dict(
+                re.findall(
+                    r'^  (display_name|short_description|default_prompt): "([^"]+)"$',
+                    metadata_text,
+                    re.MULTILINE,
+                )
+            )
+            if set(interface) != {"display_name", "short_description", "default_prompt"}:
+                failures.append(f"{display_path(metadata_path)} has incomplete interface metadata")
+            else:
+                if not 25 <= len(interface["short_description"]) <= 64:
+                    failures.append(
+                        f"{display_path(metadata_path)} short_description must be 25-64 characters"
+                    )
+                if f"${skill_name}" not in interface["default_prompt"]:
+                    failures.append(
+                        f"{display_path(metadata_path)} default_prompt must mention ${skill_name}"
+                    )
+
+    for path in sorted((REPOSITORY_ROOT / "skills").rglob("*.md")):
+        byte_count = len(path.read_bytes())
+        if byte_count >= INSTRUCTION_MAX_BYTES:
+            failures.append(
+                f"{display_path(path)} is {byte_count} bytes; instruction files must stay below "
+                f"{INSTRUCTION_MAX_BYTES}"
+            )
+
+    front_door = (REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
+    declared_routes = tuple(re.findall(r"^- `([a-z0-9-]+)`: ", route_section, re.MULTILINE))
+    expected_routes = tuple(
+        skill_name for skill_name in EXPECTED_DIRECT_SKILLS if skill_name != "using-axiom"
+    )
+    if tuple(sorted(declared_routes)) != expected_routes:
+        failures.append(
+            "using-axiom route list is not the exact direct task-skill set: "
+            + ", ".join(declared_routes)
+        )
+
+    readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
+    shared_section = readme.split("### Shared skills", 1)[-1].split("\n### ", 1)[0]
+    readme_skills = tuple(
+        re.findall(r"^- `([a-z0-9-]+)`,", shared_section, re.MULTILINE)
+    )
+    if readme_skills != EXPECTED_README_SKILLS:
+        failures.append(
+            "README Shared skills list is not the expected parseable ordered set: "
+            + ", ".join(readme_skills)
+        )
 
 
 def load_json(path: Path, failures: list[str]) -> dict[str, Any] | None:
@@ -725,6 +1112,9 @@ def main() -> int:
     check_exact_hook_shapes(documents, failures)
     check_documented_hook_commands(documents, failures)
     check_packaged_skills(failures)
+    check_skill_contracts(failures)
+    check_routing_scenarios(failures)
+    check_reversible_safety_scenarios(failures)
     markdown_count = check_markdown_links(failures)
 
     conventional_hook = REPOSITORY_ROOT / "hooks" / "hooks.json"
@@ -742,7 +1132,9 @@ def main() -> int:
     print(
         "Publication validation passed: "
         f"{len(REQUIRED_PUBLIC_FILES)} required files, {len(JSON_FILES)} JSON files, "
-        f"{markdown_count} Markdown files, version {RELEASE_VERSION}, hooks, and packaged skills."
+        f"{markdown_count} Markdown files, {len(ROUTING_SCENARIOS)} routing scenarios, "
+        f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback scenarios, version {RELEASE_VERSION}, "
+        "hooks, and packaged skills."
     )
     return 0
 

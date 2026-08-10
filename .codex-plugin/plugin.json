@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -15,6 +15,7 @@
     "codex-instructions",
     "ai-workflows",
     "skills",
+    "context-efficiency",
     "automation",
     "developer-tools"
   ],
@@ -22,8 +23,8 @@
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "Axiom",
-    "shortDescription": "Safe change workflows",
-    "longDescription": "Axiom routes Codex-native AGENTS architecture, traceable Git submission, and reversible persistent system changes.",
+    "shortDescription": "Safe, context-efficient workflows",
+    "longDescription": "Axiom routes Codex-native AGENTS architecture, explicit usage optimization, traceable Git submission, and reversible persistent system changes.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [
@@ -31,6 +32,7 @@
     ],
     "defaultPrompt": [
       "Audit or refactor this repository's AGENTS guidance.",
+      "Reduce this Codex workflow's context and tool overhead without weakening quality.",
       "Checkpoint this Git work and publish one clean commit.",
       "Plan or execute this persistent system change with verified rollback."
     ],

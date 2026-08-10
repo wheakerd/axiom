@@ -18,6 +18,11 @@ marketplaces, manifests, and hooks remain separate. The distribution drift
 guard checks agreement among the skill tree, both manifests, both marketplace
 wrappers, and the README shared-skill list.
 
+The shared source includes `optimize-codex-usage` on both hosts; neither host
+receives a platform-specific copy. Its byte, word, line, reference, and
+scenario measurements are repository-level proxies unless the active host
+separately exposes exact usage for the scoped run.
+
 This is repository support: it proves that the integration files exist and
 declare the intended shape. It does not prove execution on every host release,
 operating system, shell, installation method, or policy configuration.
@@ -32,7 +37,9 @@ session. To produce it:
    command in the [README](../README.md#inspect-the-hooks).
 3. Start or reload the session.
 4. Try the routed request and non-routing control in
-   [Getting Started](getting-started.md).
+   [Getting Started](getting-started.md), plus the explicit usage-optimization
+   request in [Examples](examples.md#optimize-codex-usage) when validating that
+   route.
 5. Record pass, fail, not run, and unavailable results separately.
 
 This document does not assert that a current end-to-end host check has run. A
@@ -42,6 +49,20 @@ present executable or manifest alone would be too weak to support that claim.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.4.0` reports:
+
+- the distribution and publication guards, JSON and YAML parsing, hook and
+  documentation agreement, skill-shape, English-only, size, artifact, and
+  whitespace checks passed for the release candidate;
+- ten static routing-contract scenarios and ten rollback-gate scenarios
+  passed without being presented as host-native semantic routing evidence;
+- all five packaged Skills passed the local Skill Creator quick validator and
+  Claude Code `2.1.220` strict plugin validation passed;
+- Codex CLI `0.147.0` exposed no plugin-validation command; and
+- the bundled local `plugin-creator` validator continued to reject the Codex
+  manifest's intentional `hooks` field, so that result remains a recorded
+  validator discrepancy rather than a pass.
 
 The Git record for `v0.3.1` reports:
 
@@ -64,7 +85,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.3.1 release notes](releases/v0.3.1.md) and
+See the durable [v0.4.0 release notes](releases/v0.4.0.md),
+[v0.3.1 release notes](releases/v0.3.1.md), and
 [v0.3.0 release notes](releases/v0.3.0.md) for their release narratives. These
 historical results should not be generalized to a newer host, a different
 platform, or the present working tree without fresh validation.
@@ -89,6 +111,8 @@ Unless a current validation report says otherwise, treat these as unverified:
 - every POSIX shell, Windows configuration, operating system, and host policy;
 - successful marketplace fetch or remote release availability;
 - end-to-end routing in a session that was not freshly started or reloaded;
+- exact tokens, credits, reasoning work, or cache hits not exposed by the
+  current host;
 - Windows hook execution inferred only from the presence of `commandWindows`;
   and
 - any optional host-native validator that is missing or cannot run.

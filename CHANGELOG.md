@@ -5,7 +5,31 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-No unreleased changes are recorded yet.
+## 0.4.0 - 2026-08-10
+
+### Added
+
+- Added `optimize-codex-usage`, an explicitly triggered workflow for reducing
+  or diagnosing Codex credit, token, context, Skill/AGENTS/MCP-loading, tool,
+  validation, and reporting overhead without weakening quality or safety.
+
+### Changed
+
+- Reduced the always-loaded `using-axiom` gate and moved explicit marketplace
+  refresh detail to an on-demand reference.
+- Replaced AGENTS Architect's forwarding indexes with direct one-hop reference
+  routes and made inventory, scenarios, validation, and reporting proportional
+  to the changed surface.
+- Split direct history-preserving Git submission from checkpoint metadata and
+  consolidation so publish/push requests load only their active phase.
+- Shortened the reversible-change parent while retaining rollback,
+  authorization, sensitive-data, and layered completion gates before mutation.
+- Updated shared documentation, UI metadata, both platform wrappers, and
+  publication validation for the five-skill source without changing the
+  hook behavior.
+
+See [the v0.4.0 release notes](docs/releases/v0.4.0.md) for validation evidence
+and known limits.
 
 ## 0.3.1 - 2026-07-31
 

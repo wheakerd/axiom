@@ -55,13 +55,12 @@ Reject or report temporary, speculative, duplicated, too broad, unsupported, or 
   leaves receive explicit cross-cutting constraints; parent-owned references
   receive long supporting material.
 - When initial inventory shows inherited, duplicated, oversized, or
-  mixed-responsibility content, the main index must select
+  mixed-responsibility content, the parent route table must select
   `../migration-policy.md` as the primary owner instead of this terminal. If
-  discovered here, safe-stop and return to the main index; do not scan it as a
-  maintenance sibling.
+  discovered here, safe-stop and return to the parent route; do not scan it as
+  a maintenance sibling.
 - Use `../routing-architecture.md` when the approved outcome needs a new or materially changed routed `.agents` tree.
 - Use `../project-initialization.md` only as a target-shape reference after authorization when reorganizing an existing non-Axiom system. Do not treat it as fresh initialization.
-- Keep no two independently editable copies of the same rule.
 
 ## Validation and report
 
@@ -79,4 +78,3 @@ Reject or report temporary, speculative, duplicated, too broad, unsupported, or 
   `AGENTS.md` files.
 - Do not create or update repo-local skills as local copies of Axiom packaged skills.
 - Do not persist one-off task discoveries.
-- Do not auto-commit, auto-push, or rewrite history.

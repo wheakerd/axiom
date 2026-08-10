@@ -1,6 +1,6 @@
 # Trust Model
 
-Axiom narrows how an agent approaches three sensitive workflow families. It
+Axiom narrows how an agent approaches four focused workflow families. It
 does not replace the host's trust model, sandbox the agent, grant credentials,
 or guarantee that a model or external system is correct.
 
@@ -18,6 +18,7 @@ authorize an action.
 | Credentials and sensitive data | Existing credentials remain host-managed; sensitive content requires exact-path and exact-use authority where a route needs it | Credential presence, login state, or directory access does not authorize use or disclosure |
 | Mutation | Each workflow keeps its own edit, commit, push, promotion, deletion, or rollback gates | Loading a skill is never mutation authority |
 | Evidence | Completion is based on fresh, direct evidence from the layer that owns the outcome | A successful command, queued operation, present artifact, or missing validator is not proof |
+| Usage measurement | Host-reported metrics are exact only for their stated scope; bytes, words, route sizes, and calls are labeled proxies | Axiom cannot read hidden tokens, credits, reasoning work, or cache hits, and never invents exact savings |
 | Updates | Refresh is an explicit host marketplace action followed by session reload and hook review | Axiom does not check, download, install, or announce updates automatically |
 
 ## Hook Trust Boundary
@@ -50,9 +51,14 @@ The workflows make this distinction concrete:
 - `agents-architect` may change only the authorized instruction system. It
   treats host-discovered non-`AGENTS.md` instruction candidates as read-only
   and keeps protected plugin metadata outside ordinary AGENTS work.
-- `traceable-git-submit` requires explicit commit authority for checkpoints and
-  a separate explicit submit, publish, or push request before any push. It
-  freezes the exact Git root, path set, commit provenance, and remote targets.
+- `optimize-codex-usage` changes only the authorized repository or workflow
+  surfaces. It does not automatically lower model/reasoning settings, install
+  measurement tools, remove required evidence, or claim hidden usage data.
+- `traceable-git-submit` is selected for an explicit checkpoint, baseline,
+  consolidation, recovery, submit, publish, or push request. Checkpoint state,
+  baseline mutation, consolidation, remote refresh, push, and cleanup remain
+  independent permissions. A direct history-preserving push creates no Axiom
+  metadata, and push never implies consolidation.
 - `reversible-system-change` keeps plans and rehearsals read-only. Candidate
   preparation, active promotion, sensitive asset use, destructive retention,
   and rollback are distinct permissions.
@@ -86,6 +92,8 @@ manifests, command exit codes, and inferred state.
   layer that owns the outcome.
 - A backup, rollback script, or successful backup job is not by itself proof
   that current restoration works.
+- A smaller Skill or route chain is not by itself an improvement unless the
+  same routing, authorization, safety, and outcome scenarios still pass.
 - A missing tool, permission, host, or downstream observation is unavailable or
   unverified, not passed.
 

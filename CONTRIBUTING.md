@@ -44,6 +44,9 @@ platform-specific copy of a shared skill.
   normally when no Axiom route applies.
 - Do not turn Axiom into a catch-all for ordinary coding, documentation, Git,
   or status requests.
+- Route `optimize-codex-usage` only from an explicit Codex credit, token,
+  context, Skill/AGENTS/MCP-loading, or consumption-diagnosis goal. Do not use
+  software performance wording alone as a trigger.
 - Keep route definitions and triggers in English. Unambiguous requests in
   other languages may normalize to the canonical English route.
 - Keep the two manifests pointed at the same `./skills/` directory and keep
@@ -52,6 +55,9 @@ platform-specific copy of a shared skill.
   route, path, and command identifiers.
 - Preserve existing user work and treat missing evidence, tooling, or access as
   unverified rather than as a passing result.
+- Keep volatile model prices, plan limits, and quotas out of always-loaded
+  instructions. Label byte/word/call measurements as proxies unless the host
+  exposes exact scoped usage, and never auto-change model or reasoning settings.
 
 When editing a route, review its direct references and examples for accidental
 permission expansion. State separately whether the change affects matching,

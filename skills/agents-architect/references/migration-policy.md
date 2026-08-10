@@ -74,7 +74,6 @@ Reject rules that fail any gate.
   AGENTS routing unless the user explicitly asks for plugin or skill
   maintenance.
 - Update Markdown links, README references, AGENTS references, scripts, CI config, and documentation checks.
-- Keep no two independently editable copies of the same rule.
 - Read ignored or untracked `AGENTS.md` candidates directly. Do not use a clean
   tracked diff as proof that their content is unchanged, absent, or inactive.
 - Check the migration result for Axiom protocol leakage before writing: target
@@ -114,7 +113,6 @@ safe-stop and report its exact path and observed precedence.
 - Do not move protected plugin or skill metadata into AGENTS routing branches.
 - Do not vendor Axiom packaged skill rules, triggers, internal routes,
   validation protocols, or reporting formats into target `AGENTS.md` files.
-- Do not auto-commit, auto-push, or rewrite history.
 
 ## References
 

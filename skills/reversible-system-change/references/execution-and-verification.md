@@ -110,17 +110,13 @@ needed for recovery.
 
 ## Completion Report
 
-Report:
+Lead with the final observed outcome. Report the exact target and authorized
+effects, rollback evidence state, mutation/promotion result, every failed or
+unavailable outcome-owning layer, rollback result when used, retained recovery
+material, and required follow-up. Include successful intermediate layers only
+when they support completion or a recovery decision.
 
-- Exact target and authorized effects.
-- Directly observed prior state and each rollback evidence state.
-- Candidate, dry-run, mutation, and promotion outcomes.
-- Each relevant postcondition layer as passed, failed, not run, or unavailable.
-- Rollback trigger, action, and restored-state evidence when used.
-- Final observed state, retained recovery material, and validation gaps.
-
-Do not expose secret values or private endpoints. Do not claim the requested
-system change completed when any outcome-owning layer remains failed or
-unverified. Use the rollback evidence labels from preflight and do not call a
-path verified when validation or rehearsal is unavailable, stale, or applies
-to a different artifact, mechanism, principal, or target state.
+Do not expose secret values or private endpoints. Do not claim completion when
+an outcome-owning layer remains failed or unverified, or call rollback verified
+when validation is unavailable, stale, or applies to a different artifact,
+mechanism, principal, or target state.

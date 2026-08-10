@@ -8,8 +8,8 @@ authoritative refreshed upstream, then clean recovery state in a safe order.
 ## Apply When
 
 Use only when the active provenance record contains `newCommit`, including the
-normal submit flow after branch consolidation. Never create another final
-commit, append a checkpoint, or consolidate again on this route.
+combined consolidation-and-push flow after branch consolidation. Never create
+another final commit, append a checkpoint, or consolidate again on this route.
 
 ## Recovery Gate
 

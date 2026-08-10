@@ -17,23 +17,26 @@ Establish repository facts and narrow the reading scope before designing instruc
 
 ## Required actions
 
-- Confirm current working directory, Codex version, and visible
-  `project_doc_max_bytes`. Determine whether the target has no Git repository,
-  one unambiguous Git root, an unborn branch, or nested Git roots/worktrees.
+- Confirm the current directory and whether the target has no Git repository,
+  one unambiguous Git root, an unborn branch, or nested roots/worktrees.
+  Inspect Codex version, discovery settings, or `project_doc_max_bytes` only
+  when the task makes a version-sensitive loading or size claim.
 - When more than one plausible Git root could own the requested files, stop and
   ask for the exact target instead of selecting a parent or nested root.
-- When Git exists, record branch/ref state and classify tracked, modified,
-  staged, untracked, and ignored candidates separately. Do not describe an
-  unborn branch as a normal branch with an empty history.
-- Use the official Codex manual as the current source for platform discovery
-  behavior, and record version-sensitive uncertainty instead of filling gaps
-  with Axiom policy.
+- When edits or Git evidence are in scope, record the branch/ref state and
+  classify tracked, modified, staged, untracked, and ignored candidates
+  separately. Do not describe an unborn branch as a normal branch with an
+  empty history.
+- Use current official Codex documentation only when platform discovery
+  behavior affects the outcome; otherwise avoid a network lookup. Record
+  version-sensitive uncertainty instead of filling gaps with Axiom policy.
 - Record unverified assumptions instead of treating them as facts.
 - Start with metadata and references only.
 - Collect locations of `AGENTS.md`, host-configured or host-discovered
   non-`AGENTS.md` instruction candidates, `.agents/`, and candidate project
   docs.
-- Record candidate doc path, size, line count, Git tracking state, status, and modification time.
+- Record candidate path, size, line count, and relevant Git state. Add
+  modification time only when freshness affects the decision.
 - Classify evidence as one of four kinds: live source, persistent rule, runtime
   state, or historical reference. Use current files/config as live source;
   active instruction sources or canonical docs as persistent rules; current
@@ -51,13 +54,13 @@ Establish repository facts and narrow the reading scope before designing instruc
   maintenance.
 - Read document bodies in small batches only after metadata narrows scope.
 - For large docs, inspect headings, tables of contents, summaries, or targeted sections first.
-- For each ignored instruction candidate, run
+- For each scoped ignored instruction candidate, run
   `git check-ignore -v -- <exact-path>` or an equivalent exact owner query;
   separately resolve whether it is tracked. Report ignored/tracked state and
   the owning ignore source, line, and pattern.
-- Read every such candidate directly before work and again afterward, then
-  compare the actual content. A clean status or tracked diff cannot prove that
-  an ignored or untracked instruction is absent, unchanged, or inactive.
+- Read each scoped candidate directly before work and, if it could have
+  changed, again afterward. A clean status or tracked diff cannot prove that an
+  ignored or untracked instruction is absent, unchanged, or inactive.
 
 ## Codex behavior boundaries
 

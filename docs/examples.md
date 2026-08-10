@@ -18,6 +18,20 @@ historical, or other-repository material. A discovered instruction candidate is
 not automatically writable, and an Axiom route in the installed plugin is not
 something to copy into the target repository's `AGENTS.md`.
 
+## `optimize-codex-usage`
+
+| Field | Example |
+| --- | --- |
+| User request | "Reduce the Codex credits and context used by this repository's Skills without weakening validation or safety." |
+| Expected selected route | `optimize-codex-usage` |
+| Expected safety boundary | Inventory metadata and route chains before reading candidate bodies; use host metrics when exposed and label byte/word/call proxies otherwise; compare the same quality scenarios before and after. |
+| Not authorized | Lowering the model or reasoning effort, removing required tests or rollback gates, installing a tokenizer, changing user Skills, committing, pushing, or claiming an exact percentage without repeatable evidence. |
+
+If the implementation also changes a target repository's `AGENTS.md` system,
+add `agents-architect` only for that authorized instruction surface. A plain
+AGENTS audit still selects only `agents-architect`, and ordinary software
+performance work does not select this route.
+
 ## `traceable-git-submit`
 
 | Field | Example |
@@ -29,8 +43,19 @@ something to copy into the target repository's `AGENTS.md`.
 
 Here the user's wording authorizes local checkpoint commits for a bounded path
 set and explicitly withholds push authority. The route selection itself grants
-neither permission. A later submit or push requires a separate explicit request
-and the route's current remote, baseline, provenance, and target checks.
+neither permission. A later consolidation and a later push are separate
+requests; neither can be inferred from the other.
+
+A distinct routed request is: "Consolidate the authorized checkpoint series
+into one final local commit, and do not push." It authorizes local
+consolidation only. The workflow retains recoverable post-consolidation state
+until a later explicit push or recovery request completes remote verification
+and cleanup.
+
+"Push the current branch without rewriting history" also selects this route,
+but only its direct-submit phase. It resolves and verifies every push target,
+does not create Axiom cache or provenance metadata, and does not authorize
+checkpoint creation or consolidation.
 
 ## `reversible-system-change`
 
@@ -53,7 +78,9 @@ retention, sensitive asset use, and rollback are still separate boundaries.
 | "Fix the typo in `README.md`." | Continue normally | An ordinary source or documentation edit is not an Axiom workflow |
 | "What version of the service is running?" | Continue normally | A pure read-only status query does not plan a persistent change |
 | "Explain what a rollback is." | Continue normally | A conceptual explanation has no concrete persistent target |
-| "Refactor this parser and run its unit tests." | Continue normally | Ordinary code and repository-local testing are outside the three task routes |
+| "Refactor this parser and run its unit tests." | Continue normally | Ordinary code and repository-local testing are outside Axiom's focused routes |
+| "Commit the current changes with a multi-paragraph English message." | Continue normally | An ordinary local commit does not request checkpoint provenance or consolidation |
+| "Make this algorithm use less memory." | Continue normally | Software runtime performance is not Codex usage optimization |
 
 No-route does not certify that a task is risk-free, and it does not relax any
 host, repository, or user instruction. It means only that the request does not
@@ -65,6 +92,10 @@ If wording could map to more than one workflow and the choice would change
 execution, the routing gate calls for one concise clarification question. It
 does not load every possible skill as a precaution. Once the intent is clear,
 the smallest matching skill set is selected.
+
+If "submit" or "push" could mean preserving current history or consolidating
+an active checkpoint series, ask once which history outcome is intended. Do
+not inspect or mutate Git state before that choice is clear.
 
 See [Architecture](architecture.md) for the route sequence and
 [Trust Model](trust-model.md) for authority and mutation boundaries.

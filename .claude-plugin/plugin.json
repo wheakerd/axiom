@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "axiom",
   "displayName": "Axiom",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -16,6 +16,7 @@
     "agents-md",
     "ai-workflows",
     "skills",
+    "context-efficiency",
     "developer-tools"
   ],
   "skills": "./skills/",
