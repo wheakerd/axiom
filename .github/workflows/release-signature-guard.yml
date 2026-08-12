@@ -1,0 +1,73 @@
+name: Release signature guard
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-github-signature:
+    name: Verify GitHub-signed release target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check GitHub signature
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const result = await github.graphql(
+              `query($owner: String!, $name: String!, $oid: GitObjectID!) {
+                repository(owner: $owner, name: $name) {
+                  defaultBranchRef {
+                    name
+                  }
+                  object(oid: $oid) {
+                    ... on Commit {
+                      oid
+                      signature {
+                        isValid
+                        state
+                        wasSignedByGitHub
+                      }
+                    }
+                  }
+                }
+              }`,
+              {
+                owner: context.repo.owner,
+                name: context.repo.repo,
+                oid: context.sha,
+              },
+            );
+
+            const repository = result.repository;
+            const defaultRef = `refs/heads/${repository.defaultBranchRef?.name}`;
+            const commit = repository.object;
+            const signature = commit?.signature;
+
+            if (context.ref !== defaultRef) {
+              core.setFailed(
+                `Release targets must be verified from ${defaultRef}; received ${context.ref}.`,
+              );
+              return;
+            }
+
+            if (
+              commit?.oid !== context.sha ||
+              signature?.isValid !== true ||
+              signature?.state !== "VALID" ||
+              signature?.wasSignedByGitHub !== true
+            ) {
+              core.setFailed(
+                `Commit ${context.sha} must have a valid signature made with GitHub's signing key before it can be used as a release target.`,
+              );
+              return;
+            }
+
+            core.info(
+              `Commit ${context.sha} has a valid signature made with GitHub's signing key.`,
+            );
