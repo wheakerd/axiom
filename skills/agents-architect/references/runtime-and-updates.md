@@ -7,6 +7,8 @@ Handle long-task state and user-triggered durable instruction updates.
 ## Apply when
 
 - An AGENTS Architect workflow is already active for a target repository's AGENTS instruction architecture.
+- A durable update trigger follows ordinary work in the current task, even when
+  AGENTS Architect was not active for the earlier work.
 - The active AGENTS task risks context compaction.
 - During that active task, the user says exactly `effective-instructions`.
 - During that active task, the user says exactly `effective-instructions:preview`.
@@ -55,13 +57,19 @@ Scope these modes to the active target repository's AGENTS instruction system. D
 Do not use these modes to persist Axiom packaged skill rules, Axiom trigger definitions, load policies, internal routes, validation protocols, or reporting formats into a target repository.
 
 For `effective-instructions` and `effective-instructions:preview`, review what
-the current task had to read in each phase for retrieval-friction signals.
-Classify each signal as `instruction-gap`, `routing-gap`, `validation-gap`,
+the current task had to read in each phase for retrieval-friction signals. Load
+`maintenance/context-evidence.md` and establish the review window before
+extracting candidates. The first whole-task review begins at the task's oldest
+available turn; only a prior completed review with an explicit start,
+reviewed-through point, and candidate dispositions creates an incremental
+baseline. An earlier AGENTS read, narrow edit, ordinary task completion, or
+Skill activation is not such a baseline. Classify each signal as
+`instruction-gap`, `routing-gap`, `validation-gap`,
 `expected-live-verification`, or `one-off-code-defect`.
 
 `effective-instructions`:
 
-- After the current task, extract durable candidates.
+- Extract durable candidates from the established review window.
 - Apply the admission gate.
 - Update the smallest canonical leaf.
 - Update indexes only when routing changes.
@@ -98,6 +106,8 @@ For every triggered update, report:
 - Removed or merged rules.
 - Rejected candidates and reasons.
 - Retrieval-friction dispositions and source checks that remain necessary.
+- Review-window start, reviewed-through point, baseline reason, and any unread
+  required history.
 - Affected routes.
 - Byte changes.
 - Git tracking or ignore state.

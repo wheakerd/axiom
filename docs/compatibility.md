@@ -50,6 +50,21 @@ present executable or manifest alone would be too weak to support that claim.
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
 
+The Git record for `v0.4.2` reports:
+
+- the distribution and publication guards, JSON and YAML parsing, hook and
+  documentation agreement, skill-shape, English-only, size, artifact, and
+  whitespace checks passed for the release candidate;
+- a complete real-task-history scenario confirmed that a first durable review
+  with eight earlier completed turns and no prior update baseline starts at the
+  task's oldest available turn rather than its latest work phase;
+- all five packaged Skills passed the local Skill Creator quick validator and
+  Claude Code `2.1.220` strict plugin validation passed;
+- Codex CLI `0.147.0` exposed no plugin-validation command; and
+- the bundled local `plugin-creator` validator continued to reject the Codex
+  manifest's intentional `hooks` field, so that result remains a recorded
+  validator discrepancy rather than a pass.
+
 The Git record for `v0.4.1` reports:
 
 - the distribution and publication guards, JSON and YAML parsing, hook and
@@ -99,7 +114,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.4.1 release notes](releases/v0.4.1.md),
+See the durable [v0.4.2 release notes](releases/v0.4.2.md),
+[v0.4.1 release notes](releases/v0.4.1.md),
 [v0.4.0 release notes](releases/v0.4.0.md),
 [v0.3.1 release notes](releases/v0.3.1.md), and
 [v0.3.0 release notes](releases/v0.3.0.md) for their release narratives. These

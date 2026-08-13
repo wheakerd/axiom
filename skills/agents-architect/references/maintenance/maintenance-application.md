@@ -40,6 +40,12 @@ Write only candidates with:
 
 Reject or report temporary, speculative, duplicated, too broad, unsupported, or human-doc-only candidates.
 
+Before applying a task-context update, confirm that context evidence reached
+the established review-window boundary or reported the exact unavailable
+history. Do not present a newest-phase-only extraction as a complete task
+review. A complete broad review may still produce one small update or no file
+change; review coverage and accepted-rule count are independent.
+
 ## Retrieval-friction disposition
 
 When task evidence flags retrieval friction:
@@ -90,7 +96,9 @@ project constraints, and removal of avoidable rediscovery.
 - Run static checks for route reachability, links, duplicate rules, protected metadata boundaries, secrets, and size model.
 - Run routing scenarios when AGENTS routing changed.
 - Run skill validation for changed repo-local skills when applicable.
-- Report authorization basis, inspected task scope, added/modified/rejected candidates, affected files, Git tracking state, byte changes, and validation results.
+- Report authorization basis, inspected task scope and review-window baseline,
+  added/modified/rejected candidates, affected files, Git tracking state, byte
+  changes, and validation results.
 
 ## Prohibited actions
 

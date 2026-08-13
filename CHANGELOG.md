@@ -5,6 +5,24 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.4.2 - 2026-08-12
+
+### Fixed
+
+- Made a first `effective-instructions` or preview review cover the current
+  task from its oldest available turn through the trigger instead of starting
+  at the latest work phase or Skill activation point.
+- Limited incremental review baselines to prior completed reviews that record
+  their start, reviewed-through point, and candidate dispositions; ordinary
+  AGENTS reads, narrow edits, and task completion no longer imply a baseline.
+- Required task-history inspection to reach the established review-window
+  boundary while keeping raw tool replay proportional to candidate decisions.
+- Prevented newest-phase-only extraction from being reported as a complete task
+  review and separated review coverage from the number of accepted updates.
+
+See [the v0.4.2 release notes](docs/releases/v0.4.2.md) for validation evidence
+and known limits.
+
 ## 0.4.1 - 2026-08-12
 
 ### Changed

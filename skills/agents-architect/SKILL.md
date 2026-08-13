@@ -30,15 +30,18 @@ discoverable here; do not scan siblings for background.
 - Migrate mixed or oversized existing guidance:
   `references/migration-policy.md`; add the document contract, and topology
   only when those decisions are part of the migration.
-- Maintain an existing system: optionally read
-  `references/maintenance/context-evidence.md` for supplied or compacted task
-  evidence and `references/maintenance/authorization-and-safety.md` for unclear
-  provenance or shadowing, then select exactly one terminal owner:
+- Maintain an existing system: read
+  `references/maintenance/context-evidence.md` when the scope includes current
+  or supplied task history, retrieval friction, or compacted evidence, and
+  `references/maintenance/authorization-and-safety.md` for unclear provenance
+  or shadowing, then select exactly one terminal owner:
   `references/maintenance/maintenance-application.md` for AGENTS guidance or
   `references/maintenance/repo-local-skills.md` for a supporting repo-local
   Skill.
-- Handle runtime capsules or durable updates during an active workflow:
-  `references/runtime-and-updates.md`.
+- Handle runtime capsules or a durable update trigger during or after ordinary
+  work in the current task: `references/runtime-and-updates.md`. For
+  `effective-instructions` and its preview, also read the context-evidence
+  reference to establish the review window before selecting a terminal owner.
 - Validate completed file changes or an explicitly requested route audit:
   `references/validation-reporting.md`, plus only the changed surface's
   contract owner.
