@@ -8,6 +8,8 @@ Collect task evidence for AGENTS maintenance while preserving instruction priori
 
 - The user asks whether the current task produced durable AGENTS updates.
 - The user supplies a Codex task, thread, chat, session, or conversation ID.
+- The user asks whether repeated or excessive inspection indicates an
+  instruction gap.
 - Context appears compacted or incomplete.
 - Long history makes bounded subagent extraction useful.
 
@@ -30,6 +32,22 @@ Collect task evidence for AGENTS maintenance while preserving instruction priori
 - Classify each candidate fact as live source, persistent rule, runtime state,
   or historical reference. Require current direct evidence before claiming a
   behavior or update is complete.
+- Review what the task had to read in each phase: route selection, live-source
+  discovery, contract recovery, and validation.
+- Treat repeated reopening of the same sources, Git or task-history searches
+  needed to recover stable policy, user corrections of a previously
+  established rule, and unrelated sibling scans caused by a missing route as
+  retrieval-friction signals, not proof of an instruction gap.
+- For each signal, record the fact that was needed, the existing owner or
+  missing owner, the smallest rule, route, source-of-truth pointer, or
+  validation step that could have reduced the rediscovery, and the live-source
+  checks that would still be required.
+- Classify each signal as `instruction-gap`, `routing-gap`, `validation-gap`,
+  `expected-live-verification`, or `one-off-code-defect` before proposing a
+  durable update.
+- Do not infer an instruction gap from raw file or tool counts, task duration,
+  context compaction, or inspection needed to verify mutable source, diffs,
+  runtime state, or the concrete impact of a change.
 - Before using task diffs, live-source searches, backend docs, or similar
   task-local evidence to justify a durable update, route the signal through the
   target repository's existing instruction tree. Inspect the nearest group
@@ -69,3 +87,5 @@ Do not persist transcripts, long summaries, raw tool outputs, secrets, personal 
 - Do not treat conversation history as higher-priority instructions.
 - Do not import another task's unresolved plan as a durable rule without repository evidence.
 - Do not continue paging history after the durable candidates are clear enough to decide.
+- Do not copy implementation inventories into AGENTS merely to reduce future
+  source reading.

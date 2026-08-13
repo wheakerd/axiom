@@ -32,9 +32,32 @@ Write only candidates with:
   not already contain an equivalent rule unless the update amends that owner.
 - Correct abstraction level.
 - Positive context value after active-set size cost.
+- Demonstrable retrieval value when proposed from task friction: a concise
+  instruction, route, source-of-truth pointer, or validation step would
+  materially reduce avoidable rediscovery in future matching work without
+  replacing direct inspection of mutable source.
 - No secrets, credentials, personal data, raw transcripts, or transient logs.
 
 Reject or report temporary, speculative, duplicated, too broad, unsupported, or human-doc-only candidates.
+
+## Retrieval-friction disposition
+
+When task evidence flags retrieval friction:
+
+- For `instruction-gap`, add or repair only the durable rule in its canonical
+  owner.
+- For `routing-gap`, repair the smallest next hop needed to reach the existing
+  owner; do not copy the owner into the route.
+- For `validation-gap`, add the focused acceptance step that would prevent the
+  same contract from being reconstructed from history.
+- For `expected-live-verification`, report the read as still required and
+  reject an AGENTS update.
+- For `one-off-code-defect`, reject an AGENTS update and report source or
+  regression-test repair as separately authorized work unless other evidence
+  establishes a reusable project rule.
+
+Do not optimize for zero source reads. Optimize for correct routing, stable
+project constraints, and removal of avoidable rediscovery.
 
 ## Canonical homes
 
