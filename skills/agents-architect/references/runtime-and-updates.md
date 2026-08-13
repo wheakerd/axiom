@@ -54,6 +54,11 @@ Scope these modes to the active target repository's AGENTS instruction system. D
 
 Do not use these modes to persist Axiom packaged skill rules, Axiom trigger definitions, load policies, internal routes, validation protocols, or reporting formats into a target repository.
 
+For `effective-instructions` and `effective-instructions:preview`, review what
+the current task had to read in each phase for retrieval-friction signals.
+Classify each signal as `instruction-gap`, `routing-gap`, `validation-gap`,
+`expected-live-verification`, or `one-off-code-defect`.
+
 `effective-instructions`:
 
 - After the current task, extract durable candidates.
@@ -68,6 +73,8 @@ Do not use these modes to persist Axiom packaged skill rules, Axiom trigger defi
 
 - Propose updates only.
 - Do not edit files.
+- Include retrieval-friction candidates and explain which source reads remain
+  necessary.
 - Explain rejected temporary candidates.
 
 `effective-instructions:refactor`:
@@ -90,6 +97,7 @@ For every triggered update, report:
 - Modified rules.
 - Removed or merged rules.
 - Rejected candidates and reasons.
+- Retrieval-friction dispositions and source checks that remain necessary.
 - Affected routes.
 - Byte changes.
 - Git tracking or ignore state.
@@ -100,3 +108,5 @@ For every triggered update, report:
 - Do not persist secrets.
 - Do not persist single-task preferences by default.
 - Do not keep conflicting durable versions.
+- Do not use file counts, tool counts, duration, or context compaction alone as
+  evidence that AGENTS guidance is incomplete.
