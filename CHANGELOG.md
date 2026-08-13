@@ -5,6 +5,24 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.4.1 - 2026-08-12
+
+### Changed
+
+- Extended AGENTS Architect task evidence to treat repeated source reads,
+  history recovery, user corrections, and missing-route scans as signals for
+  an instruction-maintenance review rather than automatic proof of a gap.
+- Added explicit `instruction-gap`, `routing-gap`, `validation-gap`,
+  `expected-live-verification`, and `one-off-code-defect` dispositions so
+  durable guidance remains scoped and implementation defects stay in source
+  or regression tests under separate authorization.
+- Applied the retrieval-friction review to both `effective-instructions` and
+  `effective-instructions:preview`, including required reporting of source
+  checks that remain necessary.
+
+See [the v0.4.1 release notes](docs/releases/v0.4.1.md) for validation evidence
+and known limits.
+
 ## 0.4.0 - 2026-08-10
 
 ### Added
