@@ -5,6 +5,23 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.5.0 - 2026-08-15
+
+### Added
+
+- Added `review-axiom-task`, an explicitly triggered read-only retrospective
+  for Axiom route choice, scope, authorization, actions, evidence, stops, and
+  outcomes across host-visible task history.
+
+### Changed
+
+- Extended the shared router, public documentation, Codex interface metadata,
+  and offline routing scenarios for task reviews without adding telemetry,
+  persistent logs, background work, or new mutation authority.
+
+See [the v0.5.0 release notes](docs/releases/v0.5.0.md) for validation evidence
+and known limits.
+
 ## 0.4.2 - 2026-08-12
 
 ### Fixed

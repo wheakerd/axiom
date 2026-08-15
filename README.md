@@ -8,9 +8,9 @@ Think before AI thinks.
 
 Axiom is a safety-first, request-routed workflow plugin for Codex and Claude
 Code. It is for developers and maintainers who want repository instructions,
-Codex usage optimization, Git publication, and persistent system changes to
-begin with explicit scope, authority, and evidence without turning every
-coding request into a special workflow.
+Codex usage optimization, read-only Axiom task reviews, Git publication, and
+persistent system changes to begin with explicit scope, authority, and evidence
+without turning every coding request into a special workflow.
 
 Capable agents can start executing before the target, permission, rollback, or
 proof of success is clear. Axiom places a small routing gate into the foreground
@@ -25,6 +25,7 @@ or other mutation.
 | Ask | Observable routing decision |
 | --- | --- |
 | "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, inventory the instruction system, and report findings without changes |
+| "Explain the routing, authorization, actions, and evidence for this Axiom-guided task." | Select `review-axiom-task`, review only the available task evidence, and label missing history without rerunning the task |
 | "Summarize the purpose of this README. Do not modify files." | Select no Axiom workflow and continue normally without changing files |
 
 ## 60-Second Start
@@ -53,10 +54,11 @@ Claude Code:
 After `/reload-plugins`, open `/hooks` and compare the installed handlers with
 the [exact checked-in commands](#inspect-the-hooks).
 
-Only after reviewing the hook for your host, run the routed request and control
-request above. Expect `agents-architect` to inventory and report only for the
-read-only `AGENTS.md` audit; the README summary request should continue normally
-without changing files.
+Only after reviewing the hook for your host, run the `AGENTS.md` audit and
+control request above. Expect `agents-architect` to inventory and report only
+for the read-only audit; the README summary request should continue normally
+without changing files. The task-review request is an optional follow-up after
+a routed task and must not rerun it.
 
 If either result differs, use the non-destructive checks in
 [Getting Started](docs/getting-started.md) rather than deleting caches or
@@ -68,6 +70,7 @@ rewriting local state.
 | --- | --- | --- |
 | `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, its `.agents/` routes, or repo-local skills | Inspect first; change only the authorized instruction system and keep protected plugin metadata out of scope |
 | `optimize-codex-usage` | Explicitly reducing or diagnosing Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool churn, or reporting overhead | Preserve the required quality, safety, authorization, rollback, and evidence bar; label proxies and never invent hidden usage data |
+| `review-axiom-task` | Explicitly reviewing the routing, scope, authorization, actions, evidence, stops, and outcome of an Axiom-guided task | Keep the review read-only; separate Axiom guidance from host-agent actions; label evidence as observed, reconstructed, or unavailable |
 | `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep checkpoint/provenance, consolidation, remote refresh, push, and cleanup independent; a direct push preserves history and creates no Axiom metadata |
 | `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plan-only work stays read-only; mutation requires an exact target, explicit authority, and current rollback evidence |
 
@@ -85,6 +88,10 @@ repository permissions, or turn command success into proof of an outcome.
 It also does not start a service, watcher, polling job, or automatic update
 channel. Updates happen only through an explicit host marketplace action.
 
+An Axiom task review is a bounded retrospective over evidence the host exposes.
+It is not telemetry, an instrumented execution trace, a source of hidden model
+reasoning, or a promise that compacted or unavailable history can be recovered.
+
 ## How Routing Works
 
 At session start or the configured compaction events, the platform hook reads
@@ -98,11 +105,13 @@ At session start or the configured compaction events, the platform hook reads
 5. Continues through the host's normal workflow when no route clearly applies.
 
 The gate decides which instructions are relevant; it does not grant permission
-to act. For example, selecting `reversible-system-change` for a migration plan
-keeps the work read-only. An explicit Git submit, publish, or push selects
-`traceable-git-submit`, while checkpoint creation, metadata, consolidation,
-remote refresh, push, and cleanup remain separate actions. A direct push
-preserves history and creates no Axiom metadata. Read the
+to act. For example, selecting `review-axiom-task` permits only a retrospective
+of the scoped task evidence; it does not rerun that task. Selecting
+`reversible-system-change` for a migration plan keeps the work read-only. An
+explicit Git submit, publish, or push selects `traceable-git-submit`, while
+checkpoint creation, metadata, consolidation, remote refresh, push, and cleanup
+remain separate actions. A direct push preserves history and creates no Axiom
+metadata. Read the
 [Architecture](docs/architecture.md) and [Trust Model](docs/trust-model.md) for
 the full boundary.
 
@@ -116,6 +125,7 @@ content is copied or forked for a host.
 - `using-axiom`, the session-start routing gate.
 - `agents-architect`, the repository-instruction workflow.
 - `optimize-codex-usage`, the explicit Codex consumption workflow.
+- `review-axiom-task`, the read-only Axiom task-review workflow.
 - `traceable-git-submit`, the checkpoint and Git submission workflow.
 - `reversible-system-change`, the persistent-change workflow.
 
@@ -223,7 +233,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.4.2 release notes](docs/releases/v0.4.2.md):
+- [Changelog](CHANGELOG.md) and [v0.5.0 release notes](docs/releases/v0.5.0.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -236,7 +246,7 @@ python3 scripts/check-distribution-drift.py
 ```
 
 It compares the skill tree with both manifests, both marketplace wrappers, and
-the five-item `Shared skills` list above. It is a contributor and CI check, not
+the six-item `Shared skills` list above. It is a contributor and CI check, not
 an installed runtime dependency.
 
 ## License

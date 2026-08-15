@@ -23,6 +23,10 @@ receives a platform-specific copy. Its byte, word, line, reference, and
 scenario measurements are repository-level proxies unless the active host
 separately exposes exact usage for the scoped run.
 
+The shared source also includes `review-axiom-task` on both hosts. Its review
+contract is identical, but coverage depends on the task history, summaries,
+tool results, and task-inspection interfaces each active host exposes.
+
 This is repository support: it proves that the integration files exist and
 declare the intended shape. It does not prove execution on every host release,
 operating system, shell, installation method, or policy configuration.
@@ -38,8 +42,8 @@ session. To produce it:
 3. Start or reload the session.
 4. Try the routed request and non-routing control in
    [Getting Started](getting-started.md), plus the explicit usage-optimization
-   request in [Examples](examples.md#optimize-codex-usage) when validating that
-   route.
+   and task-review requests in [Examples](examples.md) when validating those
+   routes.
 5. Record pass, fail, not run, and unavailable results separately.
 
 This document does not assert that a current end-to-end host check has run. A
@@ -49,6 +53,21 @@ present executable or manifest alone would be too weak to support that claim.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.5.0` reports:
+
+- the distribution and publication guards, JSON and YAML parsing, hook and
+  documentation agreement, skill-shape, English-only, size, artifact, and
+  whitespace checks passed for the release candidate;
+- fifteen static routing-contract scenarios and ten rollback-gate scenarios
+  passed without being presented as host-native semantic routing evidence;
+- all six packaged Skills passed the local Skill Creator quick validator and
+  Claude Code strict plugin validation passed;
+- a fresh Codex or Claude Code session-level semantic-routing check was not
+  run; and
+- the bundled local `plugin-creator` validator continued to reject the Codex
+  manifest's intentional `hooks` field, so that result remains a recorded
+  validator discrepancy rather than a pass.
 
 The Git record for `v0.4.2` reports:
 
@@ -114,7 +133,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.4.2 release notes](releases/v0.4.2.md),
+See the durable [v0.5.0 release notes](releases/v0.5.0.md),
+[v0.4.2 release notes](releases/v0.4.2.md),
 [v0.4.1 release notes](releases/v0.4.1.md),
 [v0.4.0 release notes](releases/v0.4.0.md),
 [v0.3.1 release notes](releases/v0.3.1.md), and
@@ -142,6 +162,10 @@ Unless a current validation report says otherwise, treat these as unverified:
 - every POSIX shell, Windows configuration, operating system, and host policy;
 - successful marketplace fetch or remote release availability;
 - end-to-end routing in a session that was not freshly started or reloaded;
+- recovery of task history or raw tool output the host no longer exposes after
+  compaction;
+- semantic equivalence of task-review selection and reports across Codex and
+  Claude Code without current observations from both hosts;
 - exact tokens, credits, reasoning work, or cache hits not exposed by the
   current host;
 - Windows hook execution inferred only from the presence of `commandWindows`;

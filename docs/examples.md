@@ -32,6 +32,20 @@ add `agents-architect` only for that authorized instruction surface. A plain
 AGENTS audit still selects only `agents-architect`, and ordinary software
 performance work does not select this route.
 
+## `review-axiom-task`
+
+| Field | Example |
+| --- | --- |
+| User request | "Explain the routing, authorization, actions, and evidence for this Axiom-guided task." |
+| Expected selected route | `review-axiom-task` |
+| Expected safety boundary | Freeze the review window at the request, inspect only scoped host-visible evidence, separate Axiom guidance from host-agent actions, and label material claims as observed, reconstructed, or unavailable. |
+| Not authorized | Rerunning the task, opening unrelated tasks or targets, accessing credentials, editing files, committing, pushing, deploying, changing configuration, or creating persistent trace data. |
+
+The report may use current read-only state to verify an outcome when that target
+is already in scope. Current state does not prove past authorization, causation,
+or which instructions were active. If compaction or host limits hide required
+history, the report remains partial rather than inventing a complete trace.
+
 ## `traceable-git-submit`
 
 | Field | Example |
@@ -81,6 +95,7 @@ retention, sensitive asset use, and rollback are still separate boundaries.
 | "Refactor this parser and run its unit tests." | Continue normally | Ordinary code and repository-local testing are outside Axiom's focused routes |
 | "Commit the current changes with a multi-paragraph English message." | Continue normally | An ordinary local commit does not request checkpoint provenance or consolidation |
 | "Make this algorithm use less memory." | Continue normally | Software runtime performance is not Codex usage optimization |
+| "Summarize what changed in this coding task." | Continue normally | An ordinary task summary is not an explicit review of an Axiom-guided task |
 
 No-route does not certify that a task is risk-free, and it does not relax any
 host, repository, or user instruction. It means only that the request does not

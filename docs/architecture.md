@@ -73,6 +73,9 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
   one context-audit reference only for measurement or implementation. It uses
   host metrics when exposed and otherwise labels size and call counts as
   proxies.
+- `review-axiom-task` freezes a retrospective window at the triggering request,
+  separates Axiom guidance from host-agent actions, and labels material evidence
+  as observed, reconstructed, or unavailable without persisting a trace.
 - `traceable-git-submit` separates direct history-preserving submission from
   checkpoint, baseline, consolidation, one-final submission, and recovery
   chains. Direct push loads only repository/target guidance and creates no
@@ -94,7 +97,9 @@ Axiom does not add an execution service or bypass host controls.
 Route selection and action authorization are separate decisions. A loaded
 workflow can require more evidence or stop conditions, but it cannot create
 permission to edit, commit, push, read credentials, mutate a remote target,
-delete data, or promote a version. See the [Trust Model](trust-model.md).
+delete data, or promote a version. A task review may describe earlier actions;
+it cannot rerun them or turn current state into proof of past authorization.
+See the [Trust Model](trust-model.md).
 
 ## 6. No-Match Continuation
 

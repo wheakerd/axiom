@@ -40,7 +40,7 @@ body:
     id: route_gap
     attributes:
       label: Why existing routes do not cover it
-      description: Compare the proposal with using-axiom, agents-architect, traceable-git-submit, and reversible-system-change.
+      description: Compare the proposal with using-axiom and every current route listed in README under Workflows At A Glance.
     validations:
       required: true
 

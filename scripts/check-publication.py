@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.4.2"
+RELEASE_VERSION = "0.5.0"
 
 REQUIRED_PUBLIC_FILES = (
     "README.md",
@@ -30,6 +30,7 @@ REQUIRED_PUBLIC_FILES = (
     "docs/releases/v0.4.0.md",
     "docs/releases/v0.4.1.md",
     "docs/releases/v0.4.2.md",
+    "docs/releases/v0.5.0.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -61,6 +62,7 @@ EXPECTED_DIRECT_SKILLS = (
     "agents-architect",
     "optimize-codex-usage",
     "reversible-system-change",
+    "review-axiom-task",
     "traceable-git-submit",
     "using-axiom",
 )
@@ -68,6 +70,7 @@ EXPECTED_README_SKILLS = (
     "using-axiom",
     "agents-architect",
     "optimize-codex-usage",
+    "review-axiom-task",
     "traceable-git-submit",
     "reversible-system-change",
 )
@@ -89,6 +92,14 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "phase": "normal",
         "references": (),
         "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "ordinary-task-summary-no-match",
+        "request": "Summarize what changed in this coding task.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read"}),
     },
     {
         "name": "agents-audit",
@@ -144,6 +155,38 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "phase": "audit-implementation",
         "references": ("references/context-audit.md",),
         "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "explicit-axiom-task-review",
+        "request": "Explain the routing, authorization, actions, and evidence for this Axiom-guided task.",
+        "route": "review-axiom-task",
+        "phase": "review",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "show-what-axiom-did",
+        "request": "Show me what Axiom did during this task.",
+        "route": "review-axiom-task",
+        "phase": "review",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "retrospective-git-review",
+        "request": "Audit why Axiom selected traceable-git-submit and what it authorized for this completed task.",
+        "route": "review-axiom-task",
+        "phase": "review",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "unambiguous-non-english-task-review",
+        "request": "审阅当前 Axiom 任务的路由、授权、操作和证据。",
+        "route": "review-axiom-task",
+        "phase": "review",
+        "references": (),
+        "authorization": frozenset({"read"}),
     },
     {
         "name": "material-multi-route-ambiguity",
@@ -244,7 +287,17 @@ def route_contract(request: str) -> dict[str, Any]:
     normalized = request.lower()
     if "只制定持久化数据库迁移计划" in request and "不要执行" in request:
         normalized = "prepare a read-only plan for a persistent database migration"
+    if "审阅当前 Axiom 任务的路由、授权、操作和证据" in request:
+        normalized = "review the routing authorization actions and evidence for this axiom task"
 
+    review = bool(
+        "axiom" in normalized
+        and re.search(r"\b(?:review|explain|audit|show)\b", normalized)
+        and re.search(
+            r"\b(?:task|route|routing|authorization|authority|actions?|evidence|outcome)\b",
+            normalized,
+        )
+    )
     usage = bool(
         re.search(r"\bcodex\b.*\b(?:credits?|tokens?|context|usage)\b", normalized)
         or re.search(r"\b(?:skills?|agents\.md|mcp)\b.*\bcontext\b", normalized)
@@ -262,6 +315,14 @@ def route_contract(request: str) -> dict[str, Any]:
         re.search(r"\b(?:install|upgrade|deploy|deployment|migrat\w*|retention|promot\w*)\b", normalized)
         and re.search(r"\b(?:persistent|database|system|service|authorized|read-only|plan|execute)\b", normalized)
     )
+
+    if review:
+        return {
+            "route": "review-axiom-task",
+            "phase": "review",
+            "references": (),
+            "authorization": frozenset({"read"}),
+        }
 
     if usage and (agents or persistent) and re.search(r"\b(?:either|choose one)\b", normalized):
         return {
