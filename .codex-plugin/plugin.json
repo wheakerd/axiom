@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "Axiom",
     "shortDescription": "Safe, context-efficient workflows",
-    "longDescription": "Axiom routes Codex-native AGENTS architecture, explicit usage optimization, traceable Git submission, and reversible persistent system changes.",
+    "longDescription": "Axiom routes Codex-native AGENTS architecture, explicit usage optimization, read-only Axiom task review, traceable Git submission, and reversible persistent system changes.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [
@@ -33,6 +33,7 @@
     "defaultPrompt": [
       "Audit or refactor this repository's AGENTS guidance.",
       "Reduce this Codex workflow's context and tool overhead without weakening quality.",
+      "Review this Axiom-guided task's routing, authorization, actions, evidence, and outcome.",
       "Checkpoint this Git work and publish one clean commit.",
       "Plan or execute this persistent system change with verified rollback."
     ],

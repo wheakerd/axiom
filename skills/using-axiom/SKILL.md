@@ -28,6 +28,9 @@ turning ordinary work into an Axiom task.
 - `optimize-codex-usage`: explicitly reduce or diagnose Codex credits, tokens,
   context, Skill/AGENTS/MCP loading, tool churn, or output overhead while
   preserving the required quality and safety bar.
+- `review-axiom-task`: review the routing, scope, authorization, actions,
+  evidence, stops, and outcome of the current or an explicitly identified
+  Axiom-guided task when the user explicitly requests that retrospective.
 - `traceable-git-submit`: create traceable checkpoints or baseline metadata,
   consolidate or recover their history, or perform an explicit Git
   submit/publish/push. Ordinary local staging and commits stay host-native.
@@ -40,6 +43,9 @@ route only when the requested implementation also needs that route's distinct
 authorization or safety contract. Ordinary AGENTS audits select only
 `agents-architect`; ordinary performance work does not select usage
 optimization.
+
+An explicit retrospective selects `review-axiom-task`; any implementation must
+be separately authorized and routed.
 
 ## Boundaries
 

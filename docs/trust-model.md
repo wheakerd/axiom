@@ -1,6 +1,6 @@
 # Trust Model
 
-Axiom narrows how an agent approaches four focused workflow families. It
+Axiom narrows how an agent approaches five focused workflow families. It
 does not replace the host's trust model, sandbox the agent, grant credentials,
 or guarantee that a model or external system is correct.
 
@@ -54,6 +54,10 @@ The workflows make this distinction concrete:
 - `optimize-codex-usage` changes only the authorized repository or workflow
   surfaces. It does not automatically lower model/reasoning settings, install
   measurement tools, remove required evidence, or claim hidden usage data.
+- `review-axiom-task` reviews only the scoped, host-visible task evidence. It
+  cannot infer hidden reasoning, recover unavailable history, rerun the task,
+  or turn a retrospective request into new read, credential, mutation, or
+  remote authority.
 - `traceable-git-submit` is selected for an explicit checkpoint, baseline,
   consolidation, recovery, submit, publish, or push request. Checkpoint state,
   baseline mutation, consolidation, remote refresh, push, and cleanup remain
@@ -94,6 +98,9 @@ manifests, command exit codes, and inferred state.
   that current restoration works.
 - A smaller Skill or route chain is not by itself an improvement unless the
   same routing, authorization, safety, and outcome scenarios still pass.
+- A task review labels material claims as observed, reconstructed, or
+  unavailable. Current state may verify a present outcome, but it does not by
+  itself prove historical authorization, causation, or active instructions.
 - A missing tool, permission, host, or downstream observation is unavailable or
   unverified, not passed.
 
@@ -111,6 +118,10 @@ persistent process.
 A selected task workflow may guide a mutation only when the user request and
 active instructions authorize it and its own preconditions pass. A safe stop is
 an expected result when scope, authority, rollback, or evidence is insufficient.
+
+`review-axiom-task` remains read-only and creates no transcript, trace file,
+cache, telemetry, or background process. A later mutation requires its own
+explicit authority and applicable workflow.
 
 ## Update Boundary
 

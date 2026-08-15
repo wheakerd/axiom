@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Axiom Task"
+  short_description: "Review Axiom routing, authority, actions, and evidence"
+  default_prompt: "Use $review-axiom-task to explain the routing, authorization, actions, evidence, and outcome of this Axiom-guided task."
