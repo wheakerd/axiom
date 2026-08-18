@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -31,11 +31,9 @@
       "Interactive"
     ],
     "defaultPrompt": [
-      "Audit or refactor this repository's AGENTS guidance.",
+      "Audit this repository's AGENTS guidance and report findings only.",
       "Reduce this Codex workflow's context and tool overhead without weakening quality.",
-      "Review this Axiom-guided task's routing, authorization, actions, evidence, and outcome.",
-      "Checkpoint this Git work and publish one clean commit.",
-      "Plan or execute this persistent system change with verified rollback."
+      "Review this Axiom-guided task's routing, authorization, actions, evidence, and outcome."
     ],
     "brandColor": "#111827"
   }

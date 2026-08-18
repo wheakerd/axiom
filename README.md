@@ -86,8 +86,9 @@ autonomous multi-agent framework, background policy daemon, or workflow for
 every coding task. It does not prevent every model error, replace host or
 repository permissions, or turn command success into proof of an outcome.
 
-It also does not start a service, watcher, polling job, or automatic update
-channel. Updates happen only through an explicit host marketplace action.
+It also does not start a service, watcher, polling job, or updater. The host
+controls marketplace refresh and plugin installation; Claude Code can perform
+those actions in the background when marketplace auto-update is enabled.
 
 An Axiom task review is a bounded retrospective over evidence the host exposes.
 It is not telemetry, an instrumented execution trace, a source of hidden model
@@ -188,8 +189,8 @@ command. The hook reads the routing gate; the gate makes the route decision.
 
 ## Updating
 
-Axiom does not check for or install updates automatically. Refresh the relevant
-marketplace only when you choose to.
+Axiom itself does not check for, download, or install updates. The host owns
+that lifecycle. To request a manual update, use the relevant host workflow.
 
 Codex:
 
@@ -208,6 +209,37 @@ Claude Code:
 In a supported Codex workspace plugin UI, use **Refresh**. Start a new Codex
 session after refreshing, or reload Claude Code plugins. Review any changed hook
 again before trusting it.
+
+Claude Code can also refresh a marketplace and update its installed plugins on
+disk in the background after startup. Auto-update is disabled by default for
+third-party and local development marketplaces, but a user or administrator
+can enable it. The running session keeps the version loaded at launch; use
+`/reload-plugins` after an update notification or wait for the next launch.
+Therefore, the absence of a manual refresh does not prove that the installed
+files are unchanged. See Claude Code's
+[auto-update documentation](https://code.claude.com/docs/en/discover-plugins#configure-auto-updates)
+and review any changed Axiom hook before trusting the new snapshot.
+
+## Disabling Or Removing
+
+To remove the exact Codex installation from the `axiom` marketplace:
+
+```bash
+codex plugin remove axiom@axiom
+```
+
+In Claude Code, disable Axiom while keeping it installed, or uninstall it:
+
+```text
+/plugin disable axiom@axiom
+/plugin uninstall axiom@axiom
+```
+
+After a Codex removal, start a new session. After a Claude Code change, run
+`/reload-plugins` or start a new session. Confirm that Axiom is no longer
+enabled in the host's plugin list and that its hook is absent from `/hooks`
+before treating it as inactive. Do not edit installed files or delete host
+caches as a substitute for the host-managed disable or removal workflow.
 
 ## Troubleshooting
 
@@ -234,7 +266,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.6.0 release notes](docs/releases/v0.6.0.md):
+- [Changelog](CHANGELOG.md) and [v0.6.1 release notes](docs/releases/v0.6.1.md):
   release history and version-specific evidence.
 
 ## Contributing

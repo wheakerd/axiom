@@ -144,5 +144,9 @@ shortcuts. If you intentionally update Axiom, use the exact host-controlled
 commands in [README: Updating](../README.md#updating), reload the session, and
 review the hook again.
 
+If you instead want to stop Axiom from loading, follow the host-managed
+[disable or removal workflow](../README.md#disabling-or-removing) rather than
+editing the installed package or deleting caches.
+
 Continue with the [Trust Model](trust-model.md) before authorizing a workflow
 that can commit, push, deploy, delete, migrate, or promote persistent state.
