@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.5.0"
+RELEASE_VERSION = "0.5.1"
 
 REQUIRED_PUBLIC_FILES = (
     "README.md",
@@ -31,6 +31,7 @@ REQUIRED_PUBLIC_FILES = (
     "docs/releases/v0.4.1.md",
     "docs/releases/v0.4.2.md",
     "docs/releases/v0.5.0.md",
+    "docs/releases/v0.5.1.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",

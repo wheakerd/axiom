@@ -5,6 +5,28 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.5.1 - 2026-08-17
+
+### Fixed
+
+- Separated task-turn coverage, raw-output coverage, and unread required
+  history so a compacted review cannot imply that unavailable tool output was
+  recovered.
+- Prevented superseded or narrowed proposals from being revived after
+  compaction unless the user explicitly reauthorizes them.
+
+### Changed
+
+- Made current-run versus later-run activation explicit for durable
+  `AGENTS.md` updates and required fresh-session loading claims to be marked
+  verified, not run, or unavailable.
+- Consolidated review-window and candidate-disposition ownership in the
+  context-evidence reference instead of repeating it across update paths.
+- Added a focused compaction regression scenario for task-context maintenance.
+
+See [the v0.5.1 release notes](docs/releases/v0.5.1.md) for validation evidence
+and known limits.
+
 ## 0.5.0 - 2026-08-15
 
 ### Added
