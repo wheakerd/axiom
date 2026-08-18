@@ -70,6 +70,15 @@ unexpected files, active bytes, authorization boundary, and result. Add
 current-session versus inactive evidence and host-discovered shadowing cases
 only when those behaviors are in scope.
 
+When task-context maintenance, update-trigger, or compaction handling changes,
+include one regression scenario with an early proposal that a later user
+message narrows or reverses, followed by compaction before the durable update.
+Verify that the canonical mode is reported, only the controlling decision is
+admitted, superseded and unrelated one-off candidates are rejected, turn and
+raw-output coverage are reported separately, and the current-run versus
+later-run activation boundary is explicit. Use a Markdown scenario or a
+disposable host prompt; do not add a custom harness merely for this case.
+
 Static construction or `codex debug prompt-input` can prove file discovery or
 prompt assembly but not semantic model selection. Label actual host routing as
 not run or unavailable unless directly observed in a fresh session.

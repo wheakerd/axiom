@@ -233,7 +233,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.5.0 release notes](docs/releases/v0.5.0.md):
+- [Changelog](CHANGELOG.md) and [v0.5.1 release notes](docs/releases/v0.5.1.md):
   release history and version-specific evidence.
 
 ## Contributing

@@ -40,11 +40,10 @@ Write only candidates with:
 
 Reject or report temporary, speculative, duplicated, too broad, unsupported, or human-doc-only candidates.
 
-Before applying a task-context update, confirm that context evidence reached
-the established review-window boundary or reported the exact unavailable
-history. Do not present a newest-phase-only extraction as a complete task
-review. A complete broad review may still produce one small update or no file
-change; review coverage and accepted-rule count are independent.
+Before applying a task-context update, require a context-evidence result whose
+review window, decision dispositions, and coverage fields satisfy that
+reference. Do not label the review complete when it reports unread required
+history. Review coverage and accepted-rule count remain independent.
 
 ## Retrieval-friction disposition
 
