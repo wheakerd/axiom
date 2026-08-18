@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.6.0"
+RELEASE_VERSION = "0.6.1"
 
 REQUIRED_PUBLIC_FILES = (
     "README.md",
@@ -33,6 +33,7 @@ REQUIRED_PUBLIC_FILES = (
     "docs/releases/v0.5.0.md",
     "docs/releases/v0.5.1.md",
     "docs/releases/v0.6.0.md",
+    "docs/releases/v0.6.1.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -56,6 +57,15 @@ EXPECTED_HOOK_DECLARATIONS = {
 }
 EXPECTED_SKILLS_ROOT = "./skills/"
 EXPECTED_PLUGIN_ROOT = "./"
+EXPECTED_PLUGIN_NAME = "axiom"
+EXPECTED_DISPLAY_NAME = "Axiom"
+EXPECTED_TAGLINE = "Think before AI thinks."
+EXPECTED_CODEX_CATEGORY = "Productivity"
+EXPECTED_CLAUDE_CATEGORY = "productivity"
+EXPECTED_CODEX_POLICY = {
+    "installation": "AVAILABLE",
+    "authentication": "ON_INSTALL",
+}
 HOOK_FILES = (
     "hooks/codex-hooks.json",
     "hooks/claude-hooks.json",
@@ -77,6 +87,40 @@ EXPECTED_README_SKILLS = (
     "reversible-system-change",
 )
 INSTRUCTION_MAX_BYTES = 8192
+STRICT_SEMVER = re.compile(
+    r"(?:0|[1-9]\d*)\."
+    r"(?:0|[1-9]\d*)\."
+    r"(?:0|[1-9]\d*)"
+    r"(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+)
+CODEX_DEFAULT_PROMPT_MAX_ITEMS = 3
+CODEX_DEFAULT_PROMPT_MAX_CHARACTERS = 128
+EFFECTIVE_INSTRUCTION_TOKENS = (
+    "effective-instructions",
+    "effective-instructions:preview",
+    "effective-instructions:refactor",
+    "effective-instructions:force",
+    "effective-instructions:reconcile",
+    "effective-instructions:reconcile-preview",
+)
+ROUTE_SOURCE_ANCHORS = {
+    "agents-architect": ("AGENTS.md", "audit"),
+    "optimize-codex-usage": ("Codex", "credits", "context"),
+    "review-axiom-task": ("routing", "authorization", "evidence"),
+    "traceable-git-submit": ("checkpoint", "push"),
+    "reversible-system-change": ("plan", "persistent", "rollback"),
+}
+README_LIFECYCLE_COMMANDS = (
+    "codex plugin marketplace upgrade axiom",
+    "/plugin marketplace update axiom",
+    "/plugin update axiom@axiom",
+    "/reload-plugins",
+    "codex plugin remove axiom@axiom",
+    "/plugin disable axiom@axiom",
+    "/plugin uninstall axiom@axiom",
+)
 
 ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
@@ -101,6 +145,71 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "route": None,
         "phase": "normal",
         "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "effective-instructions-apply",
+        "request": "effective-instructions",
+        "route": "agents-architect",
+        "phase": "effective-update",
+        "references": (
+            "references/runtime-and-updates.md",
+            "references/maintenance/context-evidence.md",
+            "references/maintenance/maintenance-application.md",
+        ),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "effective-instructions-preview",
+        "request": "effective-instructions:preview",
+        "route": "agents-architect",
+        "phase": "effective-preview",
+        "references": (
+            "references/runtime-and-updates.md",
+            "references/maintenance/context-evidence.md",
+        ),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "effective-instructions-refactor",
+        "request": "effective-instructions:refactor",
+        "route": "agents-architect",
+        "phase": "effective-refactor",
+        "references": (
+            "references/runtime-and-updates.md",
+            "references/routing-architecture.md",
+        ),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "effective-instructions-force",
+        "request": "effective-instructions:force Keep this durable rule.",
+        "route": "agents-architect",
+        "phase": "effective-force",
+        "references": (
+            "references/runtime-and-updates.md",
+            "references/maintenance/maintenance-application.md",
+        ),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "effective-instructions-reconcile",
+        "request": "effective-instructions:reconcile",
+        "route": "agents-architect",
+        "phase": "implementation-reconciliation",
+        "references": (
+            "references/maintenance/implementation-reconciliation.md",
+        ),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "effective-instructions-reconcile-preview",
+        "request": "effective-instructions:reconcile-preview",
+        "route": "agents-architect",
+        "phase": "implementation-reconciliation-preview",
+        "references": (
+            "references/maintenance/implementation-reconciliation.md",
+        ),
         "authorization": frozenset({"read"}),
     },
     {
@@ -285,12 +394,72 @@ def display_path(path: Path) -> str:
 
 
 def route_contract(request: str) -> dict[str, Any]:
-    """Evaluate the checked-in routing contract for representative prompts."""
+    """Evaluate the offline route model after its source contracts are checked."""
     normalized = request.lower()
     if "只制定持久化数据库迁移计划" in request and "不要执行" in request:
         normalized = "prepare a read-only plan for a persistent database migration"
     if "审阅当前 Axiom 任务的路由、授权、操作和证据" in request:
         normalized = "review the routing authorization actions and evidence for this axiom task"
+
+    effective_contracts = {
+        "effective-instructions": {
+            "route": "agents-architect",
+            "phase": "effective-update",
+            "references": (
+                "references/runtime-and-updates.md",
+                "references/maintenance/context-evidence.md",
+                "references/maintenance/maintenance-application.md",
+            ),
+            "authorization": frozenset({"read", "edit", "test"}),
+        },
+        "effective-instructions:preview": {
+            "route": "agents-architect",
+            "phase": "effective-preview",
+            "references": (
+                "references/runtime-and-updates.md",
+                "references/maintenance/context-evidence.md",
+            ),
+            "authorization": frozenset({"read"}),
+        },
+        "effective-instructions:refactor": {
+            "route": "agents-architect",
+            "phase": "effective-refactor",
+            "references": (
+                "references/runtime-and-updates.md",
+                "references/routing-architecture.md",
+            ),
+            "authorization": frozenset({"read", "edit", "test"}),
+        },
+        "effective-instructions:reconcile": {
+            "route": "agents-architect",
+            "phase": "implementation-reconciliation",
+            "references": (
+                "references/maintenance/implementation-reconciliation.md",
+            ),
+            "authorization": frozenset({"read", "edit", "test"}),
+        },
+        "effective-instructions:reconcile-preview": {
+            "route": "agents-architect",
+            "phase": "implementation-reconciliation-preview",
+            "references": (
+                "references/maintenance/implementation-reconciliation.md",
+            ),
+            "authorization": frozenset({"read"}),
+        },
+    }
+    effective_request = normalized.strip()
+    if effective_request in effective_contracts:
+        return effective_contracts[effective_request]
+    if re.fullmatch(r"effective-instructions:force\s+\S(?:.*\S)?", effective_request):
+        return {
+            "route": "agents-architect",
+            "phase": "effective-force",
+            "references": (
+                "references/runtime-and-updates.md",
+                "references/maintenance/maintenance-application.md",
+            ),
+            "authorization": frozenset({"read", "edit", "test"}),
+        }
 
     review = bool(
         "axiom" in normalized
@@ -400,6 +569,74 @@ def route_contract(request: str) -> dict[str, Any]:
         "references": (),
         "authorization": frozenset(authorization),
     }
+
+
+def has_exact_route_token(text: str, token: str) -> bool:
+    return bool(
+        re.search(
+            rf"(?<![a-z0-9:-]){re.escape(token)}(?![a-z0-9:-])",
+            text.lower(),
+        )
+    )
+
+
+def check_routing_source_contracts(failures: list[str]) -> None:
+    front_door_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+    front_door = front_door_path.read_text(encoding="utf-8")
+    route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
+
+    route_entries: dict[str, str] = {}
+    for route in ROUTE_SOURCE_ANCHORS:
+        match = re.search(
+            rf"^- `{re.escape(route)}`:(.*?)(?=^- `[a-z0-9-]+`:\s|\Z)",
+            route_section,
+            re.MULTILINE | re.DOTALL,
+        )
+        if match is None:
+            failures.append(
+                f"{display_path(front_door_path)} has no parseable source contract for {route!r}"
+            )
+            continue
+        route_entries[route] = match.group(1)
+
+        skill_path = REPOSITORY_ROOT / "skills" / route / "SKILL.md"
+        fields = parse_skill_frontmatter(skill_path, failures)
+        if fields is None:
+            continue
+        surfaces = {
+            f"{display_path(front_door_path)} route entry": match.group(1),
+            f"{display_path(skill_path)} description": fields["description"],
+        }
+        for label, surface in surfaces.items():
+            for anchor in ROUTE_SOURCE_ANCHORS[route]:
+                if anchor.casefold() not in surface.casefold():
+                    failures.append(
+                        f"{label} for {route!r} is missing selection anchor {anchor!r}"
+                    )
+
+    agents_entry = route_entries.get("agents-architect")
+    agents_path = REPOSITORY_ROOT / "skills" / "agents-architect" / "SKILL.md"
+    agents_fields = parse_skill_frontmatter(agents_path, failures)
+    if agents_entry is None or agents_fields is None:
+        return
+    for label, surface in (
+        (f"{display_path(front_door_path)} agents-architect route entry", agents_entry),
+        (f"{display_path(agents_path)} description", agents_fields["description"]),
+    ):
+        for token in EFFECTIVE_INSTRUCTION_TOKENS:
+            if not has_exact_route_token(surface, token):
+                failures.append(
+                    f"{label} is missing canonical trigger token {token!r}"
+                )
+
+
+def check_readme_lifecycle_commands(failures: list[str]) -> None:
+    readme = README_PATH.read_text(encoding="utf-8")
+    for command in README_LIFECYCLE_COMMANDS:
+        if command not in readme:
+            failures.append(
+                f"README lifecycle documentation is missing exact command {command!r}"
+            )
 
 
 def check_routing_scenarios(failures: list[str]) -> None:
@@ -624,6 +861,10 @@ def check_manifest_versions(
             failures.append(f"{relative_path} must declare a string version")
             continue
         versions[relative_path] = version
+        if STRICT_SEMVER.fullmatch(version) is None:
+            failures.append(
+                f"{relative_path} version {version!r} is not strict SemVer"
+            )
 
     if len(versions) == len(MANIFEST_FILES) and len(set(versions.values())) != 1:
         rendered = ", ".join(f"{path}={version!r}" for path, version in versions.items())
@@ -633,6 +874,37 @@ def check_manifest_versions(
         if version != RELEASE_VERSION:
             failures.append(
                 f"{relative_path} version is {version!r}; publication requires {RELEASE_VERSION!r}"
+            )
+
+
+def check_codex_interface(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> None:
+    relative_path = ".codex-plugin/plugin.json"
+    document = documents.get(relative_path)
+    if document is None:
+        return
+    interface = document.get("interface")
+    if not isinstance(interface, dict):
+        failures.append(f"{relative_path} interface must be an object")
+        return
+    prompts = interface.get("defaultPrompt")
+    if not isinstance(prompts, list):
+        failures.append(f"{relative_path} interface.defaultPrompt must be an array")
+        return
+    if not 1 <= len(prompts) <= CODEX_DEFAULT_PROMPT_MAX_ITEMS:
+        failures.append(
+            f"{relative_path} interface.defaultPrompt must contain 1-"
+            f"{CODEX_DEFAULT_PROMPT_MAX_ITEMS} entries; found {len(prompts)}"
+        )
+    for index, prompt in enumerate(prompts):
+        label = f"{relative_path} interface.defaultPrompt[{index}]"
+        if not isinstance(prompt, str) or not prompt.strip():
+            failures.append(f"{label} must be a non-empty string")
+        elif len(prompt) > CODEX_DEFAULT_PROMPT_MAX_CHARACTERS:
+            failures.append(
+                f"{label} is {len(prompt)} characters; Codex caps starter prompts at "
+                f"{CODEX_DEFAULT_PROMPT_MAX_CHARACTERS}"
             )
 
 
@@ -654,6 +926,76 @@ def marketplace_plugin(
         )
         return None
     return matches[0]
+
+
+def check_distribution_identity(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> None:
+    codex_manifest_path = ".codex-plugin/plugin.json"
+    codex_manifest = documents.get(codex_manifest_path)
+    if codex_manifest is not None:
+        if codex_manifest.get("name") != EXPECTED_PLUGIN_NAME:
+            failures.append(f"{codex_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
+        if codex_manifest.get("description") != EXPECTED_TAGLINE:
+            failures.append(f"{codex_manifest_path} description must be {EXPECTED_TAGLINE!r}")
+        interface = codex_manifest.get("interface")
+        if isinstance(interface, dict):
+            if interface.get("displayName") != EXPECTED_DISPLAY_NAME:
+                failures.append(
+                    f"{codex_manifest_path} interface.displayName must be {EXPECTED_DISPLAY_NAME!r}"
+                )
+            if interface.get("category") != EXPECTED_CODEX_CATEGORY:
+                failures.append(
+                    f"{codex_manifest_path} interface.category must be {EXPECTED_CODEX_CATEGORY!r}"
+                )
+
+    claude_manifest_path = ".claude-plugin/plugin.json"
+    claude_manifest = documents.get(claude_manifest_path)
+    if claude_manifest is not None:
+        if claude_manifest.get("name") != EXPECTED_PLUGIN_NAME:
+            failures.append(f"{claude_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
+        if claude_manifest.get("displayName") != EXPECTED_DISPLAY_NAME:
+            failures.append(
+                f"{claude_manifest_path} displayName must be {EXPECTED_DISPLAY_NAME!r}"
+            )
+        if claude_manifest.get("description") != EXPECTED_TAGLINE:
+            failures.append(f"{claude_manifest_path} description must be {EXPECTED_TAGLINE!r}")
+
+    codex_marketplace_path = ".agents/plugins/marketplace.json"
+    codex_marketplace = documents.get(codex_marketplace_path)
+    if codex_marketplace is not None:
+        if codex_marketplace.get("name") != EXPECTED_PLUGIN_NAME:
+            failures.append(
+                f"{codex_marketplace_path} name must be {EXPECTED_PLUGIN_NAME!r}"
+            )
+        interface = codex_marketplace.get("interface")
+        if not isinstance(interface, dict) or interface.get("displayName") != EXPECTED_DISPLAY_NAME:
+            failures.append(
+                f"{codex_marketplace_path} interface.displayName must be {EXPECTED_DISPLAY_NAME!r}"
+            )
+        entry = marketplace_plugin(codex_marketplace, codex_marketplace_path, failures)
+        if entry is not None:
+            if entry.get("policy") != EXPECTED_CODEX_POLICY:
+                failures.append(
+                    f"{codex_marketplace_path} axiom policy must be {EXPECTED_CODEX_POLICY!r}"
+                )
+            if entry.get("category") != EXPECTED_CODEX_CATEGORY:
+                failures.append(
+                    f"{codex_marketplace_path} axiom category must be {EXPECTED_CODEX_CATEGORY!r}"
+                )
+
+    claude_marketplace_path = ".claude-plugin/marketplace.json"
+    claude_marketplace = documents.get(claude_marketplace_path)
+    if claude_marketplace is not None:
+        if claude_marketplace.get("name") != EXPECTED_PLUGIN_NAME:
+            failures.append(
+                f"{claude_marketplace_path} name must be {EXPECTED_PLUGIN_NAME!r}"
+            )
+        entry = marketplace_plugin(claude_marketplace, claude_marketplace_path, failures)
+        if entry is not None and entry.get("category") != EXPECTED_CLAUDE_CATEGORY:
+            failures.append(
+                f"{claude_marketplace_path} axiom category must be {EXPECTED_CLAUDE_CATEGORY!r}"
+            )
 
 
 def check_shared_source_roots(
@@ -1172,12 +1514,16 @@ def main() -> int:
             documents[relative_path] = document
 
     check_manifest_versions(documents, failures)
+    check_codex_interface(documents, failures)
+    check_distribution_identity(documents, failures)
     check_shared_source_roots(documents, failures)
     check_declared_hook_paths(documents, failures)
     check_exact_hook_shapes(documents, failures)
     check_documented_hook_commands(documents, failures)
+    check_readme_lifecycle_commands(failures)
     check_packaged_skills(failures)
     check_skill_contracts(failures)
+    check_routing_source_contracts(failures)
     check_routing_scenarios(failures)
     check_reversible_safety_scenarios(failures)
     markdown_count = check_markdown_links(failures)

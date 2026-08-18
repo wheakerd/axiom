@@ -5,6 +5,22 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.6.1 - 2026-08-18
+
+### Fixed
+
+- Limited Codex starter prompts to the three entries the host displays and
+  made the AGENTS audit starter explicitly read-only.
+- Anchored routing validation to the packaged front door and Skill
+  descriptions, including every canonical `effective-instructions` mode.
+- Repaired the agents-architect validation route to its sibling instruction
+  document contract.
+- Qualified host-controlled auto-update behavior and documented safe disable
+  and removal workflows.
+
+See [the v0.6.1 release notes](docs/releases/v0.6.1.md) for validation evidence
+and known limits.
+
 ## 0.6.0 - 2026-08-18
 
 ### Added

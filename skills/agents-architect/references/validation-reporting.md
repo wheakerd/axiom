@@ -39,7 +39,8 @@ Add only checks triggered by the changed surface:
 - Root, nested entry, or discovery changes: verify the applicable instruction
   chain and current host behavior when safely available.
 - Metadata or document-role changes: read
-  `../instruction-document-contracts.md` and validate its schema.
+  [instruction document contracts](instruction-document-contracts.md) and
+  validate its schema.
 - Size or split changes: measure root, key indexes, selected owners, and
   representative active chains; do not use `project_doc_max_bytes` as an
   authoring target.

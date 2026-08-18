@@ -54,6 +54,18 @@ present executable or manifest alone would be too weak to support that claim.
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
 
+The Git record for `v0.6.1` reports:
+
+- the distribution and publication guards, JSON parsing, hook and
+  documentation agreement, skill shape, English-only, size, link, and
+  whitespace checks passed for the release candidate;
+- all six packaged Skills passed the local Skill Creator quick validator and
+  Claude Code `2.1.220` strict plugin and marketplace validation passed;
+- negative checks rejected a fourth Codex starter prompt, a missing canonical
+  route token, the prior broken relative link, and non-strict SemVer; and
+- fresh install, disable, removal, and session-level semantic-routing checks
+  were not run.
+
 The Git record for `v0.6.0` reports:
 
 - the distribution and publication guards, JSON and YAML parsing, hook and
@@ -168,7 +180,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.6.0 release notes](releases/v0.6.0.md),
+See the durable [v0.6.1 release notes](releases/v0.6.1.md),
+[v0.6.0 release notes](releases/v0.6.0.md),
 [v0.5.1 release notes](releases/v0.5.1.md),
 [v0.5.0 release notes](releases/v0.5.0.md),
 [v0.4.2 release notes](releases/v0.4.2.md),

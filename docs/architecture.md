@@ -110,10 +110,14 @@ queries, and local Git staging or commits in the host's normal workflow.
 
 ## Lifecycle And Updates
 
-Axiom has no long-running state manager or automatic update channel. The host
-loads the installed snapshot at its configured lifecycle events. A marketplace
-refresh is an explicit user action; after refreshing, the user reloads or
-starts a session and reviews any changed hook before trusting it.
+Axiom has no long-running state manager or updater of its own. The host loads
+the installed snapshot at its configured lifecycle events and controls how that
+snapshot changes. A refresh may be manually requested, or Claude Code may
+refresh a marketplace and update installed plugins on disk after startup when
+auto-update is enabled. The running Claude Code session keeps the version it
+loaded at launch until plugins are reloaded or a new session starts. In every
+case, review any changed hook before trusting the new snapshot. See
+[README: Updating](../README.md#updating) for the host-specific lifecycle.
 
 For the checked-in support boundary and evidence categories, see
 [Compatibility](compatibility.md).

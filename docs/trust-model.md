@@ -19,7 +19,7 @@ authorize an action.
 | Mutation | Each workflow keeps its own edit, commit, push, promotion, deletion, or rollback gates | Loading a skill is never mutation authority |
 | Evidence | Completion is based on fresh, direct evidence from the layer that owns the outcome | A successful command, queued operation, present artifact, or missing validator is not proof |
 | Usage measurement | Host-reported metrics are exact only for their stated scope; bytes, words, route sizes, and calls are labeled proxies | Axiom cannot read hidden tokens, credits, reasoning work, or cache hits, and never invents exact savings |
-| Updates | Refresh is an explicit host marketplace action followed by session reload and hook review | Axiom does not check, download, install, or announce updates automatically |
+| Updates | The host controls manual refresh and any configured auto-update; a changed snapshot requires session reload or restart and renewed hook review | Axiom itself does not check, download, install, or announce updates |
 
 ## Hook Trust Boundary
 
@@ -125,11 +125,20 @@ explicit authority and applicable workflow.
 
 ## Update Boundary
 
-Axiom has no automatic update channel. Update checks, marketplace refreshes,
-downloads, and installation remain explicit host-controlled actions. Use the
-commands in [README: Updating](../README.md#updating), then start or reload the
-session and review the installed hook again. A previously trusted hook does not
-make a changed definition automatically trustworthy.
+Axiom has no updater of its own. Update checks, marketplace refreshes,
+downloads, and installation remain host-controlled actions, but they are not
+always manually initiated: Claude Code can refresh marketplaces and update
+installed plugins on disk after startup when auto-update is enabled. Its
+third-party and local marketplace auto-update setting is disabled by default,
+but a user or administrator can enable it. The running session keeps its
+already-loaded version until reload or the next launch.
+
+Use [README: Updating](../README.md#updating) for manual refresh and auto-update
+details, or [README: Disabling Or Removing](../README.md#disabling-or-removing)
+to stop loading Axiom through the host. After any installed snapshot changes,
+start or reload the session and review the installed hook again. A previously
+trusted hook does not make a changed definition automatically trustworthy, and
+the absence of a manual refresh does not prove that files on disk are unchanged.
 
 ## What This Model Does Not Promise
 
