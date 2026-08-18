@@ -14,11 +14,21 @@ Handle long-task state and user-triggered durable instruction updates.
 - During that active task, the user says exactly `effective-instructions:preview`.
 - During that active task, the user says exactly `effective-instructions:refactor`.
 - During that active task, the user says exactly `effective-instructions:force <instruction>`.
+- In any task or fresh session, the user says exactly
+  `effective-instructions:reconcile`.
+- In any task or fresh session, the user says exactly
+  `effective-instructions:reconcile-preview`.
 - During that active task, the user makes a non-English request that unambiguously maps to one canonical effective-instructions mode.
+- In any task or fresh session, the user explicitly makes an unambiguous
+  non-English request to reconcile existing AGENTS guidance with current
+  implementation.
 
 ## Do not apply when
 
 - No trigger phrase is present and the task is short.
+- Reconciliation was not explicitly requested. Implementation drift or an
+  execution or context discontinuity is only possible evidence after
+  activation, never an activation signal.
 - A discovery is useful only for the current task.
 - The user wording could map to multiple effective-instructions modes.
 - The task is Axiom repository maintenance; follow the active repository's higher-priority maintenance instructions instead of this target-repository workflow unless the user explicitly invokes `$agents-architect` for a target AGENTS architecture task.
@@ -92,6 +102,15 @@ redefining them here.
 - Still check scope, conflicts, safety, and canonical placement.
 - If temporary, put it in a runtime note, not durable rules.
 
+`effective-instructions:reconcile` and
+`effective-instructions:reconcile-preview`:
+
+- Load `maintenance/implementation-reconciliation.md` as the sole detailed
+  contract for these modes.
+- Permit a fresh-session start; no earlier task context or review-window
+  baseline is required unless the user includes it in scope.
+- Do not infer either mode from repository or execution evidence.
+
 ## Activation semantics
 
 Editing an `AGENTS.md` file does not retroactively change the instruction chain
@@ -109,17 +128,20 @@ For every triggered update, report:
 - Added rules.
 - Modified rules.
 - Removed or merged rules.
-- Confirmed, superseded, unresolved, and rejected candidate dispositions with
-  reasons.
-- Retrieval-friction dispositions and source checks that remain necessary.
-- Review-window start, reviewed-through point, and baseline reason.
-- Turn coverage, raw-output coverage, and unread required history.
 - Affected routes.
 - Byte changes.
 - Git tracking or ignore state.
 - Validation results.
 - Current-run versus later-run activation status, including whether fresh host
   loading was verified, `NOT-RUN`, or unavailable.
+
+For `effective-instructions` and `effective-instructions:preview`, also report
+confirmed, superseded, unresolved, and rejected candidate dispositions with
+reasons; retrieval-friction dispositions and remaining source checks; the
+review-window start, reviewed-through point, and baseline reason; turn
+coverage; raw-output coverage; and unread required history. For either
+reconciliation mode, use the baseline, ledger, collaboration, and stop fields
+defined by `maintenance/implementation-reconciliation.md` instead.
 
 ## Prohibited actions
 

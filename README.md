@@ -25,6 +25,7 @@ or other mutation.
 | Ask | Observable routing decision |
 | --- | --- |
 | "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, inventory the instruction system, and report findings without changes |
+| "Run `effective-instructions:reconcile-preview` against this repository's current implementation." | Select `agents-architect`, compare existing AGENTS claims with the live working tree through the strict read-only reconciliation protocol, and report without changes |
 | "Explain the routing, authorization, actions, and evidence for this Axiom-guided task." | Select `review-axiom-task`, review only the available task evidence, and label missing history without rerunning the task |
 | "Summarize the purpose of this README. Do not modify files." | Select no Axiom workflow and continue normally without changing files |
 
@@ -68,7 +69,7 @@ rewriting local state.
 
 | Route | Select it for | Core boundary |
 | --- | --- | --- |
-| `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, its `.agents/` routes, or repo-local skills | Inspect first; change only the authorized instruction system and keep protected plugin metadata out of scope |
+| `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, or explicitly reconciling existing guidance with current implementation | Inspect first; reconciliation is user-triggered, evidence-led, and limited to the authorized instruction system |
 | `optimize-codex-usage` | Explicitly reducing or diagnosing Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool churn, or reporting overhead | Preserve the required quality, safety, authorization, rollback, and evidence bar; label proxies and never invent hidden usage data |
 | `review-axiom-task` | Explicitly reviewing the routing, scope, authorization, actions, evidence, stops, and outcome of an Axiom-guided task | Keep the review read-only; separate Axiom guidance from host-agent actions; label evidence as observed, reconstructed, or unavailable |
 | `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep checkpoint/provenance, consolidation, remote refresh, push, and cleanup independent; a direct push preserves history and creates no Axiom metadata |
@@ -233,7 +234,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.5.1 release notes](docs/releases/v0.5.1.md):
+- [Changelog](CHANGELOG.md) and [v0.6.0 release notes](docs/releases/v0.6.0.md):
   release history and version-specific evidence.
 
 ## Contributing

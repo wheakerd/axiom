@@ -24,7 +24,11 @@ turning ordinary work into an Axiom task.
 
 - `agents-architect`: create, audit, split, migrate, or maintain a target
   repository's `AGENTS.md` system, routed `.agents/` guidance, or supporting
-  repo-local skills. Packaged plugin skills are outside this route.
+  repo-local skills; also reconcile existing guidance with current
+  implementation only when the user explicitly invokes
+  `effective-instructions:reconcile`,
+  `effective-instructions:reconcile-preview`, or an explicit unambiguous
+  request for that operation. Packaged plugin skills are outside this route.
 - `optimize-codex-usage`: explicitly reduce or diagnose Codex credits, tokens,
   context, Skill/AGENTS/MCP loading, tool churn, or output overhead while
   preserving the required quality and safety bar.

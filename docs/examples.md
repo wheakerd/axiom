@@ -18,6 +18,14 @@ historical, or other-repository material. A discovered instruction candidate is
 not automatically writable, and an Axiom route in the installed plugin is not
 something to copy into the target repository's `AGENTS.md`.
 
+For implementation reconciliation, use
+`effective-instructions:reconcile-preview` for a read-only report or
+`effective-instructions:reconcile` for an authorized AGENTS-system update.
+These modes compare atomized existing claims with the live working tree through
+independent instruction, implementation, and provenance audits. Ordinary AGENTS
+maintenance, repository drift, rollback, compaction, or a model or agent handoff
+does not activate reconciliation without an explicit user request.
+
 ## `optimize-codex-usage`
 
 | Field | Example |

@@ -1,6 +1,6 @@
 ---
 name: agents-architect
-description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, or oversized guidance. Do not use for packaged or installed plugin Skills, ordinary documentation, or general Codex usage optimization unless the requested change is specifically to AGENTS architecture.
+description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, oversized guidance, or when the user explicitly invokes effective-instructions:reconcile or effective-instructions:reconcile-preview. Do not use for packaged or installed plugin Skills, ordinary documentation, or general Codex usage optimization unless the requested change is specifically to AGENTS architecture.
 ---
 
 # AGENTS Architect
@@ -38,6 +38,12 @@ discoverable here; do not scan siblings for background.
   `references/maintenance/maintenance-application.md` for AGENTS guidance or
   `references/maintenance/repo-local-skills.md` for a supporting repo-local
   Skill.
+- Reconcile existing AGENTS guidance with current implementation only when the
+  user explicitly invokes `effective-instructions:reconcile`,
+  `effective-instructions:reconcile-preview`, or an explicit unambiguous
+  request for that same operation: read
+  `references/maintenance/implementation-reconciliation.md`. This route may
+  begin in a later fresh session.
 - Handle runtime capsules or a durable update trigger during or after ordinary
   work in the current task: `references/runtime-and-updates.md`. For
   `effective-instructions` and its preview, also read the context-evidence
