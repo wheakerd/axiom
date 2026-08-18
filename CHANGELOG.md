@@ -5,6 +5,34 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.6.0 - 2026-08-18
+
+### Added
+
+- Added the explicitly user-triggered `effective-instructions:reconcile` and
+  `effective-instructions:reconcile-preview` modes for comparing existing
+  AGENTS guidance with current implementation.
+- Added an atomized evidence ledger that separates claim kind, observed
+  status, disposition, and write action before any rule is corrected, moved,
+  or removed.
+
+### Changed
+
+- Made the live filesystem working tree the default reconciliation baseline,
+  with staged divergence, unstaged, untracked, and material ignored content
+  recorded separately from `HEAD`, named refs, and history.
+- Required one coordinator, three independent read-only auditors, and one
+  isolated non-coordinator writer after ledger freeze; incomplete role
+  coverage now stops writes and is reported as `NOT-RUN`.
+- Kept rollback, interrupted execution, compaction, and model or agent handoff
+  as post-activation evidence rather than autonomous reconciliation triggers.
+- Added focused routing and evidence scenarios for preview/apply boundaries,
+  partial rollback, normative constraints, worker conflict, and active-chain
+  authority.
+
+See [the v0.6.0 release notes](docs/releases/v0.6.0.md) for validation evidence
+and known limits.
+
 ## 0.5.1 - 2026-08-17
 
 ### Fixed

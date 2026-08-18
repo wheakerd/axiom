@@ -47,6 +47,10 @@ Add only checks triggered by the changed surface:
   editable duplicate remains.
 - Repo-local Skill changes: validate frontmatter, direct routes, resources,
   and the AGENTS owner that selects the Skill.
+- Implementation reconciliation: validate explicit activation, recorded
+  working-tree or ref baseline, per-rule evidence status and disposition,
+  active-chain authority, collaboration separation, preview/apply
+  authorization, and the selected maintenance or migration terminal owner.
 
 Do not repeat a conclusive check unless its target changed or the check failed.
 Batch independent read-only checks when their results do not affect the next
@@ -78,6 +82,26 @@ admitted, superseded and unrelated one-off candidates are rejected, turn and
 raw-output coverage are reported separately, and the current-run versus
 later-run activation boundary is explicit. Use a Markdown scenario or a
 disposable host prompt; do not add a custom harness merely for this case.
+
+When implementation reconciliation changes, cover both exact canonical modes,
+an explicit unambiguous non-English normalization, and these boundaries:
+
+- ordinary `update AGENTS` stays on normal maintenance, while implementation
+  drift or an execution or context discontinuity without an explicit request
+  does not activate reconciliation;
+- when `HEAD` supports a rule but material working-tree content contradicts it,
+  the live tree controls by default; a user-selected ref remains explicit and
+  any live divergence is reported;
+- partial rollback and bounded negative evidence do not over-delete, and a
+  normative constraint is not removed merely because code has no analogue;
+- worker conflict is resolved from direct evidence, not majority vote, and an
+  active rule found stale remains binding for the current run; and
+- preview never writes, apply uses one writer after ledger freeze, and missing
+  roles or writer isolation safe-stop with completion and writes marked
+  `NOT-RUN`.
+
+Include material staged, unstaged, untracked, and ignored content in the
+baseline scenarios.
 
 Static construction or `codex debug prompt-input` can prove file discovery or
 prompt assembly but not semantic model selection. Label actual host routing as

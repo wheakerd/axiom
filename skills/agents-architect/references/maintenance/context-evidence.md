@@ -90,7 +90,10 @@ Collect task evidence for AGENTS maintenance while preserving instruction priori
 
 ## Subagents
 
-Use subagents only for bounded sidecar work when available and justified by size:
+When `implementation-reconciliation.md` is selected, its mandatory
+coordinator, worker, and single-writer contract controls regardless of history
+size. Otherwise, use subagents only for bounded sidecar work when available
+and justified by size:
 
 - Extract durable candidates from long history.
 - Summarize candidate evidence with source turn ranges or visible summaries.
