@@ -56,16 +56,11 @@ Scope these modes to the active target repository's AGENTS instruction system. D
 
 Do not use these modes to persist Axiom packaged skill rules, Axiom trigger definitions, load policies, internal routes, validation protocols, or reporting formats into a target repository.
 
-For `effective-instructions` and `effective-instructions:preview`, review what
-the current task had to read in each phase for retrieval-friction signals. Load
-`maintenance/context-evidence.md` and establish the review window before
-extracting candidates. The first whole-task review begins at the task's oldest
-available turn; only a prior completed review with an explicit start,
-reviewed-through point, and candidate dispositions creates an incremental
-baseline. An earlier AGENTS read, narrow edit, ordinary task completion, or
-Skill activation is not such a baseline. Classify each signal as
-`instruction-gap`, `routing-gap`, `validation-gap`,
-`expected-live-verification`, or `one-off-code-defect`.
+For `effective-instructions` and `effective-instructions:preview`, load
+`maintenance/context-evidence.md` and follow its review-window, decision-
+disposition, coverage, and retrieval-friction rules before extracting
+candidates. Keep their full definitions in that reference rather than
+redefining them here.
 
 `effective-instructions`:
 
@@ -97,21 +92,34 @@ Skill activation is not such a baseline. Classify each signal as
 - Still check scope, conflicts, safety, and canonical placement.
 - If temporary, put it in a runtime note, not durable rules.
 
+## Activation semantics
+
+Editing an `AGENTS.md` file does not retroactively change the instruction chain
+already loaded for the current run. Treat the edit as durable input for later
+in-scope runs. Report fresh host loading as verified only when it was directly
+checked in a new run or session; otherwise mark it `NOT-RUN` or unavailable.
+A runtime capsule, when justified, carries current-task state; a durable AGENTS
+update does not replace that role.
+
 ## Report required
 
 For every triggered update, report:
 
+- Selected canonical effective-instructions mode.
 - Added rules.
 - Modified rules.
 - Removed or merged rules.
-- Rejected candidates and reasons.
+- Confirmed, superseded, unresolved, and rejected candidate dispositions with
+  reasons.
 - Retrieval-friction dispositions and source checks that remain necessary.
-- Review-window start, reviewed-through point, baseline reason, and any unread
-  required history.
+- Review-window start, reviewed-through point, and baseline reason.
+- Turn coverage, raw-output coverage, and unread required history.
 - Affected routes.
 - Byte changes.
 - Git tracking or ignore state.
 - Validation results.
+- Current-run versus later-run activation status, including whether fresh host
+  loading was verified, `NOT-RUN`, or unavailable.
 
 ## Prohibited actions
 
