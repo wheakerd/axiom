@@ -75,8 +75,8 @@ rewriting local state.
 | `optimize-codex-usage` | Explicitly reducing or diagnosing Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool churn, or reporting overhead | Preserve the required quality, safety, authorization, rollback, and evidence bar; label proxies and never invent hidden usage data |
 | `review-axiom-task` | Explicitly reviewing the routing, scope, authorization, actions, evidence, stops, and outcome of an Axiom-guided task | Keep the review read-only; separate Axiom guidance from host-agent actions; label evidence as observed, reconstructed, or unavailable |
 | `confirm-external-action` | Explicitly sending, publishing, inviting, purchasing, trading, deleting, or changing external app/account state | Bind actor, target, payload, disclosure, cost, count, and retry semantics; execute once and verify through the external system of record |
-| `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep checkpoint/provenance, consolidation, remote refresh, push, and cleanup independent; a direct push preserves history and creates no Axiom metadata |
-| `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plan-only work stays read-only; mutation requires an exact target, explicit authority, and current rollback evidence |
+| `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep target-controlled Git configuration non-executable; checkpoint/provenance, consolidation, remote refresh, push, and cleanup remain independent |
+| `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plans and non-mutating rehearsals stay read-only; an isolated restore rehearsal and complete execution require separate exact write authority |
 
 The startup gate is `using-axiom`. It selects the smallest matching route and
 continues normally when none applies. See [Examples](docs/examples.md) for
@@ -272,7 +272,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.7.0 release notes](docs/releases/v0.7.0.md):
+- [Changelog](CHANGELOG.md) and [v0.7.1 release notes](docs/releases/v0.7.1.md):
   release history and version-specific evidence.
 
 ## Contributing

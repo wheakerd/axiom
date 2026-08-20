@@ -59,6 +59,31 @@ present executable or manifest alone would be too weak to support that claim.
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
 
+The Git record for `v0.7.1` reports:
+
+- the distribution and publication guards, JSON parsing, hook and
+  documentation agreement, packaged Skill shape, immutable action pins,
+  English-only, size, link, artifact, and whitespace checks passed for the
+  release candidate;
+- twenty-eight routing scenarios, thirty-seven traceable-Git security
+  scenarios, twelve external-action scenarios, and ten rollback scenarios
+  passed without being presented as fresh host semantic-routing evidence;
+- focused Linux and Git `2.55.0` probes reproduced target-controlled
+  `core.fsmonitor` and `core.sshCommand` execution, then confirmed the frozen
+  non-executable process envelope blocked both paths while benign status still
+  worked;
+- all seven packaged Skills passed the local Skill Creator quick validator and
+  Claude Code `2.1.220` strict plugin and marketplace validation passed;
+- a complete security review covered seventy-one artifacts across ten attack
+  surfaces with no remaining reportable finding, while the rehearsal routing
+  regressions selected read-only, clarification, and exact isolated-write
+  outcomes as intended;
+- the bundled local `plugin-creator` validator still rejected the intentional
+  Codex `hooks` field, while Codex CLI `0.148.0` exposed no native
+  plugin-validation command; and
+- a fresh installation, fresh-session route-selection test, real external app
+  action, and real persistent system change were not run.
+
 The Git record for `v0.7.0` reports:
 
 - the distribution and publication guards, JSON parsing, hook and
@@ -205,7 +230,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.0 release notes](releases/v0.7.0.md),
+See the durable [v0.7.1 release notes](releases/v0.7.1.md),
+[v0.7.0 release notes](releases/v0.7.0.md),
 [v0.6.1 release notes](releases/v0.6.1.md),
 [v0.6.0 release notes](releases/v0.6.0.md),
 [v0.5.1 release notes](releases/v0.5.1.md),

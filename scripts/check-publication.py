@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.7.0"
+RELEASE_VERSION = "0.7.1"
 
 REQUIRED_PUBLIC_FILES = (
     "README.md",
@@ -35,6 +35,7 @@ REQUIRED_PUBLIC_FILES = (
     "docs/releases/v0.6.0.md",
     "docs/releases/v0.6.1.md",
     "docs/releases/v0.7.0.md",
+    "docs/releases/v0.7.1.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -279,6 +280,41 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "phase": "plan",
         "references": ("references/preflight-and-rollback.md",),
         "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "non-mutating-migration-rehearsal",
+        "request": "Rehearse this database migration without changing any state.",
+        "route": "reversible-system-change",
+        "phase": "rehearsal-read-only",
+        "references": ("references/preflight-and-rollback.md",),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "upgrade-dry-run",
+        "request": "Run a dry run of this upgrade.",
+        "route": "reversible-system-change",
+        "phase": "rehearsal-read-only",
+        "references": ("references/preflight-and-rollback.md",),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "ambiguous-deployment-rehearsal",
+        "request": "Rehearse this deployment.",
+        "route": "clarify",
+        "phase": "rehearsal-type",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "isolated-restore-rehearsal",
+        "request": (
+            "Run this explicitly authorized isolated restore rehearsal without "
+            "promotion."
+        ),
+        "route": "reversible-system-change",
+        "phase": "isolated-restore-rehearsal",
+        "references": ("references/preflight-and-rollback.md",),
+        "authorization": frozenset({"read", "restore-rehearsal-write"}),
     },
     {
         "name": "migration-execution",
@@ -540,8 +576,17 @@ def route_contract(request: str) -> dict[str, Any]:
         or re.search(r"\b(?:git|branch)\b.*\b(?:submit|publish|push)\b", normalized)
     )
     persistent = bool(
-        re.search(r"\b(?:install|upgrade|deploy|deployment|migrat\w*|retention|promot\w*)\b", normalized)
-        and re.search(r"\b(?:persistent|database|system|service|authorized|read-only|plan|execute)\b", normalized)
+        (
+            re.search(
+                r"\b(?:install|upgrade|deploy|deployment|migrat\w*|retention|promot\w*)\b",
+                normalized,
+            )
+            and re.search(
+                r"\b(?:persistent|database|system|service|authorized|read-only|plan|execute|rehears\w*|dry[ -]run|simulation)\b",
+                normalized,
+            )
+        )
+        or "isolated restore rehearsal" in normalized
     )
     external_effect_prohibited = bool(
         re.search(
@@ -617,13 +662,42 @@ def route_contract(request: str) -> dict[str, Any]:
         }
 
     if persistent:
+        isolated_restore_rehearsal = "isolated restore rehearsal" in normalized
+        rehearsal_requested = bool(
+            re.search(r"\b(?:rehears\w*|dry[ -]run|simulation)\b", normalized)
+        )
+        non_mutating_rehearsal = bool(
+            rehearsal_requested
+            and re.search(
+                r"\b(?:non-mutating|read-only|without changing|do not change|dry[ -]run|simulation)\b",
+                normalized,
+            )
+        )
+        if isolated_restore_rehearsal:
+            return {
+                "route": "reversible-system-change",
+                "phase": "isolated-restore-rehearsal",
+                "references": ("references/preflight-and-rollback.md",),
+                "authorization": frozenset({"read", "restore-rehearsal-write"}),
+            }
+        if rehearsal_requested and not non_mutating_rehearsal:
+            return {
+                "route": "clarify",
+                "phase": "rehearsal-type",
+                "references": (),
+                "authorization": frozenset({"read"}),
+            }
         plan_only = bool(re.search(r"\b(?:read-only|plan)\b", normalized)) and "execute" not in normalized
         return {
             "route": "reversible-system-change",
-            "phase": "plan" if plan_only else "execute",
+            "phase": (
+                "rehearsal-read-only"
+                if non_mutating_rehearsal
+                else "plan" if plan_only else "execute"
+            ),
             "references": (
                 ("references/preflight-and-rollback.md",)
-                if plan_only
+                if plan_only or non_mutating_rehearsal
                 else (
                     "references/preflight-and-rollback.md",
                     "references/execution-and-verification.md",
@@ -631,7 +705,7 @@ def route_contract(request: str) -> dict[str, Any]:
             ),
             "authorization": (
                 frozenset({"read"})
-                if plan_only
+                if plan_only or non_mutating_rehearsal
                 else frozenset({"read", "persistent-write"})
             ),
         }
@@ -841,6 +915,46 @@ def safe_git_transport(value: str) -> bool:
     return re.match(r"^(?:[^/@:\s]+@)?[^/:\s]+:.+$", value) is not None
 
 
+COMMAND_CAPABLE_GIT_CONFIG = (
+    re.compile(
+        r"^core\.(?:fsmonitor|sshcommand|hookspath|askpass|gitproxy|pager|editor|alternaterefscommand)$"
+    ),
+    re.compile(r"^(?:sequence\.editor|pager\..+|gc\.recentobjectshook)$"),
+    re.compile(r"^(?:commit|tag)\.gpgsign$"),
+    re.compile(r"^credential(?:\..+)?\.helper$"),
+    re.compile(r"^diff\.(?:external|.+\.(?:command|textconv))$"),
+    re.compile(r"^filter\..+\.(?:clean|smudge|process)$"),
+    re.compile(r"^remote\..+\.(?:proxy|uploadpack|receivepack)$"),
+    re.compile(r"^url\..+\.(?:insteadof|pushinsteadof)$"),
+    re.compile(r"^(?:gpg|gpg\..+)\.program$"),
+    re.compile(r"^include(?:if\..+)?\.path$"),
+)
+
+
+def safe_git_execution_envelope(
+    local_config_keys: tuple[str, ...],
+    ambient_environment_names: tuple[str, ...],
+    handled_config_keys: tuple[str, ...] = (),
+) -> bool:
+    handled = {key.casefold() for key in handled_config_keys}
+    for raw_key in local_config_keys:
+        key = raw_key.casefold()
+        if any(pattern.fullmatch(key) for pattern in COMMAND_CAPABLE_GIT_CONFIG):
+            if key not in handled:
+                return False
+
+    for raw_name in ambient_environment_names:
+        name = raw_name.upper()
+        if name.startswith("GIT_") or name in {
+            "PAGER",
+            "EDITOR",
+            "VISUAL",
+            "SSH_ASKPASS",
+        }:
+            return False
+    return True
+
+
 def all_evidence(evidence: dict[str, bool], fields: tuple[str, ...]) -> bool:
     return all(evidence.get(field, False) for field in fields)
 
@@ -850,6 +964,7 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     required_anchors = {
         "SKILL.md": (
             "references/safe-git-values-and-metadata.md",
+            "non-executable Git configuration and environment boundary",
             "cleanupReady",
             "separate exact cleanup authority",
         ),
@@ -858,6 +973,12 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "git check-ref-format",
             "remote-helper syntax",
             "protocol.allow",
+            "target-controlled",
+            "core.fsmonitor",
+            "core.sshCommand",
+            "credential helpers",
+            "`GIT_*`",
+            "installed Git version",
             "no-follow",
             "linked worktree",
             "parent identity",
@@ -912,6 +1033,36 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         if safe_git_transport(value) != expected:
             failures.append(f"safe Git transport scenario {name!r} returned the wrong gate result")
 
+    execution_envelope_scenarios = (
+        ("benign-config", ("core.filemode", "remote.origin.url"), (), (), True),
+        ("fsmonitor-stops", ("core.fsmonitor",), (), (), False),
+        (
+            "neutralized-fsmonitor",
+            ("core.fsmonitor",),
+            (),
+            ("core.fsmonitor",),
+            True,
+        ),
+        ("ssh-command-stops", ("core.sshCommand",), (), (), False),
+        ("pager-command-stops", ("core.pager",), (), (), False),
+        ("credential-helper-stops", ("credential.helper",), (), (), False),
+        ("filter-process-stops", ("filter.lfs.process",), (), (), False),
+        ("url-rewrite-stops", ("url.ssh://example/.insteadOf",), (), (), False),
+        ("git-environment-stops", (), ("GIT_SSH_COMMAND",), (), False),
+        ("pager-environment-stops", (), ("GIT_PAGER",), (), False),
+    )
+    for (
+        name,
+        config_keys,
+        environment_names,
+        handled_keys,
+        expected,
+    ) in execution_envelope_scenarios:
+        if safe_git_execution_envelope(config_keys, environment_names, handled_keys) != expected:
+            failures.append(
+                f"safe Git execution-envelope scenario {name!r} returned the wrong gate result"
+            )
+
     complete_cleanup = {field: True for field in CLEANUP_AUTHORITY_FIELDS}
     if not all_evidence(complete_cleanup, CLEANUP_AUTHORITY_FIELDS):
         failures.append("complete exact cleanup authority must permit cleanup")
@@ -922,7 +1073,13 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             failures.append(
                 f"cleanup scenario without {missing_field!r} must retain recovery state"
             )
-    return len(operand_scenarios) + len(transport_scenarios) + len(CLEANUP_AUTHORITY_FIELDS) + 1
+    return (
+        len(operand_scenarios)
+        + len(transport_scenarios)
+        + len(execution_envelope_scenarios)
+        + len(CLEANUP_AUTHORITY_FIELDS)
+        + 1
+    )
 
 
 def check_external_action_scenarios(failures: list[str]) -> int:
@@ -994,6 +1151,17 @@ def check_reversible_safety_scenarios(failures: list[str]) -> None:
         if f"`{evidence_label}`" not in contract_text:
             failures.append(
                 f"reversible-system-change is missing rollback evidence label {evidence_label!r}"
+            )
+
+    for phase_anchor in (
+        "non-mutating workflow rehearsal",
+        "isolated restore rehearsal",
+        "rehearsal-write authority",
+        "cannot affect active state or data",
+    ):
+        if phase_anchor.casefold() not in contract_text.casefold():
+            failures.append(
+                f"reversible-system-change is missing rehearsal phase contract {phase_anchor!r}"
             )
 
 

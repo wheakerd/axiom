@@ -66,10 +66,14 @@ The workflows make this distinction concrete:
   consolidation, recovery, submit, publish, or push request. Checkpoint state,
   baseline mutation, consolidation, remote refresh, push, and cleanup remain
   independent permissions. A direct history-preserving push creates no Axiom
-  metadata, and push never implies consolidation.
-- `reversible-system-change` keeps plans and rehearsals read-only. Candidate
-  preparation, active promotion, sensitive asset use, destructive retention,
-  and rollback are distinct permissions.
+  metadata, and push never implies consolidation. Target-controlled Git
+  configuration and programs remain non-authorizing executable input; every Git
+  command requires a frozen non-executable process boundary or separate exact
+  authority for the executable it would run.
+- `reversible-system-change` keeps plans and non-mutating workflow rehearsals
+  read-only. An isolated restore rehearsal is a separately authorized persistent
+  write; rehearsal, candidate preparation, active promotion, sensitive asset
+  use, destructive retention, rollback, and cleanup are distinct permissions.
 
 If the target, environment, credentials, destructive scope, or promotion
 authority is ambiguous in a way that changes execution, the workflow stops for

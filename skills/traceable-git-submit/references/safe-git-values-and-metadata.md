@@ -2,10 +2,39 @@
 
 ## Purpose
 
-Keep Git-derived values literal across process boundaries, keep raw endpoints
-out of observable output, and confine Axiom state to verified Git metadata.
-Apply this reference before any command that consumes a value read from Git or
-before creating, replacing, or deleting traceable workflow metadata.
+Keep target-controlled Git state from becoming executable, keep Git-derived
+values literal across process boundaries, keep raw endpoints out of observable
+output, and confine Axiom state to verified Git metadata. Apply this reference
+before every target-repository Git invocation.
+
+## Non-Executable Git Boundary
+
+Treat repository/worktree configuration, includes, attributes, hooks, helpers,
+filters, signing or transport programs, and ambient process state as untrusted
+executable input. Before the first target-repository Git command, freeze one
+process envelope for every later command, including read-only inspection. A
+generic checkpoint, commit, fetch, or push never authorizes such a program.
+
+Bootstrap only with a host-native non-executing parser or an operation the
+installed Git version documents as unable to dispatch external programs. Use a
+literal argument API, clear ambient `GIT_*`, repository, object, index, pager,
+editor, askpass, proxy, diff, and SSH-command variables, disable
+target-controlled includes, and capture configuration names and origins without
+displaying values. If this cannot be proved, stop.
+
+Reject a target-controlled include, destination rewrite, or command-bearing
+setting unless neutralized before Git consults it or separately authorized by
+exact frozen executable identity and action. At minimum cover `core.fsmonitor`,
+`core.sshCommand`, hooks/askpass/proxy settings, credential helpers, external
+diff/textconv, filter drivers, remote commands, URL rewrites, and GPG programs.
+Treat this as a floor for the installed Git version and invoked subcommand.
+
+Resolve Git and permitted helpers independently of the target. Reintroduce only
+exact host-owned state required by the authorized operation. Disable callbacks
+whose removal cannot change the requested artifact; otherwise stop for separate
+exact authority rather than silently running or bypassing them. Recheck before
+staging, commit creation, ref mutation, or network access. Any drift stops;
+literal arguments and protocol policy cannot make executable configuration safe.
 
 ## Literal Argument Boundary
 
@@ -63,7 +92,8 @@ For each network Git process, override repository protocol policy at command
 scope: default `protocol.allow` to `never`, enable only the already classified
 `https` or `ssh` protocol needed for that target, and keep `protocol.ext.allow`
 disabled. Repository, user, or system configuration must not re-enable another
-transport for the operation.
+transport for the operation. Apply this only after the non-executable Git
+boundary passes.
 
 Run raw endpoint enumeration, validation, hashing, and direct ref queries
 inside one local capture boundary whose stdout, stderr, exceptions, and debug

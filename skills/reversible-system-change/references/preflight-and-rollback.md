@@ -117,8 +117,13 @@ For a pointer-only rollback with no irreversible data effect, an isolated
 equivalent switch plus a behavior check may serve as the rehearsal. Merely
 resolving the prior target proves only presence or readability.
 
-An isolated restore rehearsal is itself a persistent write. Freeze its exact
-target and effects and obtain authorization before running it. A plan-only
+An isolated restore rehearsal is itself a persistent write. Use the parent's
+isolated-restore-rehearsal phase, freeze its exact non-active target and effects,
+and obtain exact rehearsal-write authority before running it. It may establish
+`rehearsed` evidence only; it does not authorize candidate preparation, active
+promotion, the complete change, or cleanup. Prove that the rehearsal cannot
+affect active state or data and can be abandoned or recreated on failure;
+otherwise require the complete execution gate. A plan-only or non-mutating
 workflow rehearsal cannot perform this restore rehearsal.
 
 The following never prove a verified rollback by themselves: a successful
@@ -142,7 +147,8 @@ configuration, and affected tests before promotion.
 Keep candidate evidence separate from active-state evidence. A successful
 build, package download, upload, plan, or dry run proves only that stage.
 
-For plan-only or rehearsal requests, report assumptions, proposed write set,
-rollback strategy, validation layers, and stop gates. Do not create candidate,
-backup, capsule, cache, remote state, or sensitive-content access. Pure status
-queries and conceptual explanations do not route through this skill.
+For plan-only or non-mutating workflow-rehearsal requests, report assumptions,
+proposed write set, rollback strategy, validation layers, and stop gates. Do
+not create candidate, backup, capsule, cache, remote state, or sensitive-content
+access. Pure status queries and conceptual explanations do not route through
+this skill.

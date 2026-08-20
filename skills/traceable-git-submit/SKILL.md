@@ -78,9 +78,11 @@ conceptual answer.
   partial remote state.
 - Keep endpoints and credentials opaque. Report only sanitized target
   ordinals/fingerprints, refs, SHAs, and reversibly escaped paths.
-- Apply `references/safe-git-values-and-metadata.md` to every dynamic Git
-  operand, raw endpoint capture, and workflow metadata access. Stop when the
-  host cannot preserve literal argument vectors or no-follow containment.
+- Apply `references/safe-git-values-and-metadata.md` before every Git
+  invocation, including read-only inspection. Stop when the host cannot prove
+  a non-executable Git configuration and environment boundary, preserve literal
+  argument vectors, protect raw endpoint capture, or enforce no-follow metadata
+  containment.
 
 ## Phase Outcomes
 
