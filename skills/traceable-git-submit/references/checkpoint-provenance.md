@@ -19,7 +19,10 @@ git -C <repo> rev-parse --path-format=absolute --git-path axiom/traceable-git-su
 ```
 
 Keep the record out of the worktree, plugin directory, index, and commits.
-Update it through a temporary sibling and atomic replacement when supported.
+Apply `safe-git-values-and-metadata.md` to every read, create, update, and
+delete. Its canonical Git-directory containment, no-follow access, exclusive
+temporary sibling, parent identity revalidation, and atomic replacement gates
+are mandatory; inability to enforce them stops metadata mutation.
 
 Initial schema:
 
@@ -67,7 +70,7 @@ verified checkpoint SHA.
 
 After consolidation, add `oldHead`, `finalTree`, `backupRef`, `newCommit`, and
 authorized push-target fingerprints. Cleanup state is owned by
-`post-consolidation-recovery.md`.
+`post-consolidation-recovery.md` and requires independent exact authority.
 
 ## Begin And Record
 

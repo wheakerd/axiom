@@ -65,9 +65,13 @@ After push preflight resolves `remote`, enumerate every configured push URL:
 git -C <repo> remote get-url --push --all <remote>
 ```
 
-Capture this output without echoing it into user-visible logs. Collapse
-repeated byte-identical URL values to one target and retain first-occurrence
-order. Do not substitute the fetch URL for this inventory.
+The block shows argument order only. Apply
+`safe-git-values-and-metadata.md`: invoke with literal arguments inside one
+non-visible local capture boundary that validates transports and emits only
+fingerprints and sanitized status. Never run this endpoint-producing command
+directly in a visible terminal. Collapse repeated byte-identical URL values to
+one target and retain first-occurrence order. Do not substitute the fetch URL
+for this inventory.
 
 For each distinct target, derive:
 

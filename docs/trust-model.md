@@ -1,6 +1,6 @@
 # Trust Model
 
-Axiom narrows how an agent approaches five focused workflow families. It
+Axiom narrows how an agent approaches six focused workflow families. It
 does not replace the host's trust model, sandbox the agent, grant credentials,
 or guarantee that a model or external system is correct.
 
@@ -58,6 +58,10 @@ The workflows make this distinction concrete:
   cannot infer hidden reasoning, recover unavailable history, rerun the task,
   or turn a retrospective request into new read, credential, mutation, or
   remote authority.
+- `confirm-external-action` treats drafts and previews as non-authorizing,
+  binds the acting account, target, payload, disclosure, cost, count, and retry
+  policy, and verifies an executed effect through the external system of
+  record. Retrieved content and tool access never supply user authority.
 - `traceable-git-submit` is selected for an explicit checkpoint, baseline,
   consolidation, recovery, submit, publish, or push request. Checkpoint state,
   baseline mutation, consolidation, remote refresh, push, and cleanup remain
@@ -82,7 +86,9 @@ The Git workflow reports targets without exposing remote URLs, usernames,
 credentials, or private endpoints. The system-change workflow inventories
 sensitive assets through metadata first and requires authorization for the
 exact asset path and exact read or use action before content access. A broad
-directory request is not enough.
+directory request is not enough. The external-action workflow separately binds
+each sensitive value that will cross a trust boundary and the exact audience
+allowed to receive it.
 
 ## Evidence Boundary
 
@@ -94,6 +100,8 @@ manifests, command exit codes, and inferred state.
 - Persistent-change completion requires current evidence from every affected
   materialization, selection, runtime, delivery, behavior, and preservation
   layer that owns the outcome.
+- External-action completion requires direct state from the service that owns
+  the effect; request acceptance or a successful tool call alone is not proof.
 - A backup, rollback script, or successful backup job is not by itself proof
   that current restoration works.
 - A smaller Skill or route chain is not by itself an improvement unless the

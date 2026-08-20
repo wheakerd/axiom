@@ -15,6 +15,10 @@ ordinary submit, publish, or push request never loads this reference.
 Treat consolidation, remote refresh, and network push as independent
 authorization axes:
 
+Apply `safe-git-values-and-metadata.md` to every Git invocation in this
+reference. All command blocks show argument order only; derived values must be
+validated and passed as separate literal arguments.
+
 1. Run Git preflight. Defer a baseline-cache mismatch decision until the active
    record selects the normal or post-consolidation path.
 2. Read or initialize the baseline cache and read the active provenance record.
@@ -114,7 +118,9 @@ git -C <repo> ls-remote <push-target> <merge-ref>
 Require exactly one matching ref result and `newCommit` from every target.
 Then follow `post-consolidation-recovery.md`: fetch the branch remote, require
 authoritative refreshed `@{u} == newCommit`, update and verify the cache,
-persist cleanup proof, and only then delete recovery state in order.
+and persist `cleanupReady`. Do not delete the backup ref or active record unless
+the user separately authorized the exact cleanup envelope bound to this
+repository, workflow, refs, SHAs, and deletion operations.
 
 If push or remote verification fails, do not update the baseline, delete the
 backup, or delete the active record. Leave the consolidated commit and recovery

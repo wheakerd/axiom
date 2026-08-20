@@ -22,15 +22,19 @@ replace it with one final commit, ask one concise question before mutation.
 ## Load Only The Active Phase
 
 - Explicit baseline metadata or workflow audit: read
+  `references/safe-git-values-and-metadata.md` and
   `references/baseline-and-preflight.md`.
 - Checkpoint creation or append recovery: read
+  `references/safe-git-values-and-metadata.md`,
   `references/baseline-and-preflight.md`,
   `references/checkpoint-provenance.md`, and
   `references/checkpoint-execution.md`.
 - Direct submit, publish, or push that preserves current history: read
-  `references/repository-and-remote-targets.md` only. Do not create or update
-  Axiom metadata.
+  `references/safe-git-values-and-metadata.md` and
+  `references/repository-and-remote-targets.md`. Do not create or update Axiom
+  metadata.
 - Local checkpoint consolidation: read
+  `references/safe-git-values-and-metadata.md`,
   `references/baseline-and-preflight.md`,
   `references/checkpoint-provenance.md`,
   `references/commit-construction.md`, and
@@ -40,6 +44,7 @@ replace it with one final commit, ask one concise question before mutation.
   `references/repository-and-remote-targets.md` and
   `references/post-consolidation-recovery.md` before the first push.
 - Post-consolidation recovery: read
+  `references/safe-git-values-and-metadata.md`,
   `references/baseline-and-preflight.md`,
   `references/checkpoint-provenance.md`, and
   `references/post-consolidation-recovery.md`; add
@@ -73,6 +78,9 @@ conceptual answer.
   partial remote state.
 - Keep endpoints and credentials opaque. Report only sanitized target
   ordinals/fingerprints, refs, SHAs, and reversibly escaped paths.
+- Apply `references/safe-git-values-and-metadata.md` to every dynamic Git
+  operand, raw endpoint capture, and workflow metadata access. Stop when the
+  host cannot preserve literal argument vectors or no-follow containment.
 
 ## Phase Outcomes
 
@@ -93,8 +101,10 @@ the backup and active record and stop locally.
 
 For a combined submission or recovery, recheck every remote immediately before
 push, verify all target refs and refreshed upstream after push, update the
-baseline only after that evidence, then clean recovery state in the referenced
-order. On drift, partial push, or uncertainty, stop and retain recovery state.
+baseline only after that evidence, and persist `cleanupReady`. Delete the
+backup ref and active record only under separate exact cleanup authority in the
+referenced order. On drift, partial push, uncertainty, or absent cleanup
+authority, stop and retain recovery state.
 
 ## Report
 

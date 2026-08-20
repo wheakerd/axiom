@@ -27,6 +27,11 @@ The shared source also includes `review-axiom-task` on both hosts. Its review
 contract is identical, but coverage depends on the task history, summaries,
 tool results, and task-inspection interfaces each active host exposes.
 
+The shared source includes `confirm-external-action` on both hosts. Its action
+envelope and retry boundary are identical, while available confirmation UI,
+idempotency support, and authoritative verification depend on the connected
+service and host tool.
+
 This is repository support: it proves that the integration files exist and
 declare the intended shape. It does not prove execution on every host release,
 operating system, shell, installation method, or policy configuration.
@@ -41,9 +46,9 @@ session. To produce it:
    command in the [README](../README.md#inspect-the-hooks).
 3. Start or reload the session.
 4. Try the routed request and non-routing control in
-   [Getting Started](getting-started.md), plus the explicit usage-optimization
-   and task-review requests in [Examples](examples.md) when validating those
-   routes.
+   [Getting Started](getting-started.md), plus the explicit usage-optimization,
+   task-review, and external-action requests in [Examples](examples.md) when
+   validating those routes.
 5. Record pass, fail, not run, and unavailable results separately.
 
 This document does not assert that a current end-to-end host check has run. A
@@ -53,6 +58,26 @@ present executable or manifest alone would be too weak to support that claim.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.0` reports:
+
+- the distribution and publication guards, JSON parsing, hook and
+  documentation agreement, packaged Skill shape, immutable action pins,
+  English-only, size, link, artifact, and whitespace checks passed for the
+  release candidate;
+- twenty-four routing scenarios, twenty-seven traceable-Git security
+  scenarios, twelve external-action scenarios, and ten rollback scenarios
+  passed without being presented as fresh host semantic-routing evidence;
+- all seven packaged Skills passed the local Skill Creator quick validator and
+  Claude Code `2.1.220` strict plugin and marketplace validation passed;
+- focused negative checks rejected a moving GitHub Action reference, an
+  incomplete external-action contract, an unsafe Git transport, missing exact
+  cleanup authority, and the absence of the current release document;
+- the bundled local `plugin-creator` validator rejected the intentional Codex
+  `hooks` field on both the candidate and clean `v0.6.1` baseline, while Codex
+  CLI `0.148.0` exposed no native plugin-validation command; and
+- a fresh installation, fresh-session route-selection test, and real external
+  action were not run.
 
 The Git record for `v0.6.1` reports:
 
@@ -180,7 +205,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.6.1 release notes](releases/v0.6.1.md),
+See the durable [v0.7.0 release notes](releases/v0.7.0.md),
+[v0.6.1 release notes](releases/v0.6.1.md),
 [v0.6.0 release notes](releases/v0.6.0.md),
 [v0.5.1 release notes](releases/v0.5.1.md),
 [v0.5.0 release notes](releases/v0.5.0.md),

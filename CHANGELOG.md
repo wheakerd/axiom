@@ -5,6 +5,27 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.0 - 2026-08-20
+
+### Added
+
+- Added `confirm-external-action` to bind consequential app actions to an exact
+  actor, target, payload, disclosure, cost, count, and retry envelope before
+  one execution and authoritative verification.
+
+### Fixed
+
+- Required literal argument vectors, validated refs and transports, opaque
+  remote capture, and no-follow Git-metadata containment throughout
+  `traceable-git-submit`.
+- Made post-consolidation cleanup independently authorized and recoverable via
+  a persisted `cleanupReady` state.
+- Pinned every third-party GitHub Action to an immutable commit and added a
+  publication guard against moving action references.
+
+See [the v0.7.0 release notes](docs/releases/v0.7.0.md) for validation evidence
+and known limits.
+
 ## 0.6.1 - 2026-08-18
 
 ### Fixed
