@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "Axiom",
     "shortDescription": "Safe, context-efficient workflows",
-    "longDescription": "Axiom routes Codex-native AGENTS architecture, explicit usage optimization, read-only Axiom task review, traceable Git submission, and reversible persistent system changes.",
+    "longDescription": "Axiom routes Codex-native AGENTS architecture, explicit usage optimization, read-only task review, confirmed external actions, traceable Git submission, and reversible persistent system changes.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [

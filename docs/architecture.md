@@ -76,6 +76,9 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
 - `review-axiom-task` freezes a retrospective window at the triggering request,
   separates Axiom guidance from host-agent actions, and labels material evidence
   as observed, reconstructed, or unavailable without persisting a trace.
+- `confirm-external-action` freezes an actor, target, payload, disclosure,
+  cost, count, and retry envelope before one authorized external effect, then
+  verifies the result through the owning external system.
 - `traceable-git-submit` separates direct history-preserving submission from
   checkpoint, baseline, consolidation, one-final submission, and recovery
   chains. Direct push loads only repository/target guidance and creates no

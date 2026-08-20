@@ -19,6 +19,8 @@ Before creating the final commit, record:
 
 Capture path-bearing summaries in NUL-safe form and render paths only with
 JSON-string, Git C-style, or equivalent reversible escaping.
+Apply `safe-git-values-and-metadata.md` to every operand below. The command
+blocks show argument order, never a shell interpolation template.
 
 Generate the unique id from a UTC timestamp plus a short `oldHead` prefix. The
 candidate is usable only when this check exits nonzero:

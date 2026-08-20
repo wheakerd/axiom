@@ -3,7 +3,8 @@
 ## Purpose
 
 Resume exactly one consolidated commit, verify every frozen push target and the
-authoritative refreshed upstream, then clean recovery state in a safe order.
+authoritative refreshed upstream, then make cleanup independently authorizable
+and recoverable.
 
 ## Apply When
 
@@ -39,17 +40,17 @@ another final commit, append a checkpoint, or consolidate again on this route.
 Never expose raw endpoints. Render every displayed filesystem path with
 JSON-string, Git C-style, or equivalent reversible escaping.
 
-## Cleanup Proof And Order
+## Cleanup Readiness And Independent Authority
 
 Only after every target and refreshed `@{u}` directly equal `newCommit`:
 
 1. Update and verify baseline-cache identity and
    `lastRemotePushSha == newCommit`.
-2. Atomically persist:
+2. Atomically persist readiness without deleting anything:
 
    ```json
    {
-     "cleanup": {
+     "cleanupReady": {
        "remoteVerifiedSha": "<newCommit>",
        "upstreamVerifiedSha": "<newCommit>",
        "baselineUpdated": true,
@@ -58,20 +59,30 @@ Only after every target and refreshed `@{u}` directly equal `newCommit`:
    }
    ```
 
-3. Delete an existing backup ref with its old-value check:
+3. If the current user request does not separately authorize both deletion
+   operations for this exact repository, `workflowId`, `backupRef`, `oldHead`,
+   `newCommit`, and ordered target fingerprint set, retain the backup and active
+   record, report `cleanupReady`, and ask one concise cleanup question. A prior
+   push, consolidation, recovery, or generic cleanup request is insufficient.
+4. Under exact cleanup authority, re-run every recovery identity, target,
+   upstream, cache, metadata-containment, and backup-ref check immediately
+   before deletion. Any changed fact invalidates authority and stops cleanup.
+5. Delete an existing backup ref with its old-value compare-and-swap check:
 
    ```bash
    git -C <repo> update-ref -d <backup-ref> <old-head>
    ```
 
-4. Atomically set `backupRefDeleted: true`.
-5. Delete the active record.
+6. Atomically set `cleanupReady.backupRefDeleted: true`, reread it through the
+   no-follow boundary, and verify every bound field again.
+7. Delete the active record through the same no-follow containment boundary.
 
-A missing backup ref is acceptable only when the record already contains the
-cleanup proof, including `upstreamVerifiedSha`, and current target, upstream,
-and cache state all equal `newCommit`. Otherwise stop as unsafe. If any cleanup
-step fails, retain the active record; re-enter at the first incomplete step
-only after re-verifying actual target, upstream, cache, and backup-ref state.
+A missing backup ref is acceptable only when `cleanupReady.backupRefDeleted` is
+already true, the exact cleanup authority covers active-record deletion, and
+current target, upstream, cache, identity, and metadata containment still pass.
+Otherwise stop as unsafe. If any cleanup step fails, retain the active record;
+re-enter at the first incomplete step only after fresh verification and fresh
+or still-valid exact cleanup authority.
 
 ## References
 
