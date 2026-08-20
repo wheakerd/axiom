@@ -2,162 +2,148 @@
 
 ## Purpose
 
-Resolve one exact target Git repository, validate a direct history-preserving
-submission, and identify every destination a named remote will update without
-leaking endpoint secrets.
+Resolve one exact Git root and independently freeze the upstream baseline,
+effective push remote, and every endpoint it can update without leaking
+secrets.
 
 ## Exact Repository Root
 
-Resolve the target from the user's explicit path or scoped files before using
-the session working directory. Canonicalize the path and query Git rather than
-inferring a root from folder names:
+Resolve the user's explicit path or scoped files before the session directory:
 
 ```bash
 git -C <candidate> rev-parse --show-toplevel
 git -C <candidate> rev-parse --path-format=absolute --git-common-dir
 ```
 
-For every path in the intended write set, resolve its owning Git root. Require
-all paths to belong to the same target root.
-
-Stop before changing state when:
-
-- The target is not inside a Git repository.
-- An explicit path and the session directory resolve to different plausible
-  repositories and the user did not identify which one is authoritative.
-- Scoped paths span a parent repository and a nested repository or span two
-  worktrees/repositories.
-- A nested repository makes ownership ambiguous.
-- The requested path is outside the resolved target root.
-
-Report the canonical target root and Git common directory with reversible path
-escaping. Do not silently switch to a parent or nested repository. A linked
-worktree is valid when both roots are resolved from Git.
+Canonicalize both results and resolve every intended path's owning Git root.
+Stop if a path is outside the root, paths span repositories/worktrees, a
+parent or nested repository is ambiguous, or an explicit path conflicts with
+the session directory. Report the root and common directory with reversible
+escaping; a linked worktree is valid when Git resolves both identities.
 
 ## Direct Submit Preflight
 
-For a direct submit, publish, or push that preserves current history, resolve
-and freeze object format, symbolic branch, upstream display/full tracking ref,
-branch remote, merge ref, `HEAD`, upstream OID, ahead/behind state, and
-in-progress Git-operation paths. Use current Git facts, not Axiom cache or
-provenance metadata, and recheck object format before network access.
+For a history-preserving submit, freeze object format, symbolic branch,
+upstream display/full tracking ref, `upstreamRemote`, `mergeRef`, `HEAD`,
+upstream OID, divergence, and operation-state paths. Resolve `pushRemote` under
+the next section. Use current Git facts, not Axiom cache or provenance, and
+recheck object format before network access.
 
-Stop before network access on detached or unborn `HEAD`, missing upstream or
-remote identity, a local-only remote, behind/diverged history, an in-progress
-merge/rebase/cherry-pick/revert, or a target ref that no longer equals the
-observed upstream baseline. Set `baselineSha` to the current verified target
-ref and `finalSha` to current `HEAD`.
+Stop on detached/unborn `HEAD`, missing upstream or push identity, a local-only
+push remote, behind/diverged history, an in-progress operation, or any target
+ref unequal to the observed upstream baseline. Set `baselineSha` to that
+baseline and `finalSha` to current `HEAD`. Uncommitted work is excluded: never
+stage, stash, clean, commit, or require a clean worktree merely to push existing
+commits. Never force-push on this route.
 
-Uncommitted work is not part of a history-preserving push. Do not stage, stash,
-clean, commit, or require a clean worktree merely to push existing commits;
-report it only when it makes repository identity or requested scope ambiguous.
-Never force-push on this route.
+## Effective Push Identity
 
-## Push Target Inventory
+`upstreamRemote` comes only from `branch.<branch>.remote` and owns `@{u}` and
+refresh. Resolve effective `pushRemote` independently in this order:
 
-Apply this and the remaining sections only to submit, push, or
-post-consolidation recovery. Checkpoint-only work does not need push targets;
-a resolvable local upstream whose branch remote is `.` is valid for checkpoint
-baseline and provenance checks.
+1. a configured remote explicitly named in the current request;
+2. `branch.<branch>.pushRemote` when present;
+3. `remote.pushDefault` when present;
+4. current `upstreamRemote`.
 
-After push preflight resolves `remote`, enumerate every configured push URL:
+Capture configuration invisibly through `safe-git-values-and-metadata.md`.
+Only an absent key falls through. An empty, duplicate, malformed,
+option-shaped, `.` or non-enumerated selected value stops. A raw URL is not a
+configured remote name and must not be reinterpreted or persisted.
+
+Freeze `pushRemote`, resolution source, `mergeRef`, branch, and upstream
+identity separately; re-resolve them before inventory and before push. A
+changed remote or ref is drift. Refresh still uses `upstreamRemote`. If a
+configuration fallback selects `pushRemote != upstreamRemote` and the user did
+not name it, report only validated remote names and target fingerprints and
+obtain exact destination confirmation before push or provenance binding.
+
+## Network Semantic And Transport Closure
+
+First apply the generic semantic closure in `safe-git-values-and-metadata.md`.
+For an authorized refresh or push, also close the network-specific effects
+below; stop if any cannot be disabled or separately authorized.
+
+Refresh uses one exact source-only refspec and empty `--refmap`, never
+`remote.<name>.fetch`; fetch objects before compare-and-swap update of the sole
+tracking ref. Keep tags, prune/tag-prune, submodules, `FETCH_HEAD`, maintenance,
+and commit-graph writes off. Broad prune needs separate authority. Reject
+`fetch.bundleURI` and other implicit endpoints.
+
+Push uses one frozen raw target and exact full-ref refspec. Neutralize
+`push.followTags`, recurse, signing, push options, negotiation, upstream setup,
+prune, and force. Bypass pre-push hooks unless their exact frozen identity and
+action are separately authorized.
+
+Classify endpoints without display. Allow authenticated `https://`, `ssh://`,
+`git+ssh://`, and standard SCP-like SSH. Reject plaintext `http://`/`git://`,
+network `file://` or local paths, controls, `<helper>::<address>`, and `ext::`.
+At command scope set `protocol.allow=never`, enable only the classified HTTPS
+or SSH protocol, and keep `protocol.ext.allow` disabled. Contain enumeration,
+hashing, queries, errors, and debugging; emit only fingerprints, validated
+refs/OIDs, and sanitized status.
+
+## Target Inventory And Authorization
+
+Apply only to push or post-consolidation recovery. Checkpoint-only work may use
+local `upstreamRemote == .` and never loads target inventory.
 
 ```bash
-git -C <repo> remote get-url --push --all <remote>
+git -C <repo> remote get-url --push --all <push-remote>
 ```
 
-The block shows argument order only. Apply
-`safe-git-values-and-metadata.md`: invoke with literal arguments inside one
-non-visible local capture boundary that validates transports and emits only
-fingerprints and sanitized status. Never run this endpoint-producing command
-directly in a visible terminal. Collapse repeated byte-identical URL values to
-one target and retain first-occurrence order. Do not substitute the fetch URL
-for this inventory.
+Run this endpoint-producing command only inside a non-visible literal-argument
+capture. Validate transports, collapse byte-identical values in first-seen
+order, and derive for each target an ordinal, full-value cryptographic
+fingerprint, `mergeRef`, and expected baseline/final OIDs. Keep raw values only
+in memory or a protected temporary file, then remove them. Never persist them.
 
-For each distinct target, derive:
+- Zero targets stops with zero pushes.
+- One target may proceed under an explicit submit, publish, or push request.
+- Multiple targets require authorization of the exact ordered fingerprints and
+  acknowledgement that sequential pushes can leave partial remote state.
+- Any identity, order, count, fingerprint, or ref change invalidates authority.
 
-- A one-based ordinal.
-- A stable cryptographic fingerprint of the complete raw target value.
-- The authorized `mergeRef`.
-- The expected baseline and final SHAs when known.
+Direct push identity remains in memory. A consolidated record binds only under
+`post-consolidation-recovery.md`; never select a subset from a multi-target
+remote.
 
-Use an available native hashing facility. Keep raw URLs in process memory or a
-permission-restricted temporary file only as long as required, then remove that
-temporary material. Never persist raw endpoints in the baseline cache,
-provenance record, commit message, task report, or plugin directory.
+## Immediate Drift Gate
 
-## Authorization Gate
+Immediately before the first push, re-resolve push identity, re-enumerate
+targets, and require exact equality with frozen or bound fields. Query every
+target's `mergeRef`; require exactly one result equal to `baselineSha` from
+each before issuing any push. Missing, unreadable, changed, or moved state
+means zero pushes. Report only ordinal/fingerprint, escaped ref, and
+expected/observed OID.
 
-- Zero push targets stops submit, push, and recovery, but never checkpoint-only
-  work.
-- One distinct push target may proceed under an explicit submit, publish, or
-  push request.
-- More than one target stops by default. Report only the ordered fingerprints
-  and request explicit authorization for that exact set plus acknowledgement
-  that sequential pushes are not atomic and may leave partial remote state.
-- If the configured target set changes after authorization, stop and request
-  authorization again.
-- Do not select one target from a multi-target remote while still invoking the
-  named remote as though only that target will receive the push.
+## Push And Verification
 
-Freeze the authorized fingerprint set before a direct push or consolidation.
-Persist target fingerprints, never raw URLs, only when post-consolidation
-provenance needs recovery state.
-
-## Immediate Pre-Push Drift Gate
-
-Immediately before the first push, re-enumerate targets and require the frozen
-ordered fingerprint set to be unchanged. Then query every frozen target's
-`mergeRef` directly. Require exactly one matching ref result and
-`mergeRef == baselineSha` for every target before issuing any push command.
-
-If any target is missing, unreadable, changed, or at another SHA, perform zero
-pushes. Retain provenance and the backup ref, and report only target
-ordinal/fingerprint plus escaped ref and expected/observed SHA. Do not begin
-with targets that happened to pass while another target drifted.
-
-## Push And Verification Boundary
-
-A push to a named remote may affect every configured push target. Completion
-requires direct current evidence that every authorized target's `mergeRef`
-equals `newCommit`.
-
-Use each captured target internally for direct remote-ref verification. Capture
-and sanitize command failures before reporting them; Git errors can repeat a
-raw URL or username. A successful fetch, an updated `@{u}`, or success from only
-one target does not prove the other push targets were updated.
-
-If targets disagree, retain the backup ref and provenance record, do not update
-the baseline cache, and report each target only as ordinal/fingerprint plus
-expected and observed ref/SHA.
-
-For a direct history-preserving push, update only the current `branchRef` to
-the resolved `mergeRef`. Invoke each raw frozen target separately with the
-closed one-target/one-ref envelope:
+Push each raw frozen target separately in authorized order with one exact ref
+update:
 
 ```bash
 git -C <repo> -c push.followTags=false -c push.recurseSubmodules=no -c push.gpgSign=false -c push.pushOption= -c push.negotiate=false -c push.autoSetupRemote=false push --no-verify --no-follow-tags --recurse-submodules=no --no-signed --no-push-option --no-set-upstream --no-prune --no-force --no-force-with-lease --no-force-if-includes <push-target> <branch-ref>:<merge-ref>
 ```
 
-`--no-verify` is mandatory unless the user separately authorized the exact
-frozen pre-push hook identity and action. Verify every frozen target directly
-afterward and require `mergeRef == finalSha`. Push authority does not authorize
-a fetch; report the local tracking ref as unrefreshed unless separately
-refreshed. If any target fails or disagrees, report partial remote state and
-stop; do not create Axiom metadata, retry automatically, or infer completion
-from the push exit status.
+`--no-verify` is mandatory unless the exact frozen pre-push hook identity and
+action are separately authorized. Stop later pushes on first failure, then
+query every authorized target. Completion requires every `mergeRef` to equal
+`finalSha` or post-consolidation `newCommit`; one push exit status, fetch, or
+tracking-ref update is insufficient.
+
+On disagreement, retain backup/provenance state, do not update baseline, and
+do not retry automatically. Push authority never grants fetch; report `@{u}`
+unrefreshed unless separately refreshed. Direct push creates no Axiom metadata.
 
 ## Sensitive Reporting
 
-Never report or commit:
+Never expose raw URLs, credentials, usernames, private hosts/IPs, filesystem
+endpoints, or internal paths. Reports use the canonical root, validated remote
+name, target ordinal/fingerprint, escaped ref, and expected/observed OIDs. If
+sanitization cannot be guaranteed, report only target verification failure.
 
-- Raw fetch or push URLs.
-- Embedded credentials, tokens, or usernames.
-- Private hostnames, IP addresses, filesystem endpoints, or internal network
-  paths.
+## References
 
-Reports use repository root, remote name, target ordinal/fingerprint,
-`mergeRef`, and expected/observed SHAs. If sanitization cannot be guaranteed,
-report only that target verification failed and retain recovery state. Render
-repository and ref paths with JSON-string, Git C-style, or equivalent
-reversible escaping; never emit raw control characters or newlines.
+- `safe-git-values-and-metadata.md`
+- `post-consolidation-recovery.md`

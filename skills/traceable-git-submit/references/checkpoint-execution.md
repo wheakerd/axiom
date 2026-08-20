@@ -2,31 +2,28 @@
 
 ## Purpose
 
-Freeze an authorized write set, create one isolated checkpoint commit, and
-recover safely when the commit exists but provenance persistence failed.
+Freeze one authorized write set, create its isolated checkpoint, and recover
+when commit creation outlives provenance persistence.
 
 ## Existing Unpublished Commits
 
-Before creating a new active record, enumerate the exact ordered full-SHA list:
+Before a new active record, enumerate the ordered full-SHA list:
 
 ```bash
 git -C <repo> rev-list --reverse '@{u}'..HEAD
 ```
 
-If the list is non-empty, stop before writing the record or creating a
-checkpoint. Continue only when the user explicitly adopts that exact ordered
-full-SHA list for the current workflow.
+If non-empty, stop before record or checkpoint creation unless the user adopts
+that exact ordered full-SHA list for this workflow.
 
 For adoption:
 
-- Repeat the list after any fetch and require an exact match.
-- Name every SHA; a range, count, branch, or "all local commits" is not exact.
-- Reject merges, already-pushed commits, malformed SHAs, or commits outside
-  `@{u}..HEAD`.
-- Record the ordered list in both `checkpointShas` and `adoptedShas` before new
-  checkpoint work.
-- The record proves adoption. `Axiom-checkpoint: true` is required only for
-  workflow-created commits outside `adoptedShas`.
+- Repeat the list after any fetch; require every named full SHA and exact order.
+  A range, count, branch, or "all local commits" is insufficient.
+- Reject merges, pushed commits, malformed SHAs, and commits outside
+  `@{u}..HEAD`; seed both `checkpointShas` and `adoptedShas` before new work.
+- The record proves adoption. Only workflow-created commits outside
+  `adoptedShas` require `Axiom-checkpoint: true`.
 
 Without exact adoption, leave existing commits and the working tree unchanged.
 
@@ -34,28 +31,23 @@ Without exact adoption, leave existing commits and the working tree unchanged.
 
 Before staging:
 
-1. Complete the applicable read-only repository, identity, baseline,
-   operation-state, and unpublished-commit/adoption gates.
-2. Prove the staged-change set is empty. Any path, even an overlapping one,
-   stops before `pendingCheckpoint`.
-3. Run validation appropriate to the work slice when it can remain read-only.
-4. Resolve every intended path relative to the exact target Git root.
-5. Resolve and freeze the exact authorized currently changed path set in a
-   NUL-safe representation.
-6. Record staged, unstaged, untracked, and rename/copy state separately.
+1. Complete repository, identity, baseline, operation-state, and adoption
+   gates; run applicable read-only validation.
+2. Require an empty staged set. Any path stops before `pendingCheckpoint`.
+3. Resolve every intended path under the exact Git root; freeze the authorized
+   changed set in a NUL-safe representation.
+4. Record staged, unstaged, untracked, and rename/copy state separately.
 
-Use NUL-delimited Git output such as `git status --porcelain=v1 -z` and
-`git diff [--cached] --name-only -z`. Compare raw bytes with native arrays or
-NUL-safe sorting, never newlines, word splitting, or whitespace loops.
+Use NUL-delimited Git output. Compare raw bytes with native arrays or NUL-safe
+sorting, never newlines, word splitting, or whitespace loops.
 
 Digest the sorted raw NUL-delimited set cryptographically. Only after all gates
 pass, atomically record parent SHA, algorithm, digest, and count in
 `pendingCheckpoint`. Do not persist sensitive path names. A write failure means
 zero staging and a stop.
 
-Render every reported path with JSON-string, Git C-style, or equivalent
-reversible escaping. Never display raw control characters or newlines. Do not
-unstage, overwrite, or commit a pre-existing index.
+Render paths with reversible JSON or Git C-style escaping. Never display raw
+controls or newlines, or alter a pre-existing index.
 
 ## Stage And Prove Isolation
 
@@ -70,16 +62,20 @@ exact equality with the frozen set:
 - An empty staged diff stops unless the user explicitly requested an empty
   checkpoint and repository policy permits it.
 
-Review the full staged diff, including binary/rename summaries, and require only
-the validated slice. Do not alter unrelated state to satisfy comparison.
+Review the full staged diff and binary/rename summaries; require only the
+validated slice and never alter unrelated state to make it match.
 
-Then resolve the exact staged tree with `git write-tree`; atomically record and
-reread `stagedTreeSha` before commit. Any staging, comparison, tree, or record
-failure prohibits commit.
+Resolve the staged tree with `git write-tree`; atomically record and reread
+`stagedTreeSha`. Any staging, comparison, tree, or record failure prohibits
+candidate construction.
 
-## Create And Record The Checkpoint
+## Construct, Verify, And Install The Checkpoint
 
-Create one commit with the required structure:
+Build one exact message from independently validated lines under
+`safe-git-values-and-metadata.md`'s hostile metadata boundary. Hash the final
+message bytes and keep the bytes
+inside a non-visible capture or permission-restricted native temporary file.
+The required structure is:
 
 ```text
 <type>: <concise checkpoint summary>
@@ -94,33 +90,58 @@ Validation:
 <commands run and outcomes>
 ```
 
-After commit creation:
+Recheck `HEAD` as a symbolic ref exactly equal to recorded `branchRef`. Require
+`branchRef` itself to be a validated direct, non-symbolic ref and to resolve to
+`parentSha`. Construct the candidate from the recorded tree, never from the
+current index and never with ordinary `git commit`:
 
-1. Require `HEAD` to equal the new full SHA.
-2. Require its parent to equal the previous `HEAD`.
-3. Require its body to contain `Axiom-checkpoint: true`.
-4. Require its tree to equal recorded `stagedTreeSha`.
-5. Require its changed path set to equal the frozen authorized set using
-   NUL-safe comparison.
-6. Atomically append only that SHA and remove `pendingCheckpoint` in the same
-   record replacement.
+```bash
+git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>
+```
 
-Do not update the remote baseline cache after a local checkpoint.
+Pass the exact message through standard input or the protected file. Before
+any ref mutation, require the resulting full OID to be a commit with exactly
+one parent equal to `parentSha`, tree equal to `stagedTreeSha`, exact message
+bytes and digest equal to the frozen message, and NUL-safe changed path set
+equal to the frozen authorized set. Atomically add `candidateCommitSha`,
+`messageDigest`, and `messageDigestAlgorithm` to `pendingCheckpoint`, reread
+them, and repeat the branch direct-ref/old-OID checks.
+
+Capture the current index tree and NUL-safe status immediately before the ref
+transaction; this is concurrent-state evidence, not commit input. Install only
+the verified candidate with compare-and-swap:
+
+```bash
+git -C <repo> update-ref --no-deref <branch-ref> <candidate-commit-sha> <parent-sha>
+```
+
+After success, require symbolic `HEAD` still names `branchRef`, both resolve to
+the candidate, and repeat parent, tree, message, and path proofs. Capture the
+index tree and status again. Never normalize the index: if either differs from
+`stagedTreeSha`, or the captures differ from each other, preserve that
+concurrent state and report it as staged relative to the new `HEAD`. It cannot
+change the already constructed commit.
+
+Atomically append only `candidateCommitSha` and remove `pendingCheckpoint` in
+the same record replacement. Do not update the remote baseline cache after a
+local checkpoint.
 
 ## Failure Points And Bounded Abort
 
 - Pending write failure: no staging is allowed; stop.
 - Staging or staged-set failure: stop with pending state visible. Do not
   auto-unstage or clear evidence.
-- Staged-tree record failure: do not commit. Retain the index and pending state.
-- Commit failure: retain pending and the index. Retry only when identity,
-  `HEAD == parentSha`, the full staged path set, and the current
-  `git write-tree` result exactly matches `stagedTreeSha`.
+- Staged-tree record failure: do not construct a candidate. Retain the index
+  and pending state.
+- Candidate construction, proof, or candidate-record failure: perform no ref
+  mutation. Retain pending state and the index exactly as found.
+- Branch compare-and-swap failure: treat it as branch drift, retain all
+  evidence, and do not retry or fall back to `git commit`.
 - Append failure: use only the recovery gate below.
 
 A no-commit pending record may be cleared only when identity/baseline match,
-there is no `newCommit`, `HEAD == parentSha`, `checkpointShas` exactly equals
-`@{u}..HEAD`, and the staged-change set is empty. Atomically remove only
+there is no `newCommit`, `HEAD == parentSha`, `checkpointShas` equals
+`@{u}..HEAD`, and the staged set is empty. Atomically remove only
 `pendingCheckpoint`, reread, report, and leave worktree changes untouched. Any
 staging, commit, or uncertainty retains it for user direction.
 
@@ -139,12 +160,15 @@ of these are directly verified:
   write-set digest, digest algorithm, path count, and full `stagedTreeSha`.
 - Its `checkpointShas` exactly equals an ordered prefix of `@{u}..HEAD`.
 - Exactly one commit follows that prefix.
-- That commit is current `HEAD`, its parent is the last recorded SHA or
-  `baselineSha`, and its body contains `Axiom-checkpoint: true`.
+- That commit is current `HEAD` and recorded `candidateCommitSha`; its parent
+  is the last recorded SHA or `baselineSha`.
+- Its exact message digest matches the pending record and it passes the safe
+  exact marker gate in `safe-git-values-and-metadata.md`.
 - Its commit tree exactly equals recorded `stagedTreeSha`.
 - Its changed path set produces the exact recorded NUL-safe write-set digest
   and path count.
-- The working tree/index state has not introduced ambiguity.
+- Current index/worktree state is captured without modification; any
+  concurrent state is reported and cannot alter the candidate proof.
 
 Atomically append that one exact SHA and remove `pendingCheckpoint`, reread the
 record, and require the stored list to equal the full `@{u}..HEAD` list. Any

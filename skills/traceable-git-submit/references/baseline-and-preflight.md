@@ -50,7 +50,7 @@ Cache schema:
   "repo": "<repository-name>",
   "branch": "<current-branch>",
   "upstream": "<remote>/<branch>",
-  "remote": "<branch-remote>",
+  "upstreamRemote": "<branch-upstream-remote>",
   "mergeRef": "<branch-merge-ref>",
   "lastRemotePushSha": "<upstream-sha>",
   "updatedAt": "<utc-iso8601>"
@@ -71,7 +71,8 @@ The legacy path is
 - If only the legacy file exists, parse it and require its `repo`, `branch`,
   `upstream`, and `lastRemotePushSha` to match the current repository name,
   branch, upstream, and `@{u}` SHA.
-- Migrate only an exact match, adding `remote` and `mergeRef` from preflight.
+- Migrate only an exact match, adding `upstreamRemote` and `mergeRef` from
+  preflight.
 - Ignore and report invalid JSON or any mismatch. Do not copy that state.
 - Never stage, commit, delete, or rewrite the legacy file automatically.
 
@@ -107,19 +108,22 @@ git -C <repo> rev-parse --path-format=absolute --git-path rebase-apply
 ```
 
 Retain frozen object format, branch full ref and short name, upstream display
-name and full tracking ref, branch remote, merge ref, upstream OID, `HEAD` OID,
-and ahead/behind state. Resolve the remote from `branch.<branch>.remote`, never
-by splitting upstream text. Apply the object-format recheck rules in
+name and full tracking ref, `upstreamRemote`, merge ref, upstream OID, `HEAD`
+OID, and ahead/behind state. Resolve `upstreamRemote` from
+`branch.<branch>.remote`, never by splitting upstream text. It owns upstream
+and fetch identity only; never infer the effective push destination from it.
+Apply the object-format recheck rules in
 `safe-git-values-and-metadata.md`; report only fields needed for a mutation,
 stop, or recovery state and reversibly escape filesystem paths.
 
-When the branch remote is not `.`, perform the equivalent of
-`git -C <repo> config --get "remote.<remote>.url" >/dev/null 2>&1` only through
-the literal-argument boundary and use only its exit status to confirm that the
-key exists. Never expose or retain the value or unsanitized error output.
-A branch remote of `.` is a valid local upstream for checkpoint-only work but
-is not a network push target; workflow push and recovery must stop before push
-target inventory.
+When `upstreamRemote` is not `.`, perform the equivalent of
+`git -C <repo> config --get "remote.<upstream-remote>.url" >/dev/null 2>&1`
+only through the literal-argument boundary and use only its exit status to
+confirm that the key exists. Never expose or retain the value or unsanitized
+error output. An `upstreamRemote` of `.` is a valid local upstream but cannot
+perform the network refresh protocol. It does not prohibit a separately
+resolved network `pushRemote`; that push still cannot satisfy refreshed-
+upstream cleanup until authoritative `@{u}` reaches the verified final SHA.
 
 ## Operation-State Check
 
@@ -151,21 +155,24 @@ foreach ($gitState in $gitStates) {
 ## Consistency Gates
 
 For a normal checkpoint or consolidation path, require cached `branch`,
-`upstream`, `remote`, `mergeRef`, and `lastRemotePushSha` to equal the current
-branch, upstream, branch remote, merge ref, and `@{u}` SHA. Stop and report a
-branch change, stale cache, remote configuration change, or moved baseline.
+`upstream`, `upstreamRemote`, `mergeRef`, and `lastRemotePushSha` to equal the
+current branch, upstream, upstream remote, merge ref, and `@{u}` SHA. Stop and
+report a branch change, stale cache, upstream configuration change, or moved
+baseline. A Git-metadata cache with legacy `remote` and no `upstreamRemote` may
+be atomically migrated only when that value exactly equals current
+`upstreamRemote`; do not derive or persist push identity during this migration.
 
 For a post-consolidation record, defer this baseline decision to the recovery
-gate. The remote may already equal `newCommit` while the cache still records the
-old baseline.
+gate. Push targets may already equal `newCommit` while the cache still records
+the old upstream baseline.
 
 Stop before checkpoint, baseline mutation, consolidation, workflow push, or
 recovery when:
 
 - `HEAD` is detached or the branch is unborn.
-- The branch lacks an upstream, branch remote, or merge ref; or a workflow push
-  or recovery flow lacks a configured network remote or push target.
-- A network push is requested while the branch remote is `.`.
+- The branch lacks an upstream, upstream remote, or merge ref; or a workflow
+  push or recovery flow lacks a resolved effective push remote or push target.
+- A network refresh is requested while `upstreamRemote` is `.`.
 - Merge, rebase, cherry-pick, or revert state exists.
 - Ahead/behind shows divergence rather than only local ahead commits.
 - Normal-path cache identity or baseline facts do not match.

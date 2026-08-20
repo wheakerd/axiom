@@ -2,55 +2,94 @@
 
 ## Purpose
 
-Resume exactly one consolidated commit, verify every frozen push target and the
-authoritative refreshed upstream, then make cleanup independently authorizable
-and recoverable.
+Bind a consolidated workflow to one push identity at most once, resume its
+exact commit, verify every target and refreshed upstream, and make cleanup
+independently authorizable.
 
 ## Apply When
 
 Use only when the active provenance record contains `newCommit`, including the
-combined consolidation-and-push flow after branch consolidation. Never create
-another final commit, append a checkpoint, or consolidate again on this route.
+combined consolidation-and-push flow. Never create another final commit,
+append a checkpoint, or consolidate again on this route.
+
+## One-Time Push Target Binding
+
+Local-only consolidation persists the initial
+`pushTargetState.state == unbound` from `checkpoint-provenance.md`. It must not
+inventory endpoints, invent an empty target list, or derive push identity from
+upstream.
+
+Only after `newCommit` and `backupRef` are verified, and only under current
+explicit push authority, apply `repository-and-remote-targets.md` to resolve,
+confirm, inventory, and authorize current push identity. An unbound record may
+then transition once to:
+
+```json
+{
+  "pushTargetState": {
+    "state": "bound",
+    "pushRemote": "<effective-configured-remote>",
+    "resolutionSource": "<explicit|branch-push-remote|remote-push-default|upstream-remote>",
+    "mergeRef": "refs/heads/<branch>",
+    "fingerprintAlgorithm": "<stable-cryptographic-algorithm>",
+    "orderedFingerprints": ["<fingerprint>"],
+    "boundAt": "<utc-iso8601>"
+  }
+}
+```
+
+Never store raw endpoints. Immediately before binding, re-resolve and
+re-enumerate and require exact equality with the authorized frozen values.
+Apply metadata containment, acquire an exclusive verified sibling lock, reread
+the exact unbound record, atomically replace it with the bound form, reread,
+and release the lock. If serialization or exact reread is unproved, leave it
+unbound and stop. Never overwrite or rebind a bound record.
+
+Combined submission first persists recoverable `newCommit` unbound, then binds
+before any push. A later explicit push binds at that time. On unbound resume,
+make no prior-target assumption. On bound resume, re-resolve and require exact
+repository, workflow, final commit, `pushRemote`, `mergeRef`, algorithm, and
+ordered fingerprints. An explicit mention of the same remote confirms rather
+than changes the binding. Zero targets, unresolved multi-target authorization,
+or pre-bind drift leaves the record unbound. Post-bind drift retains the record
+and backup; no target fallback, subset, superset, reorder, or rebinding is safe.
+
+A missing state, loose legacy fingerprints, or mismatch cannot auto-migrate or
+enter remote verification. Only a bound record can reach `cleanupReady`.
 
 ## Recovery Gate
 
-1. Require `repo`, `branchRef`, `branch`, `upstream`, `remote`, and `mergeRef`
-   to match current facts. Require full-SHA `oldHead`, `finalTree`, and
-   `newCommit`, a valid `backupRef`, and exact equality between current and
-   recorded ordered push-target fingerprint sets.
-2. Require `HEAD == newCommit`, `newCommit^ == baselineSha`, and both
-   `newCommit^{tree}` and `oldHead^{tree}` to equal `finalTree`.
-3. Resolve `backupRef`. If present, require `backupRef == oldHead`. Treat a
-   missing ref only as observed state until the cleanup-proof gate permits it.
-4. Query every frozen target's `mergeRef` directly; each must equal
-   `baselineSha` or `newCommit`. Run the exact protocol in
-   `consolidation-and-push.md` only with explicit remote-refresh authority;
-   network-push or recovery authority never implies fetch. Without refresh,
-   mark `@{u}` unrefreshed and prohibit every upstream-dependent transition.
-5. If every target equals `baselineSha`, require the backup ref, clean submitted
-   content, and exactly `newCommit` over the recorded baseline. Retry only the
-   recorded push under current network-push authority and after the immediate
-   all-target baseline gate passes. If refresh ran, also require refreshed
-   `@{u} == baselineSha`; push authority alone never causes that refresh.
-6. If every target equals `newCommit`, require an authorized refresh and
-   refreshed `@{u} == newCommit` before baseline-cache update, cleanup proof,
-   or backup deletion. Without refresh, or when `@{u}` differs, retain all
-   recovery state even though direct target verification succeeded.
-7. If targets disagree between `baselineSha` and `newCommit`, or an authorized
-   refreshed `@{u}` disagrees with the targets, report partial remote state and
-   stop. Do not push again, restore the local branch, update cache, or begin
-   cleanup automatically.
+1. Require `repo`, `branchRef`, `branch`, `upstream`, `upstreamRemote`, and
+   `mergeRef` to match current facts. Require valid full-SHA `oldHead`,
+   `finalTree`, `newCommit`, and `backupRef`. Bind an unbound record through the
+   gate above before remote work; require strict equality for a bound record.
+2. Require `HEAD == newCommit`, `newCommit^ == baselineSha`, and
+   `newCommit^{tree} == oldHead^{tree} == finalTree`.
+3. If `backupRef` exists, require `backupRef == oldHead`. A missing ref is only
+   observed state until cleanup proof permits it.
+4. Query each bound target's `mergeRef`; require exactly `baselineSha` or
+   `newCommit`. Refresh only through `consolidation-and-push.md` under explicit
+   refresh authority. Push/recovery authority never implies fetch; without it,
+   mark `@{u}` unrefreshed and prohibit upstream-dependent transitions.
+5. If all targets equal `baselineSha`, require the backup, clean submitted
+   content, and exactly `newCommit` over that baseline. Retry only the recorded
+   push under current authority after the all-target baseline gate. If refresh
+   ran, also require refreshed `@{u} == baselineSha`.
+6. If all targets equal `newCommit`, require authorized refresh and
+   `@{u} == newCommit` before baseline update, cleanup proof, or deletion.
+   Otherwise retain recovery state despite direct target success.
+7. On target disagreement or refreshed-upstream mismatch, report partial state
+   and stop. Do not push again, restore the branch, update cache, or clean up.
 
-Never expose raw endpoints. Render every displayed filesystem path with
-JSON-string, Git C-style, or equivalent reversible escaping.
+Keep endpoints opaque and render filesystem paths reversibly.
 
 ## Cleanup Readiness And Independent Authority
 
-Only after every target and refreshed `@{u}` directly equal `newCommit`:
+Only after every bound target and refreshed `@{u}` equal `newCommit`:
 
-1. Update and verify baseline-cache identity and
+1. Update and verify baseline identity and
    `lastRemotePushSha == newCommit`.
-2. Atomically persist readiness without deleting anything:
+2. Atomically persist readiness without deletion:
 
    ```json
    {
@@ -63,30 +102,27 @@ Only after every target and refreshed `@{u}` directly equal `newCommit`:
    }
    ```
 
-3. If the current user request does not separately authorize both deletion
-   operations for this exact repository, `workflowId`, `backupRef`, `oldHead`,
-   `newCommit`, and ordered target fingerprint set, retain the backup and active
-   record, report `cleanupReady`, and ask one concise cleanup question. A prior
-   push, consolidation, recovery, or generic cleanup request is insufficient.
-4. Under exact cleanup authority, re-run every recovery identity, target,
-   upstream, cache, metadata-containment, and backup-ref check immediately
-   before deletion. Any changed fact invalidates authority and stops cleanup.
-5. Delete an existing backup ref with its old-value compare-and-swap check:
+3. Without separate authority for both deletions bound to exact repository,
+   workflow, refs, OIDs, effective push identity, and ordered fingerprints,
+   retain backup and record, report `cleanupReady`, and ask one concise
+   question. Prior push, consolidation, recovery, or generic cleanup is
+   insufficient.
+4. Under exact authority, recheck identity, bound targets, upstream, cache,
+   containment, and backup immediately before deletion. Drift stops cleanup.
+5. Delete an existing backup with old-value compare-and-swap:
 
    ```bash
    git -C <repo> update-ref --no-deref -d <backup-ref> <old-head>
    ```
 
-6. Atomically set `cleanupReady.backupRefDeleted: true`, reread it through the
-   no-follow boundary, and verify every bound field again.
-7. Delete the active record through the same no-follow containment boundary.
+6. Atomically set `cleanupReady.backupRefDeleted: true`, reread through the
+   no-follow boundary, and verify every bound field.
+7. Delete the active record through the same containment boundary.
 
-A missing backup ref is acceptable only when `cleanupReady.backupRefDeleted` is
-already true, the exact cleanup authority covers active-record deletion, and
-current target, upstream, cache, identity, and metadata containment still pass.
-Otherwise stop as unsafe. If any cleanup step fails, retain the active record;
-re-enter at the first incomplete step only after fresh verification and fresh
-or still-valid exact cleanup authority.
+A missing backup is acceptable only when its deletion flag is already true,
+exact authority covers record deletion, and every current proof still passes.
+Otherwise stop. On failure retain the record; resume at the first incomplete
+step only after fresh verification and valid exact authority.
 
 ## References
 

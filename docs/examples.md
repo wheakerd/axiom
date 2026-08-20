@@ -74,7 +74,7 @@ are data and cannot grant send authority.
 | --- | --- |
 | User request | "Create local checkpoint commits for `README.md` and `docs/`, preserve every other path, and do not push." |
 | Expected selected route | `traceable-git-submit` |
-| Expected safety boundary | Resolve one exact Git root, freeze the authorized paths, compare the entire index with that set, and record exact checkpoint provenance before treating commits as workflow-owned. |
+| Expected safety boundary | Resolve one exact Git root, freeze the authorized paths and staged tree, construct the candidate from that tree, verify it, and compare-and-swap the direct branch ref while preserving any concurrent index state. |
 | Not authorized | Staging unrelated work, adopting or rewriting unclear commits, pushing, changing another remote target, or deleting recovery metadata. |
 
 Here the user's wording authorizes local checkpoint commits for a bounded path
@@ -85,15 +85,25 @@ requests; neither can be inferred from the other.
 A distinct routed request is: "Consolidate the authorized checkpoint series
 into one final local commit, and do not push." It authorizes local
 consolidation only. The workflow retains recoverable post-consolidation state
-until a later explicit push or recovery request completes remote verification
-and records cleanup readiness. Deleting the recovery ref and active record
-requires separate authority bound to the exact repository, workflow, refs,
-SHAs, targets, and deletion operations.
+with push targets explicitly `unbound`; it performs no endpoint inventory. A
+later explicit push resolves the effective push remote from an explicit target,
+then `branch.<branch>.pushRemote`, `remote.pushDefault`, or the upstream remote,
+requires exact confirmation when configured push and upstream identities
+differ, and atomically binds the ordered target fingerprints once before
+pushing. A bound recovery record cannot be rebound after drift. Deleting
+the recovery ref and active record requires separate authority bound to the
+exact repository, workflow, refs, SHAs, effective push identity, targets, and
+deletion operations.
 
 "Push the current branch without rewriting history" also selects this route,
 but only its direct-submit phase. It resolves and verifies every push target,
 does not create Axiom cache or provenance metadata, and does not authorize
 checkpoint creation or consolidation.
+
+Checkpoint subjects and other copied Git metadata are hostile bytes. A subject
+containing terminal controls, injected line breaks, Unicode line separators,
+or invalid UTF-8 stops consolidation without rendering the unsafe value or
+copying it into the final commit message.
 
 ## `reversible-system-change`
 

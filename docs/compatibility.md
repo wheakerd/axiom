@@ -59,6 +59,29 @@ present executable or manifest alone would be too weak to support that claim.
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
 
+The Git record for `v0.7.3` reports:
+
+- the distribution and publication guards, JSON and strict YAML parsing, hook
+  and documentation agreement, packaged Skill shape, transitive immutable
+  Action pins, exact manifest schemas, English-only, size, link, artifact, and
+  whitespace checks passed for the release candidate;
+- thirty routing-contract fixtures, fifty-six traceable-Git contract fixtures,
+  twelve external-action gate fixtures, ten rollback gate fixtures, four
+  source-linked cross-route and resume contracts, and seventeen parser fixtures
+  passed without being presented as fresh host semantic-routing evidence;
+- focused disposable Git probes confirmed frozen-tree checkpoint construction,
+  compare-and-swap branch installation, effective push-target precedence,
+  one-time later-push target binding, and hostile commit-metadata rejection;
+- the exact release-workflow JavaScript passed fifteen signed-target, strict
+  tag, immutable-creation, version-binding, and event fixtures, while a mutated
+  bypass copy was rejected by the publication guard;
+- all seven packaged Skills passed the local Skill Creator quick validator and
+  Claude Code `2.1.220` strict plugin and marketplace validation passed; and
+- the bundled local `plugin-creator` validator still rejected the intentional
+  Codex `hooks` field, while a fresh installation, fresh-session route test,
+  Codex Security Deep Scan, real external app action, and real persistent
+  system change were not run.
+
 The Git record for `v0.7.2` reports:
 
 - the distribution and publication guards, JSON and strict YAML parsing, hook
@@ -252,7 +275,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.2 release notes](releases/v0.7.2.md),
+See the durable [v0.7.3 release notes](releases/v0.7.3.md),
+[v0.7.2 release notes](releases/v0.7.2.md),
 [v0.7.1 release notes](releases/v0.7.1.md),
 [v0.7.0 release notes](releases/v0.7.0.md),
 [v0.6.1 release notes](releases/v0.6.1.md),

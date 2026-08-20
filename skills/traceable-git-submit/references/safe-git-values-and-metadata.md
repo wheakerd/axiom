@@ -2,18 +2,15 @@
 
 ## Purpose
 
-Keep target-controlled Git state from becoming executable, keep Git-derived
-values literal across process boundaries, keep raw endpoints out of observable
-output, and confine Axiom state to verified Git metadata. Apply this reference
-before every target-repository Git invocation.
+Keep target Git state non-executable, derived values literal, endpoints secret,
+and Axiom state inside verified Git metadata. Apply before every Git command.
 
 ## Non-Executable Git Boundary
 
 Treat repository/worktree configuration, includes, attributes, hooks, helpers,
-filters, signing/transport programs, and ambient process state as untrusted
-executable input. Before the first target Git command, freeze one envelope for
-all commands, including inspection. Generic Git authority never authorizes a
-program.
+filters, signing/transport programs, and ambient state as untrusted executable
+input. Freeze one envelope before any Git command, including inspection.
+Generic Git authority never authorizes a program.
 
 Bootstrap only with a host-native non-executing parser or a Git operation the
 installed version documents as unable to dispatch programs. Use a literal
@@ -38,18 +35,8 @@ transmit options, run maintenance, or write auxiliary state; stop if an effect
 cannot be disabled or separately authorized. Set `GIT_NO_LAZY_FETCH=1` so
 promisor-object inspection cannot contact another remote.
 
-Remote refresh uses one exact source-only refspec and empty `--refmap`, never
-`remote.<name>.fetch`; it fetches objects before a compare-and-swap update of
-the sole authorized tracking ref. Tags, prune/tag-prune, submodules,
-`FETCH_HEAD`, maintenance, and commit-graph writes stay off. Broad prune needs
-separate exact authority. Reject an active `fetch.bundleURI` or other implicit
-endpoint.
-
-Push uses one frozen raw target and one exact full-ref refspec. Neutralize
-`push.followTags`, `push.recurseSubmodules`, `push.gpgSign`, `push.pushOption`,
-`push.negotiate`, upstream setup, prune, and force. Bypass pre-push hooks unless
-exact frozen hook identity and action are separately authorized. Phase
-references supply the flags.
+For network operations, apply the transport and fetch/push closure owned by
+`repository-and-remote-targets.md` plus the phase's exact command envelope.
 
 ## Object Format And OIDs
 
@@ -58,19 +45,16 @@ Accept only `sha1`/40 hex or `sha256`/64 hex and derive the same-width all-zero
 null OID. Recheck before commit creation, network access, each ref mutation,
 and final proof; drift stops.
 
-Authority, compare-and-swap, and proof OIDs need the frozen width, hex only,
-and the expected object type. The null OID is only a documented `update-ref`
-old-value sentinel and never an object. Reject abbreviations and revisions.
+Authority/proof OIDs require frozen width, hex, and expected type. The null OID
+is only an `update-ref` old-value sentinel. Reject abbreviations and revisions.
 
 ## Literal Argument Boundary
 
-Treat repository paths, remote names, refs, refspecs, object IDs, Git paths,
-and endpoints as untrusted. Use an argument vector API and put each dynamic
-value in one element; never concatenate or reparse it through a shell,
-PowerShell command string, `eval`, or equivalent. Use documented `--` where
-supported, without treating it as validation. Command blocks show argument
-order, not interpolation templates. If literal arguments cannot be preserved,
-stop; quoting a generated command is no fallback.
+Treat paths, remote names, refs, refspecs, OIDs, Git paths, and endpoints as
+untrusted. Put each dynamic value in one literal argument-vector element;
+never reparse it through a shell, PowerShell command string, `eval`, or an
+equivalent. Documented `--` is not validation. If literal arguments cannot be
+preserved, stop; quoting a generated command is no fallback.
 
 Validate immediately before use:
 
@@ -97,24 +81,37 @@ Validate immediately before use:
 Apply these gates to every inspection and mutation, including `config`,
 `fetch`, `push`, `ls-remote`, `rev-parse`, `commit-tree`, and `update-ref`.
 
-## Remote Transport And Secrecy Boundary
+## Hostile Commit Metadata
 
-Classify raw endpoints without display. Allow authenticated `https://`,
-`ssh://`, `git+ssh://`, or standard SCP-like SSH. Reject plaintext `http://` or
-`git://`, network-push `file://` or local paths, controls, Git remote-helper syntax
-such as `<helper>::<address>`, and `ext::`. Never execute/install one.
-Local `.` remains checkpoint-only.
+Treat subjects, bodies, authorship, dates, encodings, trailers, notes,
+signatures, and formatted Git output as hostile bytes. Capture through a
+literal API into a non-visible buffer or protected temporary file, sanitize
+errors, and remove temporary material after success or failure. Never emit raw
+`git log`, `show`, `cat-file`, `for-each-ref`, or formatted output.
 
-At command scope set `protocol.allow=never`, enable only the classified
-`https` or `ssh` protocol needed, and keep `protocol.ext.allow` disabled.
-Configuration must not re-enable another transport. First pass the
-non-executable boundary.
+Require a full validated commit OID. Parse byte-preserving output without a
+shell, line substitution, locale conversion, or rendering. An absent encoding
+header means UTF-8 for this workflow; reject any other declared encoding.
 
-Contain endpoint enumeration, validation, hashing, and ref queries so stdout,
-stderr, exceptions, and debug output cannot leak raw values. Emit only target
-ordinals/fingerprints, validated refs, full OIDs, and sanitized status. Never
-run endpoint-producing Git visibly or report its raw failure; without assured
-capture and sanitization, stop.
+Before comparing, displaying, or copying a scalar, require strict UTF-8 and
+reject invalid/overlong/surrogate encodings, NUL, CR, LF, ASCII C0, DEL, C1,
+`U+2028`, `U+2029`, and categories `Cc`, `Cf`, `Zl`, and `Zp`. Do not trim,
+normalize, replace, strip, or split unsafe input. Report only full OID and a
+fixed reason. An authorized reversible diagnostic may encode the entire
+bounded scalar as lowercase ASCII `hex:` data after disclosure confirmation;
+never decode it in a report or use it in a commit message.
+
+Derive a subject as bytes before its first LF inside the capture boundary,
+then validate it; never copy arbitrary body, trailer, authorship, or signature
+data. Validate every user, derived, or Git-derived message line separately and
+join only with workflow-owned LF and headings. Hash exact message bytes before
+`commit-tree`, then require the candidate's invisibly parsed bytes and digest
+to match.
+
+For `Axiom-checkpoint: true`, require strict UTF-8, validate every nonempty
+line, and accept one exact standalone trailer in its expected position. Reject
+duplicates, folding, substrings, or unsafe bodies. Unsafe checkpoint metadata
+stops before history mutation; ordinary printable UTF-8 remains valid.
 
 ## Git Metadata Containment
 
