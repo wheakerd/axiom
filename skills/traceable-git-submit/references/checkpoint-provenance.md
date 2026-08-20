@@ -125,7 +125,7 @@ After the branch `update-ref` succeeds, persist `oldHead`, `finalTree`,
 do not push or update the baseline cache. Immediately attempt:
 
 ```bash
-git -C <repo> update-ref <branch-ref> <old-head> <new-commit>
+git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>
 git -C <repo> rev-parse --verify <branch-ref>
 git -C <repo> rev-parse --verify <backup-ref>
 ```

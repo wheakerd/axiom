@@ -37,9 +37,10 @@ worktree is valid when both roots are resolved from Git.
 ## Direct Submit Preflight
 
 For a direct submit, publish, or push that preserves current history, resolve
-the symbolic branch, upstream, branch remote, merge ref, `HEAD`, upstream SHA,
-ahead/behind state, and in-progress Git-operation paths. Use current Git facts,
-not Axiom cache or provenance metadata.
+and freeze object format, symbolic branch, upstream display/full tracking ref,
+branch remote, merge ref, `HEAD`, upstream OID, ahead/behind state, and
+in-progress Git-operation paths. Use current Git facts, not Axiom cache or
+provenance metadata, and recheck object format before network access.
 
 Stop before network access on detached or unborn `HEAD`, missing upstream or
 remote identity, a local-only remote, behind/diverged history, an in-progress
@@ -131,10 +132,20 @@ the baseline cache, and report each target only as ordinal/fingerprint plus
 expected and observed ref/SHA.
 
 For a direct history-preserving push, update only the current `branchRef` to
-the resolved `mergeRef`, without force or ref rewriting. Verify every frozen
-target directly afterward and require `mergeRef == finalSha`. If any target
-fails or disagrees, report partial remote state and stop; do not create Axiom
-metadata, retry automatically, or claim completion from the push exit status.
+the resolved `mergeRef`. Invoke each raw frozen target separately with the
+closed one-target/one-ref envelope:
+
+```bash
+git -C <repo> -c push.followTags=false -c push.recurseSubmodules=no -c push.gpgSign=false -c push.pushOption= -c push.negotiate=false -c push.autoSetupRemote=false push --no-verify --no-follow-tags --recurse-submodules=no --no-signed --no-push-option --no-set-upstream --no-prune --no-force --no-force-with-lease --no-force-if-includes <push-target> <branch-ref>:<merge-ref>
+```
+
+`--no-verify` is mandatory unless the user separately authorized the exact
+frozen pre-push hook identity and action. Verify every frozen target directly
+afterward and require `mergeRef == finalSha`. Push authority does not authorize
+a fetch; report the local tracking ref as unrefreshed unless separately
+refreshed. If any target fails or disagrees, report partial remote state and
+stop; do not create Axiom metadata, retry automatically, or infer completion
+from the push exit status.
 
 ## Sensitive Reporting
 

@@ -59,8 +59,9 @@ conceptual answer.
 - Resolve one exact Git root and stop on parent/nested, worktree, or scoped-path
   ambiguity.
 - Commit only with explicit checkpoint or commit authority. Consolidate only
-  with explicit history-replacement authority. Push and fetch only with
-  explicit network push or remote-refresh authority.
+  with explicit history-replacement authority. Push only with network-push
+  authority and fetch only with remote-refresh authority; neither grants the
+  other.
 - Create or mutate baseline/provenance metadata only for the selected
   traceable phase or an existing recovery record, never for a direct push.
 - Preserve unrelated work and any pre-existing index. Never use
@@ -82,7 +83,8 @@ conceptual answer.
   invocation, including read-only inspection. Stop when the host cannot prove
   a non-executable Git configuration and environment boundary, preserve literal
   argument vectors, protect raw endpoint capture, or enforce no-follow metadata
-  containment.
+  containment. Freeze and recheck the repository object format and close every
+  invoked subcommand against configuration-driven extra effects.
 
 ## Phase Outcomes
 

@@ -27,15 +27,9 @@ validated and passed as separate literal arguments.
      the recorded ordered SHA list to equal every unpublished commit.
    - With `newCommit`, use only the recovery gate in
      `checkpoint-provenance.md`.
-4. Fetch the resolved branch remote only when the user explicitly authorizes a
-   remote refresh or network push:
-
-```bash
-git -C <repo> fetch --prune <remote>
-```
-
-Resolve `<remote>` from `branch.<branch>.remote`. Stop if it is `.` for a
-network push.
+4. Run the exact refresh protocol below only with explicit remote-refresh
+   authority. Network-push authority never authorizes it. Resolve `remote` from
+   `branch.<branch>.remote`; stop if it is `.` for network work.
 
 5. After an authorized fetch, refresh `@{u}`, ahead/behind state, cache
    comparisons, and provenance. Without fetch, use the current remote-tracking
@@ -47,6 +41,37 @@ network push.
    post-consolidation state are persisted. Retain the backup and active record;
    do not update the remote-push baseline cache or run remote-dependent cleanup.
 9. With push authority, validate again before push or cleanup.
+
+## Exact Remote Refresh
+
+Freeze and validate `objectFormat`, `remote`, its resolved raw fetch target and
+fingerprint, source `mergeRef`, full destination `upstreamTrackingRef`, its
+current `oldTrackingOid`, and the source's directly queried `sourceOid`. Keep
+the raw target inside the secrecy boundary. The source-only refspec is exactly
+the validated `mergeRef`: no wildcard, leading `+`, or destination. Require a
+direct query of that target to return the source ref once.
+
+Fetch objects without updating any ref or consuming configured fetch refspecs:
+
+```bash
+git -C <repo> -c fetch.all=false -c fetch.prune=false -c fetch.pruneTags=false -c fetch.recurseSubmodules=false -c fetch.writeCommitGraph=false -c maintenance.auto=false fetch --no-all --no-tags --no-prune --no-prune-tags --no-recurse-submodules --no-write-fetch-head --no-auto-maintenance --no-write-commit-graph --refmap= <fetch-target> <source-ref>
+```
+
+The installed Git must support every shown closure flag. Re-query `sourceRef`
+at the frozen target after fetch and require the same `sourceOid`; require that
+OID now resolves as a commit. Recheck object format, remote/fetch-target
+identity, source/destination refs, and the frozen old destination, then update
+only the authorized tracking ref:
+
+```bash
+git -C <repo> update-ref --no-deref <upstream-tracking-ref> <source-oid> <old-tracking-oid>
+```
+
+The old value makes this compare-and-swap. On drift or failure, stop without a
+tracking-ref update. After success, require the destination to equal
+`sourceOid`, then recompute `@{u}`, ahead/behind, cache comparison, and
+provenance. Generic prune is outside this protocol and needs separate exact
+authority.
 
 ## Preconditions
 
@@ -105,8 +130,13 @@ user authorized that risk. Invoke one push per authorized target in frozen
 order so each outcome is attributable:
 
 ```bash
-git -C <repo> push <push-target> <branch-ref>:<merge-ref>
+git -C <repo> -c push.followTags=false -c push.recurseSubmodules=no -c push.gpgSign=false -c push.pushOption= -c push.negotiate=false -c push.autoSetupRemote=false push --no-verify --no-follow-tags --recurse-submodules=no --no-signed --no-push-option --no-set-upstream --no-prune --no-force --no-force-with-lease --no-force-if-includes <push-target> <branch-ref>:<merge-ref>
 ```
+
+This is one raw frozen target and one exact ref update. `--no-verify` is
+mandatory unless the user separately authorized the exact frozen pre-push hook
+identity and action under `safe-git-values-and-metadata.md`; no generic push
+authority permits that hook.
 
 Stop issuing later pushes on the first failure, then query the merge ref at
 every authorized target to record any partial state:
@@ -116,11 +146,14 @@ git -C <repo> ls-remote <push-target> <merge-ref>
 ```
 
 Require exactly one matching ref result and `newCommit` from every target.
-Then follow `post-consolidation-recovery.md`: fetch the branch remote, require
-authoritative refreshed `@{u} == newCommit`, update and verify the cache,
-and persist `cleanupReady`. Do not delete the backup ref or active record unless
-the user separately authorized the exact cleanup envelope bound to this
-repository, workflow, refs, SHAs, and deletion operations.
+Then follow `post-consolidation-recovery.md`. Only when current explicit
+remote-refresh authority covers a post-push refresh may the exact protocol
+above advance authoritative `@{u}`. Without it, target verification may prove
+the push result, but do not update the cache or persist `cleanupReady`; retain
+recovery state and report that refresh remains pending. Do not delete the backup ref or active record unless
+the user separately authorized the exact
+cleanup envelope bound to this repository, workflow, refs, OIDs, and deletion
+operations.
 
 If push or remote verification fails, do not update the baseline, delete the
 backup, or delete the active record. Leave the consolidated commit and recovery
