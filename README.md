@@ -8,9 +8,10 @@ Think before AI thinks.
 
 Axiom is a safety-first, request-routed workflow plugin for Codex and Claude
 Code. It is for developers and maintainers who want repository instructions,
-Codex usage optimization, read-only Axiom task reviews, Git publication, and
-persistent system changes to begin with explicit scope, authority, and evidence
-without turning every coding request into a special workflow.
+Codex usage optimization, read-only Axiom task reviews, consequential external
+actions, Git publication, and persistent system changes to begin with explicit
+scope, authority, and evidence without turning every coding request into a
+special workflow.
 
 Capable agents can start executing before the target, permission, rollback, or
 proof of success is clear. Axiom places a small routing gate into the foreground
@@ -27,6 +28,7 @@ or other mutation.
 | "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, inventory the instruction system, and report findings without changes |
 | "Run `effective-instructions:reconcile-preview` against this repository's current implementation." | Select `agents-architect`, compare existing AGENTS claims with the live working tree through the strict read-only reconciliation protocol, and report without changes |
 | "Explain the routing, authorization, actions, and evidence for this Axiom-guided task." | Select `review-axiom-task`, review only the available task evidence, and label missing history without rerunning the task |
+| "Send this approved message to this exact recipient once, then verify delivery state." | Select `confirm-external-action`, bind the actor, target, payload, disclosure, count, and retry boundary before one verified external effect |
 | "Summarize the purpose of this README. Do not modify files." | Select no Axiom workflow and continue normally without changing files |
 
 ## 60-Second Start
@@ -72,6 +74,7 @@ rewriting local state.
 | `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, or explicitly reconciling existing guidance with current implementation | Inspect first; reconciliation is user-triggered, evidence-led, and limited to the authorized instruction system |
 | `optimize-codex-usage` | Explicitly reducing or diagnosing Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool churn, or reporting overhead | Preserve the required quality, safety, authorization, rollback, and evidence bar; label proxies and never invent hidden usage data |
 | `review-axiom-task` | Explicitly reviewing the routing, scope, authorization, actions, evidence, stops, and outcome of an Axiom-guided task | Keep the review read-only; separate Axiom guidance from host-agent actions; label evidence as observed, reconstructed, or unavailable |
+| `confirm-external-action` | Explicitly sending, publishing, inviting, purchasing, trading, deleting, or changing external app/account state | Bind actor, target, payload, disclosure, cost, count, and retry semantics; execute once and verify through the external system of record |
 | `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep checkpoint/provenance, consolidation, remote refresh, push, and cleanup independent; a direct push preserves history and creates no Axiom metadata |
 | `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plan-only work stays read-only; mutation requires an exact target, explicit authority, and current rollback evidence |
 
@@ -110,7 +113,9 @@ The gate decides which instructions are relevant; it does not grant permission
 to act. For example, selecting `review-axiom-task` permits only a retrospective
 of the scoped task evidence; it does not rerun that task. Selecting
 `reversible-system-change` for a migration plan keeps the work read-only. An
-explicit Git submit, publish, or push selects `traceable-git-submit`, while
+explicit consequential app action selects `confirm-external-action`; a preview
+does not authorize execution, and an uncertain result is not retried blindly.
+An explicit Git submit, publish, or push selects `traceable-git-submit`, while
 checkpoint creation, metadata, consolidation, remote refresh, push, and cleanup
 remain separate actions. A direct push preserves history and creates no Axiom
 metadata. Read the
@@ -128,6 +133,7 @@ content is copied or forked for a host.
 - `agents-architect`, the repository-instruction workflow.
 - `optimize-codex-usage`, the explicit Codex consumption workflow.
 - `review-axiom-task`, the read-only Axiom task-review workflow.
+- `confirm-external-action`, the consequential external-action workflow.
 - `traceable-git-submit`, the checkpoint and Git submission workflow.
 - `reversible-system-change`, the persistent-change workflow.
 
@@ -266,7 +272,7 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
-- [Changelog](CHANGELOG.md) and [v0.6.1 release notes](docs/releases/v0.6.1.md):
+- [Changelog](CHANGELOG.md) and [v0.7.0 release notes](docs/releases/v0.7.0.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -279,7 +285,7 @@ python3 scripts/check-distribution-drift.py
 ```
 
 It compares the skill tree with both manifests, both marketplace wrappers, and
-the six-item `Shared skills` list above. It is a contributor and CI check, not
+the seven-item `Shared skills` list above. It is a contributor and CI check, not
 an installed runtime dependency.
 
 ## License

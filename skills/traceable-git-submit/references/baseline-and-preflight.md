@@ -74,29 +74,12 @@ The legacy path is
 - Ignore and report invalid JSON or any mismatch. Do not copy that state.
 - Never stage, commit, delete, or rewrite the legacy file automatically.
 
-Use Git plus native shell or structured-data tools available in the current
-environment. Do not require a bundled programming-language helper. Persist
-cache updates through a temporary sibling file and atomic replacement when the
-environment supports it.
-
-Create the resolved cache directory with the current operating system's native
-tools. For POSIX shells:
-
-```bash
-cache_directory="$(dirname "$cache_path")"
-mkdir -p "$cache_directory"
-```
-
-For PowerShell:
-
-```powershell
-$cacheDirectory = Split-Path -Parent $cachePath
-New-Item -ItemType Directory -Force -Path $cacheDirectory | Out-Null
-```
-
-Write JSON with a native structured-data facility where available. Write the
-complete document to a sibling temporary path, validate it, then replace the
-cache path; never expose a partially written cache record.
+Use Git plus native structured-data and file APIs available in the current
+environment. Do not require a bundled programming-language helper. Apply
+`safe-git-values-and-metadata.md` before any cache read, directory creation,
+write, replacement, or deletion. Its canonical containment, no-follow,
+exclusive temporary-file, parent revalidation, and fail-closed rules replace
+ordinary pathname creation such as `mkdir -p` or `New-Item -Force`.
 
 ## Required Git Facts
 
@@ -126,8 +109,10 @@ fields needed to explain a mutation, stop, or recovery state. Resolve the
 remote from `branch.<branch>.remote`, never by splitting the upstream string.
 Display any filesystem path only with reversible escaping.
 
-When the branch remote is not `.`, require
-`git -C <repo> config --get "remote.<remote>.url"` to confirm that it exists.
+When the branch remote is not `.`, perform the equivalent of
+`git -C <repo> config --get "remote.<remote>.url" >/dev/null 2>&1` only through
+the literal-argument boundary and use only its exit status to confirm that the
+key exists. Never expose or retain the value or unsanitized error output.
 A branch remote of `.` is a valid local upstream for checkpoint-only work but
 is not a network push target; workflow push and recovery must stop before push
 target inventory.

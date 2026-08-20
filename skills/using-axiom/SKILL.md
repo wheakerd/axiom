@@ -38,6 +38,11 @@ turning ordinary work into an Axiom task.
 - `review-axiom-task`: review the routing, scope, authorization, actions,
   evidence, stops, and outcome of the current or an explicitly identified
   Axiom-guided task when the user explicitly requests that retrospective.
+- `confirm-external-action`: prepare, authorize, execute once, and verify an
+  explicitly requested consequential external action such as send, publish,
+  invite, purchase, trade, delete, or an external app/account change when its
+  actor, target, payload, disclosure, cost, or retry boundary is material.
+  Read-only lookup and draft-only work stay host-native.
 - `traceable-git-submit`: create traceable checkpoints or baseline metadata,
   consolidate or recover their history, or perform an explicit Git
   submit/publish/push. Ordinary local staging and commits stay host-native.
@@ -53,6 +58,12 @@ optimization.
 
 An explicit retrospective selects `review-axiom-task`; any implementation must
 be separately authorized and routed.
+
+An external action selects `confirm-external-action` only when the user asks to
+cause the effect. Preparation does not authorize execution, and an exact
+current request need not be reconfirmed unless a material envelope field is
+missing or changes. Keep local Git under `traceable-git-submit` and persistent
+system rollback work under `reversible-system-change`.
 
 ## Boundaries
 

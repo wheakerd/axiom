@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.6.1"
+RELEASE_VERSION = "0.7.0"
 
 REQUIRED_PUBLIC_FILES = (
     "README.md",
@@ -34,6 +34,7 @@ REQUIRED_PUBLIC_FILES = (
     "docs/releases/v0.5.1.md",
     "docs/releases/v0.6.0.md",
     "docs/releases/v0.6.1.md",
+    "docs/releases/v0.7.0.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -72,6 +73,7 @@ HOOK_FILES = (
 )
 EXPECTED_DIRECT_SKILLS = (
     "agents-architect",
+    "confirm-external-action",
     "optimize-codex-usage",
     "reversible-system-change",
     "review-axiom-task",
@@ -83,6 +85,7 @@ EXPECTED_README_SKILLS = (
     "agents-architect",
     "optimize-codex-usage",
     "review-axiom-task",
+    "confirm-external-action",
     "traceable-git-submit",
     "reversible-system-change",
 )
@@ -107,6 +110,7 @@ EFFECTIVE_INSTRUCTION_TOKENS = (
 )
 ROUTE_SOURCE_ANCHORS = {
     "agents-architect": ("AGENTS.md", "audit"),
+    "confirm-external-action": ("external", "target", "verify"),
     "optimize-codex-usage": ("Codex", "credits", "context"),
     "review-axiom-task": ("routing", "authorization", "evidence"),
     "traceable-git-submit": ("checkpoint", "push"),
@@ -142,6 +146,14 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
         "name": "ordinary-task-summary-no-match",
         "request": "Summarize what changed in this coding task.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "draft-only-external-no-match",
+        "request": "Draft an email to Alex, but do not send it.",
         "route": None,
         "phase": "normal",
         "references": (),
@@ -226,6 +238,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "route": "traceable-git-submit",
         "phase": "checkpoint",
         "references": (
+            "references/safe-git-values-and-metadata.md",
             "references/baseline-and-preflight.md",
             "references/checkpoint-provenance.md",
             "references/checkpoint-execution.md",
@@ -237,8 +250,27 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "request": "Push the current Git branch without rewriting history.",
         "route": "traceable-git-submit",
         "phase": "direct-submit",
-        "references": ("references/repository-and-remote-targets.md",),
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/repository-and-remote-targets.md",
+        ),
         "authorization": frozenset({"read", "network-push"}),
+    },
+    {
+        "name": "exact-external-send",
+        "request": "Send this approved email to alex@example.com once, then verify the external service status.",
+        "route": "confirm-external-action",
+        "phase": "execute-verify",
+        "references": (),
+        "authorization": frozenset({"read", "external-write"}),
+    },
+    {
+        "name": "ambiguous-external-publish",
+        "request": "Publish this announcement somewhere.",
+        "route": "confirm-external-action",
+        "phase": "authorize",
+        "references": (),
+        "authorization": frozenset({"read"}),
     },
     {
         "name": "migration-plan",
@@ -326,6 +358,31 @@ ROLLBACK_EVIDENCE_FIELDS = (
     "rollback_authorized",
     "post_restore_checks_defined",
     "evidence_fresh",
+)
+EXTERNAL_ACTION_ENVELOPE_FIELDS = (
+    "actor_bound",
+    "action_bound",
+    "target_bound",
+    "payload_bound",
+    "disclosure_bound",
+    "cost_bound",
+    "count_bound",
+    "retry_bound",
+    "current_user_authority",
+    "envelope_unchanged",
+    "host_approval_satisfied",
+)
+CLEANUP_AUTHORITY_FIELDS = (
+    "exact_authority",
+    "repo_match",
+    "workflow_match",
+    "backup_ref_match",
+    "old_head_match",
+    "new_commit_match",
+    "targets_match",
+    "operations_bound",
+    "verification_current",
+    "metadata_safe",
 )
 
 CODEX_COMMAND = (
@@ -486,6 +543,23 @@ def route_contract(request: str) -> dict[str, Any]:
         re.search(r"\b(?:install|upgrade|deploy|deployment|migrat\w*|retention|promot\w*)\b", normalized)
         and re.search(r"\b(?:persistent|database|system|service|authorized|read-only|plan|execute)\b", normalized)
     )
+    external_effect_prohibited = bool(
+        re.search(
+            r"\b(?:do not|don't|without)\s+(?:send|publish|post|invite|purchase|buy|trade|delete|cancel|change)\b",
+            normalized,
+        )
+    )
+    external_action = bool(
+        re.search(
+            r"\b(?:send|publish|post|invite|purchase|buy|trade|delete|cancel|change)\b",
+            normalized,
+        )
+        and re.search(
+            r"\b(?:email|message|announcement|post|invitation|invite|order|trade|purchase|account|membership|subscription|recipient|external service)\b",
+            normalized,
+        )
+        and not external_effect_prohibited
+    )
 
     if review:
         return {
@@ -525,6 +599,7 @@ def route_contract(request: str) -> dict[str, Any]:
                 "route": "traceable-git-submit",
                 "phase": "checkpoint",
                 "references": (
+                    "references/safe-git-values-and-metadata.md",
                     "references/baseline-and-preflight.md",
                     "references/checkpoint-provenance.md",
                     "references/checkpoint-execution.md",
@@ -534,7 +609,10 @@ def route_contract(request: str) -> dict[str, Any]:
         return {
             "route": "traceable-git-submit",
             "phase": "direct-submit",
-            "references": ("references/repository-and-remote-targets.md",),
+            "references": (
+                "references/safe-git-values-and-metadata.md",
+                "references/repository-and-remote-targets.md",
+            ),
             "authorization": frozenset({"read", "network-push"}),
         }
 
@@ -555,6 +633,21 @@ def route_contract(request: str) -> dict[str, Any]:
                 frozenset({"read"})
                 if plan_only
                 else frozenset({"read", "persistent-write"})
+            ),
+        }
+
+    if external_action:
+        ambiguous = bool(
+            re.search(r"\b(?:somewhere|someone|somebody|anywhere|whichever|whatever)\b", normalized)
+        )
+        return {
+            "route": "confirm-external-action",
+            "phase": "authorize" if ambiguous else "execute-verify",
+            "references": (),
+            "authorization": (
+                frozenset({"read"})
+                if ambiguous
+                else frozenset({"read", "external-write"})
             ),
         }
 
@@ -664,6 +757,205 @@ def check_routing_scenarios(failures: list[str]) -> None:
                     f"routing scenario {scenario['name']!r} loads undeclared reference "
                     f"{reference!r} from {display_path(main_path)}"
                 )
+
+
+def check_github_action_pins(failures: list[str]) -> int:
+    use_line = re.compile(r"^\s*uses:\s*([^\s#]+)(?:\s+#\s*(.*))?$")
+    github_action = re.compile(
+        r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_./-]+)?@([0-9a-fA-F]{40})$"
+    )
+    docker_image = re.compile(r"^docker://[^\s]+@sha256:[0-9a-fA-F]{64}$")
+    pinned = 0
+
+    workflows = sorted((REPOSITORY_ROOT / ".github" / "workflows").glob("*.y*ml"))
+    for path in workflows:
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            match = use_line.match(line)
+            if match is None:
+                continue
+            declaration = match.group(1).strip("\"'")
+            comment = match.group(2) or ""
+            if declaration.startswith("./"):
+                continue
+            if declaration.startswith("docker://"):
+                if docker_image.fullmatch(declaration) is None:
+                    failures.append(
+                        f"{display_path(path)}:{line_number} external container action must use an immutable sha256 digest"
+                    )
+                else:
+                    pinned += 1
+                continue
+
+            action_match = github_action.fullmatch(declaration)
+            if action_match is None:
+                failures.append(
+                    f"{display_path(path)}:{line_number} external action {declaration!r} must be pinned to a full 40-character commit SHA"
+                )
+                continue
+            if re.search(r"\bv[0-9]", comment) is None:
+                failures.append(
+                    f"{display_path(path)}:{line_number} pinned action must retain a human-readable version comment"
+                )
+            pinned += 1
+
+    if pinned == 0:
+        failures.append("no immutable third-party GitHub Action pins were found")
+    return pinned
+
+
+def safe_git_operand(kind: str, value: str, literal_arguments: bool) -> bool:
+    if not literal_arguments or not value:
+        return False
+    if any(
+        ord(character) < 32 or 0x7F <= ord(character) <= 0x9F
+        for character in value
+    ):
+        return False
+    if "\u2028" in value or "\u2029" in value:
+        return False
+    if kind == "sha":
+        return re.fullmatch(r"[0-9a-fA-F]{40}", value) is not None
+    if kind == "remote":
+        return not value.startswith("-")
+    if kind == "path":
+        return True
+    if kind != "ref" or not value.startswith("refs/"):
+        return False
+    components = value.split("/")
+    if any(not component or component.startswith("-") for component in components):
+        return False
+    if value.endswith(("/", ".")) or ".." in value or "@{" in value:
+        return False
+    return not any(character in value for character in " ~^:?*[\\")
+
+
+def safe_git_transport(value: str) -> bool:
+    if not safe_git_operand("path", value, True) or "::" in value:
+        return False
+    if re.match(r"^(?:https|ssh|git\+ssh)://", value, re.IGNORECASE):
+        return True
+    if "://" in value:
+        return False
+    if re.match(r"^[A-Za-z]:[\\/]", value):
+        return False
+    return re.match(r"^(?:[^/@:\s]+@)?[^/:\s]+:.+$", value) is not None
+
+
+def all_evidence(evidence: dict[str, bool], fields: tuple[str, ...]) -> bool:
+    return all(evidence.get(field, False) for field in fields)
+
+
+def check_traceable_security_contracts(failures: list[str]) -> int:
+    skill_root = REPOSITORY_ROOT / "skills" / "traceable-git-submit"
+    required_anchors = {
+        "SKILL.md": (
+            "references/safe-git-values-and-metadata.md",
+            "cleanupReady",
+            "separate exact cleanup authority",
+        ),
+        "references/safe-git-values-and-metadata.md": (
+            "argument vector",
+            "git check-ref-format",
+            "remote-helper syntax",
+            "protocol.allow",
+            "no-follow",
+            "linked worktree",
+            "parent identity",
+        ),
+        "references/baseline-and-preflight.md": (">/dev/null 2>&1",),
+        "references/repository-and-remote-targets.md": (
+            "non-visible local capture boundary",
+        ),
+        "references/post-consolidation-recovery.md": (
+            "cleanupReady",
+            "separately authorize both deletion",
+            "exact repository",
+        ),
+        "references/consolidation-and-push.md": (
+            "Do not delete the backup ref or active record unless",
+        ),
+    }
+    for relative_path, anchors in required_anchors.items():
+        path = skill_root / relative_path
+        text = path.read_text(encoding="utf-8")
+        for anchor in anchors:
+            if anchor.casefold() not in text.casefold():
+                failures.append(
+                    f"{display_path(path)} is missing traceable security contract {anchor!r}"
+                )
+
+    operand_scenarios = (
+        ("normal-ref", "ref", "refs/heads/release-1", True, True),
+        ("shell-syntax-stays-literal", "ref", "refs/heads/release;$(touch-pwn)", True, True),
+        ("shell-syntax-string-host-stops", "ref", "refs/heads/release;$(touch-pwn)", False, False),
+        ("option-shaped-ref-stops", "ref", "refs/heads/-upload", True, False),
+        ("control-character-stops", "ref", "refs/heads/release\nnext", True, False),
+        ("c1-control-stops", "ref", "refs/heads/release\x85next", True, False),
+        ("normal-remote", "remote", "origin", True, True),
+        ("option-shaped-remote-stops", "remote", "--upload-pack=evil", True, False),
+        ("full-sha", "sha", "a" * 40, True, True),
+        ("short-sha-stops", "sha", "a" * 12, True, False),
+    )
+    for name, kind, value, literal_arguments, expected in operand_scenarios:
+        if safe_git_operand(kind, value, literal_arguments) != expected:
+            failures.append(f"safe Git operand scenario {name!r} returned the wrong gate result")
+
+    transport_scenarios = (
+        ("https", "https://example.test/org/repo.git", True),
+        ("ssh", "ssh://git@example.test/org/repo.git", True),
+        ("scp-like", "git@example.test:org/repo.git", True),
+        ("plaintext-http", "http://example.test/org/repo.git", False),
+        ("local-file", "file:///tmp/repo.git", False),
+        ("remote-helper", "ext::sh -c exploit", False),
+    )
+    for name, value, expected in transport_scenarios:
+        if safe_git_transport(value) != expected:
+            failures.append(f"safe Git transport scenario {name!r} returned the wrong gate result")
+
+    complete_cleanup = {field: True for field in CLEANUP_AUTHORITY_FIELDS}
+    if not all_evidence(complete_cleanup, CLEANUP_AUTHORITY_FIELDS):
+        failures.append("complete exact cleanup authority must permit cleanup")
+    for missing_field in CLEANUP_AUTHORITY_FIELDS:
+        incomplete = dict(complete_cleanup)
+        incomplete[missing_field] = False
+        if all_evidence(incomplete, CLEANUP_AUTHORITY_FIELDS):
+            failures.append(
+                f"cleanup scenario without {missing_field!r} must retain recovery state"
+            )
+    return len(operand_scenarios) + len(transport_scenarios) + len(CLEANUP_AUTHORITY_FIELDS) + 1
+
+
+def check_external_action_scenarios(failures: list[str]) -> int:
+    skill_path = REPOSITORY_ROOT / "skills" / "confirm-external-action" / "SKILL.md"
+    contract = skill_path.read_text(encoding="utf-8")
+    for anchor in (
+        "acting account",
+        "exact target",
+        "normalized payload",
+        "sensitive value",
+        "cost",
+        "idempotency key",
+        "current user statement",
+        "Do not automatically retry",
+        "external system of record",
+        "untrusted",
+    ):
+        if anchor.casefold() not in contract.casefold():
+            failures.append(
+                f"{display_path(skill_path)} is missing external-action contract {anchor!r}"
+            )
+
+    complete = {field: True for field in EXTERNAL_ACTION_ENVELOPE_FIELDS}
+    if not all_evidence(complete, EXTERNAL_ACTION_ENVELOPE_FIELDS):
+        failures.append("complete external action envelope must permit one execution")
+    for missing_field in EXTERNAL_ACTION_ENVELOPE_FIELDS:
+        incomplete = dict(complete)
+        incomplete[missing_field] = False
+        if all_evidence(incomplete, EXTERNAL_ACTION_ENVELOPE_FIELDS):
+            failures.append(
+                f"external-action scenario without {missing_field!r} must stop before mutation"
+            )
+    return len(EXTERNAL_ACTION_ENVELOPE_FIELDS) + 1
 
 
 def rollback_gate(evidence: dict[str, bool]) -> bool:
@@ -1520,11 +1812,14 @@ def main() -> int:
     check_declared_hook_paths(documents, failures)
     check_exact_hook_shapes(documents, failures)
     check_documented_hook_commands(documents, failures)
+    action_pin_count = check_github_action_pins(failures)
     check_readme_lifecycle_commands(failures)
     check_packaged_skills(failures)
     check_skill_contracts(failures)
     check_routing_source_contracts(failures)
     check_routing_scenarios(failures)
+    traceable_security_scenarios = check_traceable_security_contracts(failures)
+    external_action_scenarios = check_external_action_scenarios(failures)
     check_reversible_safety_scenarios(failures)
     markdown_count = check_markdown_links(failures)
 
@@ -1544,8 +1839,10 @@ def main() -> int:
         "Publication validation passed: "
         f"{len(REQUIRED_PUBLIC_FILES)} required files, {len(JSON_FILES)} JSON files, "
         f"{markdown_count} Markdown files, {len(ROUTING_SCENARIOS)} routing scenarios, "
+        f"{traceable_security_scenarios} traceable security scenarios, "
+        f"{external_action_scenarios} external-action scenarios, "
         f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback scenarios, version {RELEASE_VERSION}, "
-        "hooks, and packaged skills."
+        f"{action_pin_count} immutable action pins, hooks, and packaged skills."
     )
     return 0
 
