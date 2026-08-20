@@ -83,9 +83,10 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
   checkpoint, baseline, consolidation, one-final submission, and recovery
   chains. Direct push loads only repository/target guidance and creates no
   Axiom metadata.
-- `reversible-system-change` loads preflight and rollback guidance for planning
-  and the execution reference only before an authorized mutation, promotion,
-  rollback, or completion claim.
+- `reversible-system-change` loads preflight and rollback guidance for plans,
+  non-mutating rehearsals, and separately authorized isolated restore
+  rehearsals. It adds the execution reference only for a complete authorized
+  change, promotion, rollback, or completion claim.
 
 This keeps unrelated workflow instructions out of the active context. A child
 route may narrow permissions or add checks; it cannot broaden authorization or

@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, or active-version promotion with rollback, data, service, or activation risk. Plan-only work stays read-only. Do not use for ordinary source/configuration edits, Git operations, status queries, or conceptual explanations.
+description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, or active-version promotion with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; isolated restore rehearsals require exact rehearsal-write authority. Do not use for ordinary source/configuration edits, Git operations, status queries, or conceptual explanations.
 ---
 
 # Reversible System Change
@@ -10,10 +10,16 @@ restore, and verify the prior working state.
 
 ## Select One Phase
 
-- Plan or non-mutating rehearsal: read
+- Plan or non-mutating workflow rehearsal: read
   `references/preflight-and-rollback.md`. Keep the entire phase read-only; do
   not create a candidate, backup, capsule, cache, remote record, or sensitive
   content access.
+- Authorized isolated restore rehearsal: read
+  `references/preflight-and-rollback.md` only. Freeze an isolated non-active
+  target and its complete write set, obtain exact rehearsal-write authority,
+  and verify only the restore outcome. This phase may establish `rehearsed`
+  evidence; it never authorizes candidate preparation, active promotion, the
+  complete change, or cleanup.
 - Execute a complete authorized change: read
   `references/preflight-and-rollback.md` first. Read
   `references/execution-and-verification.md` only after the exact target,
@@ -29,11 +35,12 @@ postcondition before mutation. Ask one concise question only when target,
 environment, destructive scope, credentials, sensitive asset use, promotion,
 or rollback authority would change execution.
 
-Keep candidate preparation, active promotion, service restart/reload, data
-migration, destructive retention, sensitive asset access, and rollback as
-separate actions. Permission for one never implies another. Freeze the exact
-direct and indirect write set; a newly discovered target, dependency, service,
-data store, endpoint, or destructive effect requires renewed authority.
+Keep an isolated restore rehearsal, candidate preparation, active promotion,
+service restart/reload, data migration, destructive retention, sensitive asset
+access, rollback, and rehearsal cleanup as separate actions. Permission for one
+never implies another. Freeze the exact direct and indirect write set; a newly
+discovered target, dependency, service, data store, endpoint, or destructive
+effect requires renewed authority.
 
 Inventory sensitive assets by metadata only. Read or use content only after
 the exact path and exact action are both frozen and authorized. Never print,
@@ -47,6 +54,11 @@ observed prior state, covers every non-forward-compatible effect, is currently
 readable by the restore principal with all prerequisites present, and has
 passed a target-native restore validation or an authorized isolated rehearsal.
 Recheck that evidence immediately before mutation.
+
+For the isolated restore rehearsal itself, first prove that its non-active
+target cannot affect active state or data and that a failed rehearsal can be
+abandoned or recreated within its authorized write set. If that isolation is
+unproven, treat the rehearsal as complete execution and require this full gate.
 
 Keep `identified`, `present`, `readable`, `restore-validated`, and `rehearsed`
 as distinct evidence states. A backup job, artifact, script, manifest,

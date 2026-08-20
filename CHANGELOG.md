@@ -5,6 +5,17 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.1 - 2026-08-20
+
+### Fixed
+
+- Required a frozen non-executable Git process boundary before every
+  `traceable-git-submit` command so target-controlled configuration, helpers,
+  hooks, filters, transport commands, and ambient Git state cannot silently run.
+- Distinguished read-only workflow rehearsal from an authorized isolated
+  restore rehearsal, and kept that write separate from candidate preparation,
+  promotion, complete execution, and cleanup.
+
 ## 0.7.0 - 2026-08-20
 
 ### Added

@@ -104,10 +104,12 @@ checkpoint creation or consolidation.
 | Expected safety boundary | Identify the exact target and intended persistent effects through metadata-only observation; distinguish rollback material that exists from a restore path that is currently validated or safely rehearsed. |
 | Not authorized | Reading secret contents, downloading a candidate, creating rollback artifacts, writing local or remote state, restarting a service, migrating data, or promoting a candidate. |
 
-A plan or rehearsal request routes because the proposed operation has persistent
-change and rollback risk, but the plan-only contract remains read-only. If the
-user later authorizes execution, candidate preparation, promotion, destructive
-retention, sensitive asset use, and rollback are still separate boundaries.
+A plan or non-mutating workflow-rehearsal request routes because the proposed
+operation has persistent change and rollback risk, but that phase remains
+read-only. An isolated restore rehearsal is a different persistent-write phase
+that requires exact authority for its non-active target and effects. It may
+establish rollback evidence but does not authorize candidate preparation,
+promotion, the complete change, or cleanup.
 
 ## Requests That Should Not Route
 
