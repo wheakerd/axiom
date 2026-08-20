@@ -1,9 +1,18 @@
 name: Release signature guard
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
+    tags:
+      - "v*"
+  release:
+    types:
+      - published
+      - edited
   workflow_dispatch:
 
 permissions:
@@ -19,12 +28,142 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
+            const { owner, repo } = context.repo;
+            const repositoryResponse = await github.rest.repos.get({ owner, repo });
+            const defaultBranch = repositoryResponse.data.default_branch;
+            if (defaultBranch !== "main") {
+              core.setFailed(
+                `Release policy requires main to be the default branch; found ${defaultBranch}.`,
+              );
+              return;
+            }
+
+            const defaultRef = `refs/heads/${defaultBranch}`;
+
+            async function peelRefToCommit(qualifiedRef) {
+              const reference = await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: qualifiedRef.replace(/^refs\//, ""),
+              });
+              if (reference.data.ref !== qualifiedRef) {
+                throw new Error(
+                  `Resolved ${reference.data.ref} while verifying exact ref ${qualifiedRef}.`,
+                );
+              }
+
+              let object = reference.data.object;
+              const visited = new Set();
+              for (let depth = 0; depth < 16; depth += 1) {
+                if (object.type === "commit") {
+                  return object.sha;
+                }
+                if (object.type !== "tag" || visited.has(object.sha)) {
+                  throw new Error(
+                    `Ref ${qualifiedRef} does not peel uniquely to a commit.`,
+                  );
+                }
+                visited.add(object.sha);
+                const tag = await github.rest.git.getTag({
+                  owner,
+                  repo,
+                  tag_sha: object.sha,
+                });
+                object = tag.data.object;
+              }
+              throw new Error(`Ref ${qualifiedRef} exceeds the tag peel depth limit.`);
+            }
+
+            let targetRef;
+            let targetCommit;
+            let targetMustDescendFromDefault = false;
+            if (context.eventName === "pull_request") {
+              const pullRequest = context.payload.pull_request;
+              if (pullRequest?.base?.ref !== defaultBranch) {
+                core.setFailed(
+                  `Release pull requests must target ${defaultRef}.`,
+                );
+                return;
+              }
+              if (pullRequest?.head?.repo?.full_name !== `${owner}/${repo}`) {
+                core.setFailed(
+                  "Release pull requests must use a branch in this repository.",
+                );
+                return;
+              }
+              targetRef = `pull request #${pullRequest.number} head`;
+              targetCommit = pullRequest.head.sha;
+              targetMustDescendFromDefault = true;
+            } else if (context.eventName === "release") {
+              const tagName = context.payload.release?.tag_name;
+              if (typeof tagName !== "string" || !/^v[0-9]/.test(tagName)) {
+                core.setFailed("Published releases must use a v* release tag.");
+                return;
+              }
+              targetRef = `refs/tags/${tagName}`;
+              targetCommit = await peelRefToCommit(targetRef);
+            } else if (context.eventName === "push") {
+              if (context.ref === defaultRef) {
+                targetRef = defaultRef;
+                targetCommit = context.payload.after;
+              } else if (/^refs\/tags\/v[0-9]/.test(context.ref)) {
+                targetRef = context.ref;
+                targetCommit = await peelRefToCommit(targetRef);
+              } else {
+                core.setFailed(`Unexpected push ref ${context.ref}.`);
+                return;
+              }
+            } else if (context.eventName === "workflow_dispatch") {
+              if (context.ref === defaultRef) {
+                targetRef = defaultRef;
+              } else if (
+                /^refs\/heads\/release\/v[0-9]+\.[0-9]+\.[0-9]+$/.test(context.ref)
+              ) {
+                targetRef = context.ref;
+                targetMustDescendFromDefault = true;
+              } else {
+                core.setFailed(`Unexpected manual verification ref ${context.ref}.`);
+                return;
+              }
+              targetCommit = await peelRefToCommit(targetRef);
+            } else {
+              core.setFailed(`Unsupported event ${context.eventName}.`);
+              return;
+            }
+
+            if (typeof targetCommit !== "string" || targetCommit.length === 0) {
+              core.setFailed(`Could not resolve ${targetRef} to an exact commit.`);
+              return;
+            }
+
+            const defaultCommit = await peelRefToCommit(defaultRef);
+            const historyBase = targetMustDescendFromDefault
+              ? defaultCommit
+              : targetCommit;
+            const historyHead = targetMustDescendFromDefault
+              ? targetCommit
+              : defaultCommit;
+            const comparison = await github.rest.repos.compareCommitsWithBasehead({
+              owner,
+              repo,
+              basehead: `${historyBase}...${historyHead}`,
+              per_page: 1,
+            });
+            if (
+              comparison.data.merge_base_commit?.sha !== historyBase ||
+              !["ahead", "identical"].includes(comparison.data.status)
+            ) {
+              core.setFailed(
+                targetMustDescendFromDefault
+                  ? `Target ${targetCommit} does not descend from ${defaultRef}.`
+                  : `Target ${targetCommit} is not on the ${defaultRef} history policy.`,
+              );
+              return;
+            }
+
             const result = await github.graphql(
               `query($owner: String!, $name: String!, $oid: GitObjectID!) {
                 repository(owner: $owner, name: $name) {
-                  defaultBranchRef {
-                    name
-                  }
                   object(oid: $oid) {
                     ... on Commit {
                       oid
@@ -38,36 +177,27 @@ jobs:
                 }
               }`,
               {
-                owner: context.repo.owner,
-                name: context.repo.repo,
-                oid: context.sha,
+                owner,
+                name: repo,
+                oid: targetCommit,
               },
             );
 
-            const repository = result.repository;
-            const defaultRef = `refs/heads/${repository.defaultBranchRef?.name}`;
-            const commit = repository.object;
+            const commit = result.repository.object;
             const signature = commit?.signature;
 
-            if (context.ref !== defaultRef) {
-              core.setFailed(
-                `Release targets must be verified from ${defaultRef}; received ${context.ref}.`,
-              );
-              return;
-            }
-
             if (
-              commit?.oid !== context.sha ||
+              commit?.oid !== targetCommit ||
               signature?.isValid !== true ||
               signature?.state !== "VALID" ||
               signature?.wasSignedByGitHub !== true
             ) {
               core.setFailed(
-                `Commit ${context.sha} must have a valid signature made with GitHub's signing key before it can be used as a release target.`,
+                `Release target commit ${targetCommit} must have a valid signature made with GitHub's signing key.`,
               );
               return;
             }
 
             core.info(
-              `Commit ${context.sha} has a valid signature made with GitHub's signing key.`,
+              `${targetRef} resolves to ${targetCommit}, satisfies the ${defaultRef} history policy, and has a valid signature made with GitHub's signing key.`,
             );

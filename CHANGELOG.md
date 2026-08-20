@@ -5,6 +5,25 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.2 - 2026-08-20
+
+### Fixed
+
+- Separated remote refresh from push authority, replaced broad configured
+  fetch and pruning with one source-ref fetch plus a compare-and-swap tracking
+  ref update, and closed push against tags, submodules, signing, push options,
+  and unapproved hooks.
+- Added SHA-256 Git object support and create-only backup-ref transactions so
+  valid repositories no longer stop at 40-character OIDs and concurrent
+  recovery refs cannot be overwritten.
+- Required current explicit edit authority regardless of Axiom provenance,
+  selected both external-action and reversible-change gates for persistent
+  external effects, and failed closed across resume or compaction gaps.
+- Replaced regex-only metadata and Action-pin inspection with strict bounded
+  parsers and negative fixtures, derived current release documentation from the
+  release version, and verified release targets by ancestry and GitHub
+  signature across main, tag, and GitHub Release events.
+
 ## 0.7.1 - 2026-08-20
 
 ### Fixed

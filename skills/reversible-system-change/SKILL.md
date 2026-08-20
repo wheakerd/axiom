@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, or active-version promotion with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; isolated restore rehearsals require exact rehearsal-write authority. Do not use for ordinary source/configuration edits, Git operations, status queries, or conceptual explanations.
+description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, or active-version promotion with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; isolated restore rehearsals require exact rehearsal-write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, status queries, or conceptual explanations.
 ---
 
 # Reversible System Change
@@ -86,6 +86,20 @@ execution; a plan may report the gap.
 Command success, upload acceptance, a configuration write, or process start
 proves only that stage. A failed or unavailable outcome-owning observation is
 unverified, not complete.
+
+## Resume And Compaction Handoff
+
+After resume or compaction, reobserve the target and drift-sensitive state,
+then fail closed unless host-native task context and current direct evidence
+from the owning system reconstruct the active phase, exact current user
+authority, frozen action envelope and complete write set, prior mutations and
+attempt identifiers, idempotency status, and rollback point and validation
+evidence. If any material field is missing, stale, or inconsistent, perform
+zero new mutations. Never adopt post-change state as the prior rollback
+baseline. An unknown external outcome enters Verify only and must not be
+resent. Reestablish changed or missing evidence and obtain renewed authority;
+authority cannot waive the rollback gate. Do not add a daemon, cache,
+telemetry, or persistent handoff tool to reconstruct the handoff.
 
 ## Safety And Handoff
 

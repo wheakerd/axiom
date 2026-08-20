@@ -5,8 +5,8 @@ description: Route an Axiom plugin session to the smallest matching bundled skil
 
 # Using Axiom
 
-Axiom is a routing gate. Decide whether one installed workflow applies without
-turning ordinary work into an Axiom task.
+Axiom is a routing gate. Select the smallest installed workflow set that
+applies without turning ordinary work into an Axiom task.
 
 ## Route Once
 
@@ -50,6 +50,14 @@ turning ordinary work into an Axiom task.
   upgrade, deployment, migration, destructive retention, or promotion with
   rollback, data, service, or activation risk. Plans remain read-only.
 
+Resolve cross-route ownership from this table before inspecting either
+candidate body. A deployment, promotion, migration, destructive retention, or
+similar persistent change that also causes a consequential external app or
+account effect, including publish, delete, or remote-state mutation, selects
+both `confirm-external-action` and `reversible-system-change`. Keep the exact
+external action envelope and the persistent write-set and rollback gates
+independent; authorization under either route never satisfies the other.
+
 An explicit usage-reduction goal selects `optimize-codex-usage`. Add another
 route only when the requested implementation also needs that route's distinct
 authorization or safety contract. Ordinary AGENTS audits select only
@@ -62,8 +70,10 @@ be separately authorized and routed.
 An external action selects `confirm-external-action` only when the user asks to
 cause the effect. Preparation does not authorize execution, and an exact
 current request need not be reconfirmed unless a material envelope field is
-missing or changes. Keep local Git under `traceable-git-submit` and persistent
-system rollback work under `reversible-system-change`.
+missing or changes. Keep local Git under `traceable-git-submit`. A persistent
+change with no distinct consequential external effect stays under
+`reversible-system-change`; apply the cross-route rule above when both effects
+are present.
 
 ## Boundaries
 
@@ -72,6 +82,10 @@ system rollback work under `reversible-system-change`.
 - Startup routing is foreground and read-only. It must not write files, contact
   a network, start a service or background process, collect telemetry, or check
   for updates.
+- On resume or compaction, reselect every still-active route from current
+  direct evidence before any new mutation. If route or phase cannot be
+  reconstructed, perform zero new mutations; let each selected route's handoff
+  contract resolve prior attempts.
 - Do not load every Axiom skill, route from broad topical similarity, edit
   protected plugin metadata without explicit scope, or persist one-off task
   discoveries as durable instructions.

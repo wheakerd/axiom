@@ -22,9 +22,10 @@ update Axiom metadata. Reading Git facts never authorizes cache mutation. Use
 cache init, check, migration, or update semantics only for the exact selected
 traceable phase.
 
-Do not fetch solely for local consolidation. A remote refresh or network push
-requires its own explicit authorization; otherwise use the current
-remote-tracking ref and report that it was not refreshed.
+Do not fetch solely for local consolidation. Remote refresh and network push
+each require independent explicit authority; push authority never grants a
+refresh or any fetch. Without refresh authority, use the current tracking ref
+and report that it was not refreshed.
 
 ## Baseline Cache
 
@@ -87,9 +88,11 @@ Resolve these facts before cache or workflow decisions:
 
 ```bash
 git -C <repo> rev-parse --path-format=absolute --git-path axiom/traceable-git-submit-baseline.json
+git -C <repo> rev-parse --show-object-format
 git -C <repo> symbolic-ref --quiet HEAD
 git -C <repo> branch --show-current
 git -C <repo> rev-parse --abbrev-ref --symbolic-full-name '@{u}'
+git -C <repo> rev-parse --symbolic-full-name '@{u}'
 git -C <repo> config --get "branch.<branch>.remote"
 git -C <repo> config --get "branch.<branch>.merge"
 git -C <repo> rev-parse --verify HEAD
@@ -103,11 +106,12 @@ git -C <repo> rev-parse --path-format=absolute --git-path rebase-merge
 git -C <repo> rev-parse --path-format=absolute --git-path rebase-apply
 ```
 
-Retain branch full ref and short name, upstream, branch remote, merge ref,
-upstream SHA, `HEAD` SHA, and ahead/behind state for decisions. Report only the
-fields needed to explain a mutation, stop, or recovery state. Resolve the
-remote from `branch.<branch>.remote`, never by splitting the upstream string.
-Display any filesystem path only with reversible escaping.
+Retain frozen object format, branch full ref and short name, upstream display
+name and full tracking ref, branch remote, merge ref, upstream OID, `HEAD` OID,
+and ahead/behind state. Resolve the remote from `branch.<branch>.remote`, never
+by splitting upstream text. Apply the object-format recheck rules in
+`safe-git-values-and-metadata.md`; report only fields needed for a mutation,
+stop, or recovery state and reversibly escape filesystem paths.
 
 When the branch remote is not `.`, perform the equivalent of
 `git -C <repo> config --get "remote.<remote>.url" >/dev/null 2>&1` only through

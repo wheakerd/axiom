@@ -14,9 +14,10 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.7.1"
+RELEASE_VERSION = "0.7.2"
+CURRENT_RELEASE_NOTES = f"docs/releases/v{RELEASE_VERSION}.md"
 
-REQUIRED_PUBLIC_FILES = (
+REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
     "README.md",
     "docs/getting-started.md",
     "docs/architecture.md",
@@ -36,10 +37,12 @@ REQUIRED_PUBLIC_FILES = (
     "docs/releases/v0.6.1.md",
     "docs/releases/v0.7.0.md",
     "docs/releases/v0.7.1.md",
+    "docs/releases/v0.7.2.md",
+    CURRENT_RELEASE_NOTES,
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
-)
+)))
 
 JSON_FILES = (
     ".codex-plugin/plugin.json",
@@ -328,6 +331,36 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "authorization": frozenset({"read", "persistent-write"}),
     },
     {
+        "name": "deploy-and-external-publish-cross-route",
+        "request": "Deploy this release to the external service and publish the deployment.",
+        "route": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+        "phase": "cross-route-ownership",
+        "references": (),
+        "authorization": frozenset({"read"}),
+        "authorization_gates": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+    },
+    {
+        "name": "retention-deletion-cross-route",
+        "request": "Execute the authorized retention deletion of remote backups from this external service account.",
+        "route": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+        "phase": "cross-route-ownership",
+        "references": (),
+        "authorization": frozenset({"read"}),
+        "authorization_gates": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+    },
+    {
         "name": "explicit-usage-optimization",
         "request": "Reduce the Codex credits and context used by these Skills without weakening validation.",
         "route": "optimize-codex-usage",
@@ -486,6 +519,103 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
+class CanonicalYamlError(ValueError):
+    """Raised when a protected YAML file leaves Axiom's strict tiny schema."""
+
+
+def parse_agent_metadata_document(
+    text: str,
+    label: str,
+    *,
+    allow_policy: bool,
+) -> dict[str, dict[str, Any]]:
+    """Consume agents/openai.yaml through its exact canonical tiny schema."""
+    quoted = r'"[^\r\n]*"'
+    pattern = re.compile(
+        rf"interface:\n"
+        rf"  display_name: (?P<display_name>{quoted})\n"
+        rf"  short_description: (?P<short_description>{quoted})\n"
+        rf"  default_prompt: (?P<default_prompt>{quoted})"
+        rf"(?P<policy>\npolicy:\n  allow_implicit_invocation: false)?\n?"
+    )
+    match = pattern.fullmatch(text)
+    policy_present = match is not None and match.group("policy") is not None
+    if match is None or policy_present != allow_policy:
+        raise CanonicalYamlError(
+            f"{label} must match the complete canonical interface"
+            + (" plus non-implicit policy schema" if allow_policy else " schema with no tail")
+        )
+    try:
+        interface = {
+            field: json.loads(match.group(field))
+            for field in ("display_name", "short_description", "default_prompt")
+        }
+    except json.JSONDecodeError as error:
+        raise CanonicalYamlError(f"{label} has an invalid quoted string: {error.msg}") from error
+    result: dict[str, dict[str, Any]] = {"interface": interface}
+    if allow_policy:
+        result["policy"] = {"allow_implicit_invocation": False}
+    return result
+
+
+def parse_skill_frontmatter_document(text: str, label: str) -> dict[str, str]:
+    """Parse the complete frontmatter document and reject non-schema content."""
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
+        raise CanonicalYamlError(f"{label} must start with an exact YAML delimiter")
+    try:
+        closing_index = lines.index("---", 1)
+    except ValueError as error:
+        raise CanonicalYamlError(f"{label} has no closing YAML delimiter") from error
+    if closing_index == 1:
+        raise CanonicalYamlError(f"{label} frontmatter is empty")
+    if not any(line.strip() for line in lines[closing_index + 1 :]):
+        raise CanonicalYamlError(f"{label} must contain a Markdown body after frontmatter")
+
+    expected = ("name", "description")
+    implicit_non_strings = {
+        "y",
+        "yes",
+        "n",
+        "no",
+        "true",
+        "false",
+        "on",
+        "off",
+        "null",
+        "~",
+    }
+    fields: dict[str, str] = {}
+    order: list[str] = []
+    for line_number, line in enumerate(lines[1:closing_index], start=2):
+        match = re.fullmatch(r"([a-z_]+): (.+)", line)
+        if match is None or line != line.rstrip() or "\t" in line:
+            raise CanonicalYamlError(
+                f"{label}:{line_number} frontmatter must use one canonical key and scalar"
+            )
+        key, raw_value = match.groups()
+        if key in fields:
+            raise CanonicalYamlError(f"{label}:{line_number} duplicate field {key!r}")
+        if key not in expected:
+            raise CanonicalYamlError(f"{label}:{line_number} unknown field {key!r}")
+        if (
+            raw_value != raw_value.strip()
+            or raw_value.casefold() in implicit_non_strings
+            or re.fullmatch(r"[A-Za-z][\x20-\x7e]*", raw_value) is None
+            or " #" in raw_value
+            or ": " in raw_value
+            or raw_value.endswith(":")
+        ):
+            raise CanonicalYamlError(
+                f"{label}:{line_number} {key!r} must be a canonical plain string"
+            )
+        fields[key] = raw_value
+        order.append(key)
+    if tuple(order) != expected:
+        raise CanonicalYamlError(f"{label} frontmatter must contain only name then description")
+    return fields
+
+
 def route_contract(request: str) -> dict[str, Any]:
     """Evaluate the offline route model after its source contracts are checked."""
     normalized = request.lower()
@@ -582,7 +712,7 @@ def route_contract(request: str) -> dict[str, Any]:
                 normalized,
             )
             and re.search(
-                r"\b(?:persistent|database|system|service|authorized|read-only|plan|execute|rehears\w*|dry[ -]run|simulation)\b",
+                r"\b(?:persistent|database|system|service|authorized|approved|production|staged|release|read-only|plan|execute|rehears\w*|dry[ -]run|simulation)\b",
                 normalized,
             )
         )
@@ -590,17 +720,17 @@ def route_contract(request: str) -> dict[str, Any]:
     )
     external_effect_prohibited = bool(
         re.search(
-            r"\b(?:do not|don't|without)\s+(?:send|publish|post|invite|purchase|buy|trade|delete|cancel|change)\b",
+            r"\b(?:do not|don't|without)\s+(?:send|publish|post|invite|purchase|buy|trade|delet\w*|cancel|change)\b",
             normalized,
         )
     )
     external_action = bool(
         re.search(
-            r"\b(?:send|publish|post|invite|purchase|buy|trade|delete|cancel|change)\b",
+            r"\b(?:send|publish|post|invite|purchase|buy|trade|delet\w*|cancel|change)\b",
             normalized,
         )
         and re.search(
-            r"\b(?:email|message|announcement|post|invitation|invite|order|trade|purchase|account|membership|subscription|recipient|external service)\b",
+            r"\b(?:email|message|announcement|post|invitation|invite|order|trade|purchase|account|membership|subscription|recipient|external (?:app|service)|remote deployment|deployment)\b",
             normalized,
         )
         and not external_effect_prohibited
@@ -636,6 +766,21 @@ def route_contract(request: str) -> dict[str, Any]:
             "phase": "audit",
             "references": ("references/inventory-audit.md",),
             "authorization": frozenset({"read"}),
+        }
+
+    if persistent and external_action:
+        return {
+            "route": (
+                "confirm-external-action",
+                "reversible-system-change",
+            ),
+            "phase": "cross-route-ownership",
+            "references": (),
+            "authorization": frozenset({"read"}),
+            "authorization_gates": (
+                "confirm-external-action",
+                "reversible-system-change",
+            ),
         }
 
     if git:
@@ -797,6 +942,79 @@ def check_routing_source_contracts(failures: list[str]) -> None:
                 )
 
 
+def require_ordered_contract_anchors(
+    path: Path,
+    anchors: tuple[str, ...],
+    failures: list[str],
+    contract_name: str,
+) -> None:
+    """Bind an offline semantic contract to ordered phrases in its owner."""
+    text = " ".join(path.read_text(encoding="utf-8").split()).casefold()
+    cursor = 0
+    for anchor in anchors:
+        index = text.find(" ".join(anchor.split()).casefold(), cursor)
+        if index < 0:
+            failures.append(
+                f"{display_path(path)} is missing or reorders {contract_name} anchor {anchor!r}"
+            )
+            return
+        cursor = index + len(anchor)
+
+
+def check_cross_route_resume_contracts(failures: list[str]) -> int:
+    """Lock dual-route authority and fail-closed resume to their source owners."""
+    skills = REPOSITORY_ROOT / "skills"
+    contracts = (
+        (
+            skills / "agents-architect/references/maintenance/authorization-and-safety.md",
+            "provenance authorization",
+            (
+                "Clear Axiom provenance may establish ownership, routing, and preview handling only.",
+                "A read-only assessment, option request, preview, or approval of a preview authorizes zero writes regardless of provenance.",
+            ),
+        ),
+        (
+            skills / "using-axiom/SKILL.md",
+            "cross-route and resume",
+            (
+                "Resolve cross-route ownership from this table before inspecting either candidate body.",
+                "confirm-external-action",
+                "reversible-system-change",
+                "authorization under either route never satisfies the other.",
+                "On resume or compaction, reselect every still-active route from current direct evidence before any new mutation.",
+                "If route or phase cannot be reconstructed, perform zero new mutations",
+            ),
+        ),
+        (
+            skills / "confirm-external-action/SKILL.md",
+            "external-action resume",
+            (
+                "## Resume And Compaction Handoff",
+                "host-native task context and current direct evidence from the owning system",
+                "perform zero new mutations",
+                "An unknown external outcome enters Verify only",
+                "never resend",
+                "Do not add a daemon, cache, telemetry, or persistent handoff tool",
+            ),
+        ),
+        (
+            skills / "reversible-system-change/SKILL.md",
+            "reversible-change resume",
+            (
+                "## Resume And Compaction Handoff",
+                "host-native task context and current direct evidence from the owning system",
+                "perform zero new mutations",
+                "Never adopt post-change state as the prior rollback baseline.",
+                "An unknown external outcome enters Verify only and must not be resent.",
+                "Do not add a daemon, cache, telemetry, or persistent handoff tool",
+            ),
+        ),
+    )
+    for path, name, anchors in contracts:
+        require_ordered_contract_anchors(path, anchors, failures, name)
+    return len(contracts)
+
+
 def check_readme_lifecycle_commands(failures: list[str]) -> None:
     readme = README_PATH.read_text(encoding="utf-8")
     for command in README_LIFECYCLE_COMMANDS:
@@ -809,75 +1027,380 @@ def check_readme_lifecycle_commands(failures: list[str]) -> None:
 def check_routing_scenarios(failures: list[str]) -> None:
     for scenario in ROUTING_SCENARIOS:
         actual = route_contract(scenario["request"])
-        for field in ("route", "phase", "references", "authorization"):
+        contract_fields = tuple(
+            field for field in scenario if field not in {"name", "request"}
+        )
+        for field in contract_fields:
             if actual[field] != scenario[field]:
                 failures.append(
                     f"routing scenario {scenario['name']!r} {field} is "
                     f"{actual[field]!r}; expected {scenario[field]!r}"
                 )
 
-        route = actual["route"]
-        if route in (None, "clarify"):
+        route_value = actual["route"]
+        if route_value in (None, "clarify"):
             continue
-        main_path = REPOSITORY_ROOT / "skills" / route / "SKILL.md"
-        try:
-            main_text = main_path.read_text(encoding="utf-8")
-        except OSError as error:
-            failures.append(f"routing scenario {scenario['name']!r} cannot read {display_path(main_path)}: {error}")
-            continue
-        for reference in actual["references"]:
-            if reference not in main_text:
+        routes = route_value if isinstance(route_value, tuple) else (route_value,)
+        for route in routes:
+            main_path = REPOSITORY_ROOT / "skills" / route / "SKILL.md"
+            try:
+                main_text = main_path.read_text(encoding="utf-8")
+            except OSError as error:
                 failures.append(
-                    f"routing scenario {scenario['name']!r} loads undeclared reference "
-                    f"{reference!r} from {display_path(main_path)}"
+                    f"routing scenario {scenario['name']!r} cannot read "
+                    f"{display_path(main_path)}: {error}"
                 )
+                continue
+            for reference in actual["references"]:
+                if reference not in main_text:
+                    failures.append(
+                        f"routing scenario {scenario['name']!r} loads undeclared reference "
+                        f"{reference!r} from {display_path(main_path)}"
+                    )
 
 
-def check_github_action_pins(failures: list[str]) -> int:
-    use_line = re.compile(r"^\s*uses:\s*([^\s#]+)(?:\s+#\s*(.*))?$")
+def workflow_uses_declarations(
+    text: str,
+    label: str,
+    failures: list[str],
+) -> list[tuple[int, str, str]]:
+    """Extract only canonical jobs.*.uses and jobs.*.steps[*].uses entries.
+
+    Alternate legal YAML spellings are rejected explicitly. This keeps the
+    publication guard dependency-free without pretending its tiny structural
+    subset is a general YAML parser.
+    """
+    canonical_use = re.compile(r"^( {4}| {8})uses: ([^\s#]+)(?: # (.+))?$")
+    noncanonical_key = re.compile(
+        r"^\s*(?:-\s*|\?\s*)?(?:uses|['\"]uses['\"])\s*(?::|$)"
+    )
+    unsupported_structure = re.compile(
+        r"^\s*(?:-\s*)?(?:\?|<<\s*:|[&*!]|['\"][^'\"]+['\"]\s*:|[\[{]|"
+        r"[A-Za-z_][A-Za-z0-9_-]*:\s*[&*!{\[])"
+    )
+    block_scalar = re.compile(
+        r"^(\s*)[A-Za-z_][A-Za-z0-9_-]*:\s*[>|][+-]?[0-9]*\s*(?:#.*)?$"
+    )
+
+    declarations: list[tuple[int, str, str]] = []
+    in_jobs = False
+    in_job = False
+    in_steps = False
+    block_indent: int | None = None
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if block_indent is not None:
+            if not line.strip():
+                continue
+            indent = len(line) - len(line.lstrip(" "))
+            if indent > block_indent:
+                continue
+            block_indent = None
+
+        stripped = line.lstrip(" ")
+        if not stripped or stripped.startswith("#"):
+            continue
+        if "\t" in line[: len(line) - len(stripped)]:
+            failures.append(f"{label}:{line_number} workflow indentation must use spaces")
+            continue
+
+        indent = len(line) - len(stripped)
+        if line == "jobs:":
+            in_jobs = True
+            in_job = False
+            in_steps = False
+            continue
+        if in_jobs and indent == 0:
+            in_jobs = False
+            in_job = False
+            in_steps = False
+        elif in_jobs and re.fullmatch(r"  [A-Za-z0-9_-]+:", line):
+            in_job = True
+            in_steps = False
+            continue
+        elif in_job and line == "    steps:":
+            in_steps = True
+            continue
+        elif in_steps and indent <= 4:
+            in_steps = False
+
+        use_match = canonical_use.fullmatch(line)
+        if use_match is not None:
+            use_indent = len(use_match.group(1))
+            valid_context = bool(
+                in_jobs
+                and in_job
+                and (
+                    (use_indent == 4 and not in_steps)
+                    or (use_indent == 8 and in_steps)
+                )
+            )
+            if not valid_context:
+                failures.append(
+                    f"{label}:{line_number} uses must be jobs.<job>.uses or "
+                    "jobs.<job>.steps[*].uses in canonical block form"
+                )
+            else:
+                declarations.append(
+                    (line_number, use_match.group(2), use_match.group(3) or "")
+                )
+            continue
+
+        if noncanonical_key.search(line):
+            failures.append(
+                f"{label}:{line_number} uses key is outside the canonical block subset; "
+                "write an unquoted uses key on its own line beneath the job or named step"
+            )
+            continue
+
+        if unsupported_structure.search(line):
+            failures.append(
+                f"{label}:{line_number} aliases, tags, explicit or quoted keys, and flow "
+                "mappings are outside the workflow guard's canonical YAML subset"
+            )
+            continue
+
+        block_match = block_scalar.fullmatch(line)
+        if block_match is not None:
+            block_indent = len(block_match.group(1))
+
+    return declarations
+
+
+def check_github_action_pins_in_text(
+    text: str,
+    label: str,
+    failures: list[str],
+) -> int:
     github_action = re.compile(
         r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_./-]+)?@([0-9a-fA-F]{40})$"
     )
     docker_image = re.compile(r"^docker://[^\s]+@sha256:[0-9a-fA-F]{64}$")
     pinned = 0
+    for line_number, declaration, comment in workflow_uses_declarations(
+        text, label, failures
+    ):
+        if declaration.startswith("./"):
+            continue
+        if declaration.startswith("docker://"):
+            if docker_image.fullmatch(declaration) is None:
+                failures.append(
+                    f"{label}:{line_number} external container action must use an immutable sha256 digest"
+                )
+            else:
+                pinned += 1
+            continue
 
+        action_match = github_action.fullmatch(declaration)
+        if action_match is None:
+            failures.append(
+                f"{label}:{line_number} external action {declaration!r} must be pinned to a full 40-character commit SHA"
+            )
+            continue
+        if re.search(r"\bv[0-9]", comment) is None:
+            failures.append(
+                f"{label}:{line_number} pinned action must retain a human-readable version comment"
+            )
+        pinned += 1
+    return pinned
+
+
+def check_github_action_pins(failures: list[str]) -> int:
+    pinned = 0
     workflows = sorted((REPOSITORY_ROOT / ".github" / "workflows").glob("*.y*ml"))
     for path in workflows:
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-            match = use_line.match(line)
-            if match is None:
-                continue
-            declaration = match.group(1).strip("\"'")
-            comment = match.group(2) or ""
-            if declaration.startswith("./"):
-                continue
-            if declaration.startswith("docker://"):
-                if docker_image.fullmatch(declaration) is None:
-                    failures.append(
-                        f"{display_path(path)}:{line_number} external container action must use an immutable sha256 digest"
-                    )
-                else:
-                    pinned += 1
-                continue
-
-            action_match = github_action.fullmatch(declaration)
-            if action_match is None:
-                failures.append(
-                    f"{display_path(path)}:{line_number} external action {declaration!r} must be pinned to a full 40-character commit SHA"
-                )
-                continue
-            if re.search(r"\bv[0-9]", comment) is None:
-                failures.append(
-                    f"{display_path(path)}:{line_number} pinned action must retain a human-readable version comment"
-                )
-            pinned += 1
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {display_path(path)}: {error}")
+            continue
+        pinned += check_github_action_pins_in_text(
+            text,
+            display_path(path),
+            failures,
+        )
 
     if pinned == 0:
         failures.append("no immutable third-party GitHub Action pins were found")
     return pinned
 
 
-def safe_git_operand(kind: str, value: str, literal_arguments: bool) -> bool:
+def check_release_signature_workflow_contract(failures: list[str]) -> None:
+    path = REPOSITORY_ROOT / ".github" / "workflows" / "release-signature-guard.yml"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(path)}: {error}")
+        return
+
+    trigger_contract = (
+        "on:\n"
+        "  pull_request:\n"
+        "    branches:\n"
+        "      - main\n"
+        "  push:\n"
+        "    branches:\n"
+        "      - main\n"
+        "    tags:\n"
+        '      - "v*"\n'
+        "  release:\n"
+        "    types:\n"
+        "      - published\n"
+        "      - edited\n"
+        "  workflow_dispatch:"
+    )
+    if trigger_contract not in text:
+        failures.append(
+            f"{display_path(path)} must trigger on release pull requests, main and v* tag pushes, "
+            "published/edited Releases, and manual verification"
+        )
+    for declaration in ("on:\n", "jobs:\n", "          script: |\n"):
+        if text.count(declaration) != 1:
+            failures.append(
+                f"{display_path(path)} must contain exactly one {declaration.strip()!r} owner"
+            )
+
+    require_ordered_contract_anchors(
+        path,
+        (
+            "const defaultRef = `refs/heads/${defaultBranch}`;",
+            "async function peelRefToCommit(qualifiedRef)",
+            'context.eventName === "pull_request"',
+            "pullRequest?.head?.repo?.full_name",
+            "targetCommit = pullRequest.head.sha;",
+            "context.payload.release?.tag_name",
+            "targetCommit = await peelRefToCommit(targetRef);",
+            "context.ref === defaultRef",
+            "Unexpected manual verification ref",
+            "const defaultCommit = await peelRefToCommit(defaultRef);",
+            "const historyBase = targetMustDescendFromDefault",
+            "github.rest.repos.compareCommitsWithBasehead",
+            "comparison.data.merge_base_commit?.sha !== historyBase",
+            "const result = await github.graphql",
+            "signature?.wasSignedByGitHub !== true",
+        ),
+        failures,
+        "release target signature",
+    )
+
+
+def check_validator_negative_fixtures(failures: list[str]) -> int:
+    """Prove that the strict parsers reject the bypass forms they guard."""
+    rejected = 0
+    frontmatter = "name: fixture\ndescription: Valid fixture"
+    frontmatter_fixtures = {
+        "duplicate": frontmatter.replace("name: fixture", "name: one\nname: two"),
+        "unknown-tail": f"{frontmatter}\nextra: tail",
+        "wrong-type": frontmatter.replace("name: fixture", "name: false"),
+        "yaml-1.1-bool": frontmatter.replace("Valid fixture", "On"),
+        "numeric-float": frontmatter.replace(
+            "Valid fixture", "12345678901234567890.12345678901234567890"
+        ),
+        "block-scalar": frontmatter.replace("Valid fixture", ">"),
+    }
+    for name, fixture in frontmatter_fixtures.items():
+        try:
+            parse_skill_frontmatter_document(
+                f"---\n{fixture}\n---\n\n# Fixture\n",
+                f"fixture:{name}",
+            )
+        except CanonicalYamlError:
+            rejected += 1
+        else:
+            failures.append(f"strict YAML negative fixture {name!r} was accepted")
+
+    agent = (
+        'interface:\n  display_name: "Fixture"\n'
+        '  short_description: "Valid description that is long enough"\n'
+        '  default_prompt: "Use $fixture now."'
+    )
+    agent_fixtures = {
+        "duplicate": agent.replace(
+            '  display_name: "Fixture"',
+            '  display_name: "Fixture"\n  display_name: "Duplicate"',
+        ),
+        "unknown-tail": f'{agent}\nextra:\n  field: "ignored before"',
+        "wrong-type": agent.replace('"Fixture"', "false", 1),
+        "second-document": f"{agent}\n---\nignored: true",
+    }
+    for name, fixture in agent_fixtures.items():
+        try:
+            parse_agent_metadata_document(fixture, f"fixture:{name}", allow_policy=False)
+        except CanonicalYamlError:
+            rejected += 1
+        else:
+            failures.append(f"agent metadata negative fixture {name!r} was accepted")
+
+    workflow_prefix = "jobs:\n  guard:\n    runs-on: ubuntu-latest\n    steps:\n"
+    moving_action = "actions/checkout@v4"
+    action_fixtures = {
+        "dash-uses": f"{workflow_prefix}      - uses: {moving_action}",
+        "flow-mapping": f"{workflow_prefix}      - {{ uses: {moving_action} }}",
+        "quoted-key": f'{workflow_prefix}      - name: Guard\n        "uses": {moving_action}',
+        "multiline-key": f"{workflow_prefix}      - name: Guard\n        ? uses\n        : {moving_action}",
+        "moving-container": (
+            f"{workflow_prefix}      - name: Guard\n"
+            "        uses: docker://example.test/image:latest"
+        ),
+    }
+    for name, fixture in action_fixtures.items():
+        fixture_failures: list[str] = []
+        check_github_action_pins_in_text(fixture, f"fixture:{name}", fixture_failures)
+        if fixture_failures:
+            rejected += 1
+        else:
+            failures.append(f"Action pin negative fixture {name!r} was accepted")
+
+    sha = "a" * 40
+    positive_workflow = (
+        "jobs:\n  reusable:\n"
+        f"    uses: owner/repository/.github/workflows/check.yml@{sha} # v1\n"
+        "  guarded:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Guard\n"
+        f"        uses: actions/checkout@{sha} # v4\n"
+        "      - name: Literal script\n        run: |\n"
+        "          printf '%s\\n' 'uses: is script data'\n"
+    )
+    positive_failures: list[str] = []
+    positive_pins = check_github_action_pins_in_text(
+        positive_workflow,
+        "fixture:canonical-uses",
+        positive_failures,
+    )
+    if positive_failures or positive_pins != 2:
+        failures.append(
+            "canonical jobs.*.uses and steps[*].uses fixture did not yield exactly two pins"
+        )
+
+    return rejected + 1
+
+
+GIT_OID_WIDTHS = {"sha1": 40, "sha256": 64}
+
+
+def safe_git_oid(value: str, object_format: str, *, allow_null: bool = False) -> bool:
+    width = GIT_OID_WIDTHS.get(object_format)
+    if width is None or re.fullmatch(rf"[0-9a-fA-F]{{{width}}}", value) is None:
+        return False
+    return allow_null or value != "0" * width
+
+
+def direct_branch_ref_gate(
+    symbolic_classification: str,
+    resolved_oid: str,
+    frozen_head: str,
+    rechecked_before_use: bool,
+) -> bool:
+    return bool(
+        symbolic_classification == "non-symbolic"
+        and resolved_oid == frozen_head
+        and rechecked_before_use
+    )
+
+
+def safe_git_operand(
+    kind: str,
+    value: str,
+    literal_arguments: bool,
+) -> bool:
     if not literal_arguments or not value:
         return False
     if any(
@@ -887,8 +1410,6 @@ def safe_git_operand(kind: str, value: str, literal_arguments: bool) -> bool:
         return False
     if "\u2028" in value or "\u2029" in value:
         return False
-    if kind == "sha":
-        return re.fullmatch(r"[0-9a-fA-F]{40}", value) is not None
     if kind == "remote":
         return not value.startswith("-")
     if kind == "path":
@@ -979,6 +1500,8 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "credential helpers",
             "`GIT_*`",
             "installed Git version",
+            "fetch.bundleURI",
+            "Bypass pre-push hooks unless exact frozen hook identity and action are separately authorized",
             "no-follow",
             "linked worktree",
             "parent identity",
@@ -991,19 +1514,145 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "cleanupReady",
             "separately authorize both deletion",
             "exact repository",
+            "network-push or recovery authority never implies fetch",
         ),
         "references/consolidation-and-push.md": (
+            "Network-push authority never authorizes it",
+            "Generic prune is outside this protocol",
             "Do not delete the backup ref or active record unless",
         ),
     }
     for relative_path, anchors in required_anchors.items():
         path = skill_root / relative_path
         text = path.read_text(encoding="utf-8")
+        normalized_text = " ".join(text.split()).casefold()
         for anchor in anchors:
-            if anchor.casefold() not in text.casefold():
+            if " ".join(anchor.split()).casefold() not in normalized_text:
                 failures.append(
                     f"{display_path(path)} is missing traceable security contract {anchor!r}"
                 )
+
+    refresh_command = (
+        "git -C <repo> -c fetch.all=false -c fetch.prune=false -c fetch.pruneTags=false "
+        "-c fetch.recurseSubmodules=false -c fetch.writeCommitGraph=false "
+        "-c maintenance.auto=false fetch --no-all --no-tags --no-prune --no-prune-tags "
+        "--no-recurse-submodules --no-write-fetch-head --no-auto-maintenance "
+        "--no-write-commit-graph --refmap= <fetch-target> <source-ref>"
+    )
+    push_command = (
+        "git -C <repo> -c push.followTags=false -c push.recurseSubmodules=no "
+        "-c push.gpgSign=false -c push.pushOption= -c push.negotiate=false "
+        "-c push.autoSetupRemote=false push --no-verify --no-follow-tags "
+        "--recurse-submodules=no --no-signed --no-push-option --no-set-upstream "
+        "--no-prune --no-force --no-force-with-lease --no-force-if-includes "
+        "<push-target> <branch-ref>:<merge-ref>"
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/consolidation-and-push.md",
+        (
+            "## Exact Remote Refresh",
+            "Freeze and validate `objectFormat`",
+            "The source-only refspec is exactly the validated `mergeRef`",
+            refresh_command,
+            "Re-query `sourceRef` at the frozen target after fetch and require the same `sourceOid`",
+            "git -C <repo> update-ref --no-deref <upstream-tracking-ref> <source-oid> <old-tracking-oid>",
+            "The old value makes this compare-and-swap.",
+            "recompute `@{u}`, ahead/behind, cache comparison, and provenance",
+            push_command,
+        ),
+        failures,
+        "exact refresh and consolidated push",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/commit-construction.md",
+        (
+            "do not probe for absence before create",
+            "git -C <repo> update-ref --no-deref <backup-ref> <old-head> <null-oid>",
+            "The null old value makes it create-only",
+            "Never fall back to an unconditional `update-ref`.",
+            "## Atomically Update And Verify Branch",
+            "git -C <repo> update-ref --no-deref <branch-ref> <new-commit> <old-head>",
+            "If verification fails before push, restore with compare-and-swap",
+            "git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>",
+        ),
+        failures,
+        "create-only backup ref",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/safe-git-values-and-metadata.md",
+        (
+            "## Object Format And OIDs",
+            "git rev-parse --show-object-format",
+            "Accept only `sha1`/40 hex or `sha256`/64 hex",
+            "same-width all-zero null OID",
+            "Recheck before commit creation, network access, each ref mutation, and final proof",
+        ),
+        failures,
+        "object-format OID",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/safe-git-values-and-metadata.md",
+        (
+            "Require direct-OID `branchRef`",
+            "git symbolic-ref --quiet <branch-ref>",
+            "must classify it non-symbolic",
+            "git rev-parse --verify <branch-ref>",
+            "must equal frozen `HEAD`",
+            "Recheck before source use or mutation",
+            "symbolic/uncertain state stops",
+            "Branch CAS must use `update-ref --no-deref`",
+        ),
+        failures,
+        "direct branch ref",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/baseline-and-preflight.md",
+        (
+            "## Required Git Facts",
+            "git -C <repo> rev-parse --show-object-format",
+            "git -C <repo> symbolic-ref --quiet HEAD",
+            "git -C <repo> rev-parse --verify HEAD",
+        ),
+        failures,
+        "object format before ref and OID reads",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/repository-and-remote-targets.md",
+        (
+            "For a direct history-preserving push",
+            push_command,
+            "the exact frozen pre-push hook identity and action",
+            "Verify every frozen target directly afterward",
+            "Push authority does not authorize a fetch",
+        ),
+        failures,
+        "direct push closure and verification",
+    )
+    direct_push_text = (
+        skill_root / "references/repository-and-remote-targets.md"
+    ).read_text(encoding="utf-8")
+    consolidated_push_text = (
+        skill_root / "references/consolidation-and-push.md"
+    ).read_text(encoding="utf-8")
+    if direct_push_text.count(push_command) != 1 or consolidated_push_text.count(push_command) != 1:
+        failures.append("direct and consolidated push owners must each contain the exact closed push argv once")
+    traceable_text = "\n".join(
+        path.read_text(encoding="utf-8") for path in skill_root.rglob("*.md")
+    )
+    if re.search(r"\bfetch\s+--prune\s+<remote>", traceable_text):
+        failures.append("traceable-git-submit must not restore broad fetch --prune <remote>")
+    branch_restore = "git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>"
+    checkpoint_text = (
+        skill_root / "references/checkpoint-provenance.md"
+    ).read_text(encoding="utf-8")
+    if checkpoint_text.count(branch_restore) != 1:
+        failures.append("checkpoint persistence recovery must contain the exact no-deref branch restore once")
+    if re.search(
+        r"^git -C <repo> update-ref (?![^\n]*--no-deref(?:\s|$))[^\n]*<branch-ref>",
+        traceable_text,
+        re.MULTILINE,
+    ):
+        failures.append("every branch install or restore update-ref must use --no-deref")
 
     operand_scenarios = (
         ("normal-ref", "ref", "refs/heads/release-1", True, True),
@@ -1014,12 +1663,34 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         ("c1-control-stops", "ref", "refs/heads/release\x85next", True, False),
         ("normal-remote", "remote", "origin", True, True),
         ("option-shaped-remote-stops", "remote", "--upload-pack=evil", True, False),
-        ("full-sha", "sha", "a" * 40, True, True),
-        ("short-sha-stops", "sha", "a" * 12, True, False),
     )
     for name, kind, value, literal_arguments, expected in operand_scenarios:
         if safe_git_operand(kind, value, literal_arguments) != expected:
             failures.append(f"safe Git operand scenario {name!r} returned the wrong gate result")
+
+    oid_scenarios = (
+        ("sha1-oid", "a" * 40, "sha1", False, True),
+        ("sha256-oid", "b" * 64, "sha256", False, True),
+        ("wrong-width-stops", "a" * 40, "sha256", False, False),
+        ("unknown-format-stops", "a" * 40, "future", False, False),
+        ("null-object-stops", "0" * 40, "sha1", False, False),
+        ("null-update-ref-sentinel", "0" * 64, "sha256", True, True),
+    )
+    for name, value, object_format, allow_null, expected in oid_scenarios:
+        if safe_git_oid(value, object_format, allow_null=allow_null) != expected:
+            failures.append(f"safe Git OID fixture {name!r} returned the wrong gate result")
+
+    head_oid = "c" * 40
+    branch_ref_scenarios = (
+        ("direct-current", "non-symbolic", head_oid, head_oid, True, True),
+        ("symbolic-same-oid-stops", "symbolic", head_oid, head_oid, True, False),
+        ("uncertain-same-oid-stops", "uncertain", head_oid, head_oid, True, False),
+        ("direct-oid-drift-stops", "non-symbolic", "d" * 40, head_oid, True, False),
+        ("missing-source-recheck-stops", "non-symbolic", head_oid, head_oid, False, False),
+    )
+    for name, classification, resolved_oid, frozen_head, rechecked, expected in branch_ref_scenarios:
+        if direct_branch_ref_gate(classification, resolved_oid, frozen_head, rechecked) != expected:
+            failures.append(f"direct branch-ref fixture {name!r} returned the wrong gate result")
 
     transport_scenarios = (
         ("https", "https://example.test/org/repo.git", True),
@@ -1075,10 +1746,12 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             )
     return (
         len(operand_scenarios)
+        + len(oid_scenarios)
+        + len(branch_ref_scenarios)
         + len(transport_scenarios)
         + len(execution_envelope_scenarios)
         + len(CLEANUP_AUTHORITY_FIELDS)
-        + 1
+        + 11
     )
 
 
@@ -1173,23 +1846,11 @@ def parse_skill_frontmatter(path: Path, failures: list[str]) -> dict[str, str] |
         failures.append(f"cannot read {label}: {error}")
         return None
 
-    parts = text.split("---", 2)
-    if len(parts) != 3 or parts[0].strip():
-        failures.append(f"{label} must start with YAML frontmatter")
+    try:
+        return parse_skill_frontmatter_document(text, label)
+    except CanonicalYamlError as error:
+        failures.append(str(error))
         return None
-
-    fields: list[tuple[str, str]] = []
-    for line in parts[1].strip().splitlines():
-        match = re.fullmatch(r"([a-z_]+):\s*(.+)", line)
-        if match is None:
-            failures.append(f"{label} has invalid frontmatter line: {line!r}")
-            return None
-        fields.append((match.group(1), match.group(2).strip().strip('"')))
-
-    if tuple(key for key, _ in fields) != ("name", "description"):
-        failures.append(f"{label} frontmatter must contain only name then description")
-        return None
-    return dict(fields)
 
 
 def check_skill_contracts(failures: list[str]) -> None:
@@ -1222,16 +1883,16 @@ def check_skill_contracts(failures: list[str]) -> None:
         except OSError as error:
             failures.append(f"cannot read {display_path(metadata_path)}: {error}")
         else:
-            interface = dict(
-                re.findall(
-                    r'^  (display_name|short_description|default_prompt): "([^"]+)"$',
+            try:
+                metadata = parse_agent_metadata_document(
                     metadata_text,
-                    re.MULTILINE,
+                    display_path(metadata_path),
+                    allow_policy=skill_name == "using-axiom",
                 )
-            )
-            if set(interface) != {"display_name", "short_description", "default_prompt"}:
-                failures.append(f"{display_path(metadata_path)} has incomplete interface metadata")
+            except CanonicalYamlError as error:
+                failures.append(str(error))
             else:
+                interface = metadata["interface"]
                 if not 25 <= len(interface["short_description"]) <= 64:
                     failures.append(
                         f"{display_path(metadata_path)} short_description must be 25-64 characters"
@@ -1306,6 +1967,45 @@ def check_required_files(failures: list[str]) -> None:
             failures.append(
                 f"missing required public file: {relative_path}; restore the accepted publication surface"
             )
+
+
+def check_release_version_surfaces(failures: list[str]) -> None:
+    """Derive every current-release document contract from RELEASE_VERSION."""
+    release_tag = f"v{RELEASE_VERSION}"
+    release_path = REPOSITORY_ROOT / CURRENT_RELEASE_NOTES
+    surface_contracts = (
+        (
+            README_PATH,
+            (release_tag, f"]({CURRENT_RELEASE_NOTES})"),
+        ),
+        (
+            REPOSITORY_ROOT / "CHANGELOG.md",
+            (f"## {RELEASE_VERSION} - ",),
+        ),
+        (
+            REPOSITORY_ROOT / "docs" / "compatibility.md",
+            (
+                f"The Git record for `{release_tag}` reports:",
+                f"](releases/{release_tag}.md)",
+            ),
+        ),
+        (
+            release_path,
+            (f"# Axiom {release_tag}", f"Version `{RELEASE_VERSION}`"),
+        ),
+    )
+    for path, anchors in surface_contracts:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {display_path(path)}: {error}")
+            continue
+        for anchor in anchors:
+            if anchor not in text:
+                failures.append(
+                    f"{display_path(path)} is missing current release anchor {anchor!r} "
+                    f"derived from RELEASE_VERSION={RELEASE_VERSION!r}"
+                )
 
 
 def check_manifest_versions(
@@ -1966,6 +2666,8 @@ def check_packaged_skills(failures: list[str]) -> None:
 def main() -> int:
     failures: list[str] = []
     check_required_files(failures)
+    check_release_version_surfaces(failures)
+    validator_fixture_count = check_validator_negative_fixtures(failures)
 
     documents: dict[str, dict[str, Any]] = {}
     for relative_path in JSON_FILES:
@@ -1981,10 +2683,12 @@ def main() -> int:
     check_exact_hook_shapes(documents, failures)
     check_documented_hook_commands(documents, failures)
     action_pin_count = check_github_action_pins(failures)
+    check_release_signature_workflow_contract(failures)
     check_readme_lifecycle_commands(failures)
     check_packaged_skills(failures)
     check_skill_contracts(failures)
     check_routing_source_contracts(failures)
+    cross_route_contract_count = check_cross_route_resume_contracts(failures)
     check_routing_scenarios(failures)
     traceable_security_scenarios = check_traceable_security_contracts(failures)
     external_action_scenarios = check_external_action_scenarios(failures)
@@ -2006,10 +2710,12 @@ def main() -> int:
     print(
         "Publication validation passed: "
         f"{len(REQUIRED_PUBLIC_FILES)} required files, {len(JSON_FILES)} JSON files, "
-        f"{markdown_count} Markdown files, {len(ROUTING_SCENARIOS)} routing scenarios, "
-        f"{traceable_security_scenarios} traceable security scenarios, "
-        f"{external_action_scenarios} external-action scenarios, "
-        f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback scenarios, version {RELEASE_VERSION}, "
+        f"{markdown_count} Markdown files, {len(ROUTING_SCENARIOS)} offline route contract fixtures, "
+        f"{traceable_security_scenarios} traceable-Git contract fixtures, "
+        f"{external_action_scenarios} external-action gate fixtures, "
+        f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback gate fixtures, "
+        f"{cross_route_contract_count} source-linked cross-route/resume contracts, "
+        f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
         f"{action_pin_count} immutable action pins, hooks, and packaged skills."
     )
     return 0

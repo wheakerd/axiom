@@ -10,99 +10,111 @@ before every target-repository Git invocation.
 ## Non-Executable Git Boundary
 
 Treat repository/worktree configuration, includes, attributes, hooks, helpers,
-filters, signing or transport programs, and ambient process state as untrusted
-executable input. Before the first target-repository Git command, freeze one
-process envelope for every later command, including read-only inspection. A
-generic checkpoint, commit, fetch, or push never authorizes such a program.
+filters, signing/transport programs, and ambient process state as untrusted
+executable input. Before the first target Git command, freeze one envelope for
+all commands, including inspection. Generic Git authority never authorizes a
+program.
 
-Bootstrap only with a host-native non-executing parser or an operation the
-installed Git version documents as unable to dispatch external programs. Use a
-literal argument API, clear ambient `GIT_*`, repository, object, index, pager,
-editor, askpass, proxy, diff, and SSH-command variables, disable
-target-controlled includes, and capture configuration names and origins without
-displaying values. If this cannot be proved, stop.
+Bootstrap only with a host-native non-executing parser or a Git operation the
+installed version documents as unable to dispatch programs. Use a literal
+argument API; clear ambient `GIT_*`, repository/object/index, pager/editor,
+askpass, proxy, diff, and SSH-command variables; disable target includes; and
+capture configuration names and origins without values. Otherwise stop.
 
-Reject a target-controlled include, destination rewrite, or command-bearing
-setting unless neutralized before Git consults it or separately authorized by
-exact frozen executable identity and action. At minimum cover `core.fsmonitor`,
-`core.sshCommand`, hooks/askpass/proxy settings, credential helpers, external
-diff/textconv, filter drivers, remote commands, URL rewrites, and GPG programs.
-Treat this as a floor for the installed Git version and invoked subcommand.
+Reject target-controlled includes, rewrites, and command-bearing settings unless
+neutralized before Git reads them or separately authorized by exact frozen
+identity and action. Cover at least `core.fsmonitor`, `core.sshCommand`, hooks,
+askpass/proxy, credential helpers, diff/textconv, filters, remote commands, URL
+rewrites, and GPG programs, plus installed-version subcommand equivalents.
+Resolve Git/helpers outside the target, restore only required host-owned state,
+and disable dispensable callbacks. Recheck before staging, commit creation, ref
+mutation, or network access; drift or an unclosable callback stops.
 
-Resolve Git and permitted helpers independently of the target. Reintroduce only
-exact host-owned state required by the authorized operation. Disable callbacks
-whose removal cannot change the requested artifact; otherwise stop for separate
-exact authority rather than silently running or bypassing them. Recheck before
-staging, commit creation, ref mutation, or network access. Any drift stops;
-literal arguments and protocol policy cannot make executable configuration safe.
+## Subcommand Semantic Closure
+
+Executable scanning does not close semantic configuration. For the installed Git version,
+neutralize every key that can widen refs/targets, recurse, sign,
+transmit options, run maintenance, or write auxiliary state; stop if an effect
+cannot be disabled or separately authorized. Set `GIT_NO_LAZY_FETCH=1` so
+promisor-object inspection cannot contact another remote.
+
+Remote refresh uses one exact source-only refspec and empty `--refmap`, never
+`remote.<name>.fetch`; it fetches objects before a compare-and-swap update of
+the sole authorized tracking ref. Tags, prune/tag-prune, submodules,
+`FETCH_HEAD`, maintenance, and commit-graph writes stay off. Broad prune needs
+separate exact authority. Reject an active `fetch.bundleURI` or other implicit
+endpoint.
+
+Push uses one frozen raw target and one exact full-ref refspec. Neutralize
+`push.followTags`, `push.recurseSubmodules`, `push.gpgSign`, `push.pushOption`,
+`push.negotiate`, upstream setup, prune, and force. Bypass pre-push hooks unless
+exact frozen hook identity and action are separately authorized. Phase
+references supply the flags.
+
+## Object Format And OIDs
+
+Before accepting an object ID, freeze `git rev-parse --show-object-format`.
+Accept only `sha1`/40 hex or `sha256`/64 hex and derive the same-width all-zero
+null OID. Recheck before commit creation, network access, each ref mutation,
+and final proof; drift stops.
+
+Authority, compare-and-swap, and proof OIDs need the frozen width, hex only,
+and the expected object type. The null OID is only a documented `update-ref`
+old-value sentinel and never an object. Reject abbreviations and revisions.
 
 ## Literal Argument Boundary
 
 Treat repository paths, remote names, refs, refspecs, object IDs, Git paths,
-and endpoint values as untrusted data. Invoke Git through a process or tool API
-that accepts an argument vector. Put every dynamic value in one distinct
-argument element; never concatenate it into a shell command, script fragment,
-option, or expression. Never use `eval`, `sh -c`, `Invoke-Expression`, a
-PowerShell command string, or an equivalent reparsing layer. Use a documented
-`--` separator where the Git subcommand supports one, but do not treat `--` as
-a substitute for validation.
-
-Command blocks elsewhere in this skill show argument order only. They are not
-templates for textual interpolation. If the available host interface cannot
-preserve separate literal arguments, stop before invoking Git with a dynamic
-value. Quoting or escaping a generated command string is not an accepted
-fallback.
+and endpoints as untrusted. Use an argument vector API and put each dynamic
+value in one element; never concatenate or reparse it through a shell,
+PowerShell command string, `eval`, or equivalent. Use documented `--` where
+supported, without treating it as validation. Command blocks show argument
+order, not interpolation templates. If literal arguments cannot be preserved,
+stop; quoting a generated command is no fallback.
 
 Validate immediately before use:
 
-- Reject NUL, CR, LF, Unicode line separators, other control characters, and
-  invalid encoding in every dynamic operand.
-- Require a full branch or backup ref to pass `git check-ref-format` as one
-  literal argument. It must start with its expected `refs/heads/` or
-  `refs/axiom/backups/` namespace, and no slash-delimited component may begin
-  with `-`.
-- Require a short branch or remote name to equal a value currently enumerated
-  by Git and reject an option-shaped value beginning with `-`. A network remote
-  must not be `.`.
-- Require every object ID used for authority, compare-and-swap, or proof to be
-  exactly 40 hexadecimal characters and resolve it as the expected object
-  type. Never accept a revision expression in an object-ID field.
-- Construct a refspec only from two independently validated full refs. Do not
-  accept a precomposed refspec from configuration or user-visible text.
-- Resolve repository and metadata paths as absolute canonical paths and reject
-  control characters. Keep each path in one argument element even when it
-  contains whitespace, quotes, dollar signs, semicolons, or parentheses.
+- Reject invalid encoding, NUL, CR, LF, Unicode line separators, and controls.
+- Require full branch, upstream-tracking, and backup refs to pass
+  `git check-ref-format`. Require their frozen derived identity and expected
+  `refs/heads/`, network `refs/remotes/`, or `refs/axiom/backups/` namespace;
+  no slash component may begin with `-`.
+- Require direct-OID `branchRef`: captured
+  `git symbolic-ref --quiet <branch-ref>` must classify it non-symbolic and
+  `git rev-parse --verify <branch-ref>` must equal frozen `HEAD`. Recheck before
+  source use or mutation; symbolic/uncertain state stops. Branch CAS must use
+  `update-ref --no-deref`.
+- Require short branch/remote names to be currently enumerated and not
+  option-shaped; a network remote must not be `.`.
+- Validate object IDs and the null sentinel only through the frozen
+  object-format rules above.
+- Construct source/destination refspecs only from two validated full refs. The
+  exact-refresh exception is one validated full source ref with empty
+  `--refmap`. Never accept a precomposed refspec from configuration or prose.
+- Require absolute canonical repository/metadata paths and keep each path in
+  one argument element regardless of punctuation or whitespace.
 
-These gates apply to inspection and mutation, including `config`, `fetch`,
-`push`, `ls-remote`, `rev-parse`, `show-ref`, `commit-tree`, and `update-ref`.
-A ref containing shell syntax remains data only when the literal-argument
-boundary is preserved; otherwise the workflow must stop.
+Apply these gates to every inspection and mutation, including `config`,
+`fetch`, `push`, `ls-remote`, `rev-parse`, `commit-tree`, and `update-ref`.
 
 ## Remote Transport And Secrecy Boundary
 
-Before network access, classify each raw endpoint without displaying it. Allow
-only authenticated `https://`, `ssh://`, `git+ssh://`, or standard SCP-like SSH
-targets. Reject plaintext `http://` and `git://`, `file://` for a network push,
-local paths, URLs with control characters, Git remote-helper syntax such as
-`<helper>::<address>`, and the `ext::` transport. Do not execute or install a
-remote helper to classify a target. A local `.` remote remains valid only for
-the checkpoint-only behavior described by the parent workflow.
+Classify raw endpoints without display. Allow authenticated `https://`,
+`ssh://`, `git+ssh://`, or standard SCP-like SSH. Reject plaintext `http://` or
+`git://`, network-push `file://` or local paths, controls, Git remote-helper syntax
+such as `<helper>::<address>`, and `ext::`. Never execute/install one.
+Local `.` remains checkpoint-only.
 
-For each network Git process, override repository protocol policy at command
-scope: default `protocol.allow` to `never`, enable only the already classified
-`https` or `ssh` protocol needed for that target, and keep `protocol.ext.allow`
-disabled. Repository, user, or system configuration must not re-enable another
-transport for the operation. Apply this only after the non-executable Git
-boundary passes.
+At command scope set `protocol.allow=never`, enable only the classified
+`https` or `ssh` protocol needed, and keep `protocol.ext.allow` disabled.
+Configuration must not re-enable another transport. First pass the
+non-executable boundary.
 
-Run raw endpoint enumeration, validation, hashing, and direct ref queries
-inside one local capture boundary whose stdout, stderr, exceptions, and debug
-output cannot expose the raw values. That boundary may emit only ordered target
-ordinals, cryptographic fingerprints, validated refs, full SHAs, and sanitized
-status. Do not run an endpoint-producing Git command directly in a visible
-terminal or let a failed Git process copy its command line or stderr into the
-task report. If the host cannot guarantee capture and sanitization, stop before
-endpoint inventory or network access.
+Contain endpoint enumeration, validation, hashing, and ref queries so stdout,
+stderr, exceptions, and debug output cannot leak raw values. Emit only target
+ordinals/fingerprints, validated refs, full OIDs, and sanitized status. Never
+run endpoint-producing Git visibly or report its raw failure; without assured
+capture and sanitization, stop.
 
 ## Git Metadata Containment
 

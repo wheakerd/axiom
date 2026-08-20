@@ -22,20 +22,24 @@ another final commit, append a checkpoint, or consolidate again on this route.
    `newCommit^{tree}` and `oldHead^{tree}` to equal `finalTree`.
 3. Resolve `backupRef`. If present, require `backupRef == oldHead`. Treat a
    missing ref only as observed state until the cleanup-proof gate permits it.
-4. Fetch the resolved branch remote, then resolve authoritative `@{u}`. Query
-   every frozen push target's `mergeRef` directly. Each target must equal
-   either `baselineSha` or `newCommit`; any other or unreadable result stops.
-5. If every target and refreshed `@{u}` equal `baselineSha`, require the backup
-   ref, a clean index and worktree for submitted content, and exactly
-   `newCommit` in `@{u}..HEAD`. Retry only the recorded push, after the immediate
-   all-target baseline gate in `repository-and-remote-targets.md` passes.
-6. If every target equals `newCommit`, require refreshed `@{u} == newCommit`
-   before baseline-cache update, cleanup proof, or backup deletion. If `@{u}`
-   differs or cannot be resolved after fetch, retain all recovery state and
-   stop even when push targets agree.
-7. If targets disagree between `baselineSha` and `newCommit`, or `@{u}` and
-   targets disagree, report partial remote state and stop. Do not push again,
-   restore the local branch, update cache, or begin cleanup automatically.
+4. Query every frozen target's `mergeRef` directly; each must equal
+   `baselineSha` or `newCommit`. Run the exact protocol in
+   `consolidation-and-push.md` only with explicit remote-refresh authority;
+   network-push or recovery authority never implies fetch. Without refresh,
+   mark `@{u}` unrefreshed and prohibit every upstream-dependent transition.
+5. If every target equals `baselineSha`, require the backup ref, clean submitted
+   content, and exactly `newCommit` over the recorded baseline. Retry only the
+   recorded push under current network-push authority and after the immediate
+   all-target baseline gate passes. If refresh ran, also require refreshed
+   `@{u} == baselineSha`; push authority alone never causes that refresh.
+6. If every target equals `newCommit`, require an authorized refresh and
+   refreshed `@{u} == newCommit` before baseline-cache update, cleanup proof,
+   or backup deletion. Without refresh, or when `@{u}` differs, retain all
+   recovery state even though direct target verification succeeded.
+7. If targets disagree between `baselineSha` and `newCommit`, or an authorized
+   refreshed `@{u}` disagrees with the targets, report partial remote state and
+   stop. Do not push again, restore the local branch, update cache, or begin
+   cleanup automatically.
 
 Never expose raw endpoints. Render every displayed filesystem path with
 JSON-string, Git C-style, or equivalent reversible escaping.
@@ -70,7 +74,7 @@ Only after every target and refreshed `@{u}` directly equal `newCommit`:
 5. Delete an existing backup ref with its old-value compare-and-swap check:
 
    ```bash
-   git -C <repo> update-ref -d <backup-ref> <old-head>
+   git -C <repo> update-ref --no-deref -d <backup-ref> <old-head>
    ```
 
 6. Atomically set `cleanupReady.backupRefDeleted: true`, reread it through the

@@ -22,22 +22,25 @@ JSON-string, Git C-style, or equivalent reversible escaping.
 Apply `safe-git-values-and-metadata.md` to every operand below. The command
 blocks show argument order, never a shell interpolation template.
 
-Generate the unique id from a UTC timestamp plus a short `oldHead` prefix. The
-candidate is usable only when this check exits nonzero:
-
-```bash
-git -C <repo> show-ref --verify --quiet <backup-ref>
-```
+Generate each candidate id from a UTC timestamp plus a short `oldHead` prefix.
+Validate its namespace and syntax, but do not probe for absence before create;
+only a create-only ref transaction decides whether the candidate is free.
 
 ## Create And Verify Backup
 
-Create the backup before changing the branch:
+Recheck the frozen object format, derive its all-zero `nullOid`, and atomically
+create the backup before changing the branch:
 
 ```bash
-git -C <repo> update-ref <backup-ref> <old-head>
+git -C <repo> update-ref --no-deref <backup-ref> <old-head> <null-oid>
 git -C <repo> rev-parse --verify <backup-ref>
 ```
 
+`--no-deref` binds the transaction to the candidate ref itself. The null old
+value makes it create-only: it must fail if any ref appeared concurrently. On
+a conclusively classified existing-ref compare-and-swap
+conflict, generate and validate a fresh candidate and retry; on any other or
+uncertain failure, stop. Never fall back to an unconditional `update-ref`.
 Require the backup to equal `oldHead`. Keep it until every authorized remote
 target is verified and the provenance cleanup proof is persisted.
 
@@ -96,7 +99,7 @@ Stop and keep the backup on any failure.
 ## Atomically Update And Verify Branch
 
 ```bash
-git -C <repo> update-ref <branch-ref> <new-commit> <old-head>
+git -C <repo> update-ref --no-deref <branch-ref> <new-commit> <old-head>
 ```
 
 If `oldHead` changed, the compare-and-swap must fail. After success, verify:
@@ -116,7 +119,7 @@ new working-tree or index changes, and `backupRef == oldHead`.
 If verification fails before push, restore with compare-and-swap:
 
 ```bash
-git -C <repo> update-ref <branch-ref> <old-head> <new-commit>
+git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>
 ```
 
 Keep the backup and report restoration failure with a manual recovery command.

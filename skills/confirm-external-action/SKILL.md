@@ -1,6 +1,6 @@
 ---
 name: confirm-external-action
-description: Bind and verify a consequential external action. Use when the user explicitly asks to send, publish, invite, purchase, trade, delete, or change external app or account state and the exact actor, target, payload, disclosure, cost, or retry boundary matters. Do not use for read-only lookup, draft-only work, local Git, or persistent system changes owned by another route.
+description: Bind and verify a consequential external action. Use when the user explicitly asks to send, publish, invite, purchase, trade, delete, or change external app or account state and the exact actor, target, payload, disclosure, cost, or retry boundary matters. Do not use for read-only lookup, draft-only work, or local Git. Pair with reversible-system-change when the same request also has persistent rollback, data, service, or activation risk.
 ---
 
 # Confirm External Action
@@ -107,6 +107,18 @@ with outcome `unknown` and request direction.
 
 For non-atomic bulk work, stop new mutations at the first failure. Inventory
 completed, failed, and unknown targets without repeating successful effects.
+
+## Resume And Compaction Handoff
+
+After resume or compaction, fail closed unless host-native task context and
+current direct evidence from the owning system reconstruct the active phase,
+exact current user authority, frozen envelope and write set, prior mutations
+and attempt identifiers, idempotency status, and applicable rollback evidence.
+If any material field is missing, stale, or inconsistent, perform zero new
+mutations. An unknown external outcome enters Verify only: query by the
+authoritative identifiers and never resend. Rebuild changed or missing fields
+and obtain renewed authority before mutation. Do not add a daemon, cache,
+telemetry, or persistent handoff tool to reconstruct the handoff.
 
 ## Verify And Report
 
