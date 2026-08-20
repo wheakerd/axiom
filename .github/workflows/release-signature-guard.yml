@@ -39,8 +39,78 @@ jobs:
             }
 
             const defaultRef = `refs/heads/${defaultBranch}`;
+            const strictSemVer = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 
-            async function peelRefToCommit(qualifiedRef) {
+            function releaseTagVersion(tagName) {
+              if (typeof tagName !== "string" || !tagName.startsWith("v")) {
+                return null;
+              }
+              const version = tagName.slice(1);
+              return strictSemVer.test(version) ? version : null;
+            }
+
+            function isSingleTagCreation(payload) {
+              return (
+                payload.created === true &&
+                payload.deleted === false &&
+                payload.forced === false &&
+                typeof payload.before === "string" &&
+                /^0{40}$/.test(payload.before) &&
+                typeof payload.after === "string" &&
+                /^(?!0{40}$)[0-9a-f]{40}$/i.test(payload.after)
+              );
+            }
+
+            function failClosedTagMutation(reason) {
+              core.setFailed(
+                `${reason} This workflow fails closed after the mutation; true server-side prevention still depends on a GitHub tag ruleset that blocks tag updates and deletions.`,
+              );
+            }
+
+            async function readJsonAtCommit(path, commitSha) {
+              const response = await github.rest.repos.getContent({
+                owner,
+                repo,
+                path,
+                ref: commitSha,
+              });
+              const content = response.data;
+              if (
+                Array.isArray(content) ||
+                content.type !== "file" ||
+                content.encoding !== "base64" ||
+                typeof content.content !== "string"
+              ) {
+                throw new Error(`Cannot read exact JSON file ${path} at ${commitSha}.`);
+              }
+              return JSON.parse(
+                Buffer.from(content.content.replace(/\n/g, ""), "base64").toString("utf8"),
+              );
+            }
+
+            async function packageVersionAtCommit(commitSha) {
+              const paths = [
+                ".codex-plugin/plugin.json",
+                ".claude-plugin/plugin.json",
+              ];
+              const manifests = await Promise.all(
+                paths.map((path) => readJsonAtCommit(path, commitSha)),
+              );
+              const versions = manifests.map((manifest) => manifest?.version);
+              if (
+                versions.some(
+                  (version) => typeof version !== "string" || !strictSemVer.test(version),
+                ) ||
+                versions[0] !== versions[1]
+              ) {
+                throw new Error(
+                  `Release manifests at ${commitSha} must contain one matching strict SemVer version.`,
+                );
+              }
+              return versions[0];
+            }
+
+            async function peelRefToCommit(qualifiedRef, expectedObjectSha = null) {
               const reference = await github.rest.git.getRef({
                 owner,
                 repo,
@@ -53,6 +123,11 @@ jobs:
               }
 
               let object = reference.data.object;
+              if (expectedObjectSha !== null && object.sha !== expectedObjectSha) {
+                throw new Error(
+                  `Ref ${qualifiedRef} changed after this event; expected ${expectedObjectSha}, found ${object.sha}.`,
+                );
+              }
               const visited = new Set();
               for (let depth = 0; depth < 16; depth += 1) {
                 if (object.type === "commit") {
@@ -76,6 +151,7 @@ jobs:
 
             let targetRef;
             let targetCommit;
+            let targetTagName = null;
             let targetMustDescendFromDefault = false;
             if (context.eventName === "pull_request") {
               const pullRequest = context.payload.pull_request;
@@ -96,19 +172,32 @@ jobs:
               targetMustDescendFromDefault = true;
             } else if (context.eventName === "release") {
               const tagName = context.payload.release?.tag_name;
-              if (typeof tagName !== "string" || !/^v[0-9]/.test(tagName)) {
-                core.setFailed("Published releases must use a v* release tag.");
+              if (releaseTagVersion(tagName) === null) {
+                core.setFailed("Published releases must use one exact strict SemVer tag.");
                 return;
               }
+              targetTagName = tagName;
               targetRef = `refs/tags/${tagName}`;
               targetCommit = await peelRefToCommit(targetRef);
             } else if (context.eventName === "push") {
               if (context.ref === defaultRef) {
                 targetRef = defaultRef;
                 targetCommit = context.payload.after;
-              } else if (/^refs\/tags\/v[0-9]/.test(context.ref)) {
+              } else if (context.ref.startsWith("refs/tags/")) {
+                const tagName = context.ref.slice("refs/tags/".length);
+                if (releaseTagVersion(tagName) === null) {
+                  core.setFailed(`Tag push ${tagName} is not one exact strict SemVer tag.`);
+                  return;
+                }
+                if (!isSingleTagCreation(context.payload)) {
+                  failClosedTagMutation(
+                    `Tag push ${context.ref} was not a single immutable creation event.`,
+                  );
+                  return;
+                }
+                targetTagName = tagName;
                 targetRef = context.ref;
-                targetCommit = await peelRefToCommit(targetRef);
+                targetCommit = await peelRefToCommit(targetRef, context.payload.after);
               } else {
                 core.setFailed(`Unexpected push ref ${context.ref}.`);
                 return;
@@ -134,6 +223,17 @@ jobs:
             if (typeof targetCommit !== "string" || targetCommit.length === 0) {
               core.setFailed(`Could not resolve ${targetRef} to an exact commit.`);
               return;
+            }
+
+            const packageVersion = await packageVersionAtCommit(targetCommit);
+            if (targetTagName !== null) {
+              const expectedReleaseTag = `v${packageVersion}`;
+              if (targetTagName !== expectedReleaseTag) {
+                core.setFailed(
+                  `Release tag ${targetTagName} does not match package version ${expectedReleaseTag}.`,
+                );
+                return;
+              }
             }
 
             const defaultCommit = await peelRefToCommit(defaultRef);

@@ -5,6 +5,22 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.3 - 2026-08-20
+
+### Fixed
+
+- Bound checkpoint commits to the frozen staged tree and installed them with
+  compare-and-swap ref updates, preserving concurrently staged paths instead
+  of committing them outside the authorized path set.
+- Resolved the effective Git push destination independently from the fetch
+  upstream, added a one-time later-push target binding, and rejected hostile
+  commit metadata before it can reach a terminal or public commit message.
+- Extended Action-pin validation through local composite actions and reusable
+  workflows, and restricted protected manifests to their exact owned schemas.
+- Required strict, version-matched, creation-only release tags and made the
+  publication guard execute the exact workflow gate against positive,
+  negative, and mutation-bypass fixtures.
+
 ## 0.7.2 - 2026-08-20
 
 ### Fixed

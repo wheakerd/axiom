@@ -5,16 +5,19 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
+import tempfile
+from dataclasses import dataclass
 from html import unescape
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
 from urllib.parse import unquote, urlsplit
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.7.2"
+RELEASE_VERSION = "0.7.3"
 CURRENT_RELEASE_NOTES = f"docs/releases/v{RELEASE_VERSION}.md"
 
 REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
@@ -38,6 +41,7 @@ REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
     "docs/releases/v0.7.0.md",
     "docs/releases/v0.7.1.md",
     "docs/releases/v0.7.2.md",
+    "docs/releases/v0.7.3.md",
     CURRENT_RELEASE_NOTES,
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -71,6 +75,54 @@ EXPECTED_CODEX_POLICY = {
     "installation": "AVAILABLE",
     "authentication": "ON_INSTALL",
 }
+CODEX_MANIFEST_KEYS = frozenset(
+    {
+        "name",
+        "version",
+        "description",
+        "author",
+        "homepage",
+        "repository",
+        "license",
+        "keywords",
+        "skills",
+        "hooks",
+        "interface",
+    }
+)
+CODEX_INTERFACE_KEYS = frozenset(
+    {
+        "displayName",
+        "shortDescription",
+        "longDescription",
+        "developerName",
+        "category",
+        "capabilities",
+        "defaultPrompt",
+        "brandColor",
+    }
+)
+CLAUDE_MANIFEST_KEYS = frozenset(
+    {
+        "$schema",
+        "name",
+        "displayName",
+        "version",
+        "description",
+        "author",
+        "homepage",
+        "repository",
+        "license",
+        "keywords",
+        "skills",
+        "hooks",
+    }
+)
+CODEX_MARKETPLACE_KEYS = frozenset({"name", "interface", "plugins"})
+CODEX_MARKETPLACE_PLUGIN_KEYS = frozenset({"name", "source", "policy", "category"})
+CLAUDE_MARKETPLACE_KEYS = frozenset({"name", "owner", "description", "plugins"})
+CLAUDE_MARKETPLACE_PLUGIN_KEYS = frozenset({"name", "source", "category", "tags"})
+AUTHOR_KEYS = frozenset({"name", "url"})
 HOOK_FILES = (
     "hooks/codex-hooks.json",
     "hooks/claude-hooks.json",
@@ -1059,218 +1111,1106 @@ def check_routing_scenarios(failures: list[str]) -> None:
                     )
 
 
+@dataclass(frozen=True)
+class CanonicalYamlScalar:
+    """A scalar from Axiom's dependency-free canonical YAML subset."""
+
+    value: str
+    comment: str
+    line: int
+
+
+@dataclass(frozen=True)
+class CanonicalYamlLine:
+    indent: int
+    content: str
+    line: int
+
+
+@dataclass(frozen=True)
+class ActionUse:
+    declaration: str
+    comment: str
+    line: int
+    scope: str
+
+
+def split_yaml_comment(raw: str) -> tuple[str, str]:
+    """Split a YAML scalar from an unquoted inline comment."""
+    single_quoted = False
+    double_quoted = False
+    escaped = False
+    for index, character in enumerate(raw):
+        if double_quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                double_quoted = False
+            continue
+        if single_quoted:
+            if character == "'":
+                if index + 1 < len(raw) and raw[index + 1] == "'":
+                    continue
+                single_quoted = False
+            continue
+        if character == '"':
+            double_quoted = True
+        elif character == "'":
+            single_quoted = True
+        elif character == "#" and (index == 0 or raw[index - 1].isspace()):
+            return raw[:index].rstrip(), raw[index + 1 :].strip()
+    return raw.rstrip(), ""
+
+
+def canonical_yaml_lines(text: str, label: str) -> list[CanonicalYamlLine]:
+    """Tokenize canonical block YAML while treating scalar bodies as opaque."""
+    if "\r" in text:
+        raise CanonicalYamlError(f"{label} must use LF line endings")
+
+    tokens: list[CanonicalYamlLine] = []
+    block_parent_indent: int | None = None
+    block_header = re.compile(
+        r"(?:-\s+)?[A-Za-z_][A-Za-z0-9_-]*:\s*[>|][+-]?[0-9]*$"
+    )
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        leading = raw_line[: len(raw_line) - len(raw_line.lstrip(" \t"))]
+        indent = len(leading)
+        if block_parent_indent is not None:
+            if not raw_line.strip() or indent > block_parent_indent:
+                continue
+            block_parent_indent = None
+
+        if not raw_line.strip() or raw_line.lstrip(" ").startswith("#"):
+            continue
+        if "\t" in raw_line:
+            raise CanonicalYamlError(
+                f"{label}:{line_number} canonical YAML must not contain tabs"
+            )
+        if raw_line != raw_line.rstrip(" "):
+            raise CanonicalYamlError(
+                f"{label}:{line_number} canonical YAML must not contain trailing spaces"
+            )
+        if indent % 2:
+            raise CanonicalYamlError(
+                f"{label}:{line_number} canonical YAML indentation must use two-space levels"
+            )
+
+        content = raw_line[indent:]
+        uncommented, _ = split_yaml_comment(content)
+        if uncommented in {"---", "..."}:
+            raise CanonicalYamlError(
+                f"{label}:{line_number} multiple YAML documents are not allowed"
+            )
+        tokens.append(CanonicalYamlLine(indent, content, line_number))
+        if block_header.fullmatch(uncommented):
+            block_parent_indent = indent
+    return tokens
+
+
+class CanonicalYamlParser:
+    """Parse the canonical block subset used by workflows and action metadata."""
+
+    def __init__(self, text: str, label: str) -> None:
+        self.label = label
+        self.tokens = canonical_yaml_lines(text, label)
+
+    def parse(self) -> dict[str, Any]:
+        if not self.tokens:
+            raise CanonicalYamlError(f"{self.label} is empty")
+        if self.tokens[0].indent != 0 or self.tokens[0].content.startswith("-"):
+            raise CanonicalYamlError(
+                f"{self.label}:{self.tokens[0].line} must start with a top-level mapping"
+            )
+        value, index = self.parse_mapping(0, 0)
+        if index != len(self.tokens):
+            token = self.tokens[index]
+            raise CanonicalYamlError(
+                f"{self.label}:{token.line} has an unexpected YAML structure"
+            )
+        return value
+
+    def parse_mapping(self, index: int, indent: int) -> tuple[dict[str, Any], int]:
+        mapping: dict[str, Any] = {}
+        while index < len(self.tokens):
+            token = self.tokens[index]
+            if token.indent < indent:
+                break
+            if token.indent > indent:
+                raise CanonicalYamlError(
+                    f"{self.label}:{token.line} has an unexpected indentation level"
+                )
+            if token.content.startswith("-"):
+                break
+            index = self.parse_mapping_entry(
+                mapping,
+                token.content,
+                token.line,
+                indent,
+                index + 1,
+            )
+        return mapping, index
+
+    def parse_mapping_entry(
+        self,
+        mapping: dict[str, Any],
+        content: str,
+        line: int,
+        indent: int,
+        next_index: int,
+    ) -> int:
+        uncommented, comment = split_yaml_comment(content)
+        match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_-]*):(?: (.*))?", uncommented)
+        if match is None:
+            raise CanonicalYamlError(
+                f"{self.label}:{line} must use an unquoted canonical mapping key"
+            )
+        key, raw_value = match.groups()
+        if key in mapping:
+            raise CanonicalYamlError(
+                f"{self.label}:{line} contains duplicate mapping key {key!r}"
+            )
+        if raw_value is not None:
+            mapping[key] = self.parse_scalar(raw_value, comment, line)
+            return next_index
+
+        if next_index < len(self.tokens) and self.tokens[next_index].indent > indent:
+            child = self.tokens[next_index]
+            if child.indent != indent + 2:
+                raise CanonicalYamlError(
+                    f"{self.label}:{child.line} nested content must advance one indentation level"
+                )
+            if child.content.startswith("-"):
+                mapping[key], next_index = self.parse_sequence(next_index, indent + 2)
+            else:
+                mapping[key], next_index = self.parse_mapping(next_index, indent + 2)
+        else:
+            mapping[key] = CanonicalYamlScalar("", comment, line)
+        return next_index
+
+    def parse_sequence(self, index: int, indent: int) -> tuple[list[Any], int]:
+        sequence: list[Any] = []
+        while index < len(self.tokens):
+            token = self.tokens[index]
+            if token.indent < indent:
+                break
+            if token.indent > indent:
+                raise CanonicalYamlError(
+                    f"{self.label}:{token.line} has an unexpected sequence indentation"
+                )
+            if token.content == "-":
+                next_index = index + 1
+                if next_index >= len(self.tokens) or self.tokens[next_index].indent != indent + 2:
+                    raise CanonicalYamlError(
+                        f"{self.label}:{token.line} empty sequence entry has no child"
+                    )
+                child = self.tokens[next_index]
+                if child.content.startswith("-"):
+                    value, index = self.parse_sequence(next_index, indent + 2)
+                else:
+                    value, index = self.parse_mapping(next_index, indent + 2)
+                sequence.append(value)
+                continue
+            if not token.content.startswith("- "):
+                break
+
+            remainder = token.content[2:]
+            uncommented, _ = split_yaml_comment(remainder)
+            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*:(?: .*)?", uncommented):
+                item: dict[str, Any] = {}
+                index = self.parse_mapping_entry(
+                    item,
+                    remainder,
+                    token.line,
+                    indent + 2,
+                    index + 1,
+                )
+                while index < len(self.tokens):
+                    continuation = self.tokens[index]
+                    if continuation.indent != indent + 2 or continuation.content.startswith("-"):
+                        break
+                    index = self.parse_mapping_entry(
+                        item,
+                        continuation.content,
+                        continuation.line,
+                        indent + 2,
+                        index + 1,
+                    )
+                sequence.append(item)
+                continue
+
+            raw_scalar, comment = split_yaml_comment(remainder)
+            sequence.append(self.parse_scalar(raw_scalar, comment, token.line))
+            index += 1
+            if index < len(self.tokens) and self.tokens[index].indent > indent:
+                child = self.tokens[index]
+                raise CanonicalYamlError(
+                    f"{self.label}:{child.line} scalar sequence entry cannot own nested content"
+                )
+        return sequence, index
+
+    def parse_scalar(self, raw: str, comment: str, line: int) -> CanonicalYamlScalar:
+        if not raw or raw != raw.strip():
+            raise CanonicalYamlError(
+                f"{self.label}:{line} scalar must use canonical spacing"
+            )
+        if raw[0] in "&*!{[" or raw.startswith("<<:"):
+            raise CanonicalYamlError(
+                f"{self.label}:{line} aliases, tags, and flow collections are not allowed"
+            )
+        if raw.startswith('"') or raw.endswith('"'):
+            try:
+                value = json.loads(raw)
+            except json.JSONDecodeError as error:
+                raise CanonicalYamlError(
+                    f"{self.label}:{line} has an invalid double-quoted scalar"
+                ) from error
+            if not isinstance(value, str):
+                raise CanonicalYamlError(
+                    f"{self.label}:{line} quoted scalar must decode to a string"
+                )
+        elif raw.startswith("'") or raw.endswith("'"):
+            if len(raw) < 2 or not raw.startswith("'") or not raw.endswith("'"):
+                raise CanonicalYamlError(
+                    f"{self.label}:{line} has an invalid single-quoted scalar"
+                )
+            value = raw[1:-1].replace("''", "'")
+        else:
+            if ": " in raw:
+                raise CanonicalYamlError(
+                    f"{self.label}:{line} ambiguous plain scalar must be quoted"
+                )
+            value = raw
+        return CanonicalYamlScalar(value, comment, line)
+
+
+def parse_canonical_yaml_document(text: str, label: str) -> dict[str, Any]:
+    return CanonicalYamlParser(text, label).parse()
+
+
+def walk_yaml_uses(
+    value: Any,
+    path: tuple[str | int, ...] = (),
+) -> Iterator[tuple[tuple[str | int, ...], Any]]:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = (*path, key)
+            if key == "uses":
+                yield child_path, child
+            yield from walk_yaml_uses(child, child_path)
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from walk_yaml_uses(child, (*path, index))
+
+
 def workflow_uses_declarations(
-    text: str,
+    document: dict[str, Any],
     label: str,
     failures: list[str],
-) -> list[tuple[int, str, str]]:
-    """Extract only canonical jobs.*.uses and jobs.*.steps[*].uses entries.
+) -> list[ActionUse]:
+    declarations: list[ActionUse] = []
+    allowed_paths: set[tuple[str | int, ...]] = set()
+    jobs = document.get("jobs")
+    if not isinstance(jobs, dict):
+        failures.append(f"{label} must contain a jobs mapping")
+        return declarations
 
-    Alternate legal YAML spellings are rejected explicitly. This keeps the
-    publication guard dependency-free without pretending its tiny structural
-    subset is a general YAML parser.
-    """
-    canonical_use = re.compile(r"^( {4}| {8})uses: ([^\s#]+)(?: # (.+))?$")
-    noncanonical_key = re.compile(
-        r"^\s*(?:-\s*|\?\s*)?(?:uses|['\"]uses['\"])\s*(?::|$)"
-    )
-    unsupported_structure = re.compile(
-        r"^\s*(?:-\s*)?(?:\?|<<\s*:|[&*!]|['\"][^'\"]+['\"]\s*:|[\[{]|"
-        r"[A-Za-z_][A-Za-z0-9_-]*:\s*[&*!{\[])"
-    )
-    block_scalar = re.compile(
-        r"^(\s*)[A-Za-z_][A-Za-z0-9_-]*:\s*[>|][+-]?[0-9]*\s*(?:#.*)?$"
-    )
-
-    declarations: list[tuple[int, str, str]] = []
-    in_jobs = False
-    in_job = False
-    in_steps = False
-    block_indent: int | None = None
-    for line_number, line in enumerate(text.splitlines(), start=1):
-        if block_indent is not None:
-            if not line.strip():
-                continue
-            indent = len(line) - len(line.lstrip(" "))
-            if indent > block_indent:
-                continue
-            block_indent = None
-
-        stripped = line.lstrip(" ")
-        if not stripped or stripped.startswith("#"):
+    for job_name, job in jobs.items():
+        if not isinstance(job, dict):
+            failures.append(f"{label} jobs.{job_name} must be a mapping")
             continue
-        if "\t" in line[: len(line) - len(stripped)]:
-            failures.append(f"{label}:{line_number} workflow indentation must use spaces")
-            continue
-
-        indent = len(line) - len(stripped)
-        if line == "jobs:":
-            in_jobs = True
-            in_job = False
-            in_steps = False
-            continue
-        if in_jobs and indent == 0:
-            in_jobs = False
-            in_job = False
-            in_steps = False
-        elif in_jobs and re.fullmatch(r"  [A-Za-z0-9_-]+:", line):
-            in_job = True
-            in_steps = False
-            continue
-        elif in_job and line == "    steps:":
-            in_steps = True
-            continue
-        elif in_steps and indent <= 4:
-            in_steps = False
-
-        use_match = canonical_use.fullmatch(line)
-        if use_match is not None:
-            use_indent = len(use_match.group(1))
-            valid_context = bool(
-                in_jobs
-                and in_job
-                and (
-                    (use_indent == 4 and not in_steps)
-                    or (use_indent == 8 and in_steps)
+        if "uses" in job:
+            path = ("jobs", job_name, "uses")
+            allowed_paths.add(path)
+            scalar = job["uses"]
+            if not isinstance(scalar, CanonicalYamlScalar) or not scalar.value:
+                failures.append(f"{label} jobs.{job_name}.uses must be a non-empty scalar")
+            else:
+                declarations.append(
+                    ActionUse(scalar.value, scalar.comment, scalar.line, "workflow-job")
                 )
-            )
-            if not valid_context:
+        steps = job.get("steps")
+        if steps is None:
+            continue
+        if not isinstance(steps, list):
+            failures.append(f"{label} jobs.{job_name}.steps must be a sequence")
+            continue
+        for index, step in enumerate(steps):
+            if not isinstance(step, dict):
+                failures.append(f"{label} jobs.{job_name}.steps[{index}] must be a mapping")
+                continue
+            if "uses" not in step:
+                continue
+            path = ("jobs", job_name, "steps", index, "uses")
+            allowed_paths.add(path)
+            scalar = step["uses"]
+            if not isinstance(scalar, CanonicalYamlScalar) or not scalar.value:
                 failures.append(
-                    f"{label}:{line_number} uses must be jobs.<job>.uses or "
-                    "jobs.<job>.steps[*].uses in canonical block form"
+                    f"{label} jobs.{job_name}.steps[{index}].uses must be a non-empty scalar"
                 )
             else:
                 declarations.append(
-                    (line_number, use_match.group(2), use_match.group(3) or "")
+                    ActionUse(scalar.value, scalar.comment, scalar.line, "workflow-step")
                 )
-            continue
 
-        if noncanonical_key.search(line):
+    for path, scalar in walk_yaml_uses(document):
+        if path not in allowed_paths:
+            line = scalar.line if isinstance(scalar, CanonicalYamlScalar) else "?"
             failures.append(
-                f"{label}:{line_number} uses key is outside the canonical block subset; "
-                "write an unquoted uses key on its own line beneath the job or named step"
+                f"{label}:{line} uses is outside jobs.<job>.uses or jobs.<job>.steps[*].uses"
             )
-            continue
-
-        if unsupported_structure.search(line):
-            failures.append(
-                f"{label}:{line_number} aliases, tags, explicit or quoted keys, and flow "
-                "mappings are outside the workflow guard's canonical YAML subset"
-            )
-            continue
-
-        block_match = block_scalar.fullmatch(line)
-        if block_match is not None:
-            block_indent = len(block_match.group(1))
-
     return declarations
 
 
-def check_github_action_pins_in_text(
-    text: str,
+def workflow_container_declarations(
+    document: dict[str, Any],
     label: str,
     failures: list[str],
-) -> int:
+) -> list[ActionUse]:
+    declarations: list[ActionUse] = []
+    jobs = document.get("jobs")
+    if not isinstance(jobs, dict):
+        return declarations
+
+    def append_image(value: Any, image_label: str) -> None:
+        if not isinstance(value, CanonicalYamlScalar) or not value.value:
+            failures.append(f"{label} {image_label} must be a non-empty scalar")
+            return
+        declarations.append(
+            ActionUse(value.value, value.comment, value.line, "workflow-container")
+        )
+
+    for job_name, job in jobs.items():
+        if not isinstance(job, dict):
+            continue
+        container = job.get("container")
+        if container is not None:
+            if isinstance(container, CanonicalYamlScalar):
+                append_image(container, f"jobs.{job_name}.container")
+            elif isinstance(container, dict):
+                append_image(
+                    container.get("image"), f"jobs.{job_name}.container.image"
+                )
+            else:
+                failures.append(
+                    f"{label} jobs.{job_name}.container must be an image scalar or mapping"
+                )
+        services = job.get("services")
+        if services is None:
+            continue
+        if not isinstance(services, dict):
+            failures.append(f"{label} jobs.{job_name}.services must be a mapping")
+            continue
+        for service_name, service in services.items():
+            if not isinstance(service, dict):
+                failures.append(
+                    f"{label} jobs.{job_name}.services.{service_name} must be a mapping"
+                )
+                continue
+            append_image(
+                service.get("image"),
+                f"jobs.{job_name}.services.{service_name}.image",
+            )
+    return declarations
+
+
+def action_uses_declarations(
+    document: dict[str, Any],
+    label: str,
+    failures: list[str],
+) -> list[ActionUse]:
+    declarations: list[ActionUse] = []
+    allowed_paths: set[tuple[str | int, ...]] = set()
+    runs = document.get("runs")
+    if not isinstance(runs, dict):
+        failures.append(f"{label} must contain a runs mapping")
+        return declarations
+    steps = runs.get("steps")
+    if steps is not None:
+        if not isinstance(steps, list):
+            failures.append(f"{label} runs.steps must be a sequence")
+        else:
+            for index, step in enumerate(steps):
+                if not isinstance(step, dict):
+                    failures.append(f"{label} runs.steps[{index}] must be a mapping")
+                    continue
+                if "uses" not in step:
+                    continue
+                path = ("runs", "steps", index, "uses")
+                allowed_paths.add(path)
+                scalar = step["uses"]
+                if not isinstance(scalar, CanonicalYamlScalar) or not scalar.value:
+                    failures.append(
+                        f"{label} runs.steps[{index}].uses must be a non-empty scalar"
+                    )
+                else:
+                    declarations.append(
+                        ActionUse(scalar.value, scalar.comment, scalar.line, "action-step")
+                    )
+
+    for path, scalar in walk_yaml_uses(document):
+        if path not in allowed_paths:
+            line = scalar.line if isinstance(scalar, CanonicalYamlScalar) else "?"
+            failures.append(f"{label}:{line} uses is outside runs.steps[*].uses")
+    return declarations
+
+
+def canonical_local_path(raw: str, label: str, failures: list[str]) -> PurePosixPath | None:
+    if raw == "./":
+        return PurePosixPath(".")
+    if (
+        not raw.startswith("./")
+        or raw.startswith(".//")
+        or "\\" in raw
+        or "\x00" in raw
+        or any(character in raw for character in "?#@")
+        or re.fullmatch(r"\./[A-Za-z0-9._/-]+", raw) is None
+    ):
+        failures.append(f"{label} local uses path {raw!r} is ambiguous or non-canonical")
+        return None
+    tail = raw[2:]
+    pure = PurePosixPath(tail)
+    if (
+        not tail
+        or pure.is_absolute()
+        or pure.as_posix() != tail
+        or any(part in {"", ".", ".."} for part in pure.parts)
+    ):
+        failures.append(f"{label} local uses path {raw!r} contains traversal or ambiguity")
+        return None
+    return pure
+
+
+def contained_path(
+    root: Path,
+    relative: PurePosixPath,
+    label: str,
+    failures: list[str],
+) -> Path | None:
+    resolved_root = root.resolve()
+    candidate = (resolved_root / Path(*relative.parts)).resolve()
+    try:
+        candidate.relative_to(resolved_root)
+    except ValueError:
+        failures.append(f"{label} resolves outside the repository: {relative.as_posix()!r}")
+        return None
+    return candidate
+
+
+def local_action_metadata(
+    root: Path,
+    raw: str,
+    label: str,
+    failures: list[str],
+) -> Path | None:
+    relative = canonical_local_path(raw, label, failures)
+    if relative is None:
+        return None
+    directory = contained_path(root, relative, label, failures)
+    if directory is None:
+        return None
+    if not directory.is_dir():
+        failures.append(f"{label} local action directory does not exist: {raw!r}")
+        return None
+    candidates = [
+        path
+        for path in (directory / "action.yml", directory / "action.yaml")
+        if path.is_file()
+    ]
+    if len(candidates) != 1:
+        failures.append(
+            f"{label} local action {raw!r} must contain exactly one action.yml or action.yaml; "
+            f"found {len(candidates)}"
+        )
+        return None
+    metadata = candidates[0].resolve()
+    try:
+        metadata.relative_to(root.resolve())
+        metadata.relative_to(directory)
+    except ValueError:
+        failures.append(f"{label} local action metadata escapes its repository directory")
+        return None
+    return metadata
+
+
+def local_action_file(
+    root: Path,
+    action_directory: Path,
+    raw: str,
+    label: str,
+    failures: list[str],
+) -> Path | None:
+    candidate_raw = raw if raw.startswith("./") else f"./{raw}"
+    relative = canonical_local_path(candidate_raw, label, failures)
+    if relative is None:
+        return None
+    candidate = (action_directory / Path(*relative.parts)).resolve()
+    try:
+        candidate.relative_to(root.resolve())
+        candidate.relative_to(action_directory.resolve())
+    except ValueError:
+        failures.append(f"{label} local action file escapes its action directory: {raw!r}")
+        return None
+    if not candidate.is_file():
+        failures.append(f"{label} local action file does not exist: {raw!r}")
+        return None
+    return candidate
+
+
+def scalar_field(
+    mapping: dict[str, Any],
+    key: str,
+    label: str,
+    failures: list[str],
+) -> str | None:
+    scalar = mapping.get(key)
+    if not isinstance(scalar, CanonicalYamlScalar) or not scalar.value:
+        failures.append(f"{label} {key} must be a non-empty scalar")
+        return None
+    return scalar.value
+
+
+def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
     github_action = re.compile(
         r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_./-]+)?@([0-9a-fA-F]{40})$"
     )
-    docker_image = re.compile(r"^docker://[^\s]+@sha256:[0-9a-fA-F]{64}$")
+    docker_image = re.compile(
+        r"^docker://[A-Za-z0-9._:/-]+@sha256:[0-9a-fA-F]{64}$"
+    )
+    workflow_container = re.compile(
+        r"^[A-Za-z0-9._:/-]+@sha256:[0-9a-fA-F]{64}$"
+    )
+    workflows = sorted((root / ".github" / "workflows").glob("*.y*ml"))
+    scanned: set[Path] = set()
+    visiting: list[Path] = []
     pinned = 0
-    for line_number, declaration, comment in workflow_uses_declarations(
-        text, label, failures
-    ):
-        if declaration.startswith("./"):
-            continue
-        if declaration.startswith("docker://"):
-            if docker_image.fullmatch(declaration) is None:
+
+    def read_yaml(path: Path) -> tuple[dict[str, Any] | None, str]:
+        label = path.relative_to(root).as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {label}: {error}")
+            return None, label
+        try:
+            return parse_canonical_yaml_document(text, label), label
+        except CanonicalYamlError as error:
+            failures.append(str(error))
+            return None, label
+
+    def enter(path: Path, label: str) -> bool:
+        resolved = path.resolve()
+        if resolved in visiting:
+            start = visiting.index(resolved)
+            cycle = visiting[start:] + [resolved]
+            failures.append(
+                f"{label} local uses cycle detected: "
+                + " -> ".join(item.relative_to(root.resolve()).as_posix() for item in cycle)
+            )
+            return False
+        if resolved in scanned:
+            return False
+        visiting.append(resolved)
+        return True
+
+    def leave(path: Path) -> None:
+        resolved = path.resolve()
+        if visiting and visiting[-1] == resolved:
+            visiting.pop()
+        scanned.add(resolved)
+
+    def check_external(use: ActionUse, source_label: str) -> None:
+        nonlocal pinned
+        declaration = use.declaration
+        location = f"{source_label}:{use.line}"
+        if use.scope == "workflow-container":
+            if workflow_container.fullmatch(declaration) is None:
                 failures.append(
-                    f"{label}:{line_number} external container action must use an immutable sha256 digest"
+                    f"{location} workflow container {declaration!r} must use an immutable "
+                    "sha256 digest"
                 )
             else:
                 pinned += 1
-            continue
-
+            return
+        if declaration.startswith("docker://"):
+            if docker_image.fullmatch(declaration) is None:
+                failures.append(
+                    f"{location} external container action must use an immutable sha256 digest"
+                )
+            else:
+                pinned += 1
+            return
         action_match = github_action.fullmatch(declaration)
         if action_match is None:
             failures.append(
-                f"{label}:{line_number} external action {declaration!r} must be pinned to a full 40-character commit SHA"
+                f"{location} external action {declaration!r} must be pinned to a full "
+                "40-character commit SHA"
             )
-            continue
-        if re.search(r"\bv[0-9]", comment) is None:
+            return
+        action_path = declaration.rsplit("@", 1)[0]
+        if any(part in {".", ".."} for part in action_path.split("/")):
+            failures.append(f"{location} external action path contains traversal")
+            return
+        if re.search(r"\bv[0-9]", use.comment) is None:
             failures.append(
-                f"{label}:{line_number} pinned action must retain a human-readable version comment"
+                f"{location} pinned action must retain a human-readable version comment"
             )
         pinned += 1
+
+    def inspect_use(use: ActionUse, source_label: str) -> None:
+        declaration = use.declaration
+        location = f"{source_label}:{use.line}"
+        if not declaration.startswith("./"):
+            check_external(use, source_label)
+            return
+        if use.scope == "workflow-job":
+            relative = canonical_local_path(declaration, location, failures)
+            if relative is None:
+                return
+            if not re.fullmatch(r"\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml", relative.as_posix()):
+                failures.append(
+                    f"{location} local reusable workflow must name one file directly under "
+                    ".github/workflows"
+                )
+                return
+            lexical_candidate = root.resolve() / Path(*relative.parts)
+            if lexical_candidate.is_symlink():
+                failures.append(
+                    f"{location} local reusable workflow must not be a symbolic link"
+                )
+                return
+            candidate = contained_path(root, relative, location, failures)
+            if candidate is None or not candidate.is_file():
+                failures.append(f"{location} local reusable workflow is missing: {declaration!r}")
+                return
+            inspect_workflow(candidate)
+            return
+        metadata = local_action_metadata(root, declaration, location, failures)
+        if metadata is not None:
+            inspect_action(metadata)
+
+    def inspect_workflow(path: Path) -> None:
+        label = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            failures.append(f"{label} workflow file must not be a symbolic link")
+            return
+        try:
+            path.resolve().relative_to(root.resolve())
+        except ValueError:
+            failures.append(f"{label} workflow file escapes the repository")
+            return
+        if not path.is_file():
+            failures.append(f"{label} workflow file is missing")
+            return
+        if not enter(path, label):
+            return
+        document, label = read_yaml(path)
+        if document is not None:
+            for use in workflow_uses_declarations(document, label, failures):
+                inspect_use(use, label)
+            for container in workflow_container_declarations(document, label, failures):
+                check_external(container, label)
+        leave(path)
+
+    def inspect_action(path: Path) -> None:
+        label = path.relative_to(root).as_posix()
+        if not enter(path, label):
+            return
+        document, label = read_yaml(path)
+        if document is None:
+            leave(path)
+            return
+        declarations = action_uses_declarations(document, label, failures)
+        runs = document.get("runs")
+        if not isinstance(runs, dict):
+            leave(path)
+            return
+        using = scalar_field(runs, "using", f"{label} runs", failures)
+        action_directory = path.parent.resolve()
+        if using == "composite":
+            if not isinstance(runs.get("steps"), list):
+                failures.append(f"{label} composite action must declare runs.steps")
+            for use in declarations:
+                inspect_use(use, label)
+        elif using in {"node12", "node16", "node20", "node24"}:
+            if "steps" in runs:
+                failures.append(f"{label} JavaScript action must not declare runs.steps")
+            main = scalar_field(runs, "main", f"{label} runs", failures)
+            if main is not None:
+                local_action_file(root, action_directory, main, f"{label} runs.main", failures)
+            for optional in ("pre", "post"):
+                if optional not in runs:
+                    continue
+                value = scalar_field(runs, optional, f"{label} runs", failures)
+                if value is not None:
+                    local_action_file(
+                        root,
+                        action_directory,
+                        value,
+                        f"{label} runs.{optional}",
+                        failures,
+                    )
+        elif using == "docker":
+            if "steps" in runs:
+                failures.append(f"{label} Docker action must not declare runs.steps")
+            image = scalar_field(runs, "image", f"{label} runs", failures)
+            if image is not None:
+                if image.startswith("docker://"):
+                    check_external(ActionUse(image, "", 0, "action-image"), label)
+                else:
+                    local_action_file(
+                        root,
+                        action_directory,
+                        image,
+                        f"{label} runs.image",
+                        failures,
+                    )
+        elif using is not None:
+            failures.append(f"{label} runs.using {using!r} is not an accepted local action runtime")
+        leave(path)
+
+    for workflow in workflows:
+        inspect_workflow(workflow)
     return pinned
 
 
 def check_github_action_pins(failures: list[str]) -> int:
-    pinned = 0
-    workflows = sorted((REPOSITORY_ROOT / ".github" / "workflows").glob("*.y*ml"))
-    for path in workflows:
-        try:
-            text = path.read_text(encoding="utf-8")
-        except OSError as error:
-            failures.append(f"cannot read {display_path(path)}: {error}")
-            continue
-        pinned += check_github_action_pins_in_text(
-            text,
-            display_path(path),
-            failures,
-        )
-
+    pinned = check_github_action_pins_from_root(REPOSITORY_ROOT, failures)
     if pinned == 0:
         failures.append("no immutable third-party GitHub Action pins were found")
     return pinned
 
 
-def check_release_signature_workflow_contract(failures: list[str]) -> None:
+def check_action_graph_fixtures(failures: list[str]) -> int:
+    """Exercise transitive local-action resolution without touching the repository."""
+    rejected = 0
+    workflow_template = (
+        "name: Fixture\n"
+        "on:\n"
+        "  workflow_dispatch:\n"
+        "jobs:\n"
+        "  guard:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - name: Guard\n"
+        "        uses: {uses}\n"
+    )
+    composite_header = (
+        "name: Fixture\n"
+        "description: Fixture action\n"
+        "runs:\n"
+        "  using: composite\n"
+        "  steps:\n"
+    )
+
+    def write(root: Path, relative: str, text: str) -> None:
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+    with tempfile.TemporaryDirectory(prefix="axiom-action-fixtures-") as raw_root:
+        fixture_root = Path(raw_root)
+
+        indirect = fixture_root / "indirect"
+        write(
+            indirect,
+            ".github/workflows/guard.yml",
+            workflow_template.format(uses="./.github/actions/wrapper"),
+        )
+        write(
+            indirect,
+            ".github/actions/wrapper/action.yml",
+            composite_header
+            + "    - name: Moving dependency\n"
+            + "      uses: actions/setup-python@v6\n",
+        )
+        indirect_failures: list[str] = []
+        check_github_action_pins_from_root(indirect, indirect_failures)
+        if any("actions/setup-python@v6" in failure for failure in indirect_failures):
+            rejected += 1
+        else:
+            failures.append("indirect moving-action fixture was not rejected transitively")
+
+        moving_container = fixture_root / "moving-container"
+        write(
+            moving_container,
+            ".github/workflows/guard.yml",
+            "name: Fixture\n"
+            "on:\n"
+            "  workflow_dispatch:\n"
+            "jobs:\n"
+            "  guard:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    container: ubuntu:latest\n"
+            "    steps:\n"
+            "      - name: Guard\n"
+            "        run: echo guarded\n",
+        )
+        moving_container_failures: list[str] = []
+        check_github_action_pins_from_root(
+            moving_container, moving_container_failures
+        )
+        if any(
+            "workflow container 'ubuntu:latest'" in failure
+            for failure in moving_container_failures
+        ):
+            rejected += 1
+        else:
+            failures.append("moving workflow-container fixture was not rejected")
+
+        traversal = fixture_root / "traversal"
+        write(
+            traversal,
+            ".github/workflows/guard.yml",
+            workflow_template.format(
+                uses="./.github/actions/../actions/wrapper"
+            ),
+        )
+        traversal_failures: list[str] = []
+        check_github_action_pins_from_root(traversal, traversal_failures)
+        if any("traversal or ambiguity" in failure for failure in traversal_failures):
+            rejected += 1
+        else:
+            failures.append("local-action traversal fixture was not rejected")
+
+        missing = fixture_root / "missing-metadata"
+        write(
+            missing,
+            ".github/workflows/guard.yml",
+            workflow_template.format(uses="./.github/actions/wrapper"),
+        )
+        write(missing, ".github/actions/wrapper/README.md", "fixture\n")
+        missing_failures: list[str] = []
+        check_github_action_pins_from_root(missing, missing_failures)
+        if any("exactly one action.yml or action.yaml" in failure for failure in missing_failures):
+            rejected += 1
+        else:
+            failures.append("missing local-action metadata fixture was not rejected")
+
+        cycle = fixture_root / "cycle"
+        write(
+            cycle,
+            ".github/workflows/guard.yml",
+            workflow_template.format(uses="./.github/actions/one"),
+        )
+        write(
+            cycle,
+            ".github/actions/one/action.yml",
+            composite_header
+            + "    - name: Two\n"
+            + "      uses: ./.github/actions/two\n",
+        )
+        write(
+            cycle,
+            ".github/actions/two/action.yaml",
+            composite_header
+            + "    - name: One\n"
+            + "      uses: ./.github/actions/one\n",
+        )
+        cycle_failures: list[str] = []
+        check_github_action_pins_from_root(cycle, cycle_failures)
+        if any("local uses cycle detected" in failure for failure in cycle_failures):
+            rejected += 1
+        else:
+            failures.append("local composite-action cycle fixture was not rejected")
+
+        duplicate = fixture_root / "duplicate-key"
+        write(
+            duplicate,
+            ".github/workflows/guard.yml",
+            workflow_template.format(uses="./.github/actions/wrapper"),
+        )
+        write(
+            duplicate,
+            ".github/actions/wrapper/action.yml",
+            "name: Fixture\n"
+            "description: Fixture action\n"
+            "runs:\n"
+            "  using: composite\n"
+            "  steps:\n"
+            "runs:\n"
+            "  using: composite\n"
+            "  steps:\n",
+        )
+        duplicate_failures: list[str] = []
+        check_github_action_pins_from_root(duplicate, duplicate_failures)
+        if any("duplicate mapping key 'runs'" in failure for failure in duplicate_failures):
+            rejected += 1
+        else:
+            failures.append("duplicate action-metadata key fixture was not rejected")
+
+        valid = fixture_root / "valid"
+        job_digest = "c" * 64
+        service_digest = "d" * 64
+        write(
+            valid,
+            ".github/workflows/guard.yml",
+            "name: Fixture\n"
+            "on:\n"
+            "  workflow_dispatch:\n"
+            "jobs:\n"
+            "  guard:\n"
+            "    runs-on: ubuntu-latest\n"
+            "    container:\n"
+            f"      image: ghcr.io/example/job@sha256:{job_digest}\n"
+            "    services:\n"
+            "      database:\n"
+            f"        image: ghcr.io/example/database@sha256:{service_digest}\n"
+            "    steps:\n"
+            "      - name: Guard\n"
+            "        uses: ./.github/actions/root\n",
+        )
+        write(
+            valid,
+            ".github/actions/root/action.yml",
+            composite_header
+            + "    - name: Nested composite\n"
+            + "      uses: ./.github/actions/nested\n"
+            + "    - name: Local JavaScript\n"
+            + "      uses: ./.github/actions/javascript\n"
+            + "    - name: Local Docker\n"
+            + "      uses: ./.github/actions/docker\n",
+        )
+        sha = "a" * 40
+        digest = "b" * 64
+        write(
+            valid,
+            ".github/actions/nested/action.yaml",
+            composite_header
+            + "    - name: Pinned action\n"
+            + f"      uses: actions/setup-python@{sha} # v6\n"
+            + "    - name: Pinned container\n"
+            + f"      uses: docker://ghcr.io/example/action@sha256:{digest}\n",
+        )
+        write(
+            valid,
+            ".github/actions/javascript/action.yml",
+            "name: JavaScript fixture\n"
+            "description: JavaScript fixture action\n"
+            "runs:\n"
+            "  using: node20\n"
+            "  main: dist/index.js\n",
+        )
+        write(valid, ".github/actions/javascript/dist/index.js", "'use strict';\n")
+        write(
+            valid,
+            ".github/actions/docker/action.yml",
+            "name: Docker fixture\n"
+            "description: Docker fixture action\n"
+            "runs:\n"
+            "  using: docker\n"
+            "  image: Dockerfile\n",
+        )
+        write(valid, ".github/actions/docker/Dockerfile", "FROM scratch\n")
+        valid_failures: list[str] = []
+        valid_pins = check_github_action_pins_from_root(valid, valid_failures)
+        if valid_failures or valid_pins != 4:
+            failures.append(
+                "valid pinned local composite, JavaScript, and Docker action graph failed: "
+                + "; ".join(valid_failures)
+            )
+
+    return rejected + 1
+
+
+def check_release_signature_workflow_contract(failures: list[str]) -> str | None:
     path = REPOSITORY_ROOT / ".github" / "workflows" / "release-signature-guard.yml"
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as error:
         failures.append(f"cannot read {display_path(path)}: {error}")
-        return
+        return None
 
-    trigger_contract = (
-        "on:\n"
-        "  pull_request:\n"
-        "    branches:\n"
-        "      - main\n"
-        "  push:\n"
-        "    branches:\n"
-        "      - main\n"
-        "    tags:\n"
-        '      - "v*"\n'
-        "  release:\n"
-        "    types:\n"
-        "      - published\n"
-        "      - edited\n"
-        "  workflow_dispatch:"
-    )
-    if trigger_contract not in text:
+    label = display_path(path)
+    try:
+        document = parse_canonical_yaml_document(text, label)
+    except CanonicalYamlError as error:
+        failures.append(str(error))
+        document = {}
+
+    triggers = document.get("on")
+    if not isinstance(triggers, dict) or set(triggers) != {
+        "pull_request",
+        "push",
+        "release",
+        "workflow_dispatch",
+    }:
         failures.append(
-            f"{display_path(path)} must trigger on release pull requests, main and v* tag pushes, "
-            "published/edited Releases, and manual verification"
+            f"{label} must structurally declare only pull_request, push, release, and "
+            "workflow_dispatch triggers"
         )
-    for declaration in ("on:\n", "jobs:\n", "          script: |\n"):
-        if text.count(declaration) != 1:
+    else:
+        pull_request = triggers.get("pull_request")
+        push = triggers.get("push")
+        release = triggers.get("release")
+
+        def scalar_values(value: Any) -> list[str] | None:
+            if not isinstance(value, list) or any(
+                not isinstance(item, CanonicalYamlScalar) for item in value
+            ):
+                return None
+            return [item.value for item in value]
+
+        if not isinstance(pull_request, dict) or scalar_values(
+            pull_request.get("branches")
+        ) != ["main"]:
+            failures.append(f"{label} pull_request trigger must target only main")
+        if (
+            not isinstance(push, dict)
+            or scalar_values(push.get("branches")) != ["main"]
+            or scalar_values(push.get("tags")) != ["v*"]
+        ):
+            failures.append(f"{label} push trigger must cover only main and v* tags")
+        if not isinstance(release, dict) or scalar_values(release.get("types")) != [
+            "published",
+            "edited",
+        ]:
             failures.append(
-                f"{display_path(path)} must contain exactly one {declaration.strip()!r} owner"
+                f"{label} release trigger must cover published and edited events"
             )
+        manual = triggers.get("workflow_dispatch")
+        if not isinstance(manual, CanonicalYamlScalar) or manual.value:
+            failures.append(f"{label} workflow_dispatch trigger must not accept inputs")
 
     require_ordered_contract_anchors(
         path,
         (
             "const defaultRef = `refs/heads/${defaultBranch}`;",
-            "async function peelRefToCommit(qualifiedRef)",
+            "const strictSemVer = /^(?:0|[1-9]",
+            "function releaseTagVersion(tagName)",
+            "return strictSemVer.test(version) ? version : null;",
+            "function isSingleTagCreation(payload)",
+            "payload.created === true",
+            "payload.deleted === false",
+            "payload.forced === false",
+            "/^0{40}$/.test(payload.before)",
+            "/^(?!0{40}$)[0-9a-f]{40}$/i.test(payload.after)",
+            "function failClosedTagMutation(reason)",
+            "true server-side prevention still depends on a GitHub tag ruleset",
+            "async function readJsonAtCommit(path, commitSha)",
+            "async function packageVersionAtCommit(commitSha)",
+            '".codex-plugin/plugin.json"',
+            '".claude-plugin/plugin.json"',
+            '!strictSemVer.test(version)',
+            "versions[0] !== versions[1]",
+            "async function peelRefToCommit(qualifiedRef, expectedObjectSha = null)",
+            "object.sha !== expectedObjectSha",
             'context.eventName === "pull_request"',
             "pullRequest?.head?.repo?.full_name",
             "targetCommit = pullRequest.head.sha;",
             "context.payload.release?.tag_name",
+            "releaseTagVersion(tagName) === null",
             "targetCommit = await peelRefToCommit(targetRef);",
             "context.ref === defaultRef",
+            'context.ref.startsWith("refs/tags/")',
+            "!isSingleTagCreation(context.payload)",
+            "failClosedTagMutation(",
+            "targetCommit = await peelRefToCommit(targetRef, context.payload.after);",
             "Unexpected manual verification ref",
+            "const packageVersion = await packageVersionAtCommit(targetCommit);",
+            "const expectedReleaseTag = `v${packageVersion}`;",
+            "targetTagName !== expectedReleaseTag",
             "const defaultCommit = await peelRefToCommit(defaultRef);",
             "const historyBase = targetMustDescendFromDefault",
             "github.rest.repos.compareCommitsWithBasehead",
@@ -1281,6 +2221,557 @@ def check_release_signature_workflow_contract(failures: list[str]) -> None:
         failures,
         "release target signature",
     )
+    for owner in (
+        "          script: |",
+        "function releaseTagVersion(tagName)",
+        "function isSingleTagCreation(payload)",
+        "function failClosedTagMutation(reason)",
+        "async function packageVersionAtCommit(commitSha)",
+    ):
+        if text.count(owner) != 1:
+            failures.append(f"{label} must contain exactly one critical owner {owner!r}")
+    for weak_pattern in ("/^v[0-9]/", "/^refs\\/tags\\/v[0-9]/"):
+        if weak_pattern in text:
+            failures.append(f"{label} retains weak release-tag matcher {weak_pattern!r}")
+    return text
+
+
+def extract_canonical_yaml_literal_block(
+    text: str,
+    header: str,
+    label: str,
+) -> str | None:
+    """Extract the exact value of one canonical YAML literal block."""
+    lines = text.splitlines()
+    owners = [index for index, line in enumerate(lines) if line == header]
+    if len(owners) != 1:
+        return None
+
+    header_index = owners[0]
+    header_indent = len(header) - len(header.lstrip(" "))
+    block_lines: list[str] = []
+    for line in lines[header_index + 1 :]:
+        if not line.strip():
+            block_lines.append("")
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        if indent <= header_indent:
+            break
+        block_lines.append(line)
+
+    content_indents = [
+        len(line) - len(line.lstrip(" ")) for line in block_lines if line.strip()
+    ]
+    if not content_indents or min(content_indents) != header_indent + 2:
+        return None
+    content_indent = min(content_indents)
+    extracted: list[str] = []
+    for line in block_lines:
+        if not line:
+            extracted.append("")
+        elif line[:content_indent] != " " * content_indent:
+            return None
+        else:
+            extracted.append(line[content_indent:])
+    return "\n".join(extracted) + "\n"
+
+
+RELEASE_SCRIPT_NODE_HARNESS = r"""
+"use strict";
+const fs = require("node:fs");
+const vm = require("node:vm");
+const input = JSON.parse(fs.readFileSync(0, "utf8"));
+
+async function runScenario(scenario) {
+  const sandbox = Object.create(null);
+  sandbox.__scenarioJson = JSON.stringify(scenario);
+  const context = vm.createContext(sandbox, {
+    name: `release-signature-${scenario.name}`,
+    codeGeneration: { strings: false, wasm: false },
+  });
+  const bootstrap = `
+"use strict";
+const __scenario = JSON.parse(__scenarioJson);
+const __failures = [];
+const __infos = [];
+const __stringify = JSON.stringify.bind(JSON);
+const context = Object.freeze(__scenario.context);
+const core = Object.freeze({
+  setFailed(message) { __failures.push(String(message)); },
+  info(message) { __infos.push(String(message)); },
+});
+const Buffer = Object.freeze({
+  from(value, encoding) {
+    if (typeof value !== "string" || encoding !== "base64") {
+      throw new Error("Unexpected Buffer.from request in offline release fixture.");
+    }
+    return Object.freeze({
+      toString(outputEncoding) {
+        if (outputEncoding !== "utf8") {
+          throw new Error("Unexpected Buffer output encoding in offline release fixture.");
+        }
+        return __stringify({ version: __scenario.packageVersion });
+      },
+    });
+  },
+});
+const github = Object.freeze({
+  rest: Object.freeze({
+    repos: Object.freeze({
+      async get() {
+        return { data: { default_branch: "main" } };
+      },
+      async getContent({ path, ref }) {
+        if (
+          ![".codex-plugin/plugin.json", ".claude-plugin/plugin.json"].includes(path) ||
+          typeof ref !== "string" ||
+          ref.length === 0
+        ) {
+          throw new Error("Unexpected manifest lookup in offline release fixture.");
+        }
+        return {
+          data: {
+            type: "file",
+            encoding: "base64",
+            content: "offline-fixture",
+          },
+        };
+      },
+      async compareCommitsWithBasehead({ basehead }) {
+        const base = String(basehead).split("...")[0];
+        return {
+          data: {
+            merge_base_commit: { sha: base },
+            status: "ahead",
+          },
+        };
+      },
+    }),
+    git: Object.freeze({
+      async getRef({ ref }) {
+        const qualifiedRef = "refs/" + ref;
+        const object = __scenario.refs[qualifiedRef];
+        if (!object) {
+          throw new Error("Unexpected ref lookup " + qualifiedRef + ".");
+        }
+        return { data: { ref: qualifiedRef, object } };
+      },
+      async getTag({ tag_sha }) {
+        const tag = (__scenario.tags || {})[tag_sha];
+        if (!tag) {
+          throw new Error("Unexpected annotated tag lookup " + tag_sha + ".");
+        }
+        return { data: { object: tag } };
+      },
+    }),
+  }),
+  async graphql(_query, variables) {
+    return {
+      repository: {
+        object: {
+          oid: variables.oid,
+          signature: {
+            isValid: true,
+            state: "VALID",
+            wasSignedByGitHub: true,
+          },
+        },
+      },
+    };
+  },
+});
+`;
+  const wrapper = `${bootstrap}
+(async () => {
+${input.script}
+})().then(
+  () => {
+    globalThis.__resultJson = __stringify({ failures: __failures, infos: __infos });
+  },
+  (error) => {
+    __failures.push(
+      "THREW:" + String(error && error.name) + ":" + String(error && error.message),
+    );
+    globalThis.__resultJson = __stringify({ failures: __failures, infos: __infos });
+  },
+);
+`;
+  const execution = new vm.Script(wrapper, {
+    filename: `release-signature-${scenario.name}.js`,
+  }).runInContext(context, { timeout: 2000 });
+  let timeout;
+  try {
+    await Promise.race([
+      execution,
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => reject(new Error("scenario timeout")), 5000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (typeof context.__resultJson !== "string") {
+    throw new Error(`Scenario ${scenario.name} produced no result.`);
+  }
+  return { name: scenario.name, ...JSON.parse(context.__resultJson) };
+}
+
+(async () => {
+  const results = [];
+  for (const scenario of input.scenarios) {
+    results.push(await runScenario(scenario));
+  }
+  process.stdout.write(JSON.stringify({ results }));
+})().catch((error) => {
+  process.stderr.write(String(error && error.stack ? error.stack : error));
+  process.exitCode = 1;
+});
+"""
+
+
+def release_script_scenarios() -> tuple[dict[str, Any], ...]:
+    null_sha = "0" * 40
+    main_sha = "1" * 40
+    tag_sha = "2" * 40
+    pull_request_sha = "3" * 40
+    release_branch_sha = "4" * 40
+    old_tag_sha = "5" * 40
+    repository = {"owner": "wheakerd", "repo": "axiom"}
+
+    def fixture(
+        name: str,
+        event_name: str,
+        ref: str,
+        payload: dict[str, Any],
+        *,
+        target_ref: str | None = None,
+        target_sha: str | None = None,
+        expected_failure: str | None = None,
+    ) -> dict[str, Any]:
+        refs: dict[str, dict[str, str]] = {
+            "refs/heads/main": {"type": "commit", "sha": main_sha}
+        }
+        if target_ref is not None and target_sha is not None:
+            refs[target_ref] = {"type": "commit", "sha": target_sha}
+        return {
+            "name": name,
+            "context": {
+                "repo": repository,
+                "eventName": event_name,
+                "ref": ref,
+                "payload": payload,
+            },
+            "refs": refs,
+            "packageVersion": RELEASE_VERSION,
+            "expectedFailure": expected_failure,
+        }
+
+    def tag_push(
+        name: str,
+        tag_name: str,
+        *,
+        before: str,
+        after: str,
+        created: bool,
+        deleted: bool,
+        forced: bool,
+        expected_failure: str | None,
+    ) -> dict[str, Any]:
+        tag_ref = f"refs/tags/{tag_name}"
+        return fixture(
+            name,
+            "push",
+            tag_ref,
+            {
+                "before": before,
+                "after": after,
+                "created": created,
+                "deleted": deleted,
+                "forced": forced,
+            },
+            target_ref=tag_ref,
+            target_sha=after,
+            expected_failure=expected_failure,
+        )
+
+    immutable_failure = "not a single immutable creation event"
+    strict_tag_failure = "not one exact strict SemVer tag"
+    return (
+        fixture(
+            "pull-request",
+            "pull_request",
+            "refs/pull/7/merge",
+            {
+                "pull_request": {
+                    "number": 7,
+                    "base": {"ref": "main"},
+                    "head": {
+                        "repo": {"full_name": "wheakerd/axiom"},
+                        "sha": pull_request_sha,
+                    },
+                }
+            },
+        ),
+        fixture(
+            "main-push",
+            "push",
+            "refs/heads/main",
+            {"after": main_sha},
+        ),
+        fixture(
+            "release",
+            "release",
+            "refs/tags/v0.7.3",
+            {"release": {"tag_name": "v0.7.3"}},
+            target_ref="refs/tags/v0.7.3",
+            target_sha=tag_sha,
+        ),
+        fixture(
+            "workflow-dispatch-main",
+            "workflow_dispatch",
+            "refs/heads/main",
+            {},
+        ),
+        fixture(
+            "workflow-dispatch-release-branch",
+            "workflow_dispatch",
+            "refs/heads/release/v0.7.3",
+            {},
+            target_ref="refs/heads/release/v0.7.3",
+            target_sha=release_branch_sha,
+        ),
+        tag_push(
+            "tag-create",
+            "v0.7.3",
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure=None,
+        ),
+        tag_push(
+            "tag-v9oops",
+            "v9oops",
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure=strict_tag_failure,
+        ),
+        tag_push(
+            "tag-v01",
+            "v01",
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure=strict_tag_failure,
+        ),
+        tag_push(
+            "tag-extra-path",
+            "v0.7.3/extra",
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure=strict_tag_failure,
+        ),
+        tag_push(
+            "tag-version-mismatch",
+            "v0.7.4",
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure="does not match package version",
+        ),
+        tag_push(
+            "tag-move",
+            "v0.7.3",
+            before=old_tag_sha,
+            after=tag_sha,
+            created=False,
+            deleted=False,
+            forced=False,
+            expected_failure=immutable_failure,
+        ),
+        tag_push(
+            "tag-delete",
+            "v0.7.3",
+            before=old_tag_sha,
+            after=null_sha,
+            created=False,
+            deleted=True,
+            forced=False,
+            expected_failure=immutable_failure,
+        ),
+        tag_push(
+            "tag-forced",
+            "v0.7.3",
+            before=old_tag_sha,
+            after=tag_sha,
+            created=False,
+            deleted=False,
+            forced=True,
+            expected_failure=immutable_failure,
+        ),
+        tag_push(
+            "tag-inconsistent-created",
+            "v0.7.3",
+            before=old_tag_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure=immutable_failure,
+        ),
+    )
+
+
+def execute_release_workflow_script(
+    script: str,
+    scenarios: tuple[dict[str, Any], ...],
+    failures: list[str],
+    label: str,
+) -> dict[str, dict[str, Any]] | None:
+    payload = {"script": script, "scenarios": scenarios}
+    try:
+        result = subprocess.run(
+            ["node", "-e", RELEASE_SCRIPT_NODE_HARNESS],
+            input=json.dumps(payload),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=20,
+            check=False,
+        )
+    except FileNotFoundError:
+        failures.append(f"{label} requires Node.js to execute the exact github-script")
+        return None
+    except subprocess.TimeoutExpired:
+        failures.append(f"{label} exact github-script execution timed out")
+        return None
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "no diagnostic"
+        failures.append(f"{label} exact github-script harness failed: {detail}")
+        return None
+    try:
+        decoded = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        failures.append(f"{label} exact github-script harness returned invalid JSON: {error}")
+        return None
+    results = decoded.get("results") if isinstance(decoded, dict) else None
+    if not isinstance(results, list) or len(results) != len(scenarios):
+        failures.append(f"{label} exact github-script harness returned incomplete results")
+        return None
+    indexed: dict[str, dict[str, Any]] = {}
+    for item in results:
+        if not isinstance(item, dict) or not isinstance(item.get("name"), str):
+            failures.append(f"{label} exact github-script harness returned malformed results")
+            return None
+        indexed[item["name"]] = item
+    if len(indexed) != len(scenarios):
+        failures.append(f"{label} exact github-script harness repeated a scenario name")
+        return None
+    return indexed
+
+
+def validate_release_workflow_script(
+    script: str,
+    scenarios: tuple[dict[str, Any], ...],
+    failures: list[str],
+    label: str,
+) -> int:
+    results = execute_release_workflow_script(script, scenarios, failures, label)
+    if results is None:
+        return 0
+    for scenario in scenarios:
+        name = scenario["name"]
+        result = results.get(name)
+        if result is None:
+            failures.append(f"{label}:{name} produced no result")
+            continue
+        observed = result.get("failures")
+        if not isinstance(observed, list) or any(
+            not isinstance(message, str) for message in observed
+        ):
+            failures.append(f"{label}:{name} returned malformed failure evidence")
+            continue
+        expected = scenario["expectedFailure"]
+        if expected is None:
+            if observed:
+                failures.append(
+                    f"{label}:{name} legitimate control failed: {'; '.join(observed)}"
+                )
+        elif not any(expected in message for message in observed):
+            rendered = "; ".join(observed) if observed else "accepted"
+            failures.append(
+                f"{label}:{name} expected failure containing {expected!r}, got {rendered}"
+            )
+    return len(scenarios)
+
+
+def check_release_script_runtime_contract(
+    workflow_text: str | None,
+    failures: list[str],
+) -> int:
+    label = ".github/workflows/release-signature-guard.yml"
+    if workflow_text is None:
+        failures.append(f"{label} exact github-script runtime fixtures could not start")
+        return 0
+    script = extract_canonical_yaml_literal_block(
+        workflow_text,
+        "          script: |",
+        label,
+    )
+    if script is None:
+        failures.append(f"{label} exact github-script literal block could not be extracted")
+        return 0
+
+    scenarios = release_script_scenarios()
+    count = validate_release_workflow_script(
+        script,
+        scenarios,
+        failures,
+        "release-script",
+    )
+
+    mutation_owner = "function isSingleTagCreation(payload) {\n"
+    mutation = (
+        mutation_owner
+        + "  if (payload.created === false) return true;\n"
+    )
+    if script.count(mutation_owner) != 1:
+        failures.append(f"{label} bypass regression fixture could not locate its exact gate")
+        return count
+    mutated_script = script.replace(mutation_owner, mutation, 1)
+    move_scenario = tuple(
+        scenario for scenario in scenarios if scenario["name"] == "tag-move"
+    )
+    mutation_failures: list[str] = []
+    validate_release_workflow_script(
+        mutated_script,
+        move_scenario,
+        mutation_failures,
+        "release-script-bypass-mutation",
+    )
+    if not any(
+        "release-script-bypass-mutation:tag-move expected failure" in failure
+        and "got accepted" in failure
+        for failure in mutation_failures
+    ):
+        detail = "; ".join(mutation_failures) if mutation_failures else "no mismatch"
+        failures.append(
+            f"{label} bypass regression fixture was not detected by exact execution: {detail}"
+        )
+    else:
+        count += 1
+    return count
 
 
 def check_validator_negative_fixtures(failures: list[str]) -> int:
@@ -1330,47 +2821,7 @@ def check_validator_negative_fixtures(failures: list[str]) -> int:
         else:
             failures.append(f"agent metadata negative fixture {name!r} was accepted")
 
-    workflow_prefix = "jobs:\n  guard:\n    runs-on: ubuntu-latest\n    steps:\n"
-    moving_action = "actions/checkout@v4"
-    action_fixtures = {
-        "dash-uses": f"{workflow_prefix}      - uses: {moving_action}",
-        "flow-mapping": f"{workflow_prefix}      - {{ uses: {moving_action} }}",
-        "quoted-key": f'{workflow_prefix}      - name: Guard\n        "uses": {moving_action}',
-        "multiline-key": f"{workflow_prefix}      - name: Guard\n        ? uses\n        : {moving_action}",
-        "moving-container": (
-            f"{workflow_prefix}      - name: Guard\n"
-            "        uses: docker://example.test/image:latest"
-        ),
-    }
-    for name, fixture in action_fixtures.items():
-        fixture_failures: list[str] = []
-        check_github_action_pins_in_text(fixture, f"fixture:{name}", fixture_failures)
-        if fixture_failures:
-            rejected += 1
-        else:
-            failures.append(f"Action pin negative fixture {name!r} was accepted")
-
-    sha = "a" * 40
-    positive_workflow = (
-        "jobs:\n  reusable:\n"
-        f"    uses: owner/repository/.github/workflows/check.yml@{sha} # v1\n"
-        "  guarded:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Guard\n"
-        f"        uses: actions/checkout@{sha} # v4\n"
-        "      - name: Literal script\n        run: |\n"
-        "          printf '%s\\n' 'uses: is script data'\n"
-    )
-    positive_failures: list[str] = []
-    positive_pins = check_github_action_pins_in_text(
-        positive_workflow,
-        "fixture:canonical-uses",
-        positive_failures,
-    )
-    if positive_failures or positive_pins != 2:
-        failures.append(
-            "canonical jobs.*.uses and steps[*].uses fixture did not yield exactly two pins"
-        )
-
-    return rejected + 1
+    return rejected + check_action_graph_fixtures(failures)
 
 
 GIT_OID_WIDTHS = {"sha1": 40, "sha256": 64}
@@ -1485,41 +2936,57 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     required_anchors = {
         "SKILL.md": (
             "references/safe-git-values-and-metadata.md",
+            "references/commit-construction.md",
+            "references/repository-and-remote-targets.md",
+            "references/post-consolidation-recovery.md",
             "non-executable Git configuration and environment boundary",
             "cleanupReady",
-            "separate exact cleanup authority",
+            "Cleanup requires separate exact authority",
         ),
         "references/safe-git-values-and-metadata.md": (
-            "argument vector",
+            "literal argument-vector element",
             "git check-ref-format",
-            "remote-helper syntax",
-            "protocol.allow",
             "target-controlled",
             "core.fsmonitor",
             "core.sshCommand",
             "credential helpers",
             "`GIT_*`",
             "installed Git version",
-            "fetch.bundleURI",
-            "Bypass pre-push hooks unless exact frozen hook identity and action are separately authorized",
             "no-follow",
             "linked worktree",
             "parent identity",
+            "require strict UTF-8",
+            "invalid/overlong/surrogate encodings",
+            "NUL, CR, LF, ASCII C0, DEL, C1",
+            "`U+2028`, `U+2029`",
+            "`Cc`, `Cf`, `Zl`, and `Zp`",
         ),
         "references/baseline-and-preflight.md": (">/dev/null 2>&1",),
         "references/repository-and-remote-targets.md": (
-            "non-visible local capture boundary",
+            "non-visible literal-argument capture",
+            "a configured remote explicitly named in the current request",
+            "`branch.<branch>.pushRemote`",
+            "`remote.pushDefault`",
+            "current `upstreamRemote`",
+            "`pushRemote != upstreamRemote`",
+            "`fetch.bundleURI`",
+            "Bypass pre-push hooks unless their exact frozen identity and action are separately authorized",
+            "<helper>::<address>",
+            "`protocol.allow=never`",
         ),
         "references/post-consolidation-recovery.md": (
             "cleanupReady",
-            "separately authorize both deletion",
+            "separate authority for both deletions",
             "exact repository",
-            "network-push or recovery authority never implies fetch",
+            "Push/recovery authority never implies fetch",
+            "Local-only consolidation persists the initial",
+            "then transition once to",
+            "Never overwrite or rebind a bound record",
         ),
         "references/consolidation-and-push.md": (
             "Network-push authority never authorizes it",
-            "Generic prune is outside this protocol",
-            "Do not delete the backup ref or active record unless",
+            "Generic prune needs separate exact authority",
+            "Delete no backup or active record without the separately authorized exact cleanup envelope",
         ),
     }
     for relative_path, anchors in required_anchors.items():
@@ -1552,12 +3019,12 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         (
             "## Exact Remote Refresh",
             "Freeze and validate `objectFormat`",
-            "The source-only refspec is exactly the validated `mergeRef`",
+            "source-only refspec is exactly validated `mergeRef`",
             refresh_command,
-            "Re-query `sourceRef` at the frozen target after fetch and require the same `sourceOid`",
+            "Re-query `sourceRef`, require the same `sourceOid`",
             "git -C <repo> update-ref --no-deref <upstream-tracking-ref> <source-oid> <old-tracking-oid>",
-            "The old value makes this compare-and-swap.",
-            "recompute `@{u}`, ahead/behind, cache comparison, and provenance",
+            "The old value is compare-and-swap.",
+            "recompute `@{u}`, divergence, cache, and provenance",
             push_command,
         ),
         failures,
@@ -1619,11 +3086,11 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     require_ordered_contract_anchors(
         skill_root / "references/repository-and-remote-targets.md",
         (
-            "For a direct history-preserving push",
+            "## Direct Submit Preflight",
             push_command,
             "the exact frozen pre-push hook identity and action",
-            "Verify every frozen target directly afterward",
-            "Push authority does not authorize a fetch",
+            "query every authorized target",
+            "Push authority never grants fetch",
         ),
         failures,
         "direct push closure and verification",
@@ -1647,6 +3114,129 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     ).read_text(encoding="utf-8")
     if checkpoint_text.count(branch_restore) != 1:
         failures.append("checkpoint persistence recovery must contain the exact no-deref branch restore once")
+
+    checkpoint_execution = (
+        skill_root / "references/checkpoint-execution.md"
+    ).read_text(encoding="utf-8")
+    checkpoint_commit_tree = (
+        "git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>"
+    )
+    checkpoint_branch_cas = (
+        "git -C <repo> update-ref --no-deref <branch-ref> "
+        "<candidate-commit-sha> <parent-sha>"
+    )
+    if checkpoint_execution.count(checkpoint_commit_tree) != 1:
+        failures.append(
+            "checkpoint execution must construct exactly one candidate from stagedTreeSha"
+        )
+    if checkpoint_execution.count(checkpoint_branch_cas) != 1:
+        failures.append(
+            "checkpoint execution must install exactly one candidate with branch compare-and-swap"
+        )
+    if re.search(
+        r"^git -C <repo> commit(?:\s|$)", checkpoint_execution, re.MULTILINE
+    ):
+        failures.append("checkpoint execution must never prescribe ordinary git commit")
+
+    push_binding_path = (
+        skill_root / "references/repository-and-remote-targets.md"
+    )
+    require_ordered_contract_anchors(
+        push_binding_path,
+        (
+            "a configured remote explicitly named in the current request",
+            "`branch.<branch>.pushRemote` when present",
+            "`remote.pushDefault` when present",
+            "current `upstreamRemote`",
+        ),
+        failures,
+        "effective push-remote precedence",
+    )
+    push_binding_text = push_binding_path.read_text(encoding="utf-8")
+    normalized_push_binding = " ".join(push_binding_text.split())
+    for anchor in (
+        "`upstreamRemote` comes only from `branch.<branch>.remote` and owns `@{u}` and refresh",
+        "Resolve effective `pushRemote` independently",
+        "Freeze `pushRemote`, resolution source, `mergeRef`, branch, and upstream identity separately",
+        "Refresh still uses `upstreamRemote`",
+        "`pushRemote != upstreamRemote`",
+    ):
+        if " ".join(anchor.split()) not in normalized_push_binding:
+            failures.append(
+                f"{display_path(push_binding_path)} is missing distinct push/upstream identity contract {anchor!r}"
+            )
+
+    provenance_binding_path = (
+        skill_root / "references/post-consolidation-recovery.md"
+    )
+    require_ordered_contract_anchors(
+        provenance_binding_path,
+        (
+            "Local-only consolidation persists the initial\n`pushTargetState.state == unbound`",
+            "may\nthen transition once to:",
+            '"pushTargetState": {\n    "state": "bound"',
+            "Never overwrite or rebind a bound record",
+        ),
+        failures,
+        "one-time push-target binding",
+    )
+    provenance_binding_text = provenance_binding_path.read_text(encoding="utf-8")
+    if provenance_binding_text.count('"state": "bound"') != 1:
+        failures.append("push-target binding must define exactly one canonical bound state")
+    if (
+        "`post-consolidation-recovery.md` owns the one-time\n`unbound` to `bound` transition"
+        not in checkpoint_text
+    ):
+        failures.append(
+            "checkpoint provenance must delegate the one-time unbound-to-bound transition"
+        )
+    if "retain `pushTargetState.state == unbound`" not in consolidated_push_text:
+        failures.append("local-only consolidation must retain unbound push-target state")
+
+    hostile_path = skill_root / "references/safe-git-values-and-metadata.md"
+    require_ordered_contract_anchors(
+        hostile_path,
+        (
+            "require strict UTF-8",
+            "invalid/overlong/surrogate encodings",
+            "NUL, CR, LF, ASCII C0",
+            "DEL, C1, `U+2028`, `U+2029`",
+            "`Cc`, `Cf`, `Zl`, and `Zp`",
+        ),
+        failures,
+        "hostile Git metadata scalar rejection",
+    )
+    if re.search(
+        r"git[^\n]*(?:log|show|for-each-ref)[^\n]*%s",
+        consolidated_push_text,
+        re.IGNORECASE,
+    ):
+        failures.append("consolidation must not expose a percent-s Git metadata path")
+
+    route_contracts = {
+        "SKILL.md": (
+            "references/safe-git-values-and-metadata.md",
+            "references/commit-construction.md",
+            "references/repository-and-remote-targets.md",
+            "references/post-consolidation-recovery.md",
+        ),
+        "references/commit-construction.md": (
+            "safe-git-values-and-metadata.md",
+        ),
+        "references/repository-and-remote-targets.md": (
+            "post-consolidation-recovery.md",
+        ),
+        "references/checkpoint-provenance.md": (
+            "post-consolidation-recovery.md",
+        ),
+    }
+    for relative_path, references in route_contracts.items():
+        route_text = (skill_root / relative_path).read_text(encoding="utf-8")
+        for reference in references:
+            if reference not in route_text:
+                failures.append(
+                    f"{display_path(skill_root / relative_path)} does not route to {reference!r}"
+                )
     if re.search(
         r"^git -C <repo> update-ref (?![^\n]*--no-deref(?:\s|$))[^\n]*<branch-ref>",
         traceable_text,
@@ -1936,6 +3526,19 @@ def check_skill_contracts(failures: list[str]) -> None:
         )
 
 
+class DuplicateJsonKeyError(ValueError):
+    """Raised when a protected JSON object repeats a key."""
+
+
+def reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise DuplicateJsonKeyError(f"duplicate JSON key {key!r}")
+        result[key] = value
+    return result
+
+
 def load_json(path: Path, failures: list[str]) -> dict[str, Any] | None:
     label = display_path(path)
     try:
@@ -1948,11 +3551,14 @@ def load_json(path: Path, failures: list[str]) -> dict[str, Any] | None:
         return None
 
     try:
-        value = json.loads(text)
+        value = json.loads(text, object_pairs_hook=reject_duplicate_json_keys)
     except json.JSONDecodeError as error:
         failures.append(
             f"invalid JSON in {label}:{error.lineno}:{error.colno}: {error.msg}"
         )
+        return None
+    except DuplicateJsonKeyError as error:
+        failures.append(f"invalid JSON in {label}: {error}")
         return None
 
     if not isinstance(value, dict):
@@ -2006,6 +3612,293 @@ def check_release_version_surfaces(failures: list[str]) -> None:
                     f"{display_path(path)} is missing current release anchor {anchor!r} "
                     f"derived from RELEASE_VERSION={RELEASE_VERSION!r}"
                 )
+
+
+def exact_json_object(
+    value: Any,
+    label: str,
+    expected_keys: frozenset[str],
+    failures: list[str],
+) -> dict[str, Any] | None:
+    if type(value) is not dict:
+        failures.append(f"{label} must be an object")
+        return None
+    actual_keys = set(value)
+    unknown = sorted(actual_keys - expected_keys)
+    missing = sorted(expected_keys - actual_keys)
+    if unknown:
+        failures.append(f"{label} contains unowned fields: {', '.join(unknown)}")
+    if missing:
+        failures.append(f"{label} is missing contract fields: {', '.join(missing)}")
+    return value
+
+
+def require_json_strings(
+    mapping: dict[str, Any],
+    fields: frozenset[str],
+    label: str,
+    failures: list[str],
+) -> None:
+    for field in sorted(fields):
+        if type(mapping.get(field)) is not str or not mapping[field]:
+            failures.append(f"{label}.{field} must be a non-empty string")
+
+
+def require_json_string_list(value: Any, label: str, failures: list[str]) -> None:
+    if type(value) is not list or not value:
+        failures.append(f"{label} must be a non-empty array")
+        return
+    if any(type(item) is not str or not item for item in value):
+        failures.append(f"{label} entries must be non-empty strings")
+
+
+def exact_single_plugin(
+    document: dict[str, Any],
+    label: str,
+    expected_keys: frozenset[str],
+    failures: list[str],
+) -> dict[str, Any] | None:
+    plugins = document.get("plugins")
+    if type(plugins) is not list or len(plugins) != 1:
+        failures.append(f"{label}.plugins must contain exactly one plugin object")
+        return None
+    return exact_json_object(plugins[0], f"{label}.plugins[0]", expected_keys, failures)
+
+
+def check_manifest_capability_schema(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> None:
+    """Reject every manifest capability not owned by Axiom's current package contract."""
+    codex_path = ".codex-plugin/plugin.json"
+    codex = documents.get(codex_path)
+    if codex is not None:
+        exact_json_object(codex, codex_path, CODEX_MANIFEST_KEYS, failures)
+        require_json_strings(
+            codex,
+            frozenset(
+                {
+                    "name",
+                    "version",
+                    "description",
+                    "homepage",
+                    "repository",
+                    "license",
+                    "skills",
+                    "hooks",
+                }
+            ),
+            codex_path,
+            failures,
+        )
+        author = exact_json_object(codex.get("author"), f"{codex_path}.author", AUTHOR_KEYS, failures)
+        if author is not None:
+            require_json_strings(author, AUTHOR_KEYS, f"{codex_path}.author", failures)
+        interface = exact_json_object(
+            codex.get("interface"), f"{codex_path}.interface", CODEX_INTERFACE_KEYS, failures
+        )
+        if interface is not None:
+            require_json_strings(
+                interface,
+                frozenset(CODEX_INTERFACE_KEYS - {"capabilities", "defaultPrompt"}),
+                f"{codex_path}.interface",
+                failures,
+            )
+            require_json_string_list(
+                interface.get("capabilities"), f"{codex_path}.interface.capabilities", failures
+            )
+            if interface.get("capabilities") != ["Interactive"]:
+                failures.append(
+                    f"{codex_path}.interface.capabilities must remain ['Interactive']"
+                )
+            require_json_string_list(
+                interface.get("defaultPrompt"), f"{codex_path}.interface.defaultPrompt", failures
+            )
+        require_json_string_list(codex.get("keywords"), f"{codex_path}.keywords", failures)
+
+    claude_path = ".claude-plugin/plugin.json"
+    claude = documents.get(claude_path)
+    if claude is not None:
+        exact_json_object(claude, claude_path, CLAUDE_MANIFEST_KEYS, failures)
+        require_json_strings(
+            claude,
+            frozenset(CLAUDE_MANIFEST_KEYS - {"author", "keywords"}),
+            claude_path,
+            failures,
+        )
+        author = exact_json_object(
+            claude.get("author"), f"{claude_path}.author", AUTHOR_KEYS, failures
+        )
+        if author is not None:
+            require_json_strings(author, AUTHOR_KEYS, f"{claude_path}.author", failures)
+        require_json_string_list(claude.get("keywords"), f"{claude_path}.keywords", failures)
+
+    codex_marketplace_path = ".agents/plugins/marketplace.json"
+    codex_marketplace = documents.get(codex_marketplace_path)
+    if codex_marketplace is not None:
+        exact_json_object(
+            codex_marketplace, codex_marketplace_path, CODEX_MARKETPLACE_KEYS, failures
+        )
+        require_json_strings(
+            codex_marketplace, frozenset({"name"}), codex_marketplace_path, failures
+        )
+        interface = exact_json_object(
+            codex_marketplace.get("interface"),
+            f"{codex_marketplace_path}.interface",
+            frozenset({"displayName"}),
+            failures,
+        )
+        if interface is not None:
+            require_json_strings(
+                interface,
+                frozenset({"displayName"}),
+                f"{codex_marketplace_path}.interface",
+                failures,
+            )
+        entry = exact_single_plugin(
+            codex_marketplace,
+            codex_marketplace_path,
+            CODEX_MARKETPLACE_PLUGIN_KEYS,
+            failures,
+        )
+        if entry is not None:
+            require_json_strings(
+                entry,
+                frozenset({"name", "category"}),
+                f"{codex_marketplace_path}.plugins[0]",
+                failures,
+            )
+            source = exact_json_object(
+                entry.get("source"),
+                f"{codex_marketplace_path}.plugins[0].source",
+                frozenset({"source", "path"}),
+                failures,
+            )
+            if source is not None:
+                require_json_strings(
+                    source,
+                    frozenset({"source", "path"}),
+                    f"{codex_marketplace_path}.plugins[0].source",
+                    failures,
+                )
+                if source != {"source": "local", "path": EXPECTED_PLUGIN_ROOT}:
+                    failures.append(
+                        f"{codex_marketplace_path}.plugins[0].source must remain the "
+                        "owned local plugin root"
+                    )
+            policy = exact_json_object(
+                entry.get("policy"),
+                f"{codex_marketplace_path}.plugins[0].policy",
+                frozenset(EXPECTED_CODEX_POLICY),
+                failures,
+            )
+            if policy is not None:
+                require_json_strings(
+                    policy,
+                    frozenset(EXPECTED_CODEX_POLICY),
+                    f"{codex_marketplace_path}.plugins[0].policy",
+                    failures,
+                )
+                if policy != EXPECTED_CODEX_POLICY:
+                    failures.append(
+                        f"{codex_marketplace_path}.plugins[0].policy must remain the "
+                        "owned install policy"
+                    )
+
+    claude_marketplace_path = ".claude-plugin/marketplace.json"
+    claude_marketplace = documents.get(claude_marketplace_path)
+    if claude_marketplace is not None:
+        exact_json_object(
+            claude_marketplace,
+            claude_marketplace_path,
+            CLAUDE_MARKETPLACE_KEYS,
+            failures,
+        )
+        require_json_strings(
+            claude_marketplace,
+            frozenset({"name", "description"}),
+            claude_marketplace_path,
+            failures,
+        )
+        owner = exact_json_object(
+            claude_marketplace.get("owner"),
+            f"{claude_marketplace_path}.owner",
+            AUTHOR_KEYS,
+            failures,
+        )
+        if owner is not None:
+            require_json_strings(
+                owner, AUTHOR_KEYS, f"{claude_marketplace_path}.owner", failures
+            )
+        entry = exact_single_plugin(
+            claude_marketplace,
+            claude_marketplace_path,
+            CLAUDE_MARKETPLACE_PLUGIN_KEYS,
+            failures,
+        )
+        if entry is not None:
+            require_json_strings(
+                entry,
+                frozenset({"name", "source", "category"}),
+                f"{claude_marketplace_path}.plugins[0]",
+                failures,
+            )
+            require_json_string_list(
+                entry.get("tags"),
+                f"{claude_marketplace_path}.plugins[0].tags",
+                failures,
+            )
+
+
+def check_manifest_schema_fixtures(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> int:
+    rejected = 0
+    required = {
+        ".codex-plugin/plugin.json",
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json",
+    }
+    if not required.issubset(documents):
+        failures.append("manifest schema fixtures require all four package documents")
+        return 0
+    fixtures: list[tuple[str, dict[str, dict[str, Any]], str]] = []
+
+    mcp_servers = json.loads(json.dumps(documents))
+    mcp_servers[".codex-plugin/plugin.json"]["mcpServers"] = {
+        "unowned": {"command": "sh"}
+    }
+    fixtures.append(("mcpServers", mcp_servers, "mcpServers"))
+
+    unknown_top = json.loads(json.dumps(documents))
+    unknown_top[".claude-plugin/plugin.json"]["commands"] = ["./commands/"]
+    fixtures.append(("unknown-top-level", unknown_top, "commands"))
+
+    unknown_nested = json.loads(json.dumps(documents))
+    unknown_nested[".codex-plugin/plugin.json"]["interface"]["network"] = True
+    fixtures.append(("unknown-nested-interface", unknown_nested, "network"))
+
+    unknown_source = json.loads(json.dumps(documents))
+    unknown_source[".agents/plugins/marketplace.json"]["plugins"][0]["source"][
+        "command"
+    ] = "sh"
+    fixtures.append(("unknown-nested-source", unknown_source, "command"))
+
+    for name, fixture, expected in fixtures:
+        fixture_failures: list[str] = []
+        check_manifest_capability_schema(fixture, fixture_failures)
+        if any(expected in failure for failure in fixture_failures):
+            rejected += 1
+        else:
+            failures.append(f"manifest schema negative fixture {name!r} was accepted")
+
+    positive_failures: list[str] = []
+    check_manifest_capability_schema(documents, positive_failures)
+    if positive_failures:
+        failures.append(
+            "checked-in manifest schema control failed: " + "; ".join(positive_failures)
+        )
+    return rejected + 1
 
 
 def check_manifest_versions(
@@ -2675,6 +4568,8 @@ def main() -> int:
         if document is not None:
             documents[relative_path] = document
 
+    check_manifest_capability_schema(documents, failures)
+    manifest_schema_fixture_count = check_manifest_schema_fixtures(documents, failures)
     check_manifest_versions(documents, failures)
     check_codex_interface(documents, failures)
     check_distribution_identity(documents, failures)
@@ -2683,7 +4578,11 @@ def main() -> int:
     check_exact_hook_shapes(documents, failures)
     check_documented_hook_commands(documents, failures)
     action_pin_count = check_github_action_pins(failures)
-    check_release_signature_workflow_contract(failures)
+    release_workflow_text = check_release_signature_workflow_contract(failures)
+    release_tag_fixture_count = check_release_script_runtime_contract(
+        release_workflow_text,
+        failures,
+    )
     check_readme_lifecycle_commands(failures)
     check_packaged_skills(failures)
     check_skill_contracts(failures)
@@ -2716,6 +4615,8 @@ def main() -> int:
         f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback gate fixtures, "
         f"{cross_route_contract_count} source-linked cross-route/resume contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
+        f"{manifest_schema_fixture_count} manifest schema fixtures, "
+        f"{release_tag_fixture_count} release-tag fixtures, "
         f"{action_pin_count} immutable action pins, hooks, and packaged skills."
     )
     return 0

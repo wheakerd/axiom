@@ -32,12 +32,15 @@ Initial schema:
   "branchRef": "refs/heads/<branch>",
   "branch": "<branch>",
   "upstream": "<remote>/<branch>",
-  "remote": "<branch-remote>",
+  "upstreamRemote": "<branch-upstream-remote>",
   "mergeRef": "refs/heads/<branch>",
   "baselineSha": "<upstream-sha>",
   "workflowId": "<utc-timestamp>-<head-prefix>",
   "checkpointShas": [],
   "adoptedShas": [],
+  "pushTargetState": {
+    "state": "unbound"
+  },
   "createdAt": "<utc-iso8601>",
   "updatedAt": "<utc-iso8601>"
 }
@@ -58,18 +61,24 @@ Before each workflow-created checkpoint, atomically add:
     "writeSetDigest": "<digest-of-sorted-raw-nul-delimited-path-set>",
     "digestAlgorithm": "<algorithm>",
     "pathCount": 0,
-    "stagedTreeSha": "<added-after-staging>"
+    "stagedTreeSha": "<added-after-staging>",
+    "candidateCommitSha": "<added-before-branch-update>",
+    "messageDigest": "<added-with-candidate>",
+    "messageDigestAlgorithm": "<added-with-candidate>"
   }
 }
 ```
 
-Use the actual `pathCount`; omit `stagedTreeSha` until staging is complete,
-then add the exact `git write-tree` result before commit. This is recovery
-evidence, not authority to widen scope. Remove it atomically when appending the
-verified checkpoint SHA.
+Use the actual `pathCount`; omit fields whose evidence does not yet exist. Add
+the exact `git write-tree` result after staging. After `commit-tree` candidate
+verification, atomically add its SHA and the digest of the exact message bytes
+before branch mutation. This is recovery evidence, not authority to widen
+scope. Remove it atomically when appending the verified checkpoint SHA.
 
-After consolidation, add `oldHead`, `finalTree`, `backupRef`, `newCommit`, and
-authorized push-target fingerprints. Cleanup state is owned by
+After consolidation, add `oldHead`, `finalTree`, `backupRef`, and `newCommit`;
+preserve `pushTargetState` without inventing target inventory. Under later or
+combined push authority, `post-consolidation-recovery.md` owns the one-time
+`unbound` to `bound` transition. Cleanup state is owned by
 `post-consolidation-recovery.md` and requires independent exact authority.
 
 ## Begin And Record
@@ -83,16 +92,18 @@ preflight succeeds:
    ordered full-SHA list under `checkpoint-execution.md`; then seed both arrays
    with that list.
 2. Do not overwrite an existing record. Without `newCommit`, resume only when
-   all identity and baseline fields match and `checkpointShas` is an exact
-   ordered prefix of the current `@{u}..HEAD` list.
+   all identity and baseline fields match, `pushTargetState.state` is
+   `unbound`, and `checkpointShas` is an exact ordered prefix of the current
+   `@{u}..HEAD` list.
 3. A record with `newCommit` is post-consolidation recovery state. Do not create
    or append checkpoints and do not apply the normal consolidation gate.
 4. Before writing each `pendingCheckpoint`, require the complete staged-change
    set to be empty and all gates in `checkpoint-execution.md` to pass. Resolve
    an existing pending object only through its recovery or bounded abort gate.
-5. After each workflow-created checkpoint commit, require `HEAD` to equal the
-   new SHA, require its body to contain `Axiom-checkpoint: true`, then atomically
-   append only that SHA and remove `pendingCheckpoint` in the same replacement.
+5. After checkpoint branch CAS, require `HEAD` and `branchRef` to equal recorded
+   `candidateCommitSha` and repeat the exact parent, tree, message-digest,
+   marker, and path proofs before atomically appending only that SHA and
+   removing `pendingCheckpoint` in the same replacement.
 6. Report the record path, workflow id, and ordered SHA list after every update.
 
 Stop and report a stale record instead of replacing it.
@@ -102,21 +113,30 @@ Stop and report a stale record instead of replacing it.
 Before creating a backup ref or final commit:
 
 1. Enumerate `git -C <repo> rev-list --reverse '@{u}'..HEAD`.
-2. Require matching `repo`, `branchRef`, `branch`, `upstream`, `remote`,
-   `mergeRef`, and `baselineSha` fields.
+2. Require matching `repo`, `branchRef`, `branch`, `upstream`,
+   `upstreamRemote`, `mergeRef`, and `baselineSha` fields. Require
+   `pushTargetState.state == unbound`; target binding occurs only after a
+   recoverable `newCommit` is persisted.
 3. Require `checkpointShas` to exactly equal the enumerated ordered list.
    Reject missing, extra, reordered, malformed, or duplicate SHAs.
 4. Require `adoptedShas`, when present, to be an ordered, duplicate-free subset
    of `checkpointShas`; require recorded exact full-SHA authorization for every
    entry. Initial existing-commit adoption must be the matching prefix.
-5. Independently require every selected commit not present in `adoptedShas` to
-   contain `Axiom-checkpoint: true`.
+5. Independently require every selected commit outside `adoptedShas` to pass
+   the exact safe marker gate in `safe-git-values-and-metadata.md`.
 
 Stop on any mismatch. Do not infer authorization from a marker, timestamp,
 author, branch name, or cache entry. Adoption requires a new explicit
 confirmation naming the exact ordered full-SHA list before record creation. It
 never authorizes a merge, already-pushed commit, or SHA outside refreshed
 `@{u}..HEAD`.
+
+For a pre-consolidation legacy record with `remote` but no `upstreamRemote`,
+atomically migrate only when `remote` exactly equals the current upstream
+remote, no push-target fields exist, and every other normal gate passes; add an
+`unbound` state and never infer push identity. A post-consolidation legacy
+record or loose target fingerprint list lacks the one-time binding proof and
+requires explicit manual recovery rather than automatic migration.
 
 ## Atomic Persistence Failure
 
@@ -140,4 +160,5 @@ Resume any active record with `newCommit` only through
 ## References
 
 - `checkpoint-execution.md`
+- `safe-git-values-and-metadata.md`
 - `post-consolidation-recovery.md`
