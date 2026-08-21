@@ -156,8 +156,8 @@ fresh-host record for that exact release with:
 
 ```bash
 python3 scripts/check-compatibility-evidence.py \
-  --record axiom-v0.7.6-compatibility.json \
-  --expected-tag v0.7.6 \
+  --record axiom-v0.7.7-compatibility.json \
+  --expected-tag v0.7.7 \
   --expected-commit <40-character-commit>
 ```
 

@@ -17,7 +17,9 @@ silently broaden what the user authorized.
 | `hooks/claude-hooks.json` | Claude Code-specific session and compaction hooks |
 | `README.md` and `docs/` | Public onboarding, behavior, trust, and release documentation |
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
-| `scripts/` and `.github/workflows/` | Repository validation; not installed runtime behavior |
+| `axiom_validation/` | Standard-library publication policy modules; not installed runtime behavior |
+| `tests/` | Focused unit tests and isolated policy fixtures; not installed runtime behavior |
+| `scripts/` and `.github/workflows/` | Stable validation entrypoints and CI wiring; not installed runtime behavior |
 
 The direct children of `skills/` that contain a `SKILL.md` are Axiom's public
 routes. A route may own supporting `references/` and `agents/` resources, but
@@ -107,12 +109,20 @@ Run checks from the repository root and record the exact commands and outcomes:
 python3 scripts/check-distribution-drift.py
 python3 scripts/check-compatibility-evidence.py --self-test
 python3 scripts/check-publication.py
+python3 -m unittest discover -s tests -p 'test_*.py'
 git diff --check
 ```
 
 Also run targeted checks required by the files you changed. Read the final
 diff, confirm both manifest versions still match, and inspect
 `git status --short` for unrelated paths.
+
+`scripts/check-publication.py` is the stable aggregate entrypoint. Production
+parsers and policy gates live in `axiom_validation/`; deterministic mutation
+and event fixtures live in `tests/fixtures/`; focused `unittest` modules own
+domain-local assertions. Keep fixture names in failure messages, and let the
+aggregate reporter add the policy domain. Do not move fixture payloads back
+into production modules or add a third-party test/runtime dependency.
 
 Compatibility records must validate against `evidence/schema-v1.json`, bind to
 an already existing immutable tag and commit, preserve every not-run or

@@ -108,7 +108,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.7.6` is `STATIC-ONLY`: immutable v0.7.4 observations are preserved but are
+`0.7.7` is `STATIC-ONLY`: immutable v0.7.4 observations are preserved but are
 not carried forward as a current-release host pass.
 
 ## Deliberate Non-Goals
@@ -312,23 +312,27 @@ and report an unavailable validator as unavailable, not passed.
   routing/compatibility reporting paths.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.6 release notes](docs/releases/v0.7.6.md):
+- [Changelog](CHANGELOG.md) and [v0.7.7 release notes](docs/releases/v0.7.7.md):
   release history and version-specific evidence.
 
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing shared skills, platform
-wrappers, hooks, or public claims. The focused distribution check is:
+wrappers, hooks, or public claims. The focused distribution and publication
+checks are:
 
 ```bash
 python3 scripts/check-distribution-drift.py
 python3 scripts/check-compatibility-evidence.py --self-test
+python3 scripts/check-publication.py
+python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-It compares the skill tree with both manifests, both marketplace wrappers, and
-the seven-item `Shared skills` list above, then validates version-bound host
-evidence and the current static-only boundary. These are contributor and CI
-checks, not installed runtime dependencies.
+They compare the skill tree with both manifests, both marketplace wrappers,
+and the seven-item `Shared skills` list above; validate version-bound host
+evidence and the current static-only boundary; and exercise each publication
+policy domain with standard-library-only focused tests. These are contributor
+and CI checks, not installed runtime dependencies.
 
 Pull requests to `main`, including fork contributions, run these read-only
 distribution and publication checks on the proposed merge tree. The workflow
