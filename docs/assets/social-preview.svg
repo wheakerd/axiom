@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Axiom workflow guardrails social preview</title>
+  <desc id="description">A dark static card reading Axiom, Workflow guardrails for Codex and Claude Code, and Scope, Authority, Evidence, Rollback.</desc>
+  <rect width="1280" height="640" fill="#111827"/>
+  <path d="M0 0H1280V12H0Z" fill="#5EEAD4"/>
+  <path d="M0 628H1280V640H0Z" fill="#38BDF8"/>
+
+  <g opacity="0.14" stroke="#E5E7EB" stroke-width="1">
+    <path d="M80 80H1200"/>
+    <path d="M80 560H1200"/>
+    <path d="M80 80V560"/>
+    <path d="M1200 80V560"/>
+  </g>
+
+  <g transform="translate(905 143)">
+    <path d="M24 177H271M24 177L95 76M24 177L104 280M95 76L271 177M104 280L271 177" fill="none" stroke="#94A3B8" stroke-width="4" opacity="0.55"/>
+    <circle cx="24" cy="177" r="19" fill="#5EEAD4"/>
+    <circle cx="95" cy="76" r="19" fill="#38BDF8"/>
+    <circle cx="104" cy="280" r="19" fill="#A78BFA"/>
+    <circle cx="271" cy="177" r="19" fill="#FBBF24"/>
+    <circle cx="24" cy="177" r="7" fill="#111827"/>
+    <circle cx="95" cy="76" r="7" fill="#111827"/>
+    <circle cx="104" cy="280" r="7" fill="#111827"/>
+    <circle cx="271" cy="177" r="7" fill="#111827"/>
+  </g>
+
+  <g fill="#F8FAFC" font-family="Noto Sans, DejaVu Sans, sans-serif">
+    <text x="92" y="150" font-size="32" font-weight="700" letter-spacing="9">AXIOM</text>
+    <text x="88" y="274" font-size="60" font-weight="700">Workflow guardrails for</text>
+    <text x="88" y="350" font-size="60" font-weight="700">Codex &amp; Claude Code</text>
+  </g>
+
+  <rect x="90" y="412" width="696" height="2" fill="#334155"/>
+  <text x="90" y="474" fill="#CBD5E1" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="27" font-weight="500" letter-spacing="0.5">Scope  ·  Authority  ·  Evidence  ·  Rollback</text>
+  <text x="91" y="530" fill="#94A3B8" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="20">Think before AI thinks.</text>
+</svg>
