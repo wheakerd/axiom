@@ -60,14 +60,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.6, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.6 host-pass
+For v0.7.7, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.7 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.6.
+forward to v0.7.7.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -83,6 +83,19 @@ claim.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.7` reports:
+
+- the stable publication command delegates to independently testable manifest,
+  hook, Markdown, YAML, routing, Git, Action-graph, release, and repository
+  policy modules;
+- production policy code and deterministic fixtures are separated, while the
+  aggregate output and exit-code contract remain stable;
+- release identity is derived from the synchronized manifests and release-note
+  history is discovered from `docs/releases/`; and
+- v0.7.7 remains `STATIC-ONLY`: no fresh Codex host lifecycle was run, every
+  Claude Code case remains `UNAVAILABLE` without an authenticated subscription,
+  and immutable v0.7.4 observations remain prior-release evidence only.
 
 The Git record for `v0.7.6` reports:
 
@@ -348,7 +361,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.6 release notes](releases/v0.7.6.md),
+See the durable [v0.7.7 release notes](releases/v0.7.7.md),
+[v0.7.6 release notes](releases/v0.7.6.md),
 [v0.7.5 release notes](releases/v0.7.5.md),
 [v0.7.4 release notes](releases/v0.7.4.md),
 [v0.7.3 release notes](releases/v0.7.3.md),

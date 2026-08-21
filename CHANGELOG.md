@@ -5,6 +5,32 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.7 - 2026-08-21
+
+### Changed
+
+- Split the publication validator into standard-library policy modules for
+  manifests, hooks, Markdown, strict YAML, routing, traceable Git, GitHub
+  Actions, release provenance, and repository layout.
+- Moved deterministic event and mutation fixtures into `tests/fixtures/` and
+  added focused `unittest` coverage for each major policy domain.
+- Kept `python3 scripts/check-publication.py` as the stable aggregate command,
+  added domain ownership to failure output, derived the release version from
+  the synchronized manifests, and discovered release notes from
+  `docs/releases/`.
+
+### Validation
+
+- Preserved the valid-tree aggregate output and exit behavior, including all
+  existing mutation-policy reasons, without adding an installed or third-party
+  runtime dependency.
+- Kept the aggregate runtime at the measured 0.26-second baseline before the
+  version-document update; the final candidate runtime is recorded in the
+  release notes.
+
+See [the v0.7.7 release notes](docs/releases/v0.7.7.md) for module ownership,
+focused test coverage, runtime evidence, and known host-validation limits.
+
 ## 0.7.6 - 2026-08-21
 
 ### Fixed
