@@ -5,6 +5,13 @@ submission, post, invitation, or message requires its own authorization. The
 plan uses repository data and manual report counts only; Axiom will not add
 telemetry.
 
+Current state, checked 2026-08-21: the productization pull request is merged;
+the repository description, 12 Topics, Discussions categories and seed posts,
+and private vulnerability reporting are live. GitHub accepted the social-preview
+image association, but the external image endpoint still requires successful
+verification. These actions completed ahead of the calendar below; remaining
+actions keep their evidence and authorization gates.
+
 ## Days 1-7: Product Readiness - August 21-27
 
 ### August 21

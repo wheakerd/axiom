@@ -19,16 +19,13 @@ Do not publish exploitable details, secrets, proof-of-concept payloads, or
 sensitive repository data in an Issue, Discussion, pull request, or public
 comment.
 
-GitHub private vulnerability reporting was not enabled when this policy was
-checked on 2026-08-21. Until the repository exposes a **Report a vulnerability** action on
-its Security page, there is no project-approved private intake channel that an
-external reporter can rely on. If necessary, open a minimal public Issue that
-contains no technical details and asks the maintainer to establish a private
-channel. Keep the existence, affected surface, and exploit details out of that
-Issue.
+GitHub private vulnerability reporting was verified as enabled on 2026-08-21.
+Use the repository's
+[Report a vulnerability](https://github.com/wheakerd/axiom/security/advisories/new)
+form to create a private security advisory. Do not open a public placeholder
+Issue for a vulnerability.
 
-When private vulnerability reporting becomes available, use the repository's
-Security page and include:
+Include:
 
 - the affected Axiom version, tag, or immutable commit;
 - the affected host and version;

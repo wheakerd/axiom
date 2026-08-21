@@ -1,9 +1,7 @@
 # GitHub Discussions Plan
 
-Status checked: 2026-08-21. GitHub Discussions was disabled for the repository
-at that time. Enabling it,
-creating categories, and publishing each seed discussion are separate remote
-actions. The material below is prepared but not published.
+Status checked: 2026-08-21. GitHub Discussions is enabled. The three categories
+below are live, and each seed discussion was published once by `wheakerd`.
 
 ## Categories
 
@@ -20,6 +18,8 @@ evidence-backed need.
 ## Seed 1: Report your first fresh-session Axiom test
 
 Category: Compatibility Reports
+
+Published: [Discussion #18](https://github.com/wheakerd/axiom/discussions/18)
 
 ### Body
 
@@ -46,6 +46,8 @@ observations.
 
 Category: Routing Cases
 
+Published: [Discussion #19](https://github.com/wheakerd/axiom/discussions/19)
+
 ### Body
 
 Which smallest sanitized request caused Axiom to select a route when it should
@@ -67,6 +69,8 @@ failure.
 
 Category: Ideas and Design
 
+Published: [Discussion #20](https://github.com/wheakerd/axiom/discussions/20)
+
 ### Body
 
 Axiom should add a route only when a distinct high-impact workflow needs its
@@ -87,13 +91,14 @@ safety." Feature proposals can use the existing
 [feature-request form](https://github.com/wheakerd/axiom/issues/new?template=feature_request.yml)
 after the problem boundary is clear.
 
-## Enablement And Verification
+## Live Verification
 
 Follow GitHub's current
 [Discussions enablement](https://docs.github.com/en/discussions/quickstart)
 and
 [category management](https://docs.github.com/en/discussions/managing-discussions-for-your-community/managing-categories-for-discussions)
-documentation. After authorization, verify the repository exposes the
-Discussions tab, the three category names and formats match this plan, and each
-seed appears once in the intended category. A created draft or accepted API
-request is not proof of public visibility.
+documentation. On 2026-08-21, the repository exposed the Discussions tab,
+GitHub GraphQL returned exactly the three category names and formats in this
+plan, and Discussions #18, #19, and #20 were publicly readable once in their
+intended categories. Future category or seed changes remain separate remote
+actions and require fresh state verification.
