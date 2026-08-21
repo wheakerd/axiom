@@ -1,9 +1,8 @@
 name: Release signature guard
 
 on:
-  pull_request:
-    branches:
-      - main
+  # Pull requests run the read-only distribution workflow. This workflow owns
+  # provenance only after protected history or a release ref changes.
   push:
     branches:
       - main
@@ -153,24 +152,7 @@ jobs:
             let targetCommit;
             let targetTagName = null;
             let targetMustDescendFromDefault = false;
-            if (context.eventName === "pull_request") {
-              const pullRequest = context.payload.pull_request;
-              if (pullRequest?.base?.ref !== defaultBranch) {
-                core.setFailed(
-                  `Release pull requests must target ${defaultRef}.`,
-                );
-                return;
-              }
-              if (pullRequest?.head?.repo?.full_name !== `${owner}/${repo}`) {
-                core.setFailed(
-                  "Release pull requests must use a branch in this repository.",
-                );
-                return;
-              }
-              targetRef = `pull request #${pullRequest.number} head`;
-              targetCommit = pullRequest.head.sha;
-              targetMustDescendFromDefault = true;
-            } else if (context.eventName === "release") {
+            if (context.eventName === "release") {
               const tagName = context.payload.release?.tag_name;
               if (releaseTagVersion(tagName) === null) {
                 core.setFailed("Published releases must use one exact strict SemVer tag.");
@@ -178,6 +160,12 @@ jobs:
               }
               targetTagName = tagName;
               targetRef = `refs/tags/${tagName}`;
+              if (context.ref !== targetRef) {
+                core.setFailed(
+                  `GitHub Release tag ${targetRef} does not match event ref ${context.ref}.`,
+                );
+                return;
+              }
               targetCommit = await peelRefToCommit(targetRef);
             } else if (context.eventName === "push") {
               if (context.ref === defaultRef) {

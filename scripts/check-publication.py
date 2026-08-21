@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.7.5"
+RELEASE_VERSION = "0.7.6"
 CURRENT_RELEASE_NOTES = f"docs/releases/v{RELEASE_VERSION}.md"
 
 REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
@@ -48,6 +48,8 @@ REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
     "docs/releases/v0.7.1.md",
     "docs/releases/v0.7.2.md",
     "docs/releases/v0.7.3.md",
+    "docs/releases/v0.7.4.md",
+    "docs/releases/v0.7.5.md",
     CURRENT_RELEASE_NOTES,
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -2108,6 +2110,230 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
     return rejected + 1
 
 
+def check_distribution_workflow_contract(
+    failures: list[str],
+) -> dict[str, Any] | None:
+    path = REPOSITORY_ROOT / ".github" / "workflows" / "distribution-drift.yml"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(path)}: {error}")
+        return None
+
+    label = display_path(path)
+    try:
+        document = parse_canonical_yaml_document(text, label)
+    except CanonicalYamlError as error:
+        failures.append(str(error))
+        return None
+
+    def scalar(value: Any) -> str | None:
+        return value.value if isinstance(value, CanonicalYamlScalar) else None
+
+    def scalar_values(value: Any) -> list[str] | None:
+        if not isinstance(value, list) or any(
+            not isinstance(item, CanonicalYamlScalar) for item in value
+        ):
+            return None
+        return [item.value for item in value]
+
+    if set(document) != {"name", "on", "permissions", "jobs"}:
+        failures.append(f"{label} must contain only name, on, permissions, and jobs")
+    if scalar(document.get("name")) != "Distribution and publication guards":
+        failures.append(f"{label} must keep its exact public workflow name")
+
+    triggers = document.get("on")
+    if not isinstance(triggers, dict) or set(triggers) != {
+        "pull_request",
+        "push",
+        "workflow_dispatch",
+    }:
+        failures.append(
+            f"{label} must structurally declare only pull_request, push, and "
+            "workflow_dispatch triggers"
+        )
+    else:
+        pull_request = triggers.get("pull_request")
+        if not isinstance(pull_request, dict) or scalar_values(
+            pull_request.get("branches")
+        ) != ["main"]:
+            failures.append(f"{label} pull_request trigger must target only main")
+        for event_name in ("push", "workflow_dispatch"):
+            event = triggers.get(event_name)
+            if not isinstance(event, CanonicalYamlScalar) or event.value:
+                failures.append(f"{label} {event_name} trigger must not accept filters")
+
+    permissions = document.get("permissions")
+    if not isinstance(permissions, dict) or set(permissions) != {"contents"}:
+        failures.append(f"{label} must grant only the contents permission")
+    elif scalar(permissions.get("contents")) != "read":
+        failures.append(f"{label} contents permission must be read-only")
+
+    jobs = document.get("jobs")
+    job = jobs.get("repository-guards") if isinstance(jobs, dict) else None
+    if not isinstance(jobs, dict) or set(jobs) != {"repository-guards"}:
+        failures.append(f"{label} must declare only the repository-guards job")
+    if not isinstance(job, dict) or set(job) != {
+        "runs-on",
+        "timeout-minutes",
+        "steps",
+    }:
+        failures.append(
+            f"{label} repository-guards must contain only runner, timeout, and steps"
+        )
+    elif (
+        scalar(job.get("runs-on")) != "ubuntu-latest"
+        or scalar(job.get("timeout-minutes")) != "5"
+    ):
+        failures.append(f"{label} repository-guards runner or timeout changed")
+
+    steps = job.get("steps") if isinstance(job, dict) else None
+    if not isinstance(steps, list) or len(steps) != 3 or any(
+        not isinstance(step, dict) for step in steps
+    ):
+        failures.append(f"{label} must contain exactly three canonical validation steps")
+    else:
+        checkout, distribution, publication = steps
+        checkout_with = checkout.get("with")
+        if (
+            set(checkout) != {"name", "uses", "with"}
+            or scalar(checkout.get("name")) != "Check out repository"
+            or scalar(checkout.get("uses"))
+            != "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803"
+            or not isinstance(checkout_with, dict)
+            or set(checkout_with) != {"persist-credentials"}
+            or scalar(checkout_with.get("persist-credentials")) != "false"
+        ):
+            failures.append(
+                f"{label} checkout must remain immutable and must not persist credentials"
+            )
+        expected_commands = (
+            (
+                distribution,
+                "Check distribution agreement",
+                "python3 scripts/check-distribution-drift.py",
+            ),
+            (
+                publication,
+                "Check publication invariants",
+                "python3 scripts/check-publication.py",
+            ),
+        )
+        for step, expected_name, expected_command in expected_commands:
+            if (
+                set(step) != {"name", "run"}
+                or scalar(step.get("name")) != expected_name
+                or scalar(step.get("run")) != expected_command
+            ):
+                failures.append(
+                    f"{label} must run exact read-only validator step {expected_name!r}"
+                )
+
+    for forbidden in (
+        "pull_request_target",
+        "${{ secrets.",
+        "${{ github.token",
+        "GITHUB_TOKEN",
+    ):
+        if forbidden in text:
+            failures.append(f"{label} exposes forbidden pull-request surface {forbidden!r}")
+    return document
+
+
+def check_pull_request_validation_fixtures(
+    distribution_document: dict[str, Any] | None,
+    release_workflow_text: str | None,
+    documents: dict[str, dict[str, Any]],
+    failures: list[str],
+) -> int:
+    label = "pull-request validation event graph"
+    if distribution_document is None or release_workflow_text is None:
+        failures.append(f"{label} could not be constructed from both workflows")
+        return 0
+    try:
+        release_document = parse_canonical_yaml_document(
+            release_workflow_text,
+            ".github/workflows/release-signature-guard.yml",
+        )
+    except CanonicalYamlError as error:
+        failures.append(str(error))
+        return 0
+
+    distribution_triggers = distribution_document.get("on")
+    release_triggers = release_document.get("on")
+    distribution_events = (
+        set(distribution_triggers) if isinstance(distribution_triggers, dict) else set()
+    )
+    release_events = set(release_triggers) if isinstance(release_triggers, dict) else set()
+    pull_request = (
+        distribution_triggers.get("pull_request")
+        if isinstance(distribution_triggers, dict)
+        else None
+    )
+    pull_request_branches = (
+        {
+            item.value
+            for item in pull_request.get("branches", [])
+            if isinstance(item, CanonicalYamlScalar)
+        }
+        if isinstance(pull_request, dict)
+        else set()
+    )
+    scenarios = (
+        {
+            "name": "same-repository-unsigned-valid",
+            "base": "main",
+            "headRepository": "wheakerd/axiom",
+            "signed": False,
+            "valid": True,
+        },
+        {
+            "name": "fork-unsigned-valid",
+            "base": "main",
+            "headRepository": "contributor/axiom",
+            "signed": False,
+            "valid": True,
+        },
+        {
+            "name": "fork-manifest-version-violation",
+            "base": "main",
+            "headRepository": "contributor/axiom",
+            "signed": False,
+            "valid": False,
+        },
+    )
+    for scenario in scenarios:
+        name = scenario["name"]
+        static_scheduled = (
+            "pull_request" in distribution_events
+            and scenario["base"] in pull_request_branches
+        )
+        provenance_scheduled = "pull_request" in release_events
+        if not static_scheduled:
+            failures.append(f"{label}:{name} did not schedule static validation")
+        if provenance_scheduled:
+            failures.append(f"{label}:{name} incorrectly scheduled release provenance")
+
+        fixture_documents = json.loads(json.dumps(documents))
+        expected_valid = bool(scenario["valid"])
+        if not expected_valid:
+            manifest = fixture_documents.get(".claude-plugin/plugin.json")
+            if not isinstance(manifest, dict):
+                failures.append(f"{label}:{name} could not construct the invalid fixture")
+                continue
+            manifest["version"] = "9.9.9"
+        fixture_failures: list[str] = []
+        check_manifest_versions(fixture_documents, fixture_failures)
+        observed_valid = not fixture_failures
+        if observed_valid != expected_valid:
+            detail = "; ".join(fixture_failures) if fixture_failures else "accepted"
+            failures.append(
+                f"{label}:{name} publication result was {detail}; "
+                f"expected {'pass' if expected_valid else 'rejection'}"
+            )
+    return len(scenarios)
+
+
 def check_release_signature_workflow_contract(failures: list[str]) -> str | None:
     path = REPOSITORY_ROOT / ".github" / "workflows" / "release-signature-guard.yml"
     try:
@@ -2125,17 +2351,15 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
 
     triggers = document.get("on")
     if not isinstance(triggers, dict) or set(triggers) != {
-        "pull_request",
         "push",
         "release",
         "workflow_dispatch",
     }:
         failures.append(
-            f"{label} must structurally declare only pull_request, push, release, and "
-            "workflow_dispatch triggers"
+            f"{label} must structurally declare only push, release, and workflow_dispatch "
+            "triggers"
         )
     else:
-        pull_request = triggers.get("pull_request")
         push = triggers.get("push")
         release = triggers.get("release")
 
@@ -2146,10 +2370,6 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
                 return None
             return [item.value for item in value]
 
-        if not isinstance(pull_request, dict) or scalar_values(
-            pull_request.get("branches")
-        ) != ["main"]:
-            failures.append(f"{label} pull_request trigger must target only main")
         if (
             not isinstance(push, dict)
             or scalar_values(push.get("branches")) != ["main"]
@@ -2190,11 +2410,10 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "versions[0] !== versions[1]",
             "async function peelRefToCommit(qualifiedRef, expectedObjectSha = null)",
             "object.sha !== expectedObjectSha",
-            'context.eventName === "pull_request"',
-            "pullRequest?.head?.repo?.full_name",
-            "targetCommit = pullRequest.head.sha;",
             "context.payload.release?.tag_name",
             "releaseTagVersion(tagName) === null",
+            "context.ref !== targetRef",
+            "GitHub Release tag ${targetRef} does not match event ref ${context.ref}.",
             "targetCommit = await peelRefToCommit(targetRef);",
             "context.ref === defaultRef",
             'context.ref.startsWith("refs/tags/")',
@@ -2227,6 +2446,16 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     for weak_pattern in ("/^v[0-9]/", "/^refs\\/tags\\/v[0-9]/"):
         if weak_pattern in text:
             failures.append(f"{label} retains weak release-tag matcher {weak_pattern!r}")
+    for removed_pull_request_gate in (
+        'context.eventName === "pull_request"',
+        "pullRequest?.head?.repo?.full_name",
+        "targetCommit = pullRequest.head.sha;",
+    ):
+        if removed_pull_request_gate in text:
+            failures.append(
+                f"{label} still applies release provenance to pull requests via "
+                f"{removed_pull_request_gate!r}"
+            )
     return text
 
 
@@ -2333,10 +2562,13 @@ const github = Object.freeze({
       },
       async compareCommitsWithBasehead({ basehead }) {
         const base = String(basehead).split("...")[0];
+        const configured = __scenario.comparison;
         return {
           data: {
-            merge_base_commit: { sha: base },
-            status: "ahead",
+            merge_base_commit: {
+              sha: configured ? configured.mergeBaseSha : base,
+            },
+            status: configured ? configured.status : "ahead",
           },
         };
       },
@@ -2364,7 +2596,7 @@ const github = Object.freeze({
       repository: {
         object: {
           oid: variables.oid,
-          signature: {
+          signature: __scenario.signature || {
             isValid: true,
             state: "VALID",
             wasSignedByGitHub: true,
@@ -2427,10 +2659,13 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
     null_sha = "0" * 40
     main_sha = "1" * 40
     tag_sha = "2" * 40
-    pull_request_sha = "3" * 40
-    release_branch_sha = "4" * 40
-    old_tag_sha = "5" * 40
+    release_branch_sha = "3" * 40
+    old_tag_sha = "4" * 40
+    outside_history_sha = "5" * 40
     repository = {"owner": "wheakerd", "repo": "axiom"}
+    release_tag = f"v{RELEASE_VERSION}"
+    major, minor, patch = RELEASE_VERSION.split(".")
+    mismatched_tag = f"v{major}.{minor}.{int(patch) + 1}"
 
     def fixture(
         name: str,
@@ -2440,6 +2675,8 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         *,
         target_ref: str | None = None,
         target_sha: str | None = None,
+        comparison: dict[str, str] | None = None,
+        signature: dict[str, Any] | None = None,
         expected_failure: str | None = None,
     ) -> dict[str, Any]:
         refs: dict[str, dict[str, str]] = {
@@ -2457,6 +2694,8 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             },
             "refs": refs,
             "packageVersion": RELEASE_VERSION,
+            "comparison": comparison,
+            "signature": signature,
             "expectedFailure": expected_failure,
         }
 
@@ -2469,6 +2708,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         created: bool,
         deleted: bool,
         forced: bool,
+        comparison: dict[str, str] | None = None,
         expected_failure: str | None,
     ) -> dict[str, Any]:
         tag_ref = f"refs/tags/{tag_name}"
@@ -2485,6 +2725,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             },
             target_ref=tag_ref,
             target_sha=after,
+            comparison=comparison,
             expected_failure=expected_failure,
         )
 
@@ -2492,19 +2733,11 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
     strict_tag_failure = "not one exact strict SemVer tag"
     return (
         fixture(
-            "pull-request",
+            "pull-request-provenance-rejected",
             "pull_request",
             "refs/pull/7/merge",
-            {
-                "pull_request": {
-                    "number": 7,
-                    "base": {"ref": "main"},
-                    "head": {
-                        "repo": {"full_name": "wheakerd/axiom"},
-                        "sha": pull_request_sha,
-                    },
-                }
-            },
+            {},
+            expected_failure="Unsupported event pull_request.",
         ),
         fixture(
             "main-push",
@@ -2513,12 +2746,40 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             {"after": main_sha},
         ),
         fixture(
+            "main-push-unsigned",
+            "push",
+            "refs/heads/main",
+            {"after": main_sha},
+            signature={
+                "isValid": False,
+                "state": "INVALID",
+                "wasSignedByGitHub": False,
+            },
+            expected_failure="must have a valid signature made with GitHub's signing key",
+        ),
+        fixture(
             "release",
             "release",
-            "refs/tags/v0.7.5",
-            {"release": {"tag_name": "v0.7.5"}},
-            target_ref="refs/tags/v0.7.5",
+            f"refs/tags/{release_tag}",
+            {"release": {"tag_name": release_tag}},
+            target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
+        ),
+        fixture(
+            "release-event-ref-mismatch",
+            "release",
+            f"refs/tags/{mismatched_tag}",
+            {"release": {"tag_name": release_tag}},
+            expected_failure="does not match event ref",
+        ),
+        fixture(
+            "release-version-mismatch",
+            "release",
+            f"refs/tags/{mismatched_tag}",
+            {"release": {"tag_name": mismatched_tag}},
+            target_ref=f"refs/tags/{mismatched_tag}",
+            target_sha=tag_sha,
+            expected_failure="does not match package version",
         ),
         fixture(
             "workflow-dispatch-main",
@@ -2529,20 +2790,34 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         fixture(
             "workflow-dispatch-release-branch",
             "workflow_dispatch",
-            "refs/heads/release/v0.7.5",
+            f"refs/heads/release/{release_tag}",
             {},
-            target_ref="refs/heads/release/v0.7.5",
+            target_ref=f"refs/heads/release/{release_tag}",
             target_sha=release_branch_sha,
         ),
         tag_push(
             "tag-create",
-            "v0.7.5",
+            release_tag,
             before=null_sha,
             after=tag_sha,
             created=True,
             deleted=False,
             forced=False,
             expected_failure=None,
+        ),
+        tag_push(
+            "tag-outside-main-history",
+            release_tag,
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            comparison={
+                "mergeBaseSha": outside_history_sha,
+                "status": "diverged",
+            },
+            expected_failure="is not on the refs/heads/main history policy",
         ),
         tag_push(
             "tag-v9oops",
@@ -2566,7 +2841,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-extra-path",
-            "v0.7.5/extra",
+            f"{release_tag}/extra",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2576,7 +2851,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-version-mismatch",
-            "v0.7.6",
+            mismatched_tag,
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2586,7 +2861,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-move",
-            "v0.7.5",
+            release_tag,
             before=old_tag_sha,
             after=tag_sha,
             created=False,
@@ -2596,7 +2871,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-delete",
-            "v0.7.5",
+            release_tag,
             before=old_tag_sha,
             after=null_sha,
             created=False,
@@ -2606,7 +2881,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-forced",
-            "v0.7.5",
+            release_tag,
             before=old_tag_sha,
             after=tag_sha,
             created=False,
@@ -2616,7 +2891,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-inconsistent-created",
-            "v0.7.5",
+            release_tag,
             before=old_tag_sha,
             after=tag_sha,
             created=True,
@@ -4668,8 +4943,15 @@ def main() -> int:
     hook_lifecycle_fixture_count = check_hook_lifecycle_fixtures(documents, failures)
     check_documented_hook_commands(documents, failures)
     action_pin_count = check_github_action_pins(failures)
+    distribution_workflow_document = check_distribution_workflow_contract(failures)
     release_workflow_text = check_release_signature_workflow_contract(failures)
-    release_tag_fixture_count = check_release_script_runtime_contract(
+    pull_request_fixture_count = check_pull_request_validation_fixtures(
+        distribution_workflow_document,
+        release_workflow_text,
+        documents,
+        failures,
+    )
+    release_provenance_fixture_count = check_release_script_runtime_contract(
         release_workflow_text,
         failures,
     )
@@ -4709,7 +4991,8 @@ def main() -> int:
         f"{evidence_fixture_count} compatibility evidence negative fixtures, "
         f"{manifest_schema_fixture_count} manifest schema fixtures, "
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
-        f"{release_tag_fixture_count} release-tag fixtures, "
+        f"{pull_request_fixture_count} pull-request event-graph fixtures, "
+        f"{release_provenance_fixture_count} release-provenance fixtures, "
         f"{action_pin_count} immutable action pins, hooks, and packaged skills."
     )
     return 0
