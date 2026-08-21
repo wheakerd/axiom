@@ -30,6 +30,7 @@
 | Command | Result |
 | --- | --- |
 | `python3 scripts/check-distribution-drift.py` | |
+| `python3 scripts/check-compatibility-evidence.py --self-test` | |
 | `python3 scripts/check-publication.py` | |
 | `git diff --check` | |
 | Additional targeted checks | |

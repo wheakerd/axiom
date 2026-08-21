@@ -5,6 +5,31 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.5 - 2026-08-21
+
+### Added
+
+- Added a versioned, privacy-safe compatibility evidence schema with immutable
+  tag and commit binding, explicit routed and no-route cases, and preserved
+  `pass`, `fail`, `not-run`, and `unavailable` outcomes.
+- Added a standard-library evidence validator with negative fixtures and a
+  post-tag record mode for release-asset validation.
+- Recorded fresh Codex `0.149.0` startup routing and no-route observations for
+  immutable `v0.7.4`, while preserving unobserved Codex compaction and all
+  unavailable Claude Code cases without inferring a pass.
+
+### Changed
+
+- Made publication validation execute the evidence validator and require the
+  schema, release status, immutable prior-release records, and v0.7.5 release
+  documentation.
+- Marked the checked-in v0.7.5 host status `STATIC-ONLY`; prior-release evidence
+  cannot be promoted to the current release, whose final commit cannot be
+  self-embedded in the commit that creates it.
+
+See [the v0.7.5 release notes](docs/releases/v0.7.5.md) for the evidence
+boundary, validation results, and post-tag asset option.
+
 ## 0.7.4 - 2026-08-21
 
 ### Fixed

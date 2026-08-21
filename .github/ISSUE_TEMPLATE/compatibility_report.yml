@@ -49,7 +49,7 @@ body:
     id: axiom_version
     attributes:
       label: Axiom version, tag, or commit
-      placeholder: "Example: v0.7.4 or an immutable commit SHA"
+      placeholder: "Example: v0.7.5 or an immutable commit SHA"
     validations:
       required: true
 
@@ -123,8 +123,8 @@ body:
   - type: textarea
     id: compaction_behavior
     attributes:
-      label: Claude Code compaction behavior
-      description: For manual and automatic compaction separately, record whether exactly one SessionStart event with source compact loaded the gate, then report the routed and control results after compaction. For Codex-only reports, write "Not run."
+      label: Compaction behavior
+      description: For manual and automatic compaction separately on each tested host, record whether exactly one SessionStart event with source compact loaded the gate, then report the routed and control results after compaction. Preserve unobserved cases as "Not run" or "Unavailable."
     validations:
       required: true
 

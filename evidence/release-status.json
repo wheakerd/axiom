@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1",
+  "targetRelease": {
+    "version": "0.7.5",
+    "tag": "v0.7.5",
+    "commit": null,
+    "binding": "pending-immutable-tag"
+  },
+  "status": "STATIC-ONLY",
+  "currentHostEvidence": [
+    {
+      "host": "codex",
+      "status": "not-run",
+      "reason": "The checked-in v0.7.5 tree cannot contain host evidence bound to its own final commit before that commit exists."
+    },
+    {
+      "host": "claude-code",
+      "status": "unavailable",
+      "reason": "No authenticated Claude Code session or subscription was available."
+    }
+  ],
+  "priorReleaseEvidence": [
+    {
+      "path": "evidence/v0.7.4/codex/linux.json",
+      "tag": "v0.7.4",
+      "commit": "ce34437e6ebf1cdaf5e55d40dc36e16c692875d5",
+      "status": "partial-host-observed"
+    },
+    {
+      "path": "evidence/v0.7.4/claude-code/linux.json",
+      "tag": "v0.7.4",
+      "commit": "ce34437e6ebf1cdaf5e55d40dc36e16c692875d5",
+      "status": "unavailable"
+    }
+  ],
+  "rules": {
+    "priorEvidenceIsCurrent": false,
+    "hostPassRequiresImmutableBinding": true,
+    "postTagReleaseAssetMaySupplementStatus": true,
+    "checkedInStatusMayBePromotedByAsset": false
+  }
+}

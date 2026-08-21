@@ -55,13 +55,50 @@ session. To produce it:
    after compaction in separate reviewed sessions.
 6. Record pass, fail, not run, and unavailable results separately.
 
-This document does not assert that a current end-to-end host check has run. A
-present executable or manifest alone would be too weak to support that claim.
+The machine-readable [release status](../evidence/release-status.json) is the
+canonical current-release summary. It binds prior observations to their exact
+tag and commit, records current host results separately, and prevents an older
+record from being interpreted as current evidence.
+
+For v0.7.5, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.5 host-pass
+claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
+`0.149.0` loaded the startup front door in one fresh routed session and selected
+no Axiom route in a separate fresh control session. Codex compaction remains
+`NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
+[version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
+forward to v0.7.5.
+
+The standard-library validator checks the complete record matrix and the
+release boundary:
+
+```bash
+python3 scripts/check-compatibility-evidence.py --self-test
+```
+
+A present executable or manifest alone remains too weak to support a host
+claim.
 
 ## Historical Validation
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.5` reports:
+
+- the versioned evidence schema, two immutable v0.7.4 host records, current
+  release status, standard-library validator, and negative fixtures passed
+  publication integration;
+- a privacy-isolated Codex `0.149.0` local-marketplace installation of Axiom
+  v0.7.4 matched the checked-in SessionStart command digest, while separate
+  fresh sessions observed `agents-architect` for the routed request and no
+  route for the arithmetic control;
+- Codex manual and automatic compaction route and control cases remain
+  `NOT-RUN`, while all Claude Code startup and compaction cases remain
+  `UNAVAILABLE` because no authenticated Claude Code session or subscription
+  was available; and
+- v0.7.5 remains `STATIC-ONLY`: its commit cannot self-embed its final object
+  ID, and v0.7.4 evidence is not a current-release pass.
 
 The Git record for `v0.7.4` reports:
 
@@ -295,7 +332,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.4 release notes](releases/v0.7.4.md),
+See the durable [v0.7.5 release notes](releases/v0.7.5.md),
+[v0.7.4 release notes](releases/v0.7.4.md),
 [v0.7.3 release notes](releases/v0.7.3.md),
 [v0.7.2 release notes](releases/v0.7.2.md),
 [v0.7.1 release notes](releases/v0.7.1.md),

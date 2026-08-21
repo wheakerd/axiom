@@ -106,7 +106,10 @@ as such; repository presence or command success is not enough.
 Follow the [field-validation protocol](docs/field-validation.md) to classify a
 result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
-kept in [Compatibility](docs/compatibility.md).
+kept in [Compatibility](docs/compatibility.md), with the machine-readable
+current boundary in [release status](evidence/release-status.json). Version
+`0.7.5` is `STATIC-ONLY`: immutable v0.7.4 observations are preserved but are
+not carried forward as a current-release host pass.
 
 ## Deliberate Non-Goals
 
@@ -309,7 +312,7 @@ and report an unavailable validator as unavailable, not passed.
   routing/compatibility reporting paths.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.4 release notes](docs/releases/v0.7.4.md):
+- [Changelog](CHANGELOG.md) and [v0.7.5 release notes](docs/releases/v0.7.5.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -319,11 +322,13 @@ wrappers, hooks, or public claims. The focused distribution check is:
 
 ```bash
 python3 scripts/check-distribution-drift.py
+python3 scripts/check-compatibility-evidence.py --self-test
 ```
 
 It compares the skill tree with both manifests, both marketplace wrappers, and
-the seven-item `Shared skills` list above. It is a contributor and CI check, not
-an installed runtime dependency.
+the seven-item `Shared skills` list above, then validates version-bound host
+evidence and the current static-only boundary. These are contributor and CI
+checks, not installed runtime dependencies.
 
 ## License
 
