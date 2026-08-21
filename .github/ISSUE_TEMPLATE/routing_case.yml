@@ -1,0 +1,119 @@
+name: Routing case
+description: Report a routing false positive, false negative, ambiguity, or expected case.
+title: "[Routing]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share the smallest sanitized request that demonstrates the routing decision. Route selection does not authorize mutation. Do not include secrets, credentials, private URLs, customer data, or sensitive repository content.
+
+  - type: dropdown
+    id: case_type
+    attributes:
+      label: Case type
+      options:
+        - False positive
+        - False negative
+        - Ambiguous
+        - Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: original_request
+    attributes:
+      label: Original request
+      description: Paste the exact sanitized request that reached the host.
+    validations:
+      required: true
+
+  - type: input
+    id: expected_route
+    attributes:
+      label: Expected route
+      description: Name the expected route, or write "No Axiom route."
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed_route
+    attributes:
+      label: Observed route
+      description: Name the observed route and cite the smallest visible evidence.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      options:
+        - Codex
+        - Claude Code
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: host_version
+    attributes:
+      label: Host version
+      placeholder: "Exact version when available"
+    validations:
+      required: true
+
+  - type: input
+    id: axiom_version
+    attributes:
+      label: Axiom version, tag, or commit
+      placeholder: "Example: v0.7.3 or an immutable commit SHA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mutation_attempted
+    attributes:
+      label: Was a mutation attempted?
+      options:
+        - No
+        - Yes, but it was blocked or stopped
+        - Yes, and a mutation occurred
+        - Unknown or unavailable
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: List the shortest fresh-session sequence that reproduces the decision.
+      placeholder: |
+        1. Record the host and Axiom versions.
+        2. Review the installed hook.
+        3. Start or reload the session.
+        4. Send the sanitized request above.
+        5. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant evidence
+      description: Include only sanitized output that directly supports the observed decision and impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_behavior
+    attributes:
+      label: Proposed behavior
+      description: Optional. Explain a narrower trigger, clearer boundary, or normal-continuation rule.
+
+  - type: checkboxes
+    id: sensitive_data
+    attributes:
+      label: Sensitive-data confirmation
+      options:
+        - label: I removed secrets, credentials, tokens, private URLs, customer data, and other sensitive content from this report and its attachments.
+          required: true
