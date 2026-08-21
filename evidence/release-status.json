@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.7.5",
-    "tag": "v0.7.5",
+    "version": "0.7.6",
+    "tag": "v0.7.6",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The checked-in v0.7.5 tree cannot contain host evidence bound to its own final commit before that commit exists."
+      "reason": "The checked-in v0.7.6 tree cannot contain host evidence bound to its own final commit before that commit exists."
     },
     {
       "host": "claude-code",

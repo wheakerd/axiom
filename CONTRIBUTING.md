@@ -136,6 +136,28 @@ dependency. Repository validation may use a host-provided interpreter in CI,
 but that check must not become a dependency of the installed plugin. Prefer
 focused, standard-library-only validation when adding repository checks.
 
+## Pull-request validation and release provenance
+
+`Distribution and publication guards` runs for pull requests targeting `main`,
+including same-repository and fork pull requests. It validates the proposed
+merge tree with repository-local distribution and publication checks. The
+workflow uses `pull_request`, grants only `contents: read`, references no
+repository secret, and checks out with `persist-credentials: false`. GitHub may
+still require maintainer approval before a first-time fork contributor's run.
+
+These checks do not require the contributor head commit to be GitHub-signed or
+hosted in `wheakerd/axiom`. Passing them proves only that the proposed merge
+tree satisfies the checked-in static policy. It does not establish release
+provenance and does not authorize publication.
+
+`Release signature guard` starts after protected history or release state
+changes. It covers pushes to `main`, strict `v*` tag events, published or edited
+GitHub Releases, and manual checks limited to `main` or a versioned
+`release/v<semver>` branch. Those targets must remain on approved `main`
+history, match both manifest versions when a tag is involved, and carry a valid
+signature made with GitHub's signing key. GitHub rulesets remain the
+server-side prevention layer for unsigned `main` updates and tag mutation.
+
 ## Pull requests
 
 Keep a pull request focused and include:

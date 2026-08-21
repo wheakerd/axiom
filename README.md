@@ -108,7 +108,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.7.5` is `STATIC-ONLY`: immutable v0.7.4 observations are preserved but are
+`0.7.6` is `STATIC-ONLY`: immutable v0.7.4 observations are preserved but are
 not carried forward as a current-release host pass.
 
 ## Deliberate Non-Goals
@@ -312,7 +312,7 @@ and report an unavailable validator as unavailable, not passed.
   routing/compatibility reporting paths.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.5 release notes](docs/releases/v0.7.5.md):
+- [Changelog](CHANGELOG.md) and [v0.7.6 release notes](docs/releases/v0.7.6.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -329,6 +329,14 @@ It compares the skill tree with both manifests, both marketplace wrappers, and
 the seven-item `Shared skills` list above, then validates version-bound host
 evidence and the current static-only boundary. These are contributor and CI
 checks, not installed runtime dependencies.
+
+Pull requests to `main`, including fork contributions, run these read-only
+distribution and publication checks on the proposed merge tree. The workflow
+grants only `contents: read`, does not reference repository secrets, and checks
+out with `persist-credentials: false`; it does not require the contributor head
+to be GitHub-signed or hosted in this repository. Those results validate a
+proposed tree only. Release provenance is established separately for protected
+`main`, immutable `v*` tags, bounded release candidates, and GitHub Releases.
 
 ## License
 

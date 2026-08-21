@@ -27,6 +27,8 @@
 
 <!-- Include every command and its exact result. Mark optional host-native checks unavailable when they could not run; do not present them as passed. -->
 
+<!-- These pull-request checks validate the proposed tree. They do not establish release provenance or authorize publication. -->
+
 | Command | Result |
 | --- | --- |
 | `python3 scripts/check-distribution-drift.py` | |

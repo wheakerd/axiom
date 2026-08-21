@@ -1,7 +1,11 @@
 name: Distribution and publication guards
 
 on:
+  # Pull requests validate the proposed merge tree only. Release provenance is
+  # enforced separately after protected history or a release ref changes.
   pull_request:
+    branches:
+      - main
   push:
   workflow_dispatch:
 

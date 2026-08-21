@@ -60,14 +60,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.5, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.5 host-pass
+For v0.7.6, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.6 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.5.
+forward to v0.7.6.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -83,6 +83,22 @@ claim.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.6` reports:
+
+- the pull-request event graph schedules read-only distribution and publication
+  validation for same-repository and fork contributions without testing the
+  contributor signature or repository origin;
+- release provenance remains limited to protected `main`, strict immutable
+  `v*` tags, bounded manual release candidates, and GitHub Release targets, with
+  negative fixtures for signatures, ancestry, mutation, version drift, and
+  mismatched Release refs;
+- a real fork pull-request run is `NOT-RUN`, so GitHub scheduling,
+  first-time-contributor approval, and live fork runner behavior are not claimed
+  by deterministic fixtures; and
+- v0.7.6 remains `STATIC-ONLY`: the current Codex cases were not rerun, all
+  Claude Code cases remain `UNAVAILABLE` without an authenticated subscription,
+  and immutable v0.7.4 observations are retained only as prior-release evidence.
 
 The Git record for `v0.7.5` reports:
 
@@ -332,7 +348,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.5 release notes](releases/v0.7.5.md),
+See the durable [v0.7.6 release notes](releases/v0.7.6.md),
+[v0.7.5 release notes](releases/v0.7.5.md),
 [v0.7.4 release notes](releases/v0.7.4.md),
 [v0.7.3 release notes](releases/v0.7.3.md),
 [v0.7.2 release notes](releases/v0.7.2.md),

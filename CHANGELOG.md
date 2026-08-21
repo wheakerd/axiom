@@ -5,6 +5,30 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.6 - 2026-08-21
+
+### Fixed
+
+- Separated read-only pull-request tree validation from release provenance so
+  unsigned same-repository and fork contributions can run the distribution and
+  publication validators without a repository-origin gate.
+- Kept provenance enforcement on protected `main`, strict immutable `v*` tags,
+  bounded release-candidate dispatches, and published or edited GitHub Releases.
+- Added deterministic event-graph and release-provenance fixtures for the eight
+  Issue #26 scenarios, including invalid trees, unsigned `main`, ancestry drift,
+  tag mutation, manifest-version mismatch, and mismatched Release targets.
+
+### Security
+
+- Restricted the pull-request workflow to `contents: read`, an immutable
+  checkout with `persist-credentials: false`, and exact local validators with no
+  secret or write-token path.
+- Preserved GitHub-signature, approved-history, strict-tag, and manifest-version
+  checks for merged and published release targets.
+
+See [the v0.7.6 release notes](docs/releases/v0.7.6.md) for the workflow trust
+boundary, validation evidence, and live-fork acceptance gap.
+
 ## 0.7.5 - 2026-08-21
 
 ### Added

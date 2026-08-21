@@ -69,3 +69,22 @@ detector, or guarantee that an agent, host, dependency, or external service is
 correct. It does not prevent every error or unsafe instruction. See the
 [field-validation protocol](docs/field-validation.md) for evidence labels and
 safe reproduction prompts.
+
+## Repository Workflow Boundary
+
+Pull-request validation and release provenance are separate trust domains.
+`Distribution and publication guards` uses the ordinary `pull_request` event
+for both same-repository and fork contributions, grants only `contents: read`,
+does not reference repository secrets, and checks out with
+`persist-credentials: false`. It validates the proposed merge tree without
+requiring a GitHub-signed contributor commit or a same-repository head. It does
+not publish, write repository state, authorize an external action, or turn a
+successful static check into release provenance.
+
+Release provenance begins at protected repository history. A separate workflow
+verifies the GitHub signature and approved-`main` ancestry of merged or
+published targets, binds strict release tags to both manifest versions, and
+fails closed on tag movement, deletion, forced update, malformed tags,
+off-history targets, and mismatched GitHub Release refs. Workflow detection is
+not server-side prevention: branch and tag rulesets must continue to reject
+unsigned protected updates and mutable release tags before they take effect.
