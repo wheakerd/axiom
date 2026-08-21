@@ -15,9 +15,10 @@ actions keep their evidence and authorization gates.
 The canonical community-directory entry was submitted as
 [PR #377](https://github.com/ccplugins/awesome-claude-code-plugins/pull/377)
 on 2026-08-21. It remains an open submission and does not count as a listing.
-Anthropic marketplace submission and the OpenAI Developer Forum post were not
-executed because an authenticated form session and forum access, respectively,
-were unavailable.
+The Anthropic community-marketplace form was submitted once on 2026-08-21;
+Claude Console records `Axiom` as `Submitted and pending review`. That state is
+not a listing. The OpenAI Developer Forum post was not executed because forum
+access was unavailable.
 
 ## Days 1-7: Product Readiness - August 21-27
 
@@ -96,10 +97,11 @@ attempts. Invitations and incomplete forms do not count.
 
 ## Days 15-21: Distribution And Technical Content - September 4-10
 
-- **September 4:** recheck the official Anthropic community-marketplace form,
-  validate the public immutable candidate, and prepare the exact submission.
-- **September 5:** submit to `claude-community` only after exact approval; verify
-  the submission record without claiming a listing.
+- **September 4:** recheck the existing authenticated Anthropic submission
+  record. Do not prepare or create a duplicate while review is pending.
+- **September 5:** if the review state changes, verify it through Claude
+  Console. After approval, verify the public catalog entry and pinned commit
+  before claiming a listing.
 - **September 6:** prepare one PR for the selected canonical community directory;
   open it only after separate external-PR authorization.
 - **September 7:** choose one Codex or Claude Code community venue based on the
