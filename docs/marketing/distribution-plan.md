@@ -103,7 +103,7 @@ endorsements.
 | `ccplugins/awesome-claude-code-plugins` | Claude Code plugin discoverers | Active community list; repository accepted PRs on the status date | Fork, add one entry to the canonical category, open one PR | `READY-AFTER-PUBLIC-BRANCH` | Exact approval to fork/push/open the external PR |
 | OpenAI Developer Showcase | OpenAI and Codex builders | Official showcase exists; current public page does not expose a verifiable submission form | Submission path `NOT-VERIFIED`; community page links to the showcase | `NOT-VERIFIED` | Approval only after actor, form, payload, and visibility are re-verified |
 | OpenAI Developer Forum, Codex category | Codex users and plugin builders | Public community forum on an OpenAI domain; active Codex project topics observed | Create one authenticated topic in the Codex category with project tags | `DRAFT-READY` | Exact approval for the account, topic, category, tags, and one post |
-| GitHub repository discovery | Developers searching GitHub | Official repository settings | Repository API for description/topics; Settings UI for social preview and Discussions | Assets ready; settings unchanged | Separate approval for each settings mutation |
+| GitHub repository discovery | Developers searching GitHub | Official repository settings | Repository API for description/topics; Settings UI for social preview and Discussions | Description, Topics, Discussions, and private reporting live; social-preview CDN verification pending | Completed actions verified 2026-08-21; future mutations require fresh approval |
 | Technical communities | Maintainers, DevEx, DevSecOps, release engineers | Community-specific | Platform-specific posts from the launch kit | Draft ready | Separate approval per platform and post |
 
 ## 1. OpenAI Universal Plugins Directory
@@ -224,12 +224,12 @@ GitHub permits up to 20 repository topics using lowercase letters, numbers, and
 hyphens; each candidate below is within the documented limit. See GitHub's
 [topic guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics).
 
-Prepared description:
+Live description, verified through the repository API on 2026-08-21:
 
 > Safety-first workflow routing for Codex and Claude Code: explicit scope,
 > authorization, evidence, and rollback for high-impact agent actions.
 
-Prepared topic replacement, exactly 12 topics:
+Live topic set, verified through the repository API on 2026-08-21:
 
 ```text
 codex
@@ -246,7 +246,8 @@ auditability
 developer-tools
 ```
 
-Exact operations, prepared only:
+The authorized operations below were executed once on 2026-08-21. They are an
+execution record, not a rerun instruction:
 
 ```bash
 gh api --method PATCH repos/wheakerd/axiom \
@@ -272,10 +273,12 @@ immediately before any authorized call and stop if the intended replacement is
 no longer exact. Verify with `gh api repos/wheakerd/axiom --jq .description` and
 `gh api repos/wheakerd/axiom/topics --jq .names`.
 
-The 1280 x 640 PNG in `docs/assets/` is prepared for GitHub's
+The 1280 x 640 PNG in `docs/assets/` was submitted to GitHub's
 [social preview setting](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview).
-The upload is a separate Settings action. Discussions and private vulnerability
-reporting are also separate mutations.
+GitHub Settings accepted the custom-image association, but the external image
+endpoint still returned `404` at the last check, so the public card remains
+`NOT-VERIFIED`. Discussions is enabled with the three planned categories and
+seed discussions, and private vulnerability reporting is enabled.
 
 ### Social preview reproduction
 
@@ -294,9 +297,10 @@ reporting are also separate mutations.
 The prepared render was visually reviewed at card size. Text-to-background
 contrast ranged from 6.92:1 to 16.96:1 for the three text colors. Re-rendering
 on a host without the requested fonts can change text metrics; inspect the PNG
-before upload. In GitHub Settings, open the Social preview editor, upload the
-PNG once, save, then verify a newly generated external share preview. Do not
-treat the local file as proof that the repository setting changed.
+before upload. Do not retry an uncertain upload blindly. Treat the public card
+as complete only after the repository's external `og:image` URL returns the
+expected image; neither the local file nor the Settings association proves that
+outcome.
 
 ## 7. Technical Communities
 
