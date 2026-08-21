@@ -12,6 +12,13 @@ image association, but the external image endpoint still requires successful
 verification. These actions completed ahead of the calendar below; remaining
 actions keep their evidence and authorization gates.
 
+The canonical community-directory entry was submitted as
+[PR #377](https://github.com/ccplugins/awesome-claude-code-plugins/pull/377)
+on 2026-08-21. It remains an open submission and does not count as a listing.
+Anthropic marketplace submission and the OpenAI Developer Forum post were not
+executed because an authenticated form session and forum access, respectively,
+were unavailable.
+
 ## Days 1-7: Product Readiness - August 21-27
 
 ### August 21
