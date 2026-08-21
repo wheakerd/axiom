@@ -59,13 +59,13 @@ Expected contract: no Axiom task route is selected and the host continues its
 ordinary read-only response. A no-route result does not certify that every
 ordinary request is safe.
 
-### 3. Claude Code compaction recovery
+### 3. Compaction recovery
 
-Run this only in an already authorized Claude Code session whose installed
-Axiom hook matched the checked-in definition. Test manual and automatic
-compaction separately; do not change global configuration, lower a compaction
-threshold, generate artificial load, or spend external-account usage merely to
-force the automatic case.
+Run this only in an already authorized Codex or Claude Code session whose
+installed Axiom hook matched the checked-in definition. Test manual and
+automatic compaction separately; do not change global configuration, lower a
+compaction threshold, generate artificial load, or spend external-account
+usage merely to force the automatic case.
 
 For each observed compaction:
 
@@ -119,6 +119,53 @@ can identify the tester as independent, match the report to an immutable Axiom
 version, and review evidence for both the routed prompt and no-route control.
 Anonymous or incomplete reports can still be useful without receiving that
 label.
+
+## Machine-Readable Records
+
+The versioned format is defined by
+[`evidence/schema-v1.json`](../evidence/schema-v1.json). A checked-in host record
+belongs below `evidence/v<version>/<host>/<operating-system>.json` and must bind
+to an already existing immutable tag and 40-character commit. Each record has
+exactly six cases: startup routed and control, manual-compaction routed and
+control, and automatic-compaction routed and control.
+
+Validate the checked-in matrix, release boundary, privacy restrictions, and
+negative fixtures with only the Python standard library:
+
+```bash
+python3 scripts/check-compatibility-evidence.py --self-test
+```
+
+The validator preserves `fail`, `not-run`, and `unavailable` as first-class
+results. A passing case requires a matching observed route, a verified
+installed-hook digest, and minimal sanitized output. A not-run or unavailable
+case must have no observed route or claimed output and must explain the exact
+limitation. All cases must record attempted and observed mutation separately.
+
+Do not include authentication material, tokens, private or absolute user
+paths, private URLs, customer data, session identifiers, or full transcripts.
+Use only the smallest final-response excerpt needed to review the route. The
+validator rejects common sensitive patterns and bounds every string and output
+list; human review remains required because no pattern list can identify every
+secret.
+
+The checked-in [release status](../evidence/release-status.json) is always
+`STATIC-ONLY` for the release commit that creates it: a Git commit cannot
+contain its own final object ID. After an immutable tag exists, validate a
+fresh-host record for that exact release with:
+
+```bash
+python3 scripts/check-compatibility-evidence.py \
+  --record axiom-v0.7.5-compatibility.json \
+  --expected-tag v0.7.5 \
+  --expected-commit <40-character-commit>
+```
+
+A content-addressed release asset can supplement the checked-in status without
+changing the Git tree. It does not promote prior evidence or rewrite the
+checked-in `STATIC-ONLY` state. Preserve the validator-reported SHA-256, and
+use an independent signature or attestation when the release-asset host's
+ability to replace or delete an asset is an unacceptable risk.
 
 ## Design-Partner Program
 

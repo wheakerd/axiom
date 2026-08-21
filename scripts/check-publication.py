@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.7.4"
+RELEASE_VERSION = "0.7.5"
 CURRENT_RELEASE_NOTES = f"docs/releases/v{RELEASE_VERSION}.md"
 
 REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
@@ -27,8 +27,14 @@ REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
     "docs/examples.md",
     "docs/trust-model.md",
     "docs/compatibility.md",
+    "docs/field-validation.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
+    "evidence/schema-v1.json",
+    "evidence/release-status.json",
+    "evidence/v0.7.4/codex/linux.json",
+    "evidence/v0.7.4/claude-code/linux.json",
+    "scripts/check-compatibility-evidence.py",
     "docs/releases/v0.3.0.md",
     "docs/releases/v0.3.1.md",
     "docs/releases/v0.4.0.md",
@@ -2509,9 +2515,9 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         fixture(
             "release",
             "release",
-            "refs/tags/v0.7.4",
-            {"release": {"tag_name": "v0.7.4"}},
-            target_ref="refs/tags/v0.7.4",
+            "refs/tags/v0.7.5",
+            {"release": {"tag_name": "v0.7.5"}},
+            target_ref="refs/tags/v0.7.5",
             target_sha=tag_sha,
         ),
         fixture(
@@ -2523,14 +2529,14 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         fixture(
             "workflow-dispatch-release-branch",
             "workflow_dispatch",
-            "refs/heads/release/v0.7.4",
+            "refs/heads/release/v0.7.5",
             {},
-            target_ref="refs/heads/release/v0.7.4",
+            target_ref="refs/heads/release/v0.7.5",
             target_sha=release_branch_sha,
         ),
         tag_push(
             "tag-create",
-            "v0.7.4",
+            "v0.7.5",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2560,7 +2566,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-extra-path",
-            "v0.7.4/extra",
+            "v0.7.5/extra",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2570,7 +2576,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-version-mismatch",
-            "v0.7.5",
+            "v0.7.6",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2580,7 +2586,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-move",
-            "v0.7.4",
+            "v0.7.5",
             before=old_tag_sha,
             after=tag_sha,
             created=False,
@@ -2590,7 +2596,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-delete",
-            "v0.7.4",
+            "v0.7.5",
             before=old_tag_sha,
             after=null_sha,
             created=False,
@@ -2600,7 +2606,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-forced",
-            "v0.7.4",
+            "v0.7.5",
             before=old_tag_sha,
             after=tag_sha,
             created=False,
@@ -2610,7 +2616,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-inconsistent-created",
-            "v0.7.4",
+            "v0.7.5",
             before=old_tag_sha,
             after=tag_sha,
             created=True,
@@ -4602,11 +4608,48 @@ def check_packaged_skills(failures: list[str]) -> None:
         )
 
 
+def check_compatibility_evidence(failures: list[str]) -> tuple[int, int]:
+    """Execute the standalone standard-library evidence validator."""
+    validator = REPOSITORY_ROOT / "scripts" / "check-compatibility-evidence.py"
+    try:
+        result = subprocess.run(
+            [sys.executable, str(validator), "--self-test"],
+            cwd=REPOSITORY_ROOT,
+            text=True,
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        failures.append(f"compatibility evidence validator could not run: {error}")
+        return 0, 0
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        failures.append(
+            "compatibility evidence validator failed"
+            + (f": {detail}" if detail else "")
+        )
+        return 0, 0
+    pattern = re.compile(
+        rf"^Compatibility evidence validation passed: ([0-9]+) records, "
+        rf"([0-9]+) negative fixtures, current release v{re.escape(RELEASE_VERSION)} "
+        rf"STATIC-ONLY\.$"
+    )
+    match = pattern.fullmatch(result.stdout.strip())
+    if match is None:
+        failures.append(
+            "compatibility evidence validator returned an unrecognized success summary"
+        )
+        return 0, 0
+    return int(match.group(1)), int(match.group(2))
+
+
 def main() -> int:
     failures: list[str] = []
     check_required_files(failures)
     check_release_version_surfaces(failures)
     validator_fixture_count = check_validator_negative_fixtures(failures)
+    evidence_record_count, evidence_fixture_count = check_compatibility_evidence(failures)
 
     documents: dict[str, dict[str, Any]] = {}
     for relative_path in JSON_FILES:
@@ -4662,6 +4705,8 @@ def main() -> int:
         f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback gate fixtures, "
         f"{cross_route_contract_count} source-linked cross-route/resume contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
+        f"{evidence_record_count} compatibility evidence records, "
+        f"{evidence_fixture_count} compatibility evidence negative fixtures, "
         f"{manifest_schema_fixture_count} manifest schema fixtures, "
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
         f"{release_tag_fixture_count} release-tag fixtures, "

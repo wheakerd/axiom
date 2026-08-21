@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:axiom:compatibility-evidence:schema:v1",
+  "title": "Axiom compatibility evidence record",
+  "description": "A privacy-safe, immutable-release-bound record of routed and no-route host observations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "release",
+    "host",
+    "installation",
+    "hook",
+    "reporter",
+    "recordedAt",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "release": {
+      "$ref": "#/$defs/release"
+    },
+    "host": {
+      "$ref": "#/$defs/host"
+    },
+    "installation": {
+      "$ref": "#/$defs/installation"
+    },
+    "hook": {
+      "$ref": "#/$defs/hook"
+    },
+    "reporter": {
+      "$ref": "#/$defs/reporter"
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "tag",
+        "commit"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "operatingSystem",
+        "architecture",
+        "shell"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "codex",
+            "claude-code"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "operatingSystem": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "shell": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      }
+    },
+    "installation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "targetPluginVersion",
+        "installedSnapshotVerified"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "targetPluginVersion": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "installedSnapshotVerified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "hook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "matcher",
+        "expectedCommandSha256",
+        "installedCommandSha256",
+        "installedCommandVerified"
+      ],
+      "properties": {
+        "event": {
+          "const": "SessionStart"
+        },
+        "matcher": {
+          "const": "startup|resume|clear|compact"
+        },
+        "expectedCommandSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "installedCommandSha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "installedCommandVerified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "reporter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "anonymous"
+      ],
+      "properties": {
+        "identity": {
+          "const": "anonymous"
+        },
+        "anonymous": {
+          "const": true
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sessionKind",
+        "lifecycleSource",
+        "compactionMode",
+        "request",
+        "expectedRoute",
+        "observedRoute",
+        "noRouteControl",
+        "inspected",
+        "mutationAttempted",
+        "mutationObserved",
+        "result",
+        "limitations",
+        "supportingOutput"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "sessionKind": {
+          "enum": [
+            "fresh",
+            "post-compaction"
+          ]
+        },
+        "lifecycleSource": {
+          "enum": [
+            "startup",
+            "compact"
+          ]
+        },
+        "compactionMode": {
+          "enum": [
+            "not-applicable",
+            "manual",
+            "automatic"
+          ]
+        },
+        "request": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "expectedRoute": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "observedRoute": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noRouteControl": {
+          "type": "boolean"
+        },
+        "inspected": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "mutationAttempted": {
+          "type": "boolean"
+        },
+        "mutationObserved": {
+          "type": "boolean"
+        },
+        "result": {
+          "enum": [
+            "pass",
+            "fail",
+            "not-run",
+            "unavailable"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "supportingOutput": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        }
+      }
+    }
+  }
+}

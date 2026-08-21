@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "1",
+  "release": {
+    "version": "0.7.4",
+    "tag": "v0.7.4",
+    "commit": "ce34437e6ebf1cdaf5e55d40dc36e16c692875d5"
+  },
+  "host": {
+    "name": "claude-code",
+    "version": "2.1.220",
+    "operatingSystem": "linux",
+    "architecture": "x86_64",
+    "shell": "bash 5.3.9"
+  },
+  "installation": {
+    "method": "Not run because the available host had no authenticated session or subscription.",
+    "targetPluginVersion": "0.7.4",
+    "installedSnapshotVerified": false
+  },
+  "hook": {
+    "event": "SessionStart",
+    "matcher": "startup|resume|clear|compact",
+    "expectedCommandSha256": "c6914168a3823c5d9d203c3e7ee5f0cbfd29364b086ada1ca31871e9528fbcc2",
+    "installedCommandSha256": null,
+    "installedCommandVerified": false
+  },
+  "reporter": {
+    "identity": "anonymous",
+    "anonymous": true
+  },
+  "recordedAt": "2026-08-21T15:46:28Z",
+  "cases": [
+    {
+      "id": "startup-routed",
+      "sessionKind": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "request": "Perform a read-only audit of this repository's AGENTS.md instruction system. Report findings only; do not modify files.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": null,
+      "noRouteControl": false,
+      "inspected": [
+        "Claude Code version and sanitized authentication status"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "unavailable",
+      "limitations": [
+        "Claude Code reported no authenticated session or subscription, so no fresh session was started."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "startup-no-route",
+      "sessionKind": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "request": "Summarize the purpose of this README. Do not modify files.",
+      "expectedRoute": "none",
+      "observedRoute": null,
+      "noRouteControl": true,
+      "inspected": [
+        "Claude Code version and sanitized authentication status"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "unavailable",
+      "limitations": [
+        "Claude Code reported no authenticated session or subscription, so no fresh session was started."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "manual-compaction-routed",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "request": "Perform a read-only audit of this repository's AGENTS.md instruction system. Report findings only; do not modify files.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": null,
+      "noRouteControl": false,
+      "inspected": [
+        "Claude Code version and sanitized authentication status"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "unavailable",
+      "limitations": [
+        "Claude Code reported no authenticated session or subscription, so manual compaction was unavailable."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "manual-compaction-no-route",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "request": "Summarize the purpose of this README. Do not modify files.",
+      "expectedRoute": "none",
+      "observedRoute": null,
+      "noRouteControl": true,
+      "inspected": [
+        "Claude Code version and sanitized authentication status"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "unavailable",
+      "limitations": [
+        "Claude Code reported no authenticated session or subscription, so manual compaction was unavailable."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "automatic-compaction-routed",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "request": "Perform a read-only audit of this repository's AGENTS.md instruction system. Report findings only; do not modify files.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": null,
+      "noRouteControl": false,
+      "inspected": [
+        "Claude Code version and sanitized authentication status"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "unavailable",
+      "limitations": [
+        "Claude Code reported no authenticated session or subscription, so automatic compaction was unavailable."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "automatic-compaction-no-route",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "request": "Summarize the purpose of this README. Do not modify files.",
+      "expectedRoute": "none",
+      "observedRoute": null,
+      "noRouteControl": true,
+      "inspected": [
+        "Claude Code version and sanitized authentication status"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "unavailable",
+      "limitations": [
+        "Claude Code reported no authenticated session or subscription, so automatic compaction was unavailable."
+      ],
+      "supportingOutput": []
+    }
+  ]
+}

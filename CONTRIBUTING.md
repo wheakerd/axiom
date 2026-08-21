@@ -16,6 +16,7 @@ silently broaden what the user authorized.
 | `hooks/codex-hooks.json` | Codex-specific startup hook |
 | `hooks/claude-hooks.json` | Claude Code-specific session and compaction hooks |
 | `README.md` and `docs/` | Public onboarding, behavior, trust, and release documentation |
+| `evidence/` | Version-bound, privacy-safe host records and current release status |
 | `scripts/` and `.github/workflows/` | Repository validation; not installed runtime behavior |
 
 The direct children of `skills/` that contain a `SKILL.md` are Axiom's public
@@ -104,6 +105,7 @@ Run checks from the repository root and record the exact commands and outcomes:
 
 ```bash
 python3 scripts/check-distribution-drift.py
+python3 scripts/check-compatibility-evidence.py --self-test
 python3 scripts/check-publication.py
 git diff --check
 ```
@@ -111,6 +113,13 @@ git diff --check
 Also run targeted checks required by the files you changed. Read the final
 diff, confirm both manifest versions still match, and inspect
 `git status --short` for unrelated paths.
+
+Compatibility records must validate against `evidence/schema-v1.json`, bind to
+an already existing immutable tag and commit, preserve every not-run or
+unavailable case, and contain only minimal sanitized output. Never carry an old
+record forward as evidence for a newer release. The checked-in current release
+status stays `STATIC-ONLY`; use the validator's post-tag `--record` mode for a
+same-release asset after the immutable tag and commit exist.
 
 Host-native validation is valuable but optional because the relevant CLI may
 not be installed. If a current Codex or Claude Code validator is already
