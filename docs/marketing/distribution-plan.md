@@ -99,7 +99,7 @@ endorsements.
 | Channel | Audience | Status | Submission mechanism | Readiness | Authorization |
 | --- | --- | --- | --- | --- | --- |
 | OpenAI universal Plugins Directory | ChatGPT and Codex plugin users | Official; current submission portal documented | OpenAI Platform plugin submission draft, review, then separate developer publication | `NOT-READY` | Exact approval for portal submission; later separate approval to publish |
-| Anthropic `claude-community` marketplace | Claude Code users | Official community marketplace; catalog syncs from reviewed submissions | Claude Console form for individual authors or claude.ai form for eligible organizations | Strict validation passed; `SUBMISSION-BLOCKED` without an authenticated form session | Authenticate the intended Console actor, preview the exact form, then authorize one submission |
+| Anthropic `claude-community` marketplace | Claude Code users | Official community marketplace; catalog syncs from reviewed submissions | Claude Console form for individual authors or claude.ai form for eligible organizations | `SUBMITTED` on 2026-08-21 after strict validation; pending review | Do not resubmit; monitor the authenticated record and verify catalog inclusion only after approval |
 | `ccplugins/awesome-claude-code-plugins` | Claude Code plugin discoverers | Active community list; repository accepted PRs on the status date | Fork, add one entry to the canonical category, open one PR | `SUBMITTED`: [PR #377](https://github.com/ccplugins/awesome-claude-code-plugins/pull/377) open; not yet listed | Do not duplicate the submission; verify the default-branch entry after maintainer review |
 | OpenAI Developer Showcase | OpenAI and Codex builders | Official showcase exists; current public page does not expose a verifiable submission form | Submission path `NOT-VERIFIED`; community page links to the showcase | `NOT-VERIFIED` | Approval only after actor, form, payload, and visibility are re-verified |
 | OpenAI Developer Forum, Codex category | Codex users and plugin builders | Public community forum on an OpenAI domain; active Codex project topics observed | Create one authenticated topic in the Codex category with project tags | `DRAFT-READY`; available session returned a temporary IP restriction | Recheck access, then authorize the exact account, topic, category, tags, and one post |
@@ -153,12 +153,14 @@ The separately curated official marketplace has no application process.
   ```
 
   Both strict commands passed against the exact public-tree content on
-  2026-08-21. The Console form redirected the available browser session to
-  sign-in, so no actor or final form payload could be bound and no submission
-  occurred.
+  2026-08-21. One submission was then created through Claude Console by actor
+  `wheakerd` in `wheakerd's Individual Org`. The authenticated submissions
+  page records `Axiom` as `Submitted and pending review`. No public listing or
+  submission identifier was exposed by the observed page.
 
-- Exact next action after approval: submit one Console form for Axiom using the
-  medium copy, source URL, MIT license, and validated commit.
+- Exact next action: do not create a duplicate submission. Monitor the existing
+  Console record; after an approval notice, verify the public catalog entry and
+  its pinned commit before reporting Axiom as listed.
 - Verification: find `axiom` in the
   [community catalog](https://github.com/anthropics/claude-plugins-community),
   confirm its pinned commit, install `axiom@claude-community`, inspect `/hooks`,
