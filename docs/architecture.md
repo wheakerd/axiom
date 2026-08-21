@@ -6,7 +6,7 @@ network service, watcher, automatic updater, or hidden persistent component.
 
 ```mermaid
 flowchart TD
-    A["Codex or Claude Code wrapper"] --> B["Session-start or compaction hook"]
+    A["Codex or Claude Code wrapper"] --> B["SessionStart hook"]
     B --> C["Read using-axiom routing gate"]
     C --> D{"Does the request clearly match a route?"}
     D -- "No" --> E["Continue through the host normally"]
@@ -39,7 +39,12 @@ select a task route themselves.
 | --- | --- | --- |
 | Codex `SessionStart` | `startup`, `resume`, `clear`, `compact` | Print a short loading message and read the routing gate from `PLUGIN_ROOT` |
 | Claude Code `SessionStart` | `startup`, `resume`, `clear`, `compact` | Print a short loading message and read the routing gate from `CLAUDE_PLUGIN_ROOT` |
-| Claude Code `PreCompact` | `manual`, `auto` | Print a preservation message and read the same gate before compaction |
+
+Claude Code emits the `compact` `SessionStart` source after either manual or
+automatic compaction and adds successful `SessionStart` stdout to model
+context. Axiom therefore uses that one post-compaction path and declares no
+`PreCompact` handler; ordinary successful stdout from `PreCompact` is not a
+context-injection path.
 
 The exact commands are published for independent review in
 [README: Inspect The Hooks](../README.md#inspect-the-hooks). Each invocation is

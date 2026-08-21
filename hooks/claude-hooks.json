@@ -1,5 +1,5 @@
 {
-  "description": "Load Axiom's routing gate in Claude Code sessions and across compaction.",
+  "description": "Load Axiom's routing gate in Claude Code sessions, including after compaction.",
   "hooks": {
     "SessionStart": [
       {
@@ -9,18 +9,6 @@
             "type": "command",
             "command": "echo 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\"",
             "statusMessage": "Loading Axiom routing"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "manual|auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo 'You have Axiom. Preserve this routing front door while compacting:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\"",
-            "statusMessage": "Preserving Axiom routing"
           }
         ]
       }

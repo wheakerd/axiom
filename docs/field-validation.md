@@ -59,7 +59,29 @@ Expected contract: no Axiom task route is selected and the host continues its
 ordinary read-only response. A no-route result does not certify that every
 ordinary request is safe.
 
-### 3. Optional persistent-change planning request
+### 3. Claude Code compaction recovery
+
+Run this only in an already authorized Claude Code session whose installed
+Axiom hook matched the checked-in definition. Test manual and automatic
+compaction separately; do not change global configuration, lower a compaction
+threshold, generate artificial load, or spend external-account usage merely to
+force the automatic case.
+
+For each observed compaction:
+
+1. record whether the trigger was manual or automatic;
+2. record whether exactly one `SessionStart` event with source `compact` loaded
+   `skills/using-axiom/SKILL.md` after compaction;
+3. run the routed read-only request above; and
+4. in a separate equivalently reviewed session, run the no-route control above.
+
+Count one effective post-compaction injection only when the host exposes one
+matching hook delivery and the routing gate is available afterward. Duplicate
+deliveries, a missing gate, a wrong route, or a routed control are failures. If
+automatic compaction does not occur naturally in the authorized test window,
+record that case as `NOT-RUN` or `UNAVAILABLE`, not passed.
+
+### 4. Optional persistent-change planning request
 
 ```text
 Plan a reversible production deployment with explicit rollback and evidence.

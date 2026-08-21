@@ -5,6 +5,22 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.4 - 2026-08-21
+
+### Fixed
+
+- Removed the ineffective Claude Code `PreCompact` context loader because
+  ordinary successful stdout from that event is not injected into model
+  context.
+- Kept `SessionStart` with the `compact` matcher as the single Axiom routing
+  injection after both manual and automatic compaction, and synchronized the
+  public lifecycle and troubleshooting guidance.
+- Added publication fixtures that reject a restored `PreCompact` context
+  loader or a Claude Code `SessionStart` matcher that omits `compact`.
+
+See [the v0.7.4 release notes](docs/releases/v0.7.4.md) for validation evidence
+and known limits.
+
 ## 0.7.3 - 2026-08-20
 
 ### Fixed

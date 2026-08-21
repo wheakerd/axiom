@@ -66,7 +66,7 @@ body:
     id: axiom_version
     attributes:
       label: Axiom version, tag, or commit
-      placeholder: "Example: v0.7.3 or an immutable commit SHA"
+      placeholder: "Example: v0.7.4 or an immutable commit SHA"
     validations:
       required: true
 
