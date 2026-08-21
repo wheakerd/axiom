@@ -81,9 +81,10 @@ Testing Axiom's routing boundary in Claude Code
 
 ### Body
 
-Axiom is a public-beta Claude Code plugin with shared Skills and foreground
-`SessionStart`/`PreCompact` hooks. It routes a narrow set of high-impact
-workflows while ordinary requests continue through Claude Code normally.
+Axiom is a public-beta Claude Code plugin with shared Skills and a foreground
+`SessionStart` hook that reloads its routing gate after manual or automatic
+compaction. It routes a narrow set of high-impact workflows while ordinary
+requests continue through Claude Code normally.
 
 The design separates choosing instructions from granting action authority. An
 external-action route still needs the exact actor, target, payload, disclosure,

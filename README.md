@@ -125,8 +125,8 @@ reasoning, or a promise that compacted or unavailable history can be recovered.
 
 ## How Routing Works
 
-At session start or the configured compaction events, the platform hook reads
-`skills/using-axiom/SKILL.md` into the current session. That gate:
+At session start and after host compaction, the platform `SessionStart` hook
+reads `skills/using-axiom/SKILL.md` into the current session. That gate:
 
 1. Honors higher-priority system, developer, user, and repository instructions.
 2. Matches an explicit Axiom request or a request that clearly fits a bundled
@@ -207,13 +207,12 @@ The matcher is `startup|resume|clear|compact`. The exact checked-in command is:
 echo 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
 ```
 
-### Claude Code `PreCompact`
-
-The matcher is `manual|auto`. The exact checked-in command is:
-
-```bash
-echo 'You have Axiom. Preserve this routing front door while compacting:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
-```
+For Claude Code, the `compact` source follows either manual or automatic
+compaction. Successful `SessionStart` stdout is added to Claude's context, so
+this is Axiom's only post-compaction routing injection. Axiom declares no
+`PreCompact` handler: ordinary successful stdout from that event is not
+context injection. See the official
+[Claude Code hooks reference](https://code.claude.com/docs/en/hooks).
 
 These commands contain only `printf` or `echo` plus `cat`, or PowerShell output
 plus `Get-Content`. They contain no file-writing, background-launch, or network
@@ -281,6 +280,12 @@ checked-in definition. Then start a fresh Codex session or run
 `/reload-plugins` in Claude Code. Existing sessions may retain earlier hook and
 skill state.
 
+If routing is missing after manual or automatic Claude Code compaction, confirm
+that `compact` remains in the installed `SessionStart` matcher and that exactly
+one matching loading event occurred. Do not add or trust a `PreCompact`
+context-loading command as a workaround; its ordinary successful stdout does
+not enter Claude's context.
+
 Do not delete host data, clear caches, edit the installed plugin, or change
 global configuration merely to make routing appear. Follow the bounded
 [troubleshooting sequence](docs/getting-started.md#non-destructive-troubleshooting)
@@ -304,7 +309,7 @@ and report an unavailable validator as unavailable, not passed.
   routing/compatibility reporting paths.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.3 release notes](docs/releases/v0.7.3.md):
+- [Changelog](CHANGELOG.md) and [v0.7.4 release notes](docs/releases/v0.7.4.md):
   release history and version-specific evidence.
 
 ## Contributing

@@ -84,9 +84,13 @@ evidence.
 Platform hooks are deliberately separate. Codex declares
 `./hooks/codex-hooks.json`; Claude Code declares
 `./hooks/claude-hooks.json`. Both read the shared
-`skills/using-axiom/SKILL.md`, while Claude Code also owns `PreCompact`
-behavior. Keep the conventional `hooks/hooks.json` absent so one host does not
-auto-discover the other host's wrapper.
+`skills/using-axiom/SKILL.md` through `SessionStart`, including the `compact`
+source after host compaction. Keep the conventional `hooks/hooks.json` absent
+so one host does not auto-discover the other host's wrapper.
+
+Do not add a Claude Code `PreCompact` context-loading handler. Ordinary
+successful stdout from that event is not injected into model context;
+post-compaction routing belongs to `SessionStart` with the `compact` matcher.
 
 Review any hook change command by command. A hook must remain foreground-only,
 locally inspectable, and limited to loading the routing gate. Do not add file

@@ -11,7 +11,7 @@ The release tree contains two wrappers over one shared skill source:
 | Host | Checked-in support surface | Lifecycle surface |
 | --- | --- | --- |
 | Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, and `./skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are present |
-| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `./skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; `PreCompact` on `manual` and `auto` |
+| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `./skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; the `compact` source follows manual or automatic compaction, and no Axiom `PreCompact` handler is declared |
 
 Both manifests declare the same `./skills/` directory. Platform-specific
 marketplaces, manifests, and hooks remain separate. The distribution drift
@@ -49,7 +49,11 @@ session. To produce it:
    [Getting Started](getting-started.md), plus the explicit usage-optimization,
    task-review, and external-action requests in [Examples](examples.md) when
    validating those routes.
-5. Record pass, fail, not run, and unavailable results separately.
+5. For Claude Code compaction coverage, observe manual and automatic compaction
+   separately. Record whether exactly one `SessionStart` event with source
+   `compact` loaded the gate, then run the routed request and no-route control
+   after compaction in separate reviewed sessions.
+6. Record pass, fail, not run, and unavailable results separately.
 
 This document does not assert that a current end-to-end host check has run. A
 present executable or manifest alone would be too weak to support that claim.
@@ -58,6 +62,22 @@ present executable or manifest alone would be too weak to support that claim.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.4` reports:
+
+- the distribution and publication guards, JSON parsing, hook and documentation
+  agreement, packaged Skill shape, protected schemas, English-only, size, link,
+  artifact, and whitespace checks passed for the release candidate;
+- three hook-lifecycle fixtures accepted the checked-in `SessionStart(compact)`
+  control and rejected both an Axiom `PreCompact` context loader and a Claude
+  Code `SessionStart` matcher without `compact`;
+- the unchanged seven-Skill package shape passed the distribution and
+  publication guards, while Claude Code `2.1.220` strict plugin and marketplace
+  validation passed; and
+- fresh manual and automatic compaction, exactly-one-injection, and
+  post-compaction routed and no-route observations are `NOT-RUN` /
+  `UNAVAILABLE`: the available environment had no Claude Code subscription or
+  authenticated session, and no pass is implied.
 
 The Git record for `v0.7.3` reports:
 
@@ -275,7 +295,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.3 release notes](releases/v0.7.3.md),
+See the durable [v0.7.4 release notes](releases/v0.7.4.md),
+[v0.7.3 release notes](releases/v0.7.3.md),
 [v0.7.2 release notes](releases/v0.7.2.md),
 [v0.7.1 release notes](releases/v0.7.1.md),
 [v0.7.0 release notes](releases/v0.7.0.md),
@@ -299,6 +320,13 @@ event names in this document reflect the checked-in hook matchers. The host,
 however, owns marketplace behavior, command availability, lifecycle delivery,
 trust UI, and plugin execution.
 
+Claude Code's official lifecycle documentation identifies `SessionStart` with
+the `compact` matcher as the post-compaction context-loading path for both
+manual and automatic compaction. It does not make ordinary successful
+`PreCompact` stdout available as model context. The checked-in wrapper follows
+that distinction; a host observation is still required before claiming that a
+particular installed version delivered it exactly once.
+
 When host behavior changes, compare this guidance with current official host
 documentation and an installed-session observation. Documentation consistency
 is useful evidence; it is not runtime proof.
@@ -311,6 +339,9 @@ Unless a current validation report says otherwise, treat these as unverified:
 - every POSIX shell, Windows configuration, operating system, and host policy;
 - successful marketplace fetch or remote release availability;
 - end-to-end routing in a session that was not freshly started or reloaded;
+- manual or automatic Claude Code compaction reinjection without a current
+  observation of the `SessionStart` `compact` delivery and post-compaction
+  routed and control requests;
 - recovery of task history or raw tool output the host no longer exposes after
   compaction;
 - semantic equivalence of task-review selection and reports across Codex and

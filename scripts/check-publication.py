@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
-RELEASE_VERSION = "0.7.3"
+RELEASE_VERSION = "0.7.4"
 CURRENT_RELEASE_NOTES = f"docs/releases/v{RELEASE_VERSION}.md"
 
 REQUIRED_PUBLIC_FILES = tuple(dict.fromkeys((
@@ -520,10 +520,6 @@ CLAUDE_SESSION_COMMAND = (
     "echo 'You have Axiom. Load this startup front door before deciding whether any "
     "Axiom skill applies:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
-CLAUDE_PRECOMPACT_COMMAND = (
-    "echo 'You have Axiom. Preserve this routing front door while compacting:'; cat "
-    "\"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
-)
 APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
     "hooks/codex-hooks.json": {
         "SessionStart": {
@@ -543,14 +539,6 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
                 "type": "command",
                 "command": CLAUDE_SESSION_COMMAND,
                 "statusMessage": "Loading Axiom routing",
-            },
-        },
-        "PreCompact": {
-            "matcher": "manual|auto",
-            "handler": {
-                "type": "command",
-                "command": CLAUDE_PRECOMPACT_COMMAND,
-                "statusMessage": "Preserving Axiom routing",
             },
         },
     },
@@ -2521,9 +2509,9 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         fixture(
             "release",
             "release",
-            "refs/tags/v0.7.3",
-            {"release": {"tag_name": "v0.7.3"}},
-            target_ref="refs/tags/v0.7.3",
+            "refs/tags/v0.7.4",
+            {"release": {"tag_name": "v0.7.4"}},
+            target_ref="refs/tags/v0.7.4",
             target_sha=tag_sha,
         ),
         fixture(
@@ -2535,14 +2523,14 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         fixture(
             "workflow-dispatch-release-branch",
             "workflow_dispatch",
-            "refs/heads/release/v0.7.3",
+            "refs/heads/release/v0.7.4",
             {},
-            target_ref="refs/heads/release/v0.7.3",
+            target_ref="refs/heads/release/v0.7.4",
             target_sha=release_branch_sha,
         ),
         tag_push(
             "tag-create",
-            "v0.7.3",
+            "v0.7.4",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2572,7 +2560,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-extra-path",
-            "v0.7.3/extra",
+            "v0.7.4/extra",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2582,7 +2570,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-version-mismatch",
-            "v0.7.4",
+            "v0.7.5",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -2592,7 +2580,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-move",
-            "v0.7.3",
+            "v0.7.4",
             before=old_tag_sha,
             after=tag_sha,
             created=False,
@@ -2602,7 +2590,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-delete",
-            "v0.7.3",
+            "v0.7.4",
             before=old_tag_sha,
             after=null_sha,
             created=False,
@@ -2612,7 +2600,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-forced",
-            "v0.7.3",
+            "v0.7.4",
             before=old_tag_sha,
             after=tag_sha,
             created=False,
@@ -2622,7 +2610,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
         tag_push(
             "tag-inconsistent-created",
-            "v0.7.3",
+            "v0.7.4",
             before=old_tag_sha,
             after=tag_sha,
             created=True,
@@ -4216,6 +4204,64 @@ def check_exact_hook_shapes(
                     )
 
 
+def check_hook_lifecycle_fixtures(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> int:
+    """Prove the Claude wrapper rejects ineffective compaction injection."""
+    required = {"hooks/codex-hooks.json", "hooks/claude-hooks.json"}
+    if not required.issubset(documents):
+        failures.append("hook lifecycle fixtures require both platform hook documents")
+        return 0
+
+    fixtures: list[tuple[str, dict[str, dict[str, Any]], str]] = []
+
+    precompact = json.loads(json.dumps(documents))
+    precompact["hooks/claude-hooks.json"]["hooks"]["PreCompact"] = [
+        {
+            "matcher": "manual|auto",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": (
+                        "echo 'Load Axiom before compaction'; cat "
+                        '"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"'
+                    ),
+                    "statusMessage": "Loading Axiom before compaction",
+                }
+            ],
+        }
+    ]
+    fixtures.append(
+        ("claude-precompact-context-injection", precompact, "event set changed")
+    )
+
+    missing_compact = json.loads(json.dumps(documents))
+    missing_compact["hooks/claude-hooks.json"]["hooks"]["SessionStart"][0][
+        "matcher"
+    ] = "startup|resume|clear"
+    fixtures.append(
+        ("claude-session-start-without-compact", missing_compact, ".matcher is")
+    )
+
+    rejected = 0
+    for name, fixture, expected in fixtures:
+        fixture_failures: list[str] = []
+        check_exact_hook_shapes(fixture, fixture_failures)
+        if any(expected in failure for failure in fixture_failures):
+            rejected += 1
+        else:
+            failures.append(f"hook lifecycle negative fixture {name!r} was accepted")
+
+    positive_failures: list[str] = []
+    check_exact_hook_shapes(documents, positive_failures)
+    if positive_failures:
+        failures.append(
+            "checked-in hook lifecycle control failed: "
+            + "; ".join(positive_failures)
+        )
+    return rejected + 1
+
+
 def hook_commands(
     relative_path: str, document: dict[str, Any], failures: list[str]
 ) -> dict[str, list[str]]:
@@ -4576,6 +4622,7 @@ def main() -> int:
     check_shared_source_roots(documents, failures)
     check_declared_hook_paths(documents, failures)
     check_exact_hook_shapes(documents, failures)
+    hook_lifecycle_fixture_count = check_hook_lifecycle_fixtures(documents, failures)
     check_documented_hook_commands(documents, failures)
     action_pin_count = check_github_action_pins(failures)
     release_workflow_text = check_release_signature_workflow_contract(failures)
@@ -4616,6 +4663,7 @@ def main() -> int:
         f"{cross_route_contract_count} source-linked cross-route/resume contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
         f"{manifest_schema_fixture_count} manifest schema fixtures, "
+        f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
         f"{release_tag_fixture_count} release-tag fixtures, "
         f"{action_pin_count} immutable action pins, hooks, and packaged skills."
     )

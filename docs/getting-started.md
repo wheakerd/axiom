@@ -61,7 +61,7 @@ Run these commands inside Claude Code:
 
 The `/reload-plugins` step loads the newly installed plugin before hook review.
 
-### 2. Review both hooks
+### 2. Review the hook
 
 Open:
 
@@ -69,15 +69,16 @@ Open:
 /hooks
 ```
 
-Compare both installed handlers with
+Compare the installed handler with
 [README: Inspect The Hooks](../README.md#inspect-the-hooks):
 
-- `SessionStart` for `startup`, `resume`, `clear`, and `compact`;
-- `PreCompact` for `manual` and `auto`.
+- `SessionStart` for `startup`, `resume`, `clear`, and `compact`.
 
-Both commands should use the host-provided `CLAUDE_PLUGIN_ROOT` and read only
-`skills/using-axiom/SKILL.md`. Stop trusting a handler if extra commands or a
-different path appear.
+The `compact` source follows either manual or automatic compaction. This one
+command should use the host-provided `CLAUDE_PLUGIN_ROOT` and read only
+`skills/using-axiom/SKILL.md`. No Axiom `PreCompact` handler should appear.
+Stop trusting the handler if extra commands, events, or a different path
+appear.
 
 ## Verify One Routed Request
 
@@ -135,7 +136,11 @@ Use this sequence without deleting or rewriting state:
 5. Retry the explicit routed request and the ordinary control request. Record
    the host version, Axiom version or commit, request, expected route, and
    observed behavior.
-6. If a host command or validator is unavailable, record it as unavailable.
+6. For a missing post-compaction route in Claude Code, confirm that exactly one
+   `SessionStart` event with source `compact` followed the manual or automatic
+   compaction. Do not add a `PreCompact` context-loading command as a
+   workaround.
+7. If a host command or validator is unavailable, record it as unavailable.
    Do not install or update tooling merely to turn that absence into a pass.
 
 Do not use `git reset`, `git clean`, cache deletion, plugin-directory edits,
