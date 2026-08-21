@@ -6,34 +6,40 @@
 
 Think before AI thinks.
 
-Axiom is a safety-first, request-routed workflow plugin for Codex and Claude
-Code. It is for developers and maintainers who want repository instructions,
-Codex usage optimization, read-only Axiom task reviews, consequential external
-actions, Git publication, and persistent system changes to begin with explicit
-scope, authority, and evidence without turning every coding request into a
-special workflow.
+**Workflow guardrails for Codex and Claude Code.**
 
-Capable agents can start executing before the target, permission, rollback, or
-proof of success is clear. Axiom places a small routing gate into the foreground
-session context and loads one focused workflow only when the request matches.
-Codex and Claude Code use the same checked-in skills through separate platform
-wrappers and hooks.
+**Axiom is a safety-first workflow router for high-impact coding-agent
+actions. It makes scope, authorization, evidence, and rollback explicit while
+ordinary coding requests continue normally.**
 
-Route selection is not action authorization. Loading an Axiom workflow never,
-by itself, permits an edit, commit, push, deployment, deletion, credential use,
-or other mutation.
+Capable coding agents can begin before the target, authority, rollback path, or
+proof of success is clear. Axiom loads one focused workflow when a request
+needs those boundaries. It does not grant mutation authority: selecting a
+route never, by itself, permits an edit, commit, push, deployment, deletion,
+credential use, or external action.
 
-| Ask | Observable routing decision |
+Unlike a generic prompt collection, Axiom has an inspectable session hook, a
+small routing gate, shared versioned Skills, route-specific stop conditions,
+and checked-in validation fixtures. It is a public beta, not a sandbox or a
+guarantee that an agent cannot make a mistake.
+
+**Scope. Authority. Evidence. Rollback.**
+
+| Safe first request | Expected boundary |
 | --- | --- |
-| "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, inventory the instruction system, and report findings without changes |
-| "Run `effective-instructions:reconcile-preview` against this repository's current implementation." | Select `agents-architect`, compare existing AGENTS claims with the live working tree through the strict read-only reconciliation protocol, and report without changes |
-| "Explain the routing, authorization, actions, and evidence for this Axiom-guided task." | Select `review-axiom-task`, review only the available task evidence, and label missing history without rerunning the task |
-| "Send this approved message to this exact recipient once, then verify delivery state." | Select `confirm-external-action`, bind the actor, target, payload, disclosure, count, and retry boundary before one verified external effect |
-| "Summarize the purpose of this README. Do not modify files." | Select no Axiom workflow and continue normally without changing files |
+| "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, report evidence, and stop without changes |
+| "Summarize the purpose of this README. Do not modify files." | Select no Axiom route and continue normally |
+
+Install one host, inspect the installed hook, then test one routed request and
+one no-route control. Report the observed result with the
+[compatibility form](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml)
+or report a false positive or false negative with the
+[routing-case form](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml).
 
 ## 60-Second Start
 
-Choose one host and install from the Git marketplace.
+Choose one host and install Axiom for Codex & Claude Code from the Git
+marketplace.
 
 Codex:
 
@@ -57,30 +63,50 @@ Claude Code:
 After `/reload-plugins`, open `/hooks` and compare the installed handlers with
 the [exact checked-in commands](#inspect-the-hooks).
 
-Only after reviewing the hook for your host, run the `AGENTS.md` audit and
-control request above. Expect `agents-architect` to inventory and report only
-for the read-only audit; the README summary request should continue normally
-without changing files. The task-review request is an optional follow-up after
-a routed task and must not rerun it.
+Only after reviewing the hook for your host, run the two safe prompts above.
+The first request is expected to select `agents-architect` and remain
+read-only. The second is expected to select no Axiom route and continue through
+the host normally. These are expected contracts, not claims that your host has
+already reproduced them.
 
 If either result differs, use the non-destructive checks in
 [Getting Started](docs/getting-started.md) rather than deleting caches or
 rewriting local state.
 
-## Workflows At A Glance
+## When Axiom Routes
 
-| Route | Select it for | Core boundary |
+| User outcome | Route | Core boundary |
 | --- | --- | --- |
-| `agents-architect` | Initializing, auditing, splitting, migrating, or maintaining an `AGENTS.md` system, or explicitly reconciling existing guidance with current implementation | Inspect first; reconciliation is user-triggered, evidence-led, and limited to the authorized instruction system |
-| `optimize-codex-usage` | Explicitly reducing or diagnosing Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool churn, or reporting overhead | Preserve the required quality, safety, authorization, rollback, and evidence bar; label proxies and never invent hidden usage data |
-| `review-axiom-task` | Explicitly reviewing the routing, scope, authorization, actions, evidence, stops, and outcome of an Axiom-guided task | Keep the review read-only; separate Axiom guidance from host-agent actions; label evidence as observed, reconstructed, or unavailable |
-| `confirm-external-action` | Explicitly sending, publishing, inviting, purchasing, trading, deleting, or changing external app/account state | Bind actor, target, payload, disclosure, cost, count, and retry semantics; execute once and verify through the external system of record |
-| `traceable-git-submit` | Explicit checkpoint commits, baseline metadata, consolidation, recovery, or Git submit/publish/push | Keep target-controlled Git configuration non-executable; checkpoint/provenance, consolidation, remote refresh, push, and cleanup remain independent |
-| `reversible-system-change` | Planning, rehearsing, or executing a persistent install, upgrade, deployment, migration, retention action, or promotion with rollback or data risk | Plans and non-mutating rehearsals stay read-only; an isolated restore rehearsal and complete execution require separate exact write authority |
+| Audit or maintain repository instructions | `agents-architect` | Inspect first; changes remain limited to the authorized instruction system |
+| Reduce Codex usage overhead | `optimize-codex-usage` | Preserve the required quality and safety bar; never invent hidden usage data |
+| Review an Axiom-guided task | `review-axiom-task` | Keep the retrospective read-only and label unavailable history |
+| Confirm a consequential external action | `confirm-external-action` | Bind actor, target, payload, disclosure, count, and retry semantics before one verified effect |
+| Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup as independent permissions |
+| Plan or execute a reversible persistent change | `reversible-system-change` | Separate planning, rehearsal, promotion, rollback, and destructive retention authority |
+
+## When Normal Execution Continues
+
+Ordinary coding, documentation, explanation, status, local-commit, and
+conceptual requests continue through the host normally when no route clearly
+matches. A no-route result is not a safety certification; the host's normal
+permissions and repository instructions still apply.
 
 The startup gate is `using-axiom`. It selects the smallest matching route and
 continues normally when none applies. See [Examples](docs/examples.md) for
 routed requests and non-routing controls.
+
+## Public-Beta Evidence Status
+
+The package shape, manifests, hooks, route contracts, and validation fixtures
+are checked in and statically testable. Fresh-session behavior still depends on
+the named host version, operating system, policy, installation method, and
+installed snapshot. A current external reproduction must therefore be reported
+as such; repository presence or command success is not enough.
+
+Follow the [field-validation protocol](docs/field-validation.md) to classify a
+result as checked in, statically validated, host observed, externally
+reproduced, not verified, or unavailable. Current release-specific evidence is
+kept in [Compatibility](docs/compatibility.md).
 
 ## Deliberate Non-Goals
 
@@ -272,6 +298,12 @@ and report an unavailable validator as unavailable, not passed.
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
   evidence levels.
+- [Field Validation](docs/field-validation.md): a safe fresh-session protocol,
+  evidence labels, and design-partner reporting.
+- [Security Policy](SECURITY.md): private vulnerability boundaries and public
+  routing/compatibility reporting paths.
+- [Distribution and Launch](docs/marketing/distribution-plan.md): current
+  channel requirements, prepared listing copy, and publication gates.
 - [Changelog](CHANGELOG.md) and [v0.7.3 release notes](docs/releases/v0.7.3.md):
   release history and version-specific evidence.
 

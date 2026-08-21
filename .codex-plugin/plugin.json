@@ -14,6 +14,8 @@
     "agents-md",
     "codex-instructions",
     "ai-workflows",
+    "agent-safety",
+    "workflow-guardrails",
     "skills",
     "context-efficiency",
     "automation",
@@ -23,8 +25,8 @@
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "Axiom",
-    "shortDescription": "Safe, context-efficient workflows",
-    "longDescription": "Axiom routes Codex-native AGENTS architecture, explicit usage optimization, read-only task review, confirmed external actions, traceable Git submission, and reversible persistent system changes.",
+    "shortDescription": "Safe workflow guardrails for high-impact agent actions",
+    "longDescription": "Axiom routes focused workflows for repository instructions, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [

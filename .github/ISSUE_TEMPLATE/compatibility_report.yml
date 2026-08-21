@@ -1,0 +1,149 @@
+name: Compatibility report
+description: Report a fresh-session Axiom installation and routing observation.
+title: "[Compatibility]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report only what you observed. A manifest, installed executable, or successful command is not an end-to-end pass. Remove secrets, credentials, private URLs, customer data, and sensitive repository content from requests, logs, screenshots, and attachments.
+
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      description: Which host did you test?
+      options:
+        - Codex
+        - Claude Code
+        - Both (provide separate evidence for each)
+    validations:
+      required: true
+
+  - type: input
+    id: host_version
+    attributes:
+      label: Host version
+      description: Provide the exact version shown by the host.
+      placeholder: "Example: Codex CLI 0.149.0"
+    validations:
+      required: true
+
+  - type: input
+    id: operating_system
+    attributes:
+      label: Operating system
+      placeholder: "Example: Fedora Linux 43; macOS 15; Windows 11"
+    validations:
+      required: true
+
+  - type: input
+    id: shell
+    attributes:
+      label: Shell
+      description: Include the shell when it affects installation or hooks; otherwise write "Not relevant."
+      placeholder: "Example: bash 5.2, zsh, PowerShell 7, or not relevant"
+    validations:
+      required: true
+
+  - type: input
+    id: axiom_version
+    attributes:
+      label: Axiom version, tag, or commit
+      placeholder: "Example: v0.7.3 or an immutable commit SHA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation_method
+    attributes:
+      label: Installation method
+      options:
+        - Codex Git marketplace
+        - Claude Code Git marketplace
+        - Local development marketplace
+        - Other (explain in Evidence)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hook_review
+    attributes:
+      label: Installed-hook review
+      description: Compare every installed Axiom handler in /hooks with the checked-in definition before testing.
+      options:
+        - Reviewed and matched the checked-in definition
+        - Reviewed and differed from the checked-in definition
+        - Hook was not present
+        - Not reviewed
+        - Unavailable in this host
+    validations:
+      required: true
+
+  - type: textarea
+    id: routed_request
+    attributes:
+      label: Routed request
+      description: Paste the exact sanitized request expected to select an Axiom route.
+      placeholder: "Perform a read-only audit of this repository's AGENTS.md instruction system. Report findings only; do not modify files."
+    validations:
+      required: true
+
+  - type: input
+    id: expected_route
+    attributes:
+      label: Expected route
+      placeholder: "Example: agents-architect"
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed_route
+    attributes:
+      label: Observed route
+      description: State the selected route or the evidence that no route loaded. Do not infer hidden behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: control_request
+    attributes:
+      label: No-route control request
+      placeholder: "Summarize the purpose of this README. Do not modify files."
+    validations:
+      required: true
+
+  - type: textarea
+    id: control_behavior
+    attributes:
+      label: Observed control behavior
+      description: State whether normal host execution continued and whether any Axiom task route loaded.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Pass
+        - Fail
+        - Not run
+        - Unavailable
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include a minimal reproduction, relevant sanitized output, and any limitations. Separate results by host when testing both.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: sensitive_data
+    attributes:
+      label: Sensitive-data confirmation
+      options:
+        - label: I removed secrets, credentials, tokens, private URLs, customer data, and other sensitive content from this report and its attachments.
+          required: true
