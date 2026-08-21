@@ -99,10 +99,10 @@ endorsements.
 | Channel | Audience | Status | Submission mechanism | Readiness | Authorization |
 | --- | --- | --- | --- | --- | --- |
 | OpenAI universal Plugins Directory | ChatGPT and Codex plugin users | Official; current submission portal documented | OpenAI Platform plugin submission draft, review, then separate developer publication | `NOT-READY` | Exact approval for portal submission; later separate approval to publish |
-| Anthropic `claude-community` marketplace | Claude Code users | Official community marketplace; catalog syncs from reviewed submissions | Claude Console form for individual authors or claude.ai form for eligible organizations | `READY-AFTER-VALIDATION` | Exact approval to submit the form |
-| `ccplugins/awesome-claude-code-plugins` | Claude Code plugin discoverers | Active community list; repository accepted PRs on the status date | Fork, add one entry to the canonical category, open one PR | `READY-AFTER-PUBLIC-BRANCH` | Exact approval to fork/push/open the external PR |
+| Anthropic `claude-community` marketplace | Claude Code users | Official community marketplace; catalog syncs from reviewed submissions | Claude Console form for individual authors or claude.ai form for eligible organizations | Strict validation passed; `SUBMISSION-BLOCKED` without an authenticated form session | Authenticate the intended Console actor, preview the exact form, then authorize one submission |
+| `ccplugins/awesome-claude-code-plugins` | Claude Code plugin discoverers | Active community list; repository accepted PRs on the status date | Fork, add one entry to the canonical category, open one PR | `SUBMITTED`: [PR #377](https://github.com/ccplugins/awesome-claude-code-plugins/pull/377) open; not yet listed | Do not duplicate the submission; verify the default-branch entry after maintainer review |
 | OpenAI Developer Showcase | OpenAI and Codex builders | Official showcase exists; current public page does not expose a verifiable submission form | Submission path `NOT-VERIFIED`; community page links to the showcase | `NOT-VERIFIED` | Approval only after actor, form, payload, and visibility are re-verified |
-| OpenAI Developer Forum, Codex category | Codex users and plugin builders | Public community forum on an OpenAI domain; active Codex project topics observed | Create one authenticated topic in the Codex category with project tags | `DRAFT-READY` | Exact approval for the account, topic, category, tags, and one post |
+| OpenAI Developer Forum, Codex category | Codex users and plugin builders | Public community forum on an OpenAI domain; active Codex project topics observed | Create one authenticated topic in the Codex category with project tags | `DRAFT-READY`; available session returned a temporary IP restriction | Recheck access, then authorize the exact account, topic, category, tags, and one post |
 | GitHub repository discovery | Developers searching GitHub | Official repository settings | Repository API for description/topics; Settings UI for social preview and Discussions | Description, Topics, Discussions, and private reporting live; social-preview CDN verification pending | Completed actions verified 2026-08-21; future mutations require fresh approval |
 | Technical communities | Maintainers, DevEx, DevSecOps, release engineers | Community-specific | Platform-specific posts from the launch kit | Draft ready | Separate approval per platform and post |
 
@@ -152,6 +152,11 @@ The separately curated official marketplace has no application process.
   claude plugin validate --strict .claude-plugin/marketplace.json
   ```
 
+  Both strict commands passed against the exact public-tree content on
+  2026-08-21. The Console form redirected the available browser session to
+  sign-in, so no actor or final form payload could be bound and no submission
+  occurred.
+
 - Exact next action after approval: submit one Console form for Axiom using the
   medium copy, source URL, MIT license, and validated commit.
 - Verification: find `axiom` in the
@@ -182,6 +187,11 @@ Codex lists because it has a maintained taxonomy and active review queue.
   and readable placement based on the repository's own README.
 - Verification: confirm the merged default-branch entry and link target. An open
   PR is not a completed listing.
+
+Submission status: [PR #377](https://github.com/ccplugins/awesome-claude-code-plugins/pull/377)
+was opened on 2026-08-21. It adds exactly one README line under Workflow
+Orchestration from a GitHub-signed commit. The PR is a submission, not a
+listing; do not count it until the upstream default branch contains the entry.
 
 ## 4. OpenAI Developer Showcase
 
@@ -217,6 +227,10 @@ imply OpenAI endorsement or create a private support case.
 - Verification: read the public topic URL, category, tags, title, body, and link
   from a logged-out session. Do not retry after an uncertain submit until the
   account's topic history is checked.
+
+On 2026-08-21 the available browser session received a temporary Discourse IP
+restriction before the category page loaded. No composer, posting account,
+topic preview, or submission result was available, and no topic was created.
 
 ## 6. GitHub Discovery
 
