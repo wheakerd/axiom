@@ -18,6 +18,7 @@ silently broaden what the user authorized.
 | `README.md` and `docs/` | Public onboarding, behavior, trust, and release documentation |
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
 | `evals/` | Versioned black-box routing contracts and separately labeled host observations |
+| `evals/context-budget/` | Versioned always-loaded routing proxies, lifecycle slots, and reduction evidence |
 | `axiom_validation/` | Standard-library publication policy modules; not installed runtime behavior |
 | `tests/` | Focused unit tests and isolated policy fixtures; not installed runtime behavior |
 | `scripts/` and `.github/workflows/` | Stable validation entrypoints and CI wiring; not installed runtime behavior |
@@ -62,6 +63,14 @@ platform-specific copy of a shared skill.
 - Keep volatile model prices, plan limits, and quotas out of always-loaded
   instructions. Label byte/word/call measurements as proxies unless the host
   exposes exact scoped usage, and never auto-change model or reasoning settings.
+
+Compare always-loaded routing growth cumulatively with the immutable baseline
+in `evals/context-budget/`. An increase of at least 256 UTF-8 bytes or 5%
+requires review and a substantive justification; this is a review trigger, not
+a quality pass/fail shortcut. Any reduction experiment must use the same fixed
+routing workload before and after and report both routed and no-route results
+as passing. Do not remove a safety, authorization, stop, or evidence rule merely
+to meet a size target.
 
 When editing a route, review its direct references and examples for accidental
 permission expansion. State separately whether the change affects matching,
@@ -109,6 +118,7 @@ Run checks from the repository root and record the exact commands and outcomes:
 ```bash
 python3 scripts/check-distribution-drift.py
 python3 scripts/check-compatibility-evidence.py --self-test
+python3 scripts/measure-routing-context.py --check
 python3 scripts/check-publication.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 -m unittest tests.test_routing_evals -v

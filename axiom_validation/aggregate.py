@@ -11,6 +11,7 @@ from .action_graph import (
     check_github_action_pins,
 )
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
+from .context_budget import check_context_budget
 from .hooks import (
     check_declared_hook_paths,
     check_exact_hook_shapes,
@@ -63,6 +64,9 @@ def main() -> int:
         "repository-governance", check_repository_governance_contract, failures
     )
     run_policy("release", check_release_version_surfaces, failures)
+    context_scenario_count = run_policy(
+        "context-budget", check_context_budget, failures
+    )
     validator_fixture_count = run_policy(
         "parsers", check_validator_negative_fixtures, failures
     )
@@ -198,6 +202,7 @@ def main() -> int:
         f"{routing_eval_case_count} black-box routing cases, "
         f"{routing_benchmark_case_count} fixed host benchmark cases, "
         f"{routing_result_count} labeled host result records, "
+        f"{context_scenario_count} routing-context lifecycle scenarios, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "
