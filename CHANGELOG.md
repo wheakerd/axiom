@@ -5,6 +5,30 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.11 - 2026-08-23
+
+### Added
+
+- Added a font-free, repository-owned Axiom mark for both the Codex marketplace
+  logo and composer icon, plus light- and dark-surface brand colors, website and
+  support links, a concise listing description, and three non-mutating starter
+  prompts.
+- Added standard-library validation and negative controls for the supported
+  Codex listing fields, HTTPS links, color contrast, prompt limits, safe
+  in-package assets, SVG safety, image dimensions, file formats, and file size.
+
+### Changed
+
+- Advanced both plugin manifests to `0.7.11` while leaving the shared Skills,
+  hook definitions, route behavior, authorization boundaries, model settings,
+  reasoning settings, and runtime dependency surface unchanged.
+- Kept `interface.screenshots` absent because Axiom is a skills-only plugin
+  without MCP custom UI; no synthetic marketplace result or host success is
+  claimed.
+
+See [the v0.7.11 release notes](docs/releases/v0.7.11.md) for the listing
+contract, static validation evidence, and unavailable host and portal checks.
+
 ## 0.7.10 - 2026-08-23
 
 ### Added
