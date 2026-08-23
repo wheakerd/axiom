@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Plugin Architect"
+  short_description: "Design and audit packaged plugin architecture"
+  default_prompt: "Use $agent-plugin-architect to audit this packaged Codex and Claude Code plugin's shared Skills, routes, wrappers, hooks, and compatibility evidence."

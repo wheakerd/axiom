@@ -6,16 +6,20 @@ replace them and it is not installed runtime behavior.
 
 ## Surfaces
 
-- `schema-v1.json` owns the corpus, benchmark-manifest, and host-observation
-  record shapes.
+- `schema-v1.json` remains the byte-frozen six-route corpus, benchmark, and
+  observation contract. `schema-v2.json` adds the current seven-route shapes
+  without reinterpreting v1 evidence.
 - `routing/*.jsonl` contains one reviewed contract per line. Every public task
   route has canonical, paraphrased, near-miss, cross-route, multilingual, and
   post-compaction coverage.
-- `benchmarks/codex-core-v1.json` freezes the ordered 13-case acceptance and
-  safety slice at one fresh session per case.
+- `benchmarks/codex-core-v1.json` freezes the ordered historical 13-case
+  acceptance and safety slice. `benchmarks/codex-core-v2.json` selects the 17
+  current packaged-plugin cases at one fresh session per case.
 - `host-response-schema-v1.json` is the byte-frozen historical response
-  contract. `host-response-schema-v2.json` is the current prose-free semantic
-  response requested from a host run.
+  contract. `host-response-schema-v2.json` is the byte-frozen historical
+  prose-free contract. `host-response-schema-v3.json` keeps the same five
+  semantic fields and adds only the current route while retaining two routes
+  maximum.
 - `results/v0.7.7/` keeps Codex and Claude Code outcomes in separately labeled,
   append-only run records bound to immutable Axiom source.
 - `results/v0.7.8/codex/linux-candidate-1.json` records the terminal `UNKNOWN`
@@ -41,6 +45,14 @@ new manifest ID.
 English route definitions remain canonical. Non-English requests are input
 fixtures for unambiguous normalization, not published aliases or alternate
 route definitions.
+
+The successor v2 corpus adds `agent-plugin-architect` cases for canonical,
+paraphrased, repo-local, usage, retrospective, external-action, Git,
+installation, generic-plugin, cross-route, phase, ambiguity, multilingual,
+untrusted-data, and compaction boundaries. Every v2 case binds
+`codex-core-v2`; no v2 host result is checked in. Historical v1 corpus files,
+schemas, benchmark, and observations remain byte-identical and continue to be
+validated only against the six-route generation they declare.
 
 Observation records are append-only by `runId`. Every attempted run also binds
 the exact model-facing response schema by repository-relative `path` and
@@ -91,6 +103,11 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
+For v0.8.0, the 64-case combined corpus, 30 total benchmark memberships, and
+nine preserved observations pass static validation. Codex execution of
+`codex-core-v2` is `NOT-RUN`; authenticated Claude Code is `UNAVAILABLE /
+NOT-RUN`. If a future authorized run uses the v2 benchmark, it must bind
+`host-response-schema-v3.json` and a new immutable result record.
 
 ## Codex black-box method
 

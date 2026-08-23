@@ -14,15 +14,15 @@ figure is `ceil(UTF-8 bytes / 4)`, explicitly labeled as an estimate suitable
 only for before/after comparison of the same English Markdown surface. It must
 not be compared with billed, cached, or host-reported tokens as if equivalent.
 
-The immutable v0.7.9 gate is the cumulative baseline for v0.7.12:
+The immutable v0.7.9 gate is the cumulative baseline for v0.8.0:
 
-| Metric | Baseline | v0.7.12 candidate | Classification |
-| --- | ---: | ---: | --- |
-| UTF-8 bytes | 5,899 | 5,899 | exact static count used as a proxy |
-| Whitespace-delimited words | 757 | 757 | exact static count used as a proxy |
-| Logical lines | 107 | 107 | exact static count used as a proxy |
-| Unique direct references | 1 | 1 | exact static count used as a proxy |
-| `ceil(bytes / 4)` | 1,475 | 1,475 | estimate for the same English surface only |
+| Metric | Baseline | v0.8.0 candidate | Delta | Classification |
+| --- | ---: | ---: | ---: | --- |
+| UTF-8 bytes | 5,899 | 6,150 | +251 | exact static count used as a proxy |
+| Whitespace-delimited words | 757 | 788 | +31 | exact static count used as a proxy |
+| Logical lines | 107 | 111 | +4 | exact static count used as a proxy |
+| Unique direct references | 1 | 1 | 0 | exact static count used as a proxy |
+| `ceil(bytes / 4)` | 1,475 | 1,538 | +63 | estimate for the same English surface only |
 
 Reproduce the candidate measurement from any working directory:
 
@@ -37,21 +37,21 @@ matrix, and duplicate-injection semantics. Neither command writes files.
 
 ## Lifecycle Matrix
 
-The v0.7.12 record represents all required paths: fresh startup with a no-route
+The v0.8.0 record represents all required paths: fresh startup with a no-route
 request, fresh startup with a routed request, resume with no route, clear with
 a routed request, manual compaction with no route, automatic compaction with a
 routed request, and three repeated no-route requests in one otherwise unchanged
 session. The checked-in hook contract expects one gate injection in each
 scenario. That expected count is static configuration evidence, not an observed
-host event. This release adds no installed route: its accepted
-`agent-plugin-architect` design is reserved for Stage 2 in v0.8.0.
+host event. Routed slots now bind canonical, paraphrased, and post-compaction
+`agent-plugin-architect` contracts; this does not turn them into host results.
 
 Each host observation stores its injection events and observed count. The
 validator derives `duplicateInjectionDetected` as observed count greater than
 the scenario's expected count. A passing observation must have the exact count
 and no duplicate. Unrun or unavailable observations must retain null counts,
 null duplicate state, and an empty event list. Codex lifecycle observation for
-v0.7.12 is `NOT-RUN`; authenticated Claude Code observation is
+v0.8.0 is `NOT-RUN`; authenticated Claude Code observation is
 `UNAVAILABLE / NOT-RUN`.
 
 ## Growth Review And Reduction Evidence
@@ -76,5 +76,9 @@ context-budget validator. Safety rules, authorization boundaries, stop
 conditions, evidence gates, and model or reasoning settings cannot be removed
 or changed merely to obtain a smaller number.
 
+The 251-byte cumulative increase is about 4.25%. It remains below both the
+256-byte absolute and 5% relative review triggers, so the record classifies it
+as `below-threshold`; routing, safety, and static validation remain required.
+
 The machine-readable contract is [schema v1](schema-v1.json), and the current
-versioned record is [v0.7.12](results/v0.7.12.json).
+versioned record is [v0.8.0](results/v0.8.0.json).

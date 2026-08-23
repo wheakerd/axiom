@@ -88,18 +88,20 @@ rewriting local state.
 | User outcome | Route | Core boundary |
 | --- | --- | --- |
 | Audit or maintain repository instructions | `agents-architect` | Inspect first; changes remain limited to the authorized instruction system |
+| Design or audit packaged agent-plugin architecture | `agent-plugin-architect` | Require explicit Codex or Claude Code package intent; keep repo-local instructions and ordinary plugin code outside |
 | Reduce Codex usage overhead | `optimize-codex-usage` | Preserve the required quality and safety bar; never invent hidden usage data |
 | Review an Axiom-guided task | `review-axiom-task` | Keep the retrospective read-only and label unavailable history |
 | Confirm a consequential external action | `confirm-external-action` | Bind actor, target, payload, disclosure, count, and retry semantics before one verified effect |
 | Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup as independent permissions |
 | Plan or execute a reversible persistent change | `reversible-system-change` | Separate planning, rehearsal, promotion, rollback, and destructive retention authority |
 
-Version 0.7.12 accepts the future
+Version 0.8.0 implements the accepted
 [`agent-plugin-architect` route contract](docs/agent-plugin-architect-route-contract.md)
-for Stage 2, but does not install that route. The current gate still exposes
-only the six routes above and the seven direct Skills listed below. The planned
-implementation is a v0.8.0 minor release and must pass its own routing and host
-evidence gates before it can be described as available.
+for explicit packaged Codex or Claude Code plugin architecture. Repository-local
+`AGENTS.md` and `.agents/skills` work remains under `agents-architect`;
+ordinary plugin code and documentation still follow the no-route path. Git
+submission, installation, publication, deployment, and external actions remain
+separate active phases with their own owners.
 
 ## When Normal Execution Continues
 
@@ -125,7 +127,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.7.12` is `STATIC-ONLY`: immutable prior-release observations are preserved
+`0.8.0` is `STATIC-ONLY`: immutable prior-release observations are preserved
 but are not carried forward as a current-release host pass.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
@@ -133,12 +135,16 @@ immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.7.12 gate is
-byte-identical to that baseline.
+Markdown surface; it is not an exact token or credit count. The v0.8.0 gate is
+6,150 bytes, 788 words, 111 lines, one direct reference, and an estimated 1,538
+tokens: a measured cumulative increase of 251 bytes, below both review
+thresholds.
 
-The [routing evaluation corpus](evals/README.md) makes 47 host-independent
-expectations reviewable and separates them from the fixed 13-case Codex host
-benchmark. Its nine labeled records preserve five independent Codex `FAIL`
+The [routing evaluation corpus](evals/README.md) makes 64 host-independent
+expectations reviewable across the frozen v1 and current v2 contracts. The
+historical 13-case Codex benchmark and nine labeled observations remain bound
+to v1. The new 17-case `codex-core-v2` benchmark is statically validated but
+has no current host observation. Historical records preserve five Codex `FAIL`
 outcomes, two unreleased-candidate `UNKNOWN` outcomes, one unreleased-candidate
 Codex `PASS`, and Claude Code `UNAVAILABLE`.
 Its first two recovery runs returned the expected Case 1 routing fields but
@@ -191,7 +197,7 @@ order with one call each, no retry, zero canonical false negatives, zero
 high-impact false positives, zero clarification mismatches, and zero mutation
 attempts. Its V2 evidence is observer-derived and retains no model prose. This
 is an unreleased-candidate host pass, not a host pass bound to the immutable
-v0.7.8 release commit. No v0.7.12 host pass is inferred. Authenticated Claude
+v0.7.8 release commit. No v0.8.0 host pass is inferred. Authenticated Claude
 Code remains `UNAVAILABLE / NOT-RUN`.
 
 ## Deliberate Non-Goals
@@ -243,6 +249,7 @@ content is copied or forked for a host.
 
 - `using-axiom`, the session-start routing gate.
 - `agents-architect`, the repository-instruction workflow.
+- `agent-plugin-architect`, the packaged agent-plugin architecture workflow.
 - `optimize-codex-usage`, the explicit Codex consumption workflow.
 - `review-axiom-task`, the read-only Axiom task-review workflow.
 - `confirm-external-action`, the consequential external-action workflow.
@@ -386,7 +393,7 @@ and report an unavailable validator as unavailable, not passed.
 - [Architecture](docs/architecture.md): wrappers, hooks, routing, on-demand
   references, and normal continuation.
 - [Agent Plugin Architect Route Contract](docs/agent-plugin-architect-route-contract.md):
-  the accepted Stage 2 ownership and evaluation design, not an installed route.
+  the accepted Stage 2 ownership and evaluation design implemented in v0.8.0.
 - [Trust Model](docs/trust-model.md): authority, credentials, mutation,
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
@@ -403,7 +410,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.12 release notes](docs/releases/v0.7.12.md):
+- [Changelog](CHANGELOG.md) and [v0.8.0 release notes](docs/releases/v0.8.0.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -421,7 +428,7 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
 They compare the skill tree with both manifests, both marketplace wrappers,
-and the seven-item `Shared skills` list above; validate version-bound host
+and the eight-item `Shared skills` list above; validate version-bound host
 evidence and the current static-only boundary; preserve the dated repository
 governance and exact critical-path CODEOWNERS contract; and exercise each
 publication policy domain with standard-library-only focused tests. The

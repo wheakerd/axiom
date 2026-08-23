@@ -66,20 +66,19 @@ service, launches background work, or performs an update.
 The gate is intentionally narrow. General AI work, coding, documentation, and
 plugin-maintenance similarity do not make a request an Axiom task.
 
-### Accepted Future Route
+### Packaged Agent-Plugin Architecture
 
-Version 0.7.12 accepts the design for a future `agent-plugin-architect` route
-that will own explicit packaged Codex or Claude Code plugin architecture across
-shared Skills, route ownership, manifests, marketplace wrappers, hooks, and
-version-bound compatibility evidence. The full ownership, case, schema, and
-stop contract is recorded in
+Version 0.8.0 implements `agent-plugin-architect` for explicit packaged Codex
+or Claude Code plugin architecture across shared Skills, route ownership,
+manifests, marketplace wrappers, hooks, and version-bound compatibility
+evidence. Its accepted ownership, case, schema, and stop contract remains in
 [Agent Plugin Architect Route Contract](agent-plugin-architect-route-contract.md).
 
-The decision is **accepted for Stage 2, not implemented**. Version 0.7.12 does
-not add a Skill, modify `using-axiom`, expand the six-route gate, change either
-hook, or claim installed host behavior. The planned implementation belongs to
-v0.8.0 and must add successor evaluation contracts without changing historical
-schemas, benchmarks, or results.
+The route does not own repository-local `AGENTS.md` or `.agents/skills`
+systems, ordinary plugin source code or documentation, Git submission,
+installation, publication, deployment, or external actions. It uses one shared
+Skill tree, adds no startup hook, and keeps historical schemas, benchmarks, and
+results byte-identical while current contracts advance additively.
 
 ## 4. Task Skills And On-Demand References
 
@@ -89,6 +88,10 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
 - `agents-architect` performs only the metadata inventory needed to select one
   direct audit, initialization, design, migration, maintenance, runtime, or
   validation route.
+- `agent-plugin-architect` inventories a packaged plugin, then loads only the
+  directly linked architecture, route, trust, cross-host, evidence, or
+  validation reference needed for the active phase. It does not duplicate
+  Skills per host or infer host behavior from package shape.
 - `optimize-codex-usage` keeps conceptual answers in its main Skill and loads
   one context-audit reference only for measurement or implementation. It uses
   host metrics when exposed and otherwise labels size and call counts as

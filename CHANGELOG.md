@@ -5,6 +5,37 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.8.0 - 2026-08-23
+
+### Added
+
+- Added the direct `agent-plugin-architect` Skill and seven root-reachable
+  references for package inventory, route and trigger contracts, packaged
+  Skill architecture, hook trust, cross-host packaging, evaluation evidence,
+  and validation reporting.
+- Added additive seven-route corpus, host-response, and benchmark contracts
+  with 17 focused packaged-plugin cases. The frozen six-route schemas,
+  benchmark, and nine historical observations remain byte-identical.
+- Added v0.8.0 context-budget and release-status records that preserve Codex
+  host behavior as `NOT-RUN` and authenticated Claude Code as `UNAVAILABLE /
+  NOT-RUN`.
+
+### Changed
+
+- Advanced both plugin manifests to `0.8.0` and exposed the same shared
+  eight-Skill tree to Codex and Claude Code without changing either marketplace
+  wrapper or startup hook.
+- Extended `using-axiom` only for explicit packaged Codex or Claude Code plugin
+  architecture. Repo-local instruction systems, generic plugin work, Git,
+  installation, publication, deployment, and external effects retain their
+  existing owners and phase boundaries.
+- Measured the always-loaded gate at 6,150 bytes, 788 words, 111 lines, one
+  direct reference, and an estimated 1,538 tokens. The 251-byte cumulative
+  increase from v0.7.9 is below both review triggers.
+
+See [the v0.8.0 release notes](docs/releases/v0.8.0.md) for package shape,
+validation evidence, context metrics, and unavailable host checks.
+
 ## 0.7.12 - 2026-08-23
 
 ### Added

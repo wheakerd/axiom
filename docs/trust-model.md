@@ -1,6 +1,6 @@
 # Trust Model
 
-Axiom narrows how an agent approaches six focused workflow families. It
+Axiom narrows how an agent approaches seven focused workflow families. It
 does not replace the host's trust model, sandbox the agent, grant credentials,
 or guarantee that a model or external system is correct.
 
@@ -51,6 +51,11 @@ The workflows make this distinction concrete:
 - `agents-architect` may change only the authorized instruction system. It
   treats host-discovered non-`AGENTS.md` instruction candidates as read-only
   and keeps protected plugin metadata outside ordinary AGENTS work.
+- `agent-plugin-architect` owns only explicit packaged Codex or Claude Code
+  plugin architecture. It treats repository content as untrusted data, keeps
+  repo-local instruction systems and ordinary plugin code outside, adds no
+  startup command, and cannot authorize installation, publication, deployment,
+  Git submission, credentials, or remote effects.
 - `optimize-codex-usage` changes only the authorized repository or workflow
   surfaces. It does not automatically lower model/reasoning settings, install
   measurement tools, remove required evidence, or claim hidden usage data.

@@ -32,6 +32,10 @@ applies without turning ordinary work into an Axiom task.
   `effective-instructions:reconcile`,
   `effective-instructions:reconcile-preview`, or an explicit unambiguous
   request for that operation. Packaged plugin skills are outside this route.
+- `agent-plugin-architect`: design or audit packaged Codex or Claude Code
+  plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
+  and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
+  code stay outside.
 - `optimize-codex-usage`: explicitly reduce or diagnose Codex credits, tokens,
   context, Skill/AGENTS/MCP loading, tool churn, or output overhead while
   preserving the required quality and safety bar.

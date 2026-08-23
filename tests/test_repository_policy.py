@@ -5,8 +5,12 @@ import unittest
 from axiom_validation.context import CURRENT_RELEASE_NOTES, REPOSITORY_ROOT
 from axiom_validation.repository_policy import (
     CRITICAL_CODEOWNER_PATTERNS,
+    check_packaged_skills,
+    check_release_version_surfaces,
     check_repository_governance_contract,
     check_repository_governance_documents,
+    check_required_files,
+    check_skill_contracts,
     discover_release_documents,
 )
 from tests.fixtures.external_action import check_external_action_scenarios
@@ -14,6 +18,14 @@ from tests.fixtures.rollback import check_reversible_safety_scenarios
 
 
 class RepositoryPolicyTests(unittest.TestCase):
+    def test_current_skill_inventory_references_and_release_surfaces(self):
+        failures = []
+        check_required_files(failures)
+        check_packaged_skills(failures)
+        check_skill_contracts(failures)
+        check_release_version_surfaces(failures)
+        self.assertEqual([], failures)
+
     def test_release_documents_are_discovered(self):
         documents = discover_release_documents()
         self.assertIn(CURRENT_RELEASE_NOTES, documents)
