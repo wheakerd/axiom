@@ -60,14 +60,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.7, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.7 host-pass
+For v0.7.8, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.8 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.7.
+forward to v0.7.8.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -79,10 +79,152 @@ python3 scripts/check-compatibility-evidence.py --self-test
 A present executable or manifest alone remains too weak to support a host
 claim.
 
+## Routing Corpus And Host Benchmarks
+
+The [routing evaluation corpus](../evals/README.md) is a second, narrower
+evidence surface for route selection. Its 47 host-independent JSONL records are
+reviewable expectations, not observed model behavior. A fixed 13-case Codex
+manifest selects six canonical positives, three high-impact safety controls,
+one dual-route request, one ambiguity case, one multilingual plan, and one
+ordinary no-route request at repeat count one.
+
+Host result records live under `evals/results/` and identify a stable run ID,
+the applied response-schema path and SHA-256, immutable Axiom source, exact host
+and model, operating system, lifecycle, repeat count, route evidence,
+clarification count, mutation attempts, and explicit status. Static schema and
+coverage validation cannot turn `not-run` or `unavailable` into a pass. The
+checked-in v0.7.7 Codex run
+`codex-v0-7-7-linux-codex-core-v1-initial` is `FAIL`: its first and only
+attempted case exited nonzero without a bounded response, so route,
+clarification, and mutation fields remain null. It binds the schema used for
+that attempt at SHA-256
+`9294a71523ba3ba8411810a4678b1170ac6400e5af9351da896018a0324f82ab`.
+The stop-on-first-failure rule left cases 2-13 `not-run` without retry.
+Authenticated Claude Code evaluation is `UNAVAILABLE / NOT-RUN` because no
+subscription or authenticated session is available; its schema binding is
+null, and an offline validator result is separate static evidence.
+
+The independent recovery record uses the append-only identity
+`codex-v0-7-7-linux-codex-core-v1-recovery-1` and binds the V1 schema at
+SHA-256
+`377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6`.
+It is also `FAIL`: Case 1 exited 0 and returned the expected
+`agents-architect` route, zero clarification, false mutation fields, no tool
+event, and unchanged protected snapshots. The observer nevertheless failed
+closed because stderr contained an unexpected line. Cases 2-13 remain
+`not-run`; the correct routing output does not turn the terminal run into a
+pass or overwrite the initial failure. The initial and recovery-1 batches are
+terminal.
+
+A third append-only identity,
+`codex-v0-7-7-linux-codex-core-v1-recovery-2`, records the same
+immutable subject, fixed 13-case manifest, Codex model and lifecycle, and
+V1 response-schema digest. It is terminal `FAIL`: Case 1 exited 0 with the
+expected `agents-architect` route, zero clarification, false mutation fields,
+no tool event, and unchanged protected snapshots. Stderr-v2 observed two
+nonblank unexpected lines in `warning-prefix-unclassified` and
+`other-unclassified`, with no count or category overflow. It retained no raw
+stderr text or hashes, and the fatal unexpected classification prevented a
+pass. Cases 2-13 remain `not-run`. All three Codex batches are terminal, no
+case was retried, and no calls remain within those batches.
+
+Recovery-3 is separately recorded as
+`codex-v0-7-7-linux-codex-core-v1-recovery-3` against the same immutable
+subject, manifest, model, lifecycle, and V1 response schema. It is terminal
+`FAIL`: Cases 1-10 passed every process, lifecycle, tool, bounded-response,
+routing, clarification, mutation, and protected-snapshot gate. Case 11 selected
+`agents-architect` and `optimize-codex-usage` with zero clarification instead of
+the frozen empty route set and one clarification, producing the first semantic
+failure. Stderr remained diagnostic-only and non-causal. Cases 12-13 were not
+run, and no retry or calls remain within the batch. All four v0.7.7 Codex
+batches are terminal.
+
+The v0.7.8 candidate now places an explicit ambiguity-precedence rule before
+the usage-reduction route rule: mutually exclusive implementation choices with
+materially different routes, write surfaces, or authorization and safety
+boundaries must receive one clarification before route selection. Ten
+post-repair cases passed, but the critical ambiguity behavior remains
+unobserved because its bounded response was malformed. The repair does not
+reclassify or replace recovery-3.
+
+The independent post-fix batch
+`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-1` was authorized against
+unreleased version `0.7.8`, immutable commit
+`389495ae314cff2a5e3491df5ace4a8536de25d9`, and tree
+`7afb38829e49a049d0376fc49fb07bde57633e67`. Its tag is explicitly null and its
+release state is `candidate-unreleased`; no `v0.7.8` tag is claimed. It is
+terminal `UNKNOWN` after 11 calls: Cases 1-10 passed, Case 11 produced malformed
+bounded output, and Cases 12-13 remain `not-run`. No semantic fields are
+inferred for Case 11, its exact malformed-response subtype is unavailable
+because the private raw artifact was already destroyed, and no case was
+retried. This batch left the critical repair unobserved; Candidate 4 below
+observes it passing. v0.7.8 remains `STATIC-ONLY` until its immutable release
+identity exists.
+
+Candidate diagnostics separate model structure from response acceptance. V1
+historically included model-authored evidence and corresponding bounded/privacy
+gates. V2 contains only the five semantic routing and mutation fields; route
+uniqueness remains an independent acceptance gate, while public evidence is
+generated deterministically from validated observer facts and labeled
+`observer-derived`. Neither protocol retains raw response text, fragments,
+response-content hashes, or exception text, and neither can convert an unknown
+or failed semantic gate into a pass.
+
+A second independent batch,
+`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-2`, was evaluated against
+immutable commit `1087a10e76fd54e1508bee3938cb03a1e17a2f5e` and tree
+`6f838581d1dcc99a5b870920c1c20889c1eb2607`, with `tag: null` and the explicit
+unreleased-candidate label. It is terminal `UNKNOWN` after nine calls: Cases
+1-8 passed, Case 9 was rejected as `schema-evidence` by the legacy combined
+observer, and Cases 10-13 remain `not-run`. That category also covered stricter
+evidence acceptance, so it does not prove a model-schema violation; the
+destroyed response prevents a narrower subtype or semantic inference. No case
+was retried. Candidate 1 remains immutable, and neither batch is a host pass.
+
+A third independent batch,
+`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-3`, was evaluated against
+immutable commit `449b3c01e0b4e3ef6fd6902efe3991c0b88758cd` and tree
+`5e06400c77d9ca0b789710ab134e0d697adfe943`, with `tag: null`. It is terminal
+`FAIL` after eight calls: Cases 1-7 passed, while Case 8 preserved the expected
+empty route set, zero clarification, and false mutation fields but exceeded the
+closed evidence-length acceptance gate. The rejected evidence is not retained;
+Cases 9-13 remain `not-run`, no case was retried, and no host pass is claimed.
+
+Candidate 4 uses the independent run ID
+`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-4` and terminal path
+`evals/results/v0.7.8/codex/linux-candidate-4.json`. Against immutable
+unreleased commit `70e1242ba9f038fe663f924f167108d8940106a8` and tree
+`780b7401f7f12af9c9ab310a24c02c9aae84fe62`, all 13 ordered cases passed one
+fresh call each without retry. Candidate 3 remains frozen. v0.7.8 remains
+`STATIC-ONLY` until its immutable release identity exists, and authenticated
+Claude Code remains `UNAVAILABLE / NOT-RUN`.
+
+The first failure or unknown result stops the remaining fixed batch without a
+retry. That case preserves every known and null field; later cases remain
+`not-run`, and summary metrics remain null when the partial batch cannot support
+complete arithmetic.
+
+The corpus includes post-compaction contracts, but the fixed Codex acceptance
+batch uses fresh-start sessions. Neither corpus presence nor a fresh-start run
+proves compaction lifecycle behavior.
+
 ## Historical Validation
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.8` reports:
+
+- 47 versioned black-box routing contracts cover every public route plus near
+  misses, overlap, ambiguity, multilingual requests, no-route controls,
+  untrusted input, and post-compaction expectations;
+- a fixed 13-case, repeat-one Codex manifest and strict response schema keep
+  route, clarification, mutation-attempt, and failure evidence reviewable;
+- static corpus validation and observed host results remain separate, with
+  failed, unavailable, and not-run outcomes preserved; and
+- v0.7.8 remains `STATIC-ONLY`: Candidate 4 proves the immutable unreleased
+  candidate, not the future release tag; authenticated Claude Code remains
+  unavailable without a subscription or session.
 
 The Git record for `v0.7.7` reports:
 
@@ -93,9 +235,12 @@ The Git record for `v0.7.7` reports:
   aggregate output and exit-code contract remain stable;
 - release identity is derived from the synchronized manifests and release-note
   history is discovered from `docs/releases/`; and
-- v0.7.7 remains `STATIC-ONLY`: no fresh Codex host lifecycle was run, every
-  Claude Code case remains `UNAVAILABLE` without an authenticated subscription,
-  and immutable v0.7.4 observations remain prior-release evidence only.
+- at v0.7.7 publication, no fresh Codex host lifecycle was run; the later
+  v0.7.8 evaluation records preserve three independent v0.7.7-bound Case 1
+  failures and each run's 12 stopped cases without turning any into a pass;
+- every Claude Code case remains `UNAVAILABLE` without an authenticated
+  subscription, and immutable v0.7.4 observations remain prior-release
+  evidence only.
 
 The Git record for `v0.7.6` reports:
 
@@ -361,7 +506,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.7 release notes](releases/v0.7.7.md),
+See the durable [v0.7.8 release notes](releases/v0.7.8.md),
+[v0.7.7 release notes](releases/v0.7.7.md),
 [v0.7.6 release notes](releases/v0.7.6.md),
 [v0.7.5 release notes](releases/v0.7.5.md),
 [v0.7.4 release notes](releases/v0.7.4.md),

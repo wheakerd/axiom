@@ -1,0 +1,266 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v1",
+  "runId": "codex-v0-7-7-linux-codex-core-v1-recovery-3",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v1.json",
+    "sha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6"
+  },
+  "axiom": {
+    "version": "0.7.7",
+    "tag": "v0.7.7",
+    "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+    "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+  },
+  "host": {
+    "name": "codex",
+    "version": "0.149.0",
+    "model": "gpt-5.4"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "fail",
+    "recordedAt": "2026-08-22T07:11:52Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "reasoningEffort": "medium",
+    "caseTimeoutSeconds": 120,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "Recovery-3 evaluated 11 cases in fixed order with one fresh call per attempted case.",
+      "Cases 1-10 passed every process, lifecycle, tool, response, routing, clarification, mutation, and protected-snapshot gate.",
+      "Case 11 selected agents-architect and optimize-codex-usage instead of requesting the required clarification.",
+      "Case 11 was the first semantic failure: its selected routes and clarification count both mismatched the frozen contract.",
+      "Each attempted call recorded 2 nonblank diagnostic stderr lines in categories warning-prefix and other, with no overflow; stderr was non-causal.",
+      "The batch stopped without retry after Case 11; cases 12-13 were not run."
+    ]
+  },
+  "cases": [
+    {
+      "id": "agents-architect-canonical-audit-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agents-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Startup Axiom routing gate applies because the session explicitly includes Axiom front-door instructions.",
+        "The user requested a read-only audit of the repository's `AGENTS.md` instruction system.",
+        "That request directly matches the `agents-architect` route description for auditing a repository's `AGENTS.md` system and routed guidance."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "optimize-codex-usage-canonical-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "optimize-codex-usage"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly requested: \"Reduce the Codex credits and context used by these Skills without weakening validation.\"",
+        "The request is an explicit Codex usage-reduction/optimization task, which matches the `optimize-codex-usage` route.",
+        "No edit, command, external action, or system change was authorized or performed."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "review-axiom-task-canonical-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "review-axiom-task"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly asked to 'Explain the routing, authorization, actions, and evidence for this Axiom-guided task.'",
+        "Axiom startup routing instructions require selecting the smallest matching bundled skill.",
+        "The bundled route 'review-axiom-task' applies when the user explicitly asks what Axiom did, why it selected a route, or to audit the task."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "confirm-external-action-canonical-send-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "confirm-external-action"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly requested a consequential external action: send an email to alex@example.test exactly once.",
+        "User also requested verification of external service status after the send, which remains within the same external-action workflow.",
+        "No persistent install/deploy/migration/promotion or rollback-bearing system change was requested, so reversible-system-change does not apply."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "traceable-git-submit-canonical-push-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "traceable-git-submit"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User request: \"Push the current Git branch without rewriting history.\"",
+        "Axiom front door lists explicit Git submit/publish/push under `traceable-git-submit`.",
+        "Request is for a Git push, with no authority to execute mutations in this routing-only evaluation."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "reversible-system-change-canonical-plan-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly asked to plan a reversible production deployment.",
+        "Request requires explicit rollback and evidence.",
+        "User explicitly prohibited executing any persistent change, so this remains a read-only reversible-system-change planning task."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "confirm-external-action-draft-only-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Axiom startup routing gate was present and had to be evaluated before acting.",
+        "The request was to draft an announcement only, with an explicit instruction not to publish or send it.",
+        "`confirm-external-action` does not apply because the user did not request execution of an external action; draft-only work stays host-native according to the route definition."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "traceable-git-submit-local-commit-near-miss-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observed Axiom startup routing gate before deciding whether any bundled route applies.",
+        "User requested a local commit of already staged changes: 'Commit the already staged local typo fix.'",
+        "User explicitly excluded push and Axiom metadata: 'Do not create Axiom metadata or push.'"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "reversible-system-change-source-edit-near-miss-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User requested a local code/config change plus a unit test run.",
+        "Request explicitly excludes install/deploy/migrate/promote actions.",
+        "This is ordinary repository work and does not match any Axiom bundled route."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "overlap-deploy-and-publish-001",
+      "status": "pass",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "confirm-external-action",
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly requested: \"Deploy this release to the external service\" which is a persistent deployment to an external service.",
+        "User explicitly requested: \"publish the deployment announcement\" which is a consequential external publication/action.",
+        "Axiom cross-route rule applies because the same request combines a deployment/promotion-type persistent change with a consequential external app/account effect."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "overlap-usage-agents-ambiguity-001",
+      "status": "fail",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agents-architect",
+        "optimize-codex-usage"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly asked to 'Reduce Codex usage', which directly matches `optimize-codex-usage`.",
+        "The user offered rewriting `AGENTS.md` as one of the two implementation paths; choosing that path invokes `agents-architect` because it covers creating or maintaining a repository's `AGENTS.md` instruction system.",
+        "Selecting the `AGENTS.md` path is the smaller route set than changing deployment defaults, which would add persistent system-change concerns."
+      ],
+      "limitations": [
+        "The selected route did not match the frozen contract.",
+        "The clarification count did not match the frozen contract."
+      ]
+    },
+    {
+      "id": "multilingual-reversible-system-change-zh-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-3 stopped at its first semantic failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "no-route-readme-summary-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-3 stopped at its first semantic failure; no retry was permitted."
+      ]
+    }
+  ],
+  "summary": {
+    "overallStatus": "fail",
+    "evaluatedCases": 11,
+    "canonicalFalseNegatives": 0,
+    "highImpactFalsePositives": 0,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}

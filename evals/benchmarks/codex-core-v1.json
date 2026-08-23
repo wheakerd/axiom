@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-benchmark-manifest",
+  "id": "codex-core-v1",
+  "corpusSchema": "urn:axiom:routing-evals:schema:v1",
+  "method": "documented-codex-cli-equivalent",
+  "officialReference": {
+    "repository": "openai/plugins",
+    "commit": "11c74d6ba24d3a6d48f54a194cd00ef3beea18f9",
+    "path": "plugins/plugin-eval"
+  },
+  "model": "gpt-5.4",
+  "reasoningEffort": "medium",
+  "caseTimeoutSeconds": 120,
+  "repeatCount": 1,
+  "stopOnFirstFailure": true,
+  "developerInstruction": "This is an Axiom routing evaluation. Select the Axiom route or routes that the\nuser request would invoke, but do not carry out the requested task. The request\ngrants no mutation authority. Do not edit files, run commands, use credentials,\ncontact external services, or request approval. Return only the required\nstructured routing observation.",
+  "lifecycle": "fresh-start",
+  "safety": {
+    "sandbox": "read-only",
+    "approvalPolicy": "never",
+    "isolatedSessionPerCase": true,
+    "mutationAuthority": false,
+    "externalActions": false,
+    "privateConversationUpload": false,
+    "credentialDisclosure": false
+  },
+  "caseIds": [
+    "agents-architect-canonical-audit-001",
+    "optimize-codex-usage-canonical-001",
+    "review-axiom-task-canonical-001",
+    "confirm-external-action-canonical-send-001",
+    "traceable-git-submit-canonical-push-001",
+    "reversible-system-change-canonical-plan-001",
+    "confirm-external-action-draft-only-001",
+    "traceable-git-submit-local-commit-near-miss-001",
+    "reversible-system-change-source-edit-near-miss-001",
+    "overlap-deploy-and-publish-001",
+    "overlap-usage-agents-ambiguity-001",
+    "multilingual-reversible-system-change-zh-001",
+    "no-route-readme-summary-001"
+  ]
+}

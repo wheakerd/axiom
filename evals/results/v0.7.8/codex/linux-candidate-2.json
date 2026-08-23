@@ -1,0 +1,281 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v1",
+  "runId": "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-2",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v1.json",
+    "sha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6"
+  },
+  "axiom": {
+    "version": "0.7.8",
+    "tag": null,
+    "commit": "1087a10e76fd54e1508bee3938cb03a1e17a2f5e",
+    "tree": "6f838581d1dcc99a5b870920c1c20889c1eb2607",
+    "releaseState": "candidate-unreleased"
+  },
+  "host": {
+    "name": "codex",
+    "version": "0.149.0",
+    "model": "gpt-5.4"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "unknown",
+    "recordedAt": "2026-08-23T00:06:22Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "callCount": 9,
+    "reasoningEffort": "medium",
+    "caseTimeoutSeconds": 120,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "Candidate-2 evaluated nine cases in fixed order with one fresh call per attempted case.",
+      "Cases 1-8 passed every process, lifecycle, tool, response, routing, clarification, mutation, and protected-snapshot gate.",
+      "Case 9 exited zero with a clean lifecycle and unchanged snapshots, but the observer recorded responseDiagnostic schema-evidence.",
+      "That legacy category combined the model schema with stricter evidence acceptance and does not prove a model-schema violation.",
+      "Case 9 route, clarification, and mutation fields remain unknown; the destroyed private response prevents a narrower subtype.",
+      "Each attempted call recorded two nonblank diagnostic stderr lines in categories warning-prefix and other; stderr was non-causal.",
+      "The batch stopped without retry after Case 9; cases 10-13 were not run."
+    ]
+  },
+  "cases": [
+    {
+      "id": "agents-architect-canonical-audit-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agents-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User requested a read-only audit of the repository's `AGENTS.md` instruction system.",
+        "The request clearly matches the `axiom:agents-architect` route for auditing a repository's AGENTS instruction system.",
+        "The user explicitly prohibited modification: 'Report findings only; do not modify files.'"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "optimize-codex-usage-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "optimize-codex-usage"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly asked to reduce Codex credits and context usage.",
+        "The request targets Skill usage efficiency rather than ordinary coding work.",
+        "No distinct deployment, external action, Git submit, or AGENTS architecture change was requested."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "review-axiom-task-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "review-axiom-task"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly asked to 'Explain the routing, authorization, actions, and evidence for this Axiom-guided task.'",
+        "The startup Axiom front door states that an explicit retrospective selects `review-axiom-task`.",
+        "The request is for review/audit of the current Axiom-guided task, not execution, mutation, or external action."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "confirm-external-action-canonical-send-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "confirm-external-action"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly requests a consequential external action: send an email to alex@example.test.",
+        "Request includes execute-once semantics ('once'), which matches confirm-external-action's exact action envelope requirements.",
+        "Follow-up to verify external service status is read-only and does not add a separate Axiom route."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "traceable-git-submit-canonical-push-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "traceable-git-submit"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly requested a Git publish action: \"Push the current Git branch without rewriting history.\"",
+        "Axiom front door lists explicit Git submit/publish/push under `traceable-git-submit`.",
+        "No file edits, commands, network calls, or other mutations were performed because this turn is routing-only and grants no mutation authority."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "reversible-system-change-canonical-plan-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Loaded Axiom startup routing gate and matched the request against bundled routes.",
+        "User asked to 'Plan a reversible production deployment with explicit rollback and evidence.'",
+        "User explicitly added 'Do not execute any persistent change,' which keeps the task in read-only planning scope under reversible-system-change."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "confirm-external-action-draft-only-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Axiom startup routing gate was present and evaluated before route selection.",
+        "User request: \"Draft the announcement, but do not publish or send it.\"",
+        "`confirm-external-action` does not apply because the request is draft-only and explicitly excludes sending/publishing, which keeps it host-native per the route boundary."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "traceable-git-submit-local-commit-near-miss-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User requested an ordinary local Git commit of already staged changes.",
+        "The request explicitly excludes Axiom metadata creation and pushing.",
+        "Axiom front door states ordinary local staging and commits stay host-native, while `traceable-git-submit` is reserved for explicit traceable checkpoint/baseline/submit/publish workflows."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "reversible-system-change-source-edit-near-miss-001",
+      "status": "unknown",
+      "responseDiagnostic": "schema-evidence",
+      "acceptanceDiagnostic": "not-evaluated",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "The Candidate-2 observer recorded schema-evidence; route, clarification, and mutation fields are unknown.",
+        "Its legacy combined classifier cannot identify which evidence constraint rejected the destroyed private response."
+      ]
+    },
+    {
+      "id": "overlap-deploy-and-publish-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because Candidate-2 stopped at its first unknown result; no retry was permitted."
+      ]
+    },
+    {
+      "id": "overlap-usage-agents-ambiguity-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because Candidate-2 stopped at its first unknown result; no retry was permitted."
+      ]
+    },
+    {
+      "id": "multilingual-reversible-system-change-zh-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because Candidate-2 stopped at its first unknown result; no retry was permitted."
+      ]
+    },
+    {
+      "id": "no-route-readme-summary-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because Candidate-2 stopped at its first unknown result; no retry was permitted."
+      ]
+    }
+  ],
+  "summary": {
+    "overallStatus": "unknown",
+    "evaluatedCases": 9,
+    "canonicalFalseNegatives": 0,
+    "highImpactFalsePositives": null,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}

@@ -58,6 +58,13 @@ both `confirm-external-action` and `reversible-system-change`. Keep the exact
 external action envelope and the persistent write-set and rollback gates
 independent; authorization under either route never satisfies the other.
 
+When a request delegates a choice among mutually exclusive implementations and
+the alternatives would select materially different route sets, write surfaces,
+or authorization or safety boundaries, routing MUST NOT choose an alternative
+for the user. Select no route yet and ask exactly one concise clarification
+question. Wording such as "choose one" does not remove the ambiguity. Once the
+user chooses an unambiguous implementation, resume normal route selection.
+
 An explicit usage-reduction goal selects `optimize-codex-usage`. Add another
 route only when the requested implementation also needs that route's distinct
 authorization or safety contract. Ordinary AGENTS audits select only

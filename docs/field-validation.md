@@ -120,6 +120,46 @@ version, and review evidence for both the routed prompt and no-route control.
 Anonymous or incomplete reports can still be useful without receiving that
 label.
 
+## Black-Box Routing Corpus
+
+The [routing evaluation corpus](../evals/README.md) expands the two-request
+field sequence into 47 versioned, host-independent contracts. It covers every
+public route, paraphrases, near misses, ownership overlap, plan-only and
+draft-only requests, ordinary no-route controls, ambiguity, multilingual
+requests, post-compaction state, and untrusted input. Static validation proves
+the records are internally complete; it does not prove a host selected the
+expected route.
+
+The fixed `codex-core-v1` host manifest contains 13 ordered cases at repeat
+count one. Run each case in one fresh installed-plugin session and a fresh
+disposable workspace with the reviewed plugin identity and startup hook, a
+read-only sandbox, approvals disabled, no web or external-service tools, and
+the reviewed response schema. The exact corpus request is data, not authority:
+do not carry out its task, use credentials, contact a service, or mutate local
+or remote state.
+
+Record timeout, malformed output, an absent routing gate, uncertain outcome,
+contract mismatch, or unexpected mutation as the first failed attempt. Stop
+the remaining batch, do not retry, and do not add an extra call. Preserve known
+fields and leave genuinely unknown fields null; every later case is `not-run`
+with the stop reason and no observational claim. Summary metrics stay null when
+an unknown or unattempted case prevents complete arithmetic. Keep route evidence
+minimal and sanitized. A host record must identify its stable run ID, applied
+response-schema path and SHA-256, immutable Axiom tag, commit, and tree, plus
+host, model, operating system, lifecycle, repeat count, selected routes,
+clarification count, mutation attempt and outcome, per-case status, and
+limitations.
+
+Keep run records append-only. A recovery run receives a new identity and result
+file; do not replace the original outcome. A passing prefix remains private
+until all cases pass or a first failure produces a terminal pass-prefix,
+first-failure, and `not-run`-suffix record.
+
+Post-compaction cases in the corpus remain static expectations until run in a
+real post-compaction lifecycle. An authenticated Claude Code result remains
+`UNAVAILABLE / NOT-RUN` when no subscription or session is available; a strict
+offline plugin validator is a separate static check.
+
 ## Machine-Readable Records
 
 The versioned format is defined by
@@ -156,8 +196,8 @@ fresh-host record for that exact release with:
 
 ```bash
 python3 scripts/check-compatibility-evidence.py \
-  --record axiom-v0.7.7-compatibility.json \
-  --expected-tag v0.7.7 \
+  --record axiom-v0.7.8-compatibility.json \
+  --expected-tag v0.7.8 \
   --expected-commit <40-character-commit>
 ```
 

@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v1",
+  "runId": "codex-v0-7-7-linux-codex-core-v1-recovery-2",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v1.json",
+    "sha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6"
+  },
+  "axiom": {
+    "version": "0.7.7",
+    "tag": "v0.7.7",
+    "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+    "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+  },
+  "host": {
+    "name": "codex",
+    "version": "0.149.0",
+    "model": "gpt-5.4"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "fail",
+    "recordedAt": "2026-08-22T05:13:31Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "reasoningEffort": "medium",
+    "caseTimeoutSeconds": 120,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "The recovery-2 call returned a schema-valid routing response, completed cleanly, and exited 0.",
+      "Its route, clarification, mutation, tool-event, and protected-snapshot fields matched the frozen Case 1 contract.",
+      "Stderr policy axiom-stderr-v2 observed 2 nonblank and 2 unexpected lines; both count-overflow flags were false.",
+      "Its stderr categories were warning-prefix-unclassified and other-unclassified; category overflow was false.",
+      "Unexpected stderr is fatal under axiom-stderr-v2, so Case 1 failed despite correct routing output.",
+      "The bounded observer retained no raw stderr text or line hashes.",
+      "The recovery-2 batch stopped after its first failure; cases 2-13 were not run."
+    ]
+  },
+  "cases": [
+    {
+      "id": "agents-architect-canonical-audit-001",
+      "status": "fail",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agents-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "User explicitly requested a read-only audit of the repository's AGENTS.md instruction system.",
+        "Axiom startup gate was provided and requires selecting the smallest matching bundled route before any task work.",
+        "The bundled route definition for agents-architect covers auditing a repository's AGENTS.md instruction system and routed guidance."
+      ],
+      "limitations": [
+        "Codex stderr contained 2 unexpected nonblank lines under axiom-stderr-v2.",
+        "Categories were warning-prefix-unclassified and other-unclassified; no count or category overflow occurred.",
+        "Unexpected stderr is fatal; exit 0 and correct routing fields cannot override it."
+      ]
+    },
+    {
+      "id": "optimize-codex-usage-canonical-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "review-axiom-task-canonical-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "confirm-external-action-canonical-send-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "traceable-git-submit-canonical-push-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "reversible-system-change-canonical-plan-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "confirm-external-action-draft-only-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "traceable-git-submit-local-commit-near-miss-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "reversible-system-change-source-edit-near-miss-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "overlap-deploy-and-publish-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "overlap-usage-agents-ambiguity-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "multilingual-reversible-system-change-zh-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    },
+    {
+      "id": "no-route-readme-summary-001",
+      "status": "not-run",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Not run because recovery-2 stopped at its first failure; no retry was permitted."
+      ]
+    }
+  ],
+  "summary": {
+    "overallStatus": "fail",
+    "evaluatedCases": 1,
+    "canonicalFalseNegatives": null,
+    "highImpactFalsePositives": null,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}

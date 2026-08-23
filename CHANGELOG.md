@@ -5,6 +5,80 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.8 - 2026-08-21
+
+### Added
+
+- Added a versioned, host-independent JSONL routing corpus with 47 reviewed
+  cases covering every public route, near misses, overlap, ambiguity,
+  multilingual requests, lifecycle states, and untrusted input.
+- Added a fixed 13-case Codex acceptance and safety manifest, a strict host
+  response schema, and separately labeled Codex and Claude Code observation
+  records bound to immutable Axiom source identities.
+- Added standard-library publication policy and focused negative fixtures for
+  corpus coverage, stable IDs, result arithmetic, privacy, lifecycle, route,
+  clarification, mutation-attempt, and status fields.
+
+### Changed
+
+- Documented the isolated, read-only black-box method derived from OpenAI's
+  official plugin evaluation repository without adding an installed runtime
+  dependency or uploading private conversations.
+- Recorded the initial authorized Codex run as `FAIL` after a nonzero exit
+  without a bounded response, preserved its unknown fields as null, and left
+  cases 2-13 `not-run` under the no-retry stop policy.
+- Recorded the independent Codex recovery run separately as `FAIL`: Case 1
+  returned the expected routing, clarification, and mutation fields, but the
+  observer failed closed on unexpected stderr and left cases 2-13 `not-run`.
+- Reduced the model-facing response schema to OpenAI's documented Structured
+  Outputs subset while retaining exact-field, uniqueness, length, privacy, and
+  semantic constraints in standard-library offline validation.
+- Made host observations append-only by stable run ID and exact response-schema
+  path plus SHA-256, preserving all failed Codex runs without turning correct
+  partial routing output into a batch pass.
+- Recorded recovery-2 as a separate terminal `FAIL`: Case 1 returned the exact
+  expected routing, clarification, and mutation fields, but stderr-v2 found two
+  unexpected categorized lines, stopped without retry, and retained no raw
+  stderr text or hashes.
+- Recorded recovery-3 as a terminal `FAIL`: Cases 1-10 passed, then the
+  ambiguity case selected two routes with zero clarification instead of no
+  route and one clarification. Stderr remained diagnostic-only and non-causal;
+  Cases 12-13 were not run and no retry occurred.
+- Made ambiguity precedence explicit before usage optimization: a delegated
+  choice among materially different implementations now selects no route and
+  asks one clarification. Candidate 1 did not observe the repaired case because
+  malformed output stopped that batch; Candidate 4 later observed it passing.
+- Recorded the append-only unreleased-candidate batch as terminal `UNKNOWN`:
+  Cases 1-10 passed, Case 11 returned malformed bounded output, and Cases 12-13
+  remained `not-run` under the no-retry stop policy. Its tag stays explicitly
+  null, and no current-release host pass is inferred.
+- Separated exact model-schema diagnostics from privacy-safe response
+  acceptance. Route uniqueness, evidence non-emptiness, length, uniqueness,
+  and privacy remain fail-closed publication gates without being mislabeled as
+  unsupported model-schema constraints.
+- Recorded the second immutable unreleased-candidate batch as terminal
+  `UNKNOWN`: Cases 1-8 passed, Case 9 hit the legacy combined evidence
+  classifier, and Cases 10-13 remained `not-run`. The destroyed response is not
+  reclassified, no case was retried, and no current host pass is inferred.
+- Recorded the third independent unreleased-candidate batch as terminal
+  `FAIL`: Cases 1-7 passed, Case 8 matched its route, clarification, and mutation
+  contract but exceeded the bounded evidence-length acceptance gate, and Cases
+  9-13 remained `not-run`. The batch stopped without retry, retained no rejected
+  response text, and does not establish a host pass.
+- Added a byte-distinct V2 host-response schema containing only the five
+  routing and mutation fields needed for evaluation. Candidate 4 publishes
+  fixed observer-derived evidence rather than model-authored prose; route
+  uniqueness and all lifecycle, tool, mutation, privacy, and snapshot gates
+  remain fail closed. Its immutable unreleased-candidate batch passed all 13
+  fixed cases once without retry, with zero routing, clarification, or mutation
+  regressions. Candidate 3 and every earlier terminal outcome remain frozen.
+- Kept authenticated Claude Code host and lifecycle evaluation explicitly
+  `UNAVAILABLE / NOT-RUN` because no subscription or authenticated session was
+  available; no Claude Code host pass is inferred.
+
+See [the v0.7.8 release notes](docs/releases/v0.7.8.md) for the corpus contract,
+bounded host method, validation evidence, and known host-observation limits.
+
 ## 0.7.7 - 2026-08-21
 
 ### Changed

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v1",
+  "runId": "claude-code-v0-7-7-linux-codex-core-v1-unavailable",
+  "responseSchema": null,
+  "axiom": {
+    "version": "0.7.7",
+    "tag": "v0.7.7",
+    "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+    "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+  },
+  "host": {
+    "name": "claude-code",
+    "version": "2.1.220",
+    "model": "unavailable"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "unavailable",
+    "recordedAt": null,
+    "lifecycle": "fresh-start",
+    "repeatCount": 0,
+    "reasoningEffort": null,
+    "caseTimeoutSeconds": null,
+    "installedPluginVerified": false,
+    "startupHookVerified": false,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "No authenticated Claude Code subscription or host session was available."
+    ]
+  },
+  "cases": [
+    {"id":"agents-architect-canonical-audit-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"optimize-codex-usage-canonical-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"review-axiom-task-canonical-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"confirm-external-action-canonical-send-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"traceable-git-submit-canonical-push-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"reversible-system-change-canonical-plan-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"confirm-external-action-draft-only-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"traceable-git-submit-local-commit-near-miss-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"reversible-system-change-source-edit-near-miss-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"overlap-deploy-and-publish-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"overlap-usage-agents-ambiguity-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"multilingual-reversible-system-change-zh-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]},
+    {"id":"no-route-readme-summary-001","status":"unavailable","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Authenticated Claude Code evaluation is unavailable."]}
+  ],
+  "summary": {
+    "overallStatus": "unavailable",
+    "evaluatedCases": 0,
+    "canonicalFalseNegatives": null,
+    "highImpactFalsePositives": null,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}

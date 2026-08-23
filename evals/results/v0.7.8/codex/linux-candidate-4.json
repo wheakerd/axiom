@@ -1,0 +1,300 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v1",
+  "runId": "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-4",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v2.json",
+    "sha256": "17ca11a31e0ffba990af28ae0660ca994251d099f31c5f373f72c4251cf8a014"
+  },
+  "axiom": {
+    "version": "0.7.8",
+    "tag": null,
+    "commit": "70e1242ba9f038fe663f924f167108d8940106a8",
+    "tree": "780b7401f7f12af9c9ab310a24c02c9aae84fe62",
+    "releaseState": "candidate-unreleased"
+  },
+  "host": {
+    "name": "codex",
+    "version": "0.149.0",
+    "model": "gpt-5.4"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "pass",
+    "recordedAt": "2026-08-23T08:36:51Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "callCount": 13,
+    "reasoningEffort": "medium",
+    "caseTimeoutSeconds": 120,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": []
+  },
+  "cases": [
+    {
+      "id": "agents-architect-canonical-audit-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agents-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agents-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "optimize-codex-usage-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "optimize-codex-usage"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[optimize-codex-usage]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "review-axiom-task-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "review-axiom-task"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[review-axiom-task]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "confirm-external-action-canonical-send-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "confirm-external-action"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[confirm-external-action]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "traceable-git-submit-canonical-push-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "traceable-git-submit"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[traceable-git-submit]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "reversible-system-change-canonical-plan-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[reversible-system-change]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "confirm-external-action-draft-only-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "traceable-git-submit-local-commit-near-miss-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "reversible-system-change-source-edit-near-miss-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "overlap-deploy-and-publish-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "confirm-external-action",
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[confirm-external-action,reversible-system-change]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "overlap-usage-agents-ambiguity-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 1,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=1.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "multilingual-reversible-system-change-zh-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[reversible-system-change]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "no-route-readme-summary-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    }
+  ],
+  "summary": {
+    "overallStatus": "pass",
+    "evaluatedCases": 13,
+    "canonicalFalseNegatives": 0,
+    "highImpactFalsePositives": 0,
+    "clarificationMismatches": 0,
+    "mutationAttempts": 0
+  }
+}

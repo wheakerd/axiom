@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.7.7",
-    "tag": "v0.7.7",
+    "version": "0.7.8",
+    "tag": "v0.7.8",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -10,8 +10,8 @@
   "currentHostEvidence": [
     {
       "host": "codex",
-      "status": "not-run",
-      "reason": "The checked-in v0.7.7 tree cannot contain host evidence bound to its own final commit before that commit exists."
+      "status": "unknown",
+      "reason": "Candidate 4 passed all 13 fixed cases against an immutable unreleased commit with V2 observer-derived evidence. The checked-in release remains STATIC-ONLY until the immutable v0.7.8 tag and release commit exist."
     },
     {
       "host": "claude-code",
