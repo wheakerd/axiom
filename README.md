@@ -94,6 +94,13 @@ rewriting local state.
 | Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup as independent permissions |
 | Plan or execute a reversible persistent change | `reversible-system-change` | Separate planning, rehearsal, promotion, rollback, and destructive retention authority |
 
+Version 0.7.12 accepts the future
+[`agent-plugin-architect` route contract](docs/agent-plugin-architect-route-contract.md)
+for Stage 2, but does not install that route. The current gate still exposes
+only the six routes above and the seven direct Skills listed below. The planned
+implementation is a v0.8.0 minor release and must pass its own routing and host
+evidence gates before it can be described as available.
+
 ## When Normal Execution Continues
 
 Ordinary coding, documentation, explanation, status, local-commit, and
@@ -118,7 +125,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.7.11` is `STATIC-ONLY`: immutable prior-release observations are preserved
+`0.7.12` is `STATIC-ONLY`: immutable prior-release observations are preserved
 but are not carried forward as a current-release host pass.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
@@ -126,7 +133,7 @@ immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.7.11 gate is
+Markdown surface; it is not an exact token or credit count. The v0.7.12 gate is
 byte-identical to that baseline.
 
 The [routing evaluation corpus](evals/README.md) makes 47 host-independent
@@ -184,7 +191,7 @@ order with one call each, no retry, zero canonical false negatives, zero
 high-impact false positives, zero clarification mismatches, and zero mutation
 attempts. Its V2 evidence is observer-derived and retains no model prose. This
 is an unreleased-candidate host pass, not a host pass bound to the immutable
-v0.7.8 release commit. No v0.7.11 host pass is inferred. Authenticated Claude
+v0.7.8 release commit. No v0.7.12 host pass is inferred. Authenticated Claude
 Code remains `UNAVAILABLE / NOT-RUN`.
 
 ## Deliberate Non-Goals
@@ -378,6 +385,8 @@ and report an unavailable validator as unavailable, not passed.
   and actions each route does not authorize.
 - [Architecture](docs/architecture.md): wrappers, hooks, routing, on-demand
   references, and normal continuation.
+- [Agent Plugin Architect Route Contract](docs/agent-plugin-architect-route-contract.md):
+  the accepted Stage 2 ownership and evaluation design, not an installed route.
 - [Trust Model](docs/trust-model.md): authority, credentials, mutation,
   evidence, and update boundaries.
 - [Compatibility](docs/compatibility.md): checked-in support and validation
@@ -394,7 +403,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.11 release notes](docs/releases/v0.7.11.md):
+- [Changelog](CHANGELOG.md) and [v0.7.12 release notes](docs/releases/v0.7.12.md):
   release history and version-specific evidence.
 
 ## Contributing

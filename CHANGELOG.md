@@ -5,6 +5,31 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.12 - 2026-08-23
+
+### Added
+
+- Accepted the `agent-plugin-architect` route contract for Stage 2, including
+  its canonical description, ownership boundaries, routing cases, two-route
+  limit, evidence requirements, successor evaluation rules, and stop
+  conditions.
+- Added a versioned v0.7.12 routing-context record that preserves the exact
+  immutable v0.7.9 gate metrics and keeps every current lifecycle and usage
+  observation explicitly unrun or unavailable.
+
+### Changed
+
+- Advanced both plugin manifests to `0.7.12` for design and release bookkeeping
+  only. The accepted route is not implemented in this release; Stage 2 is
+  intended for v0.8.0.
+- Kept the current six-route gate, all seven direct public Skills, hooks,
+  marketplace wrappers, historical schemas and benchmarks, workflows, model,
+  reasoning, telemetry, authorization boundaries, and runtime dependencies
+  unchanged.
+
+See [the v0.7.12 release notes](docs/releases/v0.7.12.md) for the accepted
+design boundary, static validation evidence, and unavailable host checks.
+
 ## 0.7.11 - 2026-08-23
 
 ### Added
