@@ -52,6 +52,16 @@ Start a new Codex chat or CLI session. In that fresh session, open `/hooks` and
 compare the installed handler with the
 [exact checked-in commands](#inspect-the-hooks).
 
+The Codex listing presents the same repository-owned Axiom mark as its logo and
+composer icon, with these three non-mutating starter prompts:
+
+- `Audit this repository's AGENTS.md instruction system. Report findings only.`
+- `Plan a reversible production change with rollback evidence. Do not execute it.`
+- `Review the routing, authorization, actions, and evidence for this Axiom-guided task.`
+
+Axiom is a skills-only plugin without MCP custom UI, so its manifest does not
+declare marketplace screenshots.
+
 Claude Code:
 
 ```text
@@ -108,7 +118,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.7.10` is `STATIC-ONLY`: immutable prior-release observations are preserved
+`0.7.11` is `STATIC-ONLY`: immutable prior-release observations are preserved
 but are not carried forward as a current-release host pass.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
@@ -116,7 +126,7 @@ immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.7.10 gate is
+Markdown surface; it is not an exact token or credit count. The v0.7.11 gate is
 byte-identical to that baseline.
 
 The [routing evaluation corpus](evals/README.md) makes 47 host-independent
@@ -174,7 +184,7 @@ order with one call each, no retry, zero canonical false negatives, zero
 high-impact false positives, zero clarification mismatches, and zero mutation
 attempts. Its V2 evidence is observer-derived and retains no model prose. This
 is an unreleased-candidate host pass, not a host pass bound to the immutable
-v0.7.8 release commit. No v0.7.10 host pass is inferred. Authenticated Claude
+v0.7.8 release commit. No v0.7.11 host pass is inferred. Authenticated Claude
 Code remains `UNAVAILABLE / NOT-RUN`.
 
 ## Deliberate Non-Goals
@@ -384,7 +394,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.10 release notes](docs/releases/v0.7.10.md):
+- [Changelog](CHANGELOG.md) and [v0.7.11 release notes](docs/releases/v0.7.11.md):
   release history and version-specific evidence.
 
 ## Contributing

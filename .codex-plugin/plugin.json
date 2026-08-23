@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -25,18 +25,23 @@
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "Axiom",
-    "shortDescription": "Safe workflow guardrails for high-impact agent actions",
+    "shortDescription": "Guardrails for agent actions",
     "longDescription": "Axiom routes focused workflows for repository instructions, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [
       "Interactive"
     ],
+    "websiteURL": "https://github.com/wheakerd/axiom#readme",
+    "supportURL": "https://github.com/wheakerd/axiom/issues",
     "defaultPrompt": [
-      "Audit this repository's AGENTS guidance and report findings only.",
-      "Reduce this Codex workflow's context and tool overhead without weakening quality.",
-      "Review this Axiom-guided task's routing, authorization, actions, evidence, and outcome."
+      "Audit this repository's AGENTS.md instruction system. Report findings only.",
+      "Plan a reversible production change with rollback evidence. Do not execute it.",
+      "Review the routing, authorization, actions, and evidence for this Axiom-guided task."
     ],
-    "brandColor": "#111827"
+    "brandColor": "#111827",
+    "brandColorDark": "#5EEAD4",
+    "composerIcon": "./assets/axiom-mark.svg",
+    "logo": "./assets/axiom-mark.svg"
   }
 }
