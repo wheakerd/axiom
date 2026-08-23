@@ -1,0 +1,13 @@
+# Security-critical repository paths
+/.github/CODEOWNERS @wheakerd
+/.github/workflows/ @wheakerd
+/.codex-plugin/ @wheakerd
+/.agents/plugins/ @wheakerd
+/.claude-plugin/ @wheakerd
+/hooks/ @wheakerd
+/skills/using-axiom/ @wheakerd
+/scripts/ @wheakerd
+/axiom_validation/ @wheakerd
+/tests/ @wheakerd
+/SECURITY.md @wheakerd
+/docs/repository-governance.md @wheakerd

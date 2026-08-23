@@ -5,6 +5,31 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.9 - 2026-08-23
+
+### Security
+
+- Added a dated repository-governance record that distinguishes active GitHub
+  branch and tag rulesets from checked-in validation and documents every
+  observed control, unavailable field, exact required check, and manual
+  minimum-permission re-verification step.
+- Declared the repository owner for critical workflows, manifests, hooks,
+  routing entry point, validation code, scripts, tests, security policy, and
+  governance files in `.github/CODEOWNERS` without claiming an approval rule
+  that GitHub does not currently enforce.
+
+### Changed
+
+- Added standard-library publication checks and a focused negative test that
+  fail when the governance snapshot loses a required fact or a sibling
+  critical path loses its exact owner.
+- Kept governance auditing manual and read-only. No scheduled or dispatch
+  workflow was added, and no workflow received repository-administration
+  permission merely to inspect rulesets.
+
+See [the v0.7.9 release notes](docs/releases/v0.7.9.md) for the observed policy,
+security boundary, validation evidence, and explicitly unavailable controls.
+
 ## 0.7.8 - 2026-08-21
 
 ### Added

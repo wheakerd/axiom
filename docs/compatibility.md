@@ -60,14 +60,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.8, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.8 host-pass
+For v0.7.9, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.9 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.8.
+forward to v0.7.9.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -158,8 +158,8 @@ bounded output, and Cases 12-13 remain `not-run`. No semantic fields are
 inferred for Case 11, its exact malformed-response subtype is unavailable
 because the private raw artifact was already destroyed, and no case was
 retried. This batch left the critical repair unobserved; Candidate 4 below
-observes it passing. v0.7.8 remains `STATIC-ONLY` until its immutable release
-identity exists.
+observes it passing. Its unreleased subject is not a host pass bound to the
+immutable v0.7.8 release commit.
 
 Candidate diagnostics separate model structure from response acceptance. V1
 historically included model-authored evidence and corresponding bounded/privacy
@@ -195,9 +195,9 @@ Candidate 4 uses the independent run ID
 `evals/results/v0.7.8/codex/linux-candidate-4.json`. Against immutable
 unreleased commit `70e1242ba9f038fe663f924f167108d8940106a8` and tree
 `780b7401f7f12af9c9ab310a24c02c9aae84fe62`, all 13 ordered cases passed one
-fresh call each without retry. Candidate 3 remains frozen. v0.7.8 remains
-`STATIC-ONLY` until its immutable release identity exists, and authenticated
-Claude Code remains `UNAVAILABLE / NOT-RUN`.
+fresh call each without retry. Candidate 3 remains frozen. Its subject differs
+from the immutable v0.7.8 release commit, no v0.7.9 host pass is inferred, and
+authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`.
 
 The first failure or unknown result stops the remaining fixed batch without a
 retry. That case preserves every known and null field; later cases remain
@@ -212,6 +212,19 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.9` reports:
+
+- a dated, read-only GitHub governance snapshot distinguishes active
+  server-side rulesets from repository workflows and documentation;
+- exact required checks, pull-request parameters, force-push and deletion
+  policies, bypass visibility, unavailable fields, and manual re-verification
+  steps remain reviewable in the repository;
+- critical workflows, manifests, hooks, routing, validation, scripts, tests,
+  security, CODEOWNERS, and governance paths declare `@wheakerd` as owner; and
+- v0.7.9 remains `STATIC-ONLY`: no Codex host run was performed, and
+  authenticated Claude Code is `UNAVAILABLE / NOT-RUN` without a subscription
+  or session.
 
 The Git record for `v0.7.8` reports:
 
@@ -506,7 +519,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.8 release notes](releases/v0.7.8.md),
+See the durable [v0.7.9 release notes](releases/v0.7.9.md),
+[v0.7.8 release notes](releases/v0.7.8.md),
 [v0.7.7 release notes](releases/v0.7.7.md),
 [v0.7.6 release notes](releases/v0.7.6.md),
 [v0.7.5 release notes](releases/v0.7.5.md),
