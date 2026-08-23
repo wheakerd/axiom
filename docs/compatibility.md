@@ -60,14 +60,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.9, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.9 host-pass
+For v0.7.10, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.10 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.9.
+forward to v0.7.10.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -78,6 +78,37 @@ python3 scripts/check-compatibility-evidence.py --self-test
 
 A present executable or manifest alone remains too weak to support a host
 claim.
+
+## Routing Context Budget
+
+The [versioned routing-context record](../evals/context-budget/results/v0.7.10.json)
+binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
+`4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
+`719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
+`1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
+The v0.7.10 candidate gate is byte-identical.
+
+Its 5,899 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, and
+one unique direct reference are exact repository counts used as context-cost
+proxies. The 1,475 `ceil(bytes / 4)` value is an estimate only for comparing
+the same English Markdown surface. No exact prompt tokens, cached tokens,
+credits, or wall-clock values were exposed or inferred.
+
+Seven lifecycle records cover fresh no-route and routed requests, resume with
+no route, clear with routing, manual compaction with no route, automatic
+compaction with routing, and repeated no-route requests in one unchanged
+session. Their expected single injection comes from the checked-in hook
+contract, not a host observation. Codex scenarios are `NOT-RUN`; authenticated
+Claude Code scenarios are `UNAVAILABLE / NOT-RUN`. A future observed record can
+store each injection event, and the validator derives a duplicate whenever the
+observed count exceeds the expected count.
+
+Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
+requires review and justification, not automatic rejection. Any actual
+reduction requires equivalent before/after `PASS` evidence for both routed and
+no-route cases over the same fixed 47-case workload. Static validation and host
+observation remain separate evidence classes. No model, reasoning, hook, route,
+safety, authorization, or stop rule changed to establish this baseline.
 
 ## Routing Corpus And Host Benchmarks
 
@@ -196,7 +227,7 @@ Candidate 4 uses the independent run ID
 unreleased commit `70e1242ba9f038fe663f924f167108d8940106a8` and tree
 `780b7401f7f12af9c9ab310a24c02c9aae84fe62`, all 13 ordered cases passed one
 fresh call each without retry. Candidate 3 remains frozen. Its subject differs
-from the immutable v0.7.8 release commit, no v0.7.9 host pass is inferred, and
+from the immutable v0.7.8 release commit, no v0.7.10 host pass is inferred, and
 authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`.
 
 The first failure or unknown result stops the remaining fixed batch without a
@@ -212,6 +243,26 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.10` reports:
+
+- the immutable v0.7.9 routing gate is the cumulative proxy baseline, and the
+  v0.7.10 candidate retains its exact 5,899-byte content and SHA-256;
+- all seven required lifecycle scenarios distinguish checked-in hook
+  expectations from `NOT-RUN` or `UNAVAILABLE / NOT-RUN` host observations;
+- meaningful growth triggers review and justification, while any claimed
+  reduction requires equivalent before/after routed and no-route passing
+  evidence over the same fixed workload;
+- 54 standard-library tests and the aggregate's 52 required files, 47 routing
+  cases, 13 fixed benchmark cases, nine preserved host result records, and
+  seven context scenarios passed in a disposable release copy;
+- Claude Code `2.1.220` strict offline package validation passed, Codex CLI
+  `0.149.0` exposed no plugin-validation command, and the bundled local
+  validator preserved its known conflict with the intentional Codex `hooks`
+  field; and
+- v0.7.10 remains `STATIC-ONLY`: no Codex host session or model call was run,
+  and authenticated Claude Code was unavailable without a subscription or
+  session.
 
 The Git record for `v0.7.9` reports:
 
@@ -519,7 +570,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.9 release notes](releases/v0.7.9.md),
+See the durable [v0.7.10 release notes](releases/v0.7.10.md),
+[v0.7.9 release notes](releases/v0.7.9.md),
 [v0.7.8 release notes](releases/v0.7.8.md),
 [v0.7.7 release notes](releases/v0.7.7.md),
 [v0.7.6 release notes](releases/v0.7.6.md),

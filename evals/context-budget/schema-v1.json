@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wheakerd/axiom/evals/context-budget/schema-v1.json",
+  "title": "Axiom routing-context budget record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "recordId",
+    "targetRelease",
+    "surface",
+    "measurementBoundary",
+    "baseline",
+    "candidate",
+    "reviewThreshold",
+    "comparison",
+    "routingQuality",
+    "hostMetrics",
+    "scenarios"
+  ],
+  "properties": {
+    "$schema": { "const": "../schema-v1.json" },
+    "schemaVersion": { "const": "1" },
+    "recordId": {
+      "type": "string",
+      "pattern": "^routing-context-budget-v[0-9]+-[0-9]+-[0-9]+$"
+    },
+    "targetRelease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit", "binding"],
+      "properties": {
+        "version": { "$ref": "#/$defs/semver" },
+        "commit": { "type": "null" },
+        "binding": { "const": "pending-immutable-release" }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "language", "alwaysLoaded"],
+      "properties": {
+        "path": { "const": "skills/using-axiom/SKILL.md" },
+        "language": { "const": "en" },
+        "alwaysLoaded": { "const": true }
+      }
+    },
+    "measurementBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "staticCounts",
+        "estimatedTokens",
+        "exactHostUsage",
+        "modelOrReasoningChanged",
+        "networkOrTelemetryUsed",
+        "volatilePricingIncluded"
+      ],
+      "properties": {
+        "staticCounts": { "const": "proxy" },
+        "estimatedTokens": { "const": "estimate" },
+        "exactHostUsage": { "enum": ["observed", "not-run", "unavailable"] },
+        "modelOrReasoningChanged": { "type": "boolean" },
+        "networkOrTelemetryUsed": { "type": "boolean" },
+        "volatilePricingIncluded": { "type": "boolean" }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release", "sha256", "metrics"],
+      "properties": {
+        "release": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "tag", "commit", "tree"],
+          "properties": {
+            "version": { "$ref": "#/$defs/semver" },
+            "tag": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+            "commit": { "$ref": "#/$defs/commit" },
+            "tree": { "$ref": "#/$defs/commit" }
+          }
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "metrics": { "$ref": "#/$defs/metrics" }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "metrics"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "metrics": { "$ref": "#/$defs/metrics" }
+      }
+    },
+    "reviewThreshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison",
+        "absoluteUtf8Bytes",
+        "relativeBasisPoints",
+        "operator",
+        "effect"
+      ],
+      "properties": {
+        "comparison": { "const": "cumulative-from-immutable-baseline" },
+        "absoluteUtf8Bytes": { "type": "integer", "minimum": 1 },
+        "relativeBasisPoints": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "operator": { "const": "either" },
+        "effect": { "const": "review-and-justify-not-automatic-rejection" }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "utf8ByteDelta",
+        "wordDelta",
+        "lineDelta",
+        "referenceDelta",
+        "estimatedTokenDelta",
+        "absoluteThresholdReached",
+        "relativeThresholdReached",
+        "meaningfulIncrease",
+        "reviewStatus",
+        "justification"
+      ],
+      "properties": {
+        "method": { "const": "same-English-Markdown-surface" },
+        "utf8ByteDelta": { "type": "integer" },
+        "wordDelta": { "type": "integer" },
+        "lineDelta": { "type": "integer" },
+        "referenceDelta": { "type": "integer" },
+        "estimatedTokenDelta": { "type": "integer" },
+        "absoluteThresholdReached": { "type": "boolean" },
+        "relativeThresholdReached": { "type": "boolean" },
+        "meaningfulIncrease": { "type": "boolean" },
+        "reviewStatus": {
+          "enum": ["not-required", "below-threshold", "reviewed"]
+        },
+        "justification": { "type": ["string", "null"], "maxLength": 1000 }
+      }
+    },
+    "routingQuality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workload", "reductionPolicy", "reductionExperiment"],
+      "properties": {
+        "workload": { "$ref": "#/$defs/workload" },
+        "reductionPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requiredForAnyReduction",
+            "sameWorkloadRequired",
+            "requiredResults",
+            "requiredStatus",
+            "staticAndHostEvidenceRemainDistinct"
+          ],
+          "properties": {
+            "requiredForAnyReduction": { "const": true },
+            "sameWorkloadRequired": { "const": true },
+            "requiredResults": {
+              "const": ["routing", "no-route"]
+            },
+            "requiredStatus": { "const": "pass" },
+            "staticAndHostEvidenceRemainDistinct": { "const": true }
+          }
+        },
+        "reductionExperiment": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["equivalentWorkload", "before", "after"],
+              "properties": {
+                "equivalentWorkload": { "const": true },
+                "before": { "$ref": "#/$defs/reductionObservation" },
+                "after": { "$ref": "#/$defs/reductionObservation" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "hostMetrics": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/hostMetric" }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "utf8Bytes",
+        "whitespaceDelimitedWords",
+        "logicalLines",
+        "directReferenceCount",
+        "directReferences",
+        "estimatedTokens"
+      ],
+      "properties": {
+        "classification": {
+          "const": "exact-static-counts-used-as-context-proxies"
+        },
+        "utf8Bytes": { "type": "integer", "minimum": 0 },
+        "whitespaceDelimitedWords": { "type": "integer", "minimum": 0 },
+        "logicalLines": { "type": "integer", "minimum": 0 },
+        "directReferenceCount": { "type": "integer", "minimum": 0 },
+        "directReferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^references/.+\\.md$" }
+        },
+        "estimatedTokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["classification", "method", "comparisonScope", "value"],
+          "properties": {
+            "classification": { "const": "estimate" },
+            "method": { "const": "ceil(utf8-bytes/4)" },
+            "comparisonScope": { "const": "same-English-Markdown-surface-only" },
+            "value": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "path",
+        "fileCount",
+        "caseCount",
+        "routedCaseCount",
+        "noRouteCaseCount",
+        "sha256"
+      ],
+      "properties": {
+        "classification": { "const": "static-contract-workload-identity" },
+        "path": { "const": "evals/routing" },
+        "fileCount": { "type": "integer", "minimum": 1 },
+        "caseCount": { "type": "integer", "minimum": 1 },
+        "routedCaseCount": { "type": "integer", "minimum": 1 },
+        "noRouteCaseCount": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "reductionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "surfaceSha256",
+        "workloadSha256",
+        "caseCount",
+        "noRouteCaseCount",
+        "routingStatus",
+        "noRouteStatus"
+      ],
+      "properties": {
+        "classification": {
+          "enum": ["static-contract-validation", "host-observed"]
+        },
+        "surfaceSha256": { "$ref": "#/$defs/sha256" },
+        "workloadSha256": { "$ref": "#/$defs/sha256" },
+        "caseCount": { "type": "integer", "minimum": 1 },
+        "noRouteCaseCount": { "type": "integer", "minimum": 1 },
+        "routingStatus": { "const": "pass" },
+        "noRouteStatus": { "const": "pass" }
+      }
+    },
+    "hostMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "status",
+        "exactUsageExposed",
+        "inputTokens",
+        "cachedInputTokens",
+        "credits",
+        "wallClockMilliseconds",
+        "reason"
+      ],
+      "properties": {
+        "host": { "enum": ["codex", "claude-code"] },
+        "status": { "enum": ["observed", "not-run", "unavailable"] },
+        "exactUsageExposed": { "type": "boolean" },
+        "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "cachedInputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "credits": { "type": ["number", "null"], "minimum": 0 },
+        "wallClockMilliseconds": { "type": ["integer", "null"], "minimum": 0 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "injection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "requestOrdinal", "lifecycleSource", "contentSha256"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "requestOrdinal": { "type": "integer", "minimum": 0 },
+        "lifecycleSource": { "enum": ["startup", "resume", "clear", "compact"] },
+        "contentSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "hostObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "status",
+        "observedInjectionCount",
+        "duplicateInjectionDetected",
+        "injections",
+        "reason"
+      ],
+      "properties": {
+        "host": { "enum": ["codex", "claude-code"] },
+        "status": { "enum": ["pass", "fail", "not-run", "unavailable"] },
+        "observedInjectionCount": { "type": ["integer", "null"], "minimum": 0 },
+        "duplicateInjectionDetected": { "type": ["boolean", "null"] },
+        "injections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/injection" }
+        },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sessionState",
+        "lifecycleSource",
+        "compactionMode",
+        "requestCaseIds",
+        "expectedInjectionCount",
+        "expectationSource",
+        "hostObservations"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "sessionState": {
+          "enum": ["fresh", "resumed", "cleared", "post-compaction", "unchanged-session"]
+        },
+        "lifecycleSource": { "enum": ["startup", "resume", "clear", "compact"] },
+        "compactionMode": { "enum": ["not-applicable", "manual", "automatic"] },
+        "requestCaseIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+        },
+        "expectedInjectionCount": { "type": "integer", "minimum": 0 },
+        "expectationSource": { "const": "checked-in-hook-contract-not-host-observation" },
+        "hostObservations": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/hostObservation" }
+        }
+      }
+    }
+  }
+}

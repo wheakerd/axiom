@@ -5,6 +5,35 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.7.10 - 2026-08-23
+
+### Added
+
+- Added a versioned, standard-library routing-context budget for the
+  always-loaded `using-axiom` gate, with reproducible UTF-8 byte, word, line,
+  direct-reference, and explicitly estimated `ceil(bytes / 4)` measurements.
+- Represented fresh, resume, clear, manual-compaction, automatic-compaction,
+  and unchanged-session duplicate-injection scenarios while preserving Codex
+  host observation as `NOT-RUN` and authenticated Claude Code as
+  `UNAVAILABLE / NOT-RUN`.
+- Added focused policy and negative controls that derive duplicate injection
+  from observed event counts and reject any claimed reduction without
+  equivalent before/after routed and no-route passing evidence.
+
+### Changed
+
+- Established immutable v0.7.9 as the cumulative always-loaded baseline and
+  documented a 256-byte-or-5% growth threshold that triggers review and
+  justification rather than automatic rejection.
+- Kept `skills/using-axiom/SKILL.md`, route selection, lifecycle hooks, safety
+  rules, authorization boundaries, stop conditions, model settings, and
+  reasoning settings unchanged; no size reduction was manufactured for this
+  release.
+
+See [the v0.7.10 release notes](docs/releases/v0.7.10.md) for metric
+classification, scenario status, threshold semantics, validation evidence, and
+known host-observation gaps.
+
 ## 0.7.9 - 2026-08-23
 
 ### Security
