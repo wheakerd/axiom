@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:axiom:routing-evals:schema:v1",
+  "title": "Axiom routing evaluation contracts",
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "id",
+        "contractVersion",
+        "language",
+        "request",
+        "expectedRoutes",
+        "forbiddenRoutes",
+        "expectedClarification",
+        "expectedClarificationCount",
+        "lifecycle",
+        "mutationAuthorized",
+        "riskClass",
+        "coverage",
+        "benchmarkSets"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "1" },
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "contractVersion": { "type": "integer", "minimum": 1 },
+        "language": { "type": "string", "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$" },
+        "request": { "type": "string", "minLength": 1, "maxLength": 600 },
+        "expectedRoutes": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/route" }
+        },
+        "forbiddenRoutes": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/route" }
+        },
+        "expectedClarification": { "type": "boolean" },
+        "expectedClarificationCount": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "mutationAuthorized": { "const": false },
+        "riskClass": {
+          "enum": [
+            "canonical-positive",
+            "paraphrased-positive",
+            "near-miss",
+            "cross-route",
+            "ambiguity",
+            "no-route-control",
+            "lifecycle",
+            "untrusted-data"
+          ]
+        },
+        "coverage": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "canonical-positive",
+              "paraphrased-positive",
+              "near-miss",
+              "cross-route",
+              "plan-only",
+              "draft-only",
+              "no-route",
+              "ambiguity",
+              "multilingual",
+              "post-compaction",
+              "untrusted-data",
+              "acceptance",
+              "safety"
+            ]
+          }
+        },
+        "benchmarkSets": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 1,
+          "items": { "const": "codex-core-v1" }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "source", "compactionMode"],
+      "properties": {
+        "state": { "enum": ["fresh", "post-compaction"] },
+        "source": { "enum": ["startup", "compact"] },
+        "compactionMode": { "enum": ["not-applicable", "manual", "automatic"] }
+      }
+    },
+    "route": {
+      "enum": [
+        "agents-architect",
+        "confirm-external-action",
+        "optimize-codex-usage",
+        "reversible-system-change",
+        "review-axiom-task",
+        "traceable-git-submit"
+      ]
+    },
+    "benchmarkManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "id",
+        "corpusSchema",
+        "method",
+        "officialReference",
+        "model",
+        "reasoningEffort",
+        "caseTimeoutSeconds",
+        "repeatCount",
+        "stopOnFirstFailure",
+        "developerInstruction",
+        "lifecycle",
+        "safety",
+        "caseIds"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "1" },
+        "kind": { "const": "routing-benchmark-manifest" },
+        "id": { "const": "codex-core-v1" },
+        "corpusSchema": { "const": "urn:axiom:routing-evals:schema:v1" },
+        "method": { "const": "documented-codex-cli-equivalent" },
+        "officialReference": { "$ref": "#/$defs/officialReference" },
+        "model": { "const": "gpt-5.4" },
+        "reasoningEffort": { "const": "medium" },
+        "caseTimeoutSeconds": { "const": 120 },
+        "repeatCount": { "const": 1 },
+        "stopOnFirstFailure": { "const": true },
+        "developerInstruction": { "type": "string", "minLength": 1 },
+        "lifecycle": { "const": "fresh-start" },
+        "safety": { "$ref": "#/$defs/benchmarkSafety" },
+        "caseIds": {
+          "type": "array",
+          "minItems": 13,
+          "maxItems": 13,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "benchmarkSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sandbox",
+        "approvalPolicy",
+        "isolatedSessionPerCase",
+        "mutationAuthority",
+        "externalActions",
+        "privateConversationUpload",
+        "credentialDisclosure"
+      ],
+      "properties": {
+        "sandbox": { "const": "read-only" },
+        "approvalPolicy": { "const": "never" },
+        "isolatedSessionPerCase": { "const": true },
+        "mutationAuthority": { "const": false },
+        "externalActions": { "const": false },
+        "privateConversationUpload": { "const": false },
+        "credentialDisclosure": { "const": false }
+      }
+    },
+    "officialReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "path"],
+      "properties": {
+        "repository": { "const": "openai/plugins" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "path": { "const": "plugins/plugin-eval" }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "tag", "commit", "tree"],
+      "properties": {
+        "version": { "type": "string" },
+        "tag": { "type": ["string", "null"] },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "tree": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "releaseState": { "const": "candidate-unreleased" }
+      },
+      "oneOf": [
+        {
+          "properties": { "tag": { "type": "string" } },
+          "not": { "required": ["releaseState"] }
+        },
+        {
+          "required": ["releaseState"],
+          "properties": {
+            "tag": { "type": "null" },
+            "releaseState": { "const": "candidate-unreleased" }
+          }
+        }
+      ]
+    },
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "enum": [
+            "evals/host-response-schema-v1.json",
+            "evals/host-response-schema-v2.json"
+          ]
+        },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "model"],
+      "properties": {
+        "name": { "enum": ["codex", "claude-code"] },
+        "version": { "type": "string" },
+        "model": { "type": "string" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operatingSystem", "architecture"],
+      "properties": {
+        "operatingSystem": { "type": "string" },
+        "architecture": { "type": "string" }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "recordedAt",
+        "lifecycle",
+        "repeatCount",
+        "reasoningEffort",
+        "caseTimeoutSeconds",
+        "installedPluginVerified",
+        "startupHookVerified",
+        "method",
+        "limitations"
+      ],
+      "properties": {
+        "status": { "enum": ["pass", "fail", "unknown", "unavailable", "not-run"] },
+        "recordedAt": { "type": ["string", "null"] },
+        "lifecycle": { "const": "fresh-start" },
+        "repeatCount": { "type": "integer", "minimum": 0 },
+        "callCount": { "type": "integer", "minimum": 0, "maximum": 13 },
+        "reasoningEffort": { "type": ["string", "null"] },
+        "caseTimeoutSeconds": { "type": ["integer", "null"], "minimum": 1 },
+        "installedPluginVerified": { "type": "boolean" },
+        "startupHookVerified": { "type": "boolean" },
+        "method": { "const": "documented-codex-cli-equivalent" },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "resultCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "status",
+        "routingGateObserved",
+        "observedRoutes",
+        "clarificationCount",
+        "mutationAttempted",
+        "mutationObserved",
+        "evidence",
+        "limitations"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "enum": ["pass", "fail", "unknown", "unavailable", "not-run"] },
+        "responseDiagnostic": {
+          "enum": [
+            "not-observed",
+            "subtype-unavailable",
+            "missing-or-unreadable",
+            "json-syntax",
+            "duplicate-key",
+            "wrong-top-level-shape",
+            "schema-field-set",
+            "schema-routing-gate",
+            "schema-selected-routes",
+            "schema-clarification-count",
+            "schema-mutation-attempted",
+            "schema-mutation-observed",
+            "schema-evidence",
+            "valid"
+          ]
+        },
+        "acceptanceDiagnostic": {
+          "enum": [
+            "not-observed",
+            "not-evaluated",
+            "valid",
+            "selected-routes-duplicate",
+            "evidence-empty-string",
+            "evidence-overlength",
+            "evidence-duplicate",
+            "privacy"
+          ]
+        },
+        "evidenceSource": {
+          "enum": [
+            "model-provided",
+            "not-observed",
+            "observer-derived"
+          ]
+        },
+        "routingGateObserved": { "type": ["boolean", "null"] },
+        "observedRoutes": { "type": ["array", "null"], "items": { "$ref": "#/$defs/route" } },
+        "clarificationCount": { "type": ["integer", "null"], "minimum": 0, "maximum": 1 },
+        "mutationAttempted": { "type": ["boolean", "null"] },
+        "mutationObserved": { "type": ["boolean", "null"] },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overallStatus",
+        "evaluatedCases",
+        "canonicalFalseNegatives",
+        "highImpactFalsePositives",
+        "clarificationMismatches",
+        "mutationAttempts"
+      ],
+      "properties": {
+        "overallStatus": { "enum": ["pass", "fail", "unknown", "unavailable", "not-run"] },
+        "evaluatedCases": { "type": "integer", "minimum": 0 },
+        "canonicalFalseNegatives": { "type": ["integer", "null"], "minimum": 0 },
+        "highImpactFalsePositives": { "type": ["integer", "null"], "minimum": 0 },
+        "clarificationMismatches": { "type": ["integer", "null"], "minimum": 0 },
+        "mutationAttempts": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "observationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "benchmarkId",
+        "runId",
+        "responseSchema",
+        "axiom",
+        "host",
+        "environment",
+        "run",
+        "cases",
+        "summary"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "1" },
+        "kind": { "const": "routing-observation" },
+        "benchmarkId": { "const": "codex-core-v1" },
+        "runId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "responseSchema": {
+          "anyOf": [
+            { "$ref": "#/$defs/responseSchema" },
+            { "type": "null" }
+          ]
+        },
+        "axiom": { "$ref": "#/$defs/subject" },
+        "host": { "$ref": "#/$defs/host" },
+        "environment": { "$ref": "#/$defs/environment" },
+        "run": { "$ref": "#/$defs/run" },
+        "cases": { "type": "array", "items": { "$ref": "#/$defs/resultCase" } },
+        "summary": { "$ref": "#/$defs/summary" }
+      }
+    }
+  }
+}

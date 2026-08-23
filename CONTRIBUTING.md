@@ -17,6 +17,7 @@ silently broaden what the user authorized.
 | `hooks/claude-hooks.json` | Claude Code-specific session and compaction hooks |
 | `README.md` and `docs/` | Public onboarding, behavior, trust, and release documentation |
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
+| `evals/` | Versioned black-box routing contracts and separately labeled host observations |
 | `axiom_validation/` | Standard-library publication policy modules; not installed runtime behavior |
 | `tests/` | Focused unit tests and isolated policy fixtures; not installed runtime behavior |
 | `scripts/` and `.github/workflows/` | Stable validation entrypoints and CI wiring; not installed runtime behavior |
@@ -110,6 +111,7 @@ python3 scripts/check-distribution-drift.py
 python3 scripts/check-compatibility-evidence.py --self-test
 python3 scripts/check-publication.py
 python3 -m unittest discover -s tests -p 'test_*.py'
+python3 -m unittest tests.test_routing_evals -v
 git diff --check
 ```
 
@@ -137,6 +139,47 @@ available, run it against a disposable copy when it may write files, and report
 the host and validator versions with the result. A missing validator is
 `unavailable`, not `passed`; do not install or update proprietary tooling just
 to satisfy a contribution check.
+
+## Routing evaluation contracts
+
+The JSONL records under `evals/routing/` are public behavior contracts, not
+prompt suggestions. Keep case IDs stable. If a request, expected route,
+forbidden route, clarification count, lifecycle precondition, or risk class
+changes, increment that record's `contractVersion` and explain the contract
+change in the pull request. Do not edit an expectation after a host failure to
+make the result pass. Create a new benchmark manifest ID when the ordered live
+case set changes.
+
+Static validation and host observation are separate evidence levels. The
+publication validator checks schema, coverage, benchmark membership, privacy,
+and result arithmetic without invoking a model. A host result must identify a
+stable run ID, the applied response-schema path and SHA-256, an immutable Axiom
+tag, commit, and tree, plus the exact host, model, operating system, lifecycle,
+repeat count, route evidence, clarification count, mutation attempt state, and
+`pass`, `fail`, `unavailable`, or `not-run` status. An unavailable host that made
+no call uses a null response-schema binding.
+
+Evaluation requests grant no mutation authority. Run live cases only in fresh
+disposable workspaces with one isolated installed-plugin session per case, a
+read-only sandbox, approvals disabled, no web or external-service tools, and
+the reviewed output schema. Do not upload private conversations or credentials.
+Keep that model-facing schema within OpenAI's documented Structured Outputs
+subset; enforce omitted uniqueness, string-length, privacy, and semantic checks
+in the deterministic standard-library validator and its negative fixtures.
+The first failure or unknown outcome stops the remaining batch without retry.
+Preserve that case's known and null fields honestly, then mark every later case
+`not-run` with the stop reason. Claude Code results remain
+`UNAVAILABLE / NOT-RUN` when no authenticated subscription or session is
+available; offline validation is a separate static signal.
+
+Host run records are append-only. A recovery batch receives a new run ID and a
+new result file; it never replaces the original failure. Do not create that file
+from a passing prefix: keep partial success private until all cases pass or the
+first failure makes the batch terminal. At repeat count one, a terminal failure
+contains only a pass prefix, one first failure, and a `not-run` suffix.
+
+See [Routing Evaluations](evals/README.md) for the fixed corpus and bounded host
+method.
 
 ## Runtime boundary
 

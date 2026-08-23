@@ -599,8 +599,8 @@ def validate_status(
                 failures.append(f"{item_label}.host is unsupported")
             else:
                 current_hosts.add(host)
-            if document.get("status") not in {"not-run", "unavailable"}:
-                failures.append(f"{item_label}.status cannot imply current host observation")
+            if document.get("status") not in {"not-run", "unknown", "unavailable"}:
+                failures.append(f"{item_label}.status cannot imply a current host pass")
             require_string(document.get("reason"), f"{item_label}.reason", failures, maximum=300)
         if current_hosts != HOST_NAMES:
             failures.append(f"{label}.currentHostEvidence must name both hosts exactly once")
@@ -756,7 +756,17 @@ def check_negative_fixtures(
         ),
         failures,
     )
-    return len(fixtures) + 2
+    current_host_pass = copy.deepcopy(status)
+    current_host_pass["currentHostEvidence"][0]["status"] = "pass"
+    expect_fixture_failure(
+        "current host pass embedded before immutable publication",
+        current_host_pass,
+        lambda candidate, candidate_failures: validate_status(
+            candidate, records, current_version, candidate_failures
+        ),
+        failures,
+    )
+    return len(fixtures) + 3
 
 
 def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str | None]:

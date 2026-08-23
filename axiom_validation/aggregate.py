@@ -42,6 +42,7 @@ from .routing_contracts import (
     check_routing_scenarios,
     check_routing_source_contracts,
 )
+from .routing_evals import check_routing_evaluations
 from tests.fixtures.action_graph import check_pull_request_validation_fixtures
 from tests.fixtures.external_action import check_external_action_scenarios
 from tests.fixtures.git_contracts import check_traceable_security_contracts
@@ -161,6 +162,9 @@ def main() -> int:
         ),
         failures,
     )
+    routing_eval_case_count, routing_benchmark_case_count, routing_result_count = (
+        run_policy("routing-evals", check_routing_evaluations, failures)
+    )
     traceable_security_scenarios = run_policy(
         "git-contracts", check_traceable_security_contracts, failures
     )
@@ -187,6 +191,9 @@ def main() -> int:
         "Publication validation passed: "
         f"{len(REQUIRED_PUBLIC_FILES)} required files, {len(JSON_FILES)} JSON files, "
         f"{markdown_count} Markdown files, {len(ROUTING_SCENARIOS)} offline route contract fixtures, "
+        f"{routing_eval_case_count} black-box routing cases, "
+        f"{routing_benchmark_case_count} fixed host benchmark cases, "
+        f"{routing_result_count} labeled host result records, "
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "
         f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback gate fixtures, "

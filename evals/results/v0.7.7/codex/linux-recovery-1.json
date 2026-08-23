@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v1",
+  "runId": "codex-v0-7-7-linux-codex-core-v1-recovery-1",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v1.json",
+    "sha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6"
+  },
+  "axiom": {
+    "version": "0.7.7",
+    "tag": "v0.7.7",
+    "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+    "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+  },
+  "host": {
+    "name": "codex",
+    "version": "0.149.0",
+    "model": "gpt-5.4"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "fail",
+    "recordedAt": "2026-08-21T22:10:47Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "reasoningEffort": "medium",
+    "caseTimeoutSeconds": 120,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "The independent recovery call returned a schema-valid routing response and exited 0.",
+      "Its routing, clarification, and mutation fields matched the frozen Case 1 contract.",
+      "The call failed closed because Codex stderr contained an unexpected line.",
+      "The independent batch stopped after its first case; cases 2-13 were not run."
+    ]
+  },
+  "cases": [
+    {"id":"agents-architect-canonical-audit-001","status":"fail","routingGateObserved":true,"observedRoutes":["agents-architect"],"clarificationCount":0,"mutationAttempted":false,"mutationObserved":false,"evidence":["User requested a read-only audit of the repository's AGENTS.md instruction system.","The request directly matches the `agents-architect` route description for auditing a repository's AGENTS.md system.","User explicitly prohibited modifications, so the task remains read-only and does not invoke mutation authority."],"limitations":["Codex stderr contained an unexpected line."]},
+    {"id":"optimize-codex-usage-canonical-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"review-axiom-task-canonical-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"confirm-external-action-canonical-send-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"traceable-git-submit-canonical-push-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"reversible-system-change-canonical-plan-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"confirm-external-action-draft-only-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"traceable-git-submit-local-commit-near-miss-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"reversible-system-change-source-edit-near-miss-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"overlap-deploy-and-publish-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"overlap-usage-agents-ambiguity-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"multilingual-reversible-system-change-zh-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]},
+    {"id":"no-route-readme-summary-001","status":"not-run","routingGateObserved":null,"observedRoutes":null,"clarificationCount":null,"mutationAttempted":null,"mutationObserved":null,"evidence":[],"limitations":["Not run because the independent recovery batch stopped at its first failure."]}
+  ],
+  "summary": {
+    "overallStatus": "fail",
+    "evaluatedCases": 1,
+    "canonicalFalseNegatives": null,
+    "highImpactFalsePositives": null,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}
