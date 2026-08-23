@@ -15,6 +15,7 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.context_budget import (
     BASELINE_METRICS,
     BASELINE_SHA256,
+    CONTEXT_BUDGET_RECORD,
     ROUTING_GATE_PATH,
     check_context_budget,
     measure_markdown,
@@ -30,11 +31,15 @@ class ContextBudgetTests(unittest.TestCase):
         failures = []
         self.assertEqual(7, check_context_budget(failures))
         self.assertEqual([], failures)
-        self.assertEqual(BASELINE_METRICS, measure_markdown(ROUTING_GATE_PATH))
+        current_record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
+        current_metrics = measure_markdown(ROUTING_GATE_PATH)
+        self.assertEqual(current_record["candidate"]["metrics"], current_metrics)
+        self.assertEqual(251, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
         self.assertEqual(
-            BASELINE_SHA256,
+            current_record["candidate"]["sha256"],
             hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest(),
         )
+        self.assertNotEqual(BASELINE_SHA256, current_record["candidate"]["sha256"])
 
     def test_alternate_utf8_input_keeps_exact_counts_and_estimate_distinct(self):
         with tempfile.TemporaryDirectory() as directory:

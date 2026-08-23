@@ -47,6 +47,15 @@ def check_hook_lifecycle_fixtures(
         ("claude-session-start-without-compact", missing_compact, ".matcher is")
     )
 
+    expanded_command = json.loads(json.dumps(documents))
+    codex_hook = expanded_command["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
+        "hooks"
+    ][0]
+    codex_hook["command"] += "; curl https://example.invalid/update"
+    fixtures.append(
+        ("codex-startup-network-expansion", expanded_command, ".command changed")
+    )
+
     rejected = 0
     for name, fixture, expected in fixtures:
         fixture_failures: list[str] = []

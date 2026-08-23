@@ -24,6 +24,7 @@ from axiom_validation.routing_evals import (
     CANDIDATE_V078_SUBJECT,
     CLAUDE_UNAVAILABLE_RUN_ID,
     CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
     FAILED_HOST_RESPONSE_SCHEMA_SHA256,
     EXPECTED_RESULT_BINDINGS,
     EXPECTED_RESULT_SUBJECTS,
@@ -31,6 +32,7 @@ from axiom_validation.routing_evals import (
     INITIAL_CODEX_RUN_ID,
     HOST_RESPONSE_SCHEMA_V1_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     OPTIONAL_RESULT_PATHS,
     PRESERVED_OUTCOME_SHA256,
     RECOVERY2_CODEX_RUN_ID,
@@ -43,8 +45,10 @@ from axiom_validation.routing_evals import (
     V1_HOST_RESPONSE_SCHEMA_SHA256,
     classify_host_response_acceptance,
     classify_host_response_v2_acceptance,
+    classify_host_response_v3_acceptance,
     check_host_response_schema,
     check_host_response_schema_v2,
+    check_host_response_schema_v3,
     check_routing_evaluations,
     derive_observer_evidence,
     load_jsonl_cases,
@@ -54,6 +58,8 @@ from axiom_validation.routing_evals import (
     validate_host_response_structure,
     validate_host_response_v2,
     validate_host_response_v2_structure,
+    validate_host_response_v3,
+    validate_host_response_v3_structure,
     validate_observer_derived_evidence,
     validate_observation,
     validate_observation_run_set,
@@ -120,7 +126,7 @@ def candidate_terminal_observation() -> dict:
 class RoutingEvaluationTests(unittest.TestCase):
     def test_checked_in_evaluation_contracts_pass(self):
         failures: list[str] = []
-        self.assertEqual((47, 13, 9), check_routing_evaluations(failures))
+        self.assertEqual((64, 30, 9), check_routing_evaluations(failures))
         self.assertEqual([], failures)
 
     def test_case_negative_fixtures_fail_with_owned_reason(self):
@@ -193,6 +199,51 @@ class RoutingEvaluationTests(unittest.TestCase):
         self.assertEqual(
             "selected-routes-duplicate",
             classify_host_response_v2_acceptance(duplicate_routes),
+        )
+
+    def test_v3_adds_only_the_current_route_to_the_prose_free_contract(self):
+        root = Path(__file__).resolve().parents[1]
+        v3_path = root / HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH
+        self.assertEqual(
+            CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
+            hashlib.sha256(v3_path.read_bytes()).hexdigest(),
+        )
+        schema = json.loads(v3_path.read_text(encoding="utf-8"))
+        failures: list[str] = []
+        check_host_response_schema_v3(schema, failures)
+        self.assertEqual([], failures)
+
+        response = dict(
+            valid_host_response_v2(),
+            selectedRoutes=["agent-plugin-architect"],
+        )
+        failures = []
+        validate_host_response_v3(response, "fixture:valid V3 response", failures)
+        self.assertEqual([], failures)
+        self.assertEqual("valid", classify_host_response_v3_acceptance(response))
+
+        historical_failures: list[str] = []
+        validate_host_response_v2_structure(
+            response,
+            "fixture:V2 rejects successor route",
+            historical_failures,
+        )
+        self.assertTrue(historical_failures)
+
+        duplicate_routes = dict(
+            response,
+            selectedRoutes=["agent-plugin-architect", "agent-plugin-architect"],
+        )
+        structural_failures: list[str] = []
+        validate_host_response_v3_structure(
+            duplicate_routes,
+            "fixture:V3 duplicate routes",
+            structural_failures,
+        )
+        self.assertEqual([], structural_failures)
+        self.assertEqual(
+            "selected-routes-duplicate",
+            classify_host_response_v3_acceptance(duplicate_routes),
         )
 
     def test_observer_derived_evidence_is_deterministic_bounded_and_private(self):

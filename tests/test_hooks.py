@@ -29,7 +29,7 @@ class HookPolicyTests(unittest.TestCase):
     def test_lifecycle_mutations_are_rejected(self):
         failures = []
         count = check_hook_lifecycle_fixtures(self.documents(), failures)
-        self.assertEqual(3, count)
+        self.assertEqual(4, count)
         self.assertEqual([], failures)
 
 

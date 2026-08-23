@@ -32,6 +32,11 @@ envelope and retry boundary are identical, while available confirmation UI,
 idempotency support, and authoritative verification depend on the connected
 service and host tool.
 
+The shared source includes `agent-plugin-architect` on both hosts without a
+host-specific Skill copy. Static discovery, route parity, wrapper and hook
+shape, and version-bound evidence are checked separately from authenticated
+host loading, lifecycle routing, model behavior, and marketplace acceptance.
+
 This is repository support: it proves that the integration files exist and
 declare the intended shape. It does not prove execution on every host release,
 operating system, shell, installation method, or policy configuration.
@@ -47,8 +52,8 @@ session. To produce it:
 3. Start or reload the session.
 4. Try the routed request and non-routing control in
    [Getting Started](getting-started.md), plus the explicit usage-optimization,
-   task-review, and external-action requests in [Examples](examples.md) when
-   validating those routes.
+   packaged-plugin architecture, task-review, and external-action requests in
+   [Examples](examples.md) when validating those routes.
 5. For Claude Code compaction coverage, observe manual and automatic compaction
    separately. Record whether exactly one `SessionStart` event with source
    `compact` loaded the gate, then run the routed request and no-route control
@@ -60,14 +65,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.12, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.12 host-pass
+For v0.8.0, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.8.0 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.12.
+forward to v0.8.0.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -103,35 +108,37 @@ Axiom's intentional `hooks` field and additionally rejects the supported
 `brandColorDark` and `supportURL` fields. Those discrepancies are reported
 without removing the fields from the release manifest.
 
-## Accepted Future Route
+## Packaged Agent-Plugin Architecture
 
-Version 0.7.12 records the
+Version 0.8.0 implements the
 [agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
-as **accepted for Stage 2, not implemented**. It freezes the future route's
-frontmatter, ownership matrix, classification cases, two-route limit, evidence
-minimums, v0.8.0 surface map, successor evaluation rules, context projection,
-and stop conditions.
+as one directly packaged Skill with seven root-reachable references. It owns
+only explicit Codex or Claude Code plugin architecture across shared Skills,
+routes, manifests, marketplace wrappers, hooks, and version-bound evidence.
 
-This design record is not a checked-in `agent-plugin-architect` Skill and does
-not change the current six-route gate or seven-direct-Skill package shape. No
-Codex or Claude Code host behavior is claimed for the unimplemented route.
-Historical schemas, benchmarks, routing results, and context records remain
-their own version-bound evidence rather than being rewritten to anticipate it.
+The current package has seven task routes and eight direct Skills. Repo-local
+instruction systems, ordinary plugin code and documentation, Git submission,
+installation, publication, deployment, and external actions remain outside the
+new route. The shared Skill tree and marketplace wrappers remain single-source,
+and both hooks remain byte-identical. Static support does not establish an
+installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.7.12.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.0.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.7.12 candidate gate is byte-identical.
+The v0.8.0 candidate gate is 6,150 bytes with SHA-256
+`9ef0c0e28bb3ad1f91d2cc2014ab18b09bffd74ad402c3190a2f4949c48ebfd1`.
 
-Its 5,899 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, and
-one unique direct reference are exact repository counts used as context-cost
-proxies. The 1,475 `ceil(bytes / 4)` value is an estimate only for comparing
-the same English Markdown surface. No exact prompt tokens, cached tokens,
-credits, or wall-clock values were exposed or inferred.
+The candidate has 788 whitespace-delimited words, 111 logical lines, and one
+unique direct reference. Its 1,538 `ceil(bytes / 4)` value is an estimate only
+for comparing the same English Markdown surface. The exact cumulative delta is
+251 bytes, 31 words, four lines, zero references, and 63 estimated tokens; it
+is below both the 256-byte and 5% review triggers. No exact prompt tokens,
+cached tokens, credits, or wall-clock values were exposed or inferred.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -145,18 +152,25 @@ observed count exceeds the expected count.
 Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
 requires review and justification, not automatic rejection. Any actual
 reduction requires equivalent before/after `PASS` evidence for both routed and
-no-route cases over the same fixed 47-case workload. Static validation and host
-observation remain separate evidence classes. No model, reasoning, hook, route,
-safety, authorization, or stop rule changed to establish this baseline.
+no-route cases over the same fixed 64-case workload. Static validation and host
+observation remain separate evidence classes. No model, reasoning, hook,
+telemetry, runtime dependency, safety, authorization, or stop rule changed to
+obtain the measured result.
 
 ## Routing Corpus And Host Benchmarks
 
 The [routing evaluation corpus](../evals/README.md) is a second, narrower
-evidence surface for route selection. Its 47 host-independent JSONL records are
-reviewable expectations, not observed model behavior. A fixed 13-case Codex
-manifest selects six canonical positives, three high-impact safety controls,
-one dual-route request, one ambiguity case, one multilingual plan, and one
-ordinary no-route request at repeat count one.
+evidence surface for route selection. Its 64 host-independent JSONL records are
+reviewable expectations, not observed model behavior. The frozen 47-case v1
+corpus and 13-case `codex-core-v1` benchmark remain bound to the historical
+six-route contract. The successor v2 contract adds 17 cases for the seventh
+route, a prose-free seven-route host-response schema, and the 17-case
+`codex-core-v2` benchmark at repeat count one.
+
+The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
+cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
+behavior. It is static contract evidence only: no Codex host or model run was
+performed for v0.8.0, and authenticated Claude Code remains unavailable.
 
 Host result records live under `evals/results/` and identify a stable run ID,
 the applied response-schema path and SHA-256, immutable Axiom source, exact host
@@ -266,7 +280,7 @@ Candidate 4 uses the independent run ID
 unreleased commit `70e1242ba9f038fe663f924f167108d8940106a8` and tree
 `780b7401f7f12af9c9ab310a24c02c9aae84fe62`, all 13 ordered cases passed one
 fresh call each without retry. Candidate 3 remains frozen. Its subject differs
-from the immutable v0.7.8 release commit, no v0.7.12 host pass is inferred, and
+from the immutable v0.7.8 release commit, no v0.8.0 host pass is inferred, and
 authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`.
 
 The first failure or unknown result stops the remaining fixed batch without a
@@ -282,6 +296,26 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.0` reports:
+
+- one shared `agent-plugin-architect` Skill with seven direct references and
+  explicit exclusions for repo-local instructions, generic plugin work, Git,
+  installation, publication, deployment, and external actions;
+- synchronized `0.8.0` manifests, eight direct public Skills, seven task
+  routes, and byte-identical marketplace wrappers and startup hooks;
+- an additive seven-route schema, prose-free response schema, 17-case current
+  benchmark, and 64-case combined corpus, while all v1 schemas, benchmarks,
+  corpus files, nine observations, and earlier context records remain
+  byte-identical;
+- an exact 6,150-byte gate with a +251-byte cumulative delta that remains below
+  both context-growth review triggers; and
+- `STATIC-ONLY` current evidence: Codex host, lifecycle, model, marketplace,
+  and portal checks are `NOT-RUN`, while authenticated Claude Code is
+  `UNAVAILABLE / NOT-RUN`.
+
+See the [v0.8.0 release notes](releases/v0.8.0.md) for the candidate package,
+measurement, and validation boundary.
 
 The Git record for `v0.7.12` reports:
 
@@ -647,7 +681,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.12 release notes](releases/v0.7.12.md),
+See the durable [v0.8.0 release notes](releases/v0.8.0.md),
+[v0.7.12 release notes](releases/v0.7.12.md),
 [v0.7.11 release notes](releases/v0.7.11.md),
 [v0.7.10 release notes](releases/v0.7.10.md),
 [v0.7.9 release notes](releases/v0.7.9.md),

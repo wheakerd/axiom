@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.7.12",
-    "tag": "v0.7.12",
+    "version": "0.8.0",
+    "tag": "v0.8.0",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,12 +11,12 @@
     {
       "host": "codex",
       "status": "unknown",
-      "reason": "No v0.7.12 host run, marketplace preview, or model call was performed. The accepted agent-plugin-architect route is not implemented. Static routing-context proxies and unobserved lifecycle slots do not establish a current host pass."
+      "reason": "No v0.8.0 Codex host, lifecycle, model, marketplace, or portal run was performed. Static package, routing, and context evidence for agent-plugin-architect does not establish a current host pass."
     },
     {
       "host": "claude-code",
       "status": "unavailable",
-      "reason": "No authenticated Claude Code session or subscription was available; host validation was not run."
+      "reason": "No authenticated Claude Code session or subscription was available; authenticated host and lifecycle validation were unavailable and not run."
     }
   ],
   "priorReleaseEvidence": [

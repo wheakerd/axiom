@@ -26,6 +26,27 @@ independent instruction, implementation, and provenance audits. Ordinary AGENTS
 maintenance, repository drift, rollback, compaction, or a model or agent handoff
 does not activate reconciliation without an explicit user request.
 
+## `agent-plugin-architect`
+
+| Field | Example |
+| --- | --- |
+| User request | "Audit this packaged Codex and Claude Code plugin for one shared Skill tree, route ownership, manifest and wrapper parity, hooks, and version-bound evidence." |
+| Expected selected route | `agent-plugin-architect` |
+| Expected safety boundary | Inventory the package first; keep every public reference directly reachable; preserve one shared Skill tree, unchanged hooks, synchronized manifest versions, and evidence-classified host claims. |
+| Not authorized | Changing repo-local `AGENTS.md`, installing or activating the plugin, publishing it, deploying it, using credentials, mutating a remote, committing, or pushing. |
+
+"Design this repository's `AGENTS.md` and `.agents/skills` ownership" selects
+only `agents-architect`. "Fix the parser in this plugin repository" and
+"summarize this plugin README" select no Axiom route. The word "plugin" alone
+does not establish packaged agent-plugin architecture intent.
+
+An explicit request to redesign packaged routing and measure its Codex context
+cost selects `agent-plugin-architect` plus `optimize-codex-usage`, in gate
+order. Work that later reaches Git submission, installation, or publication is
+re-routed at that active phase instead of accumulating three or four routes.
+"Make this plugin better" requires one concise clarification when ordinary
+source work and packaged architecture would materially change the scope.
+
 ## `optimize-codex-usage`
 
 | Field | Example |
@@ -129,6 +150,9 @@ promotion, the complete change, or cleanup.
 | "What version of the service is running?" | Continue normally | A pure read-only status query does not plan a persistent change |
 | "Explain what a rollback is." | Continue normally | A conceptual explanation has no concrete persistent target |
 | "Refactor this parser and run its unit tests." | Continue normally | Ordinary code and repository-local testing are outside Axiom's focused routes |
+| "Fix the parser in this plugin repository." | Continue normally | A generic plugin repository does not imply packaged agent-plugin architecture |
+| "Summarize this plugin README." | Continue normally | Ordinary plugin documentation does not select an architecture route |
+| "Build an ordinary VS Code extension called a plugin." | Continue normally | A product named a plugin is not a Codex or Claude Code packaged Skill system |
 | "Commit the current changes with a multi-paragraph English message." | Continue normally | An ordinary local commit does not request checkpoint provenance or consolidation |
 | "Make this algorithm use less memory." | Continue normally | Software runtime performance is not Codex usage optimization |
 | "Draft an email to the customer, but do not send it." | Continue normally | Draft-only work does not request an external effect |

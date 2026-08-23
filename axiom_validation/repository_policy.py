@@ -34,9 +34,12 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/v0.7.4/claude-code/linux.json",
     "evals/README.md",
     "evals/schema-v1.json",
+    "evals/schema-v2.json",
     "evals/host-response-schema-v1.json",
     "evals/host-response-schema-v2.json",
+    "evals/host-response-schema-v3.json",
     "evals/benchmarks/codex-core-v1.json",
+    "evals/benchmarks/codex-core-v2.json",
     "evals/context-budget/README.md",
     "evals/context-budget/schema-v1.json",
     f"evals/context-budget/results/v{RELEASE_VERSION}.json",
@@ -67,6 +70,7 @@ REQUIRED_PUBLIC_FILES = tuple(
 )
 
 EXPECTED_DIRECT_SKILLS = (
+    "agent-plugin-architect",
     "agents-architect",
     "confirm-external-action",
     "optimize-codex-usage",
@@ -78,6 +82,7 @@ EXPECTED_DIRECT_SKILLS = (
 EXPECTED_README_SKILLS = (
     "using-axiom",
     "agents-architect",
+    "agent-plugin-architect",
     "optimize-codex-usage",
     "review-axiom-task",
     "confirm-external-action",
@@ -85,6 +90,24 @@ EXPECTED_README_SKILLS = (
     "reversible-system-change",
 )
 INSTRUCTION_MAX_BYTES = 8192
+AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
+    "Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or "
+    "Claude Code plugin's shared Skills, route ownership, manifests, marketplace "
+    "wrappers, hooks, and version-bound compatibility evidence. Use only for explicit "
+    "packaged agent-plugin architecture work. Do not use for repository-local "
+    "AGENTS.md or .agents/skills systems, ordinary source-code or documentation work "
+    "merely because it is in a plugin repository, host installation, publication, "
+    "deployment, or Git submission."
+)
+AGENT_PLUGIN_ARCHITECT_REFERENCES = (
+    "references/package-inventory.md",
+    "references/route-and-trigger-contracts.md",
+    "references/packaged-skill-architecture.md",
+    "references/hooks-and-trust-boundaries.md",
+    "references/cross-host-packaging.md",
+    "references/evaluation-and-evidence.md",
+    "references/validation-reporting.md",
+)
 GOVERNANCE_VERIFIED_DATE = "2026-08-23"
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
@@ -219,6 +242,44 @@ def check_skill_contracts(failures: list[str]) -> None:
         failures.append(
             "README Shared skills list is not the expected parseable ordered set: "
             + ", ".join(readme_skills)
+        )
+
+    architect_root = REPOSITORY_ROOT / "skills" / "agent-plugin-architect"
+    architect_main = architect_root / "SKILL.md"
+    architect_fields = parse_skill_frontmatter(architect_main, failures)
+    if architect_fields is not None and architect_fields.get(
+        "description"
+    ) != AGENT_PLUGIN_ARCHITECT_DESCRIPTION:
+        failures.append(
+            "skills/agent-plugin-architect/SKILL.md description drifted from the "
+            "accepted narrow route contract"
+        )
+    actual_references = tuple(
+        path.relative_to(architect_root).as_posix()
+        for path in sorted((architect_root / "references").glob("*.md"))
+    )
+    if actual_references != tuple(sorted(AGENT_PLUGIN_ARCHITECT_REFERENCES)):
+        failures.append(
+            "agent-plugin-architect direct reference set drifted: "
+            + ", ".join(actual_references)
+        )
+    architect_text = architect_main.read_text(encoding="utf-8")
+    for reference in AGENT_PLUGIN_ARCHITECT_REFERENCES:
+        if architect_text.count(reference) != 1:
+            failures.append(
+                "skills/agent-plugin-architect/SKILL.md must expose exactly one direct "
+                f"next hop for {reference!r}"
+            )
+    canonical_summary = (
+        "- `agent-plugin-architect`: design or audit packaged Codex or Claude Code\n"
+        "  plugin architecture across shared Skills, routes, manifests, wrappers, hooks,\n"
+        "  and compatibility evidence. Repo-local AGENTS systems and ordinary plugin\n"
+        "  code stay outside."
+    )
+    if canonical_summary not in front_door:
+        failures.append(
+            "skills/using-axiom/SKILL.md is missing the accepted agent-plugin-architect "
+            "route summary"
         )
 
 

@@ -20,6 +20,7 @@ EFFECTIVE_INSTRUCTION_TOKENS = (
 )
 ROUTE_SOURCE_ANCHORS = {
     "agents-architect": ("AGENTS.md", "audit"),
+    "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
     "confirm-external-action": ("external", "target", "verify"),
     "optimize-codex-usage": ("Codex", "credits", "context"),
     "review-axiom-task": ("routing", "authorization", "evidence"),
@@ -44,6 +45,11 @@ def route_contract(request: str) -> dict[str, Any]:
         normalized = "prepare a read-only plan for a persistent database migration"
     if "审阅当前 Axiom 任务的路由、授权、操作和证据" in request:
         normalized = "review the routing authorization actions and evidence for this axiom task"
+    if "打包的 Codex 和 Claude Code 插件" in request and "共享 Skills" in request:
+        normalized = (
+            "audit this packaged codex and claude code plugin's shared skills, "
+            "routes, wrappers, startup hooks, and version evidence without install or publish"
+        )
 
     effective_contracts = {
         "effective-instructions": {
@@ -119,12 +125,30 @@ def route_contract(request: str) -> dict[str, Any]:
     )
     agents = bool(
         re.search(r"(?:agents\.md|\.agents)", normalized)
-        and re.search(r"\b(?:audit|design|initialize|split|rewrit|migrat|maintain|validat)\w*\b", normalized)
+        and re.search(r"\b(?:audit|create|design|initialize|split|rewrit|migrat|maintain|validat)\w*\b", normalized)
+    )
+    plugin_architecture = bool(
+        re.search(
+            r"\b(?:audit|design|redesign|initializ\w*|migrat\w*|maintain|review|evaluat\w*)\b",
+            normalized,
+        )
+        and re.search(
+            r"\b(?:packaged|cross-host|agent[ -]plugin|codex and claude code)\b",
+            normalized,
+        )
+        and re.search(
+            r"\b(?:architect\w*|shared skills?|routes?|manifests?|wrappers?|hooks?|version(?:-bound)? (?:compatibility )?evidence|public skills?)\b",
+            normalized,
+        )
     )
     git = bool(
         re.search(r"\b(?:checkpoint|baseline metadata|consolidat\w*|one-final|recover\w*)\b", normalized)
         or re.search(r"\b(?:submit|publish|push)\b.*\b(?:git|branch|changes?|history)\b", normalized)
         or re.search(r"\b(?:git|branch)\b.*\b(?:submit|publish|push)\b", normalized)
+        or bool(
+            re.search(r"\bcommit\b.*\btag\b.*\bpush\b", normalized)
+            and re.search(r"\bplugin release\b", normalized)
+        )
     )
     persistent = bool(
         (
@@ -138,6 +162,10 @@ def route_contract(request: str) -> dict[str, Any]:
             )
         )
         or "isolated restore rehearsal" in normalized
+        or bool(
+            re.search(r"\b(?:install|update|reload)\b", normalized)
+            and re.search(r"\bplugin\b", normalized)
+        )
     )
     external_effect_prohibited = bool(
         re.search(
@@ -155,6 +183,18 @@ def route_contract(request: str) -> dict[str, Any]:
             normalized,
         )
         and not external_effect_prohibited
+    ) or bool(
+        re.search(r"\bpublish\b", normalized)
+        and re.search(r"\b(?:plugin|marketplace)\b", normalized)
+        and re.search(r"\b(?:already-prepared|prepared|confirm|execute)\b", normalized)
+        and not external_effect_prohibited
+    )
+
+    plugin_ambiguity = bool(
+        re.search(r"\b(?:either|choose one)\b", normalized)
+        and "plugin" in normalized
+        and re.search(r"\b(?:architect\w*|shared skills?|manifests?|hooks?)\b", normalized)
+        and re.search(r"\b(?:parser|source code|ordinary)\b", normalized)
     )
 
     if review:
@@ -165,12 +205,27 @@ def route_contract(request: str) -> dict[str, Any]:
             "authorization": frozenset({"read"}),
         }
 
-    if usage and (agents or persistent) and re.search(r"\b(?:either|choose one)\b", normalized):
+    if plugin_ambiguity or (
+        usage
+        and (agents or persistent)
+        and re.search(r"\b(?:either|choose one)\b", normalized)
+    ):
         return {
             "route": "clarify",
             "phase": "route-choice",
             "references": (),
             "authorization": frozenset({"read"}),
+        }
+
+    if usage and plugin_architecture:
+        return {
+            "route": (
+                "agent-plugin-architect",
+                "optimize-codex-usage",
+            ),
+            "phase": "cross-route-ownership",
+            "references": (),
+            "authorization": frozenset({"read", "edit", "test"}),
         }
 
     if usage:
@@ -187,6 +242,25 @@ def route_contract(request: str) -> dict[str, Any]:
             "phase": "audit",
             "references": ("references/inventory-audit.md",),
             "authorization": frozenset({"read"}),
+        }
+
+    if plugin_architecture:
+        audit_only = bool(re.search(r"\b(?:audit|review)\b", normalized)) and not bool(
+            re.search(r"\b(?:design|redesign|initializ\w*|migrat\w*|maintain)\b", normalized)
+        )
+        return {
+            "route": "agent-plugin-architect",
+            "phase": "architecture-audit" if audit_only else "architecture-design",
+            "references": (
+                "references/package-inventory.md",
+                "references/route-and-trigger-contracts.md",
+                "references/cross-host-packaging.md",
+            ),
+            "authorization": (
+                frozenset({"read"})
+                if audit_only
+                else frozenset({"read", "edit", "test"})
+            ),
         }
 
     if persistent and external_action:
@@ -411,6 +485,18 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "An explicit usage-reduction goal selects",
                 "On resume or compaction, reselect every still-active route from current direct evidence before any new mutation.",
                 "If route or phase cannot be reconstructed, perform zero new mutations",
+            ),
+        ),
+        (
+            skills / "agent-plugin-architect/SKILL.md",
+            "packaged-plugin ownership and phase",
+            (
+                "Confirm that the request explicitly concerns packaged agent-plugin architecture.",
+                "Repo-local `AGENTS.md` or `.agents/skills` work belongs to",
+                "Load only references needed for the active phase.",
+                "at most one other Axiom route",
+                "An explicit usage-cost goal may add `optimize-codex-usage`",
+                "Git submission, installation, publication, deployment, and consequential external effects remain separate active phases",
             ),
         ),
         (

@@ -64,7 +64,7 @@ EXPECTED_SCENARIOS = (
         "fresh",
         "startup",
         "not-applicable",
-        ("optimize-codex-usage-canonical-001",),
+        ("agent-plugin-architect-canonical-001",),
         1,
     ),
     (
@@ -80,7 +80,7 @@ EXPECTED_SCENARIOS = (
         "cleared",
         "clear",
         "not-applicable",
-        ("optimize-codex-usage-canonical-001",),
+        ("agent-plugin-architect-paraphrase-001",),
         1,
     ),
     (
@@ -96,7 +96,7 @@ EXPECTED_SCENARIOS = (
         "post-compaction",
         "compact",
         "automatic",
-        ("compaction-optimize-codex-usage-automatic-001",),
+        ("compaction-plugin-architecture-001",),
         1,
     ),
     (
