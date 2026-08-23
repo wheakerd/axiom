@@ -60,14 +60,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.7.11, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.7.11 host-pass
+For v0.7.12, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it, so it makes no current v0.7.12 host-pass
 claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.7.11.
+forward to v0.7.12.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -103,14 +103,29 @@ Axiom's intentional `hooks` field and additionally rejects the supported
 `brandColorDark` and `supportURL` fields. Those discrepancies are reported
 without removing the fields from the release manifest.
 
+## Accepted Future Route
+
+Version 0.7.12 records the
+[agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
+as **accepted for Stage 2, not implemented**. It freezes the future route's
+frontmatter, ownership matrix, classification cases, two-route limit, evidence
+minimums, v0.8.0 surface map, successor evaluation rules, context projection,
+and stop conditions.
+
+This design record is not a checked-in `agent-plugin-architect` Skill and does
+not change the current six-route gate or seven-direct-Skill package shape. No
+Codex or Claude Code host behavior is claimed for the unimplemented route.
+Historical schemas, benchmarks, routing results, and context records remain
+their own version-bound evidence rather than being rewritten to anticipate it.
+
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.7.11.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.7.12.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.7.11 candidate gate is byte-identical.
+The v0.7.12 candidate gate is byte-identical.
 
 Its 5,899 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, and
 one unique direct reference are exact repository counts used as context-cost
@@ -251,7 +266,7 @@ Candidate 4 uses the independent run ID
 unreleased commit `70e1242ba9f038fe663f924f167108d8940106a8` and tree
 `780b7401f7f12af9c9ab310a24c02c9aae84fe62`, all 13 ordered cases passed one
 fresh call each without retry. Candidate 3 remains frozen. Its subject differs
-from the immutable v0.7.8 release commit, no v0.7.11 host pass is inferred, and
+from the immutable v0.7.8 release commit, no v0.7.12 host pass is inferred, and
 authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`.
 
 The first failure or unknown result stops the remaining fixed batch without a
@@ -267,6 +282,26 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.7.12` reports:
+
+- the Stage 1 `agent-plugin-architect` contract is accepted for Stage 2 and is
+  not an installed or host-observed route;
+- both manifests advance only their synchronized version while the current
+  six-route gate, seven direct public Skills, wrappers, hooks, workflows,
+  historical evaluation contracts, and runtime surface remain unchanged;
+- the immutable v0.7.9 routing gate remains the cumulative baseline, and the
+  v0.7.12 candidate retains its exact 5,899-byte content and SHA-256;
+- all 60 standard-library tests and the aggregate publication policy passed in
+  disposable copies, along with distribution, compatibility, context-budget,
+  duplicate-aware JSON, Markdown-link, English-only, package-shape, mode,
+  whitespace, documentation, and forbidden-surface checks;
+- Claude Code `2.1.220` strict offline package validation passed separately,
+  while the stale bundled `plugin-creator` preserved its known three-field
+  non-pass; and
+- v0.7.12 remains `STATIC-ONLY`: no current Codex host or model call was run,
+  and authenticated Claude Code remains unavailable without a subscription or
+  session.
 
 The Git record for `v0.7.11` reports:
 
@@ -612,7 +647,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.7.11 release notes](releases/v0.7.11.md),
+See the durable [v0.7.12 release notes](releases/v0.7.12.md),
+[v0.7.11 release notes](releases/v0.7.11.md),
 [v0.7.10 release notes](releases/v0.7.10.md),
 [v0.7.9 release notes](releases/v0.7.9.md),
 [v0.7.8 release notes](releases/v0.7.8.md),

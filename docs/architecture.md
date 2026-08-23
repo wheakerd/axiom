@@ -66,6 +66,21 @@ service, launches background work, or performs an update.
 The gate is intentionally narrow. General AI work, coding, documentation, and
 plugin-maintenance similarity do not make a request an Axiom task.
 
+### Accepted Future Route
+
+Version 0.7.12 accepts the design for a future `agent-plugin-architect` route
+that will own explicit packaged Codex or Claude Code plugin architecture across
+shared Skills, route ownership, manifests, marketplace wrappers, hooks, and
+version-bound compatibility evidence. The full ownership, case, schema, and
+stop contract is recorded in
+[Agent Plugin Architect Route Contract](agent-plugin-architect-route-contract.md).
+
+The decision is **accepted for Stage 2, not implemented**. Version 0.7.12 does
+not add a Skill, modify `using-axiom`, expand the six-route gate, change either
+hook, or claim installed host behavior. The planned implementation belongs to
+v0.8.0 and must add successor evaluation contracts without changing historical
+schemas, benchmarks, or results.
+
 ## 4. Task Skills And On-Demand References
 
 The selected task skill establishes its own phase and evidence contract. Every

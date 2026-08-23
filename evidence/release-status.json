@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.7.11",
-    "tag": "v0.7.11",
+    "version": "0.7.12",
+    "tag": "v0.7.12",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "unknown",
-      "reason": "No v0.7.11 host run, marketplace preview, or model call was performed. The routing-context record contains deterministic repository proxies and explicit unobserved lifecycle slots without establishing a current host pass."
+      "reason": "No v0.7.12 host run, marketplace preview, or model call was performed. The accepted agent-plugin-architect route is not implemented. Static routing-context proxies and unobserved lifecycle slots do not establish a current host pass."
     },
     {
       "host": "claude-code",
