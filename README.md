@@ -108,7 +108,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.7.8` is `STATIC-ONLY`: immutable prior-release observations are preserved
+`0.7.9` is `STATIC-ONLY`: immutable prior-release observations are preserved
 but are not carried forward as a current-release host pass.
 
 The [routing evaluation corpus](evals/README.md) makes 47 host-independent
@@ -165,9 +165,9 @@ Candidate 4 ran against immutable unreleased commit
 order with one call each, no retry, zero canonical false negatives, zero
 high-impact false positives, zero clarification mismatches, and zero mutation
 attempts. Its V2 evidence is observer-derived and retains no model prose. This
-is an unreleased-candidate host pass; v0.7.8 remains `STATIC-ONLY` until the
-immutable release identity exists. Authenticated Claude Code remains
-`UNAVAILABLE / NOT-RUN`.
+is an unreleased-candidate host pass, not a host pass bound to the immutable
+v0.7.8 release commit. No v0.7.9 host pass is inferred. Authenticated Claude
+Code remains `UNAVAILABLE / NOT-RUN`.
 
 ## Deliberate Non-Goals
 
@@ -370,9 +370,11 @@ and report an unavailable validator as unavailable, not passed.
   acceptance cases, and the non-mutating observation method.
 - [Security Policy](SECURITY.md): private vulnerability boundaries and public
   routing/compatibility reporting paths.
+- [Repository Governance](docs/repository-governance.md): dated branch, tag,
+  required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.7.8 release notes](docs/releases/v0.7.8.md):
+- [Changelog](CHANGELOG.md) and [v0.7.9 release notes](docs/releases/v0.7.9.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -390,9 +392,10 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 
 They compare the skill tree with both manifests, both marketplace wrappers,
 and the seven-item `Shared skills` list above; validate version-bound host
-evidence and the current static-only boundary; and exercise each publication
-policy domain with standard-library-only focused tests. These are contributor
-and CI checks, not installed runtime dependencies.
+evidence and the current static-only boundary; preserve the dated repository
+governance and exact critical-path CODEOWNERS contract; and exercise each
+publication policy domain with standard-library-only focused tests. These are
+contributor and CI checks, not installed runtime dependencies.
 
 Pull requests to `main`, including fork contributions, run these read-only
 distribution and publication checks on the proposed merge tree. The workflow

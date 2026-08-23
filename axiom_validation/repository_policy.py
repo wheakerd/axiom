@@ -18,12 +18,14 @@ from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, pars
 
 _BASE_REQUIRED_PUBLIC_FILES = (
     "README.md",
+    ".github/CODEOWNERS",
     "docs/getting-started.md",
     "docs/architecture.md",
     "docs/examples.md",
     "docs/trust-model.md",
     "docs/compatibility.md",
     "docs/field-validation.md",
+    "docs/repository-governance.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "evidence/schema-v1.json",
@@ -79,6 +81,43 @@ EXPECTED_README_SKILLS = (
     "reversible-system-change",
 )
 INSTRUCTION_MAX_BYTES = 8192
+GOVERNANCE_VERIFIED_DATE = "2026-08-23"
+GOVERNANCE_OWNER = "@wheakerd"
+CRITICAL_CODEOWNER_PATTERNS = (
+    "/.github/CODEOWNERS",
+    "/.github/workflows/",
+    "/.codex-plugin/",
+    "/.agents/plugins/",
+    "/.claude-plugin/",
+    "/hooks/",
+    "/skills/using-axiom/",
+    "/scripts/",
+    "/axiom_validation/",
+    "/tests/",
+    "/SECURITY.md",
+    "/docs/repository-governance.md",
+)
+GOVERNANCE_SNAPSHOT_ANCHORS = (
+    f"Last verified (UTC): `{GOVERNANCE_VERIFIED_DATE}`",
+    "`require-signed-commits-on-main`",
+    "`require-github-signed-release-tags`",
+    "`refs/heads/main`",
+    "`refs/tags/v*`",
+    "`Verify GitHub-signed release target`",
+    "`repository-guards`",
+    "`required_approving_review_count: 0`",
+    "`require_extra_approval_for_unattributed_changes: true`",
+    "`allowed_merge_methods: [squash]`",
+    "`require_code_owner_review: false`",
+    "`strict_required_status_checks_policy: false`",
+    "`do_not_enforce_on_create: false`",
+    "`bypass_actors: []`",
+    "`current_user_can_bypass: never`",
+    "Required checks on `main`: **NONE OBSERVED**",
+    "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
+    "Release-tag creator allowlist: **UNAVAILABLE**",
+    "A failed workflow is detection evidence, not server-side mutation prevention.",
+)
 
 
 def parse_skill_frontmatter(path: Path, failures: list[str]) -> dict[str, str] | None:
@@ -185,6 +224,84 @@ def check_required_files(failures: list[str]) -> None:
             failures.append(
                 f"missing required public file: {relative_path}; restore the accepted publication surface"
             )
+
+
+def check_repository_governance_documents(
+    governance_text: str,
+    codeowners_text: str,
+    failures: list[str],
+) -> int:
+    """Validate the dated governance snapshot and exact critical-path owners."""
+    normalized_governance = " ".join(governance_text.split())
+    for anchor in GOVERNANCE_SNAPSHOT_ANCHORS:
+        if " ".join(anchor.split()) not in normalized_governance:
+            failures.append(
+                f"docs/repository-governance.md is missing governance snapshot anchor {anchor!r}"
+            )
+
+    entries: list[tuple[str, tuple[str, ...]]] = []
+    seen_patterns: set[str] = set()
+    for line_number, raw_line in enumerate(codeowners_text.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = line.split()
+        if len(fields) < 2:
+            failures.append(
+                f".github/CODEOWNERS:{line_number} must contain one pattern and an owner"
+            )
+            continue
+        pattern, *owners = fields
+        if pattern in seen_patterns:
+            failures.append(
+                f".github/CODEOWNERS:{line_number} duplicates critical pattern {pattern!r}"
+            )
+            continue
+        seen_patterns.add(pattern)
+        entries.append((pattern, tuple(owners)))
+
+    expected_entries = tuple(
+        (pattern, (GOVERNANCE_OWNER,)) for pattern in CRITICAL_CODEOWNER_PATTERNS
+    )
+    if tuple(entries) != expected_entries:
+        failures.append(
+            ".github/CODEOWNERS must retain the exact ordered critical-path owner set"
+        )
+
+    valid_count = 0
+    entry_map = dict(entries)
+    for pattern in CRITICAL_CODEOWNER_PATTERNS:
+        expected_owners = (GOVERNANCE_OWNER,)
+        actual_owners = entry_map.get(pattern)
+        if actual_owners != expected_owners:
+            failures.append(
+                f".github/CODEOWNERS must assign {pattern!r} only to {GOVERNANCE_OWNER}"
+            )
+        else:
+            valid_count += 1
+        if f"`{pattern}`" not in governance_text:
+            failures.append(
+                f"docs/repository-governance.md must list critical CODEOWNERS pattern {pattern!r}"
+            )
+    return valid_count
+
+
+def check_repository_governance_contract(failures: list[str]) -> int:
+    """Load and validate checked-in repository-governance declarations."""
+    documents: dict[str, str] = {}
+    for relative_path in ("docs/repository-governance.md", ".github/CODEOWNERS"):
+        path = REPOSITORY_ROOT / relative_path
+        try:
+            documents[relative_path] = path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {relative_path}: {error}")
+    if len(documents) != 2:
+        return 0
+    return check_repository_governance_documents(
+        documents["docs/repository-governance.md"],
+        documents[".github/CODEOWNERS"],
+        failures,
+    )
 
 
 def check_release_version_surfaces(failures: list[str]) -> None:

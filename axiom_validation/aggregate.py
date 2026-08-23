@@ -31,6 +31,7 @@ from .repository_policy import (
     REQUIRED_PUBLIC_FILES,
     check_compatibility_evidence,
     check_packaged_skills,
+    check_repository_governance_contract,
     check_release_version_surfaces,
     check_required_files,
     check_skill_contracts,
@@ -58,6 +59,9 @@ def main() -> int:
     failures: list[str] = []
 
     run_policy("repository", check_required_files, failures)
+    governance_owner_count = run_policy(
+        "repository-governance", check_repository_governance_contract, failures
+    )
     run_policy("release", check_release_version_surfaces, failures)
     validator_fixture_count = run_policy(
         "parsers", check_validator_negative_fixtures, failures
@@ -194,6 +198,7 @@ def main() -> int:
         f"{routing_eval_case_count} black-box routing cases, "
         f"{routing_benchmark_case_count} fixed host benchmark cases, "
         f"{routing_result_count} labeled host result records, "
+        f"{governance_owner_count} critical-path CODEOWNERS entries, "
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "
         f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback gate fixtures, "
