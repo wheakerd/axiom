@@ -127,7 +127,7 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.3` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.2` is `STATIC-ONLY`: the checked-in repair candidate cannot bind itself to its
 future signed merge commit, tag, or final post-merge host observation.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
@@ -135,7 +135,7 @@ immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.8.3 gate is
+Markdown surface; it is not an exact token or credit count. The v0.8.2 gate is
 6,293 bytes, 805 words, 114 lines, one direct reference, and an estimated 1,574
 tokens. Its cumulative increase of 394 bytes, 48 words, seven lines, zero
 references, and 99 estimated tokens reaches both review thresholds and is
@@ -175,9 +175,18 @@ Case 1 after unexpected tool use; no retry occurred and Cases 2-17 remain
 at repeat count one with the expected route, zero clarification, false model
 mutation fields, zero tool events or calls, and unchanged protected snapshots.
 These separate one-sample outcomes demonstrate observed variance, not Stage 3
-acceptance. Issue #34 remains open until a fresh complete 17-call observation
-against the signed v0.8.3 merge is validated, bound to immutable tag `v0.8.3`,
-and attached as a content-addressed release asset.
+acceptance. Two later complete-batch attempts against the signed unreleased
+v0.8.3 candidate stopped as external terminal `UNKNOWN` records and are not
+reclassified. Issue #34 remains open until a fresh complete 17-call observation
+against the signed v0.8.2 repair merge is validated, bound to immutable tag
+`v0.8.2`, and attached as a content-addressed release asset.
+
+The [Codex exec JSONL observer taxonomy v2](evals/codex-exec-jsonl-observer-v2.json)
+binds all eight public event types and nine item types for Codex CLI `0.149.1`
+to exact official source. The routing validator classifies an item before
+lifecycle sequencing, so a pre-turn tool/action or error cannot be mistaken for
+benign progress. Unknown, malformed, invalid-status, and post-terminal input
+fails closed, while the sanitized result excludes raw or private payload.
 
 The v0.7.8 candidate makes ambiguity precedence explicit: a delegated choice
 among materially different implementations selects no route until one concise
@@ -434,7 +443,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.3 release notes](docs/releases/v0.8.3.md):
+- [Changelog](CHANGELOG.md) and [v0.8.2 release notes](docs/releases/v0.8.2.md):
   release history and version-specific evidence.
 
 ## Contributing

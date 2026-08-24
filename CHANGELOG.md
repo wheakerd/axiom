@@ -5,7 +5,10 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-## 0.8.3 - 2026-08-24
+The active tree is a v0.8.2 repair candidate. It does not relabel either signed
+candidate merge, rewrite any terminal observation, or claim a host pass.
+
+## 0.8.3 - unreleased candidate history
 
 ### Changed
 
@@ -25,14 +28,16 @@ the repository's version tags and the commits they identify.
   clarification, false model mutation fields, zero tool events or calls, and
   unchanged protected snapshots. The separate one-sample outcomes demonstrate
   observed variance; they are not a retry series or Stage 3 acceptance.
-- A fresh complete 17-case Codex batch against the signed v0.8.3 merge remains
-  required before tagging. Authenticated Claude Code remains `UNAVAILABLE /
-  NOT-RUN`, and actual post-compaction behavior remains `NOT-RUN`.
+- Two complete-batch attempts against the signed v0.8.3 candidate stopped at
+  Case 1 as external terminal `UNKNOWN` records. Their observer limitations do
+  not convert either attempt to pass, and no tag or Release was created.
+- Authenticated Claude Code remained `UNAVAILABLE / NOT-RUN`, and actual
+  post-compaction behavior remained `NOT-RUN`.
 
 See [the v0.8.3 release notes](docs/releases/v0.8.3.md) for the diagnostic
 boundary and release gate.
 
-## 0.8.2 - 2026-08-23
+## 0.8.2 - unreleased repair candidate
 
 ### Changed
 
@@ -44,6 +49,10 @@ boundary and release gate.
   hooks, marketplace wrappers, corpus records, benchmarks, or authorization.
 - Added a reviewed v0.8.2 routing-context record and an explicit validator mode
   for a content-addressed, external post-merge `codex-core-v2` observation.
+- Added the exact Codex CLI 0.149.1 public JSONL discriminator taxonomy under
+  the existing routing-evaluation validator. Items are classified before
+  lifecycle sequencing; tool/action, error, unknown, malformed, invalid-status,
+  and post-terminal events fail closed without retaining private payload.
 
 ### Evidence Boundary
 
@@ -55,6 +64,11 @@ boundary and release gate.
   `298268ac0cfcaac84af22d7117e126f57e72152c`; it is not final v0.8.2 evidence.
   Actual post-compaction lifecycle remains `NOT-RUN`, and authenticated Claude
   Code remains `UNAVAILABLE / NOT-RUN`.
+- The signed v0.8.2 release-bound batch remains terminal `FAIL` at Case 1 after
+  unexpected tool use. A separate corrected-preflight Case 1 diagnostic passed
+  once with zero tool events, but it is variance evidence rather than Stage 3
+  acceptance. The signed v0.8.3 candidate and both external terminal `UNKNOWN`
+  attempts remain distinct unreleased history.
 - Issue #34 may close only after the final signed merge receives a complete
   17-call Codex pass, an immutable v0.8.2 tag, and a validated
   content-addressed release asset bound to that exact commit and tree.

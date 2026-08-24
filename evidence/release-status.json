@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.3",
-    "tag": "v0.8.3",
+    "version": "0.8.2",
+    "tag": "v0.8.2",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.2 release-bound batch remains terminal FAIL at Case 1 after unexpected tool use. One independent corrected-preflight v0.8.2 Case 1 diagnostic passed at repeat count one with zero tool events, demonstrating variance but not a complete v0.8.3 host or lifecycle result."
+      "reason": "Signed v0.8.2 remains terminal FAIL at Case 1; a separate corrected-preflight Case 1 passed once with zero tools. Two unreleased v0.8.3 complete-batch attempts remain external terminal UNKNOWN. These distinct outcomes establish neither a complete v0.8.2 host pass nor lifecycle evidence."
     },
     {
       "host": "claude-code",

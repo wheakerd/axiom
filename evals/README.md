@@ -106,13 +106,15 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For v0.8.3, the 64-case combined corpus, 30 total benchmark memberships, and
+For the v0.8.2 repair, the 64-case combined corpus, 30 total benchmark memberships, and
 11 preserved observations pass static validation. The sole immutable v0.8.0
 `codex-core-v2` attempt is terminal `FAIL`; authenticated Claude Code is
 `UNAVAILABLE / NOT-RUN`. F4 and F5 remain separate candidate diagnostics. The
 later v0.8.2 release-bound batch also remains terminal `FAIL`; one independent
 corrected-preflight Case 1 `PASS` at repeat count one is recorded only as a
-diagnostic. No final v0.8.3 host result or Stage 3 pass is inferred.
+diagnostic. Two later complete-batch attempts against the signed unreleased
+v0.8.3 candidate remain external terminal `UNKNOWN` records. No final v0.8.2
+host result or Stage 3 pass is inferred.
 
 The explicit external mode validates one content-addressed post-merge record
 without changing aggregate behavior:
@@ -120,9 +122,9 @@ without changing aggregate behavior:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.3-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.3 \
-  --expected-tag v0.8.3 \
+  /absolute/path/axiom-v0.8.2-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.2 \
+  --expected-tag v0.8.2 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -167,6 +169,24 @@ For each manifest case, the observer must:
    exit state, and before/after mutation comparison. Remove the disposable
    home, plugin cache, workspace, and opaque authentication copy after
    classification.
+
+The JSON stream must use the versioned
+[`codex-exec-jsonl-observer-v2.json`](codex-exec-jsonl-observer-v2.json)
+contract for Codex CLI `0.149.1`. For every item event, the observer must
+classify before lifecycle sequencing: resolve the public item discriminator,
+category, and any enumerated status first. A source-valid benign item may appear after
+`thread.started` and before `turn.started`; a tool/action or error item in that
+position is still counted and terminates. Unknown, malformed, invalid-status,
+pre-thread benign, duplicate-phase, post-terminal, or abrupt input fails
+closed. Persist the call count before launch and make terminal state
+irreversible.
+
+The sanitized journal may retain only ordinal, public event and item
+discriminators, fixed category and role, and an enumerated status. It must not
+retain response or reasoning text, tool arguments or output, identifiers,
+credentials, paths, session/config content, or raw payload. The classifier is
+part of the existing standard-library validation owner; it is not a model
+runner or a private maintenance harness.
 
 The exact five-sentence developer instruction is:
 
@@ -362,10 +382,12 @@ acceptance.
 
 Final acceptance uses a new complete 17-call batch against the exact signed
 merge commit before any tag is created. A failure stops without minting a tag.
-On pass, create immutable `v0.8.3` at that same commit, finalize the external
+On pass, create immutable `v0.8.2` at that same commit, finalize the external
 record with the exact tag, commit, and tree, validate its content-addressed
 filename, and upload it as the Release asset with its full SHA-256 in Release
-and Issue text. Issue #34 closes only after the asset and release checks pass.
+and Issue text. The signed unreleased v0.8.3 candidate and its two external
+terminal `UNKNOWN` attempts remain immutable history. Issue #34 closes only
+after the v0.8.2 asset and release checks pass.
 
 The preserved initial Codex run is
 `codex-v0-7-7-linux-codex-core-v1-initial`; it binds the schema used for that
