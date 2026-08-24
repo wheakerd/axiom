@@ -25,6 +25,8 @@ from axiom_validation.routing_evals import (
     CANDIDATE_RESULT_PATH,
     CANDIDATE_V078_SUBJECT,
     CLAUDE_UNAVAILABLE_RUN_ID,
+    CODEX_EXEC_JSONL_ITEM_TYPES,
+    CODEX_EXEC_JSONL_TAXONOMY_VERSION,
     CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
     CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
     FAILED_HOST_RESPONSE_SCHEMA_SHA256,
@@ -53,6 +55,7 @@ from axiom_validation.routing_evals import (
     classify_host_response_acceptance,
     classify_host_response_v2_acceptance,
     classify_host_response_v3_acceptance,
+    classify_codex_exec_jsonl_lines,
     check_host_response_schema,
     check_host_response_schema_v2,
     check_host_response_schema_v3,
@@ -151,7 +154,7 @@ def benchmark_v2_case_ids() -> list[str]:
     return json.loads(path.read_text(encoding="utf-8"))["caseIds"]
 
 
-def external_v083_observation() -> dict:
+def external_v082_observation() -> dict:
     cases = corpus_cases()
     result_cases = []
     for case_id in benchmark_v2_case_ids():
@@ -190,14 +193,14 @@ def external_v083_observation() -> dict:
         "schemaVersion": "2",
         "kind": "routing-observation",
         "benchmarkId": "codex-core-v2",
-        "runId": "codex-v0-8-3-linux-codex-core-v2-post-tag-1",
+        "runId": "codex-v0-8-2-repair-linux-codex-core-v2-post-tag-1",
         "responseSchema": {
             "path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
             "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
         },
         "axiom": {
-            "version": "0.8.3",
-            "tag": "v0.8.3",
+            "version": "0.8.2",
+            "tag": "v0.8.2",
             "commit": "b" * 40,
             "tree": "c" * 40,
         },
@@ -234,7 +237,7 @@ def external_v083_observation() -> dict:
 def write_content_addressed_observation(directory: Path, record: dict) -> Path:
     payload = (json.dumps(record, indent=2) + "\n").encode("ascii")
     digest = hashlib.sha256(payload).hexdigest()
-    path = directory / f"axiom-v0.8.3-codex-core-v2-{digest}.json"
+    path = directory / f"axiom-v0.8.2-codex-core-v2-{digest}.json"
     path.write_bytes(payload)
     return path
 
@@ -248,6 +251,168 @@ class RoutingEvaluationTests(unittest.TestCase):
         failures: list[str] = []
         self.assertEqual((64, 30, 11), check_routing_evaluations(failures))
         self.assertEqual([], failures)
+
+    def test_codex_exec_jsonl_taxonomy_accepts_source_valid_benign_pre_turn_items(self):
+        usage = {
+            "input_tokens": 1,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1,
+            "reasoning_output_tokens": 0,
+        }
+        events = [
+            {"type": "thread.started", "thread_id": "ephemeral-thread"},
+            {
+                "type": "item.completed",
+                "item": {
+                    "id": "reasoning-1",
+                    "type": "reasoning",
+                    "text": "private content must not survive",
+                },
+            },
+            {"type": "turn.started"},
+            {
+                "type": "item.started",
+                "item": {"id": "todo-1", "type": "todo_list"},
+            },
+            {
+                "type": "item.updated",
+                "item": {"id": "todo-1", "type": "todo_list"},
+            },
+            {
+                "type": "item.completed",
+                "item": {"id": "todo-1", "type": "todo_list"},
+            },
+            {
+                "type": "item.completed",
+                "item": {
+                    "id": "message-1",
+                    "type": "agent_message",
+                    "text": "private response must not survive",
+                },
+            },
+            {"type": "turn.completed", "usage": usage},
+        ]
+        result = classify_codex_exec_jsonl_lines(
+            json.dumps(event) for event in events
+        )
+        self.assertEqual(CODEX_EXEC_JSONL_TAXONOMY_VERSION, result["taxonomyVersion"])
+        self.assertEqual("pass", result["outcome"])
+        self.assertEqual("turn-completed", result["terminalReason"])
+        self.assertEqual(0, result["toolActionEventCount"])
+        self.assertEqual(0, result["uniqueToolActionCount"])
+        retained = json.dumps(result, sort_keys=True)
+        self.assertNotIn("private content", retained)
+        self.assertNotIn("private response", retained)
+        self.assertNotIn("ephemeral-thread", retained)
+
+    def test_codex_exec_jsonl_taxonomy_catches_every_action_type_before_sequencing(self):
+        for item_type, (_, allowed_events, statuses) in CODEX_EXEC_JSONL_ITEM_TYPES.items():
+            if item_type in {"agent_message", "reasoning", "todo_list", "error"}:
+                continue
+            for event_type in sorted(allowed_events):
+                for status in sorted(statuses) if statuses is not None else (None,):
+                    with self.subTest(
+                        item_type=item_type,
+                        event_type=event_type,
+                        status=status,
+                    ):
+                        item = {
+                            "id": "ephemeral-action",
+                            "type": item_type,
+                            "arguments": "private command or path",
+                        }
+                        if status is not None:
+                            item["status"] = status
+                        event = {"type": event_type, "item": item}
+                        result = classify_codex_exec_jsonl_lines([json.dumps(event)])
+                        self.assertEqual("fail", result["outcome"])
+                        self.assertEqual(
+                            "tool-action-capable", result["terminalReason"]
+                        )
+                        self.assertEqual(1, result["toolActionEventCount"])
+                        self.assertEqual(1, result["uniqueToolActionCount"])
+                        self.assertNotIn(
+                            "private command", json.dumps(result, sort_keys=True)
+                        )
+
+    def test_codex_exec_jsonl_taxonomy_classifies_errors_before_sequencing(self):
+        fixtures = (
+            {"type": "error", "message": "private runtime warning"},
+            {"type": "turn.failed", "error": {"message": "private failure"}},
+            {
+                "type": "item.completed",
+                "item": {
+                    "id": "error-1",
+                    "type": "error",
+                    "message": "private item failure",
+                },
+            },
+        )
+        for event in fixtures:
+            with self.subTest(event_type=event["type"]):
+                result = classify_codex_exec_jsonl_lines([json.dumps(event)])
+                self.assertEqual("fail", result["outcome"])
+                self.assertTrue(result["failureSeen"])
+                retained = json.dumps(result, sort_keys=True)
+                self.assertNotIn("private", retained)
+
+    def test_codex_exec_jsonl_taxonomy_fails_closed_on_unknown_or_malformed_input(self):
+        fixtures = (
+            '{"type":"thread.started","type":"turn.started"}',
+            json.dumps({"type": "item.completed", "item": {"id": "x", "type": "future_item"}}),
+            json.dumps({"type": "item.completed", "item": {"id": "x", "type": "agent_message"}}),
+            json.dumps({"type": "thread.started", "thread_id": "x"}),
+        )
+        results = [
+            classify_codex_exec_jsonl_lines([fixtures[0]]),
+            classify_codex_exec_jsonl_lines([
+                json.dumps({"type": "thread.started", "thread_id": "x"}),
+                fixtures[1],
+            ]),
+            classify_codex_exec_jsonl_lines([fixtures[2]]),
+            classify_codex_exec_jsonl_lines([fixtures[3]]),
+        ]
+        self.assertTrue(all(result["outcome"] == "unknown" for result in results))
+        self.assertTrue(all(result["forbiddenUnknownSeen"] for result in results))
+        self.assertEqual("abrupt-input", results[-1]["terminalReason"])
+
+    def test_codex_exec_jsonl_taxonomy_rejects_invalid_status_and_post_terminal_input(self):
+        invalid_status = classify_codex_exec_jsonl_lines(
+            [
+                json.dumps(
+                    {
+                        "type": "item.started",
+                        "item": {
+                            "id": "command-1",
+                            "type": "command_execution",
+                            "status": "future-status",
+                        },
+                    }
+                )
+            ]
+        )
+        self.assertEqual("unknown", invalid_status["outcome"])
+        self.assertEqual(1, invalid_status["toolActionEventCount"])
+
+        usage = {
+            "input_tokens": 0,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_output_tokens": 0,
+        }
+        post_terminal = classify_codex_exec_jsonl_lines(
+            json.dumps(event)
+            for event in (
+                {"type": "thread.started", "thread_id": "thread-1"},
+                {"type": "turn.started"},
+                {"type": "turn.completed", "usage": usage},
+                {"type": "turn.started"},
+            )
+        )
+        self.assertEqual("unknown", post_terminal["outcome"])
+        self.assertEqual("event-after-terminal", post_terminal["terminalReason"])
 
     def test_v080_records_preserve_the_terminal_fail_and_unavailable_host(self):
         codex = load_v080_result("codex")
@@ -321,7 +486,7 @@ class RoutingEvaluationTests(unittest.TestCase):
                 )
 
     def test_external_post_tag_observation_passes_function_and_cli(self):
-        record = external_v083_observation()
+        record = external_v082_observation()
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = write_content_addressed_observation(
                 Path(temporary_directory), record
@@ -329,8 +494,8 @@ class RoutingEvaluationTests(unittest.TestCase):
             failures: list[str] = []
             digest = validate_external_routing_observation(
                 path,
-                expected_version="0.8.3",
-                expected_tag="v0.8.3",
+                expected_version="0.8.2",
+                expected_tag="v0.8.2",
                 expected_commit="b" * 40,
                 expected_tree="c" * 40,
                 failures=failures,
@@ -346,9 +511,9 @@ class RoutingEvaluationTests(unittest.TestCase):
                     "--post-tag-routing-observation",
                     str(path),
                     "--expected-version",
-                    "0.8.3",
+                    "0.8.2",
                     "--expected-tag",
-                    "v0.8.3",
+                    "v0.8.2",
                     "--expected-commit",
                     "b" * 40,
                     "--expected-tree",
@@ -363,20 +528,20 @@ class RoutingEvaluationTests(unittest.TestCase):
 
     def test_external_post_tag_observation_rejects_partial_or_candidate_evidence(self):
         fixtures: list[tuple[str, dict, str]] = []
-        candidate = external_v083_observation()
+        candidate = external_v082_observation()
         candidate["axiom"]["tag"] = None
         candidate["axiom"]["releaseState"] = "candidate-unreleased"
         fixtures.append(("candidate", candidate, "exact released version"))
 
-        wrong_call_count = external_v083_observation()
+        wrong_call_count = external_v082_observation()
         wrong_call_count["run"]["callCount"] = 16
         fixtures.append(("call count", wrong_call_count, "run.callCount"))
 
-        repeated = external_v083_observation()
+        repeated = external_v082_observation()
         repeated["run"]["repeatCount"] = 2
         fixtures.append(("repeat count", repeated, "run.repeatCount"))
 
-        not_run = external_v083_observation()
+        not_run = external_v082_observation()
         not_run["cases"][-1].update(
             {
                 "status": "not-run",
@@ -394,15 +559,15 @@ class RoutingEvaluationTests(unittest.TestCase):
         )
         fixtures.append(("not run", not_run, "17 passing cases"))
 
-        reordered = external_v083_observation()
+        reordered = external_v082_observation()
         reordered["cases"].reverse()
         fixtures.append(("case order", reordered, "exact benchmark order"))
 
-        regression = external_v083_observation()
+        regression = external_v082_observation()
         regression["summary"]["highImpactFalsePositives"] = 1
         fixtures.append(("summary", regression, "zero-regression PASS"))
 
-        malformed_run_id = external_v083_observation()
+        malformed_run_id = external_v082_observation()
         malformed_run_id["runId"] = []
         fixtures.append(("run ID type", malformed_run_id, "runId must be"))
 
@@ -415,8 +580,8 @@ class RoutingEvaluationTests(unittest.TestCase):
                     failures: list[str] = []
                     validate_external_routing_observation(
                         path,
-                        expected_version="0.8.3",
-                        expected_tag="v0.8.3",
+                        expected_version="0.8.2",
+                        expected_tag="v0.8.2",
                         expected_commit="b" * 40,
                         expected_tree="c" * 40,
                         failures=failures,
@@ -428,13 +593,13 @@ class RoutingEvaluationTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = write_content_addressed_observation(
-                Path(temporary_directory), external_v083_observation()
+                Path(temporary_directory), external_v082_observation()
             )
             failures = []
             validate_external_routing_observation(
                 path,
-                expected_version="0.8.3",
-                expected_tag="v0.8.3",
+                expected_version="0.8.2",
+                expected_tag="v0.8.2",
                 expected_commit="b" * 40,
                 expected_tree="d" * 40,
                 failures=failures,
@@ -445,7 +610,7 @@ class RoutingEvaluationTests(unittest.TestCase):
             )
 
         with tempfile.TemporaryDirectory() as temporary_directory:
-            payload = (json.dumps(external_v083_observation(), indent=2) + "\n").replace(
+            payload = (json.dumps(external_v082_observation(), indent=2) + "\n").replace(
                 '  "schemaVersion": "2",',
                 '  "schemaVersion": "2",\n  "schemaVersion": "2",',
                 1,
@@ -453,14 +618,14 @@ class RoutingEvaluationTests(unittest.TestCase):
             digest = hashlib.sha256(payload).hexdigest()
             path = (
                 Path(temporary_directory)
-                / f"axiom-v0.8.3-codex-core-v2-{digest}.json"
+                / f"axiom-v0.8.2-codex-core-v2-{digest}.json"
             )
             path.write_bytes(payload)
             failures = []
             validate_external_routing_observation(
                 path,
-                expected_version="0.8.3",
-                expected_tag="v0.8.3",
+                expected_version="0.8.2",
+                expected_tag="v0.8.2",
                 expected_commit="b" * 40,
                 expected_tree="c" * 40,
                 failures=failures,

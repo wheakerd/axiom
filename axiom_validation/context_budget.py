@@ -55,14 +55,13 @@ EXPECTED_HOST_METRICS = {
         "host": "codex",
         "status": "observed",
         "exactUsageExposed": True,
-        "inputTokens": 12278,
-        "cachedInputTokens": 1920,
+        "inputTokens": 279939,
+        "cachedInputTokens": 156288,
         "credits": None,
-        "wallClockMilliseconds": 13139,
+        "wallClockMilliseconds": 350053,
         "reason": (
-            "Exact scoped usage comes from one independent corrected-preflight "
-            "Case 1 diagnostic against Axiom 0.8.2 at repeat count one. It is not "
-            "a complete v0.8.3 host or lifecycle observation."
+            "Exact aggregate usage comes from the 19-call F5 PASS against the "
+            "Axiom 0.8.1 candidate. It is not final v0.8.2 or lifecycle evidence."
         ),
     },
     "claude-code": {

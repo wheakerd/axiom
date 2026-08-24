@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For v0.8.3, a final Stage 3 result belongs outside the checked-in tree because
+For the v0.8.2 repair, a final Stage 3 result belongs outside the checked-in tree because
 the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.3-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.3 \
-  --expected-tag v0.8.3 \
+  /absolute/path/axiom-v0.8.2-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.2 \
+  --expected-tag v0.8.2 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.3 with a non-null `v0.8.3` tag and the
+The subject must be non-candidate v0.8.2 with a non-null `v0.8.2` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -241,12 +241,21 @@ acceptance rate. Neither observation can be supplied to this external mode:
 the failure is incomplete, and the diagnostic is not a 17-case schema-v2
 record.
 
+Before lifecycle sequencing, stream each public JSONL event through the
+[Codex CLI 0.149.1 observer taxonomy](../evals/codex-exec-jsonl-observer-v2.json).
+Classify the top-level discriminator and, for item events, the item
+discriminator and status first. Known benign items between `thread.started`
+and `turn.started` are source-valid. Tool/action or error items at any phase
+terminate; unknown, malformed, invalid-status, pre-thread benign,
+duplicate-phase, post-terminal, and abrupt streams fail closed. Retain only the
+taxonomy's bounded public journal fields and never raw payload.
+
 Use this safe release sequence:
 
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. If the batch passes, create immutable tag `v0.8.3` at that same commit.
+3. If the batch passes, create immutable tag `v0.8.2` at that same commit.
 4. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
 5. Upload the exact validated record to the GitHub Release. Put its full
@@ -257,7 +266,8 @@ Use this safe release sequence:
 The asset supplements final release evidence. It never edits, promotes, or
 rewrites the checked-in `STATIC-ONLY` status, and it cannot reclassify F4, F5,
 the v0.8.2 release-bound failure, the independent diagnostic, or any historical
-observation.
+observation. The signed unreleased v0.8.3 candidate and its two external
+terminal `UNKNOWN` attempts also remain distinct history.
 
 ## Design-Partner Program
 

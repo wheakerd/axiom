@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "2",
+  "taxonomyVersion": "codex-exec-jsonl-observer-v2",
+  "host": {
+    "name": "codex-cli",
+    "version": "0.149.1"
+  },
+  "source": {
+    "repository": "openai/codex",
+    "tag": "rust-v0.149.1",
+    "tagObject": "980a6d12110b110d29ec13bdcbe14011100b3566",
+    "commit": "ff29a44391deccde0aba0f8390337d7f3c319ea4",
+    "files": [
+      {
+        "path": "codex-rs/exec/src/exec_events.rs",
+        "blob": "30df7f176a02c5283405a70fac2d5ef9acdcb66e",
+        "sha256": "c404928e0f2a463e19d1b263081c9d5e0380aec9f651a05ee0766f7bb7527f32",
+        "lines": "8-133,148-228",
+        "authority": "closed top-level and item enums plus public action statuses"
+      },
+      {
+        "path": "codex-rs/exec/src/event_processor_with_jsonl_output.rs",
+        "blob": "e8b1375114339d25c83f13fc1f6b1ac1c5c73ad8",
+        "sha256": "d43476319a61c53369055fdbbd7c093100b23bc93f9b01365db0af4c96df3e2c",
+        "lines": "142-392,397-616",
+        "authority": "item mapping, lifecycle emission, and terminal behavior"
+      },
+      {
+        "path": "codex-rs/exec/src/event_processor_with_jsonl_output_tests.rs",
+        "blob": "60ebd532604218bcdae7ca54f5fd949ab974ae44",
+        "sha256": "6a857b12a12e5fdc0929c9b213262334105c885b4c87eb08cde8efb4b80850a1",
+        "lines": "64-87",
+        "authority": "runtime warning maps to a non-fatal error item"
+      }
+    ]
+  },
+  "categories": [
+    "benign-content-progress",
+    "tool-action-capable",
+    "failure-error",
+    "forbidden-unknown"
+  ],
+  "topLevelTypes": {
+    "thread.started": {
+      "category": "benign-content-progress",
+      "role": "thread-start"
+    },
+    "turn.started": {
+      "category": "benign-content-progress",
+      "role": "turn-start"
+    },
+    "turn.completed": {
+      "category": "benign-content-progress",
+      "role": "terminal-success"
+    },
+    "turn.failed": {
+      "category": "failure-error",
+      "role": "terminal-failure"
+    },
+    "item.started": {
+      "category": "item-delegated",
+      "role": "item-start"
+    },
+    "item.updated": {
+      "category": "item-delegated",
+      "role": "item-update"
+    },
+    "item.completed": {
+      "category": "item-delegated",
+      "role": "item-complete"
+    },
+    "error": {
+      "category": "failure-error",
+      "role": "stream-error"
+    }
+  },
+  "itemTypes": {
+    "agent_message": {
+      "category": "benign-content-progress",
+      "allowedEvents": [
+        "item.completed"
+      ]
+    },
+    "reasoning": {
+      "category": "benign-content-progress",
+      "allowedEvents": [
+        "item.completed"
+      ]
+    },
+    "todo_list": {
+      "category": "benign-content-progress",
+      "allowedEvents": [
+        "item.completed",
+        "item.started",
+        "item.updated"
+      ]
+    },
+    "command_execution": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.completed",
+        "item.started"
+      ],
+      "statuses": [
+        "completed",
+        "declined",
+        "failed",
+        "in_progress"
+      ]
+    },
+    "file_change": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.completed"
+      ],
+      "statuses": [
+        "completed",
+        "failed",
+        "in_progress"
+      ]
+    },
+    "mcp_tool_call": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.completed",
+        "item.started"
+      ],
+      "statuses": [
+        "completed",
+        "failed",
+        "in_progress"
+      ]
+    },
+    "collab_tool_call": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.completed",
+        "item.started"
+      ],
+      "statuses": [
+        "completed",
+        "failed",
+        "in_progress"
+      ]
+    },
+    "web_search": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.completed",
+        "item.started"
+      ]
+    },
+    "error": {
+      "category": "failure-error",
+      "allowedEvents": [
+        "item.completed"
+      ]
+    }
+  },
+  "lifecycle": {
+    "threadStartedIsFirstNormalEvent": true,
+    "classifyItemBeforeSequencing": true,
+    "knownItemsAllowedBetweenThreadAndTurn": true,
+    "benignItemBeforeThread": "forbidden-unknown",
+    "toolOrErrorBeforeThreadOrTurn": "classify-and-terminate",
+    "unknownMalformedOrInvalidStatus": "fail-closed",
+    "eventAfterTerminal": "fail-closed"
+  },
+  "batchLedger": {
+    "persistCallCountBeforeLaunch": true,
+    "terminalStates": [
+      "pass",
+      "fail",
+      "unknown"
+    ],
+    "terminalStateIsIrreversible": true
+  },
+  "retention": {
+    "allowedJournalFields": [
+      "ordinal",
+      "eventType",
+      "itemType",
+      "category",
+      "role",
+      "status"
+    ],
+    "forbidden": [
+      "response text",
+      "reasoning text",
+      "tool arguments",
+      "tool output",
+      "identifiers",
+      "credentials",
+      "paths",
+      "session or config content",
+      "raw payload"
+    ]
+  }
+}

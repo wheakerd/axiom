@@ -14,9 +14,9 @@ figure is `ceil(UTF-8 bytes / 4)`, explicitly labeled as an estimate suitable
 only for before/after comparison of the same English Markdown surface. It must
 not be compared with billed, cached, or host-reported tokens as if equivalent.
 
-The immutable v0.7.9 gate is the cumulative baseline for v0.8.3:
+The immutable v0.7.9 gate is the cumulative baseline for the v0.8.2 repair:
 
-| Metric | Baseline | v0.8.3 candidate | Delta | Classification |
+| Metric | Baseline | v0.8.2 repair candidate | Delta | Classification |
 | --- | ---: | ---: | ---: | --- |
 | UTF-8 bytes | 5,899 | 6,293 | +394 | exact static count used as a proxy |
 | Whitespace-delimited words | 757 | 805 | +48 | exact static count used as a proxy |
@@ -37,7 +37,7 @@ matrix, and duplicate-injection semantics. Neither command writes files.
 
 ## Lifecycle Matrix
 
-The v0.8.3 record represents all required paths: fresh startup with a no-route
+The v0.8.2 record represents all required paths: fresh startup with a no-route
 request, fresh startup with a routed request, resume with no route, clear with
 a routed request, manual compaction with no route, automatic compaction with a
 routed request, and three repeated no-route requests in one otherwise unchanged
@@ -51,18 +51,17 @@ validator derives `duplicateInjectionDetected` as observed count greater than
 the scenario's expected count. A passing observation must have the exact count
 and no duplicate. Unrun or unavailable observations must retain null counts,
 null duplicate state, and an empty event list. Codex lifecycle observation for
-v0.8.3 is `NOT-RUN`; authenticated Claude Code observation is
+v0.8.2 is `NOT-RUN`; authenticated Claude Code observation is
 `UNAVAILABLE / NOT-RUN`. The independent v0.8.2 diagnostic used one fresh
 Case 1 session and therefore does not claim actual post-compaction behavior.
 
-The record separately preserves one independent corrected-preflight Case 1
-diagnostic's usage: 12,278 input tokens, 1,920 cached input tokens, and 13,139
-milliseconds. The host also reported 69 output tokens, but schema v1 has no
-output-token field, so that value remains in routing and release documentation.
-Its repeat count and call count were one. The earlier v0.8.2 release-bound
-Case 1 failure and this independent pass demonstrate observed variance, not a
-pass rate or Stage 3 acceptance. These metrics are not final v0.8.3 host,
-lifecycle, tag, or release evidence. The deterministic static
+The record separately preserves candidate-observed F5 usage: 279,939 input
+tokens, 156,288 cached input tokens, and 350,053 milliseconds. F5 also
+reported 2,436 output tokens, but schema v1 has no output-token field, so that
+value remains in routing and release documentation. Its 19 planned calls are
+candidate-only 0.8.1 evidence, not a v0.8.2 host pass. The later v0.8.2
+release-bound Case 1 failure and one independent diagnostic pass demonstrate
+variance, not a pass rate or Stage 3 acceptance. The deterministic static
 measurement remains local and telemetry-free; the separately authorized Codex
 model calls necessarily used the host network, so the combined record sets
 `networkOrTelemetryUsed` to true.
@@ -96,5 +95,5 @@ publication-only negative boundary needed to prevent a high-impact false
 positive. The threshold does not replace routing, safety, or static validation.
 
 The machine-readable contract is [schema v1](schema-v1.json), and the current
-versioned record is [v0.8.3](results/v0.8.3.json). The v0.8.2 record remains
-historical and byte-frozen.
+versioned record is [v0.8.2](results/v0.8.2.json). The v0.8.3 record remains
+byte-frozen as unreleased candidate history.
