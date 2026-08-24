@@ -5,6 +5,38 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.8.1 - 2026-08-23
+
+### Added
+
+- Added append-only `codex-core-v2` records for immutable Axiom v0.8.0:
+  Codex stopped at Case 1 with terminal `FAIL`, while authenticated Claude Code
+  remains `UNAVAILABLE / NOT-RUN` because no subscription or session exists.
+- Added a v0.8.1 routing-context record. The always-loaded gate and cumulative
+  delta are unchanged, while exact scoped Codex usage records 14,907 input
+  tokens, 1,920 cached input tokens, and 17,984 milliseconds. The host reported
+  116 output tokens, which the existing context schema does not store.
+
+### Changed
+
+- Extended the existing routing validator to select v1 or v2 benchmark order,
+  route bounds, diagnostics, observer provenance, call limits, and immutable
+  response-schema bindings without changing either route contract.
+- Advanced both manifests together to `0.8.1` and kept the package, hooks,
+  Skills, routing gate, corpus, benchmarks, and historical evidence unchanged.
+
+### Evidence Boundary
+
+- The sole v0.8.0 Codex attempt returned a valid V3 response with
+  `agent-plugin-architect`, zero clarification, and no observed mutation, but
+  the observer recorded a mutation attempt after two unexpected tool events.
+  Stop-on-first-failure left Cases 2-17 `NOT-RUN`; no case was retried and the
+  unexpected tool categories are not inferred.
+- Version 0.8.1 records that failed Stage 3 attempt; it does not fix the route,
+  claim Stage 3 acceptance, or close GitHub Issue #34. Codex lifecycle,
+  v0.8.1 host behavior, authenticated Claude Code, marketplace, portal,
+  publication, and active-user installation remain unverified or not run.
+
 ## 0.8.0 - 2026-08-23
 
 ### Added

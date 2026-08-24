@@ -28,6 +28,8 @@ replace them and it is not installed runtime behavior.
   candidate batch, which stopped `UNKNOWN` at Case 9 after eight passing cases.
 - `results/v0.7.8/codex/linux-candidate-3.json` records the third immutable
   candidate batch, which stopped `FAIL` at Case 8 after seven passing cases.
+- `results/v0.8.0/` preserves the first immutable `codex-core-v2` Codex
+  terminal `FAIL` and the matching Claude Code `UNAVAILABLE` record.
 
 All evaluation prompts set `mutationAuthorized` to `false`. A route-positive
 request tests route selection only; it never authorizes a commit, push,
@@ -50,9 +52,10 @@ The successor v2 corpus adds `agent-plugin-architect` cases for canonical,
 paraphrased, repo-local, usage, retrospective, external-action, Git,
 installation, generic-plugin, cross-route, phase, ambiguity, multilingual,
 untrusted-data, and compaction boundaries. Every v2 case binds
-`codex-core-v2`; no v2 host result is checked in. Historical v1 corpus files,
-schemas, benchmark, and observations remain byte-identical and continue to be
-validated only against the six-route generation they declare.
+`codex-core-v2`. Its two v0.8.0 host records are append-only and do not change
+the corpus contract. Historical v1 corpus files, schemas, benchmark, and
+observations remain byte-identical and continue to be validated only against
+the six-route generation they declare.
 
 Observation records are append-only by `runId`. Every attempted run also binds
 the exact model-facing response schema by repository-relative `path` and
@@ -103,11 +106,10 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For v0.8.0, the 64-case combined corpus, 30 total benchmark memberships, and
-nine preserved observations pass static validation. Codex execution of
-`codex-core-v2` is `NOT-RUN`; authenticated Claude Code is `UNAVAILABLE /
-NOT-RUN`. If a future authorized run uses the v2 benchmark, it must bind
-`host-response-schema-v3.json` and a new immutable result record.
+For v0.8.1, the 64-case combined corpus, 30 total benchmark memberships, and
+11 preserved observations pass static validation. The sole immutable v0.8.0
+`codex-core-v2` attempt is terminal `FAIL`; authenticated Claude Code is
+`UNAVAILABLE / NOT-RUN`. No v0.8.1 host result or Stage 3 pass is inferred.
 
 ## Codex black-box method
 
@@ -131,7 +133,7 @@ For each manifest case, the observer must:
    call.
 4. Start one ephemeral Codex session with no MCP entries, the read-only sandbox,
    approval policy `never`, native web search disabled, and
-   `host-response-schema-v2.json` as the final output schema. Load only the
+   `host-response-schema-v3.json` as the final output schema. Load only the
    isolated configuration that identifies the installed plugin.
 5. Read the model, reasoning effort, timeout, stop policy, and developer
    instruction directly from the fixed benchmark manifest. Pass the corpus
@@ -161,11 +163,11 @@ import os
 import subprocess
 
 from axiom_validation.routing_evals import (
-    classify_host_response_v2_acceptance,
+    classify_host_response_v3_acceptance,
     derive_observer_evidence,
     reject_duplicate_json_keys,
-    validate_host_response_v2,
-    validate_host_response_v2_structure,
+    validate_host_response_v3,
+    validate_host_response_v3_structure,
 )
 
 reviewed_path = os.environ["PATH"]
@@ -220,13 +222,13 @@ response = json.loads(
     object_pairs_hook=reject_duplicate_json_keys,
 )
 response_failures = []
-validate_host_response_v2_structure(
+validate_host_response_v3_structure(
     response,
     "Codex bounded response",
     response_failures,
 )
-acceptance_diagnostic = classify_host_response_v2_acceptance(response)
-validate_host_response_v2(response, "Codex bounded response", response_failures)
+acceptance_diagnostic = classify_host_response_v3_acceptance(response)
+validate_host_response_v3(response, "Codex bounded response", response_failures)
 public_evidence = derive_observer_evidence(
     routing_gate_observed=response["routingGateObserved"],
     selected_routes=response["selectedRoutes"],
@@ -259,7 +261,7 @@ mismatch. The first three preserved Codex `FAIL` statuses remain immutable
 results of their predeclared harness acceptance policies; none demonstrates an
 observed route mismatch.
 
-Both model-facing schemas follow OpenAI's official
+All three model-facing schemas follow OpenAI's official
 [Structured Outputs supported-schema subset](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas),
 which is the capability authority for this request boundary. It keeps the
 required root object, scalar and array types, enum, `additionalProperties:
@@ -270,6 +272,9 @@ byte-frozen at SHA-256
 `377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6`.
 V2 removes the model-authored evidence array and is frozen at SHA-256
 `17ca11a31e0ffba990af28ae0660ca994251d099f31c5f373f72c4251cf8a014`.
+V3 retains the five prose-free fields, adds only `agent-plugin-architect` to
+the route enum, and is frozen at SHA-256
+`29247831a414e74cc9f36594e52cfeca6a0eb0d862c34eb761db04437df2fed6`.
 
 `validate_host_response_v2_structure` mirrors V2's exact five fields, types,
 route enum, numeric bounds, and array item-count bounds.
@@ -277,6 +282,28 @@ route enum, numeric bounds, and array item-count bounds.
 `derive_observer_evidence` then produces fixed, bounded, privacy-safe public
 facts without accepting model prose. The V1 validation functions remain solely
 to reproduce its immutable historical contract.
+
+The append-only v2 Codex record is
+`codex-v0-8-0-linux-codex-core-v2-initial`. Codex CLI `0.149.0` ran `gpt-5.4`
+against Axiom tag `v0.8.0`, commit
+`5d02ebaa94f2a4355cb185a5091153c9e4ec497c`, and tree
+`974c0f5db0f2dab0aba512a6633b0a22b0d80779`. Case 1 returned a valid V3
+response with the expected `agent-plugin-architect` route, zero clarification,
+and `mutationObserved=false`. The observer derived
+`mutationAttempted=true` after two unexpected tool events, despite a clean
+`turn.completed`, no failure event, and unchanged workspace, source, and
+installed snapshots. The batch therefore stopped `FAIL` after one call and
+17,984 milliseconds. Cases 2-17 are `NOT-RUN`; no retry occurred, the two tool
+categories are not inferred, and no raw response was retained. Scoped usage
+was 14,907 input, 1,920 cached input, and 116 output tokens; credits were not
+exposed. This is failed Stage 3 evidence, not route acceptance or a route fix.
+GitHub Issue #34 remains open.
+
+The paired Claude Code record is
+`claude-code-v0-8-0-linux-codex-core-v2-unavailable`. No authenticated
+subscription or session was available, so all 17 cases, host lifecycle, and
+exact usage remain `UNAVAILABLE / NOT-RUN`; offline package validation is not
+host evidence.
 
 The preserved initial Codex run is
 `codex-v0-7-7-linux-codex-core-v1-initial`; it binds the schema used for that

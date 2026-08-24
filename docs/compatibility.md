@@ -65,14 +65,15 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.0, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
-final commit that will contain it, so it makes no current v0.8.0 host-pass
-claim. A prior-release Codex observation exists for immutable v0.7.4: Codex
+For v0.8.1, that status is `STATIC-ONLY`. The checked-in tree cannot embed the
+final commit that will contain it. It preserves the immutable v0.8.0
+`codex-core-v2` terminal `FAIL` but makes no current v0.8.1 host-pass claim. A
+prior-release Codex observation also exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
-`NOT-RUN`; every Claude Code case remains `UNAVAILABLE`. See the
+`NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.8.0.
+forward to v0.8.1.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -110,7 +111,7 @@ without removing the fields from the release manifest.
 
 ## Packaged Agent-Plugin Architecture
 
-Version 0.8.0 implements the
+Version 0.8.1 retains the route implemented in v0.8.0 from the
 [agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
 as one directly packaged Skill with seven root-reachable references. It owns
 only explicit Codex or Claude Code plugin architecture across shared Skills,
@@ -125,20 +126,23 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.0.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.1.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.0 candidate gate is 6,150 bytes with SHA-256
+The v0.8.1 candidate gate is unchanged at 6,150 bytes with SHA-256
 `9ef0c0e28bb3ad1f91d2cc2014ab18b09bffd74ad402c3190a2f4949c48ebfd1`.
 
 The candidate has 788 whitespace-delimited words, 111 logical lines, and one
 unique direct reference. Its 1,538 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
 251 bytes, 31 words, four lines, zero references, and 63 estimated tokens; it
-is below both the 256-byte and 5% review triggers. No exact prompt tokens,
-cached tokens, credits, or wall-clock values were exposed or inferred.
+is below both the 256-byte and 5% review triggers. The record separately binds
+exact scoped usage from the immutable v0.8.0 terminal batch: 14,907 input
+tokens, 1,920 cached input tokens, and 17,984 milliseconds. The host also
+reported 116 output tokens, which the context schema does not store; credits
+were not exposed. These values are not v0.8.1 lifecycle or host-pass evidence.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -169,15 +173,33 @@ route, a prose-free seven-route host-response schema, and the 17-case
 
 The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
 cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
-behavior. It is static contract evidence only: no Codex host or model run was
-performed for v0.8.0, and authenticated Claude Code remains unavailable.
+behavior. One immutable v0.8.0 Codex run attempted Case 1 and stopped terminal
+`FAIL`; authenticated Claude Code remains unavailable. The corpus itself stays
+static contract evidence and neither record establishes a v0.8.1 host pass.
 
 Host result records live under `evals/results/` and identify a stable run ID,
 the applied response-schema path and SHA-256, immutable Axiom source, exact host
 and model, operating system, lifecycle, repeat count, route evidence,
 clarification count, mutation attempts, and explicit status. Static schema and
-coverage validation cannot turn `not-run` or `unavailable` into a pass. The
-checked-in v0.7.7 Codex run
+coverage validation cannot turn `not-run` or `unavailable` into a pass.
+
+The append-only v2 Codex record
+`codex-v0-8-0-linux-codex-core-v2-initial` binds Codex CLI `0.149.0`, model
+`gpt-5.4`, Fedora Linux 44 x86_64, response schema V3, and immutable Axiom
+v0.8.0 commit `5d02ebaa94f2a4355cb185a5091153c9e4ec497c` with tree
+`974c0f5db0f2dab0aba512a6633b0a22b0d80779`. Case 1 returned a valid response
+with `agent-plugin-architect`, zero clarification, and no observed mutation.
+The observer derived `mutationAttempted=true` after two unexpected tool events,
+while also recording clean completion, no failure event, and unchanged
+workspace, source, and installed snapshots. The batch stopped `FAIL` after one
+call and 17,984 milliseconds. Cases 2-17 are `NOT-RUN`, no retry occurred, and
+the tool categories are not inferred. Exact scoped usage was 14,907 input,
+1,920 cached input, and 116 output tokens. This is failed Stage 3 evidence, not
+route acceptance; GitHub Issue #34 remains open. The paired Claude Code record
+is entirely `UNAVAILABLE / NOT-RUN` because no authenticated subscription or
+session was available.
+
+The checked-in v0.7.7 Codex run
 `codex-v0-7-7-linux-codex-core-v1-initial` is `FAIL`: its first and only
 attempted case exited nonzero without a bounded response, so route,
 clarification, and mutation fields remain null. It binds the schema used for
@@ -296,6 +318,25 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.1` reports:
+
+- synchronized `0.8.1` manifests with no package, Skill, hook, route, corpus,
+  benchmark, or authority change;
+- append-only v0.8.0 Codex terminal `FAIL` and Claude Code `UNAVAILABLE`
+  records, with all nine v1 observations and every historical contract
+  byte-identical;
+- unchanged 6,150-byte routing-gate metrics and +251-byte cumulative delta,
+  plus exact scoped usage from the failed v0.8.0 Codex attempt;
+- 64 routing cases, 30 fixed benchmark memberships, and 11 labeled result
+  records passing static validation without converting the failed batch into a
+  Stage 3 pass; and
+- `STATIC-ONLY` v0.8.1 evidence, `NOT-RUN` Codex lifecycle, unavailable
+  authenticated Claude Code, and GitHub Issue #34 left open for separate
+  diagnosis and repair.
+
+See the [v0.8.1 release notes](releases/v0.8.1.md) for the evidence boundary,
+measurement, and validation status.
 
 The Git record for `v0.8.0` reports:
 
@@ -681,7 +722,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.8.0 release notes](releases/v0.8.0.md),
+See the durable [v0.8.1 release notes](releases/v0.8.1.md),
+[v0.8.0 release notes](releases/v0.8.0.md),
 [v0.7.12 release notes](releases/v0.7.12.md),
 [v0.7.11 release notes](releases/v0.7.11.md),
 [v0.7.10 release notes](releases/v0.7.10.md),
