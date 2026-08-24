@@ -40,6 +40,21 @@ class ContextBudgetTests(unittest.TestCase):
             hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest(),
         )
         self.assertNotEqual(BASELINE_SHA256, current_record["candidate"]["sha256"])
+        self.assertEqual("observed", current_record["measurementBoundary"]["exactHostUsage"])
+        self.assertTrue(current_record["measurementBoundary"]["networkOrTelemetryUsed"])
+        codex_metric = current_record["hostMetrics"][0]
+        self.assertEqual("observed", codex_metric["status"])
+        self.assertTrue(codex_metric["exactUsageExposed"])
+        self.assertEqual(14907, codex_metric["inputTokens"])
+        self.assertEqual(1920, codex_metric["cachedInputTokens"])
+        self.assertEqual(17984, codex_metric["wallClockMilliseconds"])
+        self.assertIsNone(codex_metric["credits"])
+        self.assertTrue(
+            all(
+                scenario["hostObservations"][0]["status"] == "not-run"
+                for scenario in current_record["scenarios"]
+            )
+        )
 
     def test_alternate_utf8_input_keeps_exact_counts_and_estimate_distinct(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -176,6 +191,16 @@ class ContextBudgetTests(unittest.TestCase):
         self.assertEqual("README.md", document["path"])
         self.assertEqual("not-measured", document["measurementBoundary"]["exactHostUsage"])
         self.assertGreater(document["metrics"]["utf8Bytes"], 0)
+
+        checked = subprocess.run(
+            [sys.executable, str(script), "--check"],
+            cwd="/tmp",
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("scoped v0.8.0 Codex usage is preserved", checked.stdout)
+        self.assertIn("without claiming v0.8.1 lifecycle evidence", checked.stdout)
 
 
 if __name__ == "__main__":

@@ -41,7 +41,12 @@ from axiom_validation.routing_evals import (
     RECOVERY3_RESULT_PATH,
     RECOVERY_RESULT_PATH,
     RECOVERY_CODEX_RUN_ID,
+    RELEASED_V080_SUBJECT,
     RESPONSE_DIAGNOSTICS,
+    V080_CLAUDE_RESULT_PATH,
+    V080_CLAUDE_UNAVAILABLE_RUN_ID,
+    V080_CODEX_RESULT_PATH,
+    V080_CODEX_RUN_ID,
     V1_HOST_RESPONSE_SCHEMA_SHA256,
     classify_host_response_acceptance,
     classify_host_response_v2_acceptance,
@@ -87,6 +92,7 @@ def response_schema_digests() -> dict[str, str]:
     return {
         HOST_RESPONSE_SCHEMA_V1_RELATIVE_PATH: V1_HOST_RESPONSE_SCHEMA_SHA256,
         HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH: CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
+        HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH: CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
     }
 
 
@@ -119,6 +125,29 @@ def load_candidate_four() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_v080_result(host: str) -> dict:
+    relative_path = (
+        V080_CODEX_RESULT_PATH if host == "codex" else V080_CLAUDE_RESULT_PATH
+    )
+    path = Path(__file__).resolve().parents[1] / "evals" / relative_path
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_result(relative_path: str) -> dict:
+    path = Path(__file__).resolve().parents[1] / "evals" / relative_path
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def benchmark_v2_case_ids() -> list[str]:
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "evals"
+        / "benchmarks"
+        / "codex-core-v2.json"
+    )
+    return json.loads(path.read_text(encoding="utf-8"))["caseIds"]
+
+
 def candidate_terminal_observation() -> dict:
     return load_candidate_one()
 
@@ -126,8 +155,79 @@ def candidate_terminal_observation() -> dict:
 class RoutingEvaluationTests(unittest.TestCase):
     def test_checked_in_evaluation_contracts_pass(self):
         failures: list[str] = []
-        self.assertEqual((64, 30, 9), check_routing_evaluations(failures))
+        self.assertEqual((64, 30, 11), check_routing_evaluations(failures))
         self.assertEqual([], failures)
+
+    def test_v080_records_preserve_the_terminal_fail_and_unavailable_host(self):
+        codex = load_v080_result("codex")
+        claude = load_v080_result("claude-code")
+        cases = corpus_cases()
+        case_ids = benchmark_v2_case_ids()
+        for host, record in (("codex", codex), ("claude-code", claude)):
+            failures: list[str] = []
+            validate_observation(
+                record,
+                host,
+                case_ids,
+                cases,
+                f"fixture:v0.8.0 {host}",
+                failures,
+            )
+            self.assertEqual([], failures)
+
+        self.assertEqual(V080_CODEX_RUN_ID, codex["runId"])
+        self.assertEqual(RELEASED_V080_SUBJECT, codex["axiom"])
+        self.assertEqual("fail", codex["run"]["status"])
+        self.assertEqual(1, codex["run"]["callCount"])
+        self.assertEqual(
+            ["fail"] + ["not-run"] * 16,
+            [case["status"] for case in codex["cases"]],
+        )
+        self.assertEqual("valid", codex["cases"][0]["responseDiagnostic"])
+        self.assertEqual("valid", codex["cases"][0]["acceptanceDiagnostic"])
+        self.assertTrue(codex["cases"][0]["mutationAttempted"])
+        self.assertFalse(codex["cases"][0]["mutationObserved"])
+        self.assertIn("unexpectedTools=2", codex["cases"][0]["evidence"][2])
+        self.assertEqual(
+            V080_CLAUDE_UNAVAILABLE_RUN_ID,
+            claude["runId"],
+        )
+        self.assertEqual("unavailable", claude["run"]["status"])
+        self.assertEqual(0, claude["run"]["callCount"])
+        self.assertTrue(all(case["status"] == "unavailable" for case in claude["cases"]))
+
+        observations = [
+            (relative_path, load_result(relative_path))
+            for relative_path in EXPECTED_RESULT_BINDINGS
+        ]
+        failures = []
+        validate_observation_run_set(
+            observations,
+            response_schema_digests(),
+            failures,
+        )
+        self.assertEqual([], failures)
+        for protected_path in (V080_CODEX_RESULT_PATH, V080_CLAUDE_RESULT_PATH):
+            with self.subTest(protected_path=protected_path):
+                tampered = [
+                    (relative_path, load_result(relative_path))
+                    for relative_path in EXPECTED_RESULT_BINDINGS
+                ]
+                changed = next(
+                    record
+                    for relative_path, record in tampered
+                    if relative_path == protected_path
+                )
+                changed["run"]["limitations"].append("Rewritten outcome.")
+                failures = []
+                validate_observation_run_set(
+                    tampered,
+                    response_schema_digests(),
+                    failures,
+                )
+                self.assertTrue(
+                    any("preserved terminal outcome" in failure for failure in failures)
+                )
 
     def test_case_negative_fixtures_fail_with_owned_reason(self):
         for name, case in case_negative_fixtures():
@@ -909,6 +1009,12 @@ class RoutingEvaluationTests(unittest.TestCase):
                 ),
                 CANDIDATE4_CODEX_RUN_ID: (
                     "23916a39703f6f77ae049ab8f6f8037a429d72ce485001ef517f662d60527689"
+                ),
+                V080_CODEX_RUN_ID: (
+                    "72030ae826b131de45a77fff0f2f4717e03783f1edb4a812de9e577ec4ab4574"
+                ),
+                V080_CLAUDE_UNAVAILABLE_RUN_ID: (
+                    "043402c24e12705ac153296e8a6bc0016fdfceca3ac42dbdbfa7d74c796de0f7"
                 ),
             },
             PRESERVED_OUTCOME_SHA256,

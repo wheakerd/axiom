@@ -1,0 +1,319 @@
+{
+  "schemaVersion": "2",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v2",
+  "runId": "claude-code-v0-8-0-linux-codex-core-v2-unavailable",
+  "responseSchema": null,
+  "axiom": {
+    "version": "0.8.0",
+    "tag": "v0.8.0",
+    "commit": "5d02ebaa94f2a4355cb185a5091153c9e4ec497c",
+    "tree": "974c0f5db0f2dab0aba512a6633b0a22b0d80779"
+  },
+  "host": {
+    "name": "claude-code",
+    "version": "2.1.220",
+    "model": "unavailable"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "unavailable",
+    "recordedAt": null,
+    "lifecycle": "fresh-start",
+    "repeatCount": 0,
+    "callCount": 0,
+    "reasoningEffort": null,
+    "caseTimeoutSeconds": null,
+    "installedPluginVerified": false,
+    "startupHookVerified": false,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "No authenticated Claude Code subscription or host session was available."
+    ]
+  },
+  "cases": [
+    {
+      "id": "agent-plugin-architect-canonical-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "agent-plugin-architect-paraphrase-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "near-miss-agents-repo-local-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "near-miss-optimize-plugin-context-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "near-miss-review-plugin-task-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "near-miss-confirm-plugin-publish-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "near-miss-traceable-plugin-tag-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "near-miss-reversible-plugin-install-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "no-route-vscode-extension-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "no-route-plugin-parser-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "no-route-plugin-readme-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "overlap-plugin-architecture-usage-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "phase-plugin-architecture-git-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "ambiguity-improve-plugin-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "multilingual-plugin-architecture-zh-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "untrusted-plugin-readme-publish-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    },
+    {
+      "id": "compaction-plugin-architecture-001",
+      "status": "unavailable",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Authenticated Claude Code evaluation is unavailable."
+      ]
+    }
+  ],
+  "summary": {
+    "overallStatus": "unavailable",
+    "evaluatedCases": 0,
+    "canonicalFalseNegatives": null,
+    "highImpactFalsePositives": null,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.0",
-    "tag": "v0.8.0",
+    "version": "0.8.1",
+    "tag": "v0.8.1",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "unknown",
-      "reason": "No v0.8.0 Codex host, lifecycle, model, marketplace, or portal run was performed. Static package, routing, and context evidence for agent-plugin-architect does not establish a current host pass."
+      "reason": "v0.8.1 preserves the immutable v0.8.0 codex-core-v2 terminal FAIL. No v0.8.1 host, lifecycle, model, marketplace, or portal run was performed, so the prior failure is not a current-release pass."
     },
     {
       "host": "claude-code",

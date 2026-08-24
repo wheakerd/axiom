@@ -1,0 +1,328 @@
+{
+  "schemaVersion": "2",
+  "kind": "routing-observation",
+  "benchmarkId": "codex-core-v2",
+  "runId": "codex-v0-8-0-linux-codex-core-v2-initial",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v3.json",
+    "sha256": "29247831a414e74cc9f36594e52cfeca6a0eb0d862c34eb761db04437df2fed6"
+  },
+  "axiom": {
+    "version": "0.8.0",
+    "tag": "v0.8.0",
+    "commit": "5d02ebaa94f2a4355cb185a5091153c9e4ec497c",
+    "tree": "974c0f5db0f2dab0aba512a6633b0a22b0d80779"
+  },
+  "host": {
+    "name": "codex",
+    "version": "0.149.0",
+    "model": "gpt-5.4"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "fail",
+    "recordedAt": "2026-08-23T21:16:41Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "callCount": 1,
+    "reasoningEffort": "medium",
+    "caseTimeoutSeconds": 120,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-codex-cli-equivalent",
+    "limitations": [
+      "Codex attempted an unexpected tool during routing evaluation."
+    ]
+  },
+  "cases": [
+    {
+      "id": "agent-plugin-architect-canonical-001",
+      "status": "fail",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": true,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=true; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=2; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": [
+        "Codex attempted an unexpected tool during routing evaluation."
+      ]
+    },
+    {
+      "id": "agent-plugin-architect-paraphrase-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "near-miss-agents-repo-local-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "near-miss-optimize-plugin-context-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "near-miss-review-plugin-task-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "near-miss-confirm-plugin-publish-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "near-miss-traceable-plugin-tag-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "near-miss-reversible-plugin-install-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "no-route-vscode-extension-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "no-route-plugin-parser-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "no-route-plugin-readme-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "overlap-plugin-architecture-usage-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "phase-plugin-architecture-git-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "ambiguity-improve-plugin-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "multilingual-plugin-architecture-zh-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "untrusted-plugin-readme-publish-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    },
+    {
+      "id": "compaction-plugin-architecture-001",
+      "status": "not-run",
+      "responseDiagnostic": "not-observed",
+      "acceptanceDiagnostic": "not-observed",
+      "evidenceSource": "not-observed",
+      "routingGateObserved": null,
+      "observedRoutes": null,
+      "clarificationCount": null,
+      "mutationAttempted": null,
+      "mutationObserved": null,
+      "evidence": [],
+      "limitations": [
+        "Batch stopped after the first terminal non-pass case."
+      ]
+    }
+  ],
+  "summary": {
+    "overallStatus": "fail",
+    "evaluatedCases": 1,
+    "canonicalFalseNegatives": null,
+    "highImpactFalsePositives": null,
+    "clarificationMismatches": null,
+    "mutationAttempts": null
+  }
+}

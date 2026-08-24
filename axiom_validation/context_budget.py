@@ -46,9 +46,38 @@ BASELINE_METRICS = {
 ABSOLUTE_REVIEW_BYTES = 256
 RELATIVE_REVIEW_BASIS_POINTS = 500
 HOSTS = ("codex", "claude-code")
-CURRENT_HOST_STATUSES = {
+CURRENT_LIFECYCLE_HOST_STATUSES = {
     "codex": "not-run",
     "claude-code": "unavailable",
+}
+EXPECTED_HOST_METRICS = {
+    "codex": {
+        "host": "codex",
+        "status": "observed",
+        "exactUsageExposed": True,
+        "inputTokens": 14907,
+        "cachedInputTokens": 1920,
+        "credits": None,
+        "wallClockMilliseconds": 17984,
+        "reason": (
+            "Exact scoped usage comes from codex-v0-8-0-linux-codex-core-v2-initial "
+            "against immutable Axiom v0.8.0; Case 1 was terminal FAIL. This is not "
+            "v0.8.1 host or lifecycle evidence."
+        ),
+    },
+    "claude-code": {
+        "host": "claude-code",
+        "status": "unavailable",
+        "exactUsageExposed": False,
+        "inputTokens": None,
+        "cachedInputTokens": None,
+        "credits": None,
+        "wallClockMilliseconds": None,
+        "reason": (
+            "No authenticated Claude Code subscription or session was available; "
+            "exact usage and lifecycle observation were unavailable and not run."
+        ),
+    },
 }
 EXPECTED_SCENARIOS = (
     (
@@ -591,9 +620,9 @@ def check_context_budget(failures: list[str]) -> int:
     expected_boundary = {
         "staticCounts": "proxy",
         "estimatedTokens": "estimate",
-        "exactHostUsage": "not-run",
+        "exactHostUsage": "observed",
         "modelOrReasoningChanged": False,
-        "networkOrTelemetryUsed": False,
+        "networkOrTelemetryUsed": True,
         "volatilePricingIncluded": False,
     }
     if boundary is not None and boundary != expected_boundary:
@@ -776,16 +805,10 @@ def check_context_budget(failures: list[str]) -> int:
             continue
         if metric.get("host") != expected_host:
             failures.append(f"hostMetrics[{index}].host must be {expected_host!r}")
-        if metric.get("status") != CURRENT_HOST_STATUSES[expected_host]:
-            failures.append(f"hostMetrics[{index}] must preserve the current unobserved status")
-        if metric.get("exactUsageExposed") is not False:
-            failures.append(f"hostMetrics[{index}].exactUsageExposed must be false")
-        for field in ("inputTokens", "cachedInputTokens", "credits", "wallClockMilliseconds"):
-            if metric.get(field) is not None:
-                failures.append(f"hostMetrics[{index}].{field} must be null without a host run")
-        reason = metric.get("reason")
-        if type(reason) is not str or not reason:
-            failures.append(f"hostMetrics[{index}].reason must explain the gap")
+        if metric != EXPECTED_HOST_METRICS[expected_host]:
+            failures.append(
+                f"hostMetrics[{index}] must preserve the exact scoped evidence boundary"
+            )
 
     scenarios = document.get("scenarios")
     if type(scenarios) is not list or len(scenarios) != len(EXPECTED_SCENARIOS):
@@ -867,7 +890,10 @@ def check_context_budget(failures: list[str]) -> int:
                     failures.append(
                         f"scenarios[{index}].hostObservations[{host_index}].host must be {expected_host!r}"
                     )
-                if observation.get("status") != CURRENT_HOST_STATUSES[expected_host]:
+                if (
+                    observation.get("status")
+                    != CURRENT_LIFECYCLE_HOST_STATUSES[expected_host]
+                ):
                     failures.append(
                         f"scenarios[{index}].hostObservations[{host_index}] must preserve the unobserved status"
                     )

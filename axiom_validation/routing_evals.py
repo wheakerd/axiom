@@ -42,6 +42,9 @@ CANDIDATE_RESULT_PATH = "results/v0.7.8/codex/linux-candidate-1.json"
 CANDIDATE2_RESULT_PATH = "results/v0.7.8/codex/linux-candidate-2.json"
 CANDIDATE3_RESULT_PATH = "results/v0.7.8/codex/linux-candidate-3.json"
 CANDIDATE4_RESULT_PATH = "results/v0.7.8/codex/linux-candidate-4.json"
+V080_CODEX_RESULT_PATH = "results/v0.8.0/codex/linux.json"
+V080_CLAUDE_RESULT_PATH = "results/v0.8.0/claude-code/linux.json"
+V080_RESULT_PATHS = (V080_CODEX_RESULT_PATH, V080_CLAUDE_RESULT_PATH)
 HISTORICAL_RESULT_PATHS = (
     "results/v0.7.7/codex/linux.json",
     "results/v0.7.7/claude-code/linux.json",
@@ -54,7 +57,7 @@ REQUIRED_RESULT_PATHS = HISTORICAL_RESULT_PATHS + (
     CANDIDATE2_RESULT_PATH,
     CANDIDATE3_RESULT_PATH,
     CANDIDATE4_RESULT_PATH,
-)
+) + V080_RESULT_PATHS
 OPTIONAL_RESULT_PATHS: tuple[str, ...] = ()
 SUPPORTED_RESULT_PATHS = REQUIRED_RESULT_PATHS + OPTIONAL_RESULT_PATHS
 HISTORICAL_PUBLIC_ROUTES = (
@@ -313,6 +316,12 @@ HOST_RESPONSE_SCHEMA_V1_RELATIVE_PATH = "evals/host-response-schema-v1.json"
 HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH = "evals/host-response-schema-v2.json"
 HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH = "evals/host-response-schema-v3.json"
 HOST_RESPONSE_SCHEMA_RELATIVE_PATH = HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH
+PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS = frozenset(
+    {
+        HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH,
+        HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
+    }
+)
 FAILED_HOST_RESPONSE_SCHEMA_SHA256 = (
     "9294a71523ba3ba8411810a4678b1170ac6400e5af9351da896018a0324f82ab"
 )
@@ -343,6 +352,10 @@ CANDIDATE3_CODEX_RUN_ID = (
 )
 CANDIDATE4_CODEX_RUN_ID = (
     "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-4"
+)
+V080_CODEX_RUN_ID = "codex-v0-8-0-linux-codex-core-v2-initial"
+V080_CLAUDE_UNAVAILABLE_RUN_ID = (
+    "claude-code-v0-8-0-linux-codex-core-v2-unavailable"
 )
 CANDIDATE_COMMIT = "389495ae314cff2a5e3491df5ace4a8536de25d9"
 CANDIDATE_TREE = "7afb38829e49a049d0376fc49fb07bde57633e67"
@@ -379,6 +392,12 @@ PRESERVED_OUTCOME_SHA256 = {
     ),
     CANDIDATE4_CODEX_RUN_ID: (
         "23916a39703f6f77ae049ab8f6f8037a429d72ce485001ef517f662d60527689"
+    ),
+    V080_CODEX_RUN_ID: (
+        "72030ae826b131de45a77fff0f2f4717e03783f1edb4a812de9e577ec4ab4574"
+    ),
+    V080_CLAUDE_UNAVAILABLE_RUN_ID: (
+        "043402c24e12705ac153296e8a6bc0016fdfceca3ac42dbdbfa7d74c796de0f7"
     ),
 }
 INITIAL_CODEX_OUTCOME_SHA256 = PRESERVED_OUTCOME_SHA256[INITIAL_CODEX_RUN_ID]
@@ -419,6 +438,14 @@ EXPECTED_RESULT_BINDINGS = {
         CANDIDATE4_CODEX_RUN_ID,
         CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
     ),
+    V080_CODEX_RESULT_PATH: (
+        V080_CODEX_RUN_ID,
+        CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
+    ),
+    V080_CLAUDE_RESULT_PATH: (
+        V080_CLAUDE_UNAVAILABLE_RUN_ID,
+        None,
+    ),
 }
 RELEASED_V077_SUBJECT = {
     "version": "0.7.7",
@@ -454,6 +481,12 @@ CANDIDATE4_V078_SUBJECT = {
     "tree": CANDIDATE4_TREE,
     "releaseState": "candidate-unreleased",
 }
+RELEASED_V080_SUBJECT = {
+    "version": "0.8.0",
+    "tag": "v0.8.0",
+    "commit": "5d02ebaa94f2a4355cb185a5091153c9e4ec497c",
+    "tree": "974c0f5db0f2dab0aba512a6633b0a22b0d80779",
+}
 EXPECTED_RESULT_SUBJECTS = {
     relative_path: RELEASED_V077_SUBJECT
     for relative_path in HISTORICAL_RESULT_PATHS
@@ -462,6 +495,8 @@ EXPECTED_RESULT_SUBJECTS[CANDIDATE_RESULT_PATH] = CANDIDATE_V078_SUBJECT
 EXPECTED_RESULT_SUBJECTS[CANDIDATE2_RESULT_PATH] = CANDIDATE2_V078_SUBJECT
 EXPECTED_RESULT_SUBJECTS[CANDIDATE3_RESULT_PATH] = CANDIDATE3_V078_SUBJECT
 EXPECTED_RESULT_SUBJECTS[CANDIDATE4_RESULT_PATH] = CANDIDATE4_V078_SUBJECT
+for _relative_path in V080_RESULT_PATHS:
+    EXPECTED_RESULT_SUBJECTS[_relative_path] = RELEASED_V080_SUBJECT
 TERMINAL_ONLY_RESULT_PATHS = frozenset(
     {
         RECOVERY3_RESULT_PATH,
@@ -469,6 +504,7 @@ TERMINAL_ONLY_RESULT_PATHS = frozenset(
         CANDIDATE2_RESULT_PATH,
         CANDIDATE3_RESULT_PATH,
         CANDIDATE4_RESULT_PATH,
+        V080_CODEX_RESULT_PATH,
     }
 )
 EVIDENCE_SOURCES = frozenset(
@@ -1552,11 +1588,11 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
         "shell=False",
         'timeout=benchmark["caseTimeoutSeconds"]',
         "reject_duplicate_json_keys",
-        "validate_host_response_v2_structure(",
-        "classify_host_response_v2_acceptance(",
-        "validate_host_response_v2(",
+        "validate_host_response_v3_structure(",
+        "classify_host_response_v3_acceptance(",
+        "validate_host_response_v3(",
         "derive_observer_evidence(",
-        "host-response-schema-v2.json",
+        "host-response-schema-v3.json",
         "observer-derived",
         "https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas",
         "`uniqueItems`",
@@ -1569,6 +1605,7 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
         FAILED_HOST_RESPONSE_SCHEMA_SHA256,
         V1_HOST_RESPONSE_SCHEMA_SHA256,
         CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
+        CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
     )
     for fragment in required_fragments:
         if fragment not in text:
@@ -1933,15 +1970,15 @@ def validate_evidence_source(
     value: Any,
     *,
     status: Any,
-    run_id: Any,
     response_schema_path: Any,
+    required: bool,
+    observer_required: bool,
     label: str,
     failures: list[str],
 ) -> str | None:
-    required = run_id == CANDIDATE4_CODEX_RUN_ID
     if value is None:
         if required:
-            failures.append(f"{label} is required for Candidate 4 evidence")
+            failures.append(f"{label} is required for observer provenance")
         return None
     if type(value) is not str or value not in EVIDENCE_SOURCES:
         failures.append(f"{label} must use the closed evidence-source enum")
@@ -1949,14 +1986,14 @@ def validate_evidence_source(
     if status in {"not-run", "unavailable"}:
         if value != "not-observed":
             failures.append(f"{label} must be not-observed for an unattempted case")
-    elif status in {"pass", "fail", "unknown"} and required:
+    elif status in {"pass", "fail", "unknown"} and observer_required:
         if value != "observer-derived":
-            failures.append(f"{label} must be observer-derived for Candidate 4")
+            failures.append(f"{label} must be observer-derived for this contract")
     if (
-        response_schema_path == HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH
+        response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS
         and value == "model-provided"
     ):
-        failures.append(f"{label} cannot claim model-provided evidence under V2")
+        failures.append(f"{label} cannot claim model-provided evidence under a prose-free schema")
     return value
 
 
@@ -1972,6 +2009,7 @@ def validate_response_schema_binding(
     supported_paths = {
         HOST_RESPONSE_SCHEMA_V1_RELATIVE_PATH,
         HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH,
+        HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     }
     if path is not None and path not in supported_paths:
         failures.append(
@@ -2100,10 +2138,24 @@ def validate_observation(
     failures: list[str],
 ) -> None:
     exact_object(record, OBSERVATION_KEYS, label, failures)
-    if record.get("schemaVersion") != "1" or record.get("kind") != "routing-observation":
-        failures.append(f"{label} has the wrong schemaVersion or kind")
-    if record.get("benchmarkId") != BENCHMARK_ID:
-        failures.append(f"{label}.benchmarkId must bind {BENCHMARK_ID}")
+    schema_version = record.get("schemaVersion")
+    if schema_version == "1":
+        expected_benchmark_id = BENCHMARK_ID
+        allowed_routes = HISTORICAL_PUBLIC_ROUTES
+        maximum_call_count = 13
+    elif schema_version == "2":
+        expected_benchmark_id = BENCHMARK_V2_ID
+        allowed_routes = PUBLIC_ROUTES
+        maximum_call_count = 17
+    else:
+        expected_benchmark_id = None
+        allowed_routes = PUBLIC_ROUTES
+        maximum_call_count = 17
+        failures.append(f"{label}.schemaVersion must be '1' or '2'")
+    if record.get("kind") != "routing-observation":
+        failures.append(f"{label}.kind must be routing-observation")
+    if record.get("benchmarkId") != expected_benchmark_id:
+        failures.append(f"{label}.benchmarkId must bind {expected_benchmark_id}")
     run_id = require_string(record.get("runId"), f"{label}.runId", failures, 100)
     if run_id is not None and CASE_ID_PATTERN.fullmatch(run_id) is None:
         failures.append(f"{label}.runId must be lowercase kebab-case")
@@ -2174,10 +2226,14 @@ def validate_observation(
             call_count = require_int(
                 run.get("callCount"), f"{label}.run.callCount", failures
             )
-            if call_count is not None and call_count > 13:
-                failures.append(f"{label}.run.callCount must be <= 13")
-        elif candidate_evidence:
-            failures.append(f"{label}.run.callCount is required for candidate evidence")
+            if call_count is not None and call_count > maximum_call_count:
+                failures.append(
+                    f"{label}.run.callCount must be <= {maximum_call_count}"
+                )
+        elif candidate_evidence or schema_version == "2":
+            failures.append(
+                f"{label}.run.callCount is required for candidate or v2 evidence"
+            )
         reasoning_effort = run.get("reasoningEffort")
         if reasoning_effort is not None:
             require_string(
@@ -2318,7 +2374,7 @@ def validate_observation(
             document.get("responseDiagnostic"),
             status,
             run_id,
-            candidate_evidence,
+            candidate_evidence or schema_version == "2",
             f"{case_label}.responseDiagnostic",
             failures,
         )
@@ -2326,7 +2382,8 @@ def validate_observation(
             document.get("acceptanceDiagnostic"),
             status,
             response_diagnostic,
-            run_id
+            schema_version == "2"
+            or run_id
             in {
                 CANDIDATE2_CODEX_RUN_ID,
                 CANDIDATE3_CODEX_RUN_ID,
@@ -2338,15 +2395,18 @@ def validate_observation(
         evidence_source = validate_evidence_source(
             document.get("evidenceSource"),
             status=status,
-            run_id=run_id,
             response_schema_path=response_schema_path,
+            required=schema_version == "2" or run_id == CANDIDATE4_CODEX_RUN_ID,
+            observer_required=(
+                schema_version == "2" or run_id == CANDIDATE4_CODEX_RUN_ID
+            ),
             label=f"{case_label}.evidenceSource",
             failures=failures,
         )
-        if response_schema_path == HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH:
+        if response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS:
             if response_diagnostic == "schema-evidence":
                 failures.append(
-                    f"{case_label}.responseDiagnostic cannot classify absent V2 evidence"
+                    f"{case_label}.responseDiagnostic cannot classify absent model evidence"
                 )
             if acceptance_diagnostic in {
                 "evidence-empty-string",
@@ -2355,7 +2415,7 @@ def validate_observation(
                 "privacy",
             }:
                 failures.append(
-                    f"{case_label}.acceptanceDiagnostic cannot classify model evidence under V2"
+                    f"{case_label}.acceptanceDiagnostic cannot classify model evidence under a prose-free schema"
                 )
 
         gate_observed = optional_bool(
@@ -2370,7 +2430,7 @@ def validate_observation(
                 observed_value,
                 f"{case_label}.observedRoutes",
                 failures,
-                allowed=HISTORICAL_PUBLIC_ROUTES,
+                allowed=allowed_routes,
                 maximum_items=2,
             )
         clarification_count = optional_int(
@@ -2514,6 +2574,11 @@ def validate_observation(
         failures.append(f"{label}.run.callCount disagrees with attempted cases")
     if evaluated and (installed is not True or hook is not True):
         failures.append(f"{label}.run attempted cases without verified plugin and hook")
+    if schema_version == "2" and run_status != "pass":
+        # A stopped v2 batch publishes no partial aggregate as a benchmark
+        # quality result. Per-case facts remain available without implying
+        # coverage for the unattempted suffix.
+        metric_known = {field: False for field in metric_known}
 
     summary = exact_object(
         record.get("summary"), SUMMARY_KEYS, f"{label}.summary", failures
@@ -2552,7 +2617,13 @@ def validate_observation_run_set(
     relative_paths = [relative_path for relative_path, _record in observations]
     if len(relative_paths) != len(set(relative_paths)):
         failures.append("routing observation paths must be unique")
-    missing_required = sorted(set(REQUIRED_RESULT_PATHS) - set(relative_paths))
+    required_for_set = set(REQUIRED_RESULT_PATHS)
+    if not set(V080_RESULT_PATHS).intersection(relative_paths):
+        # Focused historical replay fixtures may validate the complete v1 set.
+        # The repository-level file-set gate below still requires both v0.8.0
+        # records, and materializing either one requires the pair.
+        required_for_set.difference_update(V080_RESULT_PATHS)
+    missing_required = sorted(required_for_set - set(relative_paths))
     if missing_required:
         failures.append(
             "routing observations are missing required records: "
@@ -2718,10 +2789,15 @@ def check_routing_evaluations(
         if record is None:
             continue
         expected_host = Path(relative_path).parts[-2]
+        record_case_ids = (
+            benchmark_v2_case_ids
+            if record.get("schemaVersion") == "2"
+            else benchmark_case_ids
+        )
         validate_observation(
             record,
             expected_host,
-            benchmark_case_ids,
+            record_case_ids,
             cases,
             _display(path, root),
             failures,
