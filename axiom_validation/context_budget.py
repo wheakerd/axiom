@@ -55,14 +55,13 @@ EXPECTED_HOST_METRICS = {
         "host": "codex",
         "status": "observed",
         "exactUsageExposed": True,
-        "inputTokens": 14907,
-        "cachedInputTokens": 1920,
+        "inputTokens": 279939,
+        "cachedInputTokens": 156288,
         "credits": None,
-        "wallClockMilliseconds": 17984,
+        "wallClockMilliseconds": 350053,
         "reason": (
-            "Exact scoped usage comes from codex-v0-8-0-linux-codex-core-v2-initial "
-            "against immutable Axiom v0.8.0; Case 1 was terminal FAIL. This is not "
-            "v0.8.1 host or lifecycle evidence."
+            "Exact aggregate usage comes from the 19-call F5 PASS against the "
+            "Axiom 0.8.1 candidate. It is not final v0.8.2 or lifecycle evidence."
         ),
     },
     "claude-code": {

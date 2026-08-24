@@ -5,6 +5,36 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.8.2 - 2026-08-23
+
+### Changed
+
+- Clarified that publishing an already-prepared artifact selects only
+  `confirm-external-action`. A separate persistent installation, deployment,
+  migration, activation, or retention change still selects
+  `reversible-system-change` as well when it has an external effect.
+- Advanced both manifests together to `0.8.2` without changing route names,
+  hooks, marketplace wrappers, corpus records, benchmarks, or authorization.
+- Added a reviewed v0.8.2 routing-context record and an explicit validator mode
+  for a content-addressed, external post-merge `codex-core-v2` observation.
+
+### Evidence Boundary
+
+- Preserved the F4 terminal `FAIL` after eight calls: the publication-only case
+  incorrectly selected both routes. A later candidate-only F5 batch passed all
+  19 planned calls, including three Case 1 variance samples, with zero tool
+  events and unchanged protected snapshots.
+- F5 is bound to the unreleased 0.8.1 candidate commit
+  `298268ac0cfcaac84af22d7117e126f57e72152c`; it is not final v0.8.2 evidence.
+  Actual post-compaction lifecycle remains `NOT-RUN`, and authenticated Claude
+  Code remains `UNAVAILABLE / NOT-RUN`.
+- Issue #34 may close only after the final signed merge receives a complete
+  17-call Codex pass, an immutable v0.8.2 tag, and a validated
+  content-addressed release asset bound to that exact commit and tree.
+
+See [the v0.8.2 release notes](docs/releases/v0.8.2.md) for the candidate
+evidence, context review, and post-merge acceptance sequence.
+
 ## 0.8.1 - 2026-08-23
 
 ### Added

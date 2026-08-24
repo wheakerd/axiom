@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.1",
-    "tag": "v0.8.1",
+    "version": "0.8.2",
+    "tag": "v0.8.2",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -10,8 +10,8 @@
   "currentHostEvidence": [
     {
       "host": "codex",
-      "status": "unknown",
-      "reason": "v0.8.1 preserves the immutable v0.8.0 codex-core-v2 terminal FAIL. No v0.8.1 host, lifecycle, model, marketplace, or portal run was performed, so the prior failure is not a current-release pass."
+      "status": "not-run",
+      "reason": "The 19-call Codex PASS is candidate-only Axiom 0.8.1 evidence. No final v0.8.2 host, lifecycle, marketplace, or portal run has occurred."
     },
     {
       "host": "claude-code",

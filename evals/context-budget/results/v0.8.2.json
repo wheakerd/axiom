@@ -1,0 +1,338 @@
+{
+  "$schema": "../schema-v1.json",
+  "schemaVersion": "1",
+  "recordId": "routing-context-budget-v0-8-2",
+  "targetRelease": {
+    "version": "0.8.2",
+    "commit": null,
+    "binding": "pending-immutable-release"
+  },
+  "surface": {
+    "path": "skills/using-axiom/SKILL.md",
+    "language": "en",
+    "alwaysLoaded": true
+  },
+  "measurementBoundary": {
+    "staticCounts": "proxy",
+    "estimatedTokens": "estimate",
+    "exactHostUsage": "observed",
+    "modelOrReasoningChanged": false,
+    "networkOrTelemetryUsed": true,
+    "volatilePricingIncluded": false
+  },
+  "baseline": {
+    "release": {
+      "version": "0.7.9",
+      "tag": "v0.7.9",
+      "commit": "4c24ba6c016945038778475ce6b69ac9e9a5ce3b",
+      "tree": "719622eff9654dd1050863213d2bf81d3455d6f6"
+    },
+    "sha256": "1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011",
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "utf8Bytes": 5899,
+      "whitespaceDelimitedWords": 757,
+      "logicalLines": 107,
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "method": "ceil(utf8-bytes/4)",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "value": 1475
+      }
+    }
+  },
+  "candidate": {
+    "sha256": "5e852f5cc1edc3a2fdb19538b2e8bec982d9e959012cb426ae91bb96ccfef866",
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "utf8Bytes": 6293,
+      "whitespaceDelimitedWords": 805,
+      "logicalLines": 114,
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "method": "ceil(utf8-bytes/4)",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "value": 1574
+      }
+    }
+  },
+  "reviewThreshold": {
+    "comparison": "cumulative-from-immutable-baseline",
+    "absoluteUtf8Bytes": 256,
+    "relativeBasisPoints": 500,
+    "operator": "either",
+    "effect": "review-and-justify-not-automatic-rejection"
+  },
+  "comparison": {
+    "method": "same-English-Markdown-surface",
+    "utf8ByteDelta": 394,
+    "wordDelta": 48,
+    "lineDelta": 7,
+    "referenceDelta": 0,
+    "estimatedTokenDelta": 99,
+    "absoluteThresholdReached": true,
+    "relativeThresholdReached": true,
+    "meaningfulIncrease": true,
+    "reviewStatus": "reviewed",
+    "justification": "The 394-byte cumulative increase is the narrow publication-only boundary that corrected F4's false dual-route; focused tests and all 19 F5 calls passed without changing authority."
+  },
+  "routingQuality": {
+    "workload": {
+      "classification": "static-contract-workload-identity",
+      "path": "evals/routing",
+      "fileCount": 11,
+      "caseCount": 64,
+      "routedCaseCount": 45,
+      "noRouteCaseCount": 19,
+      "sha256": "75606d98e5726eacad42e304c4270a1546fa6dbfb69f3481d21262383682ccd9"
+    },
+    "reductionPolicy": {
+      "requiredForAnyReduction": true,
+      "sameWorkloadRequired": true,
+      "requiredResults": [
+        "routing",
+        "no-route"
+      ],
+      "requiredStatus": "pass",
+      "staticAndHostEvidenceRemainDistinct": true
+    },
+    "reductionExperiment": null
+  },
+  "hostMetrics": [
+    {
+      "host": "codex",
+      "status": "observed",
+      "exactUsageExposed": true,
+      "inputTokens": 279939,
+      "cachedInputTokens": 156288,
+      "credits": null,
+      "wallClockMilliseconds": 350053,
+      "reason": "Exact aggregate usage comes from the 19-call F5 PASS against the Axiom 0.8.1 candidate. It is not final v0.8.2 or lifecycle evidence."
+    },
+    {
+      "host": "claude-code",
+      "status": "unavailable",
+      "exactUsageExposed": false,
+      "inputTokens": null,
+      "cachedInputTokens": null,
+      "credits": null,
+      "wallClockMilliseconds": null,
+      "reason": "No authenticated Claude Code subscription or session was available; exact usage and lifecycle observation were unavailable and not run."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "fresh-startup-no-route",
+      "sessionState": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "F5 used fresh isolated routing sessions but did not expose native startup injection evidence; final v0.8.2 lifecycle observation was not run."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this scenario was not run."
+        }
+      ]
+    },
+    {
+      "id": "fresh-startup-routed",
+      "sessionState": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "requestCaseIds": [
+        "agent-plugin-architect-canonical-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "F5 used fresh isolated routing sessions but did not expose native startup injection evidence; final v0.8.2 lifecycle observation was not run."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this scenario was not run."
+        }
+      ]
+    },
+    {
+      "id": "resume-no-route",
+      "sessionState": "resumed",
+      "lifecycleSource": "resume",
+      "compactionMode": "not-applicable",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No final v0.8.2 Codex resume lifecycle observation was run; the F5 fresh-session batch is not resume evidence."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this scenario was not run."
+        }
+      ]
+    },
+    {
+      "id": "clear-routed",
+      "sessionState": "cleared",
+      "lifecycleSource": "clear",
+      "compactionMode": "not-applicable",
+      "requestCaseIds": [
+        "agent-plugin-architect-paraphrase-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No final v0.8.2 Codex clear lifecycle observation was run; the F5 fresh-session batch is not clear evidence."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this scenario was not run."
+        }
+      ]
+    },
+    {
+      "id": "manual-compaction-no-route",
+      "sessionState": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "requestCaseIds": [
+        "compaction-no-route-manual-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "Actual manual compaction was not observed; the F5 Case 17 call was a fresh-session routing observation only."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this scenario was not run."
+        }
+      ]
+    },
+    {
+      "id": "automatic-compaction-routed",
+      "sessionState": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "requestCaseIds": [
+        "compaction-plugin-architecture-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "Actual automatic compaction was not observed; the F5 Case 17 call was a fresh-session routing observation only."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this scenario was not run."
+        }
+      ]
+    },
+    {
+      "id": "unchanged-session-repeated-no-route",
+      "sessionState": "unchanged-session",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "requestCaseIds": [
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001"
+      ],
+      "expectedInjectionCount": 1,
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "hostObservations": [
+        {
+          "host": "codex",
+          "status": "not-run",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "F5 used a new session per call; no unchanged-session repeated-request lifecycle observation was run for v0.8.2."
+        },
+        {
+          "host": "claude-code",
+          "status": "unavailable",
+          "observedInjectionCount": null,
+          "duplicateInjectionDetected": null,
+          "injections": [],
+          "reason": "No authenticated Claude Code session was available; this repeated-request scenario was not run."
+        }
+      ]
+    }
+  ]
+}
