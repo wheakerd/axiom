@@ -65,16 +65,18 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.2, that status is `STATIC-ONLY`. The checked-in tree cannot embed its
-future signed merge commit or final post-merge observation. F4 remains a
-terminal candidate `FAIL`; F5 is a 19-call candidate-only `PASS`, not a current
-v0.8.2 host-pass claim. A prior-release Codex observation also exists for
-immutable v0.7.4: Codex
+For v0.8.3, that status is `STATIC-ONLY`. The checked-in tree cannot embed its
+future signed merge commit or final post-merge observation. The v0.8.2
+release-bound batch remains terminal `FAIL` at Case 1 after unexpected tool
+use. One independent corrected-preflight v0.8.2 Case 1 diagnostic passed at
+repeat count one with zero tool events, but the different one-sample outcomes
+are observed variance rather than a current v0.8.3 host-pass claim. A
+prior-release Codex observation also exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.8.2.
+forward to v0.8.3.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -112,7 +114,7 @@ without removing the fields from the release manifest.
 
 ## Packaged Agent-Plugin Architecture
 
-Version 0.8.2 retains the route implemented in v0.8.0 from the
+Version 0.8.3 retains the route implemented in v0.8.0 from the
 [agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
 as one directly packaged Skill with seven root-reachable references. It owns
 only explicit Codex or Claude Code plugin architecture across shared Skills,
@@ -133,12 +135,12 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.2.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.3.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.2 candidate gate is 6,293 bytes with SHA-256
+The v0.8.3 candidate gate is 6,293 bytes with SHA-256
 `5e852f5cc1edc3a2fdb19538b2e8bec982d9e959012cb426ae91bb96ccfef866`.
 
 The candidate has 805 whitespace-delimited words, 114 logical lines, and one
@@ -147,10 +149,12 @@ for comparing the same English Markdown surface. The exact cumulative delta is
 394 bytes, 48 words, seven lines, zero references, and 99 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
 reviewed and justifies it as the narrow publication-only negative boundary.
-It separately preserves candidate-observed F5 usage: 279,939 input tokens,
-156,288 cached input tokens, and 350,053 milliseconds. F5 also reported 2,436
-output tokens, which schema v1 does not store. These values are candidate
-metrics, not final v0.8.2 host or lifecycle evidence.
+It separately preserves one independent corrected-preflight Case 1
+diagnostic's scoped usage: 12,278 input tokens, 1,920 cached input tokens, and
+13,139 milliseconds. The host also reported 69 output tokens, which schema v1
+does not store. The diagnostic used repeat count one against exact v0.8.2; its
+passing route and zero tool events are not final v0.8.3 host or lifecycle
+evidence.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -185,7 +189,7 @@ The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
 cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
 behavior. One immutable v0.8.0 Codex run attempted Case 1 and stopped terminal
 `FAIL`; authenticated Claude Code remains unavailable. The corpus itself stays
-static contract evidence and neither record establishes a v0.8.2 host pass.
+static contract evidence and neither record establishes a v0.8.3 host pass.
 
 Host result records live under `evals/results/` and identify a stable run ID,
 the applied response-schema path and SHA-256, immutable Axiom source, exact host
@@ -226,6 +230,15 @@ The subject is truthfully version `0.8.1`, tag null, commit
 `candidate-unreleased`; the tested base-plus-diff identity maps exactly to that
 commit and tree. The three variance samples mean F5 is not materialized as a
 17-case schema-v2 observation, and it is not final v0.8.2 evidence.
+
+The later release-bound batch against exact v0.8.2 stopped terminal `FAIL` at
+Case 1 after unexpected tool use. It made no retry and left Cases 2-17
+`NOT-RUN`; v0.8.2 remains unreleased. A separate corrected-preflight Case 1
+diagnostic then passed one fresh call with the expected route, zero
+clarification, false model mutation fields, zero tool events or unique calls,
+and unchanged protected snapshots. Its `repeatCount` and call count were both
+one. These independent outcomes demonstrate observed variance; the passing
+diagnostic is not a schema-v2 result, not a retry, and not Stage 3 acceptance.
 
 The checked-in v0.7.7 Codex run
 `codex-v0-7-7-linux-codex-core-v1-initial` is `FAIL`: its first and only
@@ -346,6 +359,24 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.3` reports:
+
+- synchronized `0.8.3` manifests with no Skill, route, hook, wrapper, corpus,
+  benchmark, schema, or authority change;
+- the unreleased v0.8.2 release-bound Case 1 `FAIL` preserved separately from
+  one independent corrected-preflight Case 1 `PASS` at repeat count one;
+- the unchanged 6,293-byte gate and reviewed +394-byte cumulative delta, with
+  the diagnostic's 12,278 input tokens, 1,920 cached input tokens, 69 output
+  tokens, and 13,139 milliseconds kept separate from release evidence;
+- `STATIC-ONLY` current status, actual post-compaction lifecycle `NOT-RUN`, and
+  authenticated Claude Code `UNAVAILABLE / NOT-RUN`; and
+- a required fresh 17-case schema-v2 batch bound to the signed merge and,
+  only after a complete pass, immutable `v0.8.3` and a content-addressed
+  release asset.
+
+See the [v0.8.3 release notes](releases/v0.8.3.md) for the diagnostic boundary
+and release sequence.
 
 The Git record for `v0.8.2` reports:
 
@@ -768,7 +799,8 @@ The earlier Git record for `v0.3.0` reports:
   while the release record noted that the then-current official schema
   supported the field.
 
-See the durable [v0.8.2 release notes](releases/v0.8.2.md),
+See the durable [v0.8.3 release notes](releases/v0.8.3.md),
+[v0.8.2 release notes](releases/v0.8.2.md),
 [v0.8.1 release notes](releases/v0.8.1.md),
 [v0.8.0 release notes](releases/v0.8.0.md),
 [v0.7.12 release notes](releases/v0.7.12.md),

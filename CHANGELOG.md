@@ -5,6 +5,33 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
+## 0.8.3 - 2026-08-24
+
+### Changed
+
+- Advanced both manifests together to `0.8.3` without changing the shared
+  Skill tree, routing contract, hooks, corpus, benchmarks, schemas, or
+  historical observations.
+- Added the successor routing-context record and rebound the existing external
+  17-case observation gate to `v0.8.3`.
+
+### Evidence Boundary
+
+- Preserved the unreleased v0.8.2 release-bound batch as terminal `FAIL`. It
+  stopped at Case 1 after unexpected tool use, made no retry, and left Cases
+  2-17 `NOT-RUN`.
+- Recorded one independent corrected-preflight Case 1 diagnostic against exact
+  v0.8.2 as `PASS`: repeat count one, one call, the expected route, zero
+  clarification, false model mutation fields, zero tool events or calls, and
+  unchanged protected snapshots. The separate one-sample outcomes demonstrate
+  observed variance; they are not a retry series or Stage 3 acceptance.
+- A fresh complete 17-case Codex batch against the signed v0.8.3 merge remains
+  required before tagging. Authenticated Claude Code remains `UNAVAILABLE /
+  NOT-RUN`, and actual post-compaction behavior remains `NOT-RUN`.
+
+See [the v0.8.3 release notes](docs/releases/v0.8.3.md) for the diagnostic
+boundary and release gate.
+
 ## 0.8.2 - 2026-08-23
 
 ### Changed

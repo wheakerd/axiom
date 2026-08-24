@@ -1,0 +1,338 @@
+{
+  "$schema": "../schema-v1.json",
+  "baseline": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "method": "ceil(utf8-bytes/4)",
+        "value": 1475
+      },
+      "logicalLines": 107,
+      "utf8Bytes": 5899,
+      "whitespaceDelimitedWords": 757
+    },
+    "release": {
+      "commit": "4c24ba6c016945038778475ce6b69ac9e9a5ce3b",
+      "tag": "v0.7.9",
+      "tree": "719622eff9654dd1050863213d2bf81d3455d6f6",
+      "version": "0.7.9"
+    },
+    "sha256": "1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011"
+  },
+  "candidate": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "method": "ceil(utf8-bytes/4)",
+        "value": 1574
+      },
+      "logicalLines": 114,
+      "utf8Bytes": 6293,
+      "whitespaceDelimitedWords": 805
+    },
+    "sha256": "5e852f5cc1edc3a2fdb19538b2e8bec982d9e959012cb426ae91bb96ccfef866"
+  },
+  "comparison": {
+    "absoluteThresholdReached": true,
+    "estimatedTokenDelta": 99,
+    "justification": "The 394-byte cumulative increase is the narrow publication-only boundary that corrected F4's false dual-route; focused tests and all 19 F5 calls passed without changing authority.",
+    "lineDelta": 7,
+    "meaningfulIncrease": true,
+    "method": "same-English-Markdown-surface",
+    "referenceDelta": 0,
+    "relativeThresholdReached": true,
+    "reviewStatus": "reviewed",
+    "utf8ByteDelta": 394,
+    "wordDelta": 48
+  },
+  "hostMetrics": [
+    {
+      "cachedInputTokens": 1920,
+      "credits": null,
+      "exactUsageExposed": true,
+      "host": "codex",
+      "inputTokens": 12278,
+      "reason": "Exact scoped usage comes from one independent corrected-preflight Case 1 diagnostic against Axiom 0.8.2 at repeat count one. It is not a complete v0.8.3 host or lifecycle observation.",
+      "status": "observed",
+      "wallClockMilliseconds": 13139
+    },
+    {
+      "cachedInputTokens": null,
+      "credits": null,
+      "exactUsageExposed": false,
+      "host": "claude-code",
+      "inputTokens": null,
+      "reason": "No authenticated Claude Code subscription or session was available; exact usage and lifecycle observation were unavailable and not run.",
+      "status": "unavailable",
+      "wallClockMilliseconds": null
+    }
+  ],
+  "measurementBoundary": {
+    "estimatedTokens": "estimate",
+    "exactHostUsage": "observed",
+    "modelOrReasoningChanged": false,
+    "networkOrTelemetryUsed": true,
+    "staticCounts": "proxy",
+    "volatilePricingIncluded": false
+  },
+  "recordId": "routing-context-budget-v0-8-3",
+  "reviewThreshold": {
+    "absoluteUtf8Bytes": 256,
+    "comparison": "cumulative-from-immutable-baseline",
+    "effect": "review-and-justify-not-automatic-rejection",
+    "operator": "either",
+    "relativeBasisPoints": 500
+  },
+  "routingQuality": {
+    "reductionExperiment": null,
+    "reductionPolicy": {
+      "requiredForAnyReduction": true,
+      "requiredResults": [
+        "routing",
+        "no-route"
+      ],
+      "requiredStatus": "pass",
+      "sameWorkloadRequired": true,
+      "staticAndHostEvidenceRemainDistinct": true
+    },
+    "workload": {
+      "caseCount": 64,
+      "classification": "static-contract-workload-identity",
+      "fileCount": 11,
+      "noRouteCaseCount": 19,
+      "path": "evals/routing",
+      "routedCaseCount": 45,
+      "sha256": "75606d98e5726eacad42e304c4270a1546fa6dbfb69f3481d21262383682ccd9"
+    }
+  },
+  "scenarios": [
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No complete v0.8.3 Codex lifecycle observation was run; the independent v0.8.2 Case 1 diagnostic was routed and cannot supply this no-route slot.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "fresh-startup-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "One independent v0.8.2 Case 1 diagnostic observed routing in a fresh session, but it was not v0.8.3 or release-bound lifecycle evidence.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "fresh-startup-routed",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "agent-plugin-architect-canonical-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.8.3 Codex resume lifecycle observation was run; the independent diagnostic used a fresh session.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "resume-no-route",
+      "lifecycleSource": "resume",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "resumed"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.8.3 Codex clear lifecycle observation was run; the independent diagnostic used a fresh session.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "clear-routed",
+      "lifecycleSource": "clear",
+      "requestCaseIds": [
+        "agent-plugin-architect-paraphrase-001"
+      ],
+      "sessionState": "cleared"
+    },
+    {
+      "compactionMode": "manual",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Actual manual compaction was not observed; the independent diagnostic was a fresh-session Case 1 observation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "manual-compaction-no-route",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-no-route-manual-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "automatic",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Actual automatic compaction was not observed; the independent diagnostic was a fresh-session Case 1 observation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "automatic-compaction-routed",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-plugin-architecture-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No unchanged-session repeated-request lifecycle observation was run for v0.8.3; the independent diagnostic made one fresh call.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this repeated-request scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "unchanged-session-repeated-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "unchanged-session"
+    }
+  ],
+  "schemaVersion": "1",
+  "surface": {
+    "alwaysLoaded": true,
+    "language": "en",
+    "path": "skills/using-axiom/SKILL.md"
+  },
+  "targetRelease": {
+    "binding": "pending-immutable-release",
+    "commit": null,
+    "version": "0.8.3"
+  }
+}
