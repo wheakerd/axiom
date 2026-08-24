@@ -56,6 +56,7 @@ from axiom_validation.routing_evals import (
     classify_host_response_v2_acceptance,
     classify_host_response_v3_acceptance,
     classify_codex_exec_jsonl_lines,
+    check_documented_method,
     check_host_response_schema,
     check_host_response_schema_v2,
     check_host_response_schema_v3,
@@ -246,11 +247,57 @@ def candidate_terminal_observation() -> dict:
     return load_candidate_one()
 
 
+def documented_method_failures(text: str) -> list[str]:
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        eval_root = root / "evals"
+        eval_root.mkdir()
+        (eval_root / "README.md").write_text(text, encoding="utf-8")
+        failures: list[str] = []
+        check_documented_method(root, failures)
+        return failures
+
+
 class RoutingEvaluationTests(unittest.TestCase):
     def test_checked_in_evaluation_contracts_pass(self):
         failures: list[str] = []
         self.assertEqual((64, 30, 11), check_routing_evaluations(failures))
         self.assertEqual([], failures)
+
+    def test_documented_method_requires_native_hook_trust_without_bypass(self):
+        readme = (
+            Path(__file__).resolve().parents[1] / "evals" / "README.md"
+        ).read_text(encoding="utf-8")
+        self.assertEqual([], documented_method_failures(readme))
+
+        old_method = readme.replace(
+            '    "--ignore-rules",',
+            '    "--ignore-rules",\n    "--dangerously-bypass-hook-trust",',
+            1,
+        )
+        failures = documented_method_failures(old_method)
+        self.assertTrue(
+            any("--dangerously-bypass-hook-trust" in failure for failure in failures)
+        )
+
+        missing_native_write = readme.replace('"config/batchWrite"', '"config/write"')
+        failures = documented_method_failures(missing_native_write)
+        self.assertTrue(
+            any("config/batchWrite" in failure for failure in failures)
+        )
+
+    def test_documented_method_requires_codex_home_outside_system_temp(self):
+        readme = (
+            Path(__file__).resolve().parents[1] / "evals" / "README.md"
+        ).read_text(encoding="utf-8")
+        weakened = readme.replace(
+            '"AXIOM_EVAL_RUNTIME_ROOT"',
+            '"TMPDIR"',
+        )
+        failures = documented_method_failures(weakened)
+        self.assertTrue(
+            any("AXIOM_EVAL_RUNTIME_ROOT" in failure for failure in failures)
+        )
 
     def test_codex_exec_jsonl_taxonomy_accepts_source_valid_benign_pre_turn_items(self):
         usage = {

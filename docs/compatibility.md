@@ -252,6 +252,24 @@ and unchanged protected snapshots. Its `repeatCount` and call count were both
 one. These independent outcomes demonstrate observed variance; the passing
 diagnostic is not a schema-v2 result, not a retry, and not Stage 3 acceptance.
 
+A subsequent release-bound batch against signed v0.8.2 repair commit
+`9dbc2592dc2e544d3f62aafb2788af7efc503840` also stopped terminal `FAIL` at
+Case 1 with no retry. The exact route and V3 response passed, model mutation
+fields were false, no tool event or call occurred, and the source, installed
+plugin, and workspace snapshots were unchanged. The invocation's hook-trust
+bypass unconditionally produced a startup `ConfigWarning`; the fail-closed
+observer correctly classified its JSONL error item as terminal. Cases 2-17
+remain `NOT-RUN`, and this setup failure is not a host pass.
+
+The repaired release-bound method uses an owner-only runtime root outside the
+system temporary directory. After byte-verifying the installed hook, a
+zero-model native app-server exchange reads its public key and current hash via
+`hooks/list`, writes only that trust state through `config/batchWrite`, and
+requires a second `hooks/list` response with the same key and hash marked
+`Trusted`. Authentication is supplied only after that exchange. The model
+invocation no longer bypasses hook trust; error, warning, tool, unknown, and
+malformed JSONL items remain terminal.
+
 The checked-in v0.7.7 Codex run
 `codex-v0-7-7-linux-codex-core-v1-initial` is `FAIL`: its first and only
 attempted case exited nonzero without a bounded response, so route,
@@ -399,7 +417,12 @@ The Git record for `v0.8.2` reports:
 - a reviewed 6,293-byte routing gate, +394-byte cumulative delta, and F5
   candidate usage kept separate from final release or lifecycle evidence;
 - `STATIC-ONLY` checked-in status, actual post-compaction lifecycle
-  `NOT-RUN`, and authenticated Claude Code `UNAVAILABLE / NOT-RUN`; and
+  `NOT-RUN`, and authenticated Claude Code `UNAVAILABLE / NOT-RUN`;
+- the later signed `9dbc2592dc2e544d3f62aafb2788af7efc503840`
+  release-bound Case 1 `FAIL`, caused by the warning-producing hook-trust
+  bypass while routing, V3, tool, mutation, and snapshot gates otherwise
+  passed, plus the native disposable trust repair that removes that setup
+  warning without weakening the observer; and
 - an external validation mode for one final, exact 17-call schema-v2 record
   bound to the signed merge commit, tree, and immutable `v0.8.2` tag. The
   content-addressed release asset supplements but never promotes or rewrites

@@ -177,9 +177,21 @@ mutation fields, zero tool events or calls, and unchanged protected snapshots.
 These separate one-sample outcomes demonstrate observed variance, not Stage 3
 acceptance. Two later complete-batch attempts against the signed unreleased
 v0.8.3 candidate stopped as external terminal `UNKNOWN` records and are not
-reclassified. Issue #34 remains open until a fresh complete 17-call observation
-against the signed v0.8.2 repair merge is validated, bound to immutable tag
-`v0.8.2`, and attached as a content-addressed release asset.
+reclassified.
+
+A subsequent complete-batch attempt against signed v0.8.2 repair commit
+`9dbc2592dc2e544d3f62aafb2788af7efc503840` stopped at Case 1 without retry.
+The route and V3 response were valid, no tool or mutation occurred, and all
+protected snapshots were unchanged. The old hook-trust bypass nevertheless
+created a startup `ConfigWarning`, which the fail-closed JSONL observer
+correctly treated as a terminal error item; Cases 2-17 remain `NOT-RUN`. The
+repaired setup byte-verifies the installed hook, trusts its native public hash
+inside only the disposable `CODEX_HOME`, and verifies `Trusted` through
+`hooks/list` before any model call. It also keeps that owner-only `CODEX_HOME`
+outside the system temporary directory. Issue #34 remains open until a fresh
+complete 17-call observation against the next signed v0.8.2 repair merge is
+validated, bound to immutable tag `v0.8.2`, and attached as a
+content-addressed release asset.
 
 The [Codex exec JSONL observer taxonomy v2](evals/codex-exec-jsonl-observer-v2.json)
 binds all eight public event types and nine item types for Codex CLI `0.149.1`

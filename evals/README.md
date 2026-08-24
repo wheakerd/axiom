@@ -150,22 +150,35 @@ route selection, not a generated workspace change.
 For each manifest case, the observer must:
 
 1. Copy the exact immutable Axiom subject into a new disposable plugin source.
-2. Install that local marketplace copy as `axiom@axiom` into a fresh disposable
+2. Create an owner-only disposable runtime root outside the platform system
+   temporary directory. On Linux, set `AXIOM_EVAL_RUNTIME_ROOT` to a fresh
+   owner-only child of `XDG_RUNTIME_DIR`; never place the release-bound
+   `CODEX_HOME` below `/tmp`. Create the source, installed plugin, workspace,
+   `HOME`, and `CODEX_HOME` below that root with umask `077`.
+3. Install that local marketplace copy as `axiom@axiom` into the fresh
    `CODEX_HOME`. Its generated configuration may contain only the vetted local
-   marketplace and enabled-plugin entries. Supply the existing ChatGPT
-   authentication file as opaque local input without reading, printing,
-   hashing, or publishing it.
-3. Create a new empty disposable workspace and `HOME`, then verify the installed
-   manifest version, plugin source, startup hook, and front door before the
-   call.
-4. Start one ephemeral Codex session with no MCP entries, the read-only sandbox,
+   marketplace and enabled-plugin entries. Verify the installed manifest
+   version, plugin source, startup hook, and front door byte-for-byte before
+   trusting the hook.
+4. With no authentication file present and without starting a thread or turn,
+   use the native app-server `hooks/list` method to obtain the installed Axiom
+   hook's public `key` and `currentHash`. Require one enabled, untrusted Axiom
+   `SessionStart` command and no hook warnings or errors. Persist only its
+   `currentHash` under the isolated `hooks.state` through native
+   `config/batchWrite`, then repeat `hooks/list` and require the same key and
+   hash with `trustStatus` equal to `trusted`. Stop if any field or installed
+   byte changes.
+5. Stop the zero-model app server. Supply the existing ChatGPT authentication
+   file as opaque local input without reading, printing, hashing, or publishing
+   it, then start one ephemeral Codex session with no MCP entries, the
+   read-only sandbox,
    approval policy `never`, native web search disabled, and
    `host-response-schema-v3.json` as the final output schema. Load only the
    isolated configuration that identifies the installed plugin.
-5. Read the model, reasoning effort, timeout, stop policy, and developer
+6. Read the model, reasoning effort, timeout, stop policy, and developer
    instruction directly from the fixed benchmark manifest. Pass the corpus
    `request` unchanged as the final argv element.
-6. Capture only the bounded structured response, JSON event stream, process
+7. Capture only the bounded structured response, JSON event stream, process
    exit state, and before/after mutation comparison. Remove the disposable
    home, plugin cache, workspace, and opaque authentication copy after
    classification.
@@ -188,6 +201,52 @@ credentials, paths, session/config content, or raw payload. The classifier is
 part of the existing standard-library validation owner; it is not a model
 runner or a private maintenance harness.
 
+The native trust handshake is setup, not a host observation. Its app-server
+client may send only initialization, `hooks/list`, and `config/batchWrite`; it
+must never send `thread/start`, `turn/start`, or a model request. The isolated
+configuration write has this exact semantic shape:
+
+```python
+untrusted_hook = select_axiom_session_start_hook(
+    app_server_request("hooks/list", {"cwds": [str(case_workspace)]})
+)
+if untrusted_hook["trustStatus"] != "untrusted":
+    raise RuntimeError("fresh installed hook did not require trust")
+verified_key = untrusted_hook["key"]
+verified_hash = untrusted_hook["currentHash"]
+app_server_request(
+    "config/batchWrite",
+    {
+        "edits": [{
+            "keyPath": "hooks.state",
+            "value": {verified_key: {"trusted_hash": verified_hash}},
+            "mergeStrategy": "upsert",
+        }],
+        "filePath": None,
+        "expectedVersion": None,
+        "reloadUserConfig": True,
+    },
+)
+trusted_hook = select_axiom_session_start_hook(
+    app_server_request("hooks/list", {"cwds": [str(case_workspace)]})
+)
+if (
+    trusted_hook["key"] != verified_key
+    or trusted_hook["currentHash"] != verified_hash
+    or trusted_hook["trustStatus"] != "trusted"
+):
+    raise RuntimeError("installed hook trust verification failed")
+```
+
+The hook-trust bypass flag is forbidden in the release-bound invocation. Codex
+CLI `0.149.1` turns that flag into a startup `ConfigWarning`, and JSONL exposes
+the warning as a terminal `item.completed` error. The observer must not waive
+that item. The owner-only runtime root prevents the separate temporary
+PATH-alias warning. For a positional request with non-terminal stdin, the sole
+accepted model-process stderr line is exactly
+`Reading additional input from stdin...`; it is direct stderr and never changes
+JSONL classification. Missing, additional, or different stderr remains fatal.
+
 The exact five-sentence developer instruction is:
 
 ```text
@@ -206,6 +265,8 @@ is:
 import json
 import os
 import subprocess
+import tempfile
+from pathlib import Path
 
 from axiom_validation.routing_evals import (
     classify_host_response_v3_acceptance,
@@ -214,6 +275,15 @@ from axiom_validation.routing_evals import (
     validate_host_response_v3,
     validate_host_response_v3_structure,
 )
+
+runtime_parent = Path(os.environ["AXIOM_EVAL_RUNTIME_ROOT"]).resolve(strict=True)
+system_temp_root = Path(tempfile.gettempdir()).resolve(strict=True)
+if runtime_parent == system_temp_root or system_temp_root in runtime_parent.parents:
+    raise RuntimeError("release-bound CODEX_HOME must be outside system temporary storage")
+if runtime_parent.stat().st_mode & 0o077:
+    raise RuntimeError("release-bound runtime root must be owner-only")
+if runtime_parent not in case_codex_home.resolve(strict=True).parents:
+    raise RuntimeError("CODEX_HOME escaped the reviewed runtime root")
 
 reviewed_path = os.environ["PATH"]
 reviewed_locale_and_tls_environment = {
@@ -233,7 +303,6 @@ argv = [
     "--ephemeral",
     "--json",
     "--ignore-rules",
-    "--dangerously-bypass-hook-trust",
     "--skip-git-repo-check",
     "--cd",
     str(case_workspace),
@@ -516,10 +585,11 @@ bytes, not native host lifecycle inclusion. Native inclusion remains
 prospective until an authorized live case satisfies its event, routing-gate,
 semantic, and protected-snapshot gates.
 
-`--dangerously-bypass-hook-trust` is permitted only after the disposable
-installed hook was compared with the immutable subject. It bypasses the
-interactive trust prompt; it does not bypass the read-only sandbox or grant
-action authority. If that comparison fails, no host call may run.
+The release-bound method trusts only the byte-verified installed hook through
+the isolated native handshake above. It does not bypass hook trust, grant
+action authority, or persist trust outside the disposable `CODEX_HOME`. If the
+byte comparison, native write, or repeated `hooks/list` verification fails, no
+host call may run.
 
 The fixed batch permits no automatic retry. A timeout, disconnect, malformed
 response, missing gate, uncertain tool outcome, contract mismatch, or mutation

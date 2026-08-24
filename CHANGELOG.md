@@ -5,8 +5,9 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.2 repair candidate. It does not relabel either signed
-candidate merge, rewrite any terminal observation, or claim a host pass.
+The active tree is a v0.8.2 hook-trust repair candidate. It does not relabel
+either signed candidate merge, rewrite any terminal observation, or claim a
+host pass.
 
 ## 0.8.3 - unreleased candidate history
 
@@ -53,6 +54,11 @@ boundary and release gate.
   the existing routing-evaluation validator. Items are classified before
   lifecycle sequencing; tool/action, error, unknown, malformed, invalid-status,
   and post-terminal events fail closed without retaining private payload.
+- Replaced the warning-producing hook-trust bypass in the documented
+  release-bound setup with a native zero-model `hooks/list` and
+  `config/batchWrite` trust handshake after installed-hook byte verification.
+  The disposable `CODEX_HOME` must now use an owner-only runtime root outside
+  the system temporary directory.
 
 ### Evidence Boundary
 
@@ -69,6 +75,12 @@ boundary and release gate.
   once with zero tool events, but it is variance evidence rather than Stage 3
   acceptance. The signed v0.8.3 candidate and both external terminal `UNKNOWN`
   attempts remain distinct unreleased history.
+- A later complete-batch attempt against signed v0.8.2 repair commit
+  `9dbc2592dc2e544d3f62aafb2788af7efc503840` also stopped at Case 1 without
+  retry. Its route, V3 response, mutation fields, zero-tool observation, and
+  protected snapshots were valid, but the old hook-trust bypass necessarily
+  emitted a startup `ConfigWarning`; the fail-closed JSONL observer correctly
+  treated the resulting error item as terminal. Cases 2-17 remain `NOT-RUN`.
 - Issue #34 may close only after the final signed merge receives a complete
   17-call Codex pass, an immutable v0.8.2 tag, and a validated
   content-addressed release asset bound to that exact commit and tree.

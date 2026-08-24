@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "Signed v0.8.2 remains terminal FAIL at Case 1; a separate corrected-preflight Case 1 passed once with zero tools. Two unreleased v0.8.3 complete-batch attempts remain external terminal UNKNOWN. These distinct outcomes establish neither a complete v0.8.2 host pass nor lifecycle evidence."
+      "reason": "Signed v0.8.2 batches remain terminal FAIL at Case 1; the latest stopped on the old hook-trust bypass ConfigWarning. The repaired setup requires native disposable hook trust before a fresh complete batch. No complete v0.8.2 host pass or lifecycle evidence exists."
     },
     {
       "host": "claude-code",

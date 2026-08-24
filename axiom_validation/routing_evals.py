@@ -1995,12 +1995,26 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
     if exact_instruction not in text:
         failures.append(f"{label} must publish the exact benchmark developer instruction")
     required_fragments = (
+        '"AXIOM_EVAL_RUNTIME_ROOT"',
+        "tempfile.gettempdir()",
+        "release-bound CODEX_HOME must be outside system temporary storage",
         '"HOME": str(case_home)',
         '"CODEX_HOME": str(case_codex_home)',
+        'app_server_request("hooks/list"',
+        '"config/batchWrite"',
+        '"keyPath": "hooks.state"',
+        '"trusted_hash": verified_hash',
+        'untrusted_hook["currentHash"]',
+        'untrusted_hook["trustStatus"] != "untrusted"',
+        'trusted_hook["trustStatus"] != "trusted"',
+        '"mergeStrategy": "upsert"',
+        '"reloadUserConfig": True',
+        "With no authentication file present",
+        "no hook warnings or errors",
+        "must never send `thread/start`, `turn/start`, or a model request",
         '"--ephemeral"',
         '"--json"',
         '"--ignore-rules"',
-        '"--dangerously-bypass-hook-trust"',
         '"--sandbox"',
         'approval_policy="never"',
         "model_reasoning_effort=",
@@ -2036,7 +2050,11 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
     for fragment in required_fragments:
         if fragment not in text:
             failures.append(f"{label} is missing invocation contract {fragment!r}")
-    for forbidden in ("--ignore-user-config", "--ask-for-approval"):
+    for forbidden in (
+        "--dangerously-bypass-hook-trust",
+        "--ignore-user-config",
+        "--ask-for-approval",
+    ):
         if forbidden in text:
             failures.append(f"{label} documents unsupported invocation option {forbidden!r}")
 
