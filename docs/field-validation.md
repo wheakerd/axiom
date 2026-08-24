@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For v0.8.2, a final Stage 3 result belongs outside the checked-in tree because
+For v0.8.3, a final Stage 3 result belongs outside the checked-in tree because
 the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.2-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.2 \
-  --expected-tag v0.8.2 \
+  /absolute/path/axiom-v0.8.3-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.3 \
+  --expected-tag v0.8.3 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,16 +229,24 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.2 with a non-null `v0.8.2` tag and the
+The subject must be non-candidate v0.8.3 with a non-null `v0.8.3` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
+
+The unreleased v0.8.2 release-bound batch remains terminal `FAIL` at Case 1
+after unexpected tool use. A separate corrected-preflight Case 1 diagnostic
+passed one fresh call with no tool event. Its repeat count was one, so the two
+independent outcomes document variance rather than a retry series or
+acceptance rate. Neither observation can be supplied to this external mode:
+the failure is incomplete, and the diagnostic is not a 17-case schema-v2
+record.
 
 Use this safe release sequence:
 
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. If the batch passes, create immutable tag `v0.8.2` at that same commit.
+3. If the batch passes, create immutable tag `v0.8.3` at that same commit.
 4. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
 5. Upload the exact validated record to the GitHub Release. Put its full
@@ -248,7 +256,8 @@ Use this safe release sequence:
 
 The asset supplements final release evidence. It never edits, promotes, or
 rewrites the checked-in `STATIC-ONLY` status, and it cannot reclassify F4, F5,
-or any historical observation.
+the v0.8.2 release-bound failure, the independent diagnostic, or any historical
+observation.
 
 ## Design-Partner Program
 

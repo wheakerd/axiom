@@ -151,7 +151,7 @@ def benchmark_v2_case_ids() -> list[str]:
     return json.loads(path.read_text(encoding="utf-8"))["caseIds"]
 
 
-def external_v082_observation() -> dict:
+def external_v083_observation() -> dict:
     cases = corpus_cases()
     result_cases = []
     for case_id in benchmark_v2_case_ids():
@@ -190,14 +190,14 @@ def external_v082_observation() -> dict:
         "schemaVersion": "2",
         "kind": "routing-observation",
         "benchmarkId": "codex-core-v2",
-        "runId": "codex-v0-8-2-linux-codex-core-v2-post-tag-1",
+        "runId": "codex-v0-8-3-linux-codex-core-v2-post-tag-1",
         "responseSchema": {
             "path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
             "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
         },
         "axiom": {
-            "version": "0.8.2",
-            "tag": "v0.8.2",
+            "version": "0.8.3",
+            "tag": "v0.8.3",
             "commit": "b" * 40,
             "tree": "c" * 40,
         },
@@ -234,7 +234,7 @@ def external_v082_observation() -> dict:
 def write_content_addressed_observation(directory: Path, record: dict) -> Path:
     payload = (json.dumps(record, indent=2) + "\n").encode("ascii")
     digest = hashlib.sha256(payload).hexdigest()
-    path = directory / f"axiom-v0.8.2-codex-core-v2-{digest}.json"
+    path = directory / f"axiom-v0.8.3-codex-core-v2-{digest}.json"
     path.write_bytes(payload)
     return path
 
@@ -321,7 +321,7 @@ class RoutingEvaluationTests(unittest.TestCase):
                 )
 
     def test_external_post_tag_observation_passes_function_and_cli(self):
-        record = external_v082_observation()
+        record = external_v083_observation()
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = write_content_addressed_observation(
                 Path(temporary_directory), record
@@ -329,8 +329,8 @@ class RoutingEvaluationTests(unittest.TestCase):
             failures: list[str] = []
             digest = validate_external_routing_observation(
                 path,
-                expected_version="0.8.2",
-                expected_tag="v0.8.2",
+                expected_version="0.8.3",
+                expected_tag="v0.8.3",
                 expected_commit="b" * 40,
                 expected_tree="c" * 40,
                 failures=failures,
@@ -346,9 +346,9 @@ class RoutingEvaluationTests(unittest.TestCase):
                     "--post-tag-routing-observation",
                     str(path),
                     "--expected-version",
-                    "0.8.2",
+                    "0.8.3",
                     "--expected-tag",
-                    "v0.8.2",
+                    "v0.8.3",
                     "--expected-commit",
                     "b" * 40,
                     "--expected-tree",
@@ -363,20 +363,20 @@ class RoutingEvaluationTests(unittest.TestCase):
 
     def test_external_post_tag_observation_rejects_partial_or_candidate_evidence(self):
         fixtures: list[tuple[str, dict, str]] = []
-        candidate = external_v082_observation()
+        candidate = external_v083_observation()
         candidate["axiom"]["tag"] = None
         candidate["axiom"]["releaseState"] = "candidate-unreleased"
         fixtures.append(("candidate", candidate, "exact released version"))
 
-        wrong_call_count = external_v082_observation()
+        wrong_call_count = external_v083_observation()
         wrong_call_count["run"]["callCount"] = 16
         fixtures.append(("call count", wrong_call_count, "run.callCount"))
 
-        repeated = external_v082_observation()
+        repeated = external_v083_observation()
         repeated["run"]["repeatCount"] = 2
         fixtures.append(("repeat count", repeated, "run.repeatCount"))
 
-        not_run = external_v082_observation()
+        not_run = external_v083_observation()
         not_run["cases"][-1].update(
             {
                 "status": "not-run",
@@ -394,15 +394,15 @@ class RoutingEvaluationTests(unittest.TestCase):
         )
         fixtures.append(("not run", not_run, "17 passing cases"))
 
-        reordered = external_v082_observation()
+        reordered = external_v083_observation()
         reordered["cases"].reverse()
         fixtures.append(("case order", reordered, "exact benchmark order"))
 
-        regression = external_v082_observation()
+        regression = external_v083_observation()
         regression["summary"]["highImpactFalsePositives"] = 1
         fixtures.append(("summary", regression, "zero-regression PASS"))
 
-        malformed_run_id = external_v082_observation()
+        malformed_run_id = external_v083_observation()
         malformed_run_id["runId"] = []
         fixtures.append(("run ID type", malformed_run_id, "runId must be"))
 
@@ -415,8 +415,8 @@ class RoutingEvaluationTests(unittest.TestCase):
                     failures: list[str] = []
                     validate_external_routing_observation(
                         path,
-                        expected_version="0.8.2",
-                        expected_tag="v0.8.2",
+                        expected_version="0.8.3",
+                        expected_tag="v0.8.3",
                         expected_commit="b" * 40,
                         expected_tree="c" * 40,
                         failures=failures,
@@ -428,13 +428,13 @@ class RoutingEvaluationTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = write_content_addressed_observation(
-                Path(temporary_directory), external_v082_observation()
+                Path(temporary_directory), external_v083_observation()
             )
             failures = []
             validate_external_routing_observation(
                 path,
-                expected_version="0.8.2",
-                expected_tag="v0.8.2",
+                expected_version="0.8.3",
+                expected_tag="v0.8.3",
                 expected_commit="b" * 40,
                 expected_tree="d" * 40,
                 failures=failures,
@@ -445,7 +445,7 @@ class RoutingEvaluationTests(unittest.TestCase):
             )
 
         with tempfile.TemporaryDirectory() as temporary_directory:
-            payload = (json.dumps(external_v082_observation(), indent=2) + "\n").replace(
+            payload = (json.dumps(external_v083_observation(), indent=2) + "\n").replace(
                 '  "schemaVersion": "2",',
                 '  "schemaVersion": "2",\n  "schemaVersion": "2",',
                 1,
@@ -453,14 +453,14 @@ class RoutingEvaluationTests(unittest.TestCase):
             digest = hashlib.sha256(payload).hexdigest()
             path = (
                 Path(temporary_directory)
-                / f"axiom-v0.8.2-codex-core-v2-{digest}.json"
+                / f"axiom-v0.8.3-codex-core-v2-{digest}.json"
             )
             path.write_bytes(payload)
             failures = []
             validate_external_routing_observation(
                 path,
-                expected_version="0.8.2",
-                expected_tag="v0.8.2",
+                expected_version="0.8.3",
+                expected_tag="v0.8.3",
                 expected_commit="b" * 40,
                 expected_tree="c" * 40,
                 failures=failures,

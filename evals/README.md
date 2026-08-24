@@ -106,11 +106,13 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For v0.8.2, the 64-case combined corpus, 30 total benchmark memberships, and
+For v0.8.3, the 64-case combined corpus, 30 total benchmark memberships, and
 11 preserved observations pass static validation. The sole immutable v0.8.0
 `codex-core-v2` attempt is terminal `FAIL`; authenticated Claude Code is
-`UNAVAILABLE / NOT-RUN`. F4 and F5 remain separate candidate diagnostics; no
-final v0.8.2 host result or Stage 3 pass is inferred.
+`UNAVAILABLE / NOT-RUN`. F4 and F5 remain separate candidate diagnostics. The
+later v0.8.2 release-bound batch also remains terminal `FAIL`; one independent
+corrected-preflight Case 1 `PASS` at repeat count one is recorded only as a
+diagnostic. No final v0.8.3 host result or Stage 3 pass is inferred.
 
 The explicit external mode validates one content-addressed post-merge record
 without changing aggregate behavior:
@@ -118,9 +120,9 @@ without changing aggregate behavior:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.2-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.2 \
-  --expected-tag v0.8.2 \
+  /absolute/path/axiom-v0.8.3-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.3 \
+  --expected-tag v0.8.3 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -347,9 +349,20 @@ version `0.8.1`, tag null, commit
 exactly to that commit and tree. F5 does not become a 17-case schema-v2 record,
 does not claim final v0.8.2 evidence, and does not change F4.
 
+The subsequent release-bound batch against exact v0.8.2 remains terminal
+`FAIL`. Case 1 encountered unexpected tool use, the batch made no retry, and
+Cases 2-17 remain `NOT-RUN`; v0.8.2 was not tagged. One later independent
+diagnostic used the corrected standalone `:read-only` permission profile and
+ran exact Case 1 once (`repeatCount: 1`, call count one). It returned the
+expected route, zero clarification, false model mutation fields, zero tool
+events or unique calls, and unchanged protected snapshots. The release failure
+and diagnostic pass are separate one-sample observations showing variance.
+The diagnostic is not materialized as a schema-v2 result and is not Stage 3
+acceptance.
+
 Final acceptance uses a new complete 17-call batch against the exact signed
 merge commit before any tag is created. A failure stops without minting a tag.
-On pass, create immutable `v0.8.2` at that same commit, finalize the external
+On pass, create immutable `v0.8.3` at that same commit, finalize the external
 record with the exact tag, commit, and tree, validate its content-addressed
 filename, and upload it as the Release asset with its full SHA-256 in Release
 and Issue text. Issue #34 closes only after the asset and release checks pass.
