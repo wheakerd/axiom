@@ -106,10 +106,33 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For v0.8.1, the 64-case combined corpus, 30 total benchmark memberships, and
+For v0.8.2, the 64-case combined corpus, 30 total benchmark memberships, and
 11 preserved observations pass static validation. The sole immutable v0.8.0
 `codex-core-v2` attempt is terminal `FAIL`; authenticated Claude Code is
-`UNAVAILABLE / NOT-RUN`. No v0.8.1 host result or Stage 3 pass is inferred.
+`UNAVAILABLE / NOT-RUN`. F4 and F5 remain separate candidate diagnostics; no
+final v0.8.2 host result or Stage 3 pass is inferred.
+
+The explicit external mode validates one content-addressed post-merge record
+without changing aggregate behavior:
+
+```bash
+python3 scripts/check-publication.py \
+  --post-tag-routing-observation \
+  /absolute/path/axiom-v0.8.2-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.2 \
+  --expected-tag v0.8.2 \
+  --expected-commit <40-character-commit> \
+  --expected-tree <40-character-tree>
+```
+
+It requires schema v2 and response schema V3, the exact 17 unique cases in
+benchmark order, repeat count one, call count 17, 17/17 `PASS`, verified local
+installation and startup delivery, no unavailable or `NOT-RUN` suffix, and
+zero routing, clarification, or mutation regressions. The subject must bind
+the exact final version, non-null tag, 40-character commit, and 40-character
+tree. The file must stay outside the repository and expose its full SHA-256 in
+its filename. This asset may supplement release evidence; it never edits or
+promotes the checked-in `STATIC-ONLY` release status.
 
 ## Codex black-box method
 
@@ -305,6 +328,32 @@ subscription or session was available, so all 17 cases, host lifecycle, and
 exact usage remain `UNAVAILABLE / NOT-RUN`; offline package validation is not
 host evidence.
 
+F4 is a separate Codex CLI `0.149.1` diagnostic against immutable v0.8.1. It
+passed seven calls, then stopped terminal `FAIL` at
+`near-miss-confirm-plugin-publish-001` because publication alone selected both
+`confirm-external-action` and `reversible-system-change`. It made eight calls,
+did not retry, and did not run the 11-call suffix. Historical F4 evidence is
+not rewritten by the fix.
+
+F5 tested the narrow wording change as an unreleased candidate. It planned
+three independent Case 1 variance samples and then Cases 2-17 once each; all 19
+calls passed with zero tool events and unchanged workspace, source, and
+installed snapshots. Aggregate usage was 279,939 input tokens, 156,288 cached
+input tokens, 2,436 output tokens, and 350,053 milliseconds. Its subject is
+version `0.8.1`, tag null, commit
+`298268ac0cfcaac84af22d7117e126f57e72152c`, tree
+`ea298f5a81ca59eeecee863743b714f9f97f201d`, and
+`releaseState: candidate-unreleased`; the tested base-plus-diff identity maps
+exactly to that commit and tree. F5 does not become a 17-case schema-v2 record,
+does not claim final v0.8.2 evidence, and does not change F4.
+
+Final acceptance uses a new complete 17-call batch against the exact signed
+merge commit before any tag is created. A failure stops without minting a tag.
+On pass, create immutable `v0.8.2` at that same commit, finalize the external
+record with the exact tag, commit, and tree, validate its content-addressed
+filename, and upload it as the Release asset with its full SHA-256 in Release
+and Issue text. Issue #34 closes only after the asset and release checks pass.
+
 The preserved initial Codex run is
 `codex-v0-7-7-linux-codex-core-v1-initial`; it binds the schema used for that
 attempt at SHA-256
@@ -469,8 +518,9 @@ to a host routing pass.
 The fresh-session core manifest does not claim compaction coverage. The
 post-compaction cases remain checked-in contracts until a real manual or
 automatic compaction exposes the matching lifecycle event and a subsequent
-route observation. Do not lower compaction thresholds, generate artificial
-load, or infer compaction from a fresh session.
+route observation. F5 Case 17 is a fresh-session routing observation, not an
+actual compaction event. Do not lower compaction thresholds, generate
+artificial load, or infer compaction from a fresh session.
 
 Never upload private conversations, full transcripts, credentials, private
 paths, customer data, session identifiers, or external-service content. Keep

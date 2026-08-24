@@ -127,26 +127,26 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.1` is `STATIC-ONLY`: it preserves the immutable v0.8.0 Stage 3 terminal
-failure but does not carry that outcome forward as a current-release host pass.
+`0.8.2` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+future signed merge commit, tag, or final post-merge host observation.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
 immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.8.1 gate is
-6,150 bytes, 788 words, 111 lines, one direct reference, and an estimated 1,538
-tokens: a measured cumulative increase of 251 bytes, below both review
-thresholds.
+Markdown surface; it is not an exact token or credit count. The v0.8.2 gate is
+6,293 bytes, 805 words, 114 lines, one direct reference, and an estimated 1,574
+tokens. Its cumulative increase of 394 bytes, 48 words, seven lines, zero
+references, and 99 estimated tokens reaches both review thresholds and is
+explicitly reviewed as a narrow publication-only routing boundary.
 
 The [routing evaluation corpus](evals/README.md) makes 64 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
 historical 13-case Codex benchmark and nine labeled observations remain bound
-to v1. The 17-case `codex-core-v2` benchmark now has one immutable v0.8.0
-Codex `FAIL` record and one Claude Code `UNAVAILABLE` record, for 11 total
-observations. No v0.8.1 host observation exists. Historical records preserve
-five earlier Codex `FAIL`
+to v1. The 17-case `codex-core-v2` benchmark has one immutable v0.8.0 Codex
+`FAIL` record and one Claude Code `UNAVAILABLE` record, for 11 total checked-in
+observations. Historical records preserve five earlier Codex `FAIL`
 outcomes, two unreleased-candidate `UNKNOWN` outcomes, one unreleased-candidate
 Codex `PASS`, and Claude Code `UNAVAILABLE`.
 Its first two recovery runs returned the expected Case 1 routing fields but
@@ -157,15 +157,20 @@ output made Case 11 unknown and left Cases 12-13 not run. None is a
 published-release host pass. Every observed Codex batch is terminal and no
 calls remain within them.
 
-The sole `codex-core-v2` batch ran Codex CLI `0.149.0` with `gpt-5.4` against
-immutable Axiom v0.8.0. Case 1 returned a valid V3 response with the expected
-`agent-plugin-architect` route, zero clarification, and no observed mutation.
-The observer nevertheless recorded `mutationAttempted=true` after two
-unexpected tool events, so the batch stopped `FAIL` after one call and 17,984
-milliseconds. Cases 2-17 are `NOT-RUN`, no retry occurred, and no tool category
-is inferred. Scoped usage was 14,907 input, 1,920 cached input, and 116 output
-tokens. This evidence does not establish Stage 3 acceptance; GitHub Issue #34
-remains open for a separately authorized diagnosis and fix.
+The immutable v0.8.0 `codex-core-v2` batch remains a terminal `FAIL`; it is not
+rewritten by later diagnostics. The v0.8.1 F4 diagnostic also stopped `FAIL`
+after eight calls when the publication-only case selected both
+`confirm-external-action` and `reversible-system-change`. After the 143-byte
+wording fix, the candidate-only F5 batch passed all 19 planned calls, including
+three Case 1 variance samples. It recorded 279,939 input tokens, 156,288 cached
+input tokens, 2,436 output tokens, 350,053 milliseconds, zero tool events, and
+unchanged workspace, source, and installed snapshots. F5 is bound to version
+0.8.1 with a null tag, commit
+`298268ac0cfcaac84af22d7117e126f57e72152c`, and tree
+`ea298f5a81ca59eeecee863743b714f9f97f201d`; it is not a final v0.8.2 host
+pass. Issue #34 remains open until a complete 17-call observation against the
+final signed merge is validated, bound to immutable tag `v0.8.2`, and attached
+as a content-addressed release asset.
 
 The v0.7.8 candidate makes ambiguity precedence explicit: a delegated choice
 among materially different implementations selects no route until one concise
@@ -422,7 +427,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.1 release notes](docs/releases/v0.8.1.md):
+- [Changelog](CHANGELOG.md) and [v0.8.2 release notes](docs/releases/v0.8.2.md):
   release history and version-specific evidence.
 
 ## Contributing

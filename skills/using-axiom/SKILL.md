@@ -61,6 +61,9 @@ account effect, including publish, delete, or remote-state mutation, selects
 both `confirm-external-action` and `reversible-system-change`. Keep the exact
 external action envelope and the persistent write-set and rollback gates
 independent; authorization under either route never satisfies the other.
+Publication of an already-prepared artifact alone selects only
+`confirm-external-action`; publication alone is not a persistent system
+change.
 
 When a request delegates a choice among mutually exclusive implementations and
 the alternatives would select materially different route sets, write surfaces,

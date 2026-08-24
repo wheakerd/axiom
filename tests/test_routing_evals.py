@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -68,6 +70,7 @@ from axiom_validation.routing_evals import (
     validate_observer_derived_evidence,
     validate_observation,
     validate_observation_run_set,
+    validate_external_routing_observation,
     validate_response_diagnostic,
 )
 from tests.fixtures.routing_evals import (
@@ -146,6 +149,94 @@ def benchmark_v2_case_ids() -> list[str]:
         / "codex-core-v2.json"
     )
     return json.loads(path.read_text(encoding="utf-8"))["caseIds"]
+
+
+def external_v082_observation() -> dict:
+    cases = corpus_cases()
+    result_cases = []
+    for case_id in benchmark_v2_case_ids():
+        case = cases[case_id]
+        routes = case["expectedRoutes"]
+        clarifications = case["expectedClarificationCount"]
+        result_cases.append(
+            {
+                "id": case_id,
+                "status": "pass",
+                "responseDiagnostic": "valid",
+                "acceptanceDiagnostic": "valid",
+                "evidenceSource": "observer-derived",
+                "routingGateObserved": True,
+                "observedRoutes": routes,
+                "clarificationCount": clarifications,
+                "mutationAttempted": False,
+                "mutationObserved": False,
+                "evidence": derive_observer_evidence(
+                    routing_gate_observed=True,
+                    selected_routes=routes,
+                    clarification_count=clarifications,
+                    mutation_attempted=False,
+                    mutation_observed=False,
+                    turn_completed=True,
+                    failure_event=False,
+                    unexpected_tools=0,
+                    workspace_unchanged=True,
+                    source_unchanged=True,
+                    installed_unchanged=True,
+                ),
+                "limitations": [],
+            }
+        )
+    return {
+        "schemaVersion": "2",
+        "kind": "routing-observation",
+        "benchmarkId": "codex-core-v2",
+        "runId": "codex-v0-8-2-linux-codex-core-v2-post-tag-1",
+        "responseSchema": {
+            "path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
+            "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
+        },
+        "axiom": {
+            "version": "0.8.2",
+            "tag": "v0.8.2",
+            "commit": "b" * 40,
+            "tree": "c" * 40,
+        },
+        "host": {"name": "codex", "version": "0.149.1", "model": "gpt-5.4"},
+        "environment": {
+            "operatingSystem": "fedora-linux-44",
+            "architecture": "x86_64",
+        },
+        "run": {
+            "status": "pass",
+            "recordedAt": "2026-08-24T00:00:00Z",
+            "lifecycle": "fresh-start",
+            "repeatCount": 1,
+            "callCount": 17,
+            "reasoningEffort": "medium",
+            "caseTimeoutSeconds": 120,
+            "installedPluginVerified": True,
+            "startupHookVerified": True,
+            "method": "documented-codex-cli-equivalent",
+            "limitations": [],
+        },
+        "cases": result_cases,
+        "summary": {
+            "overallStatus": "pass",
+            "evaluatedCases": 17,
+            "canonicalFalseNegatives": 0,
+            "highImpactFalsePositives": 0,
+            "clarificationMismatches": 0,
+            "mutationAttempts": 0,
+        },
+    }
+
+
+def write_content_addressed_observation(directory: Path, record: dict) -> Path:
+    payload = (json.dumps(record, indent=2) + "\n").encode("ascii")
+    digest = hashlib.sha256(payload).hexdigest()
+    path = directory / f"axiom-v0.8.2-codex-core-v2-{digest}.json"
+    path.write_bytes(payload)
+    return path
 
 
 def candidate_terminal_observation() -> dict:
@@ -228,6 +319,156 @@ class RoutingEvaluationTests(unittest.TestCase):
                 self.assertTrue(
                     any("preserved terminal outcome" in failure for failure in failures)
                 )
+
+    def test_external_post_tag_observation_passes_function_and_cli(self):
+        record = external_v082_observation()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = write_content_addressed_observation(
+                Path(temporary_directory), record
+            )
+            failures: list[str] = []
+            digest = validate_external_routing_observation(
+                path,
+                expected_version="0.8.2",
+                expected_tag="v0.8.2",
+                expected_commit="b" * 40,
+                expected_tree="c" * 40,
+                failures=failures,
+            )
+            self.assertEqual([], failures)
+            self.assertEqual(path.stem.rsplit("-", 1)[-1], digest)
+
+            script = Path(__file__).resolve().parents[1] / "scripts" / "check-publication.py"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "--post-tag-routing-observation",
+                    str(path),
+                    "--expected-version",
+                    "0.8.2",
+                    "--expected-tag",
+                    "v0.8.2",
+                    "--expected-commit",
+                    "b" * 40,
+                    "--expected-tree",
+                    "c" * 40,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn(digest, completed.stdout)
+
+    def test_external_post_tag_observation_rejects_partial_or_candidate_evidence(self):
+        fixtures: list[tuple[str, dict, str]] = []
+        candidate = external_v082_observation()
+        candidate["axiom"]["tag"] = None
+        candidate["axiom"]["releaseState"] = "candidate-unreleased"
+        fixtures.append(("candidate", candidate, "exact released version"))
+
+        wrong_call_count = external_v082_observation()
+        wrong_call_count["run"]["callCount"] = 16
+        fixtures.append(("call count", wrong_call_count, "run.callCount"))
+
+        repeated = external_v082_observation()
+        repeated["run"]["repeatCount"] = 2
+        fixtures.append(("repeat count", repeated, "run.repeatCount"))
+
+        not_run = external_v082_observation()
+        not_run["cases"][-1].update(
+            {
+                "status": "not-run",
+                "responseDiagnostic": "not-observed",
+                "acceptanceDiagnostic": "not-observed",
+                "evidenceSource": "not-observed",
+                "routingGateObserved": None,
+                "observedRoutes": None,
+                "clarificationCount": None,
+                "mutationAttempted": None,
+                "mutationObserved": None,
+                "evidence": [],
+                "limitations": ["Not run."],
+            }
+        )
+        fixtures.append(("not run", not_run, "17 passing cases"))
+
+        reordered = external_v082_observation()
+        reordered["cases"].reverse()
+        fixtures.append(("case order", reordered, "exact benchmark order"))
+
+        regression = external_v082_observation()
+        regression["summary"]["highImpactFalsePositives"] = 1
+        fixtures.append(("summary", regression, "zero-regression PASS"))
+
+        malformed_run_id = external_v082_observation()
+        malformed_run_id["runId"] = []
+        fixtures.append(("run ID type", malformed_run_id, "runId must be"))
+
+        for name, record, owned_reason in fixtures:
+            with self.subTest(name=name):
+                with tempfile.TemporaryDirectory() as temporary_directory:
+                    path = write_content_addressed_observation(
+                        Path(temporary_directory), record
+                    )
+                    failures: list[str] = []
+                    validate_external_routing_observation(
+                        path,
+                        expected_version="0.8.2",
+                        expected_tag="v0.8.2",
+                        expected_commit="b" * 40,
+                        expected_tree="c" * 40,
+                        failures=failures,
+                    )
+                    self.assertTrue(
+                        any(owned_reason in failure for failure in failures),
+                        failures,
+                    )
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = write_content_addressed_observation(
+                Path(temporary_directory), external_v082_observation()
+            )
+            failures = []
+            validate_external_routing_observation(
+                path,
+                expected_version="0.8.2",
+                expected_tag="v0.8.2",
+                expected_commit="b" * 40,
+                expected_tree="d" * 40,
+                failures=failures,
+            )
+            self.assertTrue(
+                any("exact released version" in failure for failure in failures),
+                failures,
+            )
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            payload = (json.dumps(external_v082_observation(), indent=2) + "\n").replace(
+                '  "schemaVersion": "2",',
+                '  "schemaVersion": "2",\n  "schemaVersion": "2",',
+                1,
+            ).encode("ascii")
+            digest = hashlib.sha256(payload).hexdigest()
+            path = (
+                Path(temporary_directory)
+                / f"axiom-v0.8.2-codex-core-v2-{digest}.json"
+            )
+            path.write_bytes(payload)
+            failures = []
+            validate_external_routing_observation(
+                path,
+                expected_version="0.8.2",
+                expected_tag="v0.8.2",
+                expected_commit="b" * 40,
+                expected_tree="c" * 40,
+                failures=failures,
+            )
+            self.assertTrue(
+                any("duplicate key" in failure for failure in failures),
+                failures,
+            )
 
     def test_case_negative_fixtures_fail_with_owned_reason(self):
         for name, case in case_negative_fixtures():

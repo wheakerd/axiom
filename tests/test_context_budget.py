@@ -34,7 +34,7 @@ class ContextBudgetTests(unittest.TestCase):
         current_record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
         current_metrics = measure_markdown(ROUTING_GATE_PATH)
         self.assertEqual(current_record["candidate"]["metrics"], current_metrics)
-        self.assertEqual(251, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
+        self.assertEqual(394, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
         self.assertEqual(
             current_record["candidate"]["sha256"],
             hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest(),
@@ -45,10 +45,16 @@ class ContextBudgetTests(unittest.TestCase):
         codex_metric = current_record["hostMetrics"][0]
         self.assertEqual("observed", codex_metric["status"])
         self.assertTrue(codex_metric["exactUsageExposed"])
-        self.assertEqual(14907, codex_metric["inputTokens"])
-        self.assertEqual(1920, codex_metric["cachedInputTokens"])
-        self.assertEqual(17984, codex_metric["wallClockMilliseconds"])
+        self.assertEqual(279939, codex_metric["inputTokens"])
+        self.assertEqual(156288, codex_metric["cachedInputTokens"])
+        self.assertEqual(350053, codex_metric["wallClockMilliseconds"])
         self.assertIsNone(codex_metric["credits"])
+        comparison = current_record["comparison"]
+        self.assertTrue(comparison["absoluteThresholdReached"])
+        self.assertTrue(comparison["relativeThresholdReached"])
+        self.assertTrue(comparison["meaningfulIncrease"])
+        self.assertEqual("reviewed", comparison["reviewStatus"])
+        self.assertIsInstance(comparison["justification"], str)
         self.assertTrue(
             all(
                 scenario["hostObservations"][0]["status"] == "not-run"
@@ -199,8 +205,8 @@ class ContextBudgetTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertIn("scoped v0.8.0 Codex usage is preserved", checked.stdout)
-        self.assertIn("without claiming v0.8.1 lifecycle evidence", checked.stdout)
+        self.assertIn("scoped candidate F5 Codex usage is preserved", checked.stdout)
+        self.assertIn("without claiming v0.8.2 lifecycle evidence", checked.stdout)
 
 
 if __name__ == "__main__":
