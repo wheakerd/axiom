@@ -4,7 +4,8 @@
 
 Resolve one exact Git root and independently freeze the upstream baseline,
 effective push remote, and every endpoint it can update without leaking
-secrets.
+secrets. Simple named-remote submission belongs to `direct-submit.md`, not this
+heavy owner.
 
 ## Exact Repository Root
 
@@ -21,7 +22,7 @@ parent or nested repository is ambiguous, or an explicit path conflicts with
 the session directory. Report the root and common directory with reversible
 escaping; a linked worktree is valid when Git resolves both identities.
 
-## Direct Submit Preflight
+## Hardened Direct Submit Preflight
 
 For a history-preserving submit, freeze object format, symbolic branch,
 upstream display/full tracking ref, `upstreamRemote`, `mergeRef`, `HEAD`,

@@ -53,16 +53,16 @@ CURRENT_LIFECYCLE_HOST_STATUSES = {
 EXPECTED_HOST_METRICS = {
     "codex": {
         "host": "codex",
-        "status": "observed",
-        "exactUsageExposed": True,
-        "inputTokens": 12278,
-        "cachedInputTokens": 1920,
+        "status": "not-run",
+        "exactUsageExposed": False,
+        "inputTokens": None,
+        "cachedInputTokens": None,
         "credits": None,
-        "wallClockMilliseconds": 13139,
+        "wallClockMilliseconds": None,
         "reason": (
-            "Exact scoped usage comes from one independent corrected-preflight Case 1 "
-            "diagnostic against Axiom 0.8.2 at repeat count one. It is not a complete "
-            "v0.8.3 host or lifecycle observation."
+            "Phase 3A routing diagnostics and Phase 3A/3B behavior observations bind "
+            "the prior v0.8.4 patch only; the revised candidate has no current host "
+            "usage or lifecycle observation."
         ),
     },
     "claude-code": {
@@ -620,9 +620,9 @@ def check_context_budget(failures: list[str]) -> int:
     expected_boundary = {
         "staticCounts": "proxy",
         "estimatedTokens": "estimate",
-        "exactHostUsage": "observed",
+        "exactHostUsage": "not-run",
         "modelOrReasoningChanged": False,
-        "networkOrTelemetryUsed": True,
+        "networkOrTelemetryUsed": False,
         "volatilePricingIncluded": False,
     }
     if boundary is not None and boundary != expected_boundary:

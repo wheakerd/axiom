@@ -74,6 +74,126 @@ def direct_push_fast_forward_gate(
     )
 
 
+def lightweight_direct_submit_gate(
+    *,
+    target_count: int,
+    configured_named_remote: bool,
+    exact_branch: bool,
+    force_requested: bool,
+    widened_refspec: bool,
+    fetch_requested: bool,
+    retry_requested: bool,
+    identity_rechecked: bool,
+    operation_state_clear: bool,
+    target_unchanged: bool,
+    mechanism_conflict: bool,
+) -> bool:
+    """Accept only one unchanged named-remote, one-branch, non-force push."""
+    return bool(
+        type(target_count) is int
+        and target_count == 1
+        and configured_named_remote is True
+        and exact_branch is True
+        and force_requested is False
+        and widened_refspec is False
+        and fetch_requested is False
+        and retry_requested is False
+        and identity_rechecked is True
+        and operation_state_clear is True
+        and target_unchanged is True
+        and mechanism_conflict is False
+    )
+
+
+def ordinary_combined_commit_push_gate(
+    *,
+    authorization_current: bool,
+    actor_unchanged: bool,
+    repository_unchanged: bool,
+    branch_unchanged: bool,
+    configured_named_remote: bool,
+    target_unchanged: bool,
+    command_unchanged: bool,
+    staged_payload_matches: bool,
+    extra_or_unknown_staged_paths: bool,
+    operation_state_clear: bool,
+    non_force_policy_unchanged: bool,
+    force_requested: bool,
+    widened_refspec: bool,
+    target_count: int,
+    instruction_conflict: bool,
+    known_divergence: bool,
+) -> bool:
+    """Allow an ordinary combined commit/push only on concrete current facts.
+
+    Route selection is deliberately absent: an Axiom no-match neither grants nor
+    denies this host-native action and cannot manufacture a repository conflict.
+    """
+    return bool(
+        authorization_current is True
+        and actor_unchanged is True
+        and repository_unchanged is True
+        and branch_unchanged is True
+        and configured_named_remote is True
+        and target_unchanged is True
+        and command_unchanged is True
+        and staged_payload_matches is True
+        and extra_or_unknown_staged_paths is False
+        and operation_state_clear is True
+        and non_force_policy_unchanged is True
+        and force_requested is False
+        and widened_refspec is False
+        and type(target_count) is int
+        and target_count == 1
+        and instruction_conflict is False
+        and known_divergence is False
+    )
+
+
+def lightweight_push_arguments(
+    arguments: tuple[str, ...],
+    named_remote: str,
+    branch: str,
+) -> bool:
+    """Require the user's ordinary four-argument named-remote push form."""
+    return bool(
+        safe_git_operand("remote", named_remote, True)
+        and branch
+        and safe_git_operand("ref", f"refs/heads/{branch}", True)
+        and arguments == ("git", "push", named_remote, branch)
+    )
+
+
+def lightweight_push_outcome(
+    push_status: str,
+    *,
+    owning_remote_query_count: int,
+    queried_tip_matches_final: bool | None,
+) -> str:
+    """Classify completion from Git first and one query only if ambiguous."""
+    if type(owning_remote_query_count) is not int:
+        return "unknown"
+    if push_status == "success":
+        return (
+            "pass"
+            if owning_remote_query_count == 0 and queried_tip_matches_final is None
+            else "unknown"
+        )
+    if push_status == "rejected":
+        return (
+            "fail"
+            if owning_remote_query_count == 0 and queried_tip_matches_final is None
+            else "unknown"
+        )
+    if push_status != "ambiguous" or owning_remote_query_count != 1:
+        return "unknown"
+    if queried_tip_matches_final is True:
+        return "pass"
+    if queried_tip_matches_final is False:
+        return "fail"
+    return "unknown"
+
+
 def safe_git_operand(
     kind: str,
     value: str,

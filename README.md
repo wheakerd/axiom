@@ -127,22 +127,26 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.3` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.4` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, or final post-merge host observation. The
-published v0.8.2 observation remains separate release evidence.
+published v0.8.3 observation remains separate release evidence. Phase 3A's
+route-only passes and terminal behavior observation, and Phase 3B's terminal
+behavior observation, bind the prior v0.8.4 patch only; the revised candidate
+has not been observed by a host.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
 immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.8.3 gate is
-6,293 bytes, 805 words, 114 lines, one direct reference, and an estimated 1,574
-tokens. Its cumulative increase of 394 bytes, 48 words, seven lines, zero
-references, and 99 estimated tokens reaches both review thresholds and is
-explicitly reviewed as a narrow publication-only routing boundary.
+Markdown surface; it is not an exact token or credit count. The v0.8.4 gate is
+7,530 bytes, 974 words, 133 lines, one direct reference, and an estimated 1,883
+tokens. Its cumulative increase of 1,631 bytes, 217 words, 26 lines, zero
+references, and 408 estimated tokens reaches both review thresholds and is
+reviewed as the narrow host-native Git boundary, explicit no-route staged-state
+rule, and direct-reference split.
 
-The [routing evaluation corpus](evals/README.md) makes 65 host-independent
+The [routing evaluation corpus](evals/README.md) makes 67 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
 historical 13-case Codex benchmark and nine labeled observations remain bound
 to v1. The 17-case `codex-core-v2` benchmark has one immutable v0.8.0 Codex
@@ -459,7 +463,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.3 release notes](docs/releases/v0.8.3.md):
+- [Changelog](CHANGELOG.md) and [v0.8.4 release notes](docs/releases/v0.8.4.md):
   release history and version-specific evidence.
 
 ## Contributing

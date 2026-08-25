@@ -102,10 +102,10 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
 - `confirm-external-action` freezes an actor, target, payload, disclosure,
   cost, count, and retry envelope before one authorized external effect, then
   verifies the result through the owning external system.
-- `traceable-git-submit` separates direct history-preserving submission from
-  checkpoint, baseline, consolidation, one-final submission, and recovery
-  chains. Direct push loads only repository/target guidance and creates no
-  Axiom metadata.
+- `traceable-git-submit` separates an explicitly invoked lightweight direct
+  submission from checkpoint, baseline, consolidation, hardened, multi-target,
+  one-final, and recovery chains. The simple phase loads only its parent-owned
+  `direct-submit.md`; ordinary named-remote pushes load no Axiom Git Skill.
 - `reversible-system-change` loads preflight and rollback guidance for plans,
   non-mutating rehearsals, and separately authorized isolated restore
   rehearsals. It adds the execution reference only for a complete authorized
@@ -133,7 +133,8 @@ See the [Trust Model](trust-model.md).
 When no skill clearly applies, `using-axiom` tells the agent to continue
 normally without mentioning Axiom. That path is a first-class outcome, not a
 fallback error. It keeps ordinary source edits, tests, explanations, status
-queries, and local Git staging or commits in the host's normal workflow.
+queries, local Git staging or commits, and named-remote non-force pushes in the
+host's normal workflow.
 
 ## Lifecycle And Updates
 

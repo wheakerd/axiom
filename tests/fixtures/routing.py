@@ -124,10 +124,143 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "authorization": frozenset({"read", "metadata-write", "commit"}),
     },
     {
+        "name": "baseline-metadata-audit",
+        "request": "Audit the traceable Git baseline metadata without changing it.",
+        "route": "traceable-git-submit",
+        "phase": "baseline",
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/baseline-and-preflight.md",
+        ),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "traceable-workflow-audit",
+        "request": "Audit this traceable Git workflow without changing metadata.",
+        "route": "traceable-git-submit",
+        "phase": "baseline",
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/baseline-and-preflight.md",
+        ),
+        "authorization": frozenset({"read"}),
+    },
+    {
         "name": "direct-push",
         "request": "Push the current Git branch without rewriting history.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "ordinary-named-remote-push-no-match",
+        "request": "Commit the staged change and git push origin main.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read", "edit"}),
+    },
+    {
+        "name": "explicit-lightweight-direct-push",
+        "request": "$traceable-git-submit: git push origin main once without force.",
         "route": "traceable-git-submit",
         "phase": "direct-submit",
+        "references": ("references/direct-submit.md",),
+        "authorization": frozenset({"read", "network-push"}),
+    },
+    {
+        "name": "stale-tracking-mention-no-match",
+        "request": "Explain why this local tracking ref is stale without pushing.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "stale-tracking-live-baseline-direct-push",
+        "request": (
+            "Push this branch once without force. The local tracking ref is stale, "
+            "and the live remote tip is a verified ancestor of HEAD."
+        ),
+        "route": "traceable-git-submit",
+        "phase": "direct-submit",
+        "references": ("references/direct-submit.md",),
+        "authorization": frozenset({"read", "network-push"}),
+    },
+    {
+        "name": "checkpoint-consolidation",
+        "request": (
+            "Consolidate the authorized unpublished checkpoints into one final "
+            "commit without pushing."
+        ),
+        "route": "traceable-git-submit",
+        "phase": "consolidation",
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/baseline-and-preflight.md",
+            "references/checkpoint-provenance.md",
+            "references/commit-construction.md",
+            "references/consolidation-and-push.md",
+        ),
+        "authorization": frozenset({"read", "metadata-write", "commit"}),
+    },
+    {
+        "name": "checkpoint-consolidation-and-push",
+        "request": (
+            "Consolidate the authorized unpublished checkpoints into one final "
+            "commit and push it once."
+        ),
+        "route": "traceable-git-submit",
+        "phase": "consolidation",
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/baseline-and-preflight.md",
+            "references/checkpoint-provenance.md",
+            "references/commit-construction.md",
+            "references/consolidation-and-push.md",
+            "references/repository-and-remote-targets.md",
+            "references/post-consolidation-recovery.md",
+        ),
+        "authorization": frozenset(
+            {"read", "metadata-write", "commit", "network-push"}
+        ),
+    },
+    {
+        "name": "checkpoint-recovery",
+        "request": "Recover the interrupted traceable checkpoint workflow without pushing.",
+        "route": "traceable-git-submit",
+        "phase": "recovery",
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/baseline-and-preflight.md",
+            "references/checkpoint-provenance.md",
+            "references/post-consolidation-recovery.md",
+        ),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "checkpoint-remote-recovery",
+        "request": (
+            "Recover the interrupted traceable checkpoint workflow with remote "
+            "verification and an authorized push retry."
+        ),
+        "route": "traceable-git-submit",
+        "phase": "recovery",
+        "references": (
+            "references/safe-git-values-and-metadata.md",
+            "references/baseline-and-preflight.md",
+            "references/checkpoint-provenance.md",
+            "references/post-consolidation-recovery.md",
+            "references/repository-and-remote-targets.md",
+        ),
+        "authorization": frozenset({"read", "network-push"}),
+    },
+    {
+        "name": "hardened-multi-target-push",
+        "request": "Perform the authorized hardened multi-target Git push without force.",
+        "route": "traceable-git-submit",
+        "phase": "hardened-submit",
         "references": (
             "references/safe-git-values-and-metadata.md",
             "references/repository-and-remote-targets.md",
@@ -350,7 +483,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "name": "agent-plugin-git-owner",
         "request": "Commit, tag, and push the already-prepared plugin release.",
         "route": "traceable-git-submit",
-        "phase": "direct-submit",
+        "phase": "hardened-submit",
         "references": (
             "references/safe-git-values-and-metadata.md",
             "references/repository-and-remote-targets.md",

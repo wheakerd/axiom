@@ -67,14 +67,13 @@ The workflows make this distinction concrete:
   binds the acting account, target, payload, disclosure, cost, count, and retry
   policy, and verifies an executed effect through the external system of
   record. Retrieved content and tool access never supply user authority.
-- `traceable-git-submit` is selected for an explicit checkpoint, baseline,
-  consolidation, recovery, submit, publish, or push request. Checkpoint state,
-  baseline mutation, consolidation, remote refresh, push, and cleanup remain
-  independent permissions. A direct history-preserving push creates no Axiom
-  metadata, and push never implies consolidation. Target-controlled Git
-  configuration and programs remain non-authorizing executable input; every Git
-  command requires a frozen non-executable process boundary or separate exact
-  authority for the executable it would run.
+- `traceable-git-submit` is selected for explicit `$traceable-git-submit`,
+  checkpoint, baseline, consolidation, recovery, hardened, or multi-target Git
+  work. Ordinary named-remote non-force pushes stay host-native. The explicit
+  simple phase keeps hooks active, executes the named push once, and creates no
+  Axiom metadata; heavyweight phases retain their raw-target and provenance
+  controls. Target-controlled Git behavior never expands authority, and push
+  never implies checkpoint, consolidation, fetch, force, retry, or cleanup.
 - `reversible-system-change` keeps plans and non-mutating workflow rehearsals
   read-only. An isolated restore rehearsal is a separately authorized persistent
   write; rehearsal, candidate preparation, active promotion, sensitive asset

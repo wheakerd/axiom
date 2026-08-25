@@ -65,19 +65,21 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.3, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
-its future signed merge commit or final post-merge observation. Its new
-stale-tracking case is static contract evidence only; a separately labeled
-single-case diagnostic and a fresh complete release-bound observation remain
-`NOT-RUN`. The earlier signed v0.8.3 candidate at
-`ca9ae1803a806042866b0c4d288791f0f32df8f1` and its two external terminal
-`UNKNOWN` records remain immutable unreleased history. A
+For v0.8.4, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+its future signed merge commit or final post-merge observation. The host-native
+ordinary-push boundary and explicit lightweight direct-submit cases are static
+contract evidence only. Phase 3A's route diagnostics and Phase 3A/3B terminal
+behavior observations bind the prior patch, not the revised candidate; a fresh
+focused diagnostic and complete release-bound observation remain `NOT-RUN`.
+The published v0.8.3 observation and the earlier
+signed v0.8.3 candidate's two external terminal `UNKNOWN` records remain
+separate immutable history. A
 prior-release Codex observation also exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.8.3.
+forward to v0.8.4.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -136,24 +138,23 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.3.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.4.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.3 candidate gate is 6,293 bytes with SHA-256
-`5e852f5cc1edc3a2fdb19538b2e8bec982d9e959012cb426ae91bb96ccfef866`.
+The v0.8.4 candidate gate is 7,530 bytes with SHA-256
+`1ce3fa0574c76356c1095c75ec8a7e9ba5d1211924f2f08fdb88319f1c25b01b`.
 
-The candidate has 805 whitespace-delimited words, 114 logical lines, and one
-unique direct reference. Its 1,574 `ceil(bytes / 4)` value is an estimate only
+The candidate has 974 whitespace-delimited words, 133 logical lines, and one
+unique direct reference. Its 1,883 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
-394 bytes, 48 words, seven lines, zero references, and 99 estimated tokens.
+1,631 bytes, 217 words, 26 lines, zero references, and 408 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed and justifies it as the narrow publication-only negative boundary.
-It separately preserves the independent corrected-preflight v0.8.2 Case 1
-diagnostic: 12,278 input tokens, 1,920 cached input tokens, and 13,139
-milliseconds. Its 69 output tokens are outside schema v1. These are historical
-diagnostic metrics, not current v0.8.3 host or lifecycle evidence.
+reviewed and justifies the host-native Git boundary, explicit staged-state rule,
+and direct-reference split. Phase 3A/3B observations bind the prior patch and
+remain external; the revised candidate's host usage and lifecycle are
+`NOT-RUN`.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -169,7 +170,7 @@ count.
 Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
 requires review and justification, not automatic rejection. Any actual
 reduction requires equivalent before/after `PASS` evidence for both routed and
-no-route cases over the same fixed 65-case workload. Static validation and host
+no-route cases over the same fixed 67-case workload. Static validation and host
 observation remain separate evidence classes. No model, reasoning, hook,
 telemetry, runtime dependency, safety, authorization, or stop rule changed to
 obtain the measured result.
@@ -177,12 +178,13 @@ obtain the measured result.
 ## Routing Corpus And Host Benchmarks
 
 The [routing evaluation corpus](../evals/README.md) is a second, narrower
-evidence surface for route selection. Its 65 host-independent JSONL records are
+evidence surface for route selection. Its 67 host-independent JSONL records are
 reviewable expectations, not observed model behavior. The frozen 47-case v1
 corpus and 13-case `codex-core-v1` benchmark remain bound to the historical
-six-route contract. The successor v2 contract contains 18 cases for the
-seven-route contract, including one append-only stale-tracking direct-push case
-outside the unchanged 17-case `codex-core-v2` benchmark at repeat count one.
+six-route contract. The successor v2 contract contains 20 cases for the
+seven-route contract, including the stale-tracking case plus two append-only
+v0.8.4 direct-submit boundary cases outside the unchanged 17-case
+`codex-core-v2` benchmark.
 
 The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
 cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
@@ -387,6 +389,25 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.4` reports:
+
+- synchronized `0.8.4` manifests and a host-native ordinary named-remote push
+  boundary;
+- one lightweight parent-owned reference for explicit simple direct submit,
+  with one push, hooks active, zero query after conclusive Git output, and at
+  most one owning-remote query after material ambiguity;
+- two append-only schema-v2 cases and a 67-case static workload, while both
+  frozen benchmarks retain all 30 memberships;
+- deterministic stale-tracking, divergence, drift, force, multi-target,
+  fetch/retry separation, expected-staged-state continuation, and concrete
+  pre-commit conflict coverage;
+- external Phase 3A/3B observations bound to the prior patch, with the revised
+  candidate still host-unobserved; and
+- `STATIC-ONLY` current status, actual post-compaction lifecycle `NOT-RUN`, and
+  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
+
+See the [v0.8.4 release notes](releases/v0.8.4.md).
 
 The Git record for `v0.8.3` reports:
 

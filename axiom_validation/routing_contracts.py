@@ -141,14 +141,70 @@ def route_contract(request: str) -> dict[str, Any]:
             normalized,
         )
     )
-    git = bool(
-        re.search(r"\b(?:checkpoint|baseline metadata|consolidat\w*|one-final|recover\w*)\b", normalized)
-        or re.search(r"\b(?:submit|publish|push)\b.*\b(?:git|branch|changes?|history)\b", normalized)
-        or re.search(r"\b(?:git|branch)\b.*\b(?:submit|publish|push)\b", normalized)
+    explicit_traceable = "$traceable-git-submit" in normalized
+    checkpoint_git = bool(re.search(r"\bcheckpoint\b", normalized))
+    baseline_git = bool(
+        re.search(r"\bbaseline metadata\b", normalized)
+        or (
+            "traceable git workflow" in normalized
+            and re.search(r"\b(?:audit|review)\b", normalized)
+        )
+    )
+    consolidation_git = bool(re.search(r"\b(?:consolidat\w*|one-final)\b", normalized))
+    recovery_git = bool(re.search(r"\brecover\w*\b", normalized))
+    push_prohibited = bool(
+        re.search(r"\b(?:do not|don't|without)\s+push\w*\b", normalized)
+    )
+    consolidation_push = bool(
+        consolidation_git
+        and re.search(r"\b(?:push|submit)\w*\b", normalized)
+        and not push_prohibited
+    )
+    recovery_remote = bool(
+        recovery_git
+        and re.search(
+            r"\b(?:remote verification|remote binding|authorized push retry)\b",
+            normalized,
+        )
+    )
+    recovery_push_retry = bool(
+        recovery_git and re.search(r"\bauthorized push retry\b", normalized)
+    )
+    hardened_git = bool(
+        re.search(r"\b(?:hardened|raw-target|multi-target|multiple targets?|force[ -]push|rewrite history)\b", normalized)
         or bool(
             re.search(r"\bcommit\b.*\btag\b.*\bpush\b", normalized)
             and re.search(r"\bplugin release\b", normalized)
         )
+    )
+    stale_tracking_ref = bool(
+        re.search(
+            r"\b(?:stale (?:local )?(?:remote-)?tracking ref|"
+            r"(?:local )?(?:remote-)?tracking ref (?:is )?stale)\b",
+            normalized,
+        )
+    )
+    verified_live_remote_ancestor = bool(
+        re.search(
+            r"\blive remote (?:tip|commit)\b.*\bverified ancestor\b",
+            normalized,
+        )
+        or re.search(
+            r"\bverified\b.*\blive remote (?:tip|commit)\b.*\bancestor\b",
+            normalized,
+        )
+    )
+    direct_git = bool(
+        explicit_traceable
+        or (stale_tracking_ref and verified_live_remote_ancestor)
+    )
+    git = bool(
+        checkpoint_git
+        or baseline_git
+        or consolidation_git
+        or recovery_git
+        or hardened_git
+        or direct_git
     )
     persistent = bool(
         (
@@ -279,7 +335,51 @@ def route_contract(request: str) -> dict[str, Any]:
         }
 
     if git:
-        if "checkpoint" in normalized:
+        if recovery_git:
+            recovery_references = (
+                "references/safe-git-values-and-metadata.md",
+                "references/baseline-and-preflight.md",
+                "references/checkpoint-provenance.md",
+                "references/post-consolidation-recovery.md",
+            )
+            if recovery_remote:
+                recovery_references += (
+                    "references/repository-and-remote-targets.md",
+                )
+            return {
+                "route": "traceable-git-submit",
+                "phase": "recovery",
+                "references": recovery_references,
+                "authorization": (
+                    frozenset({"read", "network-push"})
+                    if recovery_push_retry
+                    else frozenset({"read"})
+                ),
+            }
+        if consolidation_git:
+            consolidation_references = (
+                "references/safe-git-values-and-metadata.md",
+                "references/baseline-and-preflight.md",
+                "references/checkpoint-provenance.md",
+                "references/commit-construction.md",
+                "references/consolidation-and-push.md",
+            )
+            if consolidation_push:
+                consolidation_references += (
+                    "references/repository-and-remote-targets.md",
+                    "references/post-consolidation-recovery.md",
+                )
+            return {
+                "route": "traceable-git-submit",
+                "phase": "consolidation",
+                "references": consolidation_references,
+                "authorization": (
+                    frozenset({"read", "metadata-write", "commit", "network-push"})
+                    if consolidation_push
+                    else frozenset({"read", "metadata-write", "commit"})
+                ),
+            }
+        if checkpoint_git:
             return {
                 "route": "traceable-git-submit",
                 "phase": "checkpoint",
@@ -291,13 +391,37 @@ def route_contract(request: str) -> dict[str, Any]:
                 ),
                 "authorization": frozenset({"read", "metadata-write", "commit"}),
             }
+        if baseline_git:
+            baseline_write = bool(
+                re.search(r"\b(?:create|update|write|record)\w*\b", normalized)
+            )
+            return {
+                "route": "traceable-git-submit",
+                "phase": "baseline",
+                "references": (
+                    "references/safe-git-values-and-metadata.md",
+                    "references/baseline-and-preflight.md",
+                ),
+                "authorization": (
+                    frozenset({"read", "metadata-write"})
+                    if baseline_write
+                    else frozenset({"read"})
+                ),
+            }
+        if hardened_git:
+            return {
+                "route": "traceable-git-submit",
+                "phase": "hardened-submit",
+                "references": (
+                    "references/safe-git-values-and-metadata.md",
+                    "references/repository-and-remote-targets.md",
+                ),
+                "authorization": frozenset({"read", "network-push"}),
+            }
         return {
             "route": "traceable-git-submit",
             "phase": "direct-submit",
-            "references": (
-                "references/safe-git-values-and-metadata.md",
-                "references/repository-and-remote-targets.md",
-            ),
+            "references": ("references/direct-submit.md",),
             "authorization": frozenset({"read", "network-push"}),
         }
 

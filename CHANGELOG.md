@@ -5,9 +5,42 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.3 candidate for Issue #35. It preserves the published
-v0.8.2 release and every terminal observation without claiming a current host
+The active tree is a v0.8.4 candidate for Issue #37. It preserves the published
+v0.8.3 release and every terminal observation without claiming a current host
 pass.
+
+## 0.8.4 - unreleased candidate
+
+### Changed
+
+- Kept ordinary named-remote non-force commit and push requests host-native, so
+  `git push origin main` does not load an Axiom Git Skill. A no-match result is
+  neither denial nor authorization, and an exact expected staged payload does
+  not manufacture a repository-state conflict.
+- Added one parent-owned lightweight direct-submit reference for an explicit
+  `$traceable-git-submit` simple push. It preserves the named remote, hooks, one
+  push, normal Git result, and normal tracking update, with at most one query
+  only when the result is materially ambiguous.
+- Kept raw-target, fingerprint, compare-and-swap, backup, consolidation,
+  recovery, force, and multi-target controls in their existing heavyweight
+  phases. Predictable material push conflicts stop before a combined commit.
+- Added deterministic hook, stale-tracking A/B/C, divergence, drift, force,
+  multi-target, retry, fetch-separation, and pre-commit conflict coverage.
+- Added two schema-v2 cases outside the frozen benchmarks, advanced both
+  manifests to `0.8.4`, and updated the static workload to 67 cases while
+  preserving all 30 benchmark memberships.
+
+### Evidence Boundary
+
+- The checked-in release status remains `STATIC-ONLY`. No v0.8.4 host or
+  lifecycle observation binds the revised candidate, and it performs no remote
+  action. Phase 3A's route-only passes and terminal behavior observation, and
+  Phase 3B's terminal behavior observation, bind the prior patch only and remain
+  separate external evidence.
+- Authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`; actual
+  post-compaction lifecycle observation remains `NOT-RUN`.
+
+See [the v0.8.4 release notes](docs/releases/v0.8.4.md).
 
 ## 0.8.3 - unreleased candidate
 
