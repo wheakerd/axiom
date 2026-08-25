@@ -40,6 +40,40 @@ def direct_branch_ref_gate(
     )
 
 
+def direct_push_fast_forward_gate(
+    live_oid: str,
+    final_oid: str,
+    object_format: str,
+    *,
+    target_count: int,
+    configured_target: bool,
+    exact_ref: bool,
+    force_requested: bool,
+    live_object_type: str,
+    live_is_ancestor: bool,
+    identity_rechecked: bool,
+    operation_state_clear: bool,
+    target_unchanged: bool,
+    live_oid_unchanged: bool,
+) -> bool:
+    """Accept one verified live non-force update without trusting tracking state."""
+    return bool(
+        type(target_count) is int
+        and target_count == 1
+        and configured_target is True
+        and exact_ref is True
+        and force_requested is False
+        and safe_git_oid(live_oid, object_format)
+        and safe_git_oid(final_oid, object_format)
+        and live_object_type == "commit"
+        and live_is_ancestor is True
+        and identity_rechecked is True
+        and operation_state_clear is True
+        and target_unchanged is True
+        and live_oid_unchanged is True
+    )
+
+
 def safe_git_operand(
     kind: str,
     value: str,

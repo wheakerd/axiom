@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.2",
-    "tag": "v0.8.2",
+    "version": "0.8.3",
+    "tag": "v0.8.3",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "Signed v0.8.2 batches remain terminal FAIL at Case 1; the latest stopped on the old hook-trust bypass ConfigWarning. The repaired setup requires native disposable hook trust before a fresh complete batch. No complete v0.8.2 host pass or lifecycle evidence exists."
+      "reason": "The v0.8.3 stale-tracking fix has deterministic static and disposable Git behavior coverage, but no release-bound v0.8.3 Codex observation or lifecycle evidence exists yet. The released v0.8.2 result and every earlier terminal outcome remain separate immutable evidence."
     },
     {
       "host": "claude-code",

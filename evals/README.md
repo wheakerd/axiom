@@ -106,15 +106,13 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For the v0.8.2 repair, the 64-case combined corpus, 30 total benchmark memberships, and
-11 preserved observations pass static validation. The sole immutable v0.8.0
-`codex-core-v2` attempt is terminal `FAIL`; authenticated Claude Code is
-`UNAVAILABLE / NOT-RUN`. F4 and F5 remain separate candidate diagnostics. The
-later v0.8.2 release-bound batch also remains terminal `FAIL`; one independent
-corrected-preflight Case 1 `PASS` at repeat count one is recorded only as a
-diagnostic. Two later complete-batch attempts against the signed unreleased
-v0.8.3 candidate remain external terminal `UNKNOWN` records. No final v0.8.2
-host result or Stage 3 pass is inferred.
+For the v0.8.3 candidate, the 65-case combined corpus, 30 total benchmark
+memberships, and 11 preserved observations pass static validation. The new
+stale-tracking case has an empty `benchmarkSets` array, so both frozen benchmark
+memberships remain unchanged. Historical v0.8.2 failures and diagnostics and
+the two external terminal `UNKNOWN` attempts against the earlier signed v0.8.3
+candidate remain distinct. The published v0.8.2 post-tag observation is an
+external Release asset; no current v0.8.3 host result is inferred from it.
 
 The explicit external mode validates one content-addressed post-merge record
 without changing aggregate behavior:
@@ -122,9 +120,9 @@ without changing aggregate behavior:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.2-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.2 \
-  --expected-tag v0.8.2 \
+  /absolute/path/axiom-v0.8.3-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.3 \
+  --expected-tag v0.8.3 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -411,7 +409,8 @@ installed snapshots. The batch therefore stopped `FAIL` after one call and
 categories are not inferred, and no raw response was retained. Scoped usage
 was 14,907 input, 1,920 cached input, and 116 output tokens; credits were not
 exposed. This is failed Stage 3 evidence, not route acceptance or a route fix.
-GitHub Issue #34 remains open.
+GitHub Issue #34 later closed only after the repaired v0.8.2 release and its
+content-addressed observation passed the required checks.
 
 The paired Claude Code record is
 `claude-code-v0-8-0-linux-codex-core-v2-unavailable`. No authenticated
@@ -438,9 +437,9 @@ version `0.8.1`, tag null, commit
 exactly to that commit and tree. F5 does not become a 17-case schema-v2 record,
 does not claim final v0.8.2 evidence, and does not change F4.
 
-The subsequent release-bound batch against exact v0.8.2 remains terminal
-`FAIL`. Case 1 encountered unexpected tool use, the batch made no retry, and
-Cases 2-17 remain `NOT-RUN`; v0.8.2 was not tagged. One later independent
+The earlier release-bound batch against exact v0.8.2 remains terminal `FAIL`.
+Case 1 encountered unexpected tool use, the batch made no retry, and Cases 2-17
+remain `NOT-RUN` for that batch. One later independent
 diagnostic used the corrected standalone `:read-only` permission profile and
 ran exact Case 1 once (`repeatCount: 1`, call count one). It returned the
 expected route, zero clarification, false model mutation fields, zero tool
@@ -449,14 +448,12 @@ and diagnostic pass are separate one-sample observations showing variance.
 The diagnostic is not materialized as a schema-v2 result and is not Stage 3
 acceptance.
 
-Final acceptance uses a new complete 17-call batch against the exact signed
-merge commit before any tag is created. A failure stops without minting a tag.
-On pass, create immutable `v0.8.2` at that same commit, finalize the external
-record with the exact tag, commit, and tree, validate its content-addressed
-filename, and upload it as the Release asset with its full SHA-256 in Release
-and Issue text. The signed unreleased v0.8.3 candidate and its two external
-terminal `UNKNOWN` attempts remain immutable history. Issue #34 closes only
-after the v0.8.2 asset and release checks pass.
+The repaired v0.8.2 sequence later completed with a new 17-call pass against
+the exact signed merge, immutable `v0.8.2` tag, and content-addressed Release
+asset before Issue #34 closed. The signed earlier v0.8.3 candidate and its two
+external terminal `UNKNOWN` attempts remain immutable history. The current
+v0.8.3 candidate requires its own focused diagnostic and fresh complete
+release-bound observation before any tag or Release.
 
 The preserved initial Codex run is
 `codex-v0-7-7-linux-codex-core-v1-initial`; it binds the schema used for that

@@ -92,7 +92,7 @@ rewriting local state.
 | Reduce Codex usage overhead | `optimize-codex-usage` | Preserve the required quality and safety bar; never invent hidden usage data |
 | Review an Axiom-guided task | `review-axiom-task` | Keep the retrospective read-only and label unavailable history |
 | Confirm a consequential external action | `confirm-external-action` | Bind actor, target, payload, disclosure, count, and retry semantics before one verified effect |
-| Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup as independent permissions |
+| Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup independent; use the live remote tip for one verified non-force direct push |
 | Plan or execute a reversible persistent change | `reversible-system-change` | Separate planning, rehearsal, promotion, rollback, and destructive retention authority |
 
 Version 0.8.0 implements the accepted
@@ -127,21 +127,22 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.2` is `STATIC-ONLY`: the checked-in repair candidate cannot bind itself to its
-future signed merge commit, tag, or final post-merge host observation.
+`0.8.3` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+future signed merge commit, tag, or final post-merge host observation. The
+published v0.8.2 observation remains separate release evidence.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
 immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.8.2 gate is
+Markdown surface; it is not an exact token or credit count. The v0.8.3 gate is
 6,293 bytes, 805 words, 114 lines, one direct reference, and an estimated 1,574
 tokens. Its cumulative increase of 394 bytes, 48 words, seven lines, zero
 references, and 99 estimated tokens reaches both review thresholds and is
 explicitly reviewed as a narrow publication-only routing boundary.
 
-The [routing evaluation corpus](evals/README.md) makes 64 host-independent
+The [routing evaluation corpus](evals/README.md) makes 65 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
 historical 13-case Codex benchmark and nine labeled observations remain bound
 to v1. The 17-case `codex-core-v2` benchmark has one immutable v0.8.0 Codex
@@ -188,10 +189,9 @@ correctly treated as a terminal error item; Cases 2-17 remain `NOT-RUN`. The
 repaired setup byte-verifies the installed hook, trusts its native public hash
 inside only the disposable `CODEX_HOME`, and verifies `Trusted` through
 `hooks/list` before any model call. It also keeps that owner-only `CODEX_HOME`
-outside the system temporary directory. Issue #34 remains open until a fresh
-complete 17-call observation against the next signed v0.8.2 repair merge is
-validated, bound to immutable tag `v0.8.2`, and attached as a
-content-addressed release asset.
+outside the system temporary directory. The subsequent signed repair, complete
+17-call pass, immutable `v0.8.2` tag, Release asset, and release checks
+completed Issue #34 without rewriting any earlier terminal record.
 
 The [Codex exec JSONL observer taxonomy v2](evals/codex-exec-jsonl-observer-v2.json)
 binds all eight public event types and nine item types for Codex CLI `0.149.1`
@@ -281,7 +281,11 @@ does not authorize execution, and an uncertain result is not retried blindly.
 An explicit Git submit, publish, or push selects `traceable-git-submit`, while
 checkpoint creation, metadata, consolidation, remote refresh, push, and cleanup
 remain separate actions. A direct push preserves history and creates no Axiom
-metadata. Read the
+metadata. For one configured non-force target, the immediately queried live
+remote commit owns the baseline and must be an ancestor of the final local
+commit; a stale tracking ref is informational and does not require fetch or
+tracking-ref mutation. Identity, operation state, target, and the live tip are
+rechecked immediately before the one push. Read the
 [Architecture](docs/architecture.md) and [Trust Model](docs/trust-model.md) for
 the full boundary.
 
@@ -455,7 +459,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.2 release notes](docs/releases/v0.8.2.md):
+- [Changelog](CHANGELOG.md) and [v0.8.3 release notes](docs/releases/v0.8.3.md):
   release history and version-specific evidence.
 
 ## Contributing
