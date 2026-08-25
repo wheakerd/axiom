@@ -9,6 +9,7 @@ from axiom_validation.git_contracts import (
     CLEANUP_AUTHORITY_FIELDS,
     all_evidence,
     direct_branch_ref_gate,
+    direct_push_fast_forward_gate,
     safe_git_execution_envelope,
     safe_git_oid,
     safe_git_operand,
@@ -28,6 +29,7 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "non-executable Git configuration and environment boundary",
             "cleanupReady",
             "Cleanup requires separate exact authority",
+            "the verified live target owns the non-force baseline",
         ),
         "references/safe-git-values-and-metadata.md": (
             "literal argument-vector element",
@@ -59,6 +61,9 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "Bypass pre-push hooks unless their exact frozen identity and action are separately authorized",
             "<helper>::<address>",
             "`protocol.allow=never`",
+            "git merge-base --is-ancestor <live-baseline-sha> <final-sha>",
+            "The local tracking OID remains informational",
+            "liveBaselineSha",
         ),
         "references/post-consolidation-recovery.md": (
             "cleanupReady",
@@ -173,6 +178,11 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         skill_root / "references/repository-and-remote-targets.md",
         (
             "## Direct Submit Preflight",
+            "Record the tracking OID and\nlocal divergence as informational state",
+            "bind\n`liveBaselineSha` only from the verified live target",
+            "git merge-base --is-ancestor <live-baseline-sha> <final-sha>",
+            "The local tracking OID remains informational",
+            "require exactly one result equal to the bound `liveBaselineSha`",
             push_command,
             "the exact frozen pre-push hook identity and action",
             "query every authorized target",
@@ -368,6 +378,44 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         if direct_branch_ref_gate(classification, resolved_oid, frozen_head, rechecked) != expected:
             failures.append(f"direct branch-ref fixture {name!r} returned the wrong gate result")
 
+    direct_push_defaults = {
+        "target_count": 1,
+        "configured_target": True,
+        "exact_ref": True,
+        "force_requested": False,
+        "live_object_type": "commit",
+        "live_is_ancestor": True,
+        "identity_rechecked": True,
+        "operation_state_clear": True,
+        "target_unchanged": True,
+        "live_oid_unchanged": True,
+    }
+    direct_push_scenarios = (
+        ("stale-tracking-live-fast-forward", None, True),
+        ("multiple-targets-stop", ("target_count", 2), False),
+        ("force-stops", ("force_requested", True), False),
+        ("nonlocal-live-object-stops", ("live_object_type", "missing"), False),
+        ("divergence-stops", ("live_is_ancestor", False), False),
+        ("identity-drift-stops", ("identity_rechecked", False), False),
+        ("operation-state-stops", ("operation_state_clear", False), False),
+        ("target-drift-stops", ("target_unchanged", False), False),
+        ("live-drift-stops", ("live_oid_unchanged", False), False),
+    )
+    for name, change, expected in direct_push_scenarios:
+        scenario = dict(direct_push_defaults)
+        if change is not None:
+            scenario[change[0]] = change[1]
+        if (
+            direct_push_fast_forward_gate(
+                "b" * 40,
+                "c" * 40,
+                "sha1",
+                **scenario,
+            )
+            != expected
+        ):
+            failures.append(f"direct push fixture {name!r} returned the wrong gate result")
+
     transport_scenarios = (
         ("https", "https://example.test/org/repo.git", True),
         ("ssh", "ssh://git@example.test/org/repo.git", True),
@@ -424,6 +472,7 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         len(operand_scenarios)
         + len(oid_scenarios)
         + len(branch_ref_scenarios)
+        + len(direct_push_scenarios)
         + len(transport_scenarios)
         + len(execution_envelope_scenarios)
         + len(CLEANUP_AUTHORITY_FIELDS)

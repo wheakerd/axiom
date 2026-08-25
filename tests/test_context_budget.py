@@ -45,9 +45,9 @@ class ContextBudgetTests(unittest.TestCase):
         codex_metric = current_record["hostMetrics"][0]
         self.assertEqual("observed", codex_metric["status"])
         self.assertTrue(codex_metric["exactUsageExposed"])
-        self.assertEqual(279939, codex_metric["inputTokens"])
-        self.assertEqual(156288, codex_metric["cachedInputTokens"])
-        self.assertEqual(350053, codex_metric["wallClockMilliseconds"])
+        self.assertEqual(12278, codex_metric["inputTokens"])
+        self.assertEqual(1920, codex_metric["cachedInputTokens"])
+        self.assertEqual(13139, codex_metric["wallClockMilliseconds"])
         self.assertIsNone(codex_metric["credits"])
         comparison = current_record["comparison"]
         self.assertTrue(comparison["absoluteThresholdReached"])
@@ -205,8 +205,8 @@ class ContextBudgetTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertIn("scoped candidate F5 Codex usage is preserved", checked.stdout)
-        self.assertIn("without claiming v0.8.2 lifecycle evidence", checked.stdout)
+        self.assertIn("historical host usage is preserved", checked.stdout)
+        self.assertIn("without claiming current host or lifecycle evidence", checked.stdout)
 
 
 if __name__ == "__main__":

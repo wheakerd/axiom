@@ -25,16 +25,19 @@ escaping; a linked worktree is valid when Git resolves both identities.
 
 For a history-preserving submit, freeze object format, symbolic branch,
 upstream display/full tracking ref, `upstreamRemote`, `mergeRef`, `HEAD`,
-upstream OID, divergence, and operation-state paths. Resolve `pushRemote` under
-the next section. Use current Git facts, not Axiom cache or provenance, and
-recheck object format before network access.
+upstream OID, local divergence, and operation-state paths. Resolve `pushRemote`
+under the next section. Use current Git facts, not Axiom cache or provenance,
+and recheck object format before network access. Record the tracking OID and
+local divergence as informational state for this phase; neither owns the live
+network baseline.
 
 Stop on detached/unborn `HEAD`, missing upstream or push identity, a local-only
-push remote, behind/diverged history, an in-progress operation, or any target
-ref unequal to the observed upstream baseline. Set `baselineSha` to that
-baseline and `finalSha` to current `HEAD`. Uncommitted work is excluded: never
-stage, stash, clean, commit, or require a clean worktree merely to push existing
-commits. Never force-push on this route.
+push remote, or an in-progress operation. Do not stop solely because the local
+tracking ref is stale, missing an object already identified by the live target,
+or reports behind/diverged state. Set `finalSha` to current `HEAD`; bind
+`liveBaselineSha` only from the verified live target under the next gates.
+Uncommitted work is excluded: never stage, stash, clean, commit, or require a
+clean worktree merely to push existing commits. Never force-push on this route.
 
 ## Effective Push Identity
 
@@ -108,14 +111,23 @@ Direct push identity remains in memory. A consolidated record binds only under
 `post-consolidation-recovery.md`; never select a subset from a multi-target
 remote.
 
+For a direct push, query the sole target's exact `mergeRef` after inventory.
+Require exactly one full OID, require that object to exist locally as a commit,
+and require `git merge-base --is-ancestor <live-baseline-sha> <final-sha>` to
+succeed. Bind that OID as `liveBaselineSha`. Missing, unreadable, non-local,
+non-commit, or non-ancestor live state stops without fetch, tracking-ref
+mutation, push, or retry. The local tracking OID remains informational and is
+never compared with `liveBaselineSha` as a permission gate.
+
 ## Immediate Drift Gate
 
 Immediately before the first push, re-resolve push identity, re-enumerate
-targets, and require exact equality with frozen or bound fields. Query every
-target's `mergeRef`; require exactly one result equal to `baselineSha` from
-each before issuing any push. Missing, unreadable, changed, or moved state
-means zero pushes. Report only ordinal/fingerprint, escaped ref, and
-expected/observed OID.
+targets, and require exact equality with frozen or bound fields. Recheck
+operation state and the direct branch ref. Query every target's `mergeRef`;
+require exactly one result equal to the bound `liveBaselineSha` from each before
+issuing any push. Missing, unreadable, changed, moved, non-local, non-commit, or
+non-ancestor state means zero pushes. Report only ordinal/fingerprint, escaped
+ref, and expected/observed OID.
 
 ## Push And Verification
 
@@ -134,7 +146,8 @@ tracking-ref update is insufficient.
 
 On disagreement, retain backup/provenance state, do not update baseline, and
 do not retry automatically. Push authority never grants fetch; report `@{u}`
-unrefreshed unless separately refreshed. Direct push creates no Axiom metadata.
+unrefreshed unless separately refreshed. A direct push neither requires nor
+separately mutates its tracking ref and creates no Axiom metadata.
 
 ## Sensitive Reporting
 
