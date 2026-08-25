@@ -5,40 +5,44 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.2 hook-trust repair candidate. It does not relabel
-either signed candidate merge, rewrite any terminal observation, or claim a
-host pass.
+The active tree is a v0.8.3 candidate for Issue #35. It preserves the published
+v0.8.2 release and every terminal observation without claiming a current host
+pass.
 
-## 0.8.3 - unreleased candidate history
+## 0.8.3 - unreleased candidate
 
 ### Changed
 
-- Advanced both manifests together to `0.8.3` without changing the shared
-  Skill tree, routing contract, hooks, corpus, benchmarks, schemas, or
-  historical observations.
-- Added the successor routing-context record and rebound the existing external
-  17-case observation gate to `v0.8.3`.
+- Changed direct non-force push validation so the immediately queried live
+  remote tip owns the baseline while a local tracking ref remains
+  informational. A verified live commit must be an ancestor of the final local
+  commit, and identity, operation state, target, and live tip are rechecked
+  immediately before one push.
+- Preserved conservative stops for missing or non-local live objects,
+  divergence, force, multiple targets, drift, failed push, and ambiguous
+  verification. The route neither fetches nor updates a tracking ref merely
+  because it is stale.
+- Added one schema-v2 routing case outside both frozen benchmarks and a
+  deterministic bare-remote behavioral test for the stale-tracking
+  fast-forward case.
+- Advanced both manifests together to `0.8.3`, updated the 65-case routing
+  workload identity, and left both 13-case and 17-case benchmarks unchanged.
 
 ### Evidence Boundary
 
-- Preserved the unreleased v0.8.2 release-bound batch as terminal `FAIL`. It
-  stopped at Case 1 after unexpected tool use, made no retry, and left Cases
-  2-17 `NOT-RUN`.
-- Recorded one independent corrected-preflight Case 1 diagnostic against exact
-  v0.8.2 as `PASS`: repeat count one, one call, the expected route, zero
-  clarification, false model mutation fields, zero tool events or calls, and
-  unchanged protected snapshots. The separate one-sample outcomes demonstrate
-  observed variance; they are not a retry series or Stage 3 acceptance.
-- Two complete-batch attempts against the signed v0.8.3 candidate stopped at
-  Case 1 as external terminal `UNKNOWN` records. Their observer limitations do
-  not convert either attempt to pass, and no tag or Release was created.
+- The earlier signed v0.8.3 candidate and its two external terminal `UNKNOWN`
+  records remain immutable unreleased history; neither is relabeled or used as
+  current evidence.
+- The stale-tracking route case is static contract evidence only. A separate
+  single-case Codex diagnostic and a fresh complete release-bound observation
+  remain required before release.
 - Authenticated Claude Code remained `UNAVAILABLE / NOT-RUN`, and actual
   post-compaction behavior remained `NOT-RUN`.
 
 See [the v0.8.3 release notes](docs/releases/v0.8.3.md) for the diagnostic
 boundary and release gate.
 
-## 0.8.2 - unreleased repair candidate
+## 0.8.2 - 2026-08-24
 
 ### Changed
 
@@ -81,12 +85,13 @@ boundary and release gate.
   protected snapshots were valid, but the old hook-trust bypass necessarily
   emitted a startup `ConfigWarning`; the fail-closed JSONL observer correctly
   treated the resulting error item as terminal. Cases 2-17 remain `NOT-RUN`.
-- Issue #34 may close only after the final signed merge receives a complete
-  17-call Codex pass, an immutable v0.8.2 tag, and a validated
-  content-addressed release asset bound to that exact commit and tree.
+- The final signed repair merge received a complete 17-call Codex pass. The
+  immutable `v0.8.2` tag, GitHub Release, and content-addressed observation
+  asset bind that result to the released commit and tree; Issue #34 closed only
+  after those checks succeeded.
 
-See [the v0.8.2 release notes](docs/releases/v0.8.2.md) for the candidate
-evidence, context review, and post-merge acceptance sequence.
+See [the v0.8.2 release notes](docs/releases/v0.8.2.md) for the preserved
+candidate evidence, context review, and completed acceptance sequence.
 
 ## 0.8.1 - 2026-08-23
 

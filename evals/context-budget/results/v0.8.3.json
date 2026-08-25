@@ -108,13 +108,13 @@
       "staticAndHostEvidenceRemainDistinct": true
     },
     "workload": {
-      "caseCount": 64,
+      "caseCount": 65,
       "classification": "static-contract-workload-identity",
       "fileCount": 11,
       "noRouteCaseCount": 19,
       "path": "evals/routing",
-      "routedCaseCount": 45,
-      "sha256": "75606d98e5726eacad42e304c4270a1546fa6dbfb69f3481d21262383682ccd9"
+      "routedCaseCount": 46,
+      "sha256": "16b2c3a75b21d337adf51cf95ae54bea3f7657621ae5631d381d2c3abbdcc5a9"
     }
   },
   "scenarios": [

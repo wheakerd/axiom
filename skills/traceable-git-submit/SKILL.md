@@ -74,8 +74,11 @@ conceptual answer.
 - Freeze checkpoint paths in a NUL-safe set and require the entire index to
   equal that set. Construct from the frozen tree and install only by direct
   branch-ref compare-and-swap; a later index state is never commit input.
-- Treat the upstream tracking ref as baseline authority. Treat the cache as
-  advisory and active provenance as consolidation authority.
+- Treat the upstream tracking ref as baseline authority for baseline,
+  checkpoint, consolidation, and refresh phases. For a direct push, retain its
+  OID only as informational local state; the verified live target owns the
+  non-force baseline. Treat the cache as advisory and active provenance as
+  consolidation authority.
 - Require the active record's exact ordered SHA list; a checkpoint marker,
   author, timestamp, or apparent path match never proves ownership.
 - Use a verified backup ref plus compare-and-swap `update-ref` for authorized
@@ -97,9 +100,11 @@ conceptual answer.
 ## Phase Outcomes
 
 For a direct history-preserving push, verify current branch/upstream identity,
-operation state, divergence, exact push targets, and immediate remote drift;
-push only the current branch history and verify every authorized target by SHA.
-Do not initialize a cache or provenance record.
+operation state, one exact push target, and immediate remote drift. Require the
+live target to be a locally available commit and an ancestor of the final local
+commit, then push only that branch history once and verify the target by SHA.
+A stale tracking ref alone never requires fetch or a tracking-ref update. Do not
+initialize a cache or provenance record.
 
 For a checkpoint, require clean staged state, exact adoption of any existing
 unpublished commits, current baseline identity, a frozen write set, exact index

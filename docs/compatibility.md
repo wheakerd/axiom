@@ -65,21 +65,19 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.2, that status is `STATIC-ONLY`. The checked-in repair tree cannot
-embed its future signed merge commit or final post-merge observation. The v0.8.2
-release-bound batch remains terminal `FAIL` at Case 1 after unexpected tool
-use. One independent corrected-preflight v0.8.2 Case 1 diagnostic passed at
-repeat count one with zero tool events, but the different one-sample outcomes
-are observed variance rather than a current v0.8.2 host-pass claim. Two later
-complete-batch attempts against signed unreleased v0.8.3 candidate commit
-`ca9ae1803a806042866b0c4d288791f0f32df8f1` remain separate external terminal
-`UNKNOWN` records. A
+For v0.8.3, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+its future signed merge commit or final post-merge observation. Its new
+stale-tracking case is static contract evidence only; a separately labeled
+single-case diagnostic and a fresh complete release-bound observation remain
+`NOT-RUN`. The earlier signed v0.8.3 candidate at
+`ca9ae1803a806042866b0c4d288791f0f32df8f1` and its two external terminal
+`UNKNOWN` records remain immutable unreleased history. A
 prior-release Codex observation also exists for immutable v0.7.4: Codex
 `0.149.0` loaded the startup front door in one fresh routed session and selected
 no Axiom route in a separate fresh control session. Codex compaction remains
 `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`. See the
 [version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.8.2.
+forward to v0.8.3.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -117,7 +115,7 @@ without removing the fields from the release manifest.
 
 ## Packaged Agent-Plugin Architecture
 
-Version 0.8.2 retains the route implemented in v0.8.0 from the
+Version 0.8.3 retains the route implemented in v0.8.0 from the
 [agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
 as one directly packaged Skill with seven root-reachable references. It owns
 only explicit Codex or Claude Code plugin architecture across shared Skills,
@@ -138,12 +136,12 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.2.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.3.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.2 repair candidate gate is 6,293 bytes with SHA-256
+The v0.8.3 candidate gate is 6,293 bytes with SHA-256
 `5e852f5cc1edc3a2fdb19538b2e8bec982d9e959012cb426ae91bb96ccfef866`.
 
 The candidate has 805 whitespace-delimited words, 114 logical lines, and one
@@ -152,10 +150,10 @@ for comparing the same English Markdown surface. The exact cumulative delta is
 394 bytes, 48 words, seven lines, zero references, and 99 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
 reviewed and justifies it as the narrow publication-only negative boundary.
-It separately preserves candidate-observed F5 usage: 279,939 input tokens,
-156,288 cached input tokens, and 350,053 milliseconds. F5 also reported 2,436
-output tokens, which schema v1 does not store. These values are candidate
-metrics, not final v0.8.2 host or lifecycle evidence.
+It separately preserves the independent corrected-preflight v0.8.2 Case 1
+diagnostic: 12,278 input tokens, 1,920 cached input tokens, and 13,139
+milliseconds. Its 69 output tokens are outside schema v1. These are historical
+diagnostic metrics, not current v0.8.3 host or lifecycle evidence.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -171,7 +169,7 @@ count.
 Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
 requires review and justification, not automatic rejection. Any actual
 reduction requires equivalent before/after `PASS` evidence for both routed and
-no-route cases over the same fixed 64-case workload. Static validation and host
+no-route cases over the same fixed 65-case workload. Static validation and host
 observation remain separate evidence classes. No model, reasoning, hook,
 telemetry, runtime dependency, safety, authorization, or stop rule changed to
 obtain the measured result.
@@ -179,12 +177,12 @@ obtain the measured result.
 ## Routing Corpus And Host Benchmarks
 
 The [routing evaluation corpus](../evals/README.md) is a second, narrower
-evidence surface for route selection. Its 64 host-independent JSONL records are
+evidence surface for route selection. Its 65 host-independent JSONL records are
 reviewable expectations, not observed model behavior. The frozen 47-case v1
 corpus and 13-case `codex-core-v1` benchmark remain bound to the historical
-six-route contract. The successor v2 contract adds 17 cases for the seventh
-route, a prose-free seven-route host-response schema, and the 17-case
-`codex-core-v2` benchmark at repeat count one.
+six-route contract. The successor v2 contract contains 18 cases for the
+seven-route contract, including one append-only stale-tracking direct-push case
+outside the unchanged 17-case `codex-core-v2` benchmark at repeat count one.
 
 The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
 cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
@@ -221,9 +219,9 @@ workspace, source, and installed snapshots. The batch stopped `FAIL` after one
 call and 17,984 milliseconds. Cases 2-17 are `NOT-RUN`, no retry occurred, and
 the tool categories are not inferred. Exact scoped usage was 14,907 input,
 1,920 cached input, and 116 output tokens. This is failed Stage 3 evidence, not
-route acceptance; GitHub Issue #34 remains open. The paired Claude Code record
-is entirely `UNAVAILABLE / NOT-RUN` because no authenticated subscription or
-session was available.
+route acceptance; that record left GitHub Issue #34 open for the later repair.
+The paired Claude Code record is entirely `UNAVAILABLE / NOT-RUN` because no
+authenticated subscription or session was available.
 
 The later F4 diagnostic used Codex CLI `0.149.1` with `gpt-5.4` against
 immutable v0.8.1. It stopped terminal `FAIL` after eight calls when
@@ -390,20 +388,22 @@ proves compaction lifecycle behavior.
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
 
-The unreleased Git candidate for `v0.8.3` reports:
+The Git record for `v0.8.3` reports:
 
-- synchronized `0.8.3` manifests with no Skill, route, hook, wrapper, corpus,
-  benchmark, schema, or authority change;
-- the unreleased v0.8.2 release-bound Case 1 `FAIL` preserved separately from
-  one independent corrected-preflight Case 1 `PASS` at repeat count one;
+- synchronized `0.8.3` manifests and a narrow direct-push contract change:
+  tracking state is informational while the immediately queried live remote
+  commit owns the verified non-force baseline;
+- one append-only schema-v2 case and a 65-case static workload, with both fixed
+  benchmark memberships unchanged;
+- the earlier signed v0.8.3 candidate and its two external terminal `UNKNOWN`
+  attempts preserved as separate unreleased history;
 - the unchanged 6,293-byte gate and reviewed +394-byte cumulative delta, with
   the diagnostic's 12,278 input tokens, 1,920 cached input tokens, 69 output
   tokens, and 13,139 milliseconds kept separate from release evidence;
 - `STATIC-ONLY` current status, actual post-compaction lifecycle `NOT-RUN`, and
   authenticated Claude Code `UNAVAILABLE / NOT-RUN`; and
-- two complete-batch attempts against signed commit
-  `ca9ae1803a806042866b0c4d288791f0f32df8f1` that stopped at Case 1 as
-  separate external terminal `UNKNOWN` records; no tag or Release exists.
+- the focused Codex diagnostic and complete release-bound observation still
+  `NOT-RUN` for this candidate.
 
 See the [v0.8.3 release notes](releases/v0.8.3.md) for the diagnostic boundary
 and the unmet release gate.
@@ -423,6 +423,10 @@ The Git record for `v0.8.2` reports:
   bypass while routing, V3, tool, mutation, and snapshot gates otherwise
   passed, plus the native disposable trust repair that removes that setup
   warning without weakening the observer; and
+- the final signed repair, exact 17-call pass, immutable `v0.8.2` tag, GitHub
+  Release, and content-addressed schema-v2 observation asset, completed before
+  Issue #34 closed; the asset supplements but never promotes or rewrites the
+  checked-in status; and
 - an external validation mode for one final, exact 17-call schema-v2 record
   bound to the signed merge commit, tree, and immutable `v0.8.2` tag. The
   content-addressed release asset supplements but never promotes or rewrites
@@ -430,8 +434,8 @@ The Git record for `v0.8.2` reports:
 - the exact-version JSONL observer taxonomy, classify-before-sequencing rule,
   and fail-closed tool/error/unknown handling without raw payload retention.
 
-See the [v0.8.2 release notes](releases/v0.8.2.md) for the candidate evidence,
-context review, and gated post-merge sequence.
+See the [v0.8.2 release notes](releases/v0.8.2.md) for the preserved candidate
+evidence, context review, and completed post-merge sequence.
 
 The Git record for `v0.8.1` reports:
 

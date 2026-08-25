@@ -67,8 +67,8 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(
             "Routing-context budget validation passed: "
-            f"{scenario_count} lifecycle scenarios; scoped candidate F5 Codex usage is "
-            "preserved without claiming v0.8.2 lifecycle evidence."
+            f"{scenario_count} lifecycle scenarios; historical host usage is preserved "
+            "without claiming current host or lifecycle evidence."
         )
         return 0
 
