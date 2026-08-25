@@ -51,10 +51,12 @@ applies without turning ordinary work into an Axiom task.
   Read-only lookup and draft-only work stay host-native.
 - `traceable-git-submit`: create traceable checkpoints or baseline metadata,
   consolidate or recover their history, or perform an explicitly invoked,
-  hardened, multi-target, or otherwise independently traceable Git push.
-  Ordinary named-remote non-force staging, commits, and pushes stay
-  host-native; merely mentioning submit, publish, or push does not select this
-  route.
+  hardened, multi-target, or otherwise independently traceable Git push. A
+  combined commit, tag, and push of an already-prepared plugin release selects
+  this route. Ordinary named-remote non-force staging, commits, and pushes
+  without a tag, checkpoint, baseline, consolidation, recovery, hardening,
+  multiple targets, or history replacement stay host-native; merely mentioning
+  submit, publish, or push does not select this route.
 - `reversible-system-change`: plan, rehearse, or execute a persistent install,
   upgrade, deployment, migration, destructive retention, or promotion with
   rollback, data, service, or activation risk. Plans remain read-only.

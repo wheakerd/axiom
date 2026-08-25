@@ -34,7 +34,7 @@ class ContextBudgetTests(unittest.TestCase):
         current_record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
         current_metrics = measure_markdown(ROUTING_GATE_PATH)
         self.assertEqual(current_record["candidate"]["metrics"], current_metrics)
-        self.assertEqual(1631, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
+        self.assertEqual(1840, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
         self.assertEqual(
             current_record["candidate"]["sha256"],
             hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest(),

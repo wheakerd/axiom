@@ -36,26 +36,26 @@
         "classification": "estimate",
         "comparisonScope": "same-English-Markdown-surface-only",
         "method": "ceil(utf8-bytes/4)",
-        "value": 1883
+        "value": 1935
       },
-      "logicalLines": 133,
-      "utf8Bytes": 7530,
-      "whitespaceDelimitedWords": 974
+      "logicalLines": 135,
+      "utf8Bytes": 7739,
+      "whitespaceDelimitedWords": 1001
     },
-    "sha256": "1ce3fa0574c76356c1095c75ec8a7e9ba5d1211924f2f08fdb88319f1c25b01b"
+    "sha256": "7da583bb99880157a7fbca539ebb0426f49cd79d2748be51e5ef5fe85eaa3996"
   },
   "comparison": {
     "absoluteThresholdReached": true,
-    "estimatedTokenDelta": 408,
-    "justification": "The cumulative increase adds a narrow host-native Git boundary, explicitly prevents no-route or an expected staged payload from manufacturing a conflict, and keeps simple direct submit in one parent-owned reference while preserving the heavyweight owners and frozen benchmark memberships.",
-    "lineDelta": 26,
+    "estimatedTokenDelta": 460,
+    "justification": "The cumulative increase preserves the narrow host-native Git boundary while explicitly routing a combined commit, tag, and push of an already-prepared plugin release to traceable-git-submit; routing still grants no mutation authority and frozen benchmark membership is unchanged.",
+    "lineDelta": 28,
     "meaningfulIncrease": true,
     "method": "same-English-Markdown-surface",
     "referenceDelta": 0,
     "relativeThresholdReached": true,
     "reviewStatus": "reviewed",
-    "utf8ByteDelta": 1631,
-    "wordDelta": 217
+    "utf8ByteDelta": 1840,
+    "wordDelta": 244
   },
   "hostMetrics": [
     {
