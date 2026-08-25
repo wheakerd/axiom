@@ -26,6 +26,27 @@ class RoutingContractTests(unittest.TestCase):
             route_contract("Commit this change and git push origin main.")["route"]
         )
 
+    def test_tagged_plugin_release_routes_without_broadening_ordinary_push(self):
+        tagged_release = route_contract(
+            "Commit, tag, and push the already-prepared plugin release without "
+            "rewriting history."
+        )
+        self.assertEqual("traceable-git-submit", tagged_release["route"])
+        self.assertEqual("hardened-submit", tagged_release["phase"])
+        self.assertEqual(
+            (
+                "references/safe-git-values-and-metadata.md",
+                "references/repository-and-remote-targets.md",
+            ),
+            tagged_release["references"],
+        )
+        self.assertIsNone(
+            route_contract(
+                "Commit the staged plugin change and git push origin main once "
+                "without force."
+            )["route"]
+        )
+
     def test_explicit_direct_submit_loads_only_lightweight_owner(self):
         contract = route_contract(
             "$traceable-git-submit: git push origin main once without force."

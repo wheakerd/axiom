@@ -1,12 +1,11 @@
 ---
 name: traceable-git-submit
-description: Keep Git checkpoints and independently traceable submissions reviewable. Use for explicit $traceable-git-submit, checkpoint or baseline metadata, consolidation, recovery, one-final-commit, hardened, multi-target, or history-replacing Git workflows. Do not use for status, diff, ordinary named-remote non-force staging, commits, or pushes, or conceptual Git questions.
+description: Route explicit $traceable-git-submit; checkpoint/baseline, consolidation/recovery, hardened, multi-target, or history-replacing work; and a combined commit, tag, and push of an already-prepared plugin release. Ordinary named-remote non-force staging, commits, and pushes without a tag or those other triggers stay host-native; status, diff, and conceptual Git stay outside.
 ---
 
 # Traceable Git Submit
 
-Keep local checkpoints reviewable and make every history rewrite, remote
-refresh, push, verification, and cleanup step explicit.
+Keep checkpoints reviewable and Git submission phases explicit.
 
 ## Intent Gate
 
@@ -14,12 +13,14 @@ Identify one active phase before Git inspection. Route selection never grants
 action authority. Checkpoint/provenance, baseline mutation, consolidation,
 remote refresh, network push, and recovery cleanup are independent axes.
 
-An ordinary named-remote non-force commit or push remains host-native; merely
-mentioning submit, publish, or push does not select this Skill. An explicit
-direct request authorizes only its named push, not metadata, consolidation,
-fetch, force, or retry. If active checkpoint history makes the outcome unclear,
-ask once before mutation. Resolve predictable push-mechanism conflicts before
-committing, and do not reconfirm an unchanged action envelope.
+A combined commit, tag, and push of an already-prepared plugin release selects
+the hardened phase; this never authorizes the commit, tag, or push. Ordinary
+named-remote non-force staging, commits, and pushes without a tag or another
+listed phase stay host-native; submit, publish, or push alone is insufficient.
+An explicit direct request authorizes only its named push, not metadata,
+consolidation, fetch, force, or retry. Resolve predictable push
+conflicts before commit. Ask once only when active checkpoint history obscures
+the outcome; never reconfirm an unchanged envelope.
 
 ## Load Only The Active Phase
 
@@ -36,8 +37,9 @@ committing, and do not reconfirm an unchanged action envelope.
   is an ancestor of the final commit: read only `references/direct-submit.md`.
   Mere stale-tracking mention is not a route. Do not create or update Axiom
   metadata.
-- Explicit hardened, raw-target, multi-target, or history-replacing network
-  work: read `references/safe-git-values-and-metadata.md` and
+- A combined prepared-plugin commit/tag/push, or explicit hardened, raw-target,
+  multi-target, or history-replacing network work: read
+  `references/safe-git-values-and-metadata.md` and
   `references/repository-and-remote-targets.md`. Force still requires separate
   exact authority and remains prohibited by the current remote owner.
 - Local checkpoint consolidation: read

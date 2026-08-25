@@ -27,6 +27,15 @@ ROUTE_SOURCE_ANCHORS = {
     "traceable-git-submit": ("checkpoint", "push"),
     "reversible-system-change": ("plan", "persistent", "rollback"),
 }
+TAGGED_PLUGIN_RELEASE_ROUTE_ANCHORS = (
+    "combined commit, tag, and push",
+    "already-prepared plugin release",
+)
+ORDINARY_GIT_HOST_NATIVE_ANCHORS = (
+    "ordinary named-remote non-force",
+    "without a tag",
+    "stay host-native",
+)
 README_LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
     "/plugin marketplace update axiom",
@@ -544,6 +553,38 @@ def check_routing_source_contracts(failures: list[str]) -> None:
                     failures.append(
                         f"{label} for {route!r} is missing selection anchor {anchor!r}"
                     )
+
+    traceable_entry = route_entries.get("traceable-git-submit")
+    traceable_path = REPOSITORY_ROOT / "skills" / "traceable-git-submit" / "SKILL.md"
+    traceable_fields = parse_skill_frontmatter(traceable_path, failures)
+    if traceable_entry is not None and traceable_fields is not None:
+        for label, surface in (
+            (f"{display_path(front_door_path)} traceable route entry", traceable_entry),
+            (f"{display_path(traceable_path)} description", traceable_fields["description"]),
+        ):
+            for anchor in (
+                *TAGGED_PLUGIN_RELEASE_ROUTE_ANCHORS,
+                *ORDINARY_GIT_HOST_NATIVE_ANCHORS,
+            ):
+                if anchor.casefold() not in surface.casefold():
+                    failures.append(
+                        f"{label} is missing tagged-release boundary anchor {anchor!r}"
+                    )
+
+        traceable_body = " ".join(
+            traceable_path.read_text(encoding="utf-8").split()
+        )
+        for anchor in (
+            "selects the hardened phase",
+            "never authorizes the commit, tag, or push",
+            "combined prepared-plugin commit/tag/push",
+            "references/safe-git-values-and-metadata.md",
+            "references/repository-and-remote-targets.md",
+        ):
+            if anchor.casefold() not in traceable_body.casefold():
+                failures.append(
+                    f"{display_path(traceable_path)} is missing tagged-release phase anchor {anchor!r}"
+                )
 
     agents_entry = route_entries.get("agents-architect")
     agents_path = REPOSITORY_ROOT / "skills" / "agents-architect" / "SKILL.md"
