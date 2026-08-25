@@ -19,6 +19,8 @@ applies without turning ordinary work into an Axiom task.
    Ask one concise question only when the route or permitted action would
    materially differ.
 5. On no match, continue through the host normally without mentioning Axiom.
+   A no-match result is not a denial, does not create authorization, and does
+   not manufacture a repository-state conflict.
 
 ## Bundled Routes
 
@@ -48,8 +50,11 @@ applies without turning ordinary work into an Axiom task.
   actor, target, payload, disclosure, cost, or retry boundary is material.
   Read-only lookup and draft-only work stay host-native.
 - `traceable-git-submit`: create traceable checkpoints or baseline metadata,
-  consolidate or recover their history, or perform an explicit Git
-  submit/publish/push. Ordinary local staging and commits stay host-native.
+  consolidate or recover their history, or perform an explicitly invoked,
+  hardened, multi-target, or otherwise independently traceable Git push.
+  Ordinary named-remote non-force staging, commits, and pushes stay
+  host-native; merely mentioning submit, publish, or push does not select this
+  route.
 - `reversible-system-change`: plan, rehearse, or execute a persistent install,
   upgrade, deployment, migration, destructive retention, or promotion with
   rollback, data, service, or activation risk. Plans remain read-only.
@@ -84,8 +89,22 @@ be separately authorized and routed.
 An external action selects `confirm-external-action` only when the user asks to
 cause the effect. Preparation does not authorize execution, and an exact
 current request need not be reconfirmed unless a material envelope field is
-missing or changes. Keep local Git under `traceable-git-submit`. A persistent
-change with no distinct consequential external effect stays under
+missing or changes. Keep independently traceable Git workflows under
+`traceable-git-submit`; ordinary named-remote Git remains host-native.
+
+For an ordinary combined commit-and-push request, an expected staged set that
+exactly matches the current authorized payload is normal host state, not a
+conflict. If the actor, repository, branch, named remote, command, payload, and
+non-force policy remain unchanged and inspection confirms that set, continue
+host-native without asking again. Stop before commit only on concrete current
+evidence of a material repository, branch, remote, command, payload, force, or
+instruction conflict that changes the frozen action or genuinely requires user
+input. Extra or unknown staged paths, a changed or missing target or branch, an
+in-progress Git operation, force, widened or multiple targets, an instruction
+conflict, or known divergence qualifies; mere possibility, ordinary staged
+state, stale tracking information, or no Axiom route does not.
+
+A persistent change with no distinct consequential external effect stays under
 `reversible-system-change`; apply the cross-route rule above when both effects
 are present.
 
@@ -103,9 +122,9 @@ are present.
 - Do not load every Axiom skill, route from broad topical similarity, edit
   protected plugin metadata without explicit scope, or persist one-off task
   discoveries as durable instructions.
-- Ordinary coding, documentation, explanation, status, local-commit, and
-  conceptual requests continue normally unless a route description clearly
-  matches.
+- Ordinary coding, documentation, explanation, status, local commits,
+  named-remote non-force pushes, and conceptual requests continue normally
+  unless a route description clearly matches.
 
 ## Explicit Refresh
 

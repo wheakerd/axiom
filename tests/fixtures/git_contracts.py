@@ -10,6 +10,10 @@ from axiom_validation.git_contracts import (
     all_evidence,
     direct_branch_ref_gate,
     direct_push_fast_forward_gate,
+    lightweight_direct_submit_gate,
+    lightweight_push_arguments,
+    lightweight_push_outcome,
+    ordinary_combined_commit_push_gate,
     safe_git_execution_envelope,
     safe_git_oid,
     safe_git_operand,
@@ -22,14 +26,15 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     skill_root = REPOSITORY_ROOT / "skills" / "traceable-git-submit"
     required_anchors = {
         "SKILL.md": (
+            "references/direct-submit.md",
             "references/safe-git-values-and-metadata.md",
             "references/commit-construction.md",
             "references/repository-and-remote-targets.md",
             "references/post-consolidation-recovery.md",
-            "non-executable Git configuration and environment boundary",
             "cleanupReady",
             "Cleanup requires separate exact authority",
             "the verified live target owns the non-force baseline",
+            "normal repository hooks",
         ),
         "references/safe-git-values-and-metadata.md": (
             "literal argument-vector element",
@@ -177,7 +182,7 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     require_ordered_contract_anchors(
         skill_root / "references/repository-and-remote-targets.md",
         (
-            "## Direct Submit Preflight",
+            "## Hardened Direct Submit Preflight",
             "Record the tracking OID and\nlocal divergence as informational state",
             "bind\n`liveBaselineSha` only from the verified live target",
             "git merge-base --is-ancestor <live-baseline-sha> <final-sha>",
@@ -194,11 +199,61 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     direct_push_text = (
         skill_root / "references/repository-and-remote-targets.md"
     ).read_text(encoding="utf-8")
+    lightweight_push_text = (
+        skill_root / "references/direct-submit.md"
+    ).read_text(encoding="utf-8")
     consolidated_push_text = (
         skill_root / "references/consolidation-and-push.md"
     ).read_text(encoding="utf-8")
     if direct_push_text.count(push_command) != 1 or consolidated_push_text.count(push_command) != 1:
         failures.append("direct and consolidated push owners must each contain the exact closed push argv once")
+    require_ordered_contract_anchors(
+        skill_root / "references/direct-submit.md",
+        (
+            "## Scope",
+            "## Pre-Commit Conflict Gate",
+            "git push origin main",
+            "Keep normal repository pre-push hooks active",
+            "## One Native Push",
+            "Push exactly once",
+            "## Proportional Completion",
+            "Make no query when the Git result is conclusive",
+            "at most one owning-remote query",
+            "## Stop Conditions",
+        ),
+        failures,
+        "lightweight direct-submit",
+    )
+    using_axiom_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+    require_ordered_contract_anchors(
+        using_axiom_path,
+        (
+            "A no-match result is not a denial",
+            "does not create authorization",
+            "does not manufacture a repository-state conflict",
+            "an expected staged set that exactly matches the current authorized payload",
+            "continue host-native without asking again",
+            "Stop before commit only on concrete current evidence",
+            "mere possibility, ordinary staged state, stale tracking information, or no Axiom route does not",
+        ),
+        failures,
+        "ordinary no-route combined commit and push",
+    )
+    for prohibited in (
+        "--no-verify",
+        "generated runner",
+        "execution wrapper",
+        "raw URL",
+        "fingerprint",
+    ):
+        if prohibited.casefold() not in lightweight_push_text.casefold():
+            failures.append(
+                f"lightweight direct-submit must prohibit {prohibited!r}"
+            )
+    if re.search(r"^\s*git\s+fetch\b", lightweight_push_text, re.MULTILINE):
+        failures.append("lightweight direct-submit must not prescribe fetch")
+    if lightweight_push_text.count("git push origin main") != 1:
+        failures.append("lightweight direct-submit must contain one canonical named push")
     traceable_text = "\n".join(
         path.read_text(encoding="utf-8") for path in skill_root.rglob("*.md")
     )
@@ -311,6 +366,7 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
 
     route_contracts = {
         "SKILL.md": (
+            "references/direct-submit.md",
             "references/safe-git-values-and-metadata.md",
             "references/commit-construction.md",
             "references/repository-and-remote-targets.md",
@@ -416,6 +472,125 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         ):
             failures.append(f"direct push fixture {name!r} returned the wrong gate result")
 
+    lightweight_defaults = {
+        "target_count": 1,
+        "configured_named_remote": True,
+        "exact_branch": True,
+        "force_requested": False,
+        "widened_refspec": False,
+        "fetch_requested": False,
+        "retry_requested": False,
+        "identity_rechecked": True,
+        "operation_state_clear": True,
+        "target_unchanged": True,
+        "mechanism_conflict": False,
+    }
+    lightweight_scenarios = (
+        ("ordinary-direct", None, True),
+        ("multiple-targets-stop", ("target_count", 2), False),
+        ("bool-target-count-stops", ("target_count", True), False),
+        ("unknown-target-stops", ("configured_named_remote", False), False),
+        ("branch-drift-stops", ("exact_branch", False), False),
+        ("force-stops", ("force_requested", True), False),
+        ("widening-stops", ("widened_refspec", True), False),
+        ("fetch-separation", ("fetch_requested", True), False),
+        ("retry-stops", ("retry_requested", True), False),
+        ("identity-drift-stops", ("identity_rechecked", False), False),
+        ("operation-state-stops", ("operation_state_clear", False), False),
+        ("target-drift-stops", ("target_unchanged", False), False),
+        ("mechanism-conflict-stops", ("mechanism_conflict", True), False),
+    )
+    for name, change, expected in lightweight_scenarios:
+        scenario = dict(lightweight_defaults)
+        if change is not None:
+            scenario[change[0]] = change[1]
+        if lightweight_direct_submit_gate(**scenario) != expected:
+            failures.append(
+                f"lightweight direct-submit fixture {name!r} returned the wrong gate result"
+            )
+
+    ordinary_combined_defaults = {
+        "authorization_current": True,
+        "actor_unchanged": True,
+        "repository_unchanged": True,
+        "branch_unchanged": True,
+        "configured_named_remote": True,
+        "target_unchanged": True,
+        "command_unchanged": True,
+        "staged_payload_matches": True,
+        "extra_or_unknown_staged_paths": False,
+        "operation_state_clear": True,
+        "non_force_policy_unchanged": True,
+        "force_requested": False,
+        "widened_refspec": False,
+        "target_count": 1,
+        "instruction_conflict": False,
+        "known_divergence": False,
+    }
+    ordinary_combined_scenarios = (
+        ("expected-staged-payload-proceeds", None, True),
+        ("authorization-drift-stops", ("authorization_current", False), False),
+        ("actor-drift-stops", ("actor_unchanged", False), False),
+        ("repository-drift-stops", ("repository_unchanged", False), False),
+        ("branch-drift-stops", ("branch_unchanged", False), False),
+        ("missing-remote-stops", ("configured_named_remote", False), False),
+        ("target-drift-stops", ("target_unchanged", False), False),
+        ("command-drift-stops", ("command_unchanged", False), False),
+        ("payload-drift-stops", ("staged_payload_matches", False), False),
+        ("extra-staged-path-stops", ("extra_or_unknown_staged_paths", True), False),
+        ("operation-state-stops", ("operation_state_clear", False), False),
+        ("policy-drift-stops", ("non_force_policy_unchanged", False), False),
+        ("force-stops", ("force_requested", True), False),
+        ("widening-stops", ("widened_refspec", True), False),
+        ("multiple-targets-stop", ("target_count", 2), False),
+        ("bool-target-count-stops", ("target_count", True), False),
+        ("instruction-conflict-stops", ("instruction_conflict", True), False),
+        ("known-divergence-stops", ("known_divergence", True), False),
+    )
+    for name, change, expected in ordinary_combined_scenarios:
+        scenario = dict(ordinary_combined_defaults)
+        if change is not None:
+            scenario[change[0]] = change[1]
+        if ordinary_combined_commit_push_gate(**scenario) != expected:
+            failures.append(
+                f"ordinary combined commit/push fixture {name!r} returned the wrong gate result"
+            )
+
+    lightweight_argument_scenarios = (
+        ("exact", ("git", "push", "origin", "main"), "origin", "main", True),
+        ("no-verify-stops", ("git", "push", "--no-verify", "origin", "main"), "origin", "main", False),
+        ("force-stops", ("git", "push", "--force", "origin", "main"), "origin", "main", False),
+        ("raw-target-stops", ("git", "push", "https://example.invalid/repo.git", "main"), "origin", "main", False),
+        ("widened-refspec-stops", ("git", "push", "origin", "main:other"), "origin", "main", False),
+    )
+    for name, arguments, remote, branch, expected in lightweight_argument_scenarios:
+        if lightweight_push_arguments(arguments, remote, branch) != expected:
+            failures.append(
+                f"lightweight push arguments fixture {name!r} returned the wrong result"
+            )
+
+    lightweight_outcome_scenarios = (
+        ("conclusive-success", "success", 0, None, "pass"),
+        ("conclusive-rejection", "rejected", 0, None, "fail"),
+        ("ambiguous-confirmed", "ambiguous", 1, True, "pass"),
+        ("ambiguous-not-updated", "ambiguous", 1, False, "fail"),
+        ("ambiguous-unresolved", "ambiguous", 1, None, "unknown"),
+        ("duplicate-query-stops", "ambiguous", 2, True, "unknown"),
+        ("query-after-success-stops", "success", 1, True, "unknown"),
+    )
+    for name, status, query_count, match, expected in lightweight_outcome_scenarios:
+        if (
+            lightweight_push_outcome(
+                status,
+                owning_remote_query_count=query_count,
+                queried_tip_matches_final=match,
+            )
+            != expected
+        ):
+            failures.append(
+                f"lightweight push outcome fixture {name!r} returned the wrong result"
+            )
+
     transport_scenarios = (
         ("https", "https://example.test/org/repo.git", True),
         ("ssh", "ssh://git@example.test/org/repo.git", True),
@@ -473,6 +648,10 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         + len(oid_scenarios)
         + len(branch_ref_scenarios)
         + len(direct_push_scenarios)
+        + len(lightweight_scenarios)
+        + len(ordinary_combined_scenarios)
+        + len(lightweight_argument_scenarios)
+        + len(lightweight_outcome_scenarios)
         + len(transport_scenarios)
         + len(execution_envelope_scenarios)
         + len(CLEANUP_AUTHORITY_FIELDS)

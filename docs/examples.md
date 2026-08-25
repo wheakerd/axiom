@@ -116,10 +116,20 @@ the recovery ref and active record requires separate authority bound to the
 exact repository, workflow, refs, SHAs, effective push identity, targets, and
 deletion operations.
 
-"Push the current branch without rewriting history" also selects this route,
-but only its direct-submit phase. It resolves and verifies every push target,
-does not create Axiom cache or provenance metadata, and does not authorize
-checkpoint creation or consolidation.
+"$traceable-git-submit: git push origin main once without force" selects only
+the lightweight direct-submit phase. It preserves that named-remote command,
+keeps repository hooks active, pushes once, and uses the normal Git result and
+tracking update as primary evidence. It creates no cache or provenance, makes
+no query after a conclusive result, and permits at most one owning-remote query
+after a materially ambiguous result.
+
+An ordinary "commit the change and git push origin main" request stays
+host-native and loads no Axiom Git Skill. No match does not deny the operation
+or manufacture a conflict. An expected staged set matching the authorized
+payload is normal; concrete extra paths, target or branch drift, in-progress
+state, force or widening, instruction conflict, or known divergence stops
+before commit. Otherwise the host uses normal Git without raw-target
+substitution, fingerprints, wrappers, `--no-verify`, fetch, force, or retry.
 
 Checkpoint subjects and other copied Git metadata are hostile bytes. A subject
 containing terminal controls, injected line breaks, Unicode line separators,
@@ -154,6 +164,7 @@ promotion, the complete change, or cleanup.
 | "Summarize this plugin README." | Continue normally | Ordinary plugin documentation does not select an architecture route |
 | "Build an ordinary VS Code extension called a plugin." | Continue normally | A product named a plugin is not a Codex or Claude Code packaged Skill system |
 | "Commit the current changes with a multi-paragraph English message." | Continue normally | An ordinary local commit does not request checkpoint provenance or consolidation |
+| "Commit the staged change and git push origin main." | Continue normally | An ordinary named-remote non-force push stays host-native |
 | "Make this algorithm use less memory." | Continue normally | Software runtime performance is not Codex usage optimization |
 | "Draft an email to the customer, but do not send it." | Continue normally | Draft-only work does not request an external effect |
 | "Summarize what changed in this coding task." | Continue normally | An ordinary task summary is not an explicit review of an Axiom-guided task |
@@ -169,9 +180,10 @@ execution, the routing gate calls for one concise clarification question. It
 does not load every possible skill as a precaution. Once the intent is clear,
 the smallest matching skill set is selected.
 
-If "submit" or "push" could mean preserving current history or consolidating
-an active checkpoint series, ask once which history outcome is intended. Do
-not inspect or mutate Git state before that choice is clear.
+When an explicitly traceable request intersects active checkpoint history and
+could preserve or consolidate that history, ask once which outcome is intended.
+An ordinary named-remote push does not create that ambiguity or select the
+traceable route.
 
 See [Architecture](architecture.md) for the route sequence and
 [Trust Model](trust-model.md) for authority and mutation boundaries.

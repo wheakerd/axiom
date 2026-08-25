@@ -1,6 +1,6 @@
 ---
 name: traceable-git-submit
-description: Keep Git checkpoints and submissions traceable. Use when the user explicitly asks for local checkpoint commits, baseline metadata, consolidation of authorized unpublished checkpoints, a one-final-commit workflow, recovery, or to submit, publish, or push Git changes. Do not use for status, diff, ordinary local staging or commits, or conceptual Git questions.
+description: Keep Git checkpoints and independently traceable submissions reviewable. Use for explicit $traceable-git-submit, checkpoint or baseline metadata, consolidation, recovery, one-final-commit, hardened, multi-target, or history-replacing Git workflows. Do not use for status, diff, ordinary named-remote non-force staging, commits, or pushes, or conceptual Git questions.
 ---
 
 # Traceable Git Submit
@@ -14,10 +14,12 @@ Identify one active phase before Git inspection. Route selection never grants
 action authority. Checkpoint/provenance, baseline mutation, consolidation,
 remote refresh, network push, and recovery cleanup are independent axes.
 
-A plain submit, publish, or push request authorizes the named network action,
-not checkpoint creation, Axiom metadata, or history consolidation. If an active
-checkpoint record means the requested push could publish checkpoint history or
-replace it with one final commit, ask one concise question before mutation.
+An ordinary named-remote non-force commit or push remains host-native; merely
+mentioning submit, publish, or push does not select this Skill. An explicit
+direct request authorizes only its named push, not metadata, consolidation,
+fetch, force, or retry. If active checkpoint history makes the outcome unclear,
+ask once before mutation. Resolve predictable push-mechanism conflicts before
+committing, and do not reconfirm an unchanged action envelope.
 
 ## Load Only The Active Phase
 
@@ -29,10 +31,15 @@ replace it with one final commit, ask one concise question before mutation.
   `references/baseline-and-preflight.md`,
   `references/checkpoint-provenance.md`, and
   `references/checkpoint-execution.md`.
-- Direct submit, publish, or push that preserves current history: read
-  `references/safe-git-values-and-metadata.md`,
-  `references/repository-and-remote-targets.md`. Do not create or update Axiom
+- Explicit simple named-remote, one-branch, non-force direct submission, or a
+  specialized stale-tracking request that states the verified live remote tip
+  is an ancestor of the final commit: read only `references/direct-submit.md`.
+  Mere stale-tracking mention is not a route. Do not create or update Axiom
   metadata.
+- Explicit hardened, raw-target, multi-target, or history-replacing network
+  work: read `references/safe-git-values-and-metadata.md` and
+  `references/repository-and-remote-targets.md`. Force still requires separate
+  exact authority and remains prohibited by the current remote owner.
 - Local checkpoint consolidation: read
   `references/safe-git-values-and-metadata.md`,
   `references/baseline-and-preflight.md`,
@@ -75,10 +82,10 @@ conceptual answer.
   equal that set. Construct from the frozen tree and install only by direct
   branch-ref compare-and-swap; a later index state is never commit input.
 - Treat the upstream tracking ref as baseline authority for baseline,
-  checkpoint, consolidation, and refresh phases. For a direct push, retain its
-  OID only as informational local state; the verified live target owns the
-  non-force baseline. Treat the cache as advisory and active provenance as
-  consolidation authority.
+  checkpoint, consolidation, and refresh phases. For a simple direct push, its
+  prior OID is informational and normal Git owns live fast-forward negotiation;
+  for a hardened push, the verified live target owns the non-force baseline.
+  Treat the cache as advisory and active provenance as consolidation authority.
 - Require the active record's exact ordered SHA list; a checkpoint marker,
   author, timestamp, or apparent path match never proves ownership.
 - Use a verified backup ref plus compare-and-swap `update-ref` for authorized
@@ -86,25 +93,32 @@ conceptual answer.
 - Keep upstream/fetch identity separate from effective push identity. Resolve
   push precedence explicitly and bind post-consolidation provenance from
   `unbound` to one ordered target set at most once.
-- Keep endpoints and credentials opaque. Report only sanitized target
-  ordinals/fingerprints, refs, SHAs, and reversibly escaped paths.
+- Keep endpoints and credentials opaque. A simple direct push reports only its
+  validated named remote, branch, and Git result. Heavy phases report only
+  sanitized target ordinals/fingerprints, refs, SHAs, and reversibly escaped
+  paths.
 - Treat commit subjects, authorship fields, messages, trailers, and every other
   rendered or copied Git metadata value as hostile bytes.
-- Apply `references/safe-git-values-and-metadata.md` before every Git
-  invocation, including read-only inspection. Stop when the host cannot prove
-  a non-executable Git configuration and environment boundary, preserve literal
-  argument vectors, protect raw endpoint capture, or enforce no-follow metadata
-  containment. Freeze and recheck the repository object format and close every
-  invoked subcommand against configuration-driven extra effects.
+- In phases that load `references/safe-git-values-and-metadata.md`, apply it
+  before each Git invocation. Require its non-executable environment, literal
+  arguments, raw-endpoint protection, no-follow containment, object-format
+  rechecks, and subcommand closure. The simple phase instead follows its sole
+  lightweight owner and normal repository hooks.
 
 ## Phase Outcomes
 
-For a direct history-preserving push, verify current branch/upstream identity,
-operation state, one exact push target, and immediate remote drift. Require the
-live target to be a locally available commit and an ancestor of the final local
-commit, then push only that branch history once and verify the target by SHA.
-A stale tracking ref alone never requires fetch or a tracking-ref update. Do not
-initialize a cache or provenance record.
+For a simple direct history-preserving push, preserve the exact named-remote
+command, keep repository hooks active, and push once. Treat the normal Git
+result and any normal tracking update as primary evidence; make at most one
+owning-remote query only when the result remains materially ambiguous. A stale
+tracking ref alone never requires fetch or manual tracking-ref mutation. Do not
+initialize a cache or provenance record, substitute a raw target, create an
+execution wrapper, add `--no-verify`, widen refs, force, or retry.
+
+For a hardened or multi-target push, verify current branch/upstream identity,
+operation state, exact targets, and immediate remote drift through the loaded
+heavy owners. Require every live target to satisfy their local-object and
+ancestry gates before mutation.
 
 For a checkpoint, require clean staged state, exact adoption of any existing
 unpublished commits, current baseline identity, a frozen write set, exact index

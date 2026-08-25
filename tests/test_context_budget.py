@@ -34,20 +34,20 @@ class ContextBudgetTests(unittest.TestCase):
         current_record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
         current_metrics = measure_markdown(ROUTING_GATE_PATH)
         self.assertEqual(current_record["candidate"]["metrics"], current_metrics)
-        self.assertEqual(394, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
+        self.assertEqual(1631, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
         self.assertEqual(
             current_record["candidate"]["sha256"],
             hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest(),
         )
         self.assertNotEqual(BASELINE_SHA256, current_record["candidate"]["sha256"])
-        self.assertEqual("observed", current_record["measurementBoundary"]["exactHostUsage"])
-        self.assertTrue(current_record["measurementBoundary"]["networkOrTelemetryUsed"])
+        self.assertEqual("not-run", current_record["measurementBoundary"]["exactHostUsage"])
+        self.assertFalse(current_record["measurementBoundary"]["networkOrTelemetryUsed"])
         codex_metric = current_record["hostMetrics"][0]
-        self.assertEqual("observed", codex_metric["status"])
-        self.assertTrue(codex_metric["exactUsageExposed"])
-        self.assertEqual(12278, codex_metric["inputTokens"])
-        self.assertEqual(1920, codex_metric["cachedInputTokens"])
-        self.assertEqual(13139, codex_metric["wallClockMilliseconds"])
+        self.assertEqual("not-run", codex_metric["status"])
+        self.assertFalse(codex_metric["exactUsageExposed"])
+        self.assertIsNone(codex_metric["inputTokens"])
+        self.assertIsNone(codex_metric["cachedInputTokens"])
+        self.assertIsNone(codex_metric["wallClockMilliseconds"])
         self.assertIsNone(codex_metric["credits"])
         comparison = current_record["comparison"]
         self.assertTrue(comparison["absoluteThresholdReached"])

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.3",
-    "tag": "v0.8.3",
+    "version": "0.8.4",
+    "tag": "v0.8.4",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.3 stale-tracking fix has deterministic static and disposable Git behavior coverage, but no release-bound v0.8.3 Codex observation or lifecycle evidence exists yet. The released v0.8.2 result and every earlier terminal outcome remain separate immutable evidence."
+      "reason": "The revised v0.8.4 host-native push boundary has deterministic static coverage, but no current host or lifecycle observation. Phase 3A routing diagnostics and Phase 3A/3B terminal behavior observations bind the prior patch only and remain separate external evidence."
     },
     {
       "host": "claude-code",
