@@ -65,21 +65,19 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.4, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
-its future signed merge commit or final post-merge observation. The host-native
-ordinary-push boundary and explicit lightweight direct-submit cases are static
-contract evidence only. Phase 3A's route diagnostics and Phase 3A/3B terminal
-behavior observations bind the prior patch, not the revised candidate; a fresh
-focused diagnostic and complete release-bound observation remain `NOT-RUN`.
-The published v0.8.3 observation and the earlier
-signed v0.8.3 candidate's two external terminal `UNKNOWN` records remain
-separate immutable history. A
-prior-release Codex observation also exists for immutable v0.7.4: Codex
-`0.149.0` loaded the startup front door in one fresh routed session and selected
-no Axiom route in a separate fresh control session. Codex compaction remains
-`NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`. See the
-[version-bound records](../evidence/v0.7.4/) and do not carry their outcomes
-forward to v0.8.4.
+For v0.8.5, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+its future signed merge commit, final GitHub Actions runs, or post-merge host
+observation. The dated governance snapshot separately records the directly
+observed required-check ruleset. The repository-only CI hardening changes no
+installed route, hook, or routing contract. Current Codex host and lifecycle
+evidence is `NOT-RUN`; authenticated Claude Code evidence is
+`UNAVAILABLE / NOT-RUN`. v0.8.4 and all earlier observations remain separate
+history. A prior-release Codex observation also exists for immutable v0.7.4:
+Codex `0.149.0` loaded the startup front door in one fresh routed session and
+selected no Axiom route in a separate fresh control session. Codex compaction
+remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
+See the [version-bound records](../evidence/v0.7.4/) and do not carry their
+outcomes forward to v0.8.5.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -138,23 +136,22 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.4.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.5.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.4 candidate gate is 7,530 bytes with SHA-256
-`1ce3fa0574c76356c1095c75ec8a7e9ba5d1211924f2f08fdb88319f1c25b01b`.
+The unchanged v0.8.5 candidate gate is 7,739 bytes with SHA-256
+`7da583bb99880157a7fbca539ebb0426f49cd79d2748be51e5ef5fe85eaa3996`.
 
-The candidate has 974 whitespace-delimited words, 133 logical lines, and one
-unique direct reference. Its 1,883 `ceil(bytes / 4)` value is an estimate only
+The candidate has 1,001 whitespace-delimited words, 135 logical lines, and one
+unique direct reference. Its 1,935 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
-1,631 bytes, 217 words, 26 lines, zero references, and 408 estimated tokens.
+1,840 bytes, 244 words, 28 lines, zero references, and 460 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
 reviewed and justifies the host-native Git boundary, explicit staged-state rule,
-and direct-reference split. Phase 3A/3B observations bind the prior patch and
-remain external; the revised candidate's host usage and lifecycle are
-`NOT-RUN`.
+and direct-reference split. The v0.8.5 CI change leaves this gate and the fixed
+67-case workload unchanged. Current host usage and lifecycle are `NOT-RUN`.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -389,6 +386,23 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.5` reports:
+
+- synchronized `0.8.5` manifests and a dedicated read-only
+  `unit-and-integration-tests` workflow for pull requests and pushes to `main`;
+- exact Ubuntu `24.04`, Python `3.14.7`, and Node.js `24.19.0` selections, full
+  Action commit pins, disabled setup-node package-manager caching, environment
+  version output, and complete verbose unittest discovery;
+- `repository-guards` and release-signature provenance preserved as separate
+  checks, with the main ruleset directly re-read after it began requiring both
+  pull-request checks from GitHub Actions in strict mode;
+- the unchanged 7,739-byte routing gate and 67-case workload, with no routing,
+  hook, corpus, benchmark, model, reasoning, or installed-runtime change; and
+- `STATIC-ONLY` current status, Codex host and lifecycle `NOT-RUN`, a real fork
+  run `NOT-RUN`, and authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
+
+See the [v0.8.5 release notes](releases/v0.8.5.md).
 
 The Git record for `v0.8.4` reports:
 

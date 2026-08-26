@@ -5,9 +5,43 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.4 candidate for Issue #37. It preserves the published
-v0.8.3 release and every terminal observation without claiming a current host
-pass.
+The active tree is a v0.8.5 candidate for Issue #56. It preserves v0.8.4 and
+every historical observation without claiming a current host pass.
+
+## 0.8.5 - unreleased candidate
+
+### Security
+
+- Added a dedicated `unit-and-integration-tests` GitHub Actions check for pull
+  requests and pushes to `main`. It uses `ubuntu-24.04`, exact Python `3.14.7`
+  and Node.js `24.19.0`, prints the Ubuntu, Python, Node.js, and Git versions,
+  and executes the complete verbose standard-library `unittest` suite.
+- Kept the workflow read-only for same-repository and fork pull requests: it
+  grants only `contents: read`, persists no checkout credential, references no
+  secret or token expression, and pins every external Action to a full commit.
+- Preserved `repository-guards` as the separate publication-policy signal and
+  kept release provenance under the unchanged `Release signature guard`.
+- Extended the checked-in action-graph contract and pull-request event fixtures
+  to fail closed on workflow, permission, trigger, toolchain, command, or check
+  name drift.
+
+### Evidence Boundary
+
+- The checked-in release status remains `STATIC-ONLY`. Local validation can
+  prove the workflow and test contracts, while final-candidate GitHub Actions,
+  pending or failing merge rejection, and a real fork run remain external
+  gates.
+- Updated and directly re-read the active main ruleset on 2026-08-26 UTC. It
+  requires both `repository-guards` and `unit-and-integration-tests` from
+  GitHub Actions with strict branch synchronization while preserving the
+  signed-commit, squash-only, non-fast-forward, zero-bypass, and release-tag
+  protections.
+- Installed Skills, hooks, routing contracts, corpus membership, benchmarks,
+  models, reasoning settings, and action authority are unchanged. Current
+  Codex host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code is
+  `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.5 release notes](docs/releases/v0.8.5.md).
 
 ## 0.8.4 - unreleased candidate
 

@@ -60,9 +60,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Phase 3A routing diagnostics and Phase 3A/3B behavior observations bind "
-            "the prior v0.8.4 patch only; the revised candidate has no current host "
-            "usage or lifecycle observation."
+            "The v0.8.5 repository-only CI hardening changes no installed routing; "
+            "no current Codex host usage or lifecycle observation was run, and prior "
+            "v0.8.4 observations remain separate historical evidence."
         ),
     },
     "claude-code": {

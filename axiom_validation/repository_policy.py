@@ -109,7 +109,7 @@ AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/evaluation-and-evidence.md",
     "references/validation-reporting.md",
 )
-GOVERNANCE_VERIFIED_DATE = "2026-08-23"
+GOVERNANCE_VERIFIED_DATE = "2026-08-26"
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
@@ -133,15 +133,19 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     "`refs/tags/v*`",
     "`Verify GitHub-signed release target`",
     "`repository-guards`",
+    "`unit-and-integration-tests`",
+    "`integration_id: 15368`",
     "`required_approving_review_count: 0`",
     "`require_extra_approval_for_unattributed_changes: true`",
     "`allowed_merge_methods: [squash]`",
     "`require_code_owner_review: false`",
+    "`strict_required_status_checks_policy: true`",
     "`strict_required_status_checks_policy: false`",
     "`do_not_enforce_on_create: false`",
     "`bypass_actors: []`",
     "`current_user_can_bypass: never`",
-    "Required checks on `main`: **NONE OBSERVED**",
+    "Required checks on `main`: `repository-guards` and "
+    "`unit-and-integration-tests`",
     "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
     "Release-tag creator allowlist: **UNAVAILABLE**",
     "A failed workflow is detection evidence, not server-side mutation prevention.",

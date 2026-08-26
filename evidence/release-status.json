@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.4",
-    "tag": "v0.8.4",
+    "version": "0.8.5",
+    "tag": "v0.8.5",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The revised v0.8.4 host-native push boundary has deterministic static coverage, but no current host or lifecycle observation. Phase 3A routing diagnostics and Phase 3A/3B terminal behavior observations bind the prior patch only and remain separate external evidence."
+      "reason": "The v0.8.5 repository-only CI hardening has deterministic static coverage and does not change installed routing, but no current Codex host or lifecycle observation was run. Prior v0.8.4 observations remain separate historical evidence."
     },
     {
       "host": "claude-code",

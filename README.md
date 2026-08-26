@@ -127,24 +127,25 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.4` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
-future signed merge commit, tag, or final post-merge host observation. The
-published v0.8.3 observation remains separate release evidence. Phase 3A's
-route-only passes and terminal behavior observation, and Phase 3B's terminal
-behavior observation, bind the prior v0.8.4 patch only; the revised candidate
-has not been observed by a host.
+`0.8.5` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+future signed merge commit, tag, final GitHub Actions runs, or post-merge host
+observation. The dated governance snapshot separately records the directly
+observed required-check ruleset. The CI hardening changes no installed route or
+hook. Current Codex host and lifecycle evidence is `NOT-RUN`, authenticated
+Claude Code is `UNAVAILABLE / NOT-RUN`, and v0.8.4 evidence remains separate
+history.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
 immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
 bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The v0.8.4 gate is
-7,530 bytes, 974 words, 133 lines, one direct reference, and an estimated 1,883
-tokens. Its cumulative increase of 1,631 bytes, 217 words, 26 lines, zero
-references, and 408 estimated tokens reaches both review thresholds and is
-reviewed as the narrow host-native Git boundary, explicit no-route staged-state
-rule, and direct-reference split.
+Markdown surface; it is not an exact token or credit count. The unchanged
+v0.8.5 gate is 7,739 bytes, 1,001 words, 135 lines, one direct reference, and an
+estimated 1,935 tokens. Its cumulative increase of 1,840 bytes, 244 words, 28
+lines, zero references, and 460 estimated tokens reaches both review thresholds
+and remains reviewed as the narrow host-native Git boundary, explicit no-route
+staged-state rule, and direct-reference split.
 
 The [routing evaluation corpus](evals/README.md) makes 67 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
@@ -463,7 +464,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.4 release notes](docs/releases/v0.8.4.md):
+- [Changelog](CHANGELOG.md) and [v0.8.5 release notes](docs/releases/v0.8.5.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -490,13 +491,16 @@ event counts and rejects a claimed reduction without equivalent before/after
 routed and no-route results. These are
 contributor and CI checks, not installed runtime dependencies.
 
-Pull requests to `main`, including fork contributions, run these read-only
-distribution and publication checks on the proposed merge tree. The workflow
-grants only `contents: read`, does not reference repository secrets, and checks
-out with `persist-credentials: false`; it does not require the contributor head
-to be GitHub-signed or hosted in this repository. Those results validate a
-proposed tree only. Release provenance is established separately for protected
-`main`, immutable `v*` tags, bounded release candidates, and GitHub Releases.
+Pull requests to `main`, including fork contributions, run two separate
+read-only checks on the proposed merge tree: `repository-guards` for package and
+publication policy, and `unit-and-integration-tests` for the complete unittest
+suite. Both workflows grant only `contents: read`, reference no repository
+secret, and check out with `persist-credentials: false`; they do not require the
+contributor head to be GitHub-signed or hosted in this repository. The active
+main ruleset requires both GitHub Actions checks in strict mode. Those results
+validate a proposed tree only. Release provenance is established separately for
+protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
+Releases.
 
 ## License
 
