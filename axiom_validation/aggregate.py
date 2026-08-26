@@ -9,6 +9,7 @@ from typing import Any
 from .action_graph import (
     check_distribution_workflow_contract,
     check_github_action_pins,
+    check_unit_test_workflow_contract,
 )
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
 from .context_budget import check_context_budget
@@ -135,6 +136,9 @@ def main() -> int:
     distribution_workflow_document = run_policy(
         "action-graph", check_distribution_workflow_contract, failures
     )
+    unit_test_workflow_document = run_policy(
+        "action-graph", check_unit_test_workflow_contract, failures
+    )
     release_workflow_text = run_policy(
         "release", check_release_signature_workflow_contract, failures
     )
@@ -142,6 +146,7 @@ def main() -> int:
         "action-graph",
         lambda domain_failures: check_pull_request_validation_fixtures(
             distribution_workflow_document,
+            unit_test_workflow_document,
             release_workflow_text,
             documents,
             domain_failures,

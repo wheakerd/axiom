@@ -246,13 +246,18 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
 
 def check_pull_request_validation_fixtures(
     distribution_document: dict[str, Any] | None,
+    unit_test_document: dict[str, Any] | None,
     release_workflow_text: str | None,
     documents: dict[str, dict[str, Any]],
     failures: list[str],
 ) -> int:
     label = "pull-request validation event graph"
-    if distribution_document is None or release_workflow_text is None:
-        failures.append(f"{label} could not be constructed from both workflows")
+    if (
+        distribution_document is None
+        or unit_test_document is None
+        or release_workflow_text is None
+    ):
+        failures.append(f"{label} could not be constructed from all three workflows")
         return 0
     try:
         release_document = parse_canonical_yaml_document(
@@ -264,11 +269,15 @@ def check_pull_request_validation_fixtures(
         return 0
 
     distribution_triggers = distribution_document.get("on")
+    unit_test_triggers = unit_test_document.get("on")
     release_triggers = release_document.get("on")
     distribution_events = (
         set(distribution_triggers) if isinstance(distribution_triggers, dict) else set()
     )
     release_events = set(release_triggers) if isinstance(release_triggers, dict) else set()
+    unit_test_events = (
+        set(unit_test_triggers) if isinstance(unit_test_triggers, dict) else set()
+    )
     pull_request = (
         distribution_triggers.get("pull_request")
         if isinstance(distribution_triggers, dict)
@@ -281,6 +290,20 @@ def check_pull_request_validation_fixtures(
             if isinstance(item, CanonicalYamlScalar)
         }
         if isinstance(pull_request, dict)
+        else set()
+    )
+    unit_test_pull_request = (
+        unit_test_triggers.get("pull_request")
+        if isinstance(unit_test_triggers, dict)
+        else None
+    )
+    unit_test_pull_request_branches = (
+        {
+            item.value
+            for item in unit_test_pull_request.get("branches", [])
+            if isinstance(item, CanonicalYamlScalar)
+        }
+        if isinstance(unit_test_pull_request, dict)
         else set()
     )
     scenarios = (
@@ -312,9 +335,15 @@ def check_pull_request_validation_fixtures(
             "pull_request" in distribution_events
             and scenario["base"] in pull_request_branches
         )
+        full_tests_scheduled = (
+            "pull_request" in unit_test_events
+            and scenario["base"] in unit_test_pull_request_branches
+        )
         provenance_scheduled = "pull_request" in release_events
         if not static_scheduled:
             failures.append(f"{label}:{name} did not schedule static validation")
+        if not full_tests_scheduled:
+            failures.append(f"{label}:{name} did not schedule full unittest validation")
         if provenance_scheduled:
             failures.append(f"{label}:{name} incorrectly scheduled release provenance")
 

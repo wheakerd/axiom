@@ -106,14 +106,12 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For the v0.8.4 candidate, the 67-case combined corpus, 30 total benchmark
-memberships, and 11 preserved observations pass static validation. The new
-ordinary host-native and explicit lightweight direct-submit cases have empty
-`benchmarkSets` arrays, so both frozen benchmark memberships remain unchanged.
-The stale-tracking case also remains outside both benchmarks. Historical v0.8.2 failures and diagnostics and
-the two external terminal `UNKNOWN` attempts against the earlier signed v0.8.3
-candidate remain distinct. The published v0.8.3 post-tag observation is an
-external Release asset; no current v0.8.4 host result is inferred from it.
+For the v0.8.5 candidate, the unchanged 67-case combined corpus, 30 total
+benchmark memberships, and 11 preserved observations pass static validation.
+The ordinary host-native, explicit lightweight direct-submit, and
+stale-tracking cases remain outside both frozen benchmarks. Historical v0.8.4
+and earlier evidence remains distinct; no current v0.8.5 host result is
+inferred from it.
 
 The explicit external mode validates one content-addressed post-merge record
 without changing aggregate behavior:
@@ -121,9 +119,9 @@ without changing aggregate behavior:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.4-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.4 \
-  --expected-tag v0.8.4 \
+  /absolute/path/axiom-v0.8.5-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.5 \
+  --expected-tag v0.8.5 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```

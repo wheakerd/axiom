@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.4 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.5 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.4-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.4 \
-  --expected-tag v0.8.4 \
+  /absolute/path/axiom-v0.8.5-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.5 \
+  --expected-tag v0.8.5 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.4 with a non-null `v0.8.4` tag and the
+The subject must be non-candidate v0.8.5 with a non-null `v0.8.5` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -255,13 +255,13 @@ Use this safe release sequence:
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. If the batch passes, create immutable tag `v0.8.4` at that same commit.
+3. If the batch passes, create immutable tag `v0.8.5` at that same commit.
 4. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
 5. Upload the exact validated record to the GitHub Release. Put its full
    SHA-256 in the Release and Issue text, then require release and signature
    checks to pass.
-6. Close Issue #35 only after the asset and release checks succeed.
+6. Close Issue #56 only after the asset and release checks succeed.
 
 The asset supplements final release evidence. It never edits, promotes, or
 rewrites the checked-in `STATIC-ONLY` status, and it cannot reclassify F4, F5,

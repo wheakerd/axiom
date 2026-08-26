@@ -4,11 +4,12 @@ This document is a dated, read-only observation of GitHub repository policy.
 It does not configure GitHub, grant authority, or replace server-side rulesets.
 A failed workflow is detection evidence, not server-side mutation prevention.
 
-Last verified (UTC): `2026-08-23`
+Last verified (UTC): `2026-08-26`
 
 Verification used authenticated read-only GitHub REST and GraphQL queries for
-the public `wheakerd/axiom` repository. No ruleset, branch, tag, release,
-workflow, permission, collaborator, or repository setting was changed. The
+the public `wheakerd/axiom` repository after the separately authorized main
+ruleset update. The verification queries changed no ruleset, branch, tag,
+release, workflow, permission, collaborator, or repository setting. The
 [ruleset REST API](https://docs.github.com/en/rest/repos/rules),
 [ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets),
 and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
@@ -27,12 +28,16 @@ The active repository ruleset `require-signed-commits-on-main` targets exactly
   `require_extra_approval_for_unattributed_changes: true`, and
   `allowed_merge_methods: [squash]`;
 - `non_fast_forward`, which blocks force pushes; and
-- `required_signatures`, which requires signed commits.
+- `required_signatures`, which requires signed commits; and
+- `required_status_checks`, with exact GitHub Actions checks
+  `repository-guards` and `unit-and-integration-tests`, both bound to
+  `integration_id: 15368`, `strict_required_status_checks_policy: true`, and
+  `do_not_enforce_on_create: false`.
 
-Required checks on `main`: **NONE OBSERVED**. The branch ruleset contains no
-`required_status_checks` rule. The `repository-guards` GitHub Actions check runs
-on pull requests and pushes, but its presence and successful history do not make
-it a required check.
+Required checks on `main`: `repository-guards` and
+`unit-and-integration-tests`. Both must pass before merge, and strict mode
+requires the pull-request branch to be current with `main` before their final
+results are accepted. The two checks remain distinct server-side prerequisites.
 
 The ruleset contains no `deletion` rule. `main` was the repository's default
 branch at verification time, but no destructive deletion probe was attempted
@@ -72,8 +77,13 @@ enumerate the complete effective actor roster. Release-tag creator allowlist:
 `Distribution and publication guards` produces the `repository-guards` check.
 It validates a proposed pull-request tree with read-only repository checks. It
 does not establish release provenance, prevent a Git ref mutation, or authorize
-publication. Because `main` has no required-status-check rule, this check is
-currently informative rather than a server-side merge prerequisite.
+publication.
+
+`Unit and integration tests` produces the exact
+`unit-and-integration-tests` check. It runs the complete standard-library
+unittest discovery command in the fixed blocking environment and remains
+separate from package and publication-policy validation. The active `main`
+ruleset requires both checks and accepts them only from GitHub Actions.
 
 `Release signature guard` produces the exact
 `Verify GitHub-signed release target` check. The tag ruleset requires that check
