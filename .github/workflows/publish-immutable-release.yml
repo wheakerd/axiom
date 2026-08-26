@@ -1,0 +1,245 @@
+name: Publish immutable release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing strict SemVer tag at the current signed main commit
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-immutable-release
+  cancel-in-progress: false
+
+jobs:
+  publish-immutable-release:
+    if: "github.ref == 'refs/heads/main'"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      GITHUB_API_VERSION: "2026-03-10"
+    steps:
+      - name: Check out the authorized main commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Validate evidence and publish the immutable release
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          version="${RELEASE_TAG#v}"
+          commit="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          tag_commit="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          test "$tag_commit" = "$commit"
+
+          release_workdir="$(mktemp -d)"
+          trap 'rm -rf -- "${release_workdir:?}"' EXIT
+          collection="$release_workdir/release-collection.json"
+          initial_release="$release_workdir/release-initial.json"
+          initial_plan="$release_workdir/plan-initial.json"
+          current_release="$release_workdir/release-current.json"
+          current_plan="$release_workdir/plan-current.json"
+          prepublish_release="$release_workdir/release-prepublish.json"
+          final_release="$release_workdir/release-final.json"
+          latest_release="$release_workdir/release-latest.json"
+          upload_result="$release_workdir/attestation-upload.json"
+
+          remote_preflight() {
+            local phase="$1"
+            local settings="$release_workdir/immutable-$phase.json"
+            local repository_metadata="$release_workdir/repository-$phase.json"
+            local latest_metadata="$release_workdir/latest-$phase.json"
+            local main_metadata="$release_workdir/main-$phase.json"
+            local tag_metadata="$release_workdir/tag-$phase.json"
+            local signature="$release_workdir/signature-$phase.json"
+            local repository_owner="${GITHUB_REPOSITORY%%/*}"
+            local repository_name="${GITHUB_REPOSITORY#*/}"
+
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/immutable-releases" > "$settings"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY" > "$repository_metadata"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/releases/latest" > "$latest_metadata"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/commits/main" > "$main_metadata"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" > "$tag_metadata"
+            gh api graphql \
+              -f query='query($owner: String!, $name: String!, $oid: GitObjectID!) { repository(owner: $owner, name: $name) { object(oid: $oid) { ... on Commit { oid signature { isValid state wasSignedByGitHub } } } } }' \
+              -f owner="$repository_owner" \
+              -f name="$repository_name" \
+              -f oid="$commit" > "$signature"
+            python3 scripts/check-release-evidence.py preflight \
+              --immutable-settings "$settings" \
+              --repository-metadata "$repository_metadata" \
+              --latest-release-metadata "$latest_metadata" \
+              --main-commit-metadata "$main_metadata" \
+              --tag-commit-metadata "$tag_metadata" \
+              --graphql-signature "$signature" \
+              --expected-commit "$commit" \
+              --expected-tag "$RELEASE_TAG"
+          }
+
+          prepare_plan() {
+            local metadata="$1"
+            local plan="$2"
+            python3 scripts/check-release-evidence.py prepare \
+              --release-metadata "$metadata" \
+              --plan-output "$plan" \
+              --expected-version "$version" \
+              --expected-tag "$RELEASE_TAG" \
+              --expected-commit "$commit" \
+              --expected-tree "$tree"
+          }
+
+          download_evidence() {
+            local plan="$1"
+            local directory="$2"
+            local observation_id
+            local observation_name
+            local attestation_id
+            local attestation_name
+            observation_id="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field asset-id)"
+            observation_name="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field asset-name)"
+            attestation_id="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field attestation-id)"
+            attestation_name="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field attestation-name)"
+            mkdir "$directory"
+            downloaded_observation="$directory/$observation_name"
+            downloaded_attestation="$directory/$attestation_name"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              -H "Accept: application/octet-stream" \
+              "repos/$GITHUB_REPOSITORY/releases/assets/$observation_id" > "$downloaded_observation"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              -H "Accept: application/octet-stream" \
+              "repos/$GITHUB_REPOSITORY/releases/assets/$attestation_id" > "$downloaded_attestation"
+          }
+
+          remote_preflight initial
+          gh api --paginate --slurp \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$collection"
+          python3 scripts/check-release-evidence.py select \
+            --release-collection "$collection" \
+            --release-output "$initial_release" \
+            --expected-tag "$RELEASE_TAG"
+          prepare_plan "$initial_release" "$initial_plan"
+
+          release_id="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field release-id)"
+          release_phase="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field phase)"
+          observation_id="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field asset-id)"
+          observation_name="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field asset-name)"
+          initial_directory="$release_workdir/initial-assets"
+          mkdir "$initial_directory"
+          initial_observation="$initial_directory/$observation_name"
+          gh api \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            -H "Accept: application/octet-stream" \
+            "repos/$GITHUB_REPOSITORY/releases/assets/$observation_id" > "$initial_observation"
+          expected_attestation="$(python3 scripts/check-release-evidence.py validate \
+            --plan "$initial_plan" \
+            --asset "$initial_observation" \
+            --attestation-directory "$release_workdir")"
+          expected_attestation_name="$(basename -- "$expected_attestation")"
+
+          if test "$release_phase" = "draft"; then
+            attestation_present="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field attestation-present)"
+            if test "$attestation_present" = "false"; then
+              gh api --method POST \
+                -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+                -H "Accept: application/vnd.github+json" \
+                -H "Content-Type: application/octet-stream" \
+                "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets?name=$expected_attestation_name" \
+                --input "$expected_attestation" > "$upload_result"
+            fi
+          fi
+
+          gh api \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$current_release"
+          prepare_plan "$current_release" "$current_plan"
+          test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field release-id)" = "$release_id"
+          test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field attestation-name)" = "$expected_attestation_name"
+          download_evidence "$current_plan" "$release_workdir/current-assets"
+
+          if test "$release_phase" = "final"; then
+            remote_preflight final-recovery
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$final_release"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/releases/latest" > "$latest_release"
+            python3 scripts/check-release-evidence.py verify \
+              --plan "$current_plan" \
+              --release-metadata "$final_release" \
+              --asset "$downloaded_observation" \
+              --attestation "$downloaded_attestation" \
+              --latest-release-metadata "$latest_release" \
+              --final
+            exit 0
+          fi
+
+          test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field phase)" = "draft"
+          python3 scripts/check-release-evidence.py verify \
+            --plan "$current_plan" \
+            --release-metadata "$current_release" \
+            --asset "$downloaded_observation" \
+            --attestation "$downloaded_attestation"
+
+          remote_preflight prepublish
+          gh api \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$prepublish_release"
+          python3 scripts/check-release-evidence.py verify \
+            --plan "$current_plan" \
+            --release-metadata "$prepublish_release" \
+            --asset "$downloaded_observation" \
+            --attestation "$downloaded_attestation"
+
+          gh api --method PATCH \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" \
+            -F draft=false \
+            -F prerelease=false \
+            -f make_latest=true > "$release_workdir/publication-response.json"
+
+          remote_preflight postpublish
+          gh api \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$final_release"
+          gh api \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases/latest" > "$latest_release"
+          download_evidence "$current_plan" "$release_workdir/final-assets"
+          python3 scripts/check-release-evidence.py verify \
+            --plan "$current_plan" \
+            --release-metadata "$final_release" \
+            --asset "$downloaded_observation" \
+            --attestation "$downloaded_attestation" \
+            --prepublish-release-metadata "$prepublish_release" \
+            --latest-release-metadata "$latest_release" \
+            --final

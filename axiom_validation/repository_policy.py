@@ -49,7 +49,9 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/results/v0.7.7/codex/linux-recovery-2.json",
     "evals/results/v0.7.7/claude-code/linux.json",
     "scripts/check-compatibility-evidence.py",
+    "scripts/check-release-evidence.py",
     "scripts/measure-routing-context.py",
+    ".github/workflows/publish-immutable-release.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -149,6 +151,10 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
     "Release-tag creator allowlist: **UNAVAILABLE**",
     "A failed workflow is detection evidence, not server-side mutation prevention.",
+    "`Publish immutable release`",
+    "`enabled: true`",
+    "`enforced_by_owner: false`",
+    "Existing Releases, including v0.8.5, remain in their previously reported mutable state",
 )
 
 
@@ -396,7 +402,7 @@ def check_release_version_surfaces(failures: list[str]) -> None:
         ),
         (
             release_path,
-            (f"# Axiom {release_tag}", f"Version `{RELEASE_VERSION}`"),
+            (f"Version `{RELEASE_VERSION}`", "## Exact Draft Evidence Validation"),
         ),
     )
     for path, anchors in surface_contracts:
@@ -411,6 +417,10 @@ def check_release_version_surfaces(failures: list[str]) -> None:
                     f"{display_path(path)} is missing current release anchor {anchor!r} "
                     f"derived from RELEASE_VERSION={RELEASE_VERSION!r}"
                 )
+        if path == release_path and (text.startswith("# ") or "\n# " in text):
+            failures.append(
+                f"{display_path(path)} must be a compact Release body without a duplicate title"
+            )
 
 
 def check_packaged_skills(failures: list[str]) -> None:

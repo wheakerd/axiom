@@ -91,6 +91,45 @@ for `v*`; the workflow also verifies signed `main` history and observes later
 tag or GitHub Release events. Its event-time detection remains distinct from
 the active tag ruleset's pre-mutation deletion and force-push restrictions.
 
+`Publish immutable release` is a separate manually dispatched workflow. It
+accepts only one strict SemVer tag from the current `main` commit, grants only
+`contents: write`, and has no pull-request, push, release, schedule, secret, or
+arbitrary repository input. It globally serializes Latest publication, verifies
+the live immutable setting, main/tag identity, and REST plus GraphQL GitHub-made
+signature, and rejects a different equal-or-newer current Latest SemVer, then
+uniquely freezes one numeric Release ID. It validates one
+downloaded observation asset, uploads one deterministic attestation without
+replacement, downloads both remote assets, publishes the same draft, and
+requires the final Release to be immutable and GitHub Latest. It can resume a
+draft after the exact attestation already exists and can perform final-only
+readback without a second publication mutation.
+
+The signed-target workflow remains a separate policy owner. GitHub does not
+start another workflow for an ordinary event created by a workflow's
+`GITHUB_TOKEN`, so the publication workflow fails closed on direct signature
+readback and the release operator explicitly dispatches `Release signature
+guard` on the exact published tag afterward.
+
+## Immutable Release Policy
+
+On 2026-08-26 UTC, an authenticated repository-owner REST request enabled
+immutable releases for `wheakerd/axiom`; the immediate read-back returned
+`enabled: true` and `enforced_by_owner: false`. This repository-level setting
+applies only to future Releases. Existing Releases, including v0.8.5, remain in
+their previously reported mutable state and are not retroactively relabeled.
+
+The checkout cannot prove that this remote setting remains enabled. The release
+workflow reads it before any mutation, immediately before publication, and
+after publication. Final acceptance also requires GitHub's Release response
+itself to report `immutable: true`.
+
+GitHub's documented immutable-release guarantees cover the associated tag and
+uploaded assets. They do not document the Release title, body, Latest marker,
+or Release object as immutable. Axiom's content-addressed attestation binds the
+exact title and release-notes SHA-256, and later verification fails on metadata
+drift. That is durable detection, not a claim that the platform blocks every
+metadata edit or Release deletion.
+
 ## Critical-Path Ownership
 
 The checked-in [CODEOWNERS file](../.github/CODEOWNERS) assigns the following

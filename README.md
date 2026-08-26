@@ -127,13 +127,17 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.5` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
-future signed merge commit, tag, final GitHub Actions runs, or post-merge host
-observation. The dated governance snapshot separately records the directly
-observed required-check ruleset. The CI hardening changes no installed route or
-hook. Current Codex host and lifecycle evidence is `NOT-RUN`, authenticated
-Claude Code is `UNAVAILABLE / NOT-RUN`, and v0.8.4 evidence remains separate
-history.
+`0.8.6` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+future signed merge commit, tag, final GitHub Actions runs, or external
+release-bound host observation. The release-evidence hardening changes no
+installed route or hook. A manually dispatched main-only workflow validates one
+exact draft asset, records a content-addressed attestation, and requires the
+published Release to be immutable and GitHub Latest. It freezes one numeric
+Release ID, checks the live setting, main/tag target, and GitHub signature,
+downloads both final assets, and can resume after an attestation upload or
+completed publication without replacement. Current Codex host and lifecycle
+evidence is `NOT-RUN`, authenticated Claude Code is
+`UNAVAILABLE / NOT-RUN`, and v0.8.5 evidence remains separate history.
 
 The [routing-context budget](evals/context-budget/README.md) freezes the
 immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
@@ -141,7 +145,7 @@ bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
 Markdown surface; it is not an exact token or credit count. The unchanged
-v0.8.5 gate is 7,739 bytes, 1,001 words, 135 lines, one direct reference, and an
+v0.8.6 gate is 7,739 bytes, 1,001 words, 135 lines, one direct reference, and an
 estimated 1,935 tokens. Its cumulative increase of 1,840 bytes, 244 words, 28
 lines, zero references, and 460 estimated tokens reaches both review thresholds
 and remains reviewed as the narrow host-native Git boundary, explicit no-route
@@ -464,7 +468,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.5 release notes](docs/releases/v0.8.5.md):
+- [Changelog](CHANGELOG.md) and [v0.8.6 release notes](docs/releases/v0.8.6.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -501,6 +505,23 @@ main ruleset requires both GitHub Actions checks in strict mode. Those results
 validate a proposed tree only. Release provenance is established separately for
 protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
 Releases.
+
+The separate `Publish immutable release` workflow never runs for a pull
+request or ordinary push. From the current signed `main` commit it accepts only
+one exact SemVer tag, serializes repository-wide Latest publication, and
+requires the live immutable-release setting, main/tag target, and GitHub-made
+signature to remain valid. It rejects a different equal-or-newer current Latest
+SemVer. It uniquely freezes one Release ID, validates the
+downloaded observation and exposed GitHub digest, uploads one deterministic
+attestation without replacement, downloads both remote assets, and publishes
+only that draft. A rerun resumes a verified draft or performs final-only
+readback after publication. Final verification requires the same assets,
+`immutable=true`, and the GitHub Latest identity. GitHub's immutable-release
+guarantee covers the tag and assets; the attestation makes title/body drift
+detectable without claiming that every Release metadata edit or deletion is
+platform-blocked. The operator explicitly dispatches the unchanged release
+signature guard on the tag after publication because events created with
+`GITHUB_TOKEN` do not start that separate workflow automatically.
 
 ## License
 

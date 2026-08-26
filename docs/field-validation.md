@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.5 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.6 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.5-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.5 \
-  --expected-tag v0.8.5 \
+  /absolute/path/axiom-v0.8.6-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.6 \
+  --expected-tag v0.8.6 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.5 with a non-null `v0.8.5` tag and the
+The subject must be non-candidate v0.8.6 with a non-null `v0.8.6` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -255,19 +255,37 @@ Use this safe release sequence:
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. If the batch passes, create immutable tag `v0.8.5` at that same commit.
+3. If the batch passes, create immutable tag `v0.8.6` at that same commit.
 4. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-5. Upload the exact validated record to the GitHub Release. Put its full
-   SHA-256 in the Release and Issue text, then require release and signature
-   checks to pass.
-6. Close Issue #56 only after the asset and release checks succeed.
+5. Create one draft `Axiom v0.8.6` Release targeting the exact 40-character
+   commit and upload only the validated observation asset.
+6. Dispatch `Publish immutable release` from the current `main` commit with
+   only `tag=v0.8.6`. The workflow itself requires the live immutable setting,
+   `main` and tag identity, and REST plus GraphQL GitHub-made signature before
+   mutation and around publication. It also rejects a different equal-or-newer
+   current Latest SemVer. It freezes the Release ID, downloads and
+   validates the observation, uploads one deterministic attestation only when
+   absent, downloads both remote assets, publishes the same draft, and requires
+   `immutable=true` plus GitHub Latest. A rerun may resume an exact draft or
+   perform final-only readback; it never replaces either asset.
+7. Explicitly dispatch the unchanged `Release signature guard` on `v0.8.6` and
+   require the exact-tag run to pass. A Release mutation made with the
+   publication workflow's `GITHUB_TOKEN` does not automatically start another
+   workflow from the resulting ordinary release event.
+8. Close Issue #57 only after the signature guard, publication workflow,
+   immutable Release, Latest marker, asset identities, and attestation all pass.
 
 The asset supplements final release evidence. It never edits, promotes, or
 rewrites the checked-in `STATIC-ONLY` status, and it cannot reclassify F4, F5,
 the v0.8.2 release-bound failure, the independent diagnostic, or any historical
 observation. The signed unreleased v0.8.3 candidate and its two external
 terminal `UNKNOWN` attempts also remain distinct history.
+
+GitHub's immutable-release guarantee protects the associated tag and assets.
+The Axiom attestation additionally binds the exact title and release-notes
+SHA-256 so metadata drift is detectable, without claiming that GitHub prevents
+every title/body edit or deletion of the Release object.
 
 ## Design-Partner Program
 
