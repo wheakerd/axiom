@@ -60,9 +60,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.5 repository-only CI hardening changes no installed routing; "
+            "The v0.8.6 release-evidence hardening changes no installed routing; "
             "no current Codex host usage or lifecycle observation was run, and prior "
-            "v0.8.4 observations remain separate historical evidence."
+            "v0.8.5 observations remain separate historical evidence."
         ),
     },
     "claude-code": {

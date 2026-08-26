@@ -18,7 +18,7 @@ class ActionGraphTests(unittest.TestCase):
         count = check_github_action_pins(failures)
         document = check_distribution_workflow_contract(failures)
         unit_test_document = check_unit_test_workflow_contract(failures)
-        self.assertEqual(5, count)
+        self.assertEqual(7, count)
         self.assertIsNotNone(document)
         self.assertIsNotNone(unit_test_document)
         self.assertEqual([], failures)

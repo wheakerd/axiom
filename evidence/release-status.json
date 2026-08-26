@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.5",
-    "tag": "v0.8.5",
+    "version": "0.8.6",
+    "tag": "v0.8.6",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.5 repository-only CI hardening has deterministic static coverage and does not change installed routing, but no current Codex host or lifecycle observation was run. Prior v0.8.4 observations remain separate historical evidence."
+      "reason": "The v0.8.6 release-evidence hardening changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. Prior v0.8.5 evidence remains separate."
     },
     {
       "host": "claude-code",

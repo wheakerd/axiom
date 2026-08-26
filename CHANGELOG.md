@@ -5,8 +5,56 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.5 candidate for Issue #56. It preserves v0.8.4 and
-every historical observation without claiming a current host pass.
+The active tree is a v0.8.6 candidate for Issue #57. It preserves v0.8.5 and
+every historical observation without claiming a checked-in current host pass.
+
+## 0.8.6 - unreleased candidate
+
+### Security
+
+- Added a manual, main-only `Publish immutable release` workflow that accepts
+  only one strict SemVer tag, checks out the exact dispatch commit without
+  persisted credentials, serializes all repository-wide Latest publication,
+  and rejects a different equal-or-newer current Latest SemVer.
+- Added a standard-library release-evidence validator that uniquely selects a
+  draft or already-immutable Release, freezes its numeric ID and evidence
+  assets, downloads the exact GitHub bytes, requires the filename SHA-256,
+  size, asset ID, and exposed API digest, then applies the existing 17-case
+  external observation validator.
+- Added a deterministic content-addressed attestation that binds the Release,
+  version, tag, commit, tree, asset identity, digest, size, and validator result.
+  The workflow uploads it to the frozen Release ID without replacement,
+  downloads both remote assets, resumes safely after an earlier upload or
+  publication, and verifies `immutable=true` plus GitHub Latest.
+- Added fail-closed live preflights for the immutable-release setting, `main`
+  and tag targets, and REST plus GraphQL GitHub-made signature evidence before
+  mutation, immediately before publication, and after publication.
+- Enabled immutable releases for `wheakerd/axiom`. GitHub directly reported
+  `enabled: true` and `enforced_by_owner: false`; the setting applies to future
+  releases and does not rewrite the mutable state of earlier Releases.
+- Kept `Verify GitHub-signed release target` unchanged and separate: it still
+  owns signed tag/history provenance, while the new stable check owns exact
+  evidence-asset validity and publication immutability. The operator explicitly
+  dispatches the unchanged guard after publication because `GITHUB_TOKEN`
+  mutations do not trigger an ordinary `release: published` workflow run.
+
+### Evidence Boundary
+
+- Missing, duplicated, malformed, replaced, or digest-mismatched assets fail
+  closed. Incomplete, non-pass, retrying, mutating, wrong-order, or wrong-subject
+  observations also fail through the existing repository-owned validator.
+- GitHub immutable Releases protect the tag and assets. The attestation also
+  binds the exact title and release-notes digest so later metadata drift is
+  detectable; this does not claim that GitHub blocks every metadata edit or
+  Release deletion.
+- The checked-in release status remains `STATIC-ONLY`. A fresh v0.8.6 Codex
+  result must remain external until it is bound to the final tag, commit, tree,
+  immutable Release, and attestation. Prior terminal results are unchanged.
+- Installed Skills, hooks, route selection, corpus membership, benchmarks,
+  models, reasoning settings, and action authority are unchanged. Authenticated
+  Claude Code host evidence remains `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.6 release notes](docs/releases/v0.8.6.md).
 
 ## 0.8.5 - unreleased candidate
 
