@@ -5,7 +5,7 @@
   "method": "documented-codex-same-session-sequence",
   "responseSchema": {
     "path": "evals/review-response-schema-v1.json",
-    "sha256": "073d58151c69be361d3f096d4e40ed053d8f7db9ef97ec1834aaa78501b2e427"
+    "sha256": "5fbec1e569e7245d7ec7f49df14bc125f0a95baf6e8437d23d2dff24ce5a1018"
   },
   "model": "gpt-5.4",
   "reasoningEffort": "medium",

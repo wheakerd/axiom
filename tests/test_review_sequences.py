@@ -17,9 +17,35 @@ from axiom_validation.routing_evals import (
     check_review_sequence_contracts,
     validate_review_response,
 )
+from axiom_validation.routing_evals.review_sequences import (
+    REVIEW_RESPONSE_DESCRIPTIONS,
+)
 
 
 class ReviewSequenceTests(unittest.TestCase):
+    def test_model_facing_schema_describes_every_closed_field(self):
+        schema = json.loads(
+            (REPOSITORY_ROOT / REVIEW_RESPONSE_SCHEMA_RELATIVE_PATH).read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(set(schema["required"]), set(REVIEW_RESPONSE_DESCRIPTIONS))
+        for field in schema["required"]:
+            with self.subTest(field=field):
+                self.assertEqual(
+                    REVIEW_RESPONSE_DESCRIPTIONS[field],
+                    schema["properties"][field].get("description"),
+                )
+
+        self.assertIn(
+            "current review turn, never setup or historical prose",
+            schema["properties"]["observableTrigger"]["description"],
+        )
+        self.assertIn(
+            "Merely referring to or explaining the refusal is not inheritance",
+            schema["properties"]["priorRefusalInherited"]["description"],
+        )
+
     def test_checked_in_sequences_cover_every_issue_edge(self):
         failures: list[str] = []
         self.assertEqual((8, 11), check_review_sequence_contracts(failures))
