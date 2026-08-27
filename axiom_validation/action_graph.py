@@ -15,6 +15,28 @@ from .yaml_subset import (
 )
 
 
+DOCKER_NAME_COMPONENT = r"[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*"
+DOCKER_DOMAIN_COMPONENT = (
+    r"(?:[A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])"
+)
+DOCKER_DOMAIN = rf"{DOCKER_DOMAIN_COMPONENT}(?:\.{DOCKER_DOMAIN_COMPONENT})*(?::[0-9]+)?"
+DOCKER_IMAGE_DIGEST_PATTERN = re.compile(
+    rf"^(?:{DOCKER_DOMAIN}/)?{DOCKER_NAME_COMPONENT}"
+    rf"(?:/{DOCKER_NAME_COMPONENT})*"
+    r"(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?"
+    r"@sha256:[0-9a-fA-F]{64}$"
+)
+DOCKER_REPOSITORY_NAME_MAX_LENGTH = 255
+DOCKER_STAGE_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]*$")
+DOCKER_PLATFORM_PATTERN = re.compile(
+    r"^--platform=[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*$"
+)
+DOCKER_PARSER_DIRECTIVE_PATTERN = re.compile(
+    r"^[ \t]*#[ \t]*(?:escape|syntax|check)[ \t]*=",
+    re.IGNORECASE,
+)
+
+
 def walk_yaml_uses(
     value: Any,
     path: tuple[str | int, ...] = (),
@@ -266,12 +288,20 @@ def local_action_file(
     raw: str,
     label: str,
     failures: list[str],
+    *,
+    reject_symlink: bool = False,
 ) -> Path | None:
     candidate_raw = raw if raw.startswith("./") else f"./{raw}"
     relative = canonical_local_path(candidate_raw, label, failures)
     if relative is None:
         return None
-    candidate = (action_directory / Path(*relative.parts)).resolve()
+    lexical_candidate = action_directory / Path(*relative.parts)
+    if reject_symlink and lexical_candidate.is_symlink():
+        failures.append(
+            f"{label} local action file must not be a symbolic link: {raw!r}"
+        )
+        return None
+    candidate = lexical_candidate.resolve()
     try:
         candidate.relative_to(root.resolve())
         candidate.relative_to(action_directory.resolve())
@@ -282,6 +312,204 @@ def local_action_file(
         failures.append(f"{label} local action file does not exist: {raw!r}")
         return None
     return candidate
+
+
+def strip_dockerfile_comment(line: str) -> str:
+    """Remove Dockerfile comment lines while retaining inline hash data."""
+    return "" if line.lstrip(" \t").startswith("#") else line
+
+
+def is_digest_pinned_docker_source(source: str) -> bool:
+    """Accept a bounded Docker reference with one exact SHA-256 digest."""
+    if DOCKER_IMAGE_DIGEST_PATTERN.fullmatch(source) is None:
+        return False
+    name_and_tag = source.rsplit("@", 1)[0]
+    last_slash = name_and_tag.rfind("/")
+    last_colon = name_and_tag.rfind(":")
+    name = name_and_tag[:last_colon] if last_colon > last_slash else name_and_tag
+    first, separator, remainder = name.partition("/")
+    has_domain = separator and (
+        "." in first
+        or ":" in first
+        or first == "localhost"
+        or first.lower() != first
+    )
+    repository_name = remainder if has_domain else name
+    return len(repository_name) <= DOCKER_REPOSITORY_NAME_MAX_LENGTH
+
+
+def dockerfile_logical_lines(
+    text: str,
+    label: str,
+    failures: list[str],
+) -> list[tuple[int, str]]:
+    """Join the default Dockerfile escape continuation without interpreting shell."""
+    logical_lines: list[tuple[int, str]] = []
+    continued: list[str] = []
+    continued_from: int | None = None
+
+    if "\x00" in text or text.startswith("\ufeff"):
+        failures.append(f"{label} contains an unsupported NUL byte or byte-order mark")
+
+    for line_number, physical_line in enumerate(text.splitlines(), start=1):
+        if DOCKER_PARSER_DIRECTIVE_PATTERN.match(physical_line):
+            failures.append(
+                f"{label}:{line_number} uses an unsupported Dockerfile parser directive"
+            )
+        commentless = strip_dockerfile_comment(physical_line)
+        if not commentless:
+            continue
+        content = commentless.rstrip(" \t")
+        content_backslashes = len(content) - len(content.rstrip("\\"))
+        if commentless != content and content_backslashes == 1:
+            failures.append(
+                f"{label}:{line_number} has whitespace after a Dockerfile line continuation"
+            )
+            continued = []
+            continued_from = None
+            continue
+        trailing_backslashes = len(content) - len(content.rstrip("\\"))
+        has_continuation = trailing_backslashes == 1
+
+        if has_continuation:
+            segment = content[:-1]
+            if not segment.strip():
+                failures.append(
+                    f"{label}:{line_number} has a malformed Dockerfile line continuation"
+                )
+                continued = []
+                continued_from = None
+                continue
+            if continued_from is None:
+                continued_from = line_number
+                segment = segment.lstrip(" \t")
+            continued.append(segment)
+            continue
+
+        segment = content
+        if continued:
+            if not segment.strip():
+                failures.append(
+                    f"{label}:{line_number} has a malformed Dockerfile line continuation"
+                )
+            else:
+                continued.append(segment)
+                logical_lines.append(
+                    (continued_from or line_number, "".join(continued).strip())
+                )
+            continued = []
+            continued_from = None
+        elif segment.strip():
+            logical_lines.append((line_number, segment.strip()))
+
+    if continued:
+        failures.append(
+            f"{label}:{continued_from or '?'} has an unterminated Dockerfile line continuation"
+        )
+    return logical_lines
+
+
+def check_dockerfile_base_images(
+    path: Path,
+    label: str,
+    failures: list[str],
+) -> int:
+    """Validate each local Docker action stage and count remote digest pins."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        failures.append(f"cannot read {label}: {error}")
+        return 0
+
+    stages: set[str] = set()
+    from_count = 0
+    pinned = 0
+    logical_lines = dockerfile_logical_lines(
+        text,
+        label,
+        failures,
+    )
+    for line_number, logical_line in logical_lines:
+        if "<<" in logical_line:
+            failures.append(
+                f"{label}:{line_number} uses unsupported Dockerfile heredoc syntax"
+            )
+            return 0
+
+    for line_number, logical_line in logical_lines:
+        instruction_match = re.fullmatch(
+            r"([A-Za-z]+)(?:[ \t]+(.*))?",
+            logical_line,
+        )
+        if instruction_match is None:
+            if re.match(r"(?i)^from\b", logical_line):
+                failures.append(f"{label}:{line_number} has malformed FROM syntax")
+            continue
+        instruction, arguments = instruction_match.groups()
+        if instruction.casefold() != "from":
+            continue
+
+        from_count += 1
+        tokens = arguments.split() if arguments is not None else []
+        if not tokens:
+            failures.append(f"{label}:{line_number} FROM must name one immutable source")
+            continue
+        if any(
+            "$" in token or any(character in token for character in "'\"`")
+            for token in tokens
+        ):
+            failures.append(
+                f"{label}:{line_number} FROM variables, expressions, and quoted "
+                "values are unsupported"
+            )
+            continue
+
+        if tokens[0].startswith("--"):
+            if DOCKER_PLATFORM_PATTERN.fullmatch(tokens[0]) is None:
+                failures.append(
+                    f"{label}:{line_number} FROM uses an unsupported or variable platform selector"
+                )
+                continue
+            tokens = tokens[1:]
+        if len(tokens) not in {1, 3} or (
+            len(tokens) == 3 and tokens[1].casefold() != "as"
+        ):
+            failures.append(f"{label}:{line_number} has malformed or ambiguous FROM syntax")
+            continue
+
+        source = tokens[0]
+        stage_name = tokens[2] if len(tokens) == 3 else None
+        if stage_name is not None and DOCKER_STAGE_PATTERN.fullmatch(stage_name) is None:
+            failures.append(f"{label}:{line_number} has an invalid Docker build stage name")
+            continue
+
+        source_key = source.casefold()
+        accepted_source = False
+        if source_key == "scratch":
+            accepted_source = True
+        elif source_key in stages:
+            accepted_source = True
+        elif is_digest_pinned_docker_source(source):
+            accepted_source = True
+            pinned += 1
+        else:
+            failures.append(
+                f"{label}:{line_number} remote FROM source {source!r} must use "
+                "@sha256:<64 hex> or reference a previously validated stage"
+            )
+
+        if stage_name is not None and accepted_source:
+            stage_key = stage_name.casefold()
+            if stage_key == "scratch" or stage_key in stages:
+                failures.append(
+                    f"{label}:{line_number} Docker build stage name {stage_name!r} is ambiguous"
+                )
+            else:
+                stages.add(stage_key)
+
+    if from_count == 0:
+        failures.append(f"{label} must contain at least one FROM instruction")
+    return pinned
 
 
 def scalar_field(
@@ -440,6 +668,7 @@ def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
         leave(path)
 
     def inspect_action(path: Path) -> None:
+        nonlocal pinned
         label = path.relative_to(root).as_posix()
         if not enter(path, label):
             return
@@ -484,14 +713,29 @@ def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
             if image is not None:
                 if image.startswith("docker://"):
                     check_external(ActionUse(image, "", 0, "action-image"), label)
+                elif image != "Dockerfile":
+                    failures.append(
+                        f"{label} runs.image must name Dockerfile or an immutable "
+                        "docker:// image"
+                    )
                 else:
-                    local_action_file(
+                    dockerfile = local_action_file(
                         root,
                         action_directory,
                         image,
                         f"{label} runs.image",
                         failures,
+                        reject_symlink=True,
                     )
+                    if dockerfile is not None:
+                        dockerfile_label = dockerfile.relative_to(
+                            root.resolve()
+                        ).as_posix()
+                        pinned += check_dockerfile_base_images(
+                            dockerfile,
+                            dockerfile_label,
+                            failures,
+                        )
         elif using is not None:
             failures.append(f"{label} runs.using {using!r} is not an accepted local action runtime")
         leave(path)

@@ -5,9 +5,43 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.12 sequential candidate for Issue #62. It preserves
-the immutable v0.8.11 release and every historical observation without claiming
+The active tree is the v0.8.13 sequential candidate for Issue #63. It preserves
+the immutable v0.8.12 release and every historical observation without claiming
 a checked-in current host pass.
+
+## 0.8.13 - unreleased candidate
+
+### Security
+
+- Extended local Docker-action validation to inspect every effective
+  `Dockerfile` `FROM` source and require either `scratch`, a previously
+  validated build stage, or a remote `@sha256:<64 hex>` digest.
+- Added a narrow standard-library parser that handles deterministic
+  continuations, comments, case-insensitive instructions, fixed platform
+  selectors, and ordered stage references while failing closed on variables,
+  malformed syntax, unsupported parser directives, symbolic links, and path
+  escape.
+- Defined the aggregate immutable-pin count to include remote Dockerfile base
+  digests while excluding `scratch` and validated local-stage references.
+
+### Evidence Boundary
+
+- Expanded the production-owned action-graph contract to 40 accepted and
+  rejected scenarios, including split-instruction, heredoc, inline-hash
+  continuation, and escaped-escape bypasses, and added an offline socket-denial
+  regression.
+- The complete 118-test standard-library suite, publication guard,
+  distribution drift guard, compatibility self-test, routing-context and
+  canonical-facts checks, JSON parsing, compile checks, English-only scan,
+  Claude Code strict offline plugin validation, and whitespace checks pass in
+  disposable release copies.
+- Installed Skills, hooks, routes, authorization, models, benchmark membership,
+  and runtime dependencies are unchanged. The checked-in status remains
+  `STATIC-ONLY`; Codex host and lifecycle evidence is `NOT-RUN`, and
+  authenticated Claude Code host and lifecycle validation is
+  `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.13 release notes](docs/releases/v0.8.13.md).
 
 ## 0.8.12 - unreleased candidate
 

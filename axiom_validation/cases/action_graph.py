@@ -15,6 +15,7 @@ from axiom_validation.yaml_subset import CanonicalYamlError, CanonicalYamlScalar
 def check_action_graph_fixtures(failures: list[str]) -> int:
     """Exercise transitive local-action resolution without touching the repository."""
     rejected = 0
+    accepted = 0
     workflow_template = (
         "name: Fixture\n"
         "on:\n"
@@ -38,6 +39,29 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
+
+    def write_docker_action(
+        root: Path,
+        dockerfile: str,
+        *,
+        image: str = "Dockerfile",
+    ) -> None:
+        write(
+            root,
+            ".github/workflows/guard.yml",
+            workflow_template.format(uses="./.github/actions/docker"),
+        )
+        write(
+            root,
+            ".github/actions/docker/action.yml",
+            "name: Docker fixture\n"
+            "description: Docker fixture action\n"
+            "runs:\n"
+            "  using: docker\n"
+            f"  image: {image}\n",
+        )
+        if dockerfile:
+            write(root, ".github/actions/docker/Dockerfile", dockerfile)
 
     with tempfile.TemporaryDirectory(prefix="axiom-action-fixtures-") as raw_root:
         fixture_root = Path(raw_root)
@@ -170,6 +194,224 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
         else:
             failures.append("duplicate action-metadata key fixture was not rejected")
 
+        digest_a = "a" * 64
+        digest_b = "B" * 64
+        valid_dockerfiles = (
+            (
+                "digest-pinned-remote",
+                f"FROM ubuntu@sha256:{digest_a}\n",
+                1,
+            ),
+            (
+                "tag-and-digest-pinned-remote",
+                f"FROM ubuntu:24.04@sha256:{digest_a}\n",
+                1,
+            ),
+            (
+                "all-pinned-multi-stage",
+                f"FROM ubuntu@sha256:{digest_a} AS build\n"
+                f"FROM ghcr.io/example/helper@sha256:{digest_b} AS helper\n"
+                "FROM build AS final\n",
+                2,
+            ),
+            (
+                "prior-local-stage",
+                "FROM scratch AS build\nFROM build AS final\n",
+                0,
+            ),
+            (
+                "casing-whitespace-and-continuation",
+                "# Pinned remote build stage\n"
+                "fRoM --platform=linux/amd64 \\\n"
+                f"    ghcr.io/example/build@sha256:{digest_a} aS Build\n"
+                "FrOm Build As final\n",
+                1,
+            ),
+            (
+                "comment-inside-continuation",
+                "FROM \\\n"
+                "# Docker removes a full comment line here\n"
+                "scratch AS build\n"
+                "FROM build AS final\n",
+                0,
+            ),
+        )
+        for name, dockerfile, expected_pins in valid_dockerfiles:
+            root = fixture_root / name
+            write_docker_action(root, dockerfile)
+            scenario_failures: list[str] = []
+            observed_pins = check_github_action_pins_from_root(
+                root,
+                scenario_failures,
+            )
+            if scenario_failures or observed_pins != expected_pins:
+                detail = "; ".join(scenario_failures) or (
+                    f"observed {observed_pins} pins"
+                )
+                failures.append(f"valid Dockerfile fixture {name} failed: {detail}")
+            else:
+                accepted += 1
+
+        invalid_dockerfiles = (
+            ("latest-tag", "FROM ubuntu:latest\n", "must use @sha256"),
+            ("version-tag", "FROM ubuntu:24.04\n", "must use @sha256"),
+            ("unqualified-image", "FROM ubuntu\n", "must use @sha256"),
+            (
+                "one-mutable-stage",
+                f"FROM ubuntu@sha256:{digest_a} AS pinned\n"
+                "FROM ubuntu:latest AS mutable\n"
+                "FROM pinned AS final\n",
+                "ubuntu:latest",
+            ),
+            (
+                "unresolved-argument",
+                "ARG BASE=ubuntu:latest\nFROM ${BASE}\n",
+                "variables, expressions",
+            ),
+            (
+                "variable-platform",
+                f"FROM --platform=$BUILDPLATFORM ubuntu@sha256:{digest_a}\n",
+                "variables, expressions",
+            ),
+            (
+                "wrong-digest-length",
+                f"FROM ubuntu@sha256:{'a' * 63}\n",
+                "must use @sha256",
+            ),
+            (
+                "wrong-digest-algorithm",
+                f"FROM ubuntu@sha512:{'a' * 128}\n",
+                "must use @sha256",
+            ),
+            (
+                "unterminated-continuation",
+                f"FROM ubuntu@sha256:{digest_a} \\\n",
+                "unterminated Dockerfile line continuation",
+            ),
+            (
+                "stage-reference-before-definition",
+                "FROM build AS final\nFROM scratch AS build\n",
+                "previously validated stage",
+            ),
+            (
+                "remote-image-resembling-stage",
+                "FROM scratch AS build\nFROM ghcr.io/example/build AS final\n",
+                "ghcr.io/example/build",
+            ),
+            (
+                "unsupported-parser-directive",
+                "# escape=`\nFROM scratch\n",
+                "unsupported Dockerfile parser directive",
+            ),
+            (
+                "duplicate-stage-name",
+                "FROM scratch AS build\nFROM scratch AS BUILD\n",
+                "stage name 'BUILD' is ambiguous",
+            ),
+            (
+                "numeric-stage-name",
+                "FROM scratch AS 1build\nFROM 1build\n",
+                "invalid Docker build stage name",
+            ),
+            (
+                "empty-tag-before-digest",
+                f"FROM ubuntu:@sha256:{digest_a}\n",
+                "must use @sha256",
+            ),
+            (
+                "duplicate-tag-separator",
+                f"FROM ubuntu:24.04:extra@sha256:{digest_a}\n",
+                "must use @sha256",
+            ),
+            (
+                "invalid-image-component",
+                f"FROM ghcr.io/-owner/image@sha256:{digest_a}\n",
+                "must use @sha256",
+            ),
+            (
+                "oversized-image-name",
+                f"FROM {'a' * 256}@sha256:{digest_a}\n",
+                "must use @sha256",
+            ),
+            (
+                "whitespace-after-continuation",
+                f"FROM ubuntu@sha256:{digest_a} \\  \n",
+                "whitespace after a Dockerfile line continuation",
+            ),
+            (
+                "quoted-hash-is-not-a-comment",
+                'FROM "ubuntu#latest"\n',
+                "quoted values are unsupported",
+            ),
+            (
+                "escaped-hash-is-not-a-comment",
+                "FROM ubuntu\\#latest\n",
+                "must use @sha256",
+            ),
+            (
+                "continued-instruction-name",
+                "FR\\\nOM ubuntu:latest\n",
+                "ubuntu:latest",
+            ),
+            (
+                "unsupported-heredoc",
+                "FROM scratch\nRUN <<EOF\nFROM scratch AS ubuntu\nEOF\nFROM ubuntu\n",
+                "unsupported Dockerfile heredoc syntax",
+            ),
+            (
+                "inline-hash-continuation",
+                "FROM scratch\nRUN echo x # \\\n"
+                "FROM scratch AS ubuntu\nFROM ubuntu\n",
+                "remote FROM source 'ubuntu'",
+            ),
+            (
+                "escaped-escape-does-not-continue",
+                "FROM scratch\nRUN echo "
+                + ("\\" * 3)
+                + "\nFROM ubuntu:latest\n",
+                "ubuntu:latest",
+            ),
+        )
+        for name, dockerfile, expected_failure in invalid_dockerfiles:
+            root = fixture_root / name
+            write_docker_action(root, dockerfile)
+            scenario_failures: list[str] = []
+            check_github_action_pins_from_root(root, scenario_failures)
+            if any(expected_failure in failure for failure in scenario_failures):
+                rejected += 1
+            else:
+                failures.append(f"invalid Dockerfile fixture {name} was not rejected")
+
+        symlinked = fixture_root / "symlinked-dockerfile"
+        write_docker_action(symlinked, "")
+        write(
+            symlinked,
+            ".github/actions/docker/Dockerfile.real",
+            "FROM scratch\n",
+        )
+        (symlinked / ".github/actions/docker/Dockerfile").symlink_to(
+            "Dockerfile.real"
+        )
+        symlink_failures: list[str] = []
+        check_github_action_pins_from_root(symlinked, symlink_failures)
+        if any(
+            "must not be a symbolic link" in failure
+            for failure in symlink_failures
+        ):
+            rejected += 1
+        else:
+            failures.append("symlinked Dockerfile fixture was not rejected")
+
+        escaping = fixture_root / "escaping-dockerfile"
+        write_docker_action(escaping, "", image="../Dockerfile")
+        write(escaping, ".github/actions/Dockerfile", "FROM scratch\n")
+        escaping_failures: list[str] = []
+        check_github_action_pins_from_root(escaping, escaping_failures)
+        if any("must name Dockerfile" in failure for failure in escaping_failures):
+            rejected += 1
+        else:
+            failures.append("escaping Dockerfile source fixture was not rejected")
+
         valid = fixture_root / "valid"
         job_digest = "c" * 64
         service_digest = "d" * 64
@@ -240,8 +482,10 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 "valid pinned local composite, JavaScript, and Docker action graph failed: "
                 + "; ".join(valid_failures)
             )
+        else:
+            accepted += 1
 
-    return rejected + 1
+    return rejected + accepted
 
 
 def check_pull_request_validation_fixtures(
