@@ -60,9 +60,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.9 strict-evidence hardening changes no installed routing; "
+            "The v0.8.10 canonical-YAML parser repair changes no installed routing; "
             "no current Codex host usage or lifecycle observation was run, and "
-            "v0.8.8 plus prior observations remain separate history."
+            "v0.8.9 plus prior observations remain separate history."
         ),
     },
     "claude-code": {

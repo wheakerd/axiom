@@ -140,7 +140,9 @@ def split_yaml_comment(raw: str) -> tuple[str, str]:
     single_quoted = False
     double_quoted = False
     escaped = False
-    for index, character in enumerate(raw):
+    index = 0
+    while index < len(raw):
+        character = raw[index]
         if double_quoted:
             if escaped:
                 escaped = False
@@ -148,12 +150,15 @@ def split_yaml_comment(raw: str) -> tuple[str, str]:
                 escaped = True
             elif character == '"':
                 double_quoted = False
+            index += 1
             continue
         if single_quoted:
             if character == "'":
                 if index + 1 < len(raw) and raw[index + 1] == "'":
+                    index += 2
                     continue
                 single_quoted = False
+            index += 1
             continue
         if character == '"':
             double_quoted = True
@@ -161,6 +166,7 @@ def split_yaml_comment(raw: str) -> tuple[str, str]:
             single_quoted = True
         elif character == "#" and (index == 0 or raw[index - 1].isspace()):
             return raw[:index].rstrip(), raw[index + 1 :].strip()
+        index += 1
     return raw.rstrip(), ""
 
 
@@ -371,7 +377,7 @@ class CanonicalYamlParser:
                     f"{self.label}:{line} quoted scalar must decode to a string"
                 )
         elif raw.startswith("'") or raw.endswith("'"):
-            if len(raw) < 2 or not raw.startswith("'") or not raw.endswith("'"):
+            if re.fullmatch(r"'(?:[^']|'')*'", raw) is None:
                 raise CanonicalYamlError(
                     f"{self.label}:{line} has an invalid single-quoted scalar"
                 )
