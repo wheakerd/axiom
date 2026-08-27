@@ -3,7 +3,7 @@
 import unittest
 
 from axiom_validation.release_policy import check_release_signature_workflow_contract
-from tests.fixtures.release_policy import check_release_script_runtime_contract
+from axiom_validation.cases.release_policy import check_release_script_runtime_contract
 
 
 class ReleasePolicyTests(unittest.TestCase):

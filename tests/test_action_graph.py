@@ -9,7 +9,7 @@ from axiom_validation.action_graph import (
     check_unit_test_workflow_text,
 )
 from axiom_validation.context import REPOSITORY_ROOT
-from tests.fixtures.action_graph import check_action_graph_fixtures
+from axiom_validation.cases.action_graph import check_action_graph_fixtures
 
 
 class ActionGraphTests(unittest.TestCase):

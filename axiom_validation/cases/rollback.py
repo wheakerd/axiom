@@ -1,10 +1,10 @@
-"""Reversible-system-change evidence and source-contract fixtures."""
+"""Canonical reversible-system-change evidence and source-contract cases."""
 
 from __future__ import annotations
 
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.rollback import ROLLBACK_EVIDENCE_FIELDS, rollback_gate
-from tests.fixtures.evidence import check_strict_evidence_gate
+from .evidence import check_strict_evidence_gate
 
 
 def check_reversible_safety_scenarios(failures: list[str]) -> int:

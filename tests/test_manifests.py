@@ -19,7 +19,7 @@ from axiom_validation.manifests import (
     load_json,
     resolve_declared_asset,
 )
-from tests.fixtures.manifests import check_manifest_schema_fixtures
+from axiom_validation.cases.manifests import check_manifest_schema_fixtures
 
 
 def png_bytes(width: int, height: int) -> bytes:

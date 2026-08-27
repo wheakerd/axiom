@@ -1,4 +1,4 @@
-"""Exact release-event and mutation regression fixtures."""
+"""Canonical release-event and mutation policy cases."""
 
 from __future__ import annotations
 

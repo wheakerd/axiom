@@ -8,7 +8,7 @@ from axiom_validation.routing_contracts import (
     check_routing_source_contracts,
     route_contract,
 )
-from tests.fixtures.routing import ROUTE_BOUNDARY_SCENARIOS, ROUTING_SCENARIOS
+from axiom_validation.cases.routing import ROUTE_BOUNDARY_SCENARIOS, ROUTING_SCENARIOS
 
 
 class RoutingContractTests(unittest.TestCase):

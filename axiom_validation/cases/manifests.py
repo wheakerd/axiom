@@ -1,4 +1,4 @@
-"""Manifest schema mutation fixtures."""
+"""Canonical manifest schema mutation cases."""
 
 from __future__ import annotations
 

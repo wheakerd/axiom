@@ -1,4 +1,4 @@
-"""Routing scenarios shared by the aggregate validator and unit tests."""
+"""Canonical routing scenarios shared by validation and unit tests."""
 
 from __future__ import annotations
 

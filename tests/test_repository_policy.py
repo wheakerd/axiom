@@ -13,8 +13,8 @@ from axiom_validation.repository_policy import (
     check_skill_contracts,
     discover_release_documents,
 )
-from tests.fixtures.external_action import check_external_action_scenarios
-from tests.fixtures.rollback import check_reversible_safety_scenarios
+from axiom_validation.cases.external_action import check_external_action_scenarios
+from axiom_validation.cases.rollback import check_reversible_safety_scenarios
 
 
 class RepositoryPolicyTests(unittest.TestCase):

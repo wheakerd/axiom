@@ -65,20 +65,20 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.11, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.8.12, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
 observation. The dated governance snapshot separately records the directly
-observed required-check and immutable-release settings. The routing-gate
-reduction changes no public route, authorization boundary, hook, or fixed
-workload. Equivalent before/after contract validation is static evidence. Current
+observed required-check and immutable-release settings. The validator
+modularization changes no public route, authorization boundary, hook, installed
+Skill, or fixed workload. Current
 Codex host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code
-evidence is `UNAVAILABLE / NOT-RUN`. The immutable v0.8.10 release and all prior observations
+evidence is `UNAVAILABLE / NOT-RUN`. The immutable v0.8.11 release and all prior observations
 remain separate history. A prior-release Codex observation also exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.11.
+outcomes forward to v0.8.12.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -137,12 +137,12 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.11.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.12.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.11 candidate gate is 6,673 bytes with SHA-256
+The v0.8.12 candidate gate is 6,673 bytes with SHA-256
 `e6b17e3b23669a174c309752058b1c1ed7c2074c5730e72b51618bbc69eddda2`.
 
 The candidate has 852 whitespace-delimited words, 120 logical lines, and one
@@ -150,11 +150,11 @@ unique direct reference. Its 1,669 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
 774 bytes, 95 words, 13 lines, zero references, and 194 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. Relative to v0.8.10, the gate shrinks by 1,066 bytes, 149 words, 15
-lines, and 266 estimated tokens; headroom below 8,192 bytes rises from 5.53% to
-18.54%. The paired static experiment binds both surfaces to the unchanged
-67-case workload and records routed and no-route `PASS` separately. Current
-host usage and lifecycle remain `NOT-RUN`.
+reviewed. Relative to v0.8.11, the gate is byte-identical, so the current record
+correctly keeps its reduction experiment null. The historical v0.8.10-to-v0.8.11
+reduction remains bound to the unchanged 67-case workload in the v0.8.11 record
+and is not relabeled as current evidence. Current host usage and lifecycle remain
+`NOT-RUN`.
 
 Seven lifecycle records cover fresh no-route and routed requests, resume with
 no route, clear with routing, manual compaction with no route, automatic
@@ -390,6 +390,25 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.12` reports:
+
+- synchronized `0.8.12` manifests and release-owned metadata for Issue #62;
+- production-owned canonical validation cases with no `axiom_validation`
+  dependency on `tests`;
+- 13 focused routing-evaluation modules with all prior intentional public
+  imports and validation behavior preserved;
+- a strictly validated, whole-file-digest-protected JSON history index for 11
+  immutable observation records;
+- 117 local standard-library tests plus publication, distribution, context,
+  canonical-facts, JSON, compile, English-only, Claude Code strict offline
+  plugin, and whitespace checks;
+- unchanged installed Skills, hooks, routing, authorization, runtime
+  dependencies, benchmark membership, and historical observations; and
+- `STATIC-ONLY` current status, Codex host and lifecycle `NOT-RUN`, and
+  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
+
+See the [v0.8.12 release notes](releases/v0.8.12.md).
 
 The Git record for `v0.8.11` reports:
 

@@ -1,4 +1,4 @@
-"""Platform hook lifecycle mutation fixtures."""
+"""Canonical platform hook lifecycle mutation cases."""
 
 from __future__ import annotations
 

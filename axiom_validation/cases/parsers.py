@@ -1,9 +1,9 @@
-"""Strict parser regression fixtures."""
+"""Canonical strict parser regression cases."""
 
 from __future__ import annotations
 
 from axiom_validation.yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
-from tests.fixtures.action_graph import check_action_graph_fixtures
+from .action_graph import check_action_graph_fixtures
 
 
 def check_validator_negative_fixtures(failures: list[str]) -> int:

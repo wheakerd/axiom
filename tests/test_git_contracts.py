@@ -15,7 +15,7 @@ from axiom_validation.git_contracts import (
     safe_git_oid,
     safe_git_operand,
 )
-from tests.fixtures.git_contracts import check_traceable_security_contracts
+from axiom_validation.cases.git_contracts import check_traceable_security_contracts
 
 
 class GitContractTests(unittest.TestCase):

@@ -1,1 +1,1 @@
-"""Fixture definitions for publication policy tests."""
+"""Test-only mutations; canonical cases live in :mod:`axiom_validation.cases`."""
