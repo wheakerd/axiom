@@ -45,6 +45,17 @@ class ReviewSequenceTests(unittest.TestCase):
             "Merely referring to or explaining the refusal is not inheritance",
             schema["properties"]["priorRefusalInherited"]["description"],
         )
+        blocked_effect_description = schema["properties"]["blockedEffect"][
+            "description"
+        ]
+        self.assertIn(
+            "an absent or unauthorized recipient to external write or remote-state mutation",
+            blocked_effect_description,
+        )
+        self.assertIn(
+            "actually changed, not merely missing or unauthorized",
+            blocked_effect_description,
+        )
 
     def test_checked_in_sequences_cover_every_issue_edge(self):
         failures: list[str] = []

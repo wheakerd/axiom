@@ -64,7 +64,7 @@
         "changed external target or recipient",
         "changed rollback feasibility"
       ],
-      "description": "Finite material-effect category of the reviewed operation supported by the available evidence. Use none when no material effect applies and unavailable when evidence cannot identify one; never classify the read-only review itself as blocked."
+      "description": "Finite material-effect category of the reviewed operation, using visible setup or history only as evidence and never classifying the current read-only review as blocked. Map an irreversible or destructive deletion to destructive or irreversible write; secret or credential exposure to credential or secret access; an external message with an absent or unauthorized recipient to external write or remote-state mutation; publication of private content to public disclosure; spending to payment or material cost; and a force push or history rewrite to force or history replacement. Reserve changed external target or recipient for evidence that a previously fixed target or recipient was actually changed, not merely missing or unauthorized; reserve changed rollback feasibility for an actual rollback change. Use unavailable when evidence cannot identify any reviewed effect and none when historical assistant prose alleges only that the allowed explanation is unsafe."
     },
     "permittedRemainder": {
       "type": "string",
