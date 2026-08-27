@@ -395,10 +395,13 @@ The Git record for `v0.8.10` reports:
   markers inside valid single-quoted scalars;
 - fail-closed validation for malformed quoted scalars while preserving the
   dependency-free canonical YAML subset and existing comment boundary;
-- 108 local standard-library tests plus publication, distribution, context,
+- bounded, privacy-safe, diagnostic-only stderr classification for the current
+  release observer, while preserving the two pre-correction Case 1 failures as
+  separate terminal evidence and requiring a fresh complete 17-case batch;
+- 109 local standard-library tests plus publication, distribution, context,
   canonical-facts, JSON, English-only, and whitespace validation; and
-- unchanged installed Skills, hooks, routing, workflows, workload, and
-  release-bound acceptance contract, with Codex host evidence `NOT-RUN` and
+- unchanged installed Skills, hooks, routing, workflows, and workload, with
+  Codex host evidence for the corrected tree `NOT-RUN` and
   authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
 
 See the [v0.8.10 release notes](releases/v0.8.10.md).

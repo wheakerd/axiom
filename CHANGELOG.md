@@ -28,7 +28,16 @@ a checked-in current host pass.
 
 ### Evidence Boundary
 
-- The complete 108-test suite, focused 6-test parser run, focused 16-test
+- Corrected the current release-bound Codex observer contract so model-process
+  stderr is bounded, privacy-safe, diagnostic-only, and non-causal. Process
+  exit, JSONL lifecycle and unknown-event handling, structured response,
+  semantic routing, mutation, protected-snapshot, and cleanup gates remain
+  fail closed.
+- Preserved the pre-correction full-batch Case 1 failure and the separately
+  authorized diagnostic Case 1 failure as distinct terminal evidence. Neither
+  result is retried or reclassified; the corrected signed merge requires a new
+  complete 17-case batch.
+- The complete 109-test suite, focused 6-test parser run, focused 17-test
   action and release-contract run, publication guard, distribution drift guard,
   compatibility self-test, context-budget and canonical-facts checks, JSON
   parsing, English-only scan, and whitespace checks pass locally on the
@@ -36,8 +45,9 @@ a checked-in current host pass.
 - Existing canonical workflows, action metadata, installed Skills, hooks,
   route selection, benchmark membership, models, reasoning settings,
   workflows, and action authority are unchanged.
-- The checked-in release status remains `STATIC-ONLY`. Current Codex host and
-  release-bound lifecycle evidence is `NOT-RUN`; authenticated Claude Code host
+- The checked-in release status remains `STATIC-ONLY`. Codex host and
+  release-bound lifecycle evidence for this corrected tree is `NOT-RUN`;
+  authenticated Claude Code host
   and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks,
   signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain
   future external gates.

@@ -2040,6 +2040,16 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
         "`maxLength`",
         "stop-on-first-failure",
         "append-only",
+        "stderr is diagnostic-only and non-causal",
+        "Raw stderr remains memory-only and must be destroyed",
+        "must not retain stderr",
+        "text, fragments, hashes, paths, identifiers, or credentials",
+        "`stderrNonblankLineCount` capped at 32",
+        "`stderrCategoryCounts` capped at 32",
+        "`warning-prefix`, `error-prefix`, and `other`",
+        "`stderrCountOverflow` and `stderrCategoryOverflow`",
+        "never directly change `PASS`, `FAIL`, or `UNKNOWN`",
+        "never enter passing limitations or the public observation",
         INITIAL_CODEX_RUN_ID,
         RECOVERY_CODEX_RUN_ID,
         FAILED_HOST_RESPONSE_SCHEMA_SHA256,
@@ -2054,6 +2064,8 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
         "--dangerously-bypass-hook-trust",
         "--ignore-user-config",
         "--ask-for-approval",
+        "sole accepted model-process stderr line is exactly",
+        "Missing, additional, or different stderr remains fatal.",
     ):
         if forbidden in text:
             failures.append(f"{label} documents unsupported invocation option {forbidden!r}")

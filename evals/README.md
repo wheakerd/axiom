@@ -239,10 +239,24 @@ The hook-trust bypass flag is forbidden in the release-bound invocation. Codex
 CLI `0.149.1` turns that flag into a startup `ConfigWarning`, and JSONL exposes
 the warning as a terminal `item.completed` error. The observer must not waive
 that item. The owner-only runtime root prevents the separate temporary
-PATH-alias warning. For a positional request with non-terminal stdin, the sole
-accepted model-process stderr line is exactly
-`Reading additional input from stdin...`; it is direct stderr and never changes
-JSONL classification. Missing, additional, or different stderr remains fatal.
+PATH-alias warning.
+
+Model-process stderr is diagnostic-only and non-causal because Codex documents
+that channel for progress. Raw stderr remains memory-only and must be destroyed
+immediately after bounded classification. The observer must not retain stderr
+text, fragments, hashes, paths, identifiers, or credentials. It retains only
+`stderrPolicyVersion`, `stderrNonblankLineCount` capped at 32,
+`stderrCategoryCounts` capped at 32 per member of the closed enum
+`warning-prefix`, `error-prefix`, and `other`, plus the boolean overflow fields
+`stderrCountOverflow` and `stderrCategoryOverflow`. Classification may inspect
+only whether an in-memory nonblank line begins with `WARNING:` or `ERROR:`;
+neither raw nor normalized lines may be written to disk or logs.
+
+These bounded diagnostics never directly change `PASS`, `FAIL`, or `UNKNOWN`
+and never enter passing limitations or the public observation. Process exit
+status, JSONL lifecycle errors and unknown events, unexpected tool use, bounded
+response structure and acceptance, semantic route and clarification matching,
+mutation fields, protected snapshots, and cleanup remain fail-closed gates.
 
 The exact five-sentence developer instruction is:
 
