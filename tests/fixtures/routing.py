@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from axiom_validation.route_catalog import route_boundary_scenarios
+
+
+ROUTE_BOUNDARY_SCENARIOS = route_boundary_scenarios()
+
+
 ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
+    *ROUTE_BOUNDARY_SCENARIOS,
     {
         "name": "readme-summary-no-match",
         "request": "Summarize this README without changing files.",

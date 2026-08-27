@@ -127,31 +127,31 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.7` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.8` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The publication-workflow repair changes no
-installed route or hook. A manually dispatched exact-tag workflow validates one
-exact draft asset, records a content-addressed attestation, and requires the
-published Release to be immutable and GitHub Latest. It freezes one numeric
-Release ID, checks exact live main/tag refs and GitHub signature, downloads both
-final assets, and can resume after an attestation upload or completed
-publication without replacement. The operator separately reads the immutable
-setting with an owner credential immediately before dispatch; an exact mutable
-publication is removed by frozen Release ID and fails closed. Current Codex host and lifecycle
-evidence is `NOT-RUN`, authenticated Claude Code is
-`UNAVAILABLE / NOT-RUN`, and v0.8.5 evidence remains separate history.
+release-bound host observation. The canonical-facts repair changes no installed
+route or hook. It derives public release measurements from versioned records and
+binds the Git route boundary to one structured catalog across documentation and
+offline fixtures; passing those checks remains static validation, not a host
+observation. Current Codex host and lifecycle evidence is `NOT-RUN`, authenticated
+Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.7 evidence remains
+separate history.
 
-The [routing-context budget](evals/context-budget/README.md) freezes the
-immutable v0.7.9 `using-axiom` gate as a cumulative baseline. Its 5,899 UTF-8
-bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
-reference are exact static counts used as context proxies. The 1,475
-`ceil(bytes / 4)` figure is only an estimate for comparing the same English
-Markdown surface; it is not an exact token or credit count. The unchanged
-v0.8.7 gate is 7,739 bytes, 1,001 words, 135 lines, one direct reference, and an
-estimated 1,935 tokens. Its cumulative increase of 1,840 bytes, 244 words, 28
-lines, zero references, and 460 estimated tokens reaches both review thresholds
-and remains reviewed as the narrow host-native Git boundary, explicit no-route
-staged-state rule, and direct-reference split.
+<!-- release-facts:current-context-budget:start -->
+The [v0.8.8 routing-context record](evals/context-budget/results/v0.8.8.json) uses the
+immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
+UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
+an estimated 1,475 tokens. The candidate has 7,739 UTF-8 bytes, 1,001
+whitespace-delimited words, 135 logical lines, 1 direct reference, and an estimated
+1,935 tokens. Its cumulative deltas are +1,840 bytes, +244 words, +28 lines, 0
+references, and +460 estimated tokens. The record marks the absolute threshold
+`reached`, the relative threshold `reached`, and review status `reviewed`. The exact
+static counts are context proxies, and each `ceil(UTF-8 bytes / 4)` figure is only an
+estimate for the same English Markdown surface, not an exact token or credit count.
+Codex host and lifecycle observation remains `NOT-RUN`; authenticated Claude Code
+remains `UNAVAILABLE / NOT-RUN`. No host observation is inferred from these static
+values.
+<!-- release-facts:current-context-budget:end -->
 
 The [routing evaluation corpus](evals/README.md) makes 67 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
@@ -289,8 +289,17 @@ of the scoped task evidence; it does not rerun that task. Selecting
 `reversible-system-change` for a migration plan keeps the work read-only. An
 explicit consequential app action selects `confirm-external-action`; a preview
 does not authorize execution, and an uncertain result is not retried blindly.
-An explicit Git submit, publish, or push selects `traceable-git-submit`, while
-checkpoint creation, metadata, consolidation, remote refresh, push, and cleanup
+
+<!-- route-boundary:traceable-git-submit-v1:start -->
+Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
+include neither a tag nor a traceable trigger. A combined commit, tag, and push of an
+already-prepared plugin release selects `traceable-git-submit`'s hardened phase. The
+traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
+baseline, consolidation, recovery, multi-target, force, and history replacement. Merely
+mentioning `submit`, `publish`, or `push` does not select the route.
+<!-- route-boundary:traceable-git-submit-v1:end -->
+
+Checkpoint creation, metadata, consolidation, remote refresh, push, and cleanup
 remain separate actions. A direct push preserves history and creates no Axiom
 metadata. For one configured non-force target, the immediately queried live
 remote commit owns the baseline and must be an ancestor of the final local
@@ -470,7 +479,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.7 release notes](docs/releases/v0.8.7.md):
+- [Changelog](CHANGELOG.md) and [v0.8.8 release notes](docs/releases/v0.8.8.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -483,6 +492,7 @@ checks are:
 python3 scripts/check-distribution-drift.py
 python3 scripts/check-compatibility-evidence.py --self-test
 python3 scripts/measure-routing-context.py --check
+python3 scripts/render-release-facts.py --check
 python3 scripts/check-publication.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
@@ -494,8 +504,12 @@ governance and exact critical-path CODEOWNERS contract; and exercise each
 publication policy domain with standard-library-only focused tests. The
 context-budget check also derives duplicate lifecycle injection from recorded
 event counts and rejects a claimed reduction without equivalent before/after
-routed and no-route results. These are
+routed and no-route results. The canonical-facts check binds README and release
+notes to their machine-readable versioned measurement records and binds Git
+boundary prose and offline fixtures to the structured route catalog. These are
 contributor and CI checks, not installed runtime dependencies.
+`render-release-facts.py --check` is read-only; `--render` is the only write
+mode and updates only its managed marker regions.
 
 Pull requests to `main`, including fork contributions, run two separate
 read-only checks on the proposed merge tree: `repository-guards` for package and

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.7",
-    "tag": "v0.8.7",
+    "version": "0.8.8",
+    "tag": "v0.8.8",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.7 publication-workflow repair changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. The unpublished v0.8.6 tag and prior evidence remain separate."
+      "reason": "The v0.8.8 canonical-facts repair changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. The immutable v0.8.7 release and prior evidence remain separate."
     },
     {
       "host": "claude-code",
