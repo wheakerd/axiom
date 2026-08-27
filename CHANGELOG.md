@@ -5,9 +5,44 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.9 sequential candidate for Issue #59. It preserves
-the immutable v0.8.8 release and every historical observation without claiming
+The active tree is the v0.8.10 sequential candidate for Issue #60. It preserves
+the immutable v0.8.9 release and every historical observation without claiming
 a checked-in current host pass.
+
+## 0.8.10 - unreleased candidate
+
+### Fixed
+
+- Reworked `split_yaml_comment()` as an explicit index-driven scanner that
+  consumes doubled single quotes together and keeps the single-quoted state
+  active across the escaped literal quote.
+- Prevented an internal `#` in a valid single-quoted scalar from becoming an
+  inline comment delimiter while preserving the existing whitespace boundary
+  for the first unquoted comment marker.
+- Tightened single-quoted scalar validation so unterminated, odd-quoted, and
+  unexpected-tail forms fail closed without adding a YAML dependency or
+  expanding the accepted subset.
+- Added focused valid and adversarial coverage for quoted hashes, adjacent and
+  doubled quotes, escaped double-quoted content, empty scalars, comment
+  boundaries, line endings, tabs, trailing spaces, and document markers.
+
+### Evidence Boundary
+
+- The complete 108-test suite, focused 6-test parser run, focused 16-test
+  action and release-contract run, publication guard, distribution drift guard,
+  compatibility self-test, context-budget and canonical-facts checks, JSON
+  parsing, English-only scan, and whitespace checks pass locally on the
+  candidate tree.
+- Existing canonical workflows, action metadata, installed Skills, hooks,
+  route selection, benchmark membership, models, reasoning settings,
+  workflows, and action authority are unchanged.
+- The checked-in release status remains `STATIC-ONLY`. Current Codex host and
+  release-bound lifecycle evidence is `NOT-RUN`; authenticated Claude Code host
+  and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks,
+  signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain
+  future external gates.
+
+See [the v0.8.10 release notes](docs/releases/v0.8.10.md).
 
 ## 0.8.9 - unreleased candidate
 

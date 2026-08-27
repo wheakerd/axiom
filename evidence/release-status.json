@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.9",
-    "tag": "v0.8.9",
+    "version": "0.8.10",
+    "tag": "v0.8.10",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.9 strict-evidence hardening changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. The immutable v0.8.8 release and prior evidence remain separate."
+      "reason": "The v0.8.10 canonical-YAML parser repair changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. The immutable v0.8.9 release and prior evidence remain separate."
     },
     {
       "host": "claude-code",
