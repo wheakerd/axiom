@@ -5,9 +5,38 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.13 sequential candidate for Issue #63. It preserves
-the immutable v0.8.12 release and every historical observation without claiming
+The active tree is the v0.8.14 sequential candidate for Issue #71. It preserves
+the immutable v0.8.13 release and every historical observation without claiming
 a checked-in current host pass.
+
+## 0.8.14 - unreleased candidate
+
+### Fixed
+
+- Required `review-axiom-task` to answer observable-decision questions without
+  substituting a hidden-reasoning request, while continuing to protect raw
+  chain-of-thought, privileged prompts, and private policy text.
+- Made explanation, audit, criticism, appeal, and read-only narrowing
+  independent of a prior refusal, risk classification, assistant explanation,
+  or safety phrase.
+- Bound blocked decisions to finite material-effect categories, explicit
+  `observed`, `reconstructed`, or `unavailable` evidence, a permitted remainder,
+  and a counterfactual when causal evidence is incomplete.
+
+### Evidence Boundary
+
+- Added six static route cases plus eight sanitized same-session completion
+  sequences with 11 closed structured review checkpoints, including recursive
+  refusal termination, four-step non-expansion, and historical assistant-message
+  zero authority.
+- Added no persistent runner, transcript, telemetry, background service,
+  credential access, external action, or mutation authority. Static validation
+  remains distinct from installed-host behavior.
+- The checked-in status remains `STATIC-ONLY`; Codex routing, lifecycle, and
+  bounded-review completion are `NOT-RUN`, and authenticated Claude Code host
+  validation is `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.14 release notes](docs/releases/v0.8.14.md).
 
 ## 0.8.13 - unreleased candidate
 

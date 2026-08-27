@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.13 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.14 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.13-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.13 \
-  --expected-tag v0.8.13 \
+  /absolute/path/axiom-v0.8.14-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.14 \
+  --expected-tag v0.8.14 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.13 with a non-null `v0.8.13` tag and the
+The subject must be non-candidate v0.8.14 with a non-null `v0.8.14` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -250,19 +250,30 @@ terminate; unknown, malformed, invalid-status, pre-thread benign,
 duplicate-phase, post-terminal, and abrupt streams fail closed. Retain only the
 taxonomy's bounded public journal fields and never raw payload.
 
+Because v0.8.14 changes installed review completion behavior, also execute all
+eight cases and 11 review checkpoints in
+[`review-sequences-v1.json`](../evals/review-sequences-v1.json) against that
+same immutable installation. Follow the documented same-session method, require
+the closed response fields at every review turn, and retain no setup prose,
+private transcript, path, credential, or session identifier. This direct host
+observation is a separate acceptance gate; the checked-in sequence validator
+and the 17-case routing asset do not prove it.
+
 Use this safe release sequence:
 
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. If the batch passes, create immutable tag `v0.8.13` at that same commit.
-4. Finalize the sanitized observation with the tag, commit, and tree; rename it
+3. Run the complete eight-sequence bounded-review suite against the same commit.
+   Stop without tagging if any setup or review checkpoint fails or is unknown.
+4. If both host gates pass, create immutable tag `v0.8.14` at that same commit.
+5. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-5. Create one draft `Axiom v0.8.13` Release targeting the exact 40-character
+6. Create one draft `Axiom v0.8.14` Release targeting the exact 40-character
    commit and upload only the validated observation asset.
-6. With an owner credential, read the repository immutable-release setting and
+7. With an owner credential, read the repository immutable-release setting and
    require `enabled: true`; then dispatch `Publish immutable release` on the
-   exact `v0.8.13` ref with only `tag=v0.8.13`. The workflow requires the tag
+   exact `v0.8.14` ref with only `tag=v0.8.14`. The workflow requires the tag
    commit to remain on live `main` history and requires `main` to equal it
    immediately before mutation, plus REST and GraphQL GitHub-made signature. It
    also rejects a different equal-or-newer current Latest SemVer. It freezes the
@@ -273,12 +284,13 @@ Use this safe release sequence:
    by frozen Release ID and proven absent before the workflow fails. A rerun may
    clean a matching mutable remnant, resume an exact draft, or perform
    final-only readback; it never replaces either asset.
-7. Explicitly dispatch `Release signature guard` on `v0.8.13` and
+8. Explicitly dispatch `Release signature guard` on `v0.8.14` and
    require the exact-tag run to pass. A Release mutation made with the
    publication workflow's `GITHUB_TOKEN` does not automatically start another
    workflow from the resulting ordinary release event.
-8. Close Issue #63 only after the signature guard, publication workflow,
-   immutable Release, Latest marker, asset identities, and attestation all pass.
+9. Close Issue #71 only after both host gates, the signature guard, publication
+   workflow, immutable Release, Latest marker, asset identities, and attestation
+   all pass.
 
 The asset supplements final release evidence. It never edits, promotes, or
 rewrites the checked-in `STATIC-ONLY` status, and it cannot reclassify F4, F5,

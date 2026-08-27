@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.13",
-    "tag": "v0.8.13",
+    "version": "0.8.14",
+    "tag": "v0.8.14",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.13 Docker action hardening changes no installed routing and has no checked-in current Codex host or lifecycle observation; a fresh release-bound observation remains an external asset. The immutable v0.8.12 release and prior evidence remain separate."
+      "reason": "The v0.8.14 bounded-review correction changes installed review routing and completion contracts and has no checked-in current Codex host, lifecycle, or bounded-review observation; fresh release-bound evidence remains external. The immutable v0.8.13 release and prior evidence remain separate."
     },
     {
       "host": "claude-code",

@@ -25,7 +25,10 @@ separately exposes exact usage for the scoped run.
 
 The shared source also includes `review-axiom-task` on both hosts. Its review
 contract is identical, but coverage depends on the task history, summaries,
-tool results, and task-inspection interfaces each active host exposes.
+tool results, and task-inspection interfaces each active host exposes. The
+contract protects raw hidden reasoning while requiring a bounded rationale from
+observable evidence and independently evaluating later review, appeal,
+criticism, and narrowing requests.
 
 The shared source includes `confirm-external-action` on both hosts. Its action
 envelope and retry boundary are identical, while available confirmation UI,
@@ -65,21 +68,22 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.13, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.8.14, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
 observation. The dated governance snapshot separately records the directly
-observed required-check and immutable-release settings. The Docker action
-hardening changes repository validation only and changes no public route,
-authorization boundary, hook, installed Skill, or fixed workload. Current
-Codex host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code
-evidence is `UNAVAILABLE / NOT-RUN`. The immutable v0.8.12 release and all prior
-observations remain separate history. A prior-release Codex observation also
+observed required-check and immutable-release settings. The bounded-review
+correction changes the installed review route and Skill contract and adds eight
+same-session completion sequences with 11 review checkpoints. Static validation
+of those contracts is not host behavior. Current Codex routing, lifecycle, and
+bounded-review evidence is `NOT-RUN`; authenticated Claude Code evidence is
+`UNAVAILABLE / NOT-RUN`. The immutable v0.8.13 release and all prior observations
+remain separate history. A prior-release Codex observation also
 exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.13.
+outcomes forward to v0.8.14.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -138,22 +142,23 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.13.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.14.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.13 candidate gate is 6,673 bytes with SHA-256
-`e6b17e3b23669a174c309752058b1c1ed7c2074c5730e72b51618bbc69eddda2`.
+The v0.8.14 candidate gate is 6,960 bytes with SHA-256
+`fb27acb68971835b62b4565dced98650f8c2808a01b8e6a171f202a9d21794f1`.
 
-The candidate has 852 whitespace-delimited words, 120 logical lines, and one
-unique direct reference. Its 1,669 `ceil(bytes / 4)` value is an estimate only
+The candidate has 894 whitespace-delimited words, 124 logical lines, and one
+unique direct reference. Its 1,740 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
-774 bytes, 95 words, 13 lines, zero references, and 194 estimated tokens.
+1,061 bytes, 137 words, 17 lines, zero references, and 265 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. Relative to v0.8.12, the gate is byte-identical, so the current record
-correctly keeps its reduction experiment null. The historical v0.8.10-to-v0.8.11
-reduction remains bound to the unchanged 67-case workload in the v0.8.11 record
+reviewed. The candidate grows from v0.8.13 to add the precise observable-decision
+trigger and non-inheritance boundary, so its reduction experiment remains null.
+The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
+workload in the v0.8.11 record
 and is not relabeled as current evidence. Current host usage and lifecycle remain
 `NOT-RUN`.
 
@@ -171,7 +176,7 @@ count.
 Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
 requires review and justification, not automatic rejection. Any actual
 reduction requires equivalent before/after `PASS` evidence for both routed and
-no-route cases over the same fixed 67-case workload, with the before surface
+no-route cases over the same fixed 73-case workload, with the before surface
 bound to the immediate predecessor candidate. Static validation and host
 observation remain separate evidence classes. No model, reasoning, hook,
 telemetry, runtime dependency, safety, authorization, or stop rule changed to
@@ -391,6 +396,25 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.14` reports:
+
+- synchronized `0.8.14` manifests and release-owned metadata for Issue #71;
+- an independent bounded-decision explanation contract for review, appeal,
+  criticism, and narrowing, with raw hidden reasoning and privileged text
+  protected;
+- finite material-effect categories, zero policy authority for assistant prose,
+  refusal non-inheritance, and explicit `observed`, `reconstructed`, or
+  `unavailable` evidence states;
+- six new route-selection cases plus eight same-session completion sequences
+  with 11 closed structured review checkpoints and no persistent runner;
+- local standard-library, publication, distribution, context, canonical-facts,
+  JSON, compile, English-only, skill, plugin, Claude Code strict offline, and
+  whitespace checks; and
+- `STATIC-ONLY` current status, Codex host completion and lifecycle `NOT-RUN`,
+  and authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
+
+See the [v0.8.14 release notes](releases/v0.8.14.md).
 
 The Git record for `v0.8.13` reports:
 

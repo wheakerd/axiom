@@ -1,4 +1,4 @@
 interface:
   display_name: "Review Axiom Task"
-  short_description: "Review Axiom routing, authority, actions, and evidence"
-  default_prompt: "Use $review-axiom-task to explain the routing, authorization, actions, evidence, and outcome of this Axiom-guided task."
+  short_description: "Audit Axiom decisions from observable evidence"
+  default_prompt: "Use $review-axiom-task to independently review this Axiom decision and explain its observable trigger, bounded effect, permitted remainder, and evidence state without revealing hidden reasoning."
