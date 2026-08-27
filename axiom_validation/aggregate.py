@@ -233,6 +233,7 @@ def main() -> int:
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
         f"{pull_request_fixture_count} pull-request event-graph fixtures, "
         f"{release_provenance_fixture_count} release-provenance fixtures, "
-        f"{action_pin_count} immutable action pins, hooks, and packaged skills."
+        f"{action_pin_count} immutable external action and image pins, hooks, "
+        "and packaged skills."
     )
     return 0

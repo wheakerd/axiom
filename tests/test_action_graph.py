@@ -1,6 +1,7 @@
 """Focused tests for GitHub Actions graph policy."""
 
 import unittest
+from unittest import mock
 
 from axiom_validation.action_graph import (
     check_distribution_workflow_contract,
@@ -74,7 +75,17 @@ class ActionGraphTests(unittest.TestCase):
     def test_action_graph_mutations_are_rejected(self):
         failures = []
         count = check_action_graph_fixtures(failures)
-        self.assertEqual(7, count)
+        self.assertEqual(40, count)
+        self.assertEqual([], failures)
+
+    def test_docker_action_validation_does_not_open_a_network_socket(self):
+        failures = []
+        with mock.patch(
+            "socket.socket",
+            side_effect=AssertionError("action-graph validation must stay offline"),
+        ):
+            count = check_action_graph_fixtures(failures)
+        self.assertEqual(40, count)
         self.assertEqual([], failures)
 
 
