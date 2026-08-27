@@ -11,6 +11,15 @@ from .action_graph import (
     check_github_action_pins,
     check_unit_test_workflow_contract,
 )
+from .cases.action_graph import check_pull_request_validation_fixtures
+from .cases.external_action import check_external_action_scenarios
+from .cases.git_contracts import check_traceable_security_contracts
+from .cases.hooks import check_hook_lifecycle_fixtures
+from .cases.manifests import check_manifest_schema_fixtures
+from .cases.parsers import check_validator_negative_fixtures
+from .cases.release_policy import check_release_script_runtime_contract
+from .cases.rollback import check_reversible_safety_scenarios
+from .cases.routing import ROUTING_SCENARIOS
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
 from .context_budget import check_context_budget
 from .hooks import (
@@ -48,15 +57,6 @@ from .routing_contracts import (
 )
 from .route_catalog import check_route_catalog
 from .routing_evals import check_routing_evaluations
-from tests.fixtures.action_graph import check_pull_request_validation_fixtures
-from tests.fixtures.external_action import check_external_action_scenarios
-from tests.fixtures.git_contracts import check_traceable_security_contracts
-from tests.fixtures.hooks import check_hook_lifecycle_fixtures
-from tests.fixtures.manifests import check_manifest_schema_fixtures
-from tests.fixtures.parsers import check_validator_negative_fixtures
-from tests.fixtures.release_policy import check_release_script_runtime_contract
-from tests.fixtures.rollback import check_reversible_safety_scenarios
-from tests.fixtures.routing import ROUTING_SCENARIOS
 
 
 def main() -> int:

@@ -1,4 +1,4 @@
-"""GitHub Actions and pull-request regression fixtures."""
+"""Canonical GitHub Actions and pull-request policy cases."""
 
 from __future__ import annotations
 

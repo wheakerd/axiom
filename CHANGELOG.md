@@ -5,9 +5,44 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.11 sequential candidate for Issue #61. It preserves
-the immutable v0.8.10 release and every historical observation without claiming
+The active tree is the v0.8.12 sequential candidate for Issue #62. It preserves
+the immutable v0.8.11 release and every historical observation without claiming
 a checked-in current host pass.
+
+## 0.8.12 - unreleased candidate
+
+### Changed
+
+- Moved the aggregate validator's canonical action, Git, hook, manifest,
+  parser, release, rollback, routing, and external-action cases from
+  `tests/fixtures` into the production-owned `axiom_validation.cases` package.
+- Replaced the 132 KiB `axiom_validation/routing_evals.py` monolith with focused
+  schema, corpus, benchmark, observer, acceptance, observation, external, and
+  history modules while preserving every existing public import.
+- Moved immutable routing run, result, schema, commit, tree, subject, and
+  outcome bindings into a versioned JSON index with strict duplicate-key,
+  unknown-field, identifier, digest, OID, path, size, and symlink validation.
+
+### Evidence Boundary
+
+- Added isolation coverage that runs the aggregate validator while rejecting
+  every `tests` import, plus adversarial history-index tests for deletion,
+  reassignment, duplicate keys, malformed bindings, symlinks, and oversized
+  files.
+- The complete 117-test standard-library suite, publication guard, distribution
+  drift guard, compatibility self-test, routing-context and canonical-facts
+  checks, JSON parsing, compile checks, English-only scan, Claude Code strict
+  offline plugin validation, and whitespace checks pass in disposable release
+  copies.
+- The local Codex plugin validator retains its documented stale-schema rejection
+  of the unchanged supported `hooks`, `brandColorDark`, and `supportURL` fields.
+- Installed Skills, hooks, routes, authorization, models, benchmark membership,
+  and runtime dependencies are unchanged. The checked-in status remains
+  `STATIC-ONLY`; Codex host and lifecycle evidence is `NOT-RUN`, and
+  authenticated Claude Code host and lifecycle validation is
+  `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.12 release notes](docs/releases/v0.8.12.md).
 
 ## 0.8.11 - unreleased candidate
 

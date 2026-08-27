@@ -1,4 +1,4 @@
-"""Traceable-Git source contracts and pure gate regression fixtures."""
+"""Canonical traceable-Git source contracts and pure gate cases."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from axiom_validation.git_contracts import (
     safe_git_transport,
 )
 from axiom_validation.routing_contracts import require_ordered_contract_anchors
-from tests.fixtures.evidence import check_strict_evidence_gate
+from .evidence import check_strict_evidence_gate
 
 
 def check_traceable_security_contracts(failures: list[str]) -> int:

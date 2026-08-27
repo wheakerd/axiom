@@ -1,10 +1,10 @@
-"""Consequential external-action contract fixtures."""
+"""Canonical consequential external-action contract cases."""
 
 from __future__ import annotations
 
 from axiom_validation.context import REPOSITORY_ROOT, display_path
 from axiom_validation.external_action import EXTERNAL_ACTION_ENVELOPE_FIELDS, external_action_gate
-from tests.fixtures.evidence import check_strict_evidence_gate
+from .evidence import check_strict_evidence_gate
 
 
 def check_external_action_scenarios(failures: list[str]) -> int:

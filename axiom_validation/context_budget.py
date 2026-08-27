@@ -64,10 +64,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.11 routing-gate reduction has equivalent static before/after "
-            "coverage; "
+            "The v0.8.12 validator modularization changes no installed routing; "
             "no current Codex host usage or lifecycle observation was run, and "
-            "v0.8.10 plus prior observations remain separate history."
+            "v0.8.11 plus prior observations remain separate history."
         ),
     },
     "claude-code": {

@@ -5,7 +5,7 @@ import unittest
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.hooks import check_declared_hook_paths, check_exact_hook_shapes
 from axiom_validation.manifests import JSON_FILES, load_json
-from tests.fixtures.hooks import check_hook_lifecycle_fixtures
+from axiom_validation.cases.hooks import check_hook_lifecycle_fixtures
 
 
 class HookPolicyTests(unittest.TestCase):

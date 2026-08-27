@@ -127,17 +127,16 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.11` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.12` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The routing-gate reduction keeps the public
-routes, fixed workload, authorization boundary, and host wrappers unchanged;
-equivalent before/after contract validation remains static evidence, not a host
-observation. Current Codex host and lifecycle evidence is `NOT-RUN`,
-authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.10
+release-bound host observation. The validator modularization changes no installed
+route, hook, Skill, authorization boundary, or fixed workload. Current Codex
+host and lifecycle evidence is `NOT-RUN`,
+authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.11
 evidence remains separate history.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.11 routing-context record](evals/context-budget/results/v0.8.11.json) uses the
+The [v0.8.12 routing-context record](evals/context-budget/results/v0.8.12.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,673 UTF-8 bytes, 852 whitespace-delimited
@@ -477,7 +476,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.11 release notes](docs/releases/v0.8.11.md):
+- [Changelog](CHANGELOG.md) and [v0.8.12 release notes](docs/releases/v0.8.12.md):
   release history and version-specific evidence.
 
 ## Contributing

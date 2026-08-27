@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "1",
+  "kind": "routing-history-index",
+  "schemaDigests": {
+    "failedHostResponseV1": "9294a71523ba3ba8411810a4678b1170ac6400e5af9351da896018a0324f82ab",
+    "hostResponseV1": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+    "hostResponseV2": "17ca11a31e0ffba990af28ae0660ca994251d099f31c5f373f72c4251cf8a014",
+    "hostResponseV3": "29247831a414e74cc9f36594e52cfeca6a0eb0d862c34eb761db04437df2fed6"
+  },
+  "entries": [
+    {
+      "key": "initial-codex",
+      "group": "v0.7.7",
+      "path": "results/v0.7.7/codex/linux.json",
+      "runId": "codex-v0-7-7-linux-codex-core-v1-initial",
+      "responseSchemaSha256": "9294a71523ba3ba8411810a4678b1170ac6400e5af9351da896018a0324f82ab",
+      "outcomeSha256": "396baf099fd2e5b407b0c4dab4a2a75ac40e1a719452bef625ef9e99f389d2be",
+      "subject": {
+        "version": "0.7.7",
+        "tag": "v0.7.7",
+        "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+        "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+      },
+      "terminalOnly": false
+    },
+    {
+      "key": "initial-claude-unavailable",
+      "group": "v0.7.7",
+      "path": "results/v0.7.7/claude-code/linux.json",
+      "runId": "claude-code-v0-7-7-linux-codex-core-v1-unavailable",
+      "responseSchemaSha256": null,
+      "outcomeSha256": "ceb671ab631ad4f7882d92550ba81c58e97eff500565d60348249498a25efc7e",
+      "subject": {
+        "version": "0.7.7",
+        "tag": "v0.7.7",
+        "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+        "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+      },
+      "terminalOnly": false
+    },
+    {
+      "key": "recovery-1",
+      "group": "v0.7.7",
+      "path": "results/v0.7.7/codex/linux-recovery-1.json",
+      "runId": "codex-v0-7-7-linux-codex-core-v1-recovery-1",
+      "responseSchemaSha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+      "outcomeSha256": "926913d803565f01354ee02f2dcf8746d9542fadeb50e081aa7f6aaf8c7e1158",
+      "subject": {
+        "version": "0.7.7",
+        "tag": "v0.7.7",
+        "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+        "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+      },
+      "terminalOnly": false
+    },
+    {
+      "key": "recovery-2",
+      "group": "v0.7.7",
+      "path": "results/v0.7.7/codex/linux-recovery-2.json",
+      "runId": "codex-v0-7-7-linux-codex-core-v1-recovery-2",
+      "responseSchemaSha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+      "outcomeSha256": "e98a70eab49ba2d198ce7c0970dd3100349cf5905b6fe6d9d2e83c2ad72079ea",
+      "subject": {
+        "version": "0.7.7",
+        "tag": "v0.7.7",
+        "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+        "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+      },
+      "terminalOnly": false
+    },
+    {
+      "key": "recovery-3",
+      "group": "v0.7.7",
+      "path": "results/v0.7.7/codex/linux-recovery-3.json",
+      "runId": "codex-v0-7-7-linux-codex-core-v1-recovery-3",
+      "responseSchemaSha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+      "outcomeSha256": "88a503e1facbcbf0a9797d81f970d21a090b490bbf757a704977afa3059a5dcd",
+      "subject": {
+        "version": "0.7.7",
+        "tag": "v0.7.7",
+        "commit": "a949c417822e29ee0047d7046831d6fbbc40a650",
+        "tree": "fd93417d4dc084914c2a3d12f80e8c4a69b9d900"
+      },
+      "terminalOnly": true
+    },
+    {
+      "key": "candidate-1",
+      "group": "v0.7.8-candidate",
+      "path": "results/v0.7.8/codex/linux-candidate-1.json",
+      "runId": "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-1",
+      "responseSchemaSha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+      "outcomeSha256": "2e337b3dd6f01ad8fe157e5869fe820bf0356a09014bf75a867095cbc88a163c",
+      "subject": {
+        "version": "0.7.8",
+        "tag": null,
+        "commit": "389495ae314cff2a5e3491df5ace4a8536de25d9",
+        "tree": "7afb38829e49a049d0376fc49fb07bde57633e67",
+        "releaseState": "candidate-unreleased"
+      },
+      "terminalOnly": true
+    },
+    {
+      "key": "candidate-2",
+      "group": "v0.7.8-candidate",
+      "path": "results/v0.7.8/codex/linux-candidate-2.json",
+      "runId": "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-2",
+      "responseSchemaSha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+      "outcomeSha256": "3b05fd35a6e8013cbf84f5e56e741dc3fcfc5dd798354b3b6be375adb0794cab",
+      "subject": {
+        "version": "0.7.8",
+        "tag": null,
+        "commit": "1087a10e76fd54e1508bee3938cb03a1e17a2f5e",
+        "tree": "6f838581d1dcc99a5b870920c1c20889c1eb2607",
+        "releaseState": "candidate-unreleased"
+      },
+      "terminalOnly": true
+    },
+    {
+      "key": "candidate-3",
+      "group": "v0.7.8-candidate",
+      "path": "results/v0.7.8/codex/linux-candidate-3.json",
+      "runId": "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-3",
+      "responseSchemaSha256": "377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6",
+      "outcomeSha256": "279fc6f94250f5deab46e3a99f716477ba8abd654f290e7df0831de34b1582fb",
+      "subject": {
+        "version": "0.7.8",
+        "tag": null,
+        "commit": "449b3c01e0b4e3ef6fd6902efe3991c0b88758cd",
+        "tree": "5e06400c77d9ca0b789710ab134e0d697adfe943",
+        "releaseState": "candidate-unreleased"
+      },
+      "terminalOnly": true
+    },
+    {
+      "key": "candidate-4",
+      "group": "v0.7.8-candidate",
+      "path": "results/v0.7.8/codex/linux-candidate-4.json",
+      "runId": "codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-4",
+      "responseSchemaSha256": "17ca11a31e0ffba990af28ae0660ca994251d099f31c5f373f72c4251cf8a014",
+      "outcomeSha256": "23916a39703f6f77ae049ab8f6f8037a429d72ce485001ef517f662d60527689",
+      "subject": {
+        "version": "0.7.8",
+        "tag": null,
+        "commit": "70e1242ba9f038fe663f924f167108d8940106a8",
+        "tree": "780b7401f7f12af9c9ab310a24c02c9aae84fe62",
+        "releaseState": "candidate-unreleased"
+      },
+      "terminalOnly": true
+    },
+    {
+      "key": "v0-8-0-codex",
+      "group": "v0.8.0",
+      "path": "results/v0.8.0/codex/linux.json",
+      "runId": "codex-v0-8-0-linux-codex-core-v2-initial",
+      "responseSchemaSha256": "29247831a414e74cc9f36594e52cfeca6a0eb0d862c34eb761db04437df2fed6",
+      "outcomeSha256": "72030ae826b131de45a77fff0f2f4717e03783f1edb4a812de9e577ec4ab4574",
+      "subject": {
+        "version": "0.8.0",
+        "tag": "v0.8.0",
+        "commit": "5d02ebaa94f2a4355cb185a5091153c9e4ec497c",
+        "tree": "974c0f5db0f2dab0aba512a6633b0a22b0d80779"
+      },
+      "terminalOnly": true
+    },
+    {
+      "key": "v0-8-0-claude-unavailable",
+      "group": "v0.8.0",
+      "path": "results/v0.8.0/claude-code/linux.json",
+      "runId": "claude-code-v0-8-0-linux-codex-core-v2-unavailable",
+      "responseSchemaSha256": null,
+      "outcomeSha256": "043402c24e12705ac153296e8a6bc0016fdfceca3ac42dbdbfa7d74c796de0f7",
+      "subject": {
+        "version": "0.8.0",
+        "tag": "v0.8.0",
+        "commit": "5d02ebaa94f2a4355cb185a5091153c9e4ec497c",
+        "tree": "974c0f5db0f2dab0aba512a6633b0a22b0d80779"
+      },
+      "terminalOnly": false
+    }
+  ]
+}

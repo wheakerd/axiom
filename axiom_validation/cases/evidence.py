@@ -1,4 +1,4 @@
-"""Shared strict-evidence gate regression fixtures."""
+"""Canonical strict-evidence gate cases shared by publication policies."""
 
 from __future__ import annotations
 
