@@ -232,13 +232,26 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "A no-match result is not a denial",
             "does not create authorization",
             "does not manufacture a repository-state conflict",
-            "an expected staged set that exactly matches the current authorized payload",
-            "continue host-native without asking again",
-            "Stop before commit only on concrete current evidence",
-            "mere possibility, ordinary staged state, stale tracking information, or no Axiom route does not",
+            "Ordinary named-remote non-force staging, commits, and pushes",
+            "stay host-native",
+            "ordinary named-remote Git remains host-native",
         ),
         failures,
-        "ordinary no-route combined commit and push",
+        "ordinary no-route Git boundary",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/direct-submit.md",
+        (
+            "An ordinary commit-and-push request",
+            "stays in the host's normal workflow",
+            "already visible material conflict",
+            "An expected staged set that exactly matches the authorized payload",
+            "extra or unknown staged paths stop",
+            "Ask one concise question only when user input is required",
+            "Do not ask again when the frozen actor",
+        ),
+        failures,
+        "ordinary combined commit and push owner",
     )
     for prohibited in (
         "--no-verify",

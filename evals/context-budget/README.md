@@ -14,15 +14,15 @@ figure is `ceil(UTF-8 bytes / 4)`, explicitly labeled as an estimate suitable
 only for before/after comparison of the same English Markdown surface. It must
 not be compared with billed, cached, or host-reported tokens as if equivalent.
 
-The immutable v0.7.9 gate is the cumulative baseline for the v0.8.10 candidate:
+The immutable v0.7.9 gate is the cumulative baseline for the v0.8.11 candidate:
 
-| Metric | Baseline | v0.8.10 candidate | Delta | Classification |
+| Metric | Baseline | v0.8.11 candidate | Delta | Classification |
 | --- | ---: | ---: | ---: | --- |
-| UTF-8 bytes | 5,899 | 7,739 | +1,840 | exact static count used as a proxy |
-| Whitespace-delimited words | 757 | 1,001 | +244 | exact static count used as a proxy |
-| Logical lines | 107 | 135 | +28 | exact static count used as a proxy |
+| UTF-8 bytes | 5,899 | 6,673 | +774 | exact static count used as a proxy |
+| Whitespace-delimited words | 757 | 852 | +95 | exact static count used as a proxy |
+| Logical lines | 107 | 120 | +13 | exact static count used as a proxy |
 | Unique direct references | 1 | 1 | 0 | exact static count used as a proxy |
-| `ceil(bytes / 4)` | 1,475 | 1,935 | +460 | estimate for the same English surface only |
+| `ceil(bytes / 4)` | 1,475 | 1,669 | +194 | estimate for the same English surface only |
 
 Reproduce the candidate measurement from any working directory:
 
@@ -37,7 +37,7 @@ matrix, and duplicate-injection semantics. Neither command writes files.
 
 ## Lifecycle Matrix
 
-The v0.8.10 record represents all required paths: fresh startup with a no-route
+The v0.8.11 record represents all required paths: fresh startup with a no-route
 request, fresh startup with a routed request, resume with no route, clear with
 a routed request, manual compaction with no route, automatic compaction with a
 routed request, and three repeated no-route requests in one otherwise unchanged
@@ -54,13 +54,13 @@ validator derives `duplicateInjectionDetected` as observed count greater than
 the scenario's expected count. A passing observation must have the exact count
 and no duplicate. Unrun or unavailable observations must retain null counts,
 null duplicate state, and an empty event list. Codex lifecycle observation for
-v0.8.10 is `NOT-RUN`; authenticated Claude Code observation is
+v0.8.11 is `NOT-RUN`; authenticated Claude Code observation is
 `UNAVAILABLE / NOT-RUN`. The preserved independent v0.8.2 diagnostic used one
 fresh Case 1 session and therefore does not claim current or actual
 post-compaction behavior.
 
-The immutable v0.8.9 release and prior observations remain separate evidence and
-are not copied into the v0.8.10 candidate's host metrics. Current exact host
+The immutable v0.8.10 release and prior observations remain separate evidence and
+are not copied into the v0.8.11 candidate's host metrics. Current exact host
 usage is therefore `NOT-RUN`; the deterministic static measurement is local and telemetry-free,
 so the record keeps `networkOrTelemetryUsed` false.
 
@@ -86,15 +86,27 @@ context-budget validator. Safety rules, authorization boundaries, stop
 conditions, evidence gates, and model or reasoning settings cannot be removed
 or changed merely to obtain a smaller number.
 
-The 1,840-byte cumulative increase is about 31.19%. It reaches both the 256-byte
-absolute and 5% relative review triggers. The record classifies it as reviewed
-and preserves the substantive justification: the gate states the host-native
-ordinary Git boundary, prevents no-route or an expected staged payload from
-manufacturing a conflict, and routes an explicit simple submission to one
-parent-owned lightweight reference. The threshold does not replace routing,
-safety, or static validation.
+Reduction evidence binds its before surface to the nearest earlier stable
+SemVer record; v0.7.9 remains only the cumulative growth baseline. The v0.8.11
+experiment therefore compares v0.8.10 and v0.8.11 over the same byte-identical
+67-case workload:
+
+| Metric | v0.8.10 before | v0.8.11 after | Delta |
+| --- | ---: | ---: | ---: |
+| UTF-8 bytes | 7,739 | 6,673 | -1,066 |
+| Whitespace-delimited words | 1,001 | 852 | -149 |
+| Logical lines | 135 | 120 | -15 |
+| Unique direct references | 1 | 1 | 0 |
+| `ceil(bytes / 4)` | 1,935 | 1,669 | -266 |
+
+The cumulative 774-byte increase is about 13.12%, so both growth-review
+triggers remain reached and reviewed. Headroom below the 8,192-byte instruction
+boundary rises from 453 bytes (5.53%) to 1,519 bytes (18.54%). Contributors
+must preserve at least 15% headroom after equivalent acceptance and should
+prefer roughly 6-6.5 KiB when precision permits. The hard limit is a rejection
+guard, not an authoring target.
 
 The machine-readable contract is [schema v1](schema-v1.json), and the current
-versioned record is [v0.8.10](results/v0.8.10.json). The v0.8.9 record remains
-byte-for-byte historical evidence; the current record preserves its exact
-unchanged gate metrics, workload, and evidence boundary.
+versioned record is [v0.8.11](results/v0.8.11.json). The v0.8.10 record remains
+byte-for-byte historical evidence; the current record binds the reduced gate,
+unchanged workload, and static-only evidence boundary.

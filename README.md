@@ -127,30 +127,28 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.10` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.11` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The canonical-YAML parser repair changes no
-installed route or hook. It consumes doubled single quotes as one literal while
-scanning single-quoted scalars so an internal `#` stays inside the scalar;
-passing the focused adversarial regression matrix remains static validation,
-not a host observation. Current Codex host and lifecycle evidence is `NOT-RUN`,
-authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.9
+release-bound host observation. The routing-gate reduction keeps the public
+routes, fixed workload, authorization boundary, and host wrappers unchanged;
+equivalent before/after contract validation remains static evidence, not a host
+observation. Current Codex host and lifecycle evidence is `NOT-RUN`,
+authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.10
 evidence remains separate history.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.10 routing-context record](evals/context-budget/results/v0.8.10.json) uses the
+The [v0.8.11 routing-context record](evals/context-budget/results/v0.8.11.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
-an estimated 1,475 tokens. The candidate has 7,739 UTF-8 bytes, 1,001
-whitespace-delimited words, 135 logical lines, 1 direct reference, and an estimated
-1,935 tokens. Its cumulative deltas are +1,840 bytes, +244 words, +28 lines, 0
-references, and +460 estimated tokens. The record marks the absolute threshold
-`reached`, the relative threshold `reached`, and review status `reviewed`. The exact
-static counts are context proxies, and each `ceil(UTF-8 bytes / 4)` figure is only an
-estimate for the same English Markdown surface, not an exact token or credit count.
-Codex host and lifecycle observation remains `NOT-RUN`; authenticated Claude Code
-remains `UNAVAILABLE / NOT-RUN`. No host observation is inferred from these static
-values.
+an estimated 1,475 tokens. The candidate has 6,673 UTF-8 bytes, 852 whitespace-delimited
+words, 120 logical lines, 1 direct reference, and an estimated 1,669 tokens. Its
+cumulative deltas are +774 bytes, +95 words, +13 lines, 0 references, and +194 estimated
+tokens. The record marks the absolute threshold `reached`, the relative threshold
+`reached`, and review status `reviewed`. The exact static counts are context proxies,
+and each `ceil(UTF-8 bytes / 4)` figure is only an estimate for the same English
+Markdown surface, not an exact token or credit count. Codex host and lifecycle
+observation remains `NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE /
+NOT-RUN`. No host observation is inferred from these static values.
 <!-- release-facts:current-context-budget:end -->
 
 The [routing evaluation corpus](evals/README.md) makes 67 host-independent
@@ -479,7 +477,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.10 release notes](docs/releases/v0.8.10.md):
+- [Changelog](CHANGELOG.md) and [v0.8.11 release notes](docs/releases/v0.8.11.md):
   release history and version-specific evidence.
 
 ## Contributing
