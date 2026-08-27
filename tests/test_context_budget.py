@@ -19,6 +19,7 @@ from axiom_validation.context_budget import (
     ROUTING_GATE_PATH,
     check_context_budget,
     measure_markdown,
+    previous_context_budget_candidate,
     routing_corpus_metrics,
     threshold_assessment,
     validate_host_observation,
@@ -34,7 +35,10 @@ class ContextBudgetTests(unittest.TestCase):
         current_record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
         current_metrics = measure_markdown(ROUTING_GATE_PATH)
         self.assertEqual(current_record["candidate"]["metrics"], current_metrics)
-        self.assertEqual(1840, current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"])
+        self.assertEqual(
+            current_record["comparison"]["utf8ByteDelta"],
+            current_metrics["utf8Bytes"] - BASELINE_METRICS["utf8Bytes"],
+        )
         self.assertEqual(
             current_record["candidate"]["sha256"],
             hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest(),
@@ -183,6 +187,68 @@ class ContextBudgetTests(unittest.TestCase):
             accepted_failures,
         )
         self.assertEqual([], accepted_failures)
+
+        wrong_predecessor = {
+            "equivalentWorkload": True,
+            "before": result(BASELINE_SHA256),
+            "after": result(after_sha),
+        }
+        predecessor_failures = []
+        validate_reduction_experiment(
+            wrong_predecessor,
+            before_sha,
+            after_sha,
+            100,
+            90,
+            corpus,
+            predecessor_failures,
+        )
+        self.assertTrue(
+            any(
+                "reductionExperiment.before.surfaceSha256" in failure
+                for failure in predecessor_failures
+            )
+        )
+
+    def test_reduction_predecessor_is_nearest_earlier_release_candidate(self):
+        def metrics(byte_count):
+            result = copy.deepcopy(BASELINE_METRICS)
+            result["utf8Bytes"] = byte_count
+            result["estimatedTokens"]["value"] = (byte_count + 3) // 4
+            return result
+
+        def write_record(root, version, sha256, byte_count):
+            document = {
+                "targetRelease": {
+                    "version": version,
+                    "commit": None,
+                    "binding": "pending-immutable-release",
+                },
+                "candidate": {
+                    "sha256": sha256,
+                    "metrics": metrics(byte_count),
+                },
+            }
+            (root / f"v{version}.json").write_text(
+                json.dumps(document), encoding="utf-8"
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_record(root, "0.8.9", "9" * 64, 7700)
+            write_record(root, "0.8.10", "a" * 64, 7739)
+            write_record(root, "0.8.11", "b" * 64, 6409)
+            write_record(root, "0.9.0", "c" * 64, 6500)
+            failures = []
+            predecessor = previous_context_budget_candidate(
+                "0.8.11", failures, results_root=root
+            )
+
+        self.assertEqual([], failures)
+        self.assertIsNotNone(predecessor)
+        predecessor_sha256, predecessor_metrics = predecessor
+        self.assertEqual("a" * 64, predecessor_sha256)
+        self.assertEqual(7739, predecessor_metrics["utf8Bytes"])
 
     def test_measurement_cli_is_repository_relative_and_read_only(self):
         script = REPOSITORY_ROOT / "scripts" / "measure-routing-context.py"

@@ -14,13 +14,17 @@ from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
 
 CONTEXT_BUDGET_ROOT = REPOSITORY_ROOT / "evals" / "context-budget"
 CONTEXT_BUDGET_SCHEMA = CONTEXT_BUDGET_ROOT / "schema-v1.json"
-CONTEXT_BUDGET_RECORD = (
-    CONTEXT_BUDGET_ROOT / "results" / f"v{RELEASE_VERSION}.json"
-)
+CONTEXT_BUDGET_RESULTS = CONTEXT_BUDGET_ROOT / "results"
+CONTEXT_BUDGET_RECORD = CONTEXT_BUDGET_RESULTS / f"v{RELEASE_VERSION}.json"
 ROUTING_GATE_PATH = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
 ROUTING_CORPUS_ROOT = REPOSITORY_ROOT / "evals" / "routing"
 MAX_JSON_BYTES = 256 * 1024
 DIRECT_REFERENCE_PATTERN = re.compile(r"(?<![A-Za-z0-9_.-])references/[A-Za-z0-9._/-]+\.md")
+CONTEXT_BUDGET_RECORD_PATTERN = re.compile(
+    r"^v(0|[1-9][0-9]*)\."
+    r"(0|[1-9][0-9]*)\."
+    r"(0|[1-9][0-9]*)\.json$"
+)
 
 BASELINE_RELEASE = {
     "version": "0.7.9",
@@ -60,9 +64,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.10 canonical-YAML parser repair changes no installed routing; "
+            "The v0.8.11 routing-gate reduction has equivalent static before/after "
+            "coverage; "
             "no current Codex host usage or lifecycle observation was run, and "
-            "v0.8.9 plus prior observations remain separate history."
+            "v0.8.10 plus prior observations remain separate history."
         ),
     },
     "claude-code": {
@@ -351,17 +356,20 @@ def threshold_assessment(baseline_bytes: int, candidate_bytes: int) -> dict[str,
 
 def validate_reduction_experiment(
     value: Any,
-    baseline_sha256: str,
+    before_sha256: str,
     candidate_sha256: str,
-    baseline_bytes: int,
+    before_bytes: int,
     candidate_bytes: int,
     corpus: dict[str, Any],
     failures: list[str],
 ) -> None:
-    """Require equivalent routed and no-route evidence for every real reduction."""
-    if candidate_bytes >= baseline_bytes:
+    """Require equivalent evidence when the gate shrinks from its predecessor."""
+    if candidate_bytes >= before_bytes:
         if value is not None:
-            failures.append("routingQuality.reductionExperiment must be null without a reduction")
+            failures.append(
+                "routingQuality.reductionExperiment must be null without a reduction "
+                "from the previous candidate"
+            )
         return
     experiment = exact_object(
         value,
@@ -377,7 +385,7 @@ def validate_reduction_experiment(
     if experiment.get("equivalentWorkload") is not True:
         failures.append("routingQuality.reductionExperiment.equivalentWorkload must be true")
 
-    expected_surfaces = (baseline_sha256, candidate_sha256)
+    expected_surfaces = (before_sha256, candidate_sha256)
     observations: list[dict[str, Any] | None] = []
     for phase, expected_surface in zip(("before", "after"), expected_surfaces):
         observation = exact_object(
@@ -553,6 +561,81 @@ def _check_metric_shape(value: Any, label: str, failures: list[str]) -> dict[str
             if estimate != expected_estimate:
                 failures.append(f"{label}.estimatedTokens is not the documented estimate")
     return metrics if len(failures) == initial_failure_count else None
+
+
+def previous_context_budget_candidate(
+    release_version: str,
+    failures: list[str],
+    *,
+    results_root: Path = CONTEXT_BUDGET_RESULTS,
+) -> tuple[str, dict[str, Any]] | None:
+    """Load the candidate measurement from the nearest earlier release record."""
+    current_match = CONTEXT_BUDGET_RECORD_PATTERN.fullmatch(f"v{release_version}.json")
+    if current_match is None:
+        failures.append("current context-budget release must be a stable SemVer")
+        return None
+    current_version = tuple(int(part) for part in current_match.groups())
+
+    try:
+        metadata = results_root.lstat()
+    except OSError as error:
+        failures.append(f"cannot inspect context-budget results directory: {error}")
+        return None
+    if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISDIR(metadata.st_mode):
+        failures.append("context-budget results path must be a regular directory")
+        return None
+
+    predecessors: list[tuple[tuple[int, int, int], Path]] = []
+    for path in results_root.glob("v*.json"):
+        match = CONTEXT_BUDGET_RECORD_PATTERN.fullmatch(path.name)
+        if match is None:
+            continue
+        version = tuple(int(part) for part in match.groups())
+        if version < current_version:
+            predecessors.append((version, path))
+    if not predecessors:
+        failures.append(
+            f"no context-budget predecessor exists before v{release_version}"
+        )
+        return None
+
+    predecessor_version, predecessor_path = max(predecessors, key=lambda item: item[0])
+    predecessor_label = ".".join(str(part) for part in predecessor_version)
+    document = load_json(predecessor_path, failures)
+    if document is None:
+        return None
+
+    initial_failure_count = len(failures)
+    target = exact_object(
+        document.get("targetRelease"),
+        f"v{predecessor_label} predecessor targetRelease",
+        frozenset({"version", "commit", "binding"}),
+        failures,
+    )
+    if target is not None and target.get("version") != predecessor_label:
+        failures.append(
+            f"v{predecessor_label} predecessor targetRelease.version is inconsistent"
+        )
+
+    candidate = exact_object(
+        document.get("candidate"),
+        f"v{predecessor_label} predecessor candidate",
+        frozenset({"sha256", "metrics"}),
+        failures,
+    )
+    if candidate is None:
+        return None
+    sha256 = candidate.get("sha256")
+    if type(sha256) is not str or re.fullmatch(r"[0-9a-f]{64}", sha256) is None:
+        failures.append(f"v{predecessor_label} predecessor candidate.sha256 is invalid")
+    metrics = _check_metric_shape(
+        candidate.get("metrics"),
+        f"v{predecessor_label} predecessor candidate.metrics",
+        failures,
+    )
+    if len(failures) != initial_failure_count or metrics is None or type(sha256) is not str:
+        return None
+    return sha256, metrics
 
 
 def check_context_budget(failures: list[str]) -> int:
@@ -766,12 +849,14 @@ def check_context_budget(failures: list[str]) -> int:
         }
         if routing_quality.get("reductionPolicy") != expected_reduction_policy:
             failures.append("routingQuality.reductionPolicy is incomplete")
-        if baseline_metrics is not None and candidate_metrics is not None:
+        previous_candidate = previous_context_budget_candidate(RELEASE_VERSION, failures)
+        if previous_candidate is not None and candidate_metrics is not None:
+            previous_sha256, previous_metrics = previous_candidate
             validate_reduction_experiment(
                 routing_quality.get("reductionExperiment"),
-                BASELINE_SHA256,
+                previous_sha256,
                 current_sha256,
-                baseline_metrics["utf8Bytes"],
+                previous_metrics["utf8Bytes"],
                 candidate_metrics["utf8Bytes"],
                 corpus,
                 failures,

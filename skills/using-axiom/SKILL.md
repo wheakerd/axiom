@@ -24,16 +24,13 @@ applies without turning ordinary work into an Axiom task.
 
 ## Bundled Routes
 
-- `agents-architect`: create, audit, split, migrate, or maintain a target
-  repository's `AGENTS.md` system, routed `.agents/` guidance, or supporting
-  repo-local skills; handle the explicit current-task modes
-  `effective-instructions`, `effective-instructions:preview`,
-  `effective-instructions:refactor`, and
-  `effective-instructions:force <instruction>`; and reconcile existing guidance
-  with current implementation only when the user explicitly invokes
-  `effective-instructions:reconcile`,
-  `effective-instructions:reconcile-preview`, or an explicit unambiguous
-  request for that operation. Packaged plugin skills are outside this route.
+- `agents-architect`: create, audit, split, migrate, or maintain repository
+  `AGENTS.md`, routed `.agents/` guidance, and repo-local skills; also handle
+  explicit `effective-instructions`, `effective-instructions:preview`,
+  `effective-instructions:refactor`, `effective-instructions:force`,
+  `effective-instructions:reconcile`, and
+  `effective-instructions:reconcile-preview` modes. Packaged plugin skills stay
+  outside.
 - `agent-plugin-architect`: design or audit packaged Codex or Claude Code
   plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
   and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
@@ -93,18 +90,6 @@ cause the effect. Preparation does not authorize execution, and an exact
 current request need not be reconfirmed unless a material envelope field is
 missing or changes. Keep independently traceable Git workflows under
 `traceable-git-submit`; ordinary named-remote Git remains host-native.
-
-For an ordinary combined commit-and-push request, an expected staged set that
-exactly matches the current authorized payload is normal host state, not a
-conflict. If the actor, repository, branch, named remote, command, payload, and
-non-force policy remain unchanged and inspection confirms that set, continue
-host-native without asking again. Stop before commit only on concrete current
-evidence of a material repository, branch, remote, command, payload, force, or
-instruction conflict that changes the frozen action or genuinely requires user
-input. Extra or unknown staged paths, a changed or missing target or branch, an
-in-progress Git operation, force, widened or multiple targets, an instruction
-conflict, or known divergence qualifies; mere possibility, ordinary staged
-state, stale tracking information, or no Axiom route does not.
 
 A persistent change with no distinct consequential external effect stays under
 `reversible-system-change`; apply the cross-route rule above when both effects

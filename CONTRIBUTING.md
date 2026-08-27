@@ -72,6 +72,12 @@ routing workload before and after and report both routed and no-route results
 as passing. Do not remove a safety, authorization, stop, or evidence rule merely
 to meet a size target.
 
+Keep the always-loaded gate at least 15% below the 8,192-byte instruction
+boundary after equivalent routing and safety acceptance, with roughly 6-6.5
+KiB preferred when precision permits. Treat 8,192 bytes as a rejection guard,
+not an authoring target. Bind reduction evidence to the immediate predecessor
+while retaining v0.7.9 as the cumulative growth baseline.
+
 When editing a route, review its direct references and examples for accidental
 permission expansion. State separately whether the change affects matching,
 planning, mutation authority, stop conditions, rollback, or completion

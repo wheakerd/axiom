@@ -5,9 +5,42 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.10 sequential candidate for Issue #60. It preserves
-the immutable v0.8.9 release and every historical observation without claiming
+The active tree is the v0.8.11 sequential candidate for Issue #61. It preserves
+the immutable v0.8.10 release and every historical observation without claiming
 a checked-in current host pass.
+
+## 0.8.11 - unreleased candidate
+
+### Performance
+
+- Reduced the always-loaded `using-axiom` gate from 7,739 to 6,673 UTF-8 bytes,
+  increasing 8,192-byte headroom from 5.53% to 18.54% while retaining every
+  public route, exact effective-instructions mode, near-miss exclusion,
+  cross-route ownership rule, authorization boundary, and lifecycle stop.
+- Removed duplicated ordinary Git staging and conflict mechanics from the
+  startup surface; their directly reachable owner remains
+  `traceable-git-submit/references/direct-submit.md`.
+- Documented a minimum 15% engineering headroom target and a roughly 6-6.5 KiB
+  preferred range, subordinate to equivalent routing and safety acceptance.
+
+### Evidence Boundary
+
+- Bound reduction experiments to the immediate predecessor candidate while
+  retaining immutable v0.7.9 as the cumulative growth baseline.
+- Recorded equivalent `PASS` results for the unchanged 67-case workload before
+  and after the reduction: 47 routed cases and 20 no-route controls.
+- The complete 110-test suite, focused 44-test routing run, publication guard,
+  distribution drift guard, compatibility self-test, context-budget and
+  canonical-facts checks, JSON parsing, English-only scan, instruction-size
+  check, skill quick validation, and Claude Code strict offline validation pass
+  in a disposable copy.
+- The checked-in release status remains `STATIC-ONLY`. Codex host and lifecycle
+  evidence is `NOT-RUN`; authenticated Claude Code host and lifecycle
+  validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks, signed merge,
+  tag, immutable Release, GitHub Latest, and Issue closure remain future
+  external gates.
+
+See [the v0.8.11 release notes](docs/releases/v0.8.11.md).
 
 ## 0.8.10 - unreleased candidate
 
