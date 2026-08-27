@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from .git_contracts import all_evidence
 
 EXTERNAL_ACTION_ENVELOPE_FIELDS = (
@@ -19,5 +22,5 @@ EXTERNAL_ACTION_ENVELOPE_FIELDS = (
 )
 
 
-def external_action_gate(evidence: dict[str, bool]) -> bool:
+def external_action_gate(evidence: Mapping[str, Any]) -> bool:
     return all_evidence(evidence, EXTERNAL_ACTION_ENVELOPE_FIELDS)

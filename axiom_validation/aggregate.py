@@ -40,7 +40,6 @@ from .repository_policy import (
     check_required_files,
     check_skill_contracts,
 )
-from .rollback import ROLLBACK_EVIDENCE_FIELDS
 from .routing_contracts import (
     check_cross_route_resume_contracts,
     check_readme_lifecycle_commands,
@@ -194,7 +193,9 @@ def main() -> int:
     external_action_scenarios = run_policy(
         "external-action", check_external_action_scenarios, failures
     )
-    run_policy("rollback", check_reversible_safety_scenarios, failures)
+    rollback_scenarios = run_policy(
+        "rollback", check_reversible_safety_scenarios, failures
+    )
     markdown_count = run_policy("markdown", check_markdown_links, failures)
 
     conventional_hook = REPOSITORY_ROOT / "hooks" / "hooks.json"
@@ -223,7 +224,7 @@ def main() -> int:
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "
-        f"{len(ROLLBACK_EVIDENCE_FIELDS) + 1} rollback gate fixtures, "
+        f"{rollback_scenarios} rollback gate fixtures, "
         f"{cross_route_contract_count} source-linked cross-route/resume contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
         f"{evidence_record_count} compatibility evidence records, "

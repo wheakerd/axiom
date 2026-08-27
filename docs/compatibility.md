@@ -65,19 +65,19 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.8, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.8.9, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
 observation. The dated governance snapshot separately records the directly
-observed required-check and immutable-release settings. The canonical-facts
-repair changes no installed route, hook, or routing contract. Current Codex
+observed required-check and immutable-release settings. The strict-evidence
+hardening changes no installed route, hook, or routing contract. Current Codex
 host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code evidence is
-`UNAVAILABLE / NOT-RUN`. The immutable v0.8.7 release and all prior observations
+`UNAVAILABLE / NOT-RUN`. The immutable v0.8.8 release and all prior observations
 remain separate history. A prior-release Codex observation also exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.8.
+outcomes forward to v0.8.9.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -136,12 +136,12 @@ installed Codex or authenticated Claude Code host pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.8.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.9.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The unchanged v0.8.8 candidate gate is 7,739 bytes with SHA-256
+The unchanged v0.8.9 candidate gate is 7,739 bytes with SHA-256
 `7da583bb99880157a7fbca539ebb0426f49cd79d2748be51e5ef5fe85eaa3996`.
 
 The candidate has 1,001 whitespace-delimited words, 135 logical lines, and one
@@ -150,7 +150,7 @@ for comparing the same English Markdown surface. The exact cumulative delta is
 1,840 bytes, 244 words, 28 lines, zero references, and 460 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
 reviewed and justifies the host-native Git boundary, explicit staged-state rule,
-and direct-reference split. The v0.8.8 canonical-facts repair leaves this gate
+and direct-reference split. The v0.8.9 strict-evidence hardening leaves this gate
 and the fixed 67-case workload unchanged. Current host usage and lifecycle are
 `NOT-RUN`.
 
@@ -387,6 +387,21 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.9` reports:
+
+- synchronized `0.8.9` manifests and release-owned metadata for Issue #59;
+- exact-singleton `True` semantics in the shared evidence helper used by
+  external-action, rollback, and cleanup gates;
+- exhaustive per-field rejection of twelve non-`True` values, actual missing
+  fields, and unknown-field substitution, while complete exact evidence passes;
+- 104 local standard-library tests plus publication, distribution, context,
+  canonical-facts, JSON, English-only, and whitespace validation; and
+- unchanged installed Skills, hooks, routing, workflows, workload, and
+  release-bound acceptance contract, with Codex host evidence `NOT-RUN` and
+  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
+
+See the [v0.8.9 release notes](releases/v0.8.9.md).
 
 The Git record for `v0.8.8` reports:
 

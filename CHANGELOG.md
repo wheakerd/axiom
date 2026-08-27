@@ -5,9 +5,41 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.8 sequential candidate for Issue #58. It preserves
-the immutable v0.8.7 release and every historical observation without claiming
+The active tree is the v0.8.9 sequential candidate for Issue #59. It preserves
+the immutable v0.8.8 release and every historical observation without claiming
 a checked-in current host pass.
+
+## 0.8.9 - unreleased candidate
+
+### Security
+
+- Changed `all_evidence()` to require the exact singleton `True` for every
+  owned field, rejecting integers, strings, collections, nulls, and every other
+  non-boolean value without coercion.
+- Routed both external-action and rollback evidence through the shared strict
+  helper while preserving their required field sets and ignoring unknown fields
+  unless an owned field is missing.
+- Added exhaustive per-field type-confusion, true-missing-field, and
+  unknown-field-substitution fixtures for external actions, rollback, and
+  cleanup authority.
+
+### Evidence Boundary
+
+- The complete 104-test suite, focused 16-test safety run, publication guard,
+  distribution drift guard, context-budget and canonical-facts checks, JSON
+  parsing, English-only scan, and whitespace checks pass locally on the
+  candidate tree.
+- The aggregate reports 155 external-action, 127 rollback, and 238 traceable-Git
+  contract fixtures, including the strict cleanup-authority matrix.
+- Installed Skills, hooks, route selection, benchmark membership, models,
+  reasoning settings, workflows, and action authority are unchanged.
+- The checked-in release status remains `STATIC-ONLY`. Current Codex host and
+  release-bound lifecycle evidence is `NOT-RUN`; authenticated Claude Code host
+  and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks,
+  signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain
+  future external gates.
+
+See [the v0.8.9 release notes](docs/releases/v0.8.9.md).
 
 ## 0.8.8 - unreleased candidate
 

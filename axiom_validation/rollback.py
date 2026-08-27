@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
+from .git_contracts import all_evidence
+
 ROLLBACK_EVIDENCE_FIELDS = (
     "prior_state_bound",
     "location_unambiguous",
@@ -15,5 +20,5 @@ ROLLBACK_EVIDENCE_FIELDS = (
 )
 
 
-def rollback_gate(evidence: dict[str, bool]) -> bool:
-    return all(evidence.get(field, False) for field in ROLLBACK_EVIDENCE_FIELDS)
+def rollback_gate(evidence: Mapping[str, Any]) -> bool:
+    return all_evidence(evidence, ROLLBACK_EVIDENCE_FIELDS)

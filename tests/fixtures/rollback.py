@@ -4,20 +4,16 @@ from __future__ import annotations
 
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.rollback import ROLLBACK_EVIDENCE_FIELDS, rollback_gate
+from tests.fixtures.evidence import check_strict_evidence_gate
 
 
-def check_reversible_safety_scenarios(failures: list[str]) -> None:
-    complete = {field: True for field in ROLLBACK_EVIDENCE_FIELDS}
-    if not rollback_gate(complete):
-        failures.append("complete rollback evidence must permit the execution phase")
-
-    for missing_field in ROLLBACK_EVIDENCE_FIELDS:
-        incomplete = dict(complete)
-        incomplete[missing_field] = False
-        if rollback_gate(incomplete):
-            failures.append(
-                f"rollback safety scenario without {missing_field!r} must stop before execution"
-            )
+def check_reversible_safety_scenarios(failures: list[str]) -> int:
+    gate_scenario_count = check_strict_evidence_gate(
+        rollback_gate,
+        ROLLBACK_EVIDENCE_FIELDS,
+        "rollback",
+        failures,
+    )
 
     skill_root = REPOSITORY_ROOT / "skills" / "reversible-system-change"
     contract_text = "\n".join(
@@ -50,3 +46,4 @@ def check_reversible_safety_scenarios(failures: list[str]) -> None:
             failures.append(
                 f"reversible-system-change is missing rehearsal phase contract {phase_anchor!r}"
             )
+    return gate_scenario_count

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from axiom_validation.context import REPOSITORY_ROOT, display_path
 from axiom_validation.external_action import EXTERNAL_ACTION_ENVELOPE_FIELDS, external_action_gate
+from tests.fixtures.evidence import check_strict_evidence_gate
 
 
 def check_external_action_scenarios(failures: list[str]) -> int:
@@ -26,14 +27,9 @@ def check_external_action_scenarios(failures: list[str]) -> int:
                 f"{display_path(skill_path)} is missing external-action contract {anchor!r}"
             )
 
-    complete = {field: True for field in EXTERNAL_ACTION_ENVELOPE_FIELDS}
-    if not external_action_gate(complete):
-        failures.append("complete external action envelope must permit one execution")
-    for missing_field in EXTERNAL_ACTION_ENVELOPE_FIELDS:
-        incomplete = dict(complete)
-        incomplete[missing_field] = False
-        if external_action_gate(incomplete):
-            failures.append(
-                f"external-action scenario without {missing_field!r} must stop before mutation"
-            )
-    return len(EXTERNAL_ACTION_ENVELOPE_FIELDS) + 1
+    return check_strict_evidence_gate(
+        external_action_gate,
+        EXTERNAL_ACTION_ENVELOPE_FIELDS,
+        "external-action",
+        failures,
+    )
