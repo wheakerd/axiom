@@ -24,7 +24,7 @@ DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
 NUMERIC_RELEASE_TAG = re.compile(
     r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
 )
-PUBLISH_WORKFLOW_SHA256 = "99a9608ec802d4e7d2f03c4a49d522979d13464f5c3093add3052fa7a6706751"
+PUBLISH_WORKFLOW_SHA256 = "1e17859df031ef9ff20f161d0e1de17ada29d7e733577c7f00a6aff12b32b046"
 
 
 class DuplicateJsonKeyError(ValueError):
@@ -194,8 +194,8 @@ def _inspect_release(
         failures.append("release.immutable must be a boolean")
     elif expected_phase == "final" and immutable is not True:
         failures.append("final GitHub Release must report immutable=true")
-    elif expected_phase == "draft" and immutable is not False:
-        failures.append("draft GitHub Release must not report immutable=true")
+    elif expected_phase != "final" and immutable is not False:
+        failures.append("non-final GitHub Release must not report immutable=true")
     if release_id is None:
         return None
     return {
@@ -298,7 +298,7 @@ def select_release_from_collection(
     expected_tag: str,
     failures: list[str],
 ) -> dict[str, Any] | None:
-    """Select one exact draft or immutable Release from an authenticated listing."""
+    """Select one exact draft, mutable final, or immutable Release from a listing."""
     document = _load_json_value(collection_path, "release collection", failures)
     if type(document) is not list:
         failures.append("release collection must be an array")
@@ -323,6 +323,34 @@ def select_release_from_collection(
     return selected
 
 
+def assert_release_absent_from_collection(
+    collection_path: Path,
+    plan: dict[str, Any],
+    failures: list[str],
+) -> None:
+    """Fail closed unless the frozen mutable Release disappeared after cleanup."""
+    if not _validate_plan(plan, failures):
+        return
+    document = _load_json_value(collection_path, "release collection", failures)
+    if type(document) is not list:
+        failures.append("release collection must be an array")
+        return
+    releases: list[Any] = []
+    for item in document:
+        if type(item) is list:
+            releases.extend(item)
+        else:
+            releases.append(item)
+    frozen_id = plan["release"]["id"]
+    frozen_tag = plan["subject"]["tag"]
+    for release in releases:
+        if type(release) is not dict:
+            failures.append("release collection contains a malformed entry")
+            continue
+        if release.get("id") == frozen_id or release.get("tag_name") == frozen_tag:
+            failures.append("compensating cleanup did not remove the frozen mutable Release")
+
+
 def prepare_release_plan(
     metadata_path: Path,
     *,
@@ -332,7 +360,7 @@ def prepare_release_plan(
     expected_tree: str,
     failures: list[str],
 ) -> dict[str, Any] | None:
-    """Freeze one exact draft or already-immutable Release and its evidence."""
+    """Freeze one exact draft, mutable published, or immutable Release and its evidence."""
     _validate_subject(
         expected_version, expected_tag, expected_commit, expected_tree, failures
     )
@@ -341,10 +369,14 @@ def prepare_release_plan(
         return None
     if document.get("draft") is True and document.get("immutable") is False:
         phase = "draft"
+    elif document.get("draft") is False and document.get("immutable") is False:
+        phase = "published-mutable"
     elif document.get("draft") is False and document.get("immutable") is True:
         phase = "final"
     else:
-        failures.append("release must be either a mutable draft or an immutable final Release")
+        failures.append(
+            "release must be a mutable draft, published mutable Release, or immutable final Release"
+        )
         return None
     release = _inspect_release(
         document,
@@ -394,7 +426,7 @@ def _validate_plan(plan: dict[str, Any], failures: list[str]) -> bool:
     subject = plan.get("subject")
     asset = plan.get("observationAsset")
     attestation = plan.get("attestationAsset")
-    if plan.get("phase") not in {"draft", "final"}:
+    if plan.get("phase") not in {"draft", "published-mutable", "final"}:
         failures.append("release evidence plan phase is unsupported")
     if type(release) is not dict or set(release) != {
         "id",
@@ -473,8 +505,8 @@ def _validate_plan(plan: dict[str, Any], failures: list[str]) -> bool:
             )
             if normalized_attestation is not None and normalized_attestation != attestation:
                 failures.append("release evidence plan attestation binding is not canonical")
-    if plan.get("phase") == "final" and attestation is None:
-        failures.append("final release evidence plan requires one attestation binding")
+    if plan.get("phase") in {"published-mutable", "final"} and attestation is None:
+        failures.append("published release evidence plan requires one attestation binding")
     return not failures
 
 
@@ -486,36 +518,36 @@ def load_release_plan(path: Path, failures: list[str]) -> dict[str, Any] | None:
 
 
 def verify_remote_release_preflight(
-    immutable_settings_path: Path,
     repository_metadata_path: Path,
     latest_release_path: Path,
-    main_commit_path: Path,
-    tag_commit_path: Path,
+    main_ref_path: Path,
+    tag_ref_path: Path,
+    history_comparison_path: Path,
+    commit_metadata_path: Path,
     graphql_signature_path: Path,
     *,
     expected_commit: str,
     expected_tag: str,
+    require_main_tip: bool,
     failures: list[str],
 ) -> None:
-    """Fail closed unless live capability, refs, and GitHub signature still match."""
+    """Fail closed unless exact live refs and GitHub signature still match."""
     if OID_PATTERN.fullmatch(expected_commit) is None:
         failures.append("preflight expected commit must be one lowercase 40-character Git SHA")
         return
-    settings = _load_json_object(
-        immutable_settings_path, "immutable-release settings", failures
-    )
     repository = _load_json_object(repository_metadata_path, "repository metadata", failures)
     latest = _load_json_object(latest_release_path, "current GitHub Latest Release", failures)
-    main_commit = _load_json_object(main_commit_path, "live main commit", failures)
-    tag_commit = _load_json_object(tag_commit_path, "live tag commit", failures)
+    main_ref = _load_json_object(main_ref_path, "live main ref", failures)
+    tag_ref = _load_json_object(tag_ref_path, "live release tag ref", failures)
+    comparison = _load_json_object(
+        history_comparison_path, "release-to-main history comparison", failures
+    )
+    commit_metadata = _load_json_object(
+        commit_metadata_path, "live release commit", failures
+    )
     graphql = _load_json_object(
         graphql_signature_path, "GraphQL commit signature", failures
     )
-    if settings is not None:
-        if settings.get("enabled") is not True:
-            failures.append("repository immutable releases must be enabled before mutation")
-        if type(settings.get("enforced_by_owner")) is not bool:
-            failures.append("immutable-release enforced_by_owner must be a boolean")
     if repository is not None and repository.get("default_branch") != "main":
         failures.append("repository default branch must remain main")
     target_match = NUMERIC_RELEASE_TAG.fullmatch(expected_tag)
@@ -535,20 +567,44 @@ def verify_remote_release_preflight(
             latest_version = tuple(int(part) for part in latest_match.groups())
             if latest_tag != expected_tag and latest_version >= target_version:
                 failures.append("publication must not regress the GitHub Latest SemVer")
-    for label, document in (("main", main_commit), ("tag", tag_commit)):
-        if document is None:
-            continue
-        if document.get("sha") != expected_commit:
-            failures.append(f"live {label} must resolve to the exact release commit")
-    if tag_commit is not None:
-        commit_document = tag_commit.get("commit")
+    main_commit = (
+        exact_ref_commit(main_ref, "refs/heads/main", "live main ref", failures)
+        if main_ref is not None
+        else None
+    )
+    tag_commit = (
+        exact_ref_commit(
+            tag_ref, f"refs/tags/{expected_tag}", "live release tag ref", failures
+        )
+        if tag_ref is not None
+        else None
+    )
+    if tag_commit is not None and tag_commit != expected_commit:
+        failures.append("live release tag ref must target the exact release commit")
+    if require_main_tip and main_commit is not None and main_commit != expected_commit:
+        failures.append("live main tip must equal the release commit before publication mutation")
+    if comparison is not None and main_commit is not None:
+        merge_base = comparison.get("merge_base_commit")
+        base = comparison.get("base_commit")
+        if (
+            type(merge_base) is not dict
+            or merge_base.get("sha") != expected_commit
+            or type(base) is not dict
+            or base.get("sha") != expected_commit
+            or comparison.get("status") not in {"ahead", "identical"}
+        ):
+            failures.append("release commit must remain on the exact live main history")
+    if commit_metadata is not None:
+        if commit_metadata.get("sha") != expected_commit:
+            failures.append("live release commit metadata must match the exact release commit")
+        commit_document = commit_metadata.get("commit")
         verification = (
             commit_document.get("verification") if type(commit_document) is dict else None
         )
         if type(verification) is not dict:
-            failures.append("REST tag target signature verification is missing")
+            failures.append("REST release commit signature verification is missing")
         elif verification.get("verified") is not True or verification.get("reason") != "valid":
-            failures.append("REST tag target signature must be verified with reason 'valid'")
+            failures.append("REST release commit signature must be verified with reason 'valid'")
     if graphql is not None:
         try:
             commit = graphql["data"]["repository"]["object"]
@@ -565,6 +621,57 @@ def verify_remote_release_preflight(
                 or signature.get("wasSignedByGitHub") is not True
             ):
                 failures.append("GraphQL signature must be VALID and made by GitHub")
+
+
+def exact_ref_commit(
+    document: dict[str, Any],
+    expected_ref: str,
+    label: str,
+    failures: list[str],
+) -> str | None:
+    """Return the commit for one exact lightweight GitHub Git-reference object."""
+    if document.get("ref") != expected_ref:
+        failures.append(f"{label} must equal {expected_ref!r}")
+    ref_object = document.get("object")
+    if type(ref_object) is not dict:
+        failures.append(f"{label} object is missing")
+        return None
+    sha = ref_object.get("sha")
+    if ref_object.get("type") != "commit" or type(sha) is not str or OID_PATTERN.fullmatch(sha) is None:
+        failures.append(f"{label} must be one lightweight ref to a lowercase commit SHA")
+        return None
+    return sha
+
+
+def classify_publication_state(
+    plan: dict[str, Any],
+    metadata_path: Path,
+    failures: list[str],
+) -> str | None:
+    """Classify only an exact frozen, newly published Release as immutable or mutable."""
+    if not _validate_plan(plan, failures):
+        return None
+    document = _load_json_object(metadata_path, "post-publication release metadata", failures)
+    if document is None:
+        return None
+    release = plan["release"]
+    subject = plan["subject"]
+    expected_fields = {
+        "id": release["id"],
+        "tag_name": subject["tag"],
+        "target_commitish": subject["commit"],
+        "draft": False,
+        "prerelease": False,
+    }
+    for field, expected in expected_fields.items():
+        if document.get(field) != expected:
+            failures.append(f"post-publication release.{field} must equal {expected!r}")
+    immutable = document.get("immutable")
+    if type(immutable) is not bool:
+        failures.append("post-publication release.immutable must be a boolean")
+    if failures:
+        return None
+    return "immutable" if immutable else "mutable"
 
 
 def _validate_local_asset(
@@ -821,7 +928,7 @@ def check_publish_workflow_contract(
         if not isinstance(tag_input, dict) or {
             key: _scalar(value) for key, value in tag_input.items()
         } != {
-            "description": "Existing strict SemVer tag at the current signed main commit",
+            "description": "Existing strict SemVer tag on signed main history",
             "required": "true",
             "type": "string",
         }:
@@ -852,8 +959,8 @@ def check_publish_workflow_contract(
             failures.append(f"{label} must use the fixed ubuntu-24.04 runner")
         if _scalar(job.get("timeout-minutes")) != "15":
             failures.append(f"{label} must keep the 15-minute timeout")
-        if _scalar(job.get("if")) != "github.ref == 'refs/heads/main'":
-            failures.append(f"{label} must run only when dispatched from main")
+        if _scalar(job.get("if")) != "github.ref == format('refs/tags/{0}', inputs.tag)":
+            failures.append(f"{label} must run only when dispatched from the exact input tag")
         env = job.get("env")
         if not isinstance(env, dict) or {
             key: _scalar(value) for key, value in env.items()
@@ -869,7 +976,7 @@ def check_publish_workflow_contract(
         else:
             expected_steps = (
                 {
-                    "name": "Check out the authorized main commit",
+                    "name": "Check out the authorized release tag commit",
                     "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
                     "with": {
                         "ref": "${{ github.sha }}",
@@ -910,7 +1017,12 @@ def check_publish_workflow_contract(
         "uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
         'python-version: "3.14.7"',
         '[[ "$RELEASE_TAG" =~ ^v',
-        'git rev-parse "${RELEASE_TAG}^{commit}"',
+        'git rev-parse "refs/tags/${RELEASE_TAG}^{commit}"',
+        "git/ref/heads/main",
+        "git/ref/tags/$RELEASE_TAG",
+        "scripts/check-release-evidence.py ref-commit",
+        "compare/$commit...$main_sha",
+        "commits/$commit",
         "scripts/check-release-evidence.py preflight",
         "scripts/check-release-evidence.py select",
         "scripts/check-release-evidence.py prepare",
@@ -920,6 +1032,11 @@ def check_publish_workflow_contract(
         "scripts/check-release-evidence.py verify",
         'draft=false',
         'make_latest=true',
+        "scripts/check-release-evidence.py publication-state",
+        'test "$release_phase" = "published-mutable"',
+        "remote_preflight draft-mutation true",
+        "gh api --method DELETE",
+        "scripts/check-release-evidence.py assert-absent",
         "releases/latest",
         "--final",
     )
@@ -935,6 +1052,7 @@ def check_publish_workflow_contract(
         "pull_request_target:",
         "schedule:",
         "${{ secrets.",
+        "immutable-releases",
         "--clobber",
         "force",
     ):
@@ -957,15 +1075,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     select.add_argument("--release-collection", type=Path, required=True)
     select.add_argument("--release-output", type=Path, required=True)
     select.add_argument("--expected-tag", required=True)
-    preflight = commands.add_parser("preflight", help="verify live release capability and target")
-    preflight.add_argument("--immutable-settings", type=Path, required=True)
+    preflight = commands.add_parser("preflight", help="verify exact live release refs and target")
     preflight.add_argument("--repository-metadata", type=Path, required=True)
     preflight.add_argument("--latest-release-metadata", type=Path, required=True)
-    preflight.add_argument("--main-commit-metadata", type=Path, required=True)
-    preflight.add_argument("--tag-commit-metadata", type=Path, required=True)
+    preflight.add_argument("--main-ref-metadata", type=Path, required=True)
+    preflight.add_argument("--tag-ref-metadata", type=Path, required=True)
+    preflight.add_argument("--history-comparison", type=Path, required=True)
+    preflight.add_argument("--commit-metadata", type=Path, required=True)
     preflight.add_argument("--graphql-signature", type=Path, required=True)
     preflight.add_argument("--expected-commit", required=True)
     preflight.add_argument("--expected-tag", required=True)
+    preflight.add_argument("--require-main-tip", action="store_true")
+    ref_commit = commands.add_parser(
+        "ref-commit", help="emit the commit for one exact lightweight GitHub ref"
+    )
+    ref_commit.add_argument("--ref-metadata", type=Path, required=True)
+    ref_commit.add_argument("--expected-ref", required=True)
     prepare = commands.add_parser("prepare", help="freeze one exact Release and its assets")
     prepare.add_argument("--release-metadata", type=Path, required=True)
     prepare.add_argument("--plan-output", type=Path, required=True)
@@ -997,6 +1122,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     verify.add_argument("--final", action="store_true")
     verify.add_argument("--latest-release-metadata", type=Path)
     verify.add_argument("--prepublish-release-metadata", type=Path)
+    publication_state = commands.add_parser(
+        "publication-state",
+        help="classify one exact post-publication Release for bounded compensation",
+    )
+    publication_state.add_argument("--plan", type=Path, required=True)
+    publication_state.add_argument("--release-metadata", type=Path, required=True)
+    absent = commands.add_parser(
+        "assert-absent", help="verify bounded cleanup removed the frozen mutable Release"
+    )
+    absent.add_argument("--plan", type=Path, required=True)
+    absent.add_argument("--release-collection", type=Path, required=True)
     return parser.parse_args(argv)
 
 
@@ -1012,16 +1148,29 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.command == "preflight":
         verify_remote_release_preflight(
-            args.immutable_settings,
             args.repository_metadata,
             args.latest_release_metadata,
-            args.main_commit_metadata,
-            args.tag_commit_metadata,
+            args.main_ref_metadata,
+            args.tag_ref_metadata,
+            args.history_comparison,
+            args.commit_metadata,
             args.graphql_signature,
             expected_commit=args.expected_commit,
             expected_tag=args.expected_tag,
+            require_main_tip=args.require_main_tip,
             failures=failures,
         )
+    elif args.command == "ref-commit":
+        document = _load_json_object(args.ref_metadata, "GitHub ref metadata", failures)
+        if document is not None:
+            commit = exact_ref_commit(
+                document,
+                args.expected_ref,
+                "GitHub ref metadata",
+                failures,
+            )
+            if commit is not None and not failures:
+                print(commit)
     elif args.command == "prepare":
         plan = prepare_release_plan(
             args.release_metadata,
@@ -1076,6 +1225,20 @@ def main(argv: list[str] | None = None) -> int:
                 latest_metadata_path=args.latest_release_metadata,
                 prepublish_metadata_path=args.prepublish_release_metadata,
                 failures=failures,
+            )
+    elif args.command == "publication-state":
+        plan = load_release_plan(args.plan, failures)
+        if plan is not None:
+            state = classify_publication_state(plan, args.release_metadata, failures)
+            if state is not None and not failures:
+                print(state)
+    elif args.command == "assert-absent":
+        plan = load_release_plan(args.plan, failures)
+        if plan is not None:
+            assert_release_absent_from_collection(
+                args.release_collection,
+                plan,
+                failures,
             )
     if failures:
         print("Release evidence validation failed:", file=sys.stderr)

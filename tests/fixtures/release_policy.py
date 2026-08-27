@@ -303,6 +303,21 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             target_ref=f"refs/heads/release/{release_tag}",
             target_sha=release_branch_sha,
         ),
+        fixture(
+            "workflow-dispatch-release-tag",
+            "workflow_dispatch",
+            f"refs/tags/{release_tag}",
+            {},
+            target_ref=f"refs/tags/{release_tag}",
+            target_sha=tag_sha,
+        ),
+        fixture(
+            "workflow-dispatch-malformed-tag",
+            "workflow_dispatch",
+            "refs/tags/v01",
+            {},
+            expected_failure="Manual tag verification requires one exact strict SemVer tag",
+        ),
         tag_push(
             "tag-create",
             release_tag,

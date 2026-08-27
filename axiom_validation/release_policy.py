@@ -97,6 +97,8 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "!isSingleTagCreation(context.payload)",
             "failClosedTagMutation(",
             "targetCommit = await peelRefToCommit(targetRef, context.payload.after);",
+            "Manual tag verification requires one exact strict SemVer tag",
+            "targetTagName = tagName;",
             "Unexpected manual verification ref",
             "const packageVersion = await packageVersionAtCommit(targetCommit);",
             "const expectedReleaseTag = `v${packageVersion}`;",

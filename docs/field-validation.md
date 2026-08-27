@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.6 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.7 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.6-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.6 \
-  --expected-tag v0.8.6 \
+  /absolute/path/axiom-v0.8.7-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.7 \
+  --expected-tag v0.8.7 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.6 with a non-null `v0.8.6` tag and the
+The subject must be non-candidate v0.8.7 with a non-null `v0.8.7` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -255,21 +255,25 @@ Use this safe release sequence:
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. If the batch passes, create immutable tag `v0.8.6` at that same commit.
+3. If the batch passes, create immutable tag `v0.8.7` at that same commit.
 4. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-5. Create one draft `Axiom v0.8.6` Release targeting the exact 40-character
+5. Create one draft `Axiom v0.8.7` Release targeting the exact 40-character
    commit and upload only the validated observation asset.
-6. Dispatch `Publish immutable release` from the current `main` commit with
-   only `tag=v0.8.6`. The workflow itself requires the live immutable setting,
-   `main` and tag identity, and REST plus GraphQL GitHub-made signature before
-   mutation and around publication. It also rejects a different equal-or-newer
-   current Latest SemVer. It freezes the Release ID, downloads and
-   validates the observation, uploads one deterministic attestation only when
+6. With an owner credential, read the repository immutable-release setting and
+   require `enabled: true`; then dispatch `Publish immutable release` on the
+   exact `v0.8.7` ref with only `tag=v0.8.7`. The workflow requires the tag
+   commit to remain on live `main` history and requires `main` to equal it
+   immediately before mutation, plus REST and GraphQL GitHub-made signature. It
+   also rejects a different equal-or-newer current Latest SemVer. It freezes the
+   Release ID, downloads and validates the observation, uploads one
+   deterministic attestation only when
    absent, downloads both remote assets, publishes the same draft, and requires
-   `immutable=true` plus GitHub Latest. A rerun may resume an exact draft or
-   perform final-only readback; it never replaces either asset.
-7. Explicitly dispatch the unchanged `Release signature guard` on `v0.8.6` and
+   `immutable=true` plus GitHub Latest. An exact mutable publication is deleted
+   by frozen Release ID and proven absent before the workflow fails. A rerun may
+   clean a matching mutable remnant, resume an exact draft, or perform
+   final-only readback; it never replaces either asset.
+7. Explicitly dispatch `Release signature guard` on `v0.8.7` and
    require the exact-tag run to pass. A Release mutation made with the
    publication workflow's `GITHUB_TOKEN` does not automatically start another
    workflow from the resulting ordinary release event.

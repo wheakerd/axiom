@@ -5,10 +5,48 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.6 candidate for Issue #57. It preserves v0.8.5 and
-every historical observation without claiming a checked-in current host pass.
+The active tree is a v0.8.7 fix-forward candidate for Issue #57. It preserves
+the unpublished v0.8.6 tag and every historical observation without claiming a
+checked-in current host pass.
 
-## 0.8.6 - unreleased candidate
+## 0.8.7 - unreleased candidate
+
+### Fixed
+
+- Removed the repository Administration-only immutable-release settings read
+  from the `GITHUB_TOKEN` publication workflow. The release operator performs
+  that owner-side read-only preflight immediately before dispatch, while the
+  workflow proves `immutable=true` from the exact final Release.
+- Replaced ambiguous tag-shaped commit lookup with fully qualified local and
+  remote Git tag refs. Live `main` and `v0.8.7` must both be lightweight refs to
+  the exact signed dispatch commit before any Release mutation.
+- Added bounded compensation and restart handling for an exact published but
+  mutable Release. Only the frozen Release ID is deleted; a fresh authenticated
+  listing must prove both its ID and tag absent, and the protected Git tag is
+  never deleted.
+- Allowed an explicit manual `Release signature guard` dispatch on one strict
+  SemVer tag ref, matching the documented post-publication provenance gate.
+
+### Evidence Boundary
+
+- Added no-model regression coverage for the inaccessible endpoint, exact ref
+  identities, published-mutable recovery, immutable classification, bounded
+  cleanup identity, and exact-tag manual dispatch.
+- Versioned the unchanged routing-context record and `STATIC-ONLY` evidence for
+  v0.8.7. Installed behavior, the 67-case routing workload, the 17-case release
+  acceptance contract, models, and reasoning settings remain unchanged.
+- Kept the signed v0.8.6 tag as an unpublished audit record. The failed v0.8.6
+  draft Release was removed; v0.8.5 remains GitHub Latest until v0.8.7 passes
+  every release gate.
+
+See [the v0.8.7 release notes](docs/releases/v0.8.7.md).
+
+## 0.8.6 - signed tag, not released
+
+The signed `v0.8.6` tag records the original Issue #57 candidate. Its immutable
+publication workflow stopped before mutation when `GITHUB_TOKEN` received HTTP
+403 from the repository Administration-only settings endpoint. No v0.8.6
+GitHub Release exists; v0.8.7 carries the publication repair.
 
 ### Security
 

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.6",
-    "tag": "v0.8.6",
+    "version": "0.8.7",
+    "tag": "v0.8.7",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.6 release-evidence hardening changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. Prior v0.8.5 evidence remains separate."
+      "reason": "The v0.8.7 publication-workflow repair changes no installed routing. No current Codex host or lifecycle observation is checked in; a fresh release-bound observation remains an external asset. The unpublished v0.8.6 tag and prior evidence remain separate."
     },
     {
       "host": "claude-code",

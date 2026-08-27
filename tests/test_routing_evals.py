@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from axiom_validation.context import RELEASE_VERSION
 from axiom_validation.routing_evals import (
     ACCEPTANCE_DIAGNOSTICS,
     CANDIDATE2_CODEX_RUN_ID,
@@ -194,14 +195,14 @@ def external_current_observation() -> dict:
         "schemaVersion": "2",
         "kind": "routing-observation",
         "benchmarkId": "codex-core-v2",
-        "runId": "codex-v0-8-6-linux-codex-core-v2-post-tag-1",
+        "runId": f"codex-v{RELEASE_VERSION.replace('.', '-')}-linux-codex-core-v2-post-tag-1",
         "responseSchema": {
             "path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
             "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
         },
         "axiom": {
-            "version": "0.8.6",
-            "tag": "v0.8.6",
+            "version": RELEASE_VERSION,
+            "tag": f"v{RELEASE_VERSION}",
             "commit": "b" * 40,
             "tree": "c" * 40,
         },
@@ -238,7 +239,7 @@ def external_current_observation() -> dict:
 def write_content_addressed_observation(directory: Path, record: dict) -> Path:
     payload = (json.dumps(record, indent=2) + "\n").encode("ascii")
     digest = hashlib.sha256(payload).hexdigest()
-    path = directory / f"axiom-v0.8.6-codex-core-v2-{digest}.json"
+    path = directory / f"axiom-v{RELEASE_VERSION}-codex-core-v2-{digest}.json"
     path.write_bytes(payload)
     return path
 
@@ -541,8 +542,8 @@ class RoutingEvaluationTests(unittest.TestCase):
             failures: list[str] = []
             digest = validate_external_routing_observation(
                 path,
-                expected_version="0.8.6",
-                expected_tag="v0.8.6",
+                expected_version=RELEASE_VERSION,
+                expected_tag=f"v{RELEASE_VERSION}",
                 expected_commit="b" * 40,
                 expected_tree="c" * 40,
                 failures=failures,
@@ -558,9 +559,9 @@ class RoutingEvaluationTests(unittest.TestCase):
                     "--post-tag-routing-observation",
                     str(path),
                     "--expected-version",
-                    "0.8.6",
+                    RELEASE_VERSION,
                     "--expected-tag",
-                    "v0.8.6",
+                    f"v{RELEASE_VERSION}",
                     "--expected-commit",
                     "b" * 40,
                     "--expected-tree",
@@ -627,8 +628,8 @@ class RoutingEvaluationTests(unittest.TestCase):
                     failures: list[str] = []
                     validate_external_routing_observation(
                         path,
-                        expected_version="0.8.6",
-                        expected_tag="v0.8.6",
+                        expected_version=RELEASE_VERSION,
+                        expected_tag=f"v{RELEASE_VERSION}",
                         expected_commit="b" * 40,
                         expected_tree="c" * 40,
                         failures=failures,
@@ -645,8 +646,8 @@ class RoutingEvaluationTests(unittest.TestCase):
             failures = []
             validate_external_routing_observation(
                 path,
-                expected_version="0.8.6",
-                expected_tag="v0.8.6",
+                expected_version=RELEASE_VERSION,
+                expected_tag=f"v{RELEASE_VERSION}",
                 expected_commit="b" * 40,
                 expected_tree="d" * 40,
                 failures=failures,
@@ -665,14 +666,14 @@ class RoutingEvaluationTests(unittest.TestCase):
             digest = hashlib.sha256(payload).hexdigest()
             path = (
                 Path(temporary_directory)
-                / f"axiom-v0.8.6-codex-core-v2-{digest}.json"
+                / f"axiom-v{RELEASE_VERSION}-codex-core-v2-{digest}.json"
             )
             path.write_bytes(payload)
             failures = []
             validate_external_routing_observation(
                 path,
-                expected_version="0.8.6",
-                expected_tag="v0.8.6",
+                expected_version=RELEASE_VERSION,
+                expected_tag=f"v{RELEASE_VERSION}",
                 expected_commit="b" * 40,
                 expected_tree="c" * 40,
                 failures=failures,

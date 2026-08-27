@@ -193,6 +193,16 @@ jobs:
             } else if (context.eventName === "workflow_dispatch") {
               if (context.ref === defaultRef) {
                 targetRef = defaultRef;
+              } else if (context.ref.startsWith("refs/tags/")) {
+                const tagName = context.ref.slice("refs/tags/".length);
+                if (releaseTagVersion(tagName) === null) {
+                  core.setFailed(
+                    `Manual tag verification requires one exact strict SemVer tag; found ${context.ref}.`,
+                  );
+                  return;
+                }
+                targetTagName = tagName;
+                targetRef = context.ref;
               } else if (
                 /^refs\/heads\/release\/v[0-9]+\.[0-9]+\.[0-9]+$/.test(context.ref)
               ) {
