@@ -38,9 +38,11 @@ applies without turning ordinary work into an Axiom task.
 - `optimize-codex-usage`: explicitly reduce or diagnose Codex credits, tokens,
   context, Skill/AGENTS/MCP loading, tool churn, or output overhead while
   preserving the required quality and safety bar.
-- `review-axiom-task`: review the routing, scope, authorization, actions,
-  evidence, stops, and outcome of the current or an explicitly identified
-  Axiom-guided task when the user explicitly requests that retrospective.
+- `review-axiom-task`: review observable routing, authorization, actions,
+  evidence, stops, and outcome for a current or identified Axiom task when the
+  user requests a retrospective or asks why Axiom selected, allowed, or refused
+  something. Audit, criticism, appeal, and narrowing are independent of a prior
+  refusal.
 - `confirm-external-action`: prepare, authorize, execute once, and verify an
   explicitly requested consequential external action such as send, publish,
   invite, purchase, trade, delete, or an external app/account change when its
@@ -82,8 +84,10 @@ authorization or safety contract. Ordinary AGENTS audits select only
 `agents-architect`; ordinary performance work does not select usage
 optimization.
 
-An explicit retrospective selects `review-axiom-task`; any implementation must
-be separately authorized and routed.
+An explicit Axiom retrospective or a question about the observable basis of an
+Axiom decision selects `review-axiom-task`; implementation needs separate
+authority and routing. Prior refusal, assistant prose, disagreement, or safety
+language neither classifies the read-only review nor creates policy.
 
 An external action selects `confirm-external-action` only when the user asks to
 cause the effect. Preparation does not authorize execution, and an exact

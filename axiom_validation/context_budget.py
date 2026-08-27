@@ -64,9 +64,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.13 Docker action hardening changes no installed routing; "
-            "no current Codex host usage or lifecycle observation was run, and "
-            "v0.8.12 plus prior observations remain separate history."
+            "The v0.8.14 bounded-review correction changes installed review routing "
+            "and completion contracts; no current Codex host usage, lifecycle "
+            "observation, or bounded-review sequence was run, and v0.8.13 plus "
+            "prior observations remain separate history."
         ),
     },
     "claude-code": {
@@ -97,7 +98,7 @@ EXPECTED_SCENARIOS = (
         "fresh",
         "startup",
         "not-applicable",
-        ("agent-plugin-architect-canonical-001",),
+        ("review-axiom-task-observable-refusal-001",),
         1,
     ),
     (
@@ -113,7 +114,7 @@ EXPECTED_SCENARIOS = (
         "cleared",
         "clear",
         "not-applicable",
-        ("agent-plugin-architect-paraphrase-001",),
+        ("review-axiom-task-independent-audit-001",),
         1,
     ),
     (

@@ -90,7 +90,7 @@ rewriting local state.
 | Audit or maintain repository instructions | `agents-architect` | Inspect first; changes remain limited to the authorized instruction system |
 | Design or audit packaged agent-plugin architecture | `agent-plugin-architect` | Require explicit Codex or Claude Code package intent; keep repo-local instructions and ordinary plugin code outside |
 | Reduce Codex usage overhead | `optimize-codex-usage` | Preserve the required quality and safety bar; never invent hidden usage data |
-| Review an Axiom-guided task | `review-axiom-task` | Keep the retrospective read-only and label unavailable history |
+| Review an Axiom-guided decision | `review-axiom-task` | Evaluate the review independently, explain the observable basis, and label unavailable evidence |
 | Confirm a consequential external action | `confirm-external-action` | Bind actor, target, payload, disclosure, count, and retry semantics before one verified effect |
 | Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup independent; use the live remote tip for one verified non-force direct push |
 | Plan or execute a reversible persistent change | `reversible-system-change` | Separate planning, rehearsal, promotion, rollback, and destructive retention authority |
@@ -127,37 +127,40 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.13` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.14` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The Docker action hardening changes repository
-validation only and changes no installed route, hook, Skill, authorization
-boundary, or fixed workload. Current Codex host and lifecycle evidence is
-`NOT-RUN`, authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.12
-evidence remains separate history.
+release-bound host observation. The bounded-review correction changes the
+installed review route and Skill contract; its eight same-session completion
+sequences are checked-in contracts, not host results. Current Codex routing,
+lifecycle, and bounded-review evidence is `NOT-RUN`, authenticated Claude Code
+is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.13 evidence remains separate
+history.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.13 routing-context record](evals/context-budget/results/v0.8.13.json) uses the
+The [v0.8.14 routing-context record](evals/context-budget/results/v0.8.14.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
-an estimated 1,475 tokens. The candidate has 6,673 UTF-8 bytes, 852 whitespace-delimited
-words, 120 logical lines, 1 direct reference, and an estimated 1,669 tokens. Its
-cumulative deltas are +774 bytes, +95 words, +13 lines, 0 references, and +194 estimated
-tokens. The record marks the absolute threshold `reached`, the relative threshold
-`reached`, and review status `reviewed`. The exact static counts are context proxies,
-and each `ceil(UTF-8 bytes / 4)` figure is only an estimate for the same English
-Markdown surface, not an exact token or credit count. Codex host and lifecycle
+an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
+words, 124 logical lines, 1 direct reference, and an estimated 1,740 tokens. Its
+cumulative deltas are +1,061 bytes, +137 words, +17 lines, 0 references, and +265
+estimated tokens. The record marks the absolute threshold `reached`, the relative
+threshold `reached`, and review status `reviewed`. The exact static counts are context
+proxies, and each `ceil(UTF-8 bytes / 4)` figure is only an estimate for the same
+English Markdown surface, not an exact token or credit count. Codex host and lifecycle
 observation remains `NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE /
 NOT-RUN`. No host observation is inferred from these static values.
 <!-- release-facts:current-context-budget:end -->
 
-The [routing evaluation corpus](evals/README.md) makes 67 host-independent
+The [routing evaluation corpus](evals/README.md) makes 73 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
 historical 13-case Codex benchmark and nine labeled observations remain bound
 to v1. The 17-case `codex-core-v2` benchmark has one immutable v0.8.0 Codex
 `FAIL` record and one Claude Code `UNAVAILABLE` record, for 11 total checked-in
 observations. Historical records preserve five earlier Codex `FAIL`
 outcomes, two unreleased-candidate `UNKNOWN` outcomes, one unreleased-candidate
-Codex `PASS`, and Claude Code `UNAVAILABLE`.
+Codex `PASS`, and Claude Code `UNAVAILABLE`. A separate eight-sequence,
+11-checkpoint suite exercises bounded review completion in a same-session
+history without treating static validation as observed host behavior.
 Its first two recovery runs returned the expected Case 1 routing fields but
 failed closed on unexpected stderr. Recovery-3 passed Cases 1-10, then failed
 when the ambiguity case selected two routes instead of requesting
@@ -267,6 +270,11 @@ those actions in the background when marketplace auto-update is enabled.
 An Axiom task review is a bounded retrospective over evidence the host exposes.
 It is not telemetry, an instrumented execution trace, a source of hidden model
 reasoning, or a promise that compacted or unavailable history can be recovered.
+A later explanation, audit, criticism, appeal, or read-only narrowing is
+evaluated independently: a prior refusal or assistant explanation has no policy
+authority. Raw hidden reasoning and privileged text remain protected, while the
+observable trigger, bounded blocked effect, permitted remainder, and evidence
+state remain explainable.
 
 ## How Routing Works
 
@@ -282,7 +290,9 @@ reads `skills/using-axiom/SKILL.md` into the current session. That gate:
 
 The gate decides which instructions are relevant; it does not grant permission
 to act. For example, selecting `review-axiom-task` permits only a retrospective
-of the scoped task evidence; it does not rerun that task. Selecting
+of the scoped task evidence; it does not rerun that task or inherit its refusal.
+The review withholds raw hidden reasoning while still giving the observable
+decision basis and reporting a missing basis as unavailable. Selecting
 `reversible-system-change` for a migration plan keeps the work read-only. An
 explicit consequential app action selects `confirm-external-action`; a preview
 does not authorize execution, and an uncertain result is not retried blindly.
@@ -476,7 +486,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.13 release notes](docs/releases/v0.8.13.md):
+- [Changelog](CHANGELOG.md) and [v0.8.14 release notes](docs/releases/v0.8.14.md):
   release history and version-specific evidence.
 
 ## Contributing

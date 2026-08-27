@@ -38,6 +38,8 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/host-response-schema-v1.json",
     "evals/host-response-schema-v2.json",
     "evals/host-response-schema-v3.json",
+    "evals/review-response-schema-v1.json",
+    "evals/review-sequences-v1.json",
     "evals/codex-exec-jsonl-observer-v2.json",
     "evals/benchmarks/codex-core-v1.json",
     "evals/benchmarks/codex-core-v2.json",

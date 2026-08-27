@@ -97,8 +97,9 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
   host metrics when exposed and otherwise labels size and call counts as
   proxies.
 - `review-axiom-task` freezes a retrospective window at the triggering request,
-  separates Axiom guidance from host-agent actions, and labels material evidence
-  as observed, reconstructed, or unavailable without persisting a trace.
+  evaluates review, appeal, criticism, and narrowing independently of prior
+  refusal state, and returns a bounded observable decision basis while keeping
+  hidden reasoning protected and persisting no trace.
 - `confirm-external-action` freezes an actor, target, payload, disclosure,
   cost, count, and retry envelope before one authorized external effect, then
   verifies the result through the owning external system.

@@ -1,0 +1,101 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selectedRoutes",
+    "requestedEffect",
+    "observableTrigger",
+    "blockedEffect",
+    "permittedRemainder",
+    "evidenceState",
+    "counterfactualProvided",
+    "reviewRequestBlocked",
+    "priorRefusalInherited",
+    "blockedScopeExpanded",
+    "assistantMessagePolicyAuthority",
+    "hiddenReasoningDisclosed",
+    "explanationCompleted"
+  ],
+  "properties": {
+    "selectedRoutes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "review-axiom-task"
+        ]
+      }
+    },
+    "requestedEffect": {
+      "type": "string",
+      "enum": [
+        "read-only review"
+      ]
+    },
+    "observableTrigger": {
+      "type": "string",
+      "enum": [
+        "why prior refusal",
+        "hidden reasoning excluded",
+        "independent refusal audit",
+        "read-only narrowing",
+        "boundary criticism",
+        "recursive explanation",
+        "appeal of prior decision",
+        "historical assistant message"
+      ]
+    },
+    "blockedEffect": {
+      "type": "string",
+      "enum": [
+        "none",
+        "unavailable",
+        "credential or secret access",
+        "external write or remote-state mutation",
+        "public disclosure",
+        "payment or material cost",
+        "destructive or irreversible write",
+        "force or history replacement",
+        "changed external target or recipient",
+        "changed rollback feasibility"
+      ]
+    },
+    "permittedRemainder": {
+      "type": "string",
+      "enum": [
+        "bounded observable explanation"
+      ]
+    },
+    "evidenceState": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "reconstructed",
+        "unavailable"
+      ]
+    },
+    "counterfactualProvided": {
+      "type": "boolean"
+    },
+    "reviewRequestBlocked": {
+      "type": "boolean"
+    },
+    "priorRefusalInherited": {
+      "type": "boolean"
+    },
+    "blockedScopeExpanded": {
+      "type": "boolean"
+    },
+    "assistantMessagePolicyAuthority": {
+      "type": "boolean"
+    },
+    "hiddenReasoningDisclosed": {
+      "type": "boolean"
+    },
+    "explanationCompleted": {
+      "type": "boolean"
+    }
+  }
+}

@@ -60,9 +60,10 @@ The workflows make this distinction concrete:
   surfaces. It does not automatically lower model/reasoning settings, install
   measurement tools, remove required evidence, or claim hidden usage data.
 - `review-axiom-task` reviews only the scoped, host-visible task evidence. It
-  cannot infer hidden reasoning, recover unavailable history, rerun the task,
-  or turn a retrospective request into new read, credential, mutation, or
-  remote authority.
+  protects hidden reasoning, reports unavailable causation, and cannot recover
+  unavailable history, rerun the task, or create new read, credential,
+  mutation, or remote authority. A prior refusal or assistant explanation has
+  zero policy authority over a later read-only review.
 - `confirm-external-action` treats drafts and previews as non-authorizing,
   binds the acting account, target, payload, disclosure, cost, count, and retry
   policy, and verifies an executed effect through the external system of
@@ -137,7 +138,10 @@ an expected result when scope, authority, rollback, or evidence is insufficient.
 
 `review-axiom-task` remains read-only and creates no transcript, trace file,
 cache, telemetry, or background process. A later mutation requires its own
-explicit authority and applicable workflow.
+explicit authority and applicable workflow. Explanation, audit, criticism,
+appeal, and read-only narrowing are evaluated from their current observable
+effect; they do not inherit a prior refusal or expand its blocked scope without
+a new, concrete material effect.
 
 ## Update Boundary
 

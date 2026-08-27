@@ -56,7 +56,7 @@ from .routing_contracts import (
     check_routing_source_contracts,
 )
 from .route_catalog import check_route_catalog
-from .routing_evals import check_routing_evaluations
+from .routing_evals import check_review_sequence_contracts, check_routing_evaluations
 
 
 def main() -> int:
@@ -187,6 +187,9 @@ def main() -> int:
     routing_eval_case_count, routing_benchmark_case_count, routing_result_count = (
         run_policy("routing-evals", check_routing_evaluations, failures)
     )
+    review_sequence_count, review_checkpoint_count = run_policy(
+        "review-evals", check_review_sequence_contracts, failures
+    )
     traceable_security_scenarios = run_policy(
         "git-contracts", check_traceable_security_contracts, failures
     )
@@ -218,6 +221,8 @@ def main() -> int:
         f"{routing_eval_case_count} black-box routing cases, "
         f"{routing_benchmark_case_count} fixed host benchmark cases, "
         f"{routing_result_count} labeled host result records, "
+        f"{review_sequence_count} bounded-review sequences with "
+        f"{review_checkpoint_count} review checkpoints, "
         f"{context_scenario_count} routing-context lifecycle scenarios, "
         f"{release_fact_surface_count} canonical release-fact surfaces, "
         f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
