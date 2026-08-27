@@ -300,6 +300,53 @@ class RoutingEvaluationTests(unittest.TestCase):
             any("AXIOM_EVAL_RUNTIME_ROOT" in failure for failure in failures)
         )
 
+    def test_documented_method_requires_bounded_noncausal_stderr_diagnostics(self):
+        readme = (
+            Path(__file__).resolve().parents[1] / "evals" / "README.md"
+        ).read_text(encoding="utf-8")
+        self.assertEqual([], documented_method_failures(readme))
+
+        mutations = (
+            (
+                "fatal-regression",
+                "Model-process stderr is diagnostic-only and non-causal",
+                "The sole accepted model-process stderr line is exactly",
+                "sole accepted model-process stderr line is exactly",
+            ),
+            (
+                "raw-retention",
+                "Raw stderr remains memory-only",
+                "Raw stderr may be persisted",
+                "must be destroyed",
+            ),
+            (
+                "missing-cap",
+                "`stderrNonblankLineCount` capped at 32",
+                "`stderrNonblankLineCount` is unbounded",
+                "stderrNonblankLineCount",
+            ),
+            (
+                "open-categories",
+                "`warning-prefix`, `error-prefix`, and `other`",
+                "implementation-defined categories",
+                "warning-prefix",
+            ),
+            (
+                "missing-overflow",
+                "`stderrCountOverflow` and `stderrCategoryOverflow`",
+                "an implementation-defined overflow marker",
+                "stderrCountOverflow",
+            ),
+        )
+        for name, original, replacement, expected in mutations:
+            with self.subTest(name=name):
+                weakened = readme.replace(original, replacement, 1)
+                self.assertNotEqual(readme, weakened)
+                failures = documented_method_failures(weakened)
+                self.assertTrue(
+                    any(expected in failure for failure in failures), failures
+                )
+
     def test_codex_exec_jsonl_taxonomy_accepts_source_valid_benign_pre_turn_items(self):
         usage = {
             "input_tokens": 1,
