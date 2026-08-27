@@ -22,7 +22,7 @@ class GitContractTests(unittest.TestCase):
     def test_all_traceable_git_fixtures(self):
         failures = []
         count = check_traceable_security_contracts(failures)
-        self.assertEqual(108, count)
+        self.assertEqual(238, count)
         self.assertEqual([], failures)
 
     def test_oid_and_literal_operand_gates(self):

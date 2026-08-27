@@ -78,12 +78,12 @@ class RepositoryPolicyTests(unittest.TestCase):
 
     def test_external_action_fixtures(self):
         failures = []
-        self.assertEqual(12, check_external_action_scenarios(failures))
+        self.assertEqual(155, check_external_action_scenarios(failures))
         self.assertEqual([], failures)
 
     def test_rollback_fixtures(self):
         failures = []
-        check_reversible_safety_scenarios(failures)
+        self.assertEqual(127, check_reversible_safety_scenarios(failures))
         self.assertEqual([], failures)
 
 

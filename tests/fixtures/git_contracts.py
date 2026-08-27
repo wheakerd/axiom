@@ -20,6 +20,7 @@ from axiom_validation.git_contracts import (
     safe_git_transport,
 )
 from axiom_validation.routing_contracts import require_ordered_contract_anchors
+from tests.fixtures.evidence import check_strict_evidence_gate
 
 
 def check_traceable_security_contracts(failures: list[str]) -> int:
@@ -633,16 +634,12 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
                 f"safe Git execution-envelope scenario {name!r} returned the wrong gate result"
             )
 
-    complete_cleanup = {field: True for field in CLEANUP_AUTHORITY_FIELDS}
-    if not all_evidence(complete_cleanup, CLEANUP_AUTHORITY_FIELDS):
-        failures.append("complete exact cleanup authority must permit cleanup")
-    for missing_field in CLEANUP_AUTHORITY_FIELDS:
-        incomplete = dict(complete_cleanup)
-        incomplete[missing_field] = False
-        if all_evidence(incomplete, CLEANUP_AUTHORITY_FIELDS):
-            failures.append(
-                f"cleanup scenario without {missing_field!r} must retain recovery state"
-            )
+    cleanup_evidence_scenarios = check_strict_evidence_gate(
+        lambda evidence: all_evidence(evidence, CLEANUP_AUTHORITY_FIELDS),
+        CLEANUP_AUTHORITY_FIELDS,
+        "cleanup-authority",
+        failures,
+    )
     return (
         len(operand_scenarios)
         + len(oid_scenarios)
@@ -654,6 +651,6 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         + len(lightweight_outcome_scenarios)
         + len(transport_scenarios)
         + len(execution_envelope_scenarios)
-        + len(CLEANUP_AUTHORITY_FIELDS)
-        + 11
+        + cleanup_evidence_scenarios
+        + 10
     )

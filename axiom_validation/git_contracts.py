@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 CLEANUP_AUTHORITY_FIELDS = (
     "exact_authority",
@@ -274,5 +276,5 @@ def safe_git_execution_envelope(
     return True
 
 
-def all_evidence(evidence: dict[str, bool], fields: tuple[str, ...]) -> bool:
-    return all(evidence.get(field, False) for field in fields)
+def all_evidence(evidence: Mapping[str, Any], fields: Sequence[str]) -> bool:
+    return all(evidence.get(field) is True for field in fields)
