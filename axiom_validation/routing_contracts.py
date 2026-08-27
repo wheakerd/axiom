@@ -8,6 +8,7 @@ from typing import Any, Iterable
 
 from .context import README_PATH, REPOSITORY_ROOT, display_path
 from .repository_policy import parse_skill_frontmatter
+from .route_catalog import load_route_catalog
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document
 
 EFFECTIVE_INSTRUCTION_TOKENS = (
@@ -27,15 +28,6 @@ ROUTE_SOURCE_ANCHORS = {
     "traceable-git-submit": ("checkpoint", "push"),
     "reversible-system-change": ("plan", "persistent", "rollback"),
 }
-TAGGED_PLUGIN_RELEASE_ROUTE_ANCHORS = (
-    "combined commit, tag, and push",
-    "already-prepared plugin release",
-)
-ORDINARY_GIT_HOST_NATIVE_ANCHORS = (
-    "ordinary named-remote non-force",
-    "without a tag",
-    "stay host-native",
-)
 README_LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
     "/plugin marketplace update axiom",
@@ -521,6 +513,12 @@ def has_exact_route_token(text: str, token: str) -> bool:
 
 
 def check_routing_source_contracts(failures: list[str]) -> None:
+    route_catalog = load_route_catalog(failures)
+    shared_boundary_anchors = (
+        tuple(route_catalog["sharedSourceAnchors"])
+        if route_catalog is not None
+        else ()
+    )
     front_door_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
     front_door = front_door_path.read_text(encoding="utf-8")
     route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
@@ -562,10 +560,7 @@ def check_routing_source_contracts(failures: list[str]) -> None:
             (f"{display_path(front_door_path)} traceable route entry", traceable_entry),
             (f"{display_path(traceable_path)} description", traceable_fields["description"]),
         ):
-            for anchor in (
-                *TAGGED_PLUGIN_RELEASE_ROUTE_ANCHORS,
-                *ORDINARY_GIT_HOST_NATIVE_ANCHORS,
-            ):
+            for anchor in shared_boundary_anchors:
                 if anchor.casefold() not in surface.casefold():
                     failures.append(
                         f"{label} is missing tagged-release boundary anchor {anchor!r}"

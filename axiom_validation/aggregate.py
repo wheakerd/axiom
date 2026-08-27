@@ -29,6 +29,7 @@ from .manifests import (
 from .markdown import check_documented_hook_commands, check_markdown_links
 from .release_policy import check_release_signature_workflow_contract
 from .release_evidence import check_publish_workflow_contract
+from .release_facts import check_release_facts
 from .reporting import run_policy
 from .repository_policy import (
     REQUIRED_PUBLIC_FILES,
@@ -46,6 +47,7 @@ from .routing_contracts import (
     check_routing_scenarios,
     check_routing_source_contracts,
 )
+from .route_catalog import check_route_catalog
 from .routing_evals import check_routing_evaluations
 from tests.fixtures.action_graph import check_pull_request_validation_fixtures
 from tests.fixtures.external_action import check_external_action_scenarios
@@ -66,6 +68,12 @@ def main() -> int:
         "repository-governance", check_repository_governance_contract, failures
     )
     run_policy("release", check_release_version_surfaces, failures)
+    release_fact_surface_count = run_policy(
+        "release-facts", check_release_facts, failures
+    )
+    route_catalog_scenario_count = run_policy(
+        "route-catalog", check_route_catalog, failures
+    )
     context_scenario_count = run_policy(
         "context-budget", check_context_budget, failures
     )
@@ -210,6 +218,8 @@ def main() -> int:
         f"{routing_benchmark_case_count} fixed host benchmark cases, "
         f"{routing_result_count} labeled host result records, "
         f"{context_scenario_count} routing-context lifecycle scenarios, "
+        f"{release_fact_surface_count} canonical release-fact surfaces, "
+        f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "

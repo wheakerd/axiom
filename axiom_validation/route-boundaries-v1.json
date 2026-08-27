@@ -1,0 +1,245 @@
+{
+  "contractId": "traceable-git-route-boundary-v1",
+  "hostNative": {
+    "conditions": {
+      "force": false,
+      "tag": false,
+      "target": "named-remote",
+      "traceableTrigger": false
+    },
+    "expectedPhase": "normal",
+    "expectedRoute": null,
+    "operations": [
+      "stage",
+      "commit",
+      "push"
+    ]
+  },
+  "preparedRelease": {
+    "artifactState": "already-prepared-plugin-release",
+    "expectedPhase": "hardened-submit",
+    "expectedRoute": "traceable-git-submit",
+    "operations": [
+      "commit",
+      "tag",
+      "push"
+    ]
+  },
+  "prohibitedClaims": [
+    "An explicit Git submit, publish, or push selects `traceable-git-submit`"
+  ],
+  "route": "traceable-git-submit",
+  "sharedSourceAnchors": [
+    "combined commit, tag, and push",
+    "already-prepared plugin release",
+    "ordinary named-remote non-force",
+    "without a tag",
+    "stay host-native"
+  ],
+  "scenarios": [
+    {
+      "authorization": [
+        "read",
+        "edit"
+      ],
+      "classification": "host-native",
+      "name": "catalog-ordinary-named-remote-stage-commit-push",
+      "phase": "normal",
+      "references": [],
+      "request": "Stage this change, commit it, and git push origin main once without force.",
+      "route": null,
+      "trigger": null
+    },
+    {
+      "authorization": [
+        "read",
+        "network-push"
+      ],
+      "classification": "traceable",
+      "name": "catalog-prepared-plugin-release",
+      "phase": "hardened-submit",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/repository-and-remote-targets.md"
+      ],
+      "request": "Commit, tag, and push the already-prepared plugin release without rewriting history.",
+      "route": "traceable-git-submit",
+      "trigger": "prepared-plugin-release"
+    },
+    {
+      "authorization": [
+        "read",
+        "network-push"
+      ],
+      "classification": "traceable",
+      "name": "catalog-explicit-traceable-git-submit",
+      "phase": "direct-submit",
+      "references": [
+        "references/direct-submit.md"
+      ],
+      "request": "$traceable-git-submit: git push origin main once without force.",
+      "route": "traceable-git-submit",
+      "trigger": "explicit-route"
+    },
+    {
+      "authorization": [
+        "read",
+        "metadata-write",
+        "commit"
+      ],
+      "classification": "traceable",
+      "name": "catalog-checkpoint",
+      "phase": "checkpoint",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/baseline-and-preflight.md",
+        "references/checkpoint-provenance.md",
+        "references/checkpoint-execution.md"
+      ],
+      "request": "Create a local checkpoint commit for these paths and do not push.",
+      "route": "traceable-git-submit",
+      "trigger": "checkpoint"
+    },
+    {
+      "authorization": [
+        "read"
+      ],
+      "classification": "traceable",
+      "name": "catalog-baseline",
+      "phase": "baseline",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/baseline-and-preflight.md"
+      ],
+      "request": "Audit the traceable Git baseline metadata without changing it.",
+      "route": "traceable-git-submit",
+      "trigger": "baseline"
+    },
+    {
+      "authorization": [
+        "read",
+        "metadata-write",
+        "commit"
+      ],
+      "classification": "traceable",
+      "name": "catalog-consolidation",
+      "phase": "consolidation",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/baseline-and-preflight.md",
+        "references/checkpoint-provenance.md",
+        "references/commit-construction.md",
+        "references/consolidation-and-push.md"
+      ],
+      "request": "Consolidate the authorized unpublished checkpoints into one final commit without pushing.",
+      "route": "traceable-git-submit",
+      "trigger": "consolidation"
+    },
+    {
+      "authorization": [
+        "read"
+      ],
+      "classification": "traceable",
+      "name": "catalog-recovery",
+      "phase": "recovery",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/baseline-and-preflight.md",
+        "references/checkpoint-provenance.md",
+        "references/post-consolidation-recovery.md"
+      ],
+      "request": "Recover the interrupted traceable checkpoint workflow without pushing.",
+      "route": "traceable-git-submit",
+      "trigger": "recovery"
+    },
+    {
+      "authorization": [
+        "read",
+        "network-push"
+      ],
+      "classification": "traceable",
+      "name": "catalog-multi-target",
+      "phase": "hardened-submit",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/repository-and-remote-targets.md"
+      ],
+      "request": "Perform the authorized hardened multi-target Git push without force.",
+      "route": "traceable-git-submit",
+      "trigger": "multi-target"
+    },
+    {
+      "authorization": [
+        "read",
+        "network-push"
+      ],
+      "classification": "traceable",
+      "name": "catalog-force",
+      "phase": "hardened-submit",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/repository-and-remote-targets.md"
+      ],
+      "request": "Perform the explicitly authorized force-push to this one Git target.",
+      "route": "traceable-git-submit",
+      "trigger": "force"
+    },
+    {
+      "authorization": [
+        "read",
+        "network-push"
+      ],
+      "classification": "traceable",
+      "name": "catalog-history-replacement",
+      "phase": "hardened-submit",
+      "references": [
+        "references/safe-git-values-and-metadata.md",
+        "references/repository-and-remote-targets.md"
+      ],
+      "request": "Rewrite history and push the authorized replacement to the named remote.",
+      "route": "traceable-git-submit",
+      "trigger": "history-replacement"
+    }
+  ],
+  "schemaVersion": "1",
+  "traceableTriggers": [
+    {
+      "id": "explicit-route",
+      "label": "an explicit `$traceable-git-submit` invocation"
+    },
+    {
+      "id": "checkpoint",
+      "label": "checkpoint"
+    },
+    {
+      "id": "baseline",
+      "label": "baseline"
+    },
+    {
+      "id": "consolidation",
+      "label": "consolidation"
+    },
+    {
+      "id": "recovery",
+      "label": "recovery"
+    },
+    {
+      "id": "multi-target",
+      "label": "multi-target"
+    },
+    {
+      "id": "force",
+      "label": "force"
+    },
+    {
+      "id": "history-replacement",
+      "label": "history replacement"
+    }
+  ],
+  "usingAxiomAnchors": [
+    "perform an explicitly invoked, hardened, multi-target, or otherwise independently traceable Git push",
+    "A combined commit, tag, and push of an already-prepared plugin release selects this route",
+    "Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native",
+    "merely mentioning submit, publish, or push does not select this route"
+  ]
+}

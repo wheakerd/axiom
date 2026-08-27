@@ -51,6 +51,8 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "scripts/check-compatibility-evidence.py",
     "scripts/check-release-evidence.py",
     "scripts/measure-routing-context.py",
+    "scripts/render-release-facts.py",
+    "axiom_validation/route-boundaries-v1.json",
     ".github/workflows/publish-immutable-release.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",

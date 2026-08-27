@@ -5,9 +5,43 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is a v0.8.7 fix-forward candidate for Issue #57. It preserves
-the unpublished v0.8.6 tag and every historical observation without claiming a
-checked-in current host pass.
+The active tree is the v0.8.8 sequential candidate for Issue #58. It preserves
+the immutable v0.8.7 release and every historical observation without claiming
+a checked-in current host pass.
+
+## 0.8.8 - unreleased candidate
+
+### Fixed
+
+- Corrected the final v0.8.4 routing-context measurements in the README and
+  release notes from the versioned machine-readable record.
+- Added a version-aware, standard-library release-facts renderer and read-only
+  drift check. README follows the current manifest version, current release
+  notes are always managed, and marker-managed historical notes remain bound
+  to their own records.
+- Added one human-reviewable structured Git route catalog that validates the
+  `using-axiom` front door, renders the README and v0.8.4 route boundary, and
+  directly supplies ten offline route fixtures.
+- Rejected the superseded over-broad submit/publish/push claim, changed public
+  measurements, and historical candidate values that lack both an explicit
+  label and immutable commit or content identity.
+
+### Evidence Boundary
+
+- The complete 104-test suite, publication guard, distribution drift guard,
+  canonical-facts check, JSON parsing, English-only scan, and Claude Code strict
+  plugin validation pass on the candidate tree.
+- The always-loaded `using-axiom` gate remains byte-identical at 7,739 UTF-8
+  bytes with SHA-256
+  `7da583bb99880157a7fbca539ebb0426f49cd79d2748be51e5ef5fe85eaa3996`.
+  Installed Skills, hooks, route selection, benchmark membership, models,
+  reasoning settings, and action authority are unchanged.
+- The checked-in release status remains `STATIC-ONLY`. Current Codex host and
+  lifecycle evidence is `NOT-RUN`; authenticated Claude Code host and lifecycle
+  evidence remains `UNAVAILABLE / NOT-RUN`. A fresh release-bound Codex
+  observation remains external to the Git tree.
+
+See [the v0.8.8 release notes](docs/releases/v0.8.8.md).
 
 ## 0.8.7 - unreleased candidate
 
