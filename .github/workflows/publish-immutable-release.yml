@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing strict SemVer tag at the current signed main commit
+        description: Existing strict SemVer tag on signed main history
         required: true
         type: string
 
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   publish-immutable-release:
-    if: "github.ref == 'refs/heads/main'"
+    if: "github.ref == format('refs/tags/{0}', inputs.tag)"
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -25,7 +25,7 @@ jobs:
       RELEASE_TAG: ${{ inputs.tag }}
       GITHUB_API_VERSION: "2026-03-10"
     steps:
-      - name: Check out the authorized main commit
+      - name: Check out the authorized release tag commit
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
@@ -45,7 +45,7 @@ jobs:
           version="${RELEASE_TAG#v}"
           commit="$(git rev-parse HEAD)"
           tree="$(git rev-parse 'HEAD^{tree}')"
-          tag_commit="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          tag_commit="$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
           test "$tag_commit" = "$commit"
 
           release_workdir="$(mktemp -d)"
@@ -59,21 +59,23 @@ jobs:
           final_release="$release_workdir/release-final.json"
           latest_release="$release_workdir/release-latest.json"
           upload_result="$release_workdir/attestation-upload.json"
+          cleanup_collection="$release_workdir/release-cleanup-collection.json"
 
           remote_preflight() {
             local phase="$1"
-            local settings="$release_workdir/immutable-$phase.json"
+            local require_main_tip="${2:-false}"
             local repository_metadata="$release_workdir/repository-$phase.json"
             local latest_metadata="$release_workdir/latest-$phase.json"
-            local main_metadata="$release_workdir/main-$phase.json"
-            local tag_metadata="$release_workdir/tag-$phase.json"
+            local main_ref="$release_workdir/main-ref-$phase.json"
+            local tag_ref="$release_workdir/tag-ref-$phase.json"
+            local comparison="$release_workdir/history-$phase.json"
+            local commit_metadata="$release_workdir/commit-$phase.json"
             local signature="$release_workdir/signature-$phase.json"
             local repository_owner="${GITHUB_REPOSITORY%%/*}"
             local repository_name="${GITHUB_REPOSITORY#*/}"
+            local main_sha
+            local main_tip_argument=()
 
-            gh api \
-              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
-              "repos/$GITHUB_REPOSITORY/immutable-releases" > "$settings"
             gh api \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
               "repos/$GITHUB_REPOSITORY" > "$repository_metadata"
@@ -82,24 +84,38 @@ jobs:
               "repos/$GITHUB_REPOSITORY/releases/latest" > "$latest_metadata"
             gh api \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
-              "repos/$GITHUB_REPOSITORY/commits/main" > "$main_metadata"
+              "repos/$GITHUB_REPOSITORY/git/ref/heads/main" > "$main_ref"
             gh api \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
-              "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" > "$tag_metadata"
+              "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" > "$tag_ref"
+            main_sha="$(python3 scripts/check-release-evidence.py ref-commit \
+              --ref-metadata "$main_ref" \
+              --expected-ref refs/heads/main)"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/compare/$commit...$main_sha" > "$comparison"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/commits/$commit" > "$commit_metadata"
             gh api graphql \
               -f query='query($owner: String!, $name: String!, $oid: GitObjectID!) { repository(owner: $owner, name: $name) { object(oid: $oid) { ... on Commit { oid signature { isValid state wasSignedByGitHub } } } } }' \
               -f owner="$repository_owner" \
               -f name="$repository_name" \
               -f oid="$commit" > "$signature"
+            if test "$require_main_tip" = "true"; then
+              main_tip_argument=(--require-main-tip)
+            fi
             python3 scripts/check-release-evidence.py preflight \
-              --immutable-settings "$settings" \
               --repository-metadata "$repository_metadata" \
               --latest-release-metadata "$latest_metadata" \
-              --main-commit-metadata "$main_metadata" \
-              --tag-commit-metadata "$tag_metadata" \
+              --main-ref-metadata "$main_ref" \
+              --tag-ref-metadata "$tag_ref" \
+              --history-comparison "$comparison" \
+              --commit-metadata "$commit_metadata" \
               --graphql-signature "$signature" \
               --expected-commit "$commit" \
-              --expected-tag "$RELEASE_TAG"
+              --expected-tag "$RELEASE_TAG" \
+              "${main_tip_argument[@]}"
           }
 
           prepare_plan() {
@@ -138,6 +154,31 @@ jobs:
               "repos/$GITHUB_REPOSITORY/releases/assets/$attestation_id" > "$downloaded_attestation"
           }
 
+          cleanup_mutable_release() {
+            local plan="$1"
+            local state
+            local cleanup_release="$release_workdir/release-cleanup-current.json"
+            gh api \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$cleanup_release"
+            state="$(python3 scripts/check-release-evidence.py publication-state \
+              --plan "$plan" \
+              --release-metadata "$cleanup_release")"
+            test "$state" = "mutable"
+            gh api --method DELETE \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/releases/$release_id"
+            gh api --paginate --slurp \
+              -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+              "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$cleanup_collection"
+            python3 scripts/check-release-evidence.py assert-absent \
+              --plan "$plan" \
+              --release-collection "$cleanup_collection"
+            remote_preflight postcleanup
+            echo "GitHub published the frozen Release without immutable protection; the exact mutable Release was removed." >&2
+            exit 1
+          }
+
           remote_preflight initial
           gh api --paginate --slurp \
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
@@ -166,6 +207,7 @@ jobs:
           expected_attestation_name="$(basename -- "$expected_attestation")"
 
           if test "$release_phase" = "draft"; then
+            remote_preflight draft-mutation true
             attestation_present="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field attestation-present)"
             if test "$attestation_present" = "false"; then
               gh api --method POST \
@@ -182,8 +224,13 @@ jobs:
             "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$current_release"
           prepare_plan "$current_release" "$current_plan"
           test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field release-id)" = "$release_id"
+          release_phase="$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field phase)"
           test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field attestation-name)" = "$expected_attestation_name"
           download_evidence "$current_plan" "$release_workdir/current-assets"
+
+          if test "$release_phase" = "published-mutable"; then
+            cleanup_mutable_release "$current_plan"
+          fi
 
           if test "$release_phase" = "final"; then
             remote_preflight final-recovery
@@ -210,7 +257,7 @@ jobs:
             --asset "$downloaded_observation" \
             --attestation "$downloaded_attestation"
 
-          remote_preflight prepublish
+          remote_preflight prepublish true
           gh api \
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$prepublish_release"
@@ -227,7 +274,18 @@ jobs:
             -F prerelease=false \
             -f make_latest=true > "$release_workdir/publication-response.json"
 
-          remote_preflight postpublish
+          gh api \
+            -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
+            "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$final_release"
+          publication_state="$(python3 scripts/check-release-evidence.py publication-state \
+            --plan "$current_plan" \
+            --release-metadata "$final_release")"
+          if test "$publication_state" = "mutable"; then
+            cleanup_mutable_release "$current_plan"
+          fi
+          test "$publication_state" = "immutable"
+
+          remote_preflight postpublish true
           gh api \
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$final_release"

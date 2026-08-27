@@ -106,11 +106,11 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For the v0.8.6 candidate, the unchanged 67-case combined corpus, 30 total
+For the v0.8.7 candidate, the unchanged 67-case combined corpus, 30 total
 benchmark memberships, and 11 preserved observations pass static validation.
 The ordinary host-native, explicit lightweight direct-submit, and
 stale-tracking cases remain outside both frozen benchmarks. Historical v0.8.4
-and earlier evidence remains distinct; no current v0.8.6 host result is
+and earlier evidence remains distinct; no current v0.8.7 host result is
 inferred from it.
 
 The explicit external mode validates one content-addressed post-merge record
@@ -119,9 +119,9 @@ without changing aggregate behavior:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.6-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.6 \
-  --expected-tag v0.8.6 \
+  /absolute/path/axiom-v0.8.7-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.7 \
+  --expected-tag v0.8.7 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```

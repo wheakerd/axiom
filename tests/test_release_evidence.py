@@ -12,7 +12,9 @@ from pathlib import Path
 
 from axiom_validation.context import RELEASE_VERSION
 from axiom_validation.release_evidence import (
+    assert_release_absent_from_collection,
     check_publish_workflow_contract,
+    classify_publication_state,
     prepare_release_plan,
     select_release_from_collection,
     validate_downloaded_observation,
@@ -134,6 +136,18 @@ class ReleaseEvidenceTests(unittest.TestCase):
             check_publish_workflow_contract(failures, modified)
             self.assertTrue(any("complete publication command" in item for item in failures))
 
+    def test_publish_workflow_avoids_admin_only_settings_endpoint(self):
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "publish-immutable-release.yml"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("/immutable-releases", workflow)
+        self.assertIn("git/ref/tags/$RELEASE_TAG", workflow)
+        self.assertIn("publication-state", workflow)
+        self.assertIn("assert-absent", workflow)
+
     def test_release_collection_selection_and_remote_preflight(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             directory = Path(temporary_directory)
@@ -151,13 +165,13 @@ class ReleaseEvidenceTests(unittest.TestCase):
             )
             self.assertEqual([], failures)
 
-            settings = directory / "settings.json"
             repository = directory / "repository.json"
             latest_release = directory / "latest.json"
-            main = directory / "main.json"
-            tag = directory / "tag.json"
+            main_ref = directory / "main-ref.json"
+            tag_ref = directory / "tag-ref.json"
+            history = directory / "history.json"
+            commit_metadata = directory / "commit.json"
             signature = directory / "signature.json"
-            write_json(settings, {"enabled": True, "enforced_by_owner": False})
             write_json(repository, {"default_branch": "main"})
             write_json(
                 latest_release,
@@ -167,8 +181,23 @@ class ReleaseEvidenceTests(unittest.TestCase):
                 "sha": COMMIT,
                 "commit": {"verification": {"verified": True, "reason": "valid"}},
             }
-            write_json(main, commit)
-            write_json(tag, commit)
+            write_json(
+                main_ref,
+                {"ref": "refs/heads/main", "object": {"type": "commit", "sha": COMMIT}},
+            )
+            write_json(
+                tag_ref,
+                {"ref": f"refs/tags/{TAG}", "object": {"type": "commit", "sha": COMMIT}},
+            )
+            write_json(
+                history,
+                {
+                    "status": "identical",
+                    "merge_base_commit": {"sha": COMMIT},
+                    "base_commit": {"sha": COMMIT},
+                },
+            )
+            write_json(commit_metadata, commit)
             write_json(
                 signature,
                 {
@@ -188,51 +217,206 @@ class ReleaseEvidenceTests(unittest.TestCase):
             )
             failures = []
             verify_remote_release_preflight(
-                settings,
                 repository,
                 latest_release,
-                main,
-                tag,
+                main_ref,
+                tag_ref,
+                history,
+                commit_metadata,
                 signature,
                 expected_commit=COMMIT,
                 expected_tag=TAG,
+                require_main_tip=True,
                 failures=failures,
             )
             self.assertEqual([], failures)
 
-            write_json(settings, {"enabled": False, "enforced_by_owner": False})
+            ahead_commit = "d" * 40
+            write_json(
+                main_ref,
+                {
+                    "ref": "refs/heads/main",
+                    "object": {"type": "commit", "sha": ahead_commit},
+                },
+            )
+            write_json(
+                history,
+                {
+                    "status": "ahead",
+                    "merge_base_commit": {"sha": COMMIT},
+                    "base_commit": {"sha": COMMIT},
+                },
+            )
             failures = []
             verify_remote_release_preflight(
-                settings,
                 repository,
                 latest_release,
-                main,
-                tag,
+                main_ref,
+                tag_ref,
+                history,
+                commit_metadata,
                 signature,
                 expected_commit=COMMIT,
                 expected_tag=TAG,
+                require_main_tip=False,
                 failures=failures,
             )
-            self.assertTrue(any("must be enabled" in item for item in failures), failures)
-
-            write_json(settings, {"enabled": True, "enforced_by_owner": False})
-            write_json(
-                latest_release,
-                {"tag_name": "v0.8.7", "draft": False, "prerelease": False},
-            )
+            self.assertEqual([], failures)
             failures = []
             verify_remote_release_preflight(
-                settings,
                 repository,
                 latest_release,
-                main,
-                tag,
+                main_ref,
+                tag_ref,
+                history,
+                commit_metadata,
                 signature,
                 expected_commit=COMMIT,
                 expected_tag=TAG,
+                require_main_tip=True,
+                failures=failures,
+            )
+            self.assertTrue(any("main tip" in item for item in failures), failures)
+            write_json(
+                main_ref,
+                {"ref": "refs/heads/main", "object": {"type": "commit", "sha": COMMIT}},
+            )
+            write_json(
+                history,
+                {
+                    "status": "identical",
+                    "merge_base_commit": {"sha": COMMIT},
+                    "base_commit": {"sha": COMMIT},
+                },
+            )
+
+            write_json(
+                tag_ref,
+                {"ref": f"refs/tags/{TAG}", "object": {"type": "tag", "sha": COMMIT}},
+            )
+            failures = []
+            verify_remote_release_preflight(
+                repository,
+                latest_release,
+                main_ref,
+                tag_ref,
+                history,
+                commit_metadata,
+                signature,
+                expected_commit=COMMIT,
+                expected_tag=TAG,
+                require_main_tip=True,
+                failures=failures,
+            )
+            self.assertTrue(any("lightweight ref" in item for item in failures), failures)
+
+            write_json(
+                tag_ref,
+                {"ref": f"refs/tags/{TAG}", "object": {"type": "commit", "sha": COMMIT}},
+            )
+            major, minor, patch = (int(part) for part in RELEASE_VERSION.split("."))
+            write_json(
+                latest_release,
+                {
+                    "tag_name": f"v{major}.{minor}.{patch + 1}",
+                    "draft": False,
+                    "prerelease": False,
+                },
+            )
+            failures = []
+            verify_remote_release_preflight(
+                repository,
+                latest_release,
+                main_ref,
+                tag_ref,
+                history,
+                commit_metadata,
+                signature,
+                expected_commit=COMMIT,
+                expected_tag=TAG,
+                require_main_tip=True,
                 failures=failures,
             )
             self.assertTrue(any("must not regress" in item for item in failures), failures)
+
+    def test_publication_state_and_bounded_cleanup_identity(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            plan, observation_path, observation_asset = self.prepare(directory)
+            failures: list[str] = []
+            attestation_path = validate_downloaded_observation(
+                plan,
+                observation_path,
+                attestation_directory=directory,
+                failures=failures,
+            )
+            self.assertEqual([], failures)
+            self.assertIsNotNone(attestation_path)
+            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
+            attestation_asset = asset_metadata(
+                attestation_path, attestation_digest, asset_id=102
+            )
+            published = directory / "published.json"
+            write_json(
+                published,
+                release_metadata(
+                    observation_asset,
+                    draft=False,
+                    immutable=False,
+                    attestation=attestation_asset,
+                ),
+            )
+            failures = []
+            self.assertEqual(
+                "mutable",
+                classify_publication_state(plan, published, failures),
+            )
+            self.assertEqual([], failures)
+
+            failures = []
+            mutable_plan = prepare_release_plan(
+                published,
+                expected_version=RELEASE_VERSION,
+                expected_tag=TAG,
+                expected_commit=COMMIT,
+                expected_tree=TREE,
+                failures=failures,
+            )
+            self.assertEqual([], failures)
+            self.assertIsNotNone(mutable_plan)
+            self.assertEqual("published-mutable", mutable_plan["phase"])
+
+            immutable_document = release_metadata(
+                observation_asset,
+                draft=False,
+                immutable=True,
+                attestation=attestation_asset,
+            )
+            write_json(published, immutable_document)
+            failures = []
+            self.assertEqual(
+                "immutable",
+                classify_publication_state(plan, published, failures),
+            )
+            self.assertEqual([], failures)
+
+            wrong_release = dict(immutable_document)
+            wrong_release["id"] = 999
+            write_json(published, wrong_release)
+            failures = []
+            self.assertIsNone(classify_publication_state(plan, published, failures))
+            self.assertTrue(any("release.id" in item for item in failures), failures)
+
+            collection = directory / "after-cleanup.json"
+            write_json(collection, [[{"id": 400, "tag_name": "v0.8.5"}]])
+            failures = []
+            assert_release_absent_from_collection(collection, plan, failures)
+            self.assertEqual([], failures)
+
+            write_json(collection, [[{"id": 501, "tag_name": TAG}]])
+            failures = []
+            assert_release_absent_from_collection(collection, plan, failures)
+            self.assertTrue(any("did not remove" in item for item in failures), failures)
 
     def test_stable_cli_prepares_emits_validates_and_verifies(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

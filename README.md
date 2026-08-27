@@ -127,15 +127,17 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.6` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.7` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The release-evidence hardening changes no
-installed route or hook. A manually dispatched main-only workflow validates one
+release-bound host observation. The publication-workflow repair changes no
+installed route or hook. A manually dispatched exact-tag workflow validates one
 exact draft asset, records a content-addressed attestation, and requires the
 published Release to be immutable and GitHub Latest. It freezes one numeric
-Release ID, checks the live setting, main/tag target, and GitHub signature,
-downloads both final assets, and can resume after an attestation upload or
-completed publication without replacement. Current Codex host and lifecycle
+Release ID, checks exact live main/tag refs and GitHub signature, downloads both
+final assets, and can resume after an attestation upload or completed
+publication without replacement. The operator separately reads the immutable
+setting with an owner credential immediately before dispatch; an exact mutable
+publication is removed by frozen Release ID and fails closed. Current Codex host and lifecycle
 evidence is `NOT-RUN`, authenticated Claude Code is
 `UNAVAILABLE / NOT-RUN`, and v0.8.5 evidence remains separate history.
 
@@ -145,7 +147,7 @@ bytes, 757 whitespace-delimited words, 107 logical lines, and one direct
 reference are exact static counts used as context proxies. The 1,475
 `ceil(bytes / 4)` figure is only an estimate for comparing the same English
 Markdown surface; it is not an exact token or credit count. The unchanged
-v0.8.6 gate is 7,739 bytes, 1,001 words, 135 lines, one direct reference, and an
+v0.8.7 gate is 7,739 bytes, 1,001 words, 135 lines, one direct reference, and an
 estimated 1,935 tokens. Its cumulative increase of 1,840 bytes, 244 words, 28
 lines, zero references, and 460 estimated tokens reaches both review thresholds
 and remains reviewed as the narrow host-native Git boundary, explicit no-route
@@ -468,7 +470,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.6 release notes](docs/releases/v0.8.6.md):
+- [Changelog](CHANGELOG.md) and [v0.8.7 release notes](docs/releases/v0.8.7.md):
   release history and version-specific evidence.
 
 ## Contributing
