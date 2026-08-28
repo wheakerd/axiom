@@ -107,6 +107,21 @@ unittest discovery command in the fixed blocking environment and remains
 separate from package and publication-policy validation. The active `main`
 ruleset requires both checks and accepts them only from GitHub Actions.
 
+`Cross-platform hook runtime integration` separately executes the exact
+checked-in Codex and applicable Claude Code `SessionStart` command strings on
+`ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix
+checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
+`hook-runtime-macos-15`. They use no repository secret, do not persist checkout
+credentials, and exercise only temporary roots through `cmd.exe` or
+no-profile Bash, as applicable to the checked-in command.
+
+These three matrix checks are intentionally not required by the active `main`
+ruleset during their initial native-CI observation period. A platform failure
+is review evidence, but does not yet block an external contributor's branch or
+fork while runner stability is being established. Only `repository-guards`
+and `unit-and-integration-tests` are server-side merge requirements in this
+dated snapshot; a future ruleset change requires separate live verification.
+
 `Release signature guard` produces the exact
 `Verify GitHub-signed release target` check. The tag ruleset requires that check
 for `v*`; the workflow also verifies signed `main` history and observes later

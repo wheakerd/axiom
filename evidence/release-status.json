@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.15",
-    "tag": "v0.8.15",
+    "version": "0.8.16",
+    "tag": "v0.8.16",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,12 +11,12 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.15 security fix changes the Codex Windows startup wrapper; no checked-in full Codex host or lifecycle observation exists. A private native Windows process-boundary regression remains separate from model-host evidence. Immutable v0.8.14 and prior evidence remain separate."
+      "reason": "Axiom v0.8.16 changes repository CI only; installed Skills, hooks, routes, and action authority are unchanged. Fedora Linux hook runtime passed 5/5, but native windows-2025 and macos-15 workflow runs and installed Codex host/lifecycle observation are not run; prior evidence remains separate."
     },
     {
       "host": "claude-code",
       "status": "unavailable",
-      "reason": "No authenticated Claude Code session or subscription was available; authenticated host and lifecycle validation were unavailable and not run."
+      "reason": "Axiom v0.8.16 changes repository CI only and leaves the installed Claude hook unchanged. Claude Code 2.1.220 strict package validation passed, but native windows-2025/macos-15 workflows and authenticated installed-host/lifecycle observation are unavailable or not run; prior evidence is separate."
     }
   ],
   "priorReleaseEvidence": [

@@ -1052,3 +1052,190 @@ def check_unit_test_workflow_contract(
         failures.append(f"cannot read {display_path(path)}: {error}")
         return None
     return check_unit_test_workflow_text(text, failures, label=display_path(path))
+
+
+def check_hook_runtime_workflow_text(
+    text: str,
+    failures: list[str],
+    *,
+    label: str = ".github/workflows/hook-runtime-integration.yml",
+) -> dict[str, Any] | None:
+    """Validate the exact read-only native hook-runtime matrix."""
+    try:
+        document = parse_canonical_yaml_document(text, label)
+    except CanonicalYamlError as error:
+        failures.append(str(error))
+        return None
+
+    def scalar(value: Any) -> str | None:
+        return value.value if isinstance(value, CanonicalYamlScalar) else None
+
+    def scalar_values(value: Any) -> list[str] | None:
+        if not isinstance(value, list) or any(
+            not isinstance(item, CanonicalYamlScalar) for item in value
+        ):
+            return None
+        return [item.value for item in value]
+
+    if set(document) != {"name", "on", "permissions", "jobs"}:
+        failures.append(f"{label} must contain only name, on, permissions, and jobs")
+    if scalar(document.get("name")) != "Cross-platform hook runtime integration":
+        failures.append(f"{label} must keep its exact public workflow name")
+
+    triggers = document.get("on")
+    if not isinstance(triggers, dict) or set(triggers) != {"pull_request", "push"}:
+        failures.append(
+            f"{label} must structurally declare only pull_request and push triggers"
+        )
+    else:
+        for event_name in ("pull_request", "push"):
+            event = triggers.get(event_name)
+            if not isinstance(event, dict) or scalar_values(event.get("branches")) != [
+                "main"
+            ]:
+                failures.append(f"{label} {event_name} trigger must target only main")
+
+    permissions = document.get("permissions")
+    if not isinstance(permissions, dict) or set(permissions) != {"contents"}:
+        failures.append(f"{label} must grant only the contents permission")
+    elif scalar(permissions.get("contents")) != "read":
+        failures.append(f"{label} contents permission must be read-only")
+
+    jobs = document.get("jobs")
+    job = jobs.get("hook-runtime") if isinstance(jobs, dict) else None
+    if not isinstance(jobs, dict) or set(jobs) != {"hook-runtime"}:
+        failures.append(f"{label} must declare only the hook-runtime job")
+    expected_job_keys = {
+        "name",
+        "strategy",
+        "runs-on",
+        "timeout-minutes",
+        "steps",
+    }
+    if not isinstance(job, dict) or set(job) != expected_job_keys:
+        failures.append(
+            f"{label} hook-runtime must contain only name, strategy, runner, "
+            "timeout, and steps"
+        )
+    elif (
+        scalar(job.get("name")) != "hook-runtime-${{ matrix.os }}"
+        or scalar(job.get("runs-on")) != "${{ matrix.os }}"
+        or scalar(job.get("timeout-minutes")) != "10"
+    ):
+        failures.append(f"{label} stable matrix check name, runner, or timeout changed")
+
+    strategy = job.get("strategy") if isinstance(job, dict) else None
+    matrix = strategy.get("matrix") if isinstance(strategy, dict) else None
+    if (
+        not isinstance(strategy, dict)
+        or set(strategy) != {"fail-fast", "matrix"}
+        or scalar(strategy.get("fail-fast")) != "false"
+        or not isinstance(matrix, dict)
+        or set(matrix) != {"os"}
+        or scalar_values(matrix.get("os"))
+        != ["ubuntu-24.04", "windows-2025", "macos-15"]
+    ):
+        failures.append(
+            f"{label} must keep the exact Ubuntu, Windows, and macOS runner matrix"
+        )
+
+    steps = job.get("steps") if isinstance(job, dict) else None
+    if not isinstance(steps, list) or len(steps) != 5 or any(
+        not isinstance(step, dict) for step in steps
+    ):
+        failures.append(f"{label} must contain exactly five canonical runtime steps")
+    else:
+        checkout, python, node, environment, runtime = steps
+        checkout_with = checkout.get("with")
+        if (
+            set(checkout) != {"name", "uses", "with"}
+            or scalar(checkout.get("name")) != "Check out repository"
+            or scalar(checkout.get("uses"))
+            != "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803"
+            or not isinstance(checkout_with, dict)
+            or set(checkout_with) != {"persist-credentials"}
+            or scalar(checkout_with.get("persist-credentials")) != "false"
+        ):
+            failures.append(
+                f"{label} checkout must remain immutable and must not persist credentials"
+            )
+
+        python_with = python.get("with")
+        if (
+            set(python) != {"name", "uses", "with"}
+            or scalar(python.get("name")) != "Set up Python"
+            or scalar(python.get("uses"))
+            != "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1"
+            or not isinstance(python_with, dict)
+            or set(python_with) != {"python-version"}
+            or scalar(python_with.get("python-version")) != "3.14.7"
+        ):
+            failures.append(f"{label} must pin the exact Python 3.14.7 environment")
+
+        node_with = node.get("with")
+        if (
+            set(node) != {"name", "uses", "with"}
+            or scalar(node.get("name")) != "Set up Node.js"
+            or scalar(node.get("uses"))
+            != "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38"
+            or not isinstance(node_with, dict)
+            or set(node_with) != {"node-version", "package-manager-cache"}
+            or scalar(node_with.get("node-version")) != "24.19.0"
+            or scalar(node_with.get("package-manager-cache")) != "false"
+        ):
+            failures.append(
+                f"{label} must pin Node.js 24.19.0 with caching disabled"
+            )
+
+        expected_commands = (
+            (
+                environment,
+                "Report canonical environment",
+                "python -B -m tests.hook_runtime_integration --report-environment",
+            ),
+            (
+                runtime,
+                "Execute exact SessionStart hooks",
+                "python -B -m unittest tests.hook_runtime_integration -v",
+            ),
+        )
+        for step, expected_name, expected_command in expected_commands:
+            if (
+                set(step) != {"name", "run"}
+                or scalar(step.get("name")) != expected_name
+                or scalar(step.get("run")) != expected_command
+            ):
+                failures.append(
+                    f"{label} must run exact local step {expected_name!r}"
+                )
+
+    expression_free = text.replace("${{ matrix.os }}", "")
+    if text.count("${{ matrix.os }}") != 2 or "${{" in expression_free:
+        failures.append(f"{label} may use only the exact matrix.os expression")
+    for forbidden in (
+        "pull_request_target",
+        "${{ secrets.",
+        "${{ github.token",
+        "GITHUB_TOKEN",
+        "permissions: write",
+    ):
+        if forbidden in text:
+            failures.append(f"{label} exposes forbidden pull-request surface {forbidden!r}")
+    return document
+
+
+def check_hook_runtime_workflow_contract(
+    failures: list[str],
+) -> dict[str, Any] | None:
+    path = (
+        REPOSITORY_ROOT
+        / ".github"
+        / "workflows"
+        / "hook-runtime-integration.yml"
+    )
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(path)}: {error}")
+        return None
+    return check_hook_runtime_workflow_text(text, failures, label=display_path(path))

@@ -68,23 +68,24 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.15, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.8.16, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
 observation. The dated governance snapshot separately records the directly
 observed actor-scoped tag-creation, no-bypass integrity, required-check, and
-immutable-release settings. The security fix changes the installed Codex
-Windows startup wrapper while leaving routes and Skills unchanged. Its private
-native Windows process-boundary regression is focused wrapper evidence, not a
-full model-host or lifecycle observation. Current Codex routing and lifecycle
-evidence is `NOT-RUN`; authenticated Claude Code evidence is `UNAVAILABLE /
-NOT-RUN`. The immutable v0.8.14 release and all prior observations remain
-separate history. A prior-release Codex observation also
+immutable-release settings. This candidate changes repository CI only;
+installed Skills, hooks, routes, and action authority are unchanged. Direct
+Fedora Linux hook-runtime validation passed 5/5, but it is repository-runtime
+evidence rather than an installed model-host observation. The GitHub-hosted
+Ubuntu, native `windows-2025`, and native `macos-15` jobs and installed Codex
+and Claude Code host observation remain `NOT-RUN` or `UNAVAILABLE / NOT-RUN`.
+The immutable v0.8.15 release and all prior observations remain separate
+history. A prior-release Codex observation also
 exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.15.
+outcomes forward to v0.8.16.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -138,18 +139,19 @@ The current package has seven task routes and eight direct Skills. Repo-local
 instruction systems, ordinary plugin code and documentation, Git submission,
 installation, publication, deployment, and external actions remain outside the
 route set. The shared Skill tree and marketplace wrappers remain single-source.
-The Codex Windows wrapper changed while the POSIX Codex command and Claude Code
-wrapper remain unchanged. Static support does not establish an installed Codex
-or authenticated Claude Code host pass.
+The installed Codex and Claude Code hooks and wrappers remain unchanged from
+v0.8.15. A repository-runtime CI matrix adds no action authority, and static
+support does not establish an installed Codex or authenticated Claude Code host
+pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.15.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.16.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.15 candidate gate is 6,960 bytes with SHA-256
+The v0.8.16 candidate gate is 6,960 bytes with SHA-256
 `fb27acb68971835b62b4565dced98650f8c2808a01b8e6a171f202a9d21794f1`.
 
 The candidate has 894 whitespace-delimited words, 124 logical lines, and one
@@ -157,7 +159,7 @@ unique direct reference. Its 1,740 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
 1,061 bytes, 137 words, 17 lines, zero references, and 265 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. The candidate is byte-identical to v0.8.14 and leaves the 73-case
+reviewed. The candidate is byte-identical to v0.8.15 and leaves the 73-case
 routing workload unchanged, so its reduction experiment remains null.
 The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
 workload in the v0.8.11 record
@@ -398,6 +400,28 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.16` reports:
+
+- synchronized `0.8.16` manifests and release-owned metadata for
+  [Issue #84](https://github.com/wheakerd/axiom/issues/84);
+- a deterministic offline runtime harness that executes the exact checked-in
+  Codex and applicable Claude Code `SessionStart` command strings on native
+  Ubuntu, Windows, and macOS GitHub-hosted runners;
+- coverage for paths containing spaces, quoting and environment expansion,
+  missing files, nonzero exits, timeout cleanup, independent output streams,
+  explicit UTF-8 and newline behavior, and actual runtime version reporting;
+- direct Fedora Linux runtime integration passing 5/5 and 128 standard-library
+  tests passing with one expected native-Windows-only skip;
+- a separate read-only three-job matrix that remains non-required while the
+  required `repository-guards` and `unit-and-integration-tests` identities stay
+  unchanged; and
+- `STATIC-ONLY` current status, native `windows-2025` and `macos-15` workflow
+  runs plus installed Codex host observation `NOT-RUN`, and authenticated
+  Claude Code host observation `UNAVAILABLE / NOT-RUN`.
+
+Installed Skills, hooks, routes, and action authority are unchanged. See the
+[v0.8.16 release notes](releases/v0.8.16.md).
 
 The Git record for `v0.8.15` reports:
 

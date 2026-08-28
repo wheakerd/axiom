@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.15 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.16 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.15-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.15 \
-  --expected-tag v0.8.15 \
+  /absolute/path/axiom-v0.8.16-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.16 \
+  --expected-tag v0.8.16 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.15 with a non-null `v0.8.15` tag and the
+The subject must be non-candidate v0.8.16 with a non-null `v0.8.16` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -250,26 +250,32 @@ terminate; unknown, malformed, invalid-status, pre-thread benign,
 duplicate-phase, post-terminal, and abrupt streams fail closed. Retain only the
 taxonomy's bounded public journal fields and never raw payload.
 
-Because v0.8.15 changes installed Codex Windows startup delivery, require the
-exact checked-in hook JSON and wrapper SHA-256 values to match the reviewed
-native Windows process-boundary evidence. If either byte sequence changes,
-repeat the exact Codex `cmd.exe /C` construction on a real supported Windows
-runner with session-working-directory executable canaries before tagging. This
-focused process check remains separate from the 17-case model-routing asset.
+Version 0.8.16 changes repository CI only and leaves the installed hook and
+wrapper bytes unchanged from v0.8.15. The prior private native Windows
+process-boundary result remains historical evidence, not a current native
+matrix run. Require the exact checked-in hook JSON and wrapper SHA-256 values to
+retain the reviewed v0.8.15 values. If either byte sequence changes, repeat the
+exact Codex `cmd.exe /C` construction on a real supported Windows runner with
+session-working-directory executable canaries before tagging. This focused
+process check remains separate from both the three-job matrix and the 17-case
+model-routing asset.
 
 Use this safe release sequence:
 
 1. Merge the reviewed patch as one GitHub-signed commit.
 2. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. Require the exact hook JSON and wrapper bytes to retain the reviewed native
-   Windows SHA-256 values. Stop and repeat the native Windows process-boundary
-   check if either digest differs.
+3. Run the separate read-only hook matrix against the exact merged commit and
+   require its native Ubuntu, Windows, and macOS jobs before treating it as
+   release-bound native CI evidence. These three checks remain non-required and
+   do not change contributor branch or fork rules. Also require the exact hook
+   JSON and wrapper bytes to retain the reviewed v0.8.15 SHA-256 values; stop
+   and repeat the native Windows process-boundary check if either digest differs.
 4. Read both active `refs/tags/v*` rulesets immediately before creation. Require
    the creation-only ruleset to contain exactly the owner `User`/`always`
    bypass, and require the signature, check, deletion, and non-fast-forward
    ruleset to contain no bypass or `creation` rule.
-5. Using the authorized owner identity, create immutable tag `v0.8.15` once at
+5. Using the authorized owner identity, create immutable tag `v0.8.16` once at
    the same commit. On an uncertain response, query the exact ref and rule suite
    without retrying creation.
 6. Verify the new rule suite identifies the exact actor, zero pre-creation SHA,
@@ -277,11 +283,11 @@ Use this safe release sequence:
    rules. Stop before publication on any mismatch.
 7. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-8. Create one draft `Axiom v0.8.15` Release targeting the exact 40-character
+8. Create one draft `Axiom v0.8.16` Release targeting the exact 40-character
    commit and upload only the validated observation asset.
 9. With an owner credential, read the repository immutable-release setting and
    require `enabled: true`; then dispatch `Publish immutable release` on the
-   exact `v0.8.15` ref with only `tag=v0.8.15`. The workflow requires the tag
+   exact `v0.8.16` ref with only `tag=v0.8.16`. The workflow requires the tag
    commit to remain on live `main` history and requires `main` to equal it
    immediately before mutation, plus REST and GraphQL GitHub-made signature. It
    also rejects a different equal-or-newer current Latest SemVer. It freezes the
@@ -292,7 +298,7 @@ Use this safe release sequence:
    by frozen Release ID and proven absent before the workflow fails. A rerun may
    clean a matching mutable remnant, resume an exact draft, or perform
    final-only readback; it never replaces either asset.
-10. Explicitly dispatch `Release signature guard` on `v0.8.15` and
+10. Explicitly dispatch `Release signature guard` on `v0.8.16` and
    require the exact-tag run to pass. A Release mutation made with the
    publication workflow's `GITHUB_TOKEN` does not automatically start another
    workflow from the resulting ordinary release event.
