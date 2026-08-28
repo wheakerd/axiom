@@ -8,6 +8,11 @@ import zlib
 from pathlib import Path
 
 from axiom_validation.context import RELEASE_VERSION, release_version
+from axiom_validation.release_versions import (
+    PRODUCTION_RELEASE_VERSION_CASES,
+    parse_production_release_tag,
+    parse_production_release_version,
+)
 from axiom_validation.manifests import (
     BRANDING_IMAGE_MAX_BYTES,
     EXPECTED_CODEX_DEFAULT_PROMPTS,
@@ -79,6 +84,29 @@ class ManifestPolicyTests(unittest.TestCase):
     def test_synchronized_manifests_are_the_release_source(self):
         self.assertEqual(RELEASE_VERSION, release_version())
         self.assertIsNotNone(release_version())
+
+    def test_canonical_production_release_grammar(self):
+        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
+            with self.subTest(case_id=case_id, surface="manifest"):
+                self.assertEqual(
+                    accepted,
+                    parse_production_release_version(version) is not None,
+                )
+            with self.subTest(case_id=case_id, surface="tag"):
+                self.assertEqual(
+                    accepted,
+                    parse_production_release_tag(f"v{version}") is not None,
+                )
+
+    def test_production_release_precedence_is_arbitrary_precision(self):
+        self.assertLess(
+            parse_production_release_version("9.999.9"),
+            parse_production_release_version("10.0.0"),
+        )
+        self.assertGreater(
+            parse_production_release_version(f"{'9' * 5000}.0.0"),
+            parse_production_release_version("10.0.0"),
+        )
 
     def test_checked_in_schema_and_versions(self):
         failures = []

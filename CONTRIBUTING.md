@@ -241,11 +241,12 @@ provenance and does not authorize publication.
 
 `Release signature guard` starts after protected history or release state
 changes. It covers pushes to `main`, strict `v*` tag events, published or edited
-GitHub Releases, and manual checks limited to `main` or a versioned
-`release/v<semver>` branch. Those targets must remain on approved `main`
-history, match both manifest versions when a tag is involved, and carry a valid
-signature made with GitHub's signing key. GitHub rulesets remain the
-server-side prevention layer for unsigned `main` updates and tag mutation.
+GitHub Releases, and manual checks limited to `main`, an exact stable numeric
+`v<version>` tag, or a stable numeric `release/v<version>` branch. A version
+named by either a candidate branch or tag must match both manifests. Every
+target must remain on approved `main` history and carry a valid signature made
+with GitHub's signing key. GitHub rulesets remain the server-side prevention
+layer for unsigned `main` updates and tag mutation.
 
 ## Pull requests
 

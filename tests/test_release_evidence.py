@@ -21,6 +21,7 @@ from axiom_validation.release_evidence import (
     verify_remote_release_preflight,
     verify_release_snapshot,
 )
+from axiom_validation.release_versions import PRODUCTION_RELEASE_VERSION_CASES
 from tests.test_routing_evals import external_current_observation
 
 
@@ -135,6 +136,55 @@ class ReleaseEvidenceTests(unittest.TestCase):
             failures: list[str] = []
             check_publish_workflow_contract(failures, modified)
             self.assertTrue(any("complete publication command" in item for item in failures))
+
+    def test_publish_workflow_contract_rejects_a_broader_version_gate(self):
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "publish-immutable-release.yml"
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            modified = Path(temporary_directory) / "publish.yml"
+            modified.write_text(
+                workflow.read_text(encoding="utf-8").replace(
+                    '[[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$ ]]',
+                    '[[ "$RELEASE_TAG" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+.*$ ]]',
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            failures: list[str] = []
+            check_publish_workflow_contract(failures, modified)
+            self.assertTrue(any("canonical stable" in item for item in failures))
+
+    def test_release_subject_rejects_every_unsupported_production_version(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            observation_path, digest = write_observation(directory, current_observation())
+            metadata_path = directory / "release-before.json"
+            write_json(
+                metadata_path,
+                release_metadata(asset_metadata(observation_path, digest)),
+            )
+            for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
+                if accepted:
+                    continue
+                with self.subTest(case_id=case_id):
+                    failures: list[str] = []
+                    plan = prepare_release_plan(
+                        metadata_path,
+                        expected_version=version,
+                        expected_tag=f"v{version}",
+                        expected_commit=COMMIT,
+                        expected_tree=TREE,
+                        failures=failures,
+                    )
+                    self.assertIsNone(plan)
+                    self.assertTrue(
+                        any("stable numeric production" in item for item in failures),
+                        failures,
+                    )
 
     def test_publish_workflow_avoids_admin_only_settings_endpoint(self):
         workflow = (

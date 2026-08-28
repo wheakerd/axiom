@@ -7,6 +7,7 @@ import subprocess
 from typing import Any
 
 from .context import REPOSITORY_ROOT, display_path
+from .release_versions import PRODUCTION_RELEASE_VERSION_PATTERN
 from .routing_contracts import require_ordered_contract_anchors
 from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonical_yaml_document
 
@@ -64,13 +65,17 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
         if not isinstance(manual, CanonicalYamlScalar) or manual.value:
             failures.append(f"{label} workflow_dispatch trigger must not accept inputs")
 
+    canonical_version_declaration = (
+        f"const productionReleaseVersion = /^{PRODUCTION_RELEASE_VERSION_PATTERN}$/;"
+    )
     require_ordered_contract_anchors(
         path,
         (
             "const defaultRef = `refs/heads/${defaultBranch}`;",
-            "const strictSemVer = /^(?:0|[1-9]",
+            canonical_version_declaration,
+            'const releaseBranchPrefix = "refs/heads/release/";',
             "function releaseTagVersion(tagName)",
-            "return strictSemVer.test(version) ? version : null;",
+            "return productionReleaseVersion.test(version) ? version : null;",
             "function isSingleTagCreation(payload)",
             "payload.created === true",
             "payload.deleted === false",
@@ -83,12 +88,12 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "async function packageVersionAtCommit(commitSha)",
             '".codex-plugin/plugin.json"',
             '".claude-plugin/plugin.json"',
-            '!strictSemVer.test(version)',
+            "!productionReleaseVersion.test(version)",
             "versions[0] !== versions[1]",
             "async function peelRefToCommit(qualifiedRef, expectedObjectSha = null)",
             "object.sha !== expectedObjectSha",
             "context.payload.release?.tag_name",
-            "releaseTagVersion(tagName) === null",
+            "const version = releaseTagVersion(tagName);",
             "context.ref !== targetRef",
             "GitHub Release tag ${targetRef} does not match event ref ${context.ref}.",
             "targetCommit = await peelRefToCommit(targetRef);",
@@ -97,12 +102,14 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "!isSingleTagCreation(context.payload)",
             "failClosedTagMutation(",
             "targetCommit = await peelRefToCommit(targetRef, context.payload.after);",
-            "Manual tag verification requires one exact strict SemVer tag",
-            "targetTagName = tagName;",
+            "Manual tag verification requires one exact stable numeric production release tag",
+            "context.ref.startsWith(releaseBranchPrefix)",
+            "const candidateTagName = context.ref.slice(releaseBranchPrefix.length);",
+            "Manual release-candidate verification requires",
             "Unexpected manual verification ref",
             "const packageVersion = await packageVersionAtCommit(targetCommit);",
-            "const expectedReleaseTag = `v${packageVersion}`;",
-            "targetTagName !== expectedReleaseTag",
+            "packageVersion !== targetVersion",
+            "names version ${targetVersion}, but manifests declare ${packageVersion}",
             "const defaultCommit = await peelRefToCommit(defaultRef);",
             "const historyBase = targetMustDescendFromDefault",
             "github.rest.repos.compareCommitsWithBasehead",
@@ -115,6 +122,7 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     )
     for owner in (
         "          script: |",
+        canonical_version_declaration,
         "function releaseTagVersion(tagName)",
         "function isSingleTagCreation(payload)",
         "function failClosedTagMutation(reason)",
@@ -122,6 +130,8 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     ):
         if text.count(owner) != 1:
             failures.append(f"{label} must contain exactly one critical owner {owner!r}")
+    if "strictSemVer" in text:
+        failures.append(f"{label} retains the superseded full-SemVer policy owner")
     for weak_pattern in ("/^v[0-9]/", "/^refs\\/tags\\/v[0-9]/"):
         if weak_pattern in text:
             failures.append(f"{label} retains weak release-tag matcher {weak_pattern!r}")

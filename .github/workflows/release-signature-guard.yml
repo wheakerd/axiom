@@ -38,14 +38,15 @@ jobs:
             }
 
             const defaultRef = `refs/heads/${defaultBranch}`;
-            const strictSemVer = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+            const productionReleaseVersion = /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/;
+            const releaseBranchPrefix = "refs/heads/release/";
 
             function releaseTagVersion(tagName) {
               if (typeof tagName !== "string" || !tagName.startsWith("v")) {
                 return null;
               }
               const version = tagName.slice(1);
-              return strictSemVer.test(version) ? version : null;
+              return productionReleaseVersion.test(version) ? version : null;
             }
 
             function isSingleTagCreation(payload) {
@@ -98,12 +99,14 @@ jobs:
               const versions = manifests.map((manifest) => manifest?.version);
               if (
                 versions.some(
-                  (version) => typeof version !== "string" || !strictSemVer.test(version),
+                  (version) =>
+                    typeof version !== "string" ||
+                    !productionReleaseVersion.test(version),
                 ) ||
                 versions[0] !== versions[1]
               ) {
                 throw new Error(
-                  `Release manifests at ${commitSha} must contain one matching strict SemVer version.`,
+                  `Release manifests at ${commitSha} must contain one matching stable numeric production release version.`,
                 );
               }
               return versions[0];
@@ -150,15 +153,18 @@ jobs:
 
             let targetRef;
             let targetCommit;
-            let targetTagName = null;
+            let targetVersion = null;
             let targetMustDescendFromDefault = false;
             if (context.eventName === "release") {
               const tagName = context.payload.release?.tag_name;
-              if (releaseTagVersion(tagName) === null) {
-                core.setFailed("Published releases must use one exact strict SemVer tag.");
+              const version = releaseTagVersion(tagName);
+              if (version === null) {
+                core.setFailed(
+                  "Published releases must use one exact stable numeric production release tag.",
+                );
                 return;
               }
-              targetTagName = tagName;
+              targetVersion = version;
               targetRef = `refs/tags/${tagName}`;
               if (context.ref !== targetRef) {
                 core.setFailed(
@@ -173,8 +179,11 @@ jobs:
                 targetCommit = context.payload.after;
               } else if (context.ref.startsWith("refs/tags/")) {
                 const tagName = context.ref.slice("refs/tags/".length);
-                if (releaseTagVersion(tagName) === null) {
-                  core.setFailed(`Tag push ${tagName} is not one exact strict SemVer tag.`);
+                const version = releaseTagVersion(tagName);
+                if (version === null) {
+                  core.setFailed(
+                    `Tag push ${tagName} is not one exact stable numeric production release tag.`,
+                  );
                   return;
                 }
                 if (!isSingleTagCreation(context.payload)) {
@@ -183,7 +192,7 @@ jobs:
                   );
                   return;
                 }
-                targetTagName = tagName;
+                targetVersion = version;
                 targetRef = context.ref;
                 targetCommit = await peelRefToCommit(targetRef, context.payload.after);
               } else {
@@ -195,17 +204,25 @@ jobs:
                 targetRef = defaultRef;
               } else if (context.ref.startsWith("refs/tags/")) {
                 const tagName = context.ref.slice("refs/tags/".length);
-                if (releaseTagVersion(tagName) === null) {
+                const version = releaseTagVersion(tagName);
+                if (version === null) {
                   core.setFailed(
-                    `Manual tag verification requires one exact strict SemVer tag; found ${context.ref}.`,
+                    `Manual tag verification requires one exact stable numeric production release tag; found ${context.ref}.`,
                   );
                   return;
                 }
-                targetTagName = tagName;
+                targetVersion = version;
                 targetRef = context.ref;
-              } else if (
-                /^refs\/heads\/release\/v[0-9]+\.[0-9]+\.[0-9]+$/.test(context.ref)
-              ) {
+              } else if (context.ref.startsWith(releaseBranchPrefix)) {
+                const candidateTagName = context.ref.slice(releaseBranchPrefix.length);
+                const version = releaseTagVersion(candidateTagName);
+                if (version === null) {
+                  core.setFailed(
+                    `Manual release-candidate verification requires ${releaseBranchPrefix}v<stable numeric production release version>; found ${context.ref}.`,
+                  );
+                  return;
+                }
+                targetVersion = version;
                 targetRef = context.ref;
                 targetMustDescendFromDefault = true;
               } else {
@@ -224,14 +241,11 @@ jobs:
             }
 
             const packageVersion = await packageVersionAtCommit(targetCommit);
-            if (targetTagName !== null) {
-              const expectedReleaseTag = `v${packageVersion}`;
-              if (targetTagName !== expectedReleaseTag) {
-                core.setFailed(
-                  `Release tag ${targetTagName} does not match package version ${expectedReleaseTag}.`,
-                );
-                return;
-              }
+            if (targetVersion !== null && packageVersion !== targetVersion) {
+              core.setFailed(
+                `Release target ${targetRef} names version ${targetVersion}, but manifests declare ${packageVersion}.`,
+              );
+              return;
             }
 
             const defaultCommit = await peelRefToCommit(defaultRef);

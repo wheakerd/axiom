@@ -94,6 +94,28 @@ required-check evidence is defense in depth, not exact tag-creation
 authorization. The authenticated actor on the exact ref-create operation is
 the server-side creation authorization boundary.
 
+## Production Release Version Policy
+
+Axiom production releases use stable numeric `MAJOR.MINOR.PATCH` versions.
+Each component is either `0` or a nonzero decimal digit followed by decimal
+digits. Manifest versions contain no `v` prefix; formal upstream tags and
+release-candidate branches use `v<version>` and `release/v<version>`
+respectively. Prerelease identifiers, build metadata, leading-zero components,
+missing or extra components, and prefixed manifest versions are rejected.
+
+`axiom_validation/release_versions.py` owns the canonical parser, derived Bash
+tag pattern, and shared regression corpus. Both manifests, the exact JavaScript
+signed-target guard, the Bash publication gate, release evidence, GitHub Latest
+comparison, and attestation subjects must remain equivalent to that policy.
+The signed-target guard binds the version named by `release/v<version>` to both
+manifests before formal tag creation; it later requires the same version from
+the exact `v<version>` tag and GitHub Release.
+
+Historical tags and Releases remain immutable records and are not rewritten.
+Prerelease or build-metadata support requires a separately reviewed design for
+GitHub prerelease state, Latest selection, precedence and duplicate-build
+semantics, evidence asset names, release recovery, and compatibility claims.
+
 ## Pull-Request Validation And Release Provenance
 
 `Distribution and publication guards` produces the `repository-guards` check.
@@ -125,17 +147,20 @@ dated snapshot; a future ruleset change requires separate live verification.
 `Release signature guard` produces the exact
 `Verify GitHub-signed release target` check. The tag ruleset requires that check
 for `v*`; the workflow also verifies signed `main` history and observes later
-tag or GitHub Release events. Its event-time detection remains distinct from
-the creation-only actor restriction and the integrity ruleset's pre-mutation
+tag or GitHub Release events. A manual `release/v<version>` candidate check
+requires the stable numeric branch version to match both manifests before the
+formal tag is created. Event-time detection remains distinct from the
+creation-only actor restriction and the integrity ruleset's pre-mutation
 deletion and force-push restrictions.
 
 `Publish immutable release` is a separate manually dispatched workflow. It
-accepts only one strict SemVer tag from the current `main` commit, grants only
-`contents: write`, and has no pull-request, push, release, schedule, secret, or
-arbitrary repository input. It globally serializes Latest publication, verifies
-the live immutable setting, main/tag identity, and REST plus GraphQL GitHub-made
-signature, and rejects a different equal-or-newer current Latest SemVer, then
-uniquely freezes one numeric Release ID. It validates one
+accepts only one stable numeric production release tag from the current `main`
+commit, grants only `contents: write`, and has no pull-request, push, release,
+schedule, secret, or arbitrary repository input. It globally serializes Latest
+publication, verifies the live immutable setting, main/tag identity, and REST
+plus GraphQL GitHub-made signature, and rejects a different equal-or-newer
+current stable release version, then uniquely freezes one numeric Release ID.
+It validates one
 downloaded observation asset, uploads one deterministic attestation without
 replacement, downloads both remote assets, publishes the same draft, and
 requires the final Release to be immutable and GitHub Latest. It can resume a

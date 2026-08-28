@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from .context import RELEASE_VERSION, REPOSITORY_ROOT, STRICT_SEMVER, display_path
+from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
+from .release_versions import parse_production_release_version
 
 JSON_FILES = (
     ".codex-plugin/plugin.json",
@@ -1012,9 +1013,10 @@ def check_manifest_versions(
             failures.append(f"{relative_path} must declare a string version")
             continue
         versions[relative_path] = version
-        if STRICT_SEMVER.fullmatch(version) is None:
+        if parse_production_release_version(version) is None:
             failures.append(
-                f"{relative_path} version {version!r} is not strict SemVer"
+                f"{relative_path} version {version!r} is not a stable numeric "
+                "production release version"
             )
 
     if len(versions) == len(MANIFEST_FILES) and len(set(versions.values())) != 1:

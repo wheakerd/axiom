@@ -12,7 +12,7 @@ class ReleasePolicyTests(unittest.TestCase):
         workflow = check_release_signature_workflow_contract(failures)
         self.assertIsNotNone(workflow)
         count = check_release_script_runtime_contract(workflow, failures)
-        self.assertEqual(21, count)
+        self.assertEqual(54, count)
         self.assertEqual([], failures)
 
 
