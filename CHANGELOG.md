@@ -5,11 +5,40 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.16 repository-CI candidate. It preserves the
-immutable v0.8.15 release and every historical observation without claiming a
-checked-in installed-host pass, native matrix completion, or publication.
+The active tree is the v0.8.17 governance-policy candidate. It preserves the
+immutable v0.8.16 release and every historical observation without claiming
+independent human review, a changed contributor gate, current host evidence, or
+publication.
 
-## 0.8.16 - unreleased candidate
+## 0.8.17 - unreleased candidate
+
+### Security
+
+- Selected Path B and documented `wheakerd` as the current ultimate repository
+  trust root, with the absence of independent human review recorded as a known
+  limitation rather than an enforced approval claim.
+- Distinguished the live server-side preventive controls from repository and
+  platform detective evidence, and declined to claim hardware-backed
+  authentication, an independently controlled release identity, or ruleset
+  history as an independent trust domain.
+- Defined the evidence required before Path A may enable approving-review,
+  code-owner, last-push, stale-review, and thread-resolution protections.
+
+### Evidence Boundary
+
+- Added a scoped repository validator and five negative fixtures that reject a
+  missing Path A transition proof, reversed path selection, and exaggerated
+  CODEOWNERS, identity, or audit-independence claims.
+- Changed no ruleset, CODEOWNERS entry, workflow, collaborator permission, or
+  required check. External contributor fork, branch, pull-request, and merge
+  gates remain unchanged.
+- Installed Skills, hooks, routes, action authority, benchmarks, and runtime
+  dependencies are unchanged. Current Codex host and lifecycle observation is
+  `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.17 release notes](docs/releases/v0.8.17.md).
+
+## 0.8.16 - 2026-08-28
 
 ### Added
 

@@ -129,6 +129,89 @@ class RepositoryPolicyTests(unittest.TestCase):
             failures,
         )
 
+    def test_repository_governance_rejects_review_boundary_claim_drift(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        transition = (
+            "That test must prove that the approval counts without author "
+            "self-approval or a\nruleset bypass."
+        )
+        hardware_limit = (
+            "Hardware-backed\nauthentication and an independently controlled release "
+            "identity were not\nverified by the repository or API evidence used for "
+            "this snapshot and are not\nclaimed as current compensating controls."
+        )
+        audit_limit = (
+            "Emergency or administrative ruleset changes remain separately "
+            "auditable\nthrough GitHub's ruleset version history. Every currently "
+            "observed history\nentry identifies `actor_id: 78034820` and "
+            "`actor_type: User`, which maps to the\nsame `wheakerd` identity. That "
+            "audit trail is detective evidence; because the\ngoverning administrator "
+            "remains the same identity, it does not constitute an\nindependent trust "
+            "domain."
+        )
+        fixtures = (
+            (
+                "deleted transition condition",
+                governance.replace(transition, "", 1),
+                "missing scoped anchor",
+            ),
+            (
+                "reversed selected path",
+                governance.replace(
+                    "`Path B: document the single-maintainer trust boundary` is the "
+                    "selected policy",
+                    "`Path A: enforce independent review` is the selected policy",
+                    1,
+                ),
+                "unsupported review-boundary claim",
+            ),
+            (
+                "exaggerated authentication and release controls",
+                governance.replace(
+                    hardware_limit,
+                    hardware_limit
+                    + "\n\nHardware-backed authentication and an independently "
+                    "controlled release identity are verified current compensating "
+                    "controls.",
+                    1,
+                ),
+                "unsupported review-boundary claim",
+            ),
+            (
+                "exaggerated ruleset audit independence",
+                governance.replace(
+                    audit_limit,
+                    audit_limit
+                    + "\n\nRuleset history constitutes an independent trust domain.",
+                    1,
+                ),
+                "unsupported review-boundary claim",
+            ),
+            (
+                "exaggerated code-owner enforcement",
+                governance
+                + "\n\nCODEOWNERS blocks an unapproved merge.\n",
+                "unsupported review-boundary claim",
+            ),
+        )
+
+        for label, mutated, expected_failure in fixtures:
+            with self.subTest(label=label):
+                self.assertNotEqual(governance, mutated)
+                failures = []
+                check_repository_governance_documents(
+                    mutated, codeowners, failures
+                )
+                self.assertTrue(
+                    any(expected_failure in failure for failure in failures),
+                    failures,
+                )
+
     def test_external_action_fixtures(self):
         failures = []
         self.assertEqual(155, check_external_action_scenarios(failures))

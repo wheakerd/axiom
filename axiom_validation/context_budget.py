@@ -64,11 +64,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.16 changes repository CI only; installed Skills, hooks, "
-            "routes, and action authority are unchanged. Fedora Linux hook runtime "
-            "passed 5/5, but native windows-2025 and macos-15 workflow runs and "
-            "installed Codex host/lifecycle observation are not run; prior evidence "
-            "remains separate."
+            "Axiom v0.8.17 changes governance documentation and its validator only; "
+            "installed Skills, hooks, routes, and action authority are unchanged. No "
+            "current installed Codex host or lifecycle observation was run; prior "
+            "evidence remains separate."
         ),
     },
     "claude-code": {
@@ -80,11 +79,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.16 changes repository CI only and leaves the installed Claude "
-            "hook unchanged. Claude Code 2.1.220 strict package validation passed, "
-            "but native windows-2025/macos-15 workflows and authenticated "
-            "installed-host/lifecycle observation are unavailable or not run; prior "
-            "evidence is separate."
+            "Axiom v0.8.17 changes governance documentation and its validator only; "
+            "the installed Claude hook is unchanged. Authenticated installed-host and "
+            "lifecycle observation are unavailable and not run; prior evidence "
+            "remains separate."
         ),
     },
 }
