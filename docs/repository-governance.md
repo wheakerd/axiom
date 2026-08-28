@@ -195,6 +195,55 @@ approval by itself. The current branch ruleset explicitly reports
 `require_code_owner_review: false`, so critical-path code-owner approval is not
 server-side enforced as of the verification date.
 
+## Human Review Trust Boundary
+
+`Path B: document the single-maintainer trust boundary` is the selected policy
+for this snapshot. `wheakerd` is the current ultimate repository trust root,
+and the absence of independent human review is a known limitation. The
+authenticated collaborator query returned only `wheakerd`, and every
+critical-path CODEOWNERS entry names that same account. CODEOWNERS is advisory
+under the live rule: it assigns responsibility and requests review, but it does
+not block an unapproved merge while `require_code_owner_review: false` and
+`required_approving_review_count: 0`.
+
+The current directly observed preventive controls are the server-side
+pull-request requirement, required signatures, non-fast-forward protection,
+strict required checks, squash-only main merges, and the release-tag creation
+and integrity rules. Server-side enforcement of the two required check contexts
+is preventive, while the repository-owned validator and test content behind
+those results remains controlled by the same ultimate trust root.
+
+The current directly observed detective controls are the repository validators
+and tests, GitHub Actions and check output, signed-target and release
+observations, content-addressed release attestations, manual read-only API
+re-verification, and ruleset-history entries. They can expose drift or preserve
+provenance, but they do not supply an independent human approval. Hardware-backed
+authentication and an independently controlled release identity were not
+verified by the repository or API evidence used for this snapshot and are not
+claimed as current compensating controls.
+
+Emergency or administrative ruleset changes remain separately auditable
+through GitHub's ruleset version history. Every currently observed history
+entry identifies `actor_id: 78034820` and `actor_type: User`, which maps to the
+same `wheakerd` identity. That audit trail is detective evidence; because the
+governing administrator remains the same identity, it does not constitute an
+independent trust domain.
+
+`Path A: enforce independent review` must not be enabled until a different
+trusted GitHub principal has direct write access, is added alongside
+`@wheakerd` as a code owner for every critical path listed above, and has
+approved a protected test pull request that changes at least one such path.
+That test must prove that the approval counts without author self-approval or a
+ruleset bypass. Only after that proof and a live API read-back should the main
+ruleset require an approving review, code-owner review, last-push approval,
+stale-review dismissal, and review-thread resolution.
+
+Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator
+permission, or required check. The external contribution flow and merge gates
+therefore remain unchanged: `repository-guards` and
+`unit-and-integration-tests` remain the only required checks, and the three
+hook-runtime matrix checks remain non-required review evidence.
+
 ## Manual Re-verification
 
 Use read-only calls and compare the returned values with this document. Do not
@@ -237,7 +286,21 @@ copy tokens or full administrative API responses into the repository.
    without ruleset write visibility. This remains a manual read-only
    verification; do not grant a workflow administrative permission.
 
-5. Review `.github/CODEOWNERS` on the protected base branch, run the repository
+5. With repository administration read access, list direct collaborators and
+   inspect every active ruleset's history. Confirm that a second trusted
+   write-capable principal has not appeared and preserve each history actor as
+   detective evidence rather than independent review.
+
+   ```bash
+   gh api --paginate -X GET \
+     'repos/wheakerd/axiom/collaborators?affiliation=direct&per_page=100' \
+     --jq '.[] | [.login, .permissions.admin, .permissions.maintain, .permissions.push] | @tsv'
+   gh api --paginate -X GET \
+     'repos/wheakerd/axiom/rulesets/RULESET_ID/history?per_page=100' \
+     --jq '.[] | [.version_id, .actor.id, .actor.type, .updated_at] | @tsv'
+   ```
+
+6. Review `.github/CODEOWNERS` on the protected base branch, run the repository
    static checks, record every unavailable field as unavailable, and update the
    verification date only in the same reviewed change as any corrected policy
    value.

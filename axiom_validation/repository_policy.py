@@ -189,6 +189,54 @@ RELEASE_TAG_POLICY_ANCHORS = (
     "Commit-level required-check evidence is defense in depth, not exact "
     "tag-creation authorization.",
 )
+GOVERNANCE_REVIEW_BOUNDARY_HEADING = "## Human Review Trust Boundary"
+GOVERNANCE_REVIEW_BOUNDARY_ANCHORS = (
+    "`Path B: document the single-maintainer trust boundary` is the selected "
+    "policy for this snapshot.",
+    "`wheakerd` is the current ultimate repository trust root, and the absence "
+    "of independent human review is a known limitation.",
+    "CODEOWNERS is advisory under the live rule: it assigns responsibility and "
+    "requests review, but it does not block an unapproved merge while "
+    "`require_code_owner_review: false` and `required_approving_review_count: 0`.",
+    "The current directly observed preventive controls are the server-side "
+    "pull-request requirement, required signatures, non-fast-forward protection, "
+    "strict required checks, squash-only main merges, and the release-tag creation "
+    "and integrity rules.",
+    "The current directly observed detective controls are the repository validators "
+    "and tests, GitHub Actions and check output, signed-target and release "
+    "observations, content-addressed release attestations, manual read-only API "
+    "re-verification, and ruleset-history entries.",
+    "Hardware-backed authentication and an independently controlled release identity "
+    "were not verified by the repository or API evidence used for this snapshot and "
+    "are not claimed as current compensating controls.",
+    "Emergency or administrative ruleset changes remain separately auditable "
+    "through GitHub's ruleset version history.",
+    "Every currently observed history entry identifies `actor_id: 78034820` and "
+    "`actor_type: User`, which maps to the same `wheakerd` identity.",
+    "That audit trail is detective evidence; because the governing administrator "
+    "remains the same identity, it does not constitute an independent trust domain.",
+    "`Path A: enforce independent review` must not be enabled until a different "
+    "trusted GitHub principal has direct write access, is added alongside `@wheakerd` "
+    "as a code owner for every critical path listed above, and has approved a "
+    "protected test pull request that changes at least one such path.",
+    "That test must prove that the approval counts without author self-approval or a "
+    "ruleset bypass.",
+    "Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator "
+    "permission, or required check.",
+    "The external contribution flow and merge gates therefore remain unchanged: "
+    "`repository-guards` and `unit-and-integration-tests` remain the only required "
+    "checks, and the three hook-runtime matrix checks remain non-required review "
+    "evidence.",
+)
+GOVERNANCE_REVIEW_BOUNDARY_FORBIDDEN = (
+    "`Path A: enforce independent review` is the selected policy for this snapshot.",
+    "Independent human review is currently enforced.",
+    "CODEOWNERS blocks an unapproved merge.",
+    "Hardware-backed authentication and an independently controlled release identity "
+    "are verified current compensating controls.",
+    "Ruleset history constitutes an independent trust domain.",
+    "Path B adds a required approval for external contributors.",
+)
 
 
 def parse_skill_frontmatter(path: Path, failures: list[str]) -> dict[str, str] | None:
@@ -370,6 +418,30 @@ def check_repository_governance_documents(
                     "docs/repository-governance.md Release Tag Policy is missing "
                     f"scoped anchor {anchor!r}"
                 )
+
+    review_heading = GOVERNANCE_REVIEW_BOUNDARY_HEADING
+    if governance_text.count(review_heading) != 1:
+        failures.append(
+            "docs/repository-governance.md must contain exactly one Human Review "
+            "Trust Boundary section"
+        )
+    else:
+        review_section = governance_text.split(review_heading, 1)[1].split(
+            "\n## ", 1
+        )[0]
+        normalized_review_section = " ".join(review_section.split())
+        for anchor in GOVERNANCE_REVIEW_BOUNDARY_ANCHORS:
+            if " ".join(anchor.split()) not in normalized_review_section:
+                failures.append(
+                    "docs/repository-governance.md Human Review Trust Boundary is "
+                    f"missing scoped anchor {anchor!r}"
+                )
+    for unsupported_claim in GOVERNANCE_REVIEW_BOUNDARY_FORBIDDEN:
+        if " ".join(unsupported_claim.split()) in normalized_governance:
+            failures.append(
+                "docs/repository-governance.md contains unsupported review-boundary "
+                f"claim {unsupported_claim!r}"
+            )
 
     entries: list[tuple[str, tuple[str, ...]]] = []
     seen_patterns: set[str] = set()
