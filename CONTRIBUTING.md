@@ -135,6 +135,20 @@ Also run targeted checks required by the files you changed. Read the final
 diff, confirm both manifest versions still match, and inspect
 `git status --short` for unrelated paths.
 
+Hook or hook-workflow changes also require the dedicated native integration
+module on every available target host:
+
+```bash
+python -B -m unittest tests.hook_runtime_integration -v
+```
+
+Use the host's equivalent Python 3 launcher when it has a different name. Run
+the module from a disposable repository copy. A Linux result proves only
+Linux; report unavailable native Windows or macOS execution as `NOT-RUN`. The
+three native matrix checks are intentionally non-required during their initial
+stability-observation period, so a runner-specific failure does not immediately
+block an external contributor's branch or fork.
+
 `scripts/check-publication.py` is the stable aggregate entrypoint. Production
 parsers and policy gates live in `axiom_validation/`; deterministic mutation
 and event fixtures live in `tests/fixtures/`; focused `unittest` modules own

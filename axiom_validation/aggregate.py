@@ -9,6 +9,7 @@ from typing import Any
 from .action_graph import (
     check_distribution_workflow_contract,
     check_github_action_pins,
+    check_hook_runtime_workflow_contract,
     check_unit_test_workflow_contract,
 )
 from .cases.action_graph import check_pull_request_validation_fixtures
@@ -149,6 +150,7 @@ def main() -> int:
     unit_test_workflow_document = run_policy(
         "action-graph", check_unit_test_workflow_contract, failures
     )
+    run_policy("action-graph", check_hook_runtime_workflow_contract, failures)
     release_workflow_text = run_policy(
         "release", check_release_signature_workflow_contract, failures
     )

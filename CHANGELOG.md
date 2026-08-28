@@ -5,11 +5,36 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.15 security fix-forward candidate. It preserves the
-immutable v0.8.14 release and every historical observation without claiming a
-checked-in current host pass or completed publication.
+The active tree is the v0.8.16 repository-CI candidate. It preserves the
+immutable v0.8.15 release and every historical observation without claiming a
+checked-in installed-host pass, native matrix completion, or publication.
 
-## 0.8.15 - unreleased candidate
+## 0.8.16 - unreleased candidate
+
+### Added
+
+- Added a deterministic, offline hook-runtime integration harness that executes
+  the exact checked-in Codex and applicable Claude Code `SessionStart` command
+  strings across native Ubuntu, Windows, and macOS GitHub-hosted runners.
+- Covered paths containing spaces, quoting and environment expansion, missing
+  files, nonzero exits, timeout cleanup, independent standard streams, and
+  explicit UTF-8 and newline behavior while reporting actual runtime versions.
+
+### Evidence Boundary
+
+- Direct Fedora Linux repository-runtime validation passed all five hook cases,
+  and the complete 128-test standard-library suite passed with one expected
+  native-Windows-only skip.
+- The separate three-job hook matrix is read-only and non-required; the existing
+  `repository-guards` and `unit-and-integration-tests` required identities remain
+  unchanged, so contributor branch and fork paths are not newly blocked.
+- Installed Skills, hooks, routes, and action authority are unchanged. Native
+  `windows-2025` and `macos-15` workflow runs and installed Codex and Claude Code
+  host observation remain `NOT-RUN` until external CI or host evidence exists.
+
+See [the v0.8.16 release notes](docs/releases/v0.8.16.md).
+
+## 0.8.15 - 2026-08-28
 
 ### Security
 

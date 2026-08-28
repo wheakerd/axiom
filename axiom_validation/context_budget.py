@@ -64,12 +64,11 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.15 security hardening changes the installed Codex Windows "
-            "startup wrapper; no current Codex host usage or full lifecycle "
-            "observation was run, and v0.8.14 plus prior observations remain "
-            "separate history. The exact wrapper bytes passed a private native "
-            "Windows process-boundary regression and remain separate from model-host "
-            "evidence."
+            "Axiom v0.8.16 changes repository CI only; installed Skills, hooks, "
+            "routes, and action authority are unchanged. Fedora Linux hook runtime "
+            "passed 5/5, but native windows-2025 and macos-15 workflow runs and "
+            "installed Codex host/lifecycle observation are not run; prior evidence "
+            "remains separate."
         ),
     },
     "claude-code": {
@@ -81,8 +80,11 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "No authenticated Claude Code subscription or session was available; "
-            "exact usage and lifecycle observation were unavailable and not run."
+            "Axiom v0.8.16 changes repository CI only and leaves the installed Claude "
+            "hook unchanged. Claude Code 2.1.220 strict package validation passed, "
+            "but native windows-2025/macos-15 workflows and authenticated "
+            "installed-host/lifecycle observation are unavailable or not run; prior "
+            "evidence is separate."
         ),
     },
 }

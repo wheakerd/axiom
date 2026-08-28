@@ -127,17 +127,18 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.15` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.16` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The security hardening changes the installed
-Codex Windows startup wrapper; the exact wrapper bytes passed a private native
-Windows process-boundary regression, but that is not a full model-host or
-lifecycle observation. Current Codex routing and lifecycle evidence is
-`NOT-RUN`, authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable
-v0.8.14 evidence remains separate history.
+release-bound host observation. This release changes repository CI only;
+installed Skills, hooks, routes, and action authority are unchanged. Direct
+Fedora Linux hook-runtime validation passed 5/5, but that repository-runtime
+result is not installed-host evidence. The GitHub-hosted Ubuntu, native
+`windows-2025`, and native `macos-15` jobs, Codex installed-host observation,
+and authenticated Claude Code installed-host observation remain `NOT-RUN` or
+`UNAVAILABLE / NOT-RUN`. Immutable v0.8.15 and prior evidence remain separate.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.15 routing-context record](evals/context-budget/results/v0.8.15.json) uses the
+The [v0.8.16 routing-context record](evals/context-budget/results/v0.8.16.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
@@ -500,7 +501,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.15 release notes](docs/releases/v0.8.15.md):
+- [Changelog](CHANGELOG.md) and [v0.8.16 release notes](docs/releases/v0.8.16.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -532,14 +533,19 @@ contributor and CI checks, not installed runtime dependencies.
 `render-release-facts.py --check` is read-only; `--render` is the only write
 mode and updates only its managed marker regions.
 
-Pull requests to `main`, including fork contributions, run two separate
-read-only checks on the proposed merge tree: `repository-guards` for package and
-publication policy, and `unit-and-integration-tests` for the complete unittest
-suite. Both workflows grant only `contents: read`, reference no repository
+Pull requests to `main`, including fork contributions, run the two existing
+required read-only checks on the proposed merge tree: `repository-guards` for
+package and publication policy, and `unit-and-integration-tests` for the
+complete unittest suite. A separate read-only native hook workflow also runs
+`hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
+`hook-runtime-macos-15` from the exact checked-in SessionStart command strings.
+All three workflows grant only `contents: read`, reference no repository
 secret, and check out with `persist-credentials: false`; they do not require the
 contributor head to be GitHub-signed or hosted in this repository. The active
-main ruleset requires both GitHub Actions checks in strict mode. Those results
-validate a proposed tree only. Release provenance is established separately for
+main ruleset requires only the two existing checks in strict mode while the
+native matrix has an initial stability-observation period, so runner-specific
+failures do not yet block contributor branches or forks. These results validate
+a proposed tree only. Release provenance is established separately for
 protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
 Releases.
 
