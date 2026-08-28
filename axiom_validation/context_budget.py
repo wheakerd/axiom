@@ -64,10 +64,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.18 changes production-release policy and repository "
-            "validation only; installed Skills, hooks, routes, and action authority "
-            "are unchanged. No current installed Codex host or lifecycle observation "
-            "was run; prior evidence remains separate."
+            "Axiom v0.8.19 fixes release-owned evidence after v0.8.18 publication "
+            "stopped; installed Skills, hooks, routes, and action authority are "
+            "unchanged. No current installed Codex host or lifecycle observation was "
+            "run; prior evidence remains separate."
         ),
     },
     "claude-code": {
@@ -79,10 +79,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.18 changes production-release policy and repository "
-            "validation only; the installed Claude hook is unchanged. Authenticated "
-            "installed-host and lifecycle observation are unavailable and not run; "
-            "prior evidence remains separate."
+            "Axiom v0.8.19 fixes release-owned evidence after v0.8.18 publication "
+            "stopped; the installed Claude hook is unchanged. Authenticated installed-"
+            "host and lifecycle observation are unavailable and not run; prior "
+            "evidence remains separate."
         ),
     },
 }

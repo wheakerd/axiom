@@ -127,18 +127,19 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.18` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.19` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. This release aligns the production-release
-version grammar across manifests, signed-target checks, immutable publication,
-evidence, and attestations. It changes no installed Skill, hook, route, action
+release-bound host observation. This fix-forward preserves the stable numeric
+production-release grammar introduced by v0.8.18 and corrects its release-owned
+validation evidence. It changes no installed Skill, hook, route, action
 authority, benchmark, or runtime dependency. Current Codex installed-host
 observation remains `NOT-RUN`, and authenticated Claude Code observation
-remains `UNAVAILABLE / NOT-RUN`. Immutable v0.8.17 and all prior native-runner,
+remains `UNAVAILABLE / NOT-RUN`. The immutable v0.8.18 tag and its unpublished
+external observation, immutable v0.8.17 Release, and all prior native-runner,
 process-boundary, and host observations remain separate.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.18 routing-context record](evals/context-budget/results/v0.8.18.json) uses the
+The [v0.8.19 routing-context record](evals/context-budget/results/v0.8.19.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
@@ -502,7 +503,7 @@ and report an unavailable validator as unavailable, not passed.
   verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.18 release notes](docs/releases/v0.8.18.md):
+- [Changelog](CHANGELOG.md) and [v0.8.19 release notes](docs/releases/v0.8.19.md):
   release history and version-specific evidence.
 
 ## Contributing
