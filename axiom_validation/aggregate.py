@@ -23,6 +23,7 @@ from .cases.routing import ROUTING_SCENARIOS
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
 from .context_budget import check_context_budget
 from .hooks import (
+    check_codex_windows_hook_security,
     check_declared_hook_paths,
     check_exact_hook_shapes,
 )
@@ -123,6 +124,7 @@ def main() -> int:
     for operation in (
         check_declared_hook_paths,
         check_exact_hook_shapes,
+        check_codex_windows_hook_security,
         check_documented_hook_commands,
     ):
         run_policy(

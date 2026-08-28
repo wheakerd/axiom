@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from axiom_validation.hooks import check_exact_hook_shapes
+from axiom_validation.hooks import (
+    check_codex_windows_hook_security,
+    check_exact_hook_shapes,
+)
 
 
 def check_hook_lifecycle_fixtures(
@@ -56,10 +59,32 @@ def check_hook_lifecycle_fixtures(
         ("codex-startup-network-expansion", expanded_command, ".command changed")
     )
 
+    unsafe_windows_commands = {
+        "codex-windows-bare-powershell": "powershell -NoProfile -Command echo unsafe",
+        "codex-windows-powershell-exe": "powershell.exe -NoProfile -Command echo unsafe",
+        "codex-windows-pwsh": "pwsh -NoProfile -Command echo unsafe",
+        "codex-windows-relative-powershell": r".\powershell.exe -NoProfile -Command echo unsafe",
+    }
+    for name, command in unsafe_windows_commands.items():
+        fixture = json.loads(json.dumps(documents))
+        fixture["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][0][
+            "commandWindows"
+        ] = command
+        fixtures.append((name, fixture, "must invoke only the approved packaged wrapper"))
+
+    unbounded_timeout = json.loads(json.dumps(documents))
+    unbounded_timeout["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][
+        0
+    ]["timeout"] = 600
+    fixtures.append(
+        ("codex-windows-unbounded-timeout", unbounded_timeout, "timeout must be exactly")
+    )
+
     rejected = 0
     for name, fixture, expected in fixtures:
         fixture_failures: list[str] = []
         check_exact_hook_shapes(fixture, fixture_failures)
+        check_codex_windows_hook_security(fixture, fixture_failures)
         if any(expected in failure for failure in fixture_failures):
             rejected += 1
         else:
@@ -67,6 +92,7 @@ def check_hook_lifecycle_fixtures(
 
     positive_failures: list[str] = []
     check_exact_hook_shapes(documents, positive_failures)
+    check_codex_windows_hook_security(documents, positive_failures)
     if positive_failures:
         failures.append(
             "checked-in hook lifecycle control failed: "

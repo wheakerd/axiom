@@ -40,6 +40,9 @@ that it:
 
 - uses the host-provided `PLUGIN_ROOT`;
 - reads only `skills/using-axiom/SKILL.md`;
+- invokes the packaged Windows wrapper through the host-provided absolute
+  plugin root, then uses only command-shell built-ins without resolving another
+  interpreter or executable from the working directory or `PATH`;
 - performs foreground output and a local file read; and
 - contains no added program, redirection, write, network access, or background
   launch.

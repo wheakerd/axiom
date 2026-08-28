@@ -127,17 +127,17 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.14` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.15` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. The bounded-review correction changes the
-installed review route and Skill contract; its eight same-session completion
-sequences are checked-in contracts, not host results. Current Codex routing,
-lifecycle, and bounded-review evidence is `NOT-RUN`, authenticated Claude Code
-is `UNAVAILABLE / NOT-RUN`, and immutable v0.8.13 evidence remains separate
-history.
+release-bound host observation. The security hardening changes the installed
+Codex Windows startup wrapper; the exact wrapper bytes passed a private native
+Windows process-boundary regression, but that is not a full model-host or
+lifecycle observation. Current Codex routing and lifecycle evidence is
+`NOT-RUN`, authenticated Claude Code is `UNAVAILABLE / NOT-RUN`, and immutable
+v0.8.14 evidence remains separate history.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.14 routing-context record](evals/context-budget/results/v0.8.14.json) uses the
+The [v0.8.15 routing-context record](evals/context-budget/results/v0.8.15.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
@@ -364,8 +364,19 @@ printf '%s\n\n' 'You have Axiom. Load this startup front door before deciding wh
 
 On Windows, the exact checked-in command is:
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Output 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; Write-Output ''; Get-Content -Raw (Join-Path $env:PLUGIN_ROOT 'skills/using-axiom/SKILL.md')"
+```cmd
+"%PLUGIN_ROOT%\hooks\codex-session-start.cmd"
+```
+
+That fixed plugin-relative path resolves no program from the session working
+directory or `PATH`. The packaged wrapper contains only command-shell built-ins:
+
+```bat
+@echo off
+setlocal DisableDelayedExpansion
+echo You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:
+echo(
+type "%~dp0..\skills\using-axiom\SKILL.md"
 ```
 
 ### Claude Code `SessionStart`
@@ -383,9 +394,12 @@ this is Axiom's only post-compaction routing injection. Axiom declares no
 context injection. See the official
 [Claude Code hooks reference](https://code.claude.com/docs/en/hooks).
 
-These commands contain only `printf` or `echo` plus `cat`, or PowerShell output
-plus `Get-Content`. They contain no file-writing, background-launch, or network
-command. The hook reads the routing gate; the gate makes the route decision.
+These commands contain only `printf` plus `cat`, `echo` plus `cat`, or a fixed
+packaged Windows wrapper using the command-shell built-ins `echo`, `setlocal`,
+and `type`. The Codex handler has a five-second timeout and resolves no second
+interpreter or executable through the working directory or `PATH`. None of the
+hooks writes files, starts background work, or contacts a network service. The
+hook reads the routing gate; the gate makes the route decision.
 
 ## Updating
 
@@ -486,7 +500,7 @@ and report an unavailable validator as unavailable, not passed.
   required-check, CODEOWNERS, and manual verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.14 release notes](docs/releases/v0.8.14.md):
+- [Changelog](CHANGELOG.md) and [v0.8.15 release notes](docs/releases/v0.8.15.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -528,6 +542,13 @@ main ruleset requires both GitHub Actions checks in strict mode. Those results
 validate a proposed tree only. Release provenance is established separately for
 protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
 Releases.
+
+Formal upstream `v*` creation is restricted by a separate creation-only
+ruleset whose only bypass actor is the repository owner `wheakerd`. The
+signature, required-check, deletion, and non-fast-forward rules remain in a
+second ruleset with no bypass actor. This does not restrict fork contributions
+or pull requests. The required check is commit-level defense in depth and is
+not treated as authorization for the exact tag-creation operation.
 
 The separate `Publish immutable release` workflow never runs for a pull
 request or ordinary push. From the current signed `main` commit it accepts only

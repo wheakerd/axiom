@@ -5,11 +5,38 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.14 sequential candidate for Issue #71. It preserves
-the immutable v0.8.13 release and every historical observation without claiming
-a checked-in current host pass.
+The active tree is the v0.8.15 security fix-forward candidate. It preserves the
+immutable v0.8.14 release and every historical observation without claiming a
+checked-in current host pass or completed publication.
 
-## 0.8.14 - unreleased candidate
+## 0.8.15 - unreleased candidate
+
+### Security
+
+- Replaced the Codex Windows startup hook's unqualified PowerShell lookup with
+  a fixed plugin-relative command wrapper that uses only command-shell built-ins
+  and a five-second timeout.
+- Split formal `v*` tag creation from the no-bypass signature, required-check,
+  deletion, and non-fast-forward rules. Only the repository owner can bypass
+  the creation-only rule; contributor fork and pull-request paths are unchanged.
+- Clarified that a commit-level required check is target-quality evidence, not
+  authorization bound to an exact tag-creation operation.
+
+### Evidence Boundary
+
+- The exact Codex Windows spawn form passed on a private native `windows-2025`
+  runner with workspace executable canaries and the candidate hook and wrapper
+  bytes; no artifact, secret, or temporary branch was retained.
+- The live tag rulesets were read back as two active, overlapping controls: one
+  creation-only ruleset with the exact user bypass and one integrity ruleset
+  with no bypass actors or creation rule.
+- The checked-in status remains `STATIC-ONLY`; full Codex routing and lifecycle
+  observation is `NOT-RUN`, and authenticated Claude Code host validation is
+  `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.15 release notes](docs/releases/v0.8.15.md).
+
+## 0.8.14 - 2026-08-27
 
 ### Fixed
 

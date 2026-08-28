@@ -76,6 +76,59 @@ class RepositoryPolicyTests(unittest.TestCase):
             failures,
         )
 
+    def test_repository_governance_rejects_stale_release_tag_creator_claim(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        mutated = governance.replace(
+            "Release-tag creator allowlist: **user `wheakerd` only**",
+            "Release-tag creator allowlist: **UNAVAILABLE**",
+            1,
+        )
+        self.assertNotEqual(governance, mutated)
+
+        failures = []
+        check_repository_governance_documents(mutated, codeowners, failures)
+        self.assertTrue(
+            any(
+                "retains stale governance claim" in failure
+                and "Release-tag creator allowlist" in failure
+                for failure in failures
+            ),
+            failures,
+        )
+
+    def test_repository_governance_rejects_contradictory_creation_ruleset(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        start = governance.index(
+            "The separate active ruleset `restrict-release-tag-creation`"
+        )
+        end = governance.index("\n\nTogether,", start)
+        contradictory = (
+            "The separate inactive ruleset `restrict-release-tag-creation` "
+            "historically targeted exactly `refs/tags/v*`. It contains no "
+            "`creation` rule. An old response recorded `actor_id: 78034820`, "
+            "`actor_type: User`, `bypass_mode: always`, and "
+            "`current_user_can_bypass: always`. Because this is historical, the "
+            "current bypass scope is unknown.\n"
+        )
+        mutated = governance[:start] + contradictory + governance[end:]
+
+        failures = []
+        check_repository_governance_documents(mutated, codeowners, failures)
+        self.assertTrue(
+            any("Release Tag Policy is missing scoped anchor" in failure for failure in failures),
+            failures,
+        )
+
     def test_external_action_fixtures(self):
         failures = []
         self.assertEqual(155, check_external_action_scenarios(failures))
