@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.17 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.18 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.17-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.17 \
-  --expected-tag v0.8.17 \
+  /absolute/path/axiom-v0.8.18-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.18 \
+  --expected-tag v0.8.18 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,7 +229,7 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.17 with a non-null `v0.8.17` tag and the
+The subject must be non-candidate v0.8.18 with a non-null `v0.8.18` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
@@ -250,12 +250,12 @@ terminate; unknown, malformed, invalid-status, pre-thread benign,
 duplicate-phase, post-terminal, and abrupt streams fail closed. Retain only the
 taxonomy's bounded public journal fields and never raw payload.
 
-Version 0.8.17 changes governance documentation and its validator only. The
-installed hook and wrapper bytes remain unchanged from v0.8.16. The v0.8.16
+Version 0.8.18 changes production-release policy and repository validation
+only. The installed hook and wrapper bytes remain unchanged from v0.8.17. The v0.8.16
 native three-platform matrix and the earlier private native Windows
-process-boundary result remain historical evidence, not current v0.8.17 host
+process-boundary result remain historical evidence, not current v0.8.18 host
 evidence. Require the exact checked-in hook JSON and wrapper SHA-256 values to
-remain byte-identical to v0.8.16. If either byte sequence changes, repeat the
+remain byte-identical to v0.8.17. If either byte sequence changes, repeat the
 three-platform matrix and the exact Codex `cmd.exe /C` construction on a real
 supported Windows runner with session-working-directory executable canaries
 before tagging. These focused process checks remain separate from the 17-case
@@ -263,35 +263,38 @@ model-routing asset.
 
 Use this safe release sequence:
 
-1. Merge the reviewed patch as one GitHub-signed commit.
-2. Run the complete 17-call batch against that exact merged commit before
+1. Verify the exact `release/v0.8.18` candidate with `Release signature guard`.
+   Require its stable numeric branch version to match both manifests and reject
+   prerelease identifiers, build metadata, leading zeros, or malformed forms.
+2. Merge the reviewed patch as one GitHub-signed commit.
+3. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
-3. Require the exact hook JSON and wrapper bytes to remain byte-identical to
-   v0.8.16. Keep any Ubuntu, Windows, and macOS matrix result attached to the
-   exact v0.8.17 commit and do not carry the v0.8.16 outcome forward. The three
+4. Require the exact hook JSON and wrapper bytes to remain byte-identical to
+   v0.8.17. Keep any Ubuntu, Windows, and macOS matrix result attached to the
+   exact v0.8.18 commit and do not carry the v0.8.16 outcome forward. The three
    checks remain non-required and do not change contributor branch or fork
    rules. Stop and repeat the three-platform matrix plus the native Windows
    process-boundary check if either digest differs.
-4. Read both active `refs/tags/v*` rulesets immediately before creation. Require
+5. Read both active `refs/tags/v*` rulesets immediately before creation. Require
    the creation-only ruleset to contain exactly the owner `User`/`always`
    bypass, and require the signature, check, deletion, and non-fast-forward
    ruleset to contain no bypass or `creation` rule.
-5. Using the authorized owner identity, create immutable tag `v0.8.17` once at
+6. Using the authorized owner identity, create immutable tag `v0.8.18` once at
    the same commit. On an uncertain response, query the exact ref and rule suite
    without retrying creation.
-6. Verify the new rule suite identifies the exact actor, zero pre-creation SHA,
+7. Verify the new rule suite identifies the exact actor, zero pre-creation SHA,
    expected target SHA, audited creation bypass, and passing no-bypass integrity
    rules. Stop before publication on any mismatch.
-7. Finalize the sanitized observation with the tag, commit, and tree; rename it
+8. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-8. Create one draft `Axiom v0.8.17` Release targeting the exact 40-character
+9. Create one draft `Axiom v0.8.18` Release targeting the exact 40-character
    commit and upload only the validated observation asset.
-9. With an owner credential, read the repository immutable-release setting and
+10. With an owner credential, read the repository immutable-release setting and
    require `enabled: true`; then dispatch `Publish immutable release` on the
-   exact `v0.8.17` ref with only `tag=v0.8.17`. The workflow requires the tag
+   exact `v0.8.18` ref with only `tag=v0.8.18`. The workflow requires the tag
    commit to remain on live `main` history and requires `main` to equal it
    immediately before mutation, plus REST and GraphQL GitHub-made signature. It
-   also rejects a different equal-or-newer current Latest SemVer. It freezes the
+   also rejects a different equal-or-newer current stable release version. It freezes the
    Release ID, downloads and validates the observation, uploads one
    deterministic attestation only when
    absent, downloads both remote assets, publishes the same draft, and requires
@@ -299,11 +302,11 @@ Use this safe release sequence:
    by frozen Release ID and proven absent before the workflow fails. A rerun may
    clean a matching mutable remnant, resume an exact draft, or perform
    final-only readback; it never replaces either asset.
-10. Explicitly dispatch `Release signature guard` on `v0.8.17` and
+11. Explicitly dispatch `Release signature guard` on `v0.8.18` and
    require the exact-tag run to pass. A Release mutation made with the
    publication workflow's `GITHUB_TOKEN` does not automatically start another
    workflow from the resulting ordinary release event.
-11. Publish or close any coordinated security record only under its separate
+12. Publish or close any coordinated security record only under its separate
    exact authorization after the signature guard, publication workflow,
    immutable Release, Latest marker, asset identities, and attestation all pass.
 

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing strict SemVer tag on signed main history
+        description: Existing stable numeric release tag on signed main history
         required: true
         type: string
 

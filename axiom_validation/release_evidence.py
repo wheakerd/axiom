@@ -10,7 +10,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .context import RELEASE_VERSION, REPOSITORY_ROOT, STRICT_SEMVER, display_path
+from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
+from .release_versions import (
+    PRODUCTION_RELEASE_TAG_ERE_PATTERN,
+    PRODUCTION_RELEASE_VERSION_CASES,
+    parse_production_release_tag,
+    parse_production_release_version,
+)
 from .routing_evals import validate_external_routing_observation
 from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonical_yaml_document
 
@@ -21,10 +27,7 @@ ATTESTATION_SCHEMA_VERSION = "1"
 PLAN_SCHEMA_VERSION = "2"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
-NUMERIC_RELEASE_TAG = re.compile(
-    r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
-)
-PUBLISH_WORKFLOW_SHA256 = "1e17859df031ef9ff20f161d0e1de17ada29d7e733577c7f00a6aff12b32b046"
+PUBLISH_WORKFLOW_SHA256 = "571181a832014bddf3088bca27eb02ce9ec5a03104f3244d6ad4b9224447d252"
 
 
 class DuplicateJsonKeyError(ValueError):
@@ -97,8 +100,10 @@ def _validate_subject(
     tree: str,
     failures: list[str],
 ) -> None:
-    if type(version) is not str or STRICT_SEMVER.fullmatch(version) is None:
-        failures.append("expected release version must be strict SemVer")
+    if parse_production_release_version(version) is None:
+        failures.append(
+            "expected release version must be one stable numeric production release version"
+        )
     if type(version) is str and version != RELEASE_VERSION:
         failures.append("expected release version must match both current manifests")
     if type(tag) is not str or tag != f"v{version}":
@@ -550,23 +555,21 @@ def verify_remote_release_preflight(
     )
     if repository is not None and repository.get("default_branch") != "main":
         failures.append("repository default branch must remain main")
-    target_match = NUMERIC_RELEASE_TAG.fullmatch(expected_tag)
-    if target_match is None:
-        failures.append("preflight expected tag must be one numeric SemVer tag")
+    target_version = parse_production_release_tag(expected_tag)
+    if target_version is None:
+        failures.append(
+            "preflight expected tag must be one stable numeric production release tag"
+        )
     if latest is not None:
         latest_tag = latest.get("tag_name")
-        latest_match = (
-            NUMERIC_RELEASE_TAG.fullmatch(latest_tag) if type(latest_tag) is str else None
-        )
+        latest_version = parse_production_release_tag(latest_tag)
         if latest.get("draft") is not False or latest.get("prerelease") is not False:
             failures.append("GitHub Latest must be one published stable Release")
-        if latest_match is None:
-            failures.append("GitHub Latest must use one numeric SemVer tag")
-        elif target_match is not None:
-            target_version = tuple(int(part) for part in target_match.groups())
-            latest_version = tuple(int(part) for part in latest_match.groups())
+        if latest_version is None:
+            failures.append("GitHub Latest must use one stable numeric production release tag")
+        elif target_version is not None:
             if latest_tag != expected_tag and latest_version >= target_version:
-                failures.append("publication must not regress the GitHub Latest SemVer")
+                failures.append("publication must not regress the GitHub Latest release version")
     main_commit = (
         exact_ref_commit(main_ref, "refs/heads/main", "live main ref", failures)
         if main_ref is not None
@@ -891,6 +894,27 @@ def _scalar(value: Any) -> str | None:
     return value.value if isinstance(value, CanonicalYamlScalar) else None
 
 
+def _check_publish_version_gate(text: str, label: str, failures: list[str]) -> None:
+    owners = re.findall(
+        r'^\s*\[\[ "\$RELEASE_TAG" =~ (?P<pattern>\S+) \]\]\s*$',
+        text,
+        flags=re.MULTILINE,
+    )
+    if owners != [PRODUCTION_RELEASE_TAG_ERE_PATTERN]:
+        failures.append(
+            f"{label} must contain one canonical stable production release tag gate"
+        )
+        return
+    pattern = re.compile(owners[0])
+    for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
+        observed = pattern.fullmatch(f"v{version}") is not None
+        if observed != accepted:
+            failures.append(
+                f"{label} publication version gate disagrees with canonical case "
+                f"{case_id!r}"
+            )
+
+
 def check_publish_workflow_contract(
     failures: list[str], workflow_path: Path = WORKFLOW_PATH
 ) -> dict[str, Any] | None:
@@ -928,7 +952,7 @@ def check_publish_workflow_contract(
         if not isinstance(tag_input, dict) or {
             key: _scalar(value) for key, value in tag_input.items()
         } != {
-            "description": "Existing strict SemVer tag on signed main history",
+            "description": "Existing stable numeric release tag on signed main history",
             "required": "true",
             "type": "string",
         }:
@@ -1043,6 +1067,7 @@ def check_publish_workflow_contract(
     for anchor in required_anchors:
         if anchor not in text:
             failures.append(f"{label} is missing required publication anchor {anchor!r}")
+    _check_publish_version_gate(text, label, failures)
     if 'GITHUB_API_VERSION: "2026-03-10"' not in text:
         failures.append(f"{label} must pin GitHub REST API version 2026-03-10")
     if hashlib.sha256(payload).hexdigest() != PUBLISH_WORKFLOW_SHA256:

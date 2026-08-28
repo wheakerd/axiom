@@ -5,12 +5,39 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.17 governance-policy candidate. It preserves the
-immutable v0.8.16 release and every historical observation without claiming
-independent human review, a changed contributor gate, current host evidence, or
-publication.
+The active tree is the v0.8.18 release-version safety candidate. It preserves
+immutable v0.8.17 and every historical tag and Release without claiming a
+current installed-host pass or completed publication.
 
-## 0.8.17 - unreleased candidate
+## 0.8.18 - unreleased candidate
+
+### Security
+
+- Restricted formal production releases to stable numeric
+  `MAJOR.MINOR.PATCH` versions with no leading zero, prerelease identifier, or
+  build metadata.
+- Bound both manifests, release-candidate branch names, formal `v*` tags,
+  publication inputs, release evidence, and attestation subjects to one
+  validator-owned production-release grammar.
+- Required `release/v<version>` candidate names to match the exact shared
+  manifest version before any formal upstream tag is created.
+
+### Regression Contract
+
+- Added one canonical acceptance corpus covering stable numeric controls plus
+  prerelease, build-metadata, leading-zero, prefixed-manifest, and malformed
+  versions across Python, the exact JavaScript guard, and the Bash publication
+  gate.
+- Preserved historical tags and Releases without rewriting them. Future
+  prerelease or build-metadata support requires a separate reviewed publication
+  design covering Latest, evidence, recovery, and compatibility semantics.
+- Installed Skills, hooks, routes, action authority, benchmarks, and runtime
+  dependencies are unchanged. Current Codex host observation is `NOT-RUN`;
+  authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.18 release notes](docs/releases/v0.8.18.md).
+
+## 0.8.17 - 2026-08-28
 
 ### Security
 

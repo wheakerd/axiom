@@ -127,18 +127,18 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.17` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.18` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. This release documents Path B and validates the
-single-maintainer trust boundary; it changes no ruleset, CODEOWNERS entry,
-workflow, collaborator permission, required check, installed Skill, hook,
-route, or action authority. Current Codex installed-host observation remains
-`NOT-RUN`, and authenticated Claude Code observation remains `UNAVAILABLE /
-NOT-RUN`. Immutable v0.8.16 and all prior native-runner, process-boundary, and
-host observations remain separate.
+release-bound host observation. This release aligns the production-release
+version grammar across manifests, signed-target checks, immutable publication,
+evidence, and attestations. It changes no installed Skill, hook, route, action
+authority, benchmark, or runtime dependency. Current Codex installed-host
+observation remains `NOT-RUN`, and authenticated Claude Code observation
+remains `UNAVAILABLE / NOT-RUN`. Immutable v0.8.17 and all prior native-runner,
+process-boundary, and host observations remain separate.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.17 routing-context record](evals/context-budget/results/v0.8.17.json) uses the
+The [v0.8.18 routing-context record](evals/context-budget/results/v0.8.18.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
@@ -502,7 +502,7 @@ and report an unavailable validator as unavailable, not passed.
   verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.17 release notes](docs/releases/v0.8.17.md):
+- [Changelog](CHANGELOG.md) and [v0.8.18 release notes](docs/releases/v0.8.18.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -557,12 +557,19 @@ second ruleset with no bypass actor. This does not restrict fork contributions
 or pull requests. The required check is commit-level defense in depth and is
 not treated as authorization for the exact tag-creation operation.
 
+Production releases use only stable numeric `MAJOR.MINOR.PATCH` manifest
+versions and matching `vMAJOR.MINOR.PATCH` tags. Leading-zero components,
+prerelease identifiers, build metadata, and a `v` prefix in a manifest version
+are rejected before formal tag creation. Supporting any of those forms requires
+a separate reviewed design for GitHub prerelease state, Latest selection,
+version precedence, evidence naming, recovery, and compatibility claims.
+
 The separate `Publish immutable release` workflow never runs for a pull
 request or ordinary push. From the current signed `main` commit it accepts only
-one exact SemVer tag, serializes repository-wide Latest publication, and
+one exact stable numeric production release tag, serializes repository-wide Latest publication, and
 requires the live immutable-release setting, main/tag target, and GitHub-made
 signature to remain valid. It rejects a different equal-or-newer current Latest
-SemVer. It uniquely freezes one Release ID, validates the
+stable release version. It uniquely freezes one Release ID, validates the
 downloaded observation and exposed GitHub digest, uploads one deterministic
 attestation without replacement, downloads both remote assets, and publishes
 only that draft. A rerun resumes a verified draft or performs final-only

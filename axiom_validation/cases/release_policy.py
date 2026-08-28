@@ -6,6 +6,7 @@ from typing import Any
 
 from axiom_validation.context import RELEASE_VERSION
 from axiom_validation.release_policy import extract_canonical_yaml_literal_block, validate_release_workflow_script
+from axiom_validation.release_versions import PRODUCTION_RELEASE_VERSION_CASES
 
 RELEASE_SCRIPT_NODE_HARNESS = r"""
 "use strict";
@@ -185,6 +186,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         target_sha: str | None = None,
         comparison: dict[str, str] | None = None,
         signature: dict[str, Any] | None = None,
+        package_version: str = RELEASE_VERSION,
         expected_failure: str | None = None,
     ) -> dict[str, Any]:
         refs: dict[str, dict[str, str]] = {
@@ -201,7 +203,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
                 "payload": payload,
             },
             "refs": refs,
-            "packageVersion": RELEASE_VERSION,
+            "packageVersion": package_version,
             "comparison": comparison,
             "signature": signature,
             "expectedFailure": expected_failure,
@@ -238,8 +240,8 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         )
 
     immutable_failure = "not a single immutable creation event"
-    strict_tag_failure = "not one exact strict SemVer tag"
-    return (
+    production_tag_failure = "not one exact stable numeric production release tag"
+    baseline_scenarios = (
         fixture(
             "pull-request-provenance-rejected",
             "pull_request",
@@ -287,7 +289,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             {"release": {"tag_name": mismatched_tag}},
             target_ref=f"refs/tags/{mismatched_tag}",
             target_sha=tag_sha,
-            expected_failure="does not match package version",
+            expected_failure="but manifests declare",
         ),
         fixture(
             "workflow-dispatch-main",
@@ -316,7 +318,10 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             "workflow_dispatch",
             "refs/tags/v01",
             {},
-            expected_failure="Manual tag verification requires one exact strict SemVer tag",
+            expected_failure=(
+                "Manual tag verification requires one exact stable numeric "
+                "production release tag"
+            ),
         ),
         tag_push(
             "tag-create",
@@ -350,7 +355,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             created=True,
             deleted=False,
             forced=False,
-            expected_failure=strict_tag_failure,
+            expected_failure=production_tag_failure,
         ),
         tag_push(
             "tag-v01",
@@ -360,7 +365,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             created=True,
             deleted=False,
             forced=False,
-            expected_failure=strict_tag_failure,
+            expected_failure=production_tag_failure,
         ),
         tag_push(
             "tag-extra-path",
@@ -370,7 +375,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             created=True,
             deleted=False,
             forced=False,
-            expected_failure=strict_tag_failure,
+            expected_failure=production_tag_failure,
         ),
         tag_push(
             "tag-version-mismatch",
@@ -380,7 +385,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             created=True,
             deleted=False,
             forced=False,
-            expected_failure="does not match package version",
+            expected_failure="but manifests declare",
         ),
         tag_push(
             "tag-move",
@@ -422,6 +427,70 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             forced=False,
             expected_failure=immutable_failure,
         ),
+    )
+
+    manifest_version_scenarios = tuple(
+        fixture(
+            f"manifest-version-{case_id}",
+            "push",
+            "refs/heads/main",
+            {"after": main_sha},
+            package_version=version,
+            expected_failure=(
+                None
+                if accepted
+                else "matching stable numeric production release version"
+            ),
+        )
+        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES
+    )
+    release_candidate_scenarios = tuple(
+        fixture(
+            f"release-candidate-version-{case_id}",
+            "workflow_dispatch",
+            f"refs/heads/release/v{version}",
+            {},
+            target_ref=f"refs/heads/release/v{version}",
+            target_sha=release_branch_sha,
+            package_version=version,
+            expected_failure=(
+                None
+                if accepted
+                else "Manual release-candidate verification requires"
+            ),
+        )
+        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES
+    )
+    invalid_tag_scenarios = tuple(
+        tag_push(
+            f"tag-version-{case_id}",
+            f"v{version}",
+            before=null_sha,
+            after=tag_sha,
+            created=True,
+            deleted=False,
+            forced=False,
+            expected_failure=production_tag_failure,
+        )
+        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES
+        if not accepted
+    )
+    candidate_binding_scenario = fixture(
+        "release-candidate-manifest-version-mismatch",
+        "workflow_dispatch",
+        f"refs/heads/release/{release_tag}",
+        {},
+        target_ref=f"refs/heads/release/{release_tag}",
+        target_sha=release_branch_sha,
+        package_version=mismatched_tag.removeprefix("v"),
+        expected_failure="but manifests declare",
+    )
+    return (
+        baseline_scenarios
+        + manifest_version_scenarios
+        + release_candidate_scenarios
+        + invalid_tag_scenarios
+        + (candidate_binding_scenario,)
     )
 
 

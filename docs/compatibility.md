@@ -68,24 +68,22 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.17, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.8.18, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
-observation. The dated governance snapshot separately records the directly
-observed actor-scoped tag-creation, no-bypass integrity, required-check,
-immutable-release, and single-maintainer human-review boundaries. This
-candidate changes governance documentation and its validator only. It changes
-no ruleset, CODEOWNERS entry, workflow, collaborator permission, required
-check, installed Skill, hook, route, or action authority. Installed Codex host
+observation. The candidate aligns stable numeric production versions across
+both manifests, release candidates, formal tags, immutable publication,
+release evidence, and attestations. It changes no installed Skill, hook, route,
+action authority, benchmark, or runtime dependency. Installed Codex host
 observation remains `NOT-RUN`; authenticated Claude Code observation remains
-`UNAVAILABLE / NOT-RUN`. The immutable v0.8.16 release and all prior
-native-runner, process-boundary, and host observations remain separate history.
+`UNAVAILABLE / NOT-RUN`. The immutable v0.8.17 release and all prior native-runner,
+process-boundary, and host observations remain separate history.
 A prior-release Codex observation also
 exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.17.
+outcomes forward to v0.8.18.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -146,12 +144,12 @@ pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.17.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.18.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.17 candidate gate is 6,960 bytes with SHA-256
+The v0.8.18 candidate gate is 6,960 bytes with SHA-256
 `fb27acb68971835b62b4565dced98650f8c2808a01b8e6a171f202a9d21794f1`.
 
 The candidate has 894 whitespace-delimited words, 124 logical lines, and one
@@ -159,7 +157,7 @@ unique direct reference. Its 1,740 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
 1,061 bytes, 137 words, 17 lines, zero references, and 265 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. The candidate is byte-identical to v0.8.16 and leaves the 73-case
+reviewed. The candidate is byte-identical to v0.8.17 and leaves the 73-case
 routing workload unchanged, so its reduction experiment remains null.
 The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
 workload in the v0.8.11 record
@@ -400,6 +398,28 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.18` reports:
+
+- synchronized `0.8.18` manifests and release-owned metadata for
+  [Issue #89](https://github.com/wheakerd/axiom/issues/89);
+- one validator-owned stable numeric production-release grammar shared by both
+  manifests, release evidence, attestation subjects, and GitHub Latest
+  comparison;
+- exact JavaScript and Bash workflow patterns validated against the same
+  canonical acceptance corpus;
+- `release/v<version>` candidate names bound to the matching manifest version
+  before formal upstream tag creation;
+- negative fixtures for prerelease identifiers, build metadata, leading zeros,
+  prefixed manifest values, missing components, and extra components; and
+- historical tags and Releases preserved, with future prerelease or
+  build-metadata support gated on a separately reviewed publication design.
+
+Installed Skills, hooks, routes, action authority, benchmarks, and runtime
+dependencies are unchanged. Current installed Codex host and lifecycle
+observation is `NOT-RUN`, and authenticated Claude Code observation is
+`UNAVAILABLE / NOT-RUN`. See the
+[v0.8.18 release notes](releases/v0.8.18.md).
 
 The Git record for `v0.8.17` reports:
 
