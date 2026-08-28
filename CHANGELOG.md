@@ -5,11 +5,26 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.18 release-version safety candidate. It preserves
-immutable v0.8.17 and every historical tag and Release without claiming a
-current installed-host pass or completed publication.
+The active tree is the v0.8.19 release-evidence fix-forward candidate. It
+preserves the immutable v0.8.18 tag without publishing a Release for it, and
+does not reuse that tag's external routing observation as v0.8.19 evidence.
 
-## 0.8.18 - unreleased candidate
+## 0.8.19 - unreleased candidate
+
+### Fixed
+
+- Corrected release-owned validation evidence after the final v0.8.18 review
+  added arbitrary-precision version coverage but its checked-in release notes
+  still reported the earlier test and release-provenance counts.
+- Advanced manifests and current release-bound evidence to the immediate next
+  patch version without moving or deleting the immutable v0.8.18 tag.
+- Required a fresh signed candidate, exact-host acceptance batch, tag, draft,
+  publication workflow, and signature guard for v0.8.19; the successful
+  v0.8.18 batch remains separate unpublished evidence.
+
+See [the v0.8.19 release notes](docs/releases/v0.8.19.md).
+
+## 0.8.18 - tagged 2026-08-28; no GitHub Release
 
 ### Security
 

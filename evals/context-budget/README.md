@@ -14,9 +14,9 @@ figure is `ceil(UTF-8 bytes / 4)`, explicitly labeled as an estimate suitable
 only for before/after comparison of the same English Markdown surface. It must
 not be compared with billed, cached, or host-reported tokens as if equivalent.
 
-The immutable v0.7.9 gate is the cumulative baseline for the v0.8.18 candidate:
+The immutable v0.7.9 gate is the cumulative baseline for the v0.8.19 candidate:
 
-| Metric | Baseline | v0.8.18 candidate | Delta | Classification |
+| Metric | Baseline | v0.8.19 candidate | Delta | Classification |
 | --- | ---: | ---: | ---: | --- |
 | UTF-8 bytes | 5,899 | 6,960 | +1,061 | exact static count used as a proxy |
 | Whitespace-delimited words | 757 | 894 | +137 | exact static count used as a proxy |
@@ -37,7 +37,7 @@ matrix, and duplicate-injection semantics. Neither command writes files.
 
 ## Lifecycle Matrix
 
-The v0.8.18 record represents all required paths: fresh startup with a no-route
+The v0.8.19 record represents all required paths: fresh startup with a no-route
 request, fresh startup with a routed request, resume with no route, clear with
 a routed request, manual compaction with no route, automatic compaction with a
 routed request, and three repeated no-route requests in one otherwise unchanged
@@ -54,13 +54,14 @@ validator derives `duplicateInjectionDetected` as observed count greater than
 the scenario's expected count. A passing observation must have the exact count
 and no duplicate. Unrun or unavailable observations must retain null counts,
 null duplicate state, and an empty event list. Codex lifecycle observation for
-v0.8.18 is `NOT-RUN`; authenticated Claude Code observation is
+v0.8.19 is `NOT-RUN`; authenticated Claude Code observation is
 `UNAVAILABLE / NOT-RUN`. The preserved independent v0.8.2 diagnostic used one
 fresh Case 1 session and therefore does not claim current or actual
 post-compaction behavior.
 
-The immutable v0.8.17 release and prior observations remain separate evidence and
-are not copied into the v0.8.18 candidate's host metrics. Current exact host
+The immutable v0.8.18 tag and unpublished observation, immutable v0.8.17
+Release, and prior observations remain separate evidence and are not copied
+into the v0.8.19 candidate's host metrics. Current exact host
 usage is therefore `NOT-RUN`; the deterministic static measurement is local and telemetry-free,
 so the record keeps `networkOrTelemetryUsed` false.
 
@@ -87,8 +88,8 @@ conditions, evidence gates, and model or reasoning settings cannot be removed
 or changed merely to obtain a smaller number.
 
 Reduction evidence binds its before surface to the nearest earlier stable
-SemVer record; v0.7.9 remains only the cumulative growth baseline. The v0.8.18
-candidate is byte-identical to v0.8.17, so its current reduction experiment is
+SemVer record; v0.7.9 remains only the cumulative growth baseline. The v0.8.19
+candidate is byte-identical to v0.8.18 and v0.8.17, so its current reduction experiment is
 correctly null. The most recent actual reduction remains the historical
 v0.8.10-to-v0.8.11 experiment over its fixed 67-case workload:
 
@@ -108,6 +109,7 @@ prefer roughly 6-6.5 KiB when precision permits. The hard limit is a rejection
 guard, not an authoring target.
 
 The machine-readable contract is [schema v1](schema-v1.json), and the current
-versioned record is [v0.8.18](results/v0.8.18.json). The v0.8.17 record remains
-byte-for-byte historical evidence; the current record binds the unchanged gate,
-fixed workload, release-version safety patch, and static-only evidence boundary.
+versioned record is [v0.8.19](results/v0.8.19.json). The v0.8.18 and v0.8.17
+records remain byte-for-byte historical evidence; the current record binds the
+unchanged gate, release-evidence fix-forward, fixed workload, and static-only
+evidence boundary.
