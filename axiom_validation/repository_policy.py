@@ -115,7 +115,7 @@ AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/evaluation-and-evidence.md",
     "references/validation-reporting.md",
 )
-GOVERNANCE_VERIFIED_DATE = "2026-08-26"
+GOVERNANCE_VERIFIED_DATE = "2026-08-28"
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
@@ -135,6 +135,7 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     f"Last verified (UTC): `{GOVERNANCE_VERIFIED_DATE}`",
     "`require-signed-commits-on-main`",
     "`require-github-signed-release-tags`",
+    "`restrict-release-tag-creation`",
     "`refs/heads/main`",
     "`refs/tags/v*`",
     "`Verify GitHub-signed release target`",
@@ -150,15 +151,43 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     "`do_not_enforce_on_create: false`",
     "`bypass_actors: []`",
     "`current_user_can_bypass: never`",
+    "`actor_id: 78034820`",
+    "`actor_type: User`",
+    "`bypass_mode: always`",
+    "`current_user_can_bypass: always`",
     "Required checks on `main`: `repository-guards` and "
     "`unit-and-integration-tests`",
     "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
-    "Release-tag creator allowlist: **UNAVAILABLE**",
+    "Release-tag creator allowlist: **user `wheakerd` only**",
+    "Commit-level required-check evidence is defense in depth, not exact "
+    "tag-creation authorization.",
     "A failed workflow is detection evidence, not server-side mutation prevention.",
     "`Publish immutable release`",
     "`enabled: true`",
     "`enforced_by_owner: false`",
     "Existing Releases, including v0.8.5, remain in their previously reported mutable state",
+)
+GOVERNANCE_SNAPSHOT_FORBIDDEN = (
+    "The ruleset has no `creation` restriction and exposes no creator allowlist.",
+    "Release-tag creator allowlist: **UNAVAILABLE**",
+)
+RELEASE_TAG_POLICY_ANCHORS = (
+    "The active repository ruleset `require-github-signed-release-tags` targets "
+    "exactly `refs/tags/v*`. Its REST response reported `bypass_actors: []` and "
+    "`current_user_can_bypass: never`.",
+    "It contains no `creation` rule. Its empty bypass list applies to every "
+    "integrity rule in this ruleset, including the required signature, required "
+    "check, deletion, and non-fast-forward controls.",
+    "The separate active ruleset `restrict-release-tag-creation` also targets "
+    "exactly `refs/tags/v*`. It contains exactly one `creation` rule. Its only "
+    "bypass entry is `actor_id: 78034820`, `actor_type: User`, and "
+    "`bypass_mode: always`, which identifies the repository owner `wheakerd`; "
+    "the owner-visible response reported `current_user_can_bypass: always`.",
+    "Because the bypass is scoped to this creation-only ruleset, it does not "
+    "bypass any rule in `require-github-signed-release-tags`.",
+    "Release-tag creator allowlist: **user `wheakerd` only**.",
+    "Commit-level required-check evidence is defense in depth, not exact "
+    "tag-creation authorization.",
 )
 
 
@@ -318,6 +347,29 @@ def check_repository_governance_documents(
             failures.append(
                 f"docs/repository-governance.md is missing governance snapshot anchor {anchor!r}"
             )
+    for stale_claim in GOVERNANCE_SNAPSHOT_FORBIDDEN:
+        if " ".join(stale_claim.split()) in normalized_governance:
+            failures.append(
+                "docs/repository-governance.md retains stale governance claim "
+                f"{stale_claim!r}"
+            )
+
+    release_heading = "## Release Tag Policy"
+    if governance_text.count(release_heading) != 1:
+        failures.append(
+            "docs/repository-governance.md must contain exactly one Release Tag Policy section"
+        )
+    else:
+        release_section = governance_text.split(release_heading, 1)[1].split(
+            "\n## ", 1
+        )[0]
+        normalized_release_section = " ".join(release_section.split())
+        for anchor in RELEASE_TAG_POLICY_ANCHORS:
+            if " ".join(anchor.split()) not in normalized_release_section:
+                failures.append(
+                    "docs/repository-governance.md Release Tag Policy is missing "
+                    f"scoped anchor {anchor!r}"
+                )
 
     entries: list[tuple[str, tuple[str, ...]]] = []
     seen_patterns: set[str] = set()

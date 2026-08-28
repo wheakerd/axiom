@@ -88,3 +88,7 @@ fails closed on tag movement, deletion, forced update, malformed tags,
 off-history targets, and mismatched GitHub Release refs. Workflow detection is
 not server-side prevention: branch and tag rulesets must continue to reject
 unsigned protected updates and mutable release tags before they take effect.
+Matching upstream `v*` creation is separately restricted to the repository
+owner by a creation-only ruleset. The signature, required-check, deletion, and
+non-fast-forward rules have no bypass actor. A reusable commit-level check is
+target-quality evidence, not authorization for an exact tag-creation request.

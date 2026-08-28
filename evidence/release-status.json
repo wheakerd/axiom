@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "targetRelease": {
-    "version": "0.8.14",
-    "tag": "v0.8.14",
+    "version": "0.8.15",
+    "tag": "v0.8.15",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
@@ -11,7 +11,7 @@
     {
       "host": "codex",
       "status": "not-run",
-      "reason": "The v0.8.14 bounded-review correction changes installed review routing and completion contracts and has no checked-in current Codex host, lifecycle, or bounded-review observation; fresh release-bound evidence remains external. The immutable v0.8.13 release and prior evidence remain separate."
+      "reason": "The v0.8.15 security fix changes the Codex Windows startup wrapper; no checked-in full Codex host or lifecycle observation exists. A private native Windows process-boundary regression remains separate from model-host evidence. Immutable v0.8.14 and prior evidence remain separate."
     },
     {
       "host": "claude-code",

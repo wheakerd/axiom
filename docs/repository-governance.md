@@ -4,12 +4,16 @@ This document is a dated, read-only observation of GitHub repository policy.
 It does not configure GitHub, grant authority, or replace server-side rulesets.
 A failed workflow is detection evidence, not server-side mutation prevention.
 
-Last verified (UTC): `2026-08-26`
+Last verified (UTC): `2026-08-28`
 
-Verification used authenticated read-only GitHub REST and GraphQL queries for
-the public `wheakerd/axiom` repository after the separately authorized main
-ruleset update. The verification queries changed no ruleset, branch, tag,
-release, workflow, permission, collaborator, or repository setting. The
+Verification used authenticated GitHub REST queries for the public
+`wheakerd/axiom` repository after a separately authorized two-step tag-ruleset
+migration. The migration first created and read back the active
+`restrict-release-tag-creation` ruleset while the earlier global creation freeze
+remained active, then removed only the temporary `creation` rule from the
+integrity ruleset. At least one server-side creation restriction remained active
+throughout. Follow-up verification was read-only and changed no branch, tag,
+release, workflow, permission, or collaborator. The
 [ruleset REST API](https://docs.github.com/en/rest/repos/rules),
 [ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets),
 and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
@@ -60,17 +64,35 @@ exactly `refs/tags/v*`. Its REST response reported `bypass_actors: []` and
 - `non_fast_forward`, which blocks the forced update needed to replace an
   existing Git tag.
 
+It contains no `creation` rule. Its empty bypass list applies to every
+integrity rule in this ruleset, including the required signature, required
+check, deletion, and non-fast-forward controls.
+
+The separate active ruleset `restrict-release-tag-creation` also targets
+exactly `refs/tags/v*`. It contains exactly one `creation` rule. Its only bypass
+entry is `actor_id: 78034820`, `actor_type: User`, and
+`bypass_mode: always`, which identifies the repository owner `wheakerd`; the
+owner-visible response reported `current_user_can_bypass: always`. Because the
+bypass is scoped to this creation-only ruleset, it does not bypass any rule in
+`require-github-signed-release-tags`.
+
 Together, the observed deletion and non-fast-forward rules prevent ordinary
 actors from deleting or updating an existing `v*` tag. This conclusion is
 derived from the active rule types and GitHub's documented semantics; no tag
 mutation was attempted. The empty bypass list means no bypass actor was
 observed with the write-visible response used for this verification.
 
-The ruleset has no `creation` restriction and exposes no creator allowlist.
-Actors with Git write permission may create a matching tag only when the
-signature and required-check rules are satisfied. The REST ruleset does not
-enumerate the complete effective actor roster. Release-tag creator allowlist:
-**UNAVAILABLE**.
+Only the exact bypass actor may create a matching upstream tag. Other
+contributors can continue to fork the repository, create branches and tags in
+their forks, and propose pull requests; repository write access alone does not
+authorize formal release-tag creation.
+Release-tag creator allowlist: **user `wheakerd` only**.
+
+The required status check remains commit-level evidence and may be reusable for
+the same commit independently of the event that produced it. Commit-level
+required-check evidence is defense in depth, not exact tag-creation
+authorization. The authenticated actor on the exact ref-create operation is
+the server-side creation authorization boundary.
 
 ## Pull-Request Validation And Release Provenance
 
@@ -89,7 +111,8 @@ ruleset requires both checks and accepts them only from GitHub Actions.
 `Verify GitHub-signed release target` check. The tag ruleset requires that check
 for `v*`; the workflow also verifies signed `main` history and observes later
 tag or GitHub Release events. Its event-time detection remains distinct from
-the active tag ruleset's pre-mutation deletion and force-push restrictions.
+the creation-only actor restriction and the integrity ruleset's pre-mutation
+deletion and force-push restrictions.
 
 `Publish immutable release` is a separate manually dispatched workflow. It
 accepts only one strict SemVer tag from the current `main` commit, grants only
@@ -192,8 +215,11 @@ copy tokens or full administrative API responses into the repository.
    ```
 
 4. With a repository administrator present, repeat the individual ruleset GET
-   and verify `bypass_actors`. GitHub may omit that property from a response to
-   a caller without ruleset write visibility. This remains a manual read-only
+   and verify that `require-github-signed-release-tags` has no bypass actors or
+   `creation` rule, while `restrict-release-tag-creation` has exactly one
+   `creation` rule and only the exact `User`/`always` bypass for actor
+   `78034820`. GitHub may omit bypass details from a response to a caller
+   without ruleset write visibility. This remains a manual read-only
    verification; do not grant a workflow administrative permission.
 
 5. Review `.github/CODEOWNERS` on the protected base branch, run the repository
@@ -209,9 +235,10 @@ copy tokens or full administrative API responses into the repository.
 - GitHub's legacy `branches/main/protection` endpoint returned `404 Branch not
   protected`; active protection was observed through repository rulesets and
   the effective branch-rules endpoint instead.
-- Exact collaborator membership, the effective release-tag creator roster,
-  and a destructive proof of branch or tag rejection were not collected.
-- Repository-plan capability was not inferred from documentation. The two
+- The authenticated direct-collaborator query reported only `wheakerd`. The
+  owner-visible creation ruleset reported the same user as its only bypass
+  actor. No destructive proof of branch or tag rejection was attempted.
+- Repository-plan capability was not inferred from documentation. The three
   named rulesets were directly observed as active; unavailable fields remain
   unavailable if a future plan or API response hides them.
 - No scheduled or manually dispatched governance-audit workflow was added.

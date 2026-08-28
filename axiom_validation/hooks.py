@@ -22,12 +22,17 @@ CODEX_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom. Load this startup front door before deciding "
     "whether any Axiom skill applies:'; cat \"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
-CODEX_WINDOWS_COMMAND = (
-    "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Write-Output 'You have "
-    "Axiom. Load this startup front door before deciding whether any Axiom skill "
-    "applies:'; Write-Output ''; Get-Content -Raw (Join-Path $env:PLUGIN_ROOT "
-    "'skills/using-axiom/SKILL.md')\""
+CODEX_WINDOWS_WRAPPER_PATH = Path("hooks/codex-session-start.cmd")
+CODEX_WINDOWS_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-session-start.cmd"'
+CODEX_WINDOWS_WRAPPER_TEXT = (
+    "@echo off\n"
+    "setlocal DisableDelayedExpansion\n"
+    "echo You have Axiom. Load this startup front door before deciding whether any "
+    "Axiom skill applies:\n"
+    "echo(\n"
+    'type "%~dp0..\\skills\\using-axiom\\SKILL.md"\n'
 )
+CODEX_HOOK_TIMEOUT_SECONDS = 5
 CLAUDE_SESSION_COMMAND = (
     "echo 'You have Axiom. Load this startup front door before deciding whether any "
     "Axiom skill applies:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
@@ -40,6 +45,7 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
                 "type": "command",
                 "command": CODEX_COMMAND,
                 "commandWindows": CODEX_WINDOWS_COMMAND,
+                "timeout": CODEX_HOOK_TIMEOUT_SECONDS,
                 "statusMessage": "Loading Axiom routing",
             },
         },
@@ -181,6 +187,51 @@ def check_exact_hook_shapes(
                         f"{label}[0].hooks[0].{field} changed; "
                         f"expected {qualifier}value {approved_value!r}"
                     )
+
+
+def check_codex_windows_hook_security(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> None:
+    """Pin the Windows hook to its packaged wrapper and a short timeout."""
+    document = documents.get("hooks/codex-hooks.json")
+    if not isinstance(document, dict):
+        return
+    try:
+        handler = document["hooks"]["SessionStart"][0]["hooks"][0]
+    except (KeyError, IndexError, TypeError):
+        return
+    if not isinstance(handler, dict):
+        return
+
+    label = "hooks/codex-hooks.json hooks.SessionStart[0].hooks[0]"
+    windows_command = handler.get("commandWindows")
+    if windows_command != CODEX_WINDOWS_COMMAND:
+        failures.append(
+            f"{label}.commandWindows must invoke only the approved packaged wrapper"
+        )
+
+    timeout = handler.get("timeout")
+    if type(timeout) is not int or timeout != CODEX_HOOK_TIMEOUT_SECONDS:
+        failures.append(
+            f"{label}.timeout must be exactly {CODEX_HOOK_TIMEOUT_SECONDS} seconds"
+        )
+
+    wrapper_path = REPOSITORY_ROOT / CODEX_WINDOWS_WRAPPER_PATH
+    if wrapper_path.is_symlink():
+        failures.append(
+            f"{display_path(wrapper_path)} must be a regular packaged file, not a symlink"
+        )
+        return
+    try:
+        wrapper_text = wrapper_path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(wrapper_path)}: {error}")
+        return
+    if wrapper_text != CODEX_WINDOWS_WRAPPER_TEXT:
+        failures.append(
+            f"{display_path(wrapper_path)} must contain only the approved cmd.exe "
+            "built-in wrapper"
+        )
 
 
 def hook_commands(

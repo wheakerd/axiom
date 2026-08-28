@@ -64,10 +64,12 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "The v0.8.14 bounded-review correction changes installed review routing "
-            "and completion contracts; no current Codex host usage, lifecycle "
-            "observation, or bounded-review sequence was run, and v0.8.13 plus "
-            "prior observations remain separate history."
+            "The v0.8.15 security hardening changes the installed Codex Windows "
+            "startup wrapper; no current Codex host usage or full lifecycle "
+            "observation was run, and v0.8.14 plus prior observations remain "
+            "separate history. The exact wrapper bytes passed a private native "
+            "Windows process-boundary regression and remain separate from model-host "
+            "evidence."
         ),
     },
     "claude-code": {

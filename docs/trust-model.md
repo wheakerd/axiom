@@ -29,9 +29,13 @@ message, and read `skills/using-axiom/SKILL.md`. The exact commands appear in
 [README: Inspect The Hooks](../README.md#inspect-the-hooks).
 
 The command surface is deliberately small: POSIX handlers use `printf` or
-`echo` plus `cat`; the Codex Windows handler uses PowerShell output plus
-`Get-Content`. There is no redirection, write, network command, background
-launch, service installation, or updater in those definitions.
+`echo` plus `cat`; the Codex Windows handler invokes a fixed wrapper below the
+host-provided plugin root. That wrapper uses only the command shell's built-in
+`echo`, `setlocal`, and `type` operations, and the handler has a five-second
+timeout. It does not ask the workspace working directory or `PATH` to resolve a
+second interpreter or executable. There is no redirection, write, network
+command, background launch, service installation, or updater in those
+definitions.
 
 This claim applies to the checked-in files. The installed definition is a
 separate trust decision. If `/hooks` shows another path or any additional
