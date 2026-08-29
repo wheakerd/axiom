@@ -541,16 +541,25 @@ required read-only checks on the proposed merge tree: `repository-guards` for
 package and publication policy, and `unit-and-integration-tests` for the
 complete unittest suite. A separate read-only native hook workflow also runs
 `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
-`hook-runtime-macos-15` from the exact checked-in SessionStart command strings.
-All three workflows grant only `contents: read`, reference no repository
-secret, and check out with `persist-credentials: false`; they do not require the
-contributor head to be GitHub-signed or hosted in this repository. The active
-main ruleset requires only the two existing checks in strict mode while the
-native matrix has an initial stability-observation period, so runner-specific
-failures do not yet block contributor branches or forks. These results validate
-a proposed tree only. Release provenance is established separately for
-protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
-Releases.
+`hook-runtime-macos-15` from the exact checked-in SessionStart command strings,
+then exposes the stable `hook-runtime-gate` aggregate. The aggregate always
+evaluates after the complete matrix and succeeds only when that current-run
+matrix result is successful; it does not enumerate platform names, check out
+the repository, receive a secret, or mutate repository state. The workflow
+also runs weekly at 06:17 UTC each Monday as compatibility-drift evidence.
+
+All three pull-request workflows grant only `contents: read`, reference no
+repository secret, and check out with `persist-credentials: false`; they do not
+require the contributor head to be GitHub-signed or hosted in this repository.
+The active main ruleset still requires only the two existing checks in strict
+mode. Promotion of `hook-runtime-gate` requires 30 consecutive successful
+`main` push runs spanning at least 14 days, stable check names, no unresolved
+runner-specific or scheduled failure, an observed successful aggregate on
+`main`, and a successful fork path when one is available. Current evidence does
+not satisfy that threshold, so runner-specific failures remain review evidence
+instead of a server-side merge block. These results validate a proposed tree
+only. Release provenance is established separately for protected `main`,
+immutable `v*` tags, bounded release candidates, and GitHub Releases.
 
 The v0.8.20 migration restricts formal upstream `v*` creation to the dedicated
 `axiom-release-tag-controller` GitHub App. The former owner-user bypass is

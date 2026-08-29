@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "17 6 * * 1"
 
 permissions:
   contents: read
@@ -45,3 +47,16 @@ jobs:
 
       - name: Execute exact SessionStart hooks
         run: python -B -m unittest tests.hook_runtime_integration -v
+
+  hook-runtime-gate:
+    name: hook-runtime-gate
+    if: ${{ always() }}
+    needs:
+      - hook-runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require successful native matrix
+        env:
+          HOOK_RUNTIME_RESULT: ${{ needs.hook-runtime.result }}
+        run: test "$HOOK_RUNTIME_RESULT" = success

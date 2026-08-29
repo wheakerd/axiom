@@ -28,7 +28,7 @@ class ActionGraphTests(unittest.TestCase):
         self.assertIsNotNone(hook_runtime_document)
         self.assertEqual([], failures)
 
-    def test_hook_runtime_workflow_matrix_and_security_mutations_are_rejected(self):
+    def test_hook_runtime_workflow_gate_matrix_and_security_mutations_are_rejected(self):
         path = (
             REPOSITORY_ROOT
             / ".github"
@@ -45,7 +45,7 @@ class ActionGraphTests(unittest.TestCase):
             (
                 "pull request target",
                 original.replace("pull_request:", "pull_request_target:", 1),
-                "only pull_request and push",
+                "forbidden pull-request surface",
             ),
             (
                 "moving Windows runner",
@@ -69,6 +69,51 @@ class ActionGraphTests(unittest.TestCase):
                     1,
                 ),
                 "Execute exact SessionStart hooks",
+            ),
+            (
+                "missing weekly observation",
+                original.replace(
+                    '  schedule:\n    - cron: "17 6 * * 1"\n',
+                    "",
+                    1,
+                ),
+                "bounded weekly schedule",
+            ),
+            (
+                "renamed aggregate job",
+                original.replace(
+                    "  hook-runtime-gate:\n",
+                    "  renamed-runtime-gate:\n",
+                    1,
+                ),
+                "only hook-runtime and hook-runtime-gate jobs",
+            ),
+            (
+                "conditional aggregate job",
+                original.replace(
+                    "if: ${{ always() }}",
+                    "if: ${{ success() }}",
+                    1,
+                ),
+                "use if: always()",
+            ),
+            (
+                "aggregate ignores matrix",
+                original.replace(
+                    "      - hook-runtime\n",
+                    "      - repository-guards\n",
+                    1,
+                ),
+                "depend only on the full hook-runtime matrix",
+            ),
+            (
+                "aggregate accepts failure",
+                original.replace(
+                    'test "$HOOK_RUNTIME_RESULT" = success',
+                    'test "$HOOK_RUNTIME_RESULT" != success',
+                    1,
+                ),
+                "fail closed",
             ),
         )
         for name, mutated, owned_reason in scenarios:

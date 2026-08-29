@@ -235,6 +235,31 @@ class RepositoryPolicyTests(unittest.TestCase):
             failures,
         )
 
+    def test_repository_governance_rejects_weakened_hook_runtime_promotion(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        mutated = governance.replace(
+            "at least 30 consecutive completed `push` runs on `main`",
+            "at least 3 consecutive completed `push` runs on `main`",
+            1,
+        )
+        self.assertNotEqual(governance, mutated)
+
+        failures = []
+        check_repository_governance_documents(mutated, codeowners, failures)
+        self.assertTrue(
+            any(
+                "Hook Runtime Promotion Gate" in failure
+                and "30 consecutive" in failure
+                for failure in failures
+            ),
+            failures,
+        )
+
     def test_external_action_fixtures(self):
         failures = []
         self.assertEqual(155, check_external_action_scenarios(failures))

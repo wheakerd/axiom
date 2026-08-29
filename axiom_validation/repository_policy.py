@@ -177,6 +177,18 @@ GOVERNANCE_SNAPSHOT_FORBIDDEN = (
     "The ruleset has no `creation` restriction and exposes no creator allowlist.",
     "Release-tag creator allowlist: **UNAVAILABLE**",
 )
+HOOK_RUNTIME_PROMOTION_HEADING = "### Hook Runtime Promotion Gate"
+HOOK_RUNTIME_PROMOTION_ANCHORS = (
+    "`hook-runtime-gate`. It uses `if: always()`, depends on the complete "
+    "`hook-runtime` matrix job",
+    "accepts only the current workflow run's `needs.hook-runtime.result == success`",
+    "at least 30 consecutive completed `push` runs on `main`",
+    "the interval from the first qualifying run to the last is at least 14 full days",
+    "there is no unresolved runner-specific false failure or scheduled compatibility failure",
+    "when an eligible fork pull request is available during the observation period",
+    "The observation gate is therefore **NOT SATISFIED**.",
+    "`hook-runtime-gate` must not be promoted from this evidence.",
+)
 RELEASE_TAG_POLICY_ANCHORS = (
     "The active repository ruleset `require-github-signed-release-tags` targets "
     "exactly `refs/tags/v*`. The administrator-visible REST response for ruleset "
@@ -269,8 +281,8 @@ GOVERNANCE_REVIEW_BOUNDARY_ANCHORS = (
     "permission, or required check.",
     "The external contribution flow and merge gates therefore remain unchanged: "
     "`repository-guards` and `unit-and-integration-tests` remain the only required "
-    "checks, and the three hook-runtime matrix checks remain non-required review "
-    "evidence.",
+    "checks, and the three hook-runtime matrix checks plus `hook-runtime-gate` "
+    "remain non-required review evidence.",
 )
 GOVERNANCE_REVIEW_BOUNDARY_FORBIDDEN = (
     "`Path A: enforce independent review` is the selected policy for this snapshot.",
@@ -479,6 +491,24 @@ def check_repository_governance_documents(
                 failures.append(
                     "docs/repository-governance.md Release Tag Controller Migration "
                     f"is missing scoped anchor {anchor!r}"
+                )
+
+    hook_runtime_heading = HOOK_RUNTIME_PROMOTION_HEADING
+    if governance_text.count(hook_runtime_heading) != 1:
+        failures.append(
+            "docs/repository-governance.md must contain exactly one Hook Runtime "
+            "Promotion Gate section"
+        )
+    else:
+        hook_runtime_section = governance_text.split(hook_runtime_heading, 1)[1].split(
+            "\n## ", 1
+        )[0]
+        normalized_hook_runtime_section = " ".join(hook_runtime_section.split())
+        for anchor in HOOK_RUNTIME_PROMOTION_ANCHORS:
+            if " ".join(anchor.split()) not in normalized_hook_runtime_section:
+                failures.append(
+                    "docs/repository-governance.md Hook Runtime Promotion Gate is "
+                    f"missing scoped anchor {anchor!r}"
                 )
 
     review_heading = GOVERNANCE_REVIEW_BOUNDARY_HEADING
