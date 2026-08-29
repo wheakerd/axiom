@@ -552,15 +552,12 @@ a proposed tree only. Release provenance is established separately for
 protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
 Releases.
 
-The dated live snapshot still restricts formal upstream `v*` creation through
-a creation-only ruleset whose bypass actor is the repository owner. The
-v0.8.20 migration target replaces that normal user bypass with one dedicated
-GitHub App and keeps the App out of the separate signature, required-check,
+The v0.8.20 migration restricts formal upstream `v*` creation to the dedicated
+`axiom-release-tag-controller` GitHub App. The former owner-user bypass is
+absent, and the App cannot bypass the separate signature, required-check,
 deletion, and non-fast-forward ruleset. Fork contributions and pull requests
-remain unchanged. The checked-in controller rejects the current live owner
-bypass and old overloaded check context, so it cannot create a tag until the
-App, environment values, and both rulesets are separately configured and read
-back.
+remain unchanged. The administrator-visible ruleset IDs, update instants, and
+actor arrays were read back after migration.
 
 `Create protected release tag` runs only by manual dispatch on current
 protected `main`. It binds the version, tag, commit, tree, both manifests,
@@ -569,7 +566,12 @@ identity, and all live rulesets. It rereads the complete state immediately
 before one exact `POST /git/refs`, then reads the created ref back. It never
 updates or deletes a tag, never retries an uncertain mutation, and never
 receives pull-request code. Its App token is repository-scoped and requests
-only `administration: read` and `contents: write`.
+only `administration: read` and `contents: write`. GitHub omits the bypass actor
+property from that read-only token, so the controller binds the reviewed ruleset
+IDs and server update instants and requires the App's effective bypass states
+to remain `never`, `never`, and `always` for main, tag integrity, and tag
+creation. Any ruleset edit fails before mutation without granting ruleset-write
+permission to the workflow.
 
 `Release signature guard` assigns distinct stable contexts: `Verify signed
 main history`, `Verify release candidate`, `Verify created release tag`, and

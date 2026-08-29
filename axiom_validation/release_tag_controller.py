@@ -9,6 +9,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Protocol
 
 from .context import REPOSITORY_ROOT, display_path
@@ -21,6 +22,11 @@ GITHUB_ACTIONS_APP_ID = 15368
 MAIN_RULESET = "require-signed-commits-on-main"
 INTEGRITY_RULESET = "require-github-signed-release-tags"
 CREATION_RULESET = "restrict-release-tag-creation"
+RULESET_BINDINGS = {
+    MAIN_RULESET: (20677005, "2026-08-26T04:46:04.609Z"),
+    INTEGRITY_RULESET: (20724385, "2026-08-29T01:53:08.312Z"),
+    CREATION_RULESET: (21703772, "2026-08-29T01:52:49.941Z"),
+}
 MAIN_REQUIRED_CHECKS = ("repository-guards", "unit-and-integration-tests")
 SIGNED_MAIN_CHECK = "Verify signed main history"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
@@ -179,6 +185,22 @@ def _quoted(value: str) -> str:
     return urllib.parse.quote(value, safe="")
 
 
+def _canonical_timestamp(value: Any, label: str) -> str:
+    if type(value) is not str:
+        raise ControllerError(f"{label} must be one ISO 8601 timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ControllerError(f"{label} must be one ISO 8601 timestamp") from error
+    if parsed.tzinfo is None:
+        raise ControllerError(f"{label} must include a UTC offset")
+    return (
+        parsed.astimezone(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
+
+
 def _decode_manifest_version(document: Any, path: str) -> str:
     content = _require_object(document, path)
     if (
@@ -294,8 +316,12 @@ def _validate_main_ruleset(ruleset: dict[str, Any], request: ReleaseTagRequest) 
         "required_status_checks": expected_checks,
     }:
         raise ControllerError(f"{MAIN_RULESET} required checks drifted")
-    if ruleset.get("bypass_actors") != [] or ruleset.get("current_user_can_bypass") != "never":
-        raise ControllerError(f"{MAIN_RULESET} must have no bypass actor")
+    if "bypass_actors" in ruleset:
+        raise ControllerError(
+            f"{MAIN_RULESET}.bypass_actors must remain omitted for the read-only release App"
+        )
+    if ruleset.get("current_user_can_bypass") != "never":
+        raise ControllerError(f"the release App must not bypass {MAIN_RULESET}")
 
 
 def _validate_integrity_ruleset(ruleset: dict[str, Any], request: ReleaseTagRequest) -> None:
@@ -327,8 +353,12 @@ def _validate_integrity_ruleset(ruleset: dict[str, Any], request: ReleaseTagRequ
         raise ControllerError(
             f"{INTEGRITY_RULESET} must require only {SIGNED_MAIN_CHECK!r}"
         )
-    if ruleset.get("bypass_actors") != [] or ruleset.get("current_user_can_bypass") != "never":
-        raise ControllerError(f"{INTEGRITY_RULESET} must retain no bypass actor")
+    if "bypass_actors" in ruleset:
+        raise ControllerError(
+            f"{INTEGRITY_RULESET}.bypass_actors must remain omitted for the read-only release App"
+        )
+    if ruleset.get("current_user_can_bypass") != "never":
+        raise ControllerError(f"the release App must not bypass {INTEGRITY_RULESET}")
 
 
 def _validate_creation_ruleset(ruleset: dict[str, Any], request: ReleaseTagRequest) -> None:
@@ -337,14 +367,9 @@ def _validate_creation_ruleset(ruleset: dict[str, Any], request: ReleaseTagReque
     if set(rules) != {"creation"}:
         raise ControllerError(f"{CREATION_RULESET} must contain only the creation rule")
     _require_rule_shape(rules["creation"], "tag creation", parameterized=False)
-    expected_actor = [{
-        "actor_id": request.expected_app_id,
-        "actor_type": "Integration",
-        "bypass_mode": "always",
-    }]
-    if ruleset.get("bypass_actors") != expected_actor:
+    if "bypass_actors" in ruleset:
         raise ControllerError(
-            f"{CREATION_RULESET} must bypass only the dedicated release GitHub App"
+            f"{CREATION_RULESET}.bypass_actors must remain omitted for the read-only release App"
         )
     if ruleset.get("current_user_can_bypass") != "always":
         raise ControllerError(
@@ -379,7 +404,7 @@ def _load_named_rulesets(
         admin.get(f"/repos/{request.repository}/rulesets?includes_parents=true&per_page=100"),
         "ruleset index",
     )
-    expected_names = {MAIN_RULESET, INTEGRITY_RULESET, CREATION_RULESET}
+    expected_names = set(RULESET_BINDINGS)
     ids: dict[str, int] = {}
     for item in index:
         summary = _require_object(item, "ruleset summary")
@@ -395,6 +420,11 @@ def _load_named_rulesets(
     if set(ids) != expected_names:
         missing = ", ".join(sorted(expected_names - set(ids)))
         raise ControllerError(f"live ruleset index is missing: {missing}")
+    expected_ids = {
+        name: identifier for name, (identifier, _) in RULESET_BINDINGS.items()
+    }
+    if ids != expected_ids:
+        raise ControllerError("live ruleset IDs drifted from the reviewed migration snapshot")
     detailed: dict[str, dict[str, Any]] = {}
     for name, identifier in ids.items():
         ruleset = _require_object(
@@ -405,6 +435,14 @@ def _load_named_rulesets(
         )
         if ruleset.get("id") != identifier:
             raise ControllerError(f"ruleset {name!r} changed identity during read-back")
+        expected_updated_at = RULESET_BINDINGS[name][1]
+        observed_updated_at = _canonical_timestamp(
+            ruleset.get("updated_at"), f"ruleset {name}.updated_at"
+        )
+        if observed_updated_at != expected_updated_at:
+            raise ControllerError(
+                f"ruleset {name!r} changed after the reviewed migration snapshot"
+            )
         detailed[name] = ruleset
     return detailed
 

@@ -117,7 +117,7 @@ AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/evaluation-and-evidence.md",
     "references/validation-reporting.md",
 )
-GOVERNANCE_VERIFIED_DATE = "2026-08-28"
+GOVERNANCE_VERIFIED_DATE = "2026-08-29"
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
@@ -140,7 +140,7 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     "`restrict-release-tag-creation`",
     "`refs/heads/main`",
     "`refs/tags/v*`",
-    "`Verify GitHub-signed release target`",
+    "`Verify signed main history`",
     "`repository-guards`",
     "`unit-and-integration-tests`",
     "`integration_id: 15368`",
@@ -153,14 +153,18 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     "`do_not_enforce_on_create: false`",
     "`bypass_actors: []`",
     "`current_user_can_bypass: never`",
-    "`actor_id: 78034820`",
-    "`actor_type: User`",
+    "`actor_id: 4756785`",
+    "`actor_type: Integration`",
     "`bypass_mode: always`",
-    "`current_user_can_bypass: always`",
+    "must omit the `bypass_actors` property",
+    "`20677005`",
+    "`20724385`",
+    "`21703772`",
     "Required checks on `main`: `repository-guards` and "
     "`unit-and-integration-tests`",
     "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
-    "Release-tag creator allowlist: **user `wheakerd` only**",
+    "Release-tag creator allowlist: **GitHub App "
+    "`axiom-release-tag-controller` only**",
     "Commit-level required-check evidence is defense in depth, not exact "
     "tag-creation authorization.",
     "A failed workflow is detection evidence, not server-side mutation prevention.",
@@ -175,35 +179,36 @@ GOVERNANCE_SNAPSHOT_FORBIDDEN = (
 )
 RELEASE_TAG_POLICY_ANCHORS = (
     "The active repository ruleset `require-github-signed-release-tags` targets "
-    "exactly `refs/tags/v*`. Its REST response reported `bypass_actors: []` and "
-    "`current_user_can_bypass: never`.",
+    "exactly `refs/tags/v*`. The administrator-visible REST response for ruleset "
+    "`20724385`, updated at `2026-08-29T01:53:08.312Z`, reported "
+    "`bypass_actors: []` and `current_user_can_bypass: never`.",
     "It contains no `creation` rule. Its empty bypass list applies to every "
     "integrity rule in this ruleset, including the required signature, required "
     "check, deletion, and non-fast-forward controls.",
     "The separate active ruleset `restrict-release-tag-creation` also targets "
-    "exactly `refs/tags/v*`. It contains exactly one `creation` rule. Its only "
-    "bypass entry is `actor_id: 78034820`, `actor_type: User`, and "
-    "`bypass_mode: always`, which identifies the repository owner `wheakerd`; "
-    "the owner-visible response reported `current_user_can_bypass: always`.",
-    "Because the bypass is scoped to this creation-only ruleset, it does not "
+    "exactly `refs/tags/v*`. Ruleset `21703772`, updated at "
+    "`2026-08-29T01:52:49.941Z`, contains exactly one `creation` rule.",
+    "Its only administrator-visible bypass entry is `actor_id: 4756785`, "
+    "`actor_type: Integration`, and `bypass_mode: always`, which identifies the "
+    "dedicated `axiom-release-tag-controller` GitHub App.",
+    "Because the App bypass is scoped to this creation-only ruleset, it does not "
     "bypass any rule in `require-github-signed-release-tags`.",
-    "Release-tag creator allowlist: **user `wheakerd` only**.",
+    "Release-tag creator allowlist: **GitHub App "
+    "`axiom-release-tag-controller` only**.",
     "Commit-level required-check evidence is defense in depth, not exact "
     "tag-creation authorization.",
 )
 RELEASE_TAG_CONTROLLER_HEADING = "## Release Tag Controller Migration"
 RELEASE_TAG_CONTROLLER_ANCHORS = (
-    "The checked-in v0.8.20 candidate adds `Create protected release tag` as the "
-    "normal pre-creation controller.",
-    "This dated document does not claim that its dedicated GitHub App, Actions "
-    "environment, secrets, variables, or ruleset migration already exists on GitHub.",
-    "The controller intentionally rejects that state before mutation.",
-    "The migration target has one dedicated GitHub App as the only `Integration` / "
-    "`always` bypass actor in `restrict-release-tag-creation`.",
-    "The same App is absent from every bypass entry in "
-    "`require-github-signed-release-tags`, whose required check becomes "
-    "`Verify signed main history` from GitHub Actions.",
-    "A break-glass operation is a separately authorized, audited ruleset change; "
+    "The v0.8.20 migration registered GitHub App ID `4756785` with slug "
+    "`axiom-release-tag-controller`, installed it only on `wheakerd/axiom`, and "
+    "created the `release-tag-creation` Actions environment.",
+    "The administrator read-back above confirms that the App is the only "
+    "`Integration` / `always` bypass actor in `restrict-release-tag-creation`, "
+    "the former owner-user bypass is absent, and "
+    "`require-github-signed-release-tags` has no bypass actor and requires only "
+    "`Verify signed main history`.",
+    "A break-glass operation remains a separately authorized, audited ruleset change; "
     "no permanent interactive-user bypass is retained merely for convenience.",
     "The `release-tag-creation` Actions environment owns "
     "`AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric "
@@ -216,11 +221,17 @@ RELEASE_TAG_CONTROLLER_ANCHORS = (
     "creates only the exact absent tag, and immediately reads the ref back.",
     "An uncertain response is read back once and reported as a failure without retry; "
     "a rerun rejects the existing ref with zero mutation.",
+    "GitHub returns `bypass_actors` only to a caller with ruleset write access.",
+    "It binds ruleset IDs `20677005`, `20724385`, and `21703772` plus their "
+    "normalized server update instants to the reviewed administrator-visible snapshot",
+    "Any actor or rule edit changes the server-owned update instant and fails before "
+    "tag mutation; no workflow receives ruleset-write permission",
     "`Verify signed main history`, `Verify release candidate`, "
     "`Verify created release tag`, and `Observe published immutable release`.",
     "The controller accepts only the exact current `main` SHA and the main-history "
     "context, so a candidate result cannot authorize production tag creation.",
-    "v0.8.20 tag creation remains intentionally blocked.",
+    "At this dated snapshot `v0.8.20` remained absent after fail-closed controller "
+    "refusals",
 )
 GOVERNANCE_REVIEW_BOUNDARY_HEADING = "## Human Review Trust Boundary"
 GOVERNANCE_REVIEW_BOUNDARY_ANCHORS = (

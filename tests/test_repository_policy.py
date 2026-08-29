@@ -84,7 +84,8 @@ class RepositoryPolicyTests(unittest.TestCase):
             encoding="utf-8"
         )
         mutated = governance.replace(
-            "Release-tag creator allowlist: **user `wheakerd` only**",
+            "Release-tag creator allowlist: **GitHub App "
+            "`axiom-release-tag-controller` only**",
             "Release-tag creator allowlist: **UNAVAILABLE**",
             1,
         )

@@ -288,8 +288,9 @@ Use this safe release sequence:
    one dedicated release GitHub App with repository administration read and
    contents write only. Configure `AXIOM_RELEASE_APP_CLIENT_ID`, numeric
    `AXIOM_RELEASE_APP_ID`, and `AXIOM_RELEASE_APP_PRIVATE_KEY` only in the
-   `release-tag-creation` Actions environment. This repository-only candidate
-   does not claim those external effects.
+   `release-tag-creation` Actions environment. The v0.8.20 migration directly
+   observed App ID `4756785`, installation ID `157389529`, and exact
+   `wheakerd/axiom` repository scope without reading back the private key.
 6. Preserve the active creation restriction while replacing its normal bypass:
    add the exact App `Integration` / `always` actor, read it back, remove the
    owner `User` bypass, and read it back again. Separately change only the
@@ -300,8 +301,11 @@ Use this safe release sequence:
    visible, current `main`, and its latest checks. Require the creation-only
    ruleset to have exactly the App bypass, the integrity ruleset to have no
    bypass, and `Verify signed main history`, `repository-guards`, and
-   `unit-and-integration-tests` to pass on the exact merged SHA. Stop on any
-   missing field or drift.
+   `unit-and-integration-tests` to pass on the exact merged SHA. Bind the three
+   administrator-verified ruleset IDs and normalized server update instants.
+   The read-only App view must omit `bypass_actors` and report effective
+   bypass states `never`, `never`, and `always`; stop on any missing field or
+   drift without granting ruleset-write permission.
 8. Dispatch `Create protected release tag` on `refs/heads/main` with
    `version=0.8.20` and `tag=v0.8.20`. The controller binds the exact version,
    tag, commit, tree, manifests, checks, signature, absence state, App identity,

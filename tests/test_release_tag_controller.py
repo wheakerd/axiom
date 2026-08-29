@@ -18,6 +18,7 @@ from axiom_validation.release_tag_controller import (
     INTEGRITY_RULESET,
     MAIN_REQUIRED_CHECKS,
     MAIN_RULESET,
+    RULESET_BINDINGS,
     SIGNED_MAIN_CHECK,
     ControllerError,
     GitHubRequestError,
@@ -69,11 +70,11 @@ class FixtureRepository:
             "source_type": "Repository",
             "source": REPOSITORY,
             "enforcement": "active",
-            "updated_at": "2026-08-28T18:00:00Z",
         }
         main = {
             **envelope,
-            "id": 1,
+            "id": RULESET_BINDINGS[MAIN_RULESET][0],
+            "updated_at": RULESET_BINDINGS[MAIN_RULESET][1],
             "name": MAIN_RULESET,
             "target": "branch",
             "conditions": {
@@ -107,12 +108,12 @@ class FixtureRepository:
                     },
                 },
             ],
-            "bypass_actors": [],
             "current_user_can_bypass": "never",
         }
         integrity = {
             **envelope,
-            "id": 2,
+            "id": RULESET_BINDINGS[INTEGRITY_RULESET][0],
+            "updated_at": RULESET_BINDINGS[INTEGRITY_RULESET][1],
             "name": INTEGRITY_RULESET,
             "target": "tag",
             "conditions": {
@@ -136,25 +137,18 @@ class FixtureRepository:
                 {"type": "deletion"},
                 {"type": "non_fast_forward"},
             ],
-            "bypass_actors": [],
             "current_user_can_bypass": "never",
         }
         creation = {
             **envelope,
-            "id": 3,
+            "id": RULESET_BINDINGS[CREATION_RULESET][0],
+            "updated_at": RULESET_BINDINGS[CREATION_RULESET][1],
             "name": CREATION_RULESET,
             "target": "tag",
             "conditions": {
                 "ref_name": {"exclude": [], "include": ["refs/tags/v*"]}
             },
             "rules": [{"type": "creation"}],
-            "bypass_actors": [
-                {
-                    "actor_id": APP_ID,
-                    "actor_type": "Integration",
-                    "bypass_mode": "always",
-                }
-            ],
             "current_user_can_bypass": "always",
         }
         return {MAIN_RULESET: main, INTEGRITY_RULESET: integrity, CREATION_RULESET: creation}
@@ -528,32 +522,42 @@ class ReleaseTagControllerTests(unittest.TestCase):
 
     def test_creation_app_cannot_bypass_integrity_rules(self):
         fixture = FixtureRepository()
-        fixture.rulesets[INTEGRITY_RULESET]["bypass_actors"] = [
-            {
-                "actor_id": APP_ID,
-                "actor_type": "Integration",
-                "bypass_mode": "always",
-            }
-        ]
         fixture.rulesets[INTEGRITY_RULESET]["current_user_can_bypass"] = "always"
         api = FixtureApi(fixture)
-        with self.assertRaisesRegex(ControllerError, "must retain no bypass actor"):
+        with self.assertRaisesRegex(ControllerError, "must not bypass"):
             run_controller(
                 api, api, fixture.request(), fixture.app_identity()
             )
         self.assertEqual(0, fixture.mutation_attempts)
 
-    def test_owner_user_bypass_is_rejected(self):
-        fixture = FixtureRepository()
-        fixture.rulesets[CREATION_RULESET]["bypass_actors"] = [
-            {"actor_id": 78034820, "actor_type": "User", "bypass_mode": "always"}
-        ]
-        api = FixtureApi(fixture)
-        with self.assertRaisesRegex(ControllerError, "dedicated release GitHub App"):
-            run_controller(
-                api, api, fixture.request(), fixture.app_identity()
-            )
-        self.assertEqual(0, fixture.mutation_attempts)
+    def test_ruleset_snapshot_or_visibility_drift_is_rejected(self):
+        for mutation, message in (
+            (
+                lambda ruleset: ruleset.__setitem__(
+                    "id", RULESET_BINDINGS[CREATION_RULESET][0] + 1
+                ),
+                "ruleset IDs drifted",
+            ),
+            (
+                lambda ruleset: ruleset.__setitem__("bypass_actors", []),
+                "must remain omitted",
+            ),
+            (
+                lambda ruleset: ruleset.__setitem__(
+                    "updated_at", "2026-08-29T01:52:50.000Z"
+                ),
+                "changed after the reviewed migration snapshot",
+            ),
+        ):
+            with self.subTest(message=message):
+                fixture = FixtureRepository()
+                mutation(fixture.rulesets[CREATION_RULESET])
+                api = FixtureApi(fixture)
+                with self.assertRaisesRegex(ControllerError, message):
+                    run_controller(
+                        api, api, fixture.request(), fixture.app_identity()
+                    )
+                self.assertEqual(0, fixture.mutation_attempts)
 
     def test_old_shared_integrity_context_is_rejected(self):
         fixture = FixtureRepository()
