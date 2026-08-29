@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   repository-guards:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Check out repository
@@ -22,8 +22,26 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+          package-manager-cache: false
+
+      - name: Report canonical environment
+        run: |
+          cat /etc/os-release
+          python --version
+          node --version
+          git --version
+
       - name: Check distribution agreement
-        run: python3 scripts/check-distribution-drift.py
+        run: python -B scripts/check-distribution-drift.py
 
       - name: Check publication invariants
-        run: python3 scripts/check-publication.py
+        run: python -B scripts/check-publication.py
