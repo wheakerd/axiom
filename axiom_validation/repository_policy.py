@@ -177,6 +177,19 @@ GOVERNANCE_SNAPSHOT_FORBIDDEN = (
     "The ruleset has no `creation` restriction and exposes no creator allowlist.",
     "Release-tag creator allowlist: **UNAVAILABLE**",
 )
+REPOSITORY_GUARDS_ENVIRONMENT_HEADING = "### Repository Guards Canonical Environment"
+REPOSITORY_GUARDS_ENVIRONMENT_ANCHORS = (
+    "pins the required `repository-guards` job to the exact `ubuntu-24.04` runner",
+    "Python `3.14.7` and Node.js `24.19.0`",
+    "`package-manager-cache: false` setting keeps package-manager caching disabled",
+    "`python -B scripts/check-distribution-drift.py` and "
+    "`python -B scripts/check-publication.py`",
+    "Fork pull requests use ordinary `pull_request`, receive only `contents: read`, "
+    "and receive no repository secret",
+    "No moving `ubuntu-latest` compatibility canary is currently defined",
+    "without reviewed ownership, cadence, failure triage, and runner-upgrade criteria",
+    "never be described as release provenance or installed-host evidence",
+)
 HOOK_RUNTIME_PROMOTION_HEADING = "### Hook Runtime Promotion Gate"
 HOOK_RUNTIME_PROMOTION_ANCHORS = (
     "`hook-runtime-gate`. It uses `if: always()`, depends on the complete "
@@ -457,6 +470,26 @@ def check_repository_governance_documents(
                 "docs/repository-governance.md retains stale governance claim "
                 f"{stale_claim!r}"
             )
+
+    repository_guards_heading = REPOSITORY_GUARDS_ENVIRONMENT_HEADING
+    if governance_text.count(repository_guards_heading) != 1:
+        failures.append(
+            "docs/repository-governance.md must contain exactly one Repository "
+            "Guards Canonical Environment section"
+        )
+    else:
+        repository_guards_section = governance_text.split(
+            repository_guards_heading, 1
+        )[1].split("\n## ", 1)[0]
+        normalized_repository_guards_section = " ".join(
+            repository_guards_section.split()
+        )
+        for anchor in REPOSITORY_GUARDS_ENVIRONMENT_ANCHORS:
+            if " ".join(anchor.split()) not in normalized_repository_guards_section:
+                failures.append(
+                    "docs/repository-governance.md Repository Guards Canonical "
+                    f"Environment is missing scoped anchor {anchor!r}"
+                )
 
     release_heading = "## Release Tag Policy"
     if governance_text.count(release_heading) != 1:

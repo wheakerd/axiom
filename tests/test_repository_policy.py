@@ -57,6 +57,31 @@ class RepositoryPolicyTests(unittest.TestCase):
             failures,
         )
 
+    def test_repository_governance_rejects_required_guard_environment_drift(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        mutated = governance.replace(
+            "exact `ubuntu-24.04` runner",
+            "moving `ubuntu-latest` runner",
+            1,
+        )
+        self.assertNotEqual(governance, mutated)
+
+        failures = []
+        check_repository_governance_documents(mutated, codeowners, failures)
+        self.assertTrue(
+            any(
+                "Repository Guards Canonical Environment" in failure
+                and "ubuntu-24.04" in failure
+                for failure in failures
+            ),
+            failures,
+        )
+
     def test_repository_governance_rejects_a_later_owner_override(self):
         governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
             encoding="utf-8"
