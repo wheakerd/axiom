@@ -94,6 +94,56 @@ required-check evidence is defense in depth, not exact tag-creation
 authorization. The authenticated actor on the exact ref-create operation is
 the server-side creation authorization boundary.
 
+## Release Tag Controller Migration
+
+The checked-in v0.8.20 candidate adds `Create protected release tag` as the
+normal pre-creation controller. This dated document does not claim that its
+dedicated GitHub App, Actions environment, secrets, variables, or ruleset
+migration already exists on GitHub. The live read-back above remains the
+current evidence: the creation-only bypass is still the owner user and the
+integrity ruleset still requires the overloaded
+`Verify GitHub-signed release target` context. The controller intentionally
+rejects that state before mutation.
+
+The migration target has one dedicated GitHub App as the only `Integration` /
+`always` bypass actor in `restrict-release-tag-creation`. The owner-user bypass
+is removed from normal operation. The same App is absent from every bypass
+entry in `require-github-signed-release-tags`, whose required check becomes
+`Verify signed main history` from GitHub Actions. A break-glass operation is a
+separately authorized, audited ruleset change; no permanent interactive-user
+bypass is retained merely for convenience.
+
+The `release-tag-creation` Actions environment owns
+`AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric
+`AXIOM_RELEASE_APP_ID`. The workflow runs only when manually dispatched on
+`refs/heads/main`. Its ordinary `GITHUB_TOKEN` has only `contents: read` and
+`checks: read`. The minted App token is scoped to this repository and requests
+only `administration: read` plus `contents: write`; administration write is not
+granted. Pull-request code never receives the private key or App token.
+
+Before one exact `POST /git/refs`, the controller binds the requested version
+and tag, live protected-main commit and tree, both manifest versions, the two
+main ruleset checks, `Verify signed main history`, REST and GraphQL GitHub-made
+signature evidence, tag and Release absence, App installation identity and
+repository scope, and all three live rulesets. It performs the same complete
+read a second time, rejects any difference, creates only the exact absent tag,
+and immediately reads the ref back. It has no update or delete operation. An
+uncertain response is read back once and reported as a failure without retry;
+a rerun rejects the existing ref with zero mutation.
+
+The checked-in `Release signature guard` assigns distinct stable check names:
+`Verify signed main history`, `Verify release candidate`,
+`Verify created release tag`, and `Observe published immutable release`.
+`release/v<version>` runs can produce candidate evidence only. The controller
+accepts only the exact current `main` SHA and the main-history context, so a
+candidate result cannot authorize production tag creation.
+
+Until the dedicated App is installed, its environment values are configured,
+the owner-user bypass is replaced, the integrity context is migrated, and all
+of those live objects are read back, v0.8.20 tag creation remains intentionally
+blocked. Repository code, tests, and documentation alone cannot establish that
+external state.
+
 ## Production Release Version Policy
 
 Axiom production releases use stable numeric `MAJOR.MINOR.PATCH` versions.
@@ -144,14 +194,22 @@ fork while runner stability is being established. Only `repository-guards`
 and `unit-and-integration-tests` are server-side merge requirements in this
 dated snapshot; a future ruleset change requires separate live verification.
 
-`Release signature guard` produces the exact
-`Verify GitHub-signed release target` check. The tag ruleset requires that check
-for `v*`; the workflow also verifies signed `main` history and observes later
-tag or GitHub Release events. A manual `release/v<version>` candidate check
-requires the stable numeric branch version to match both manifests before the
-formal tag is created. Event-time detection remains distinct from the
-creation-only actor restriction and the integrity ruleset's pre-mutation
-deletion and force-push restrictions.
+The checked-in v0.8.20 `Release signature guard` maps each evidence boundary to
+one stable name: `Verify signed main history`, `Verify release candidate`,
+`Verify created release tag`, and `Observe published immutable release`. A
+manual candidate run accepts only `release/v<version>` and requires the stable
+numeric branch version to match both manifests. A manual published-release run
+accepts only the exact tag and requires the live Release to be final,
+non-prerelease, immutable, and commit-bound. These checked-in names do not
+rewrite the dated live ruleset observation above; migration remains pending
+until a separate authenticated read-back confirms it.
+
+`Create protected release tag` is separate from the read-only signature guard
+and from immutable publication. It is manual-only on current `main`, consumes
+the dedicated App credential only after validating non-secret inputs, rereads
+all drift-sensitive state twice, and owns the sole normal tag-creation attempt.
+It has no pull-request, push, release, schedule, update, delete, publication, or
+ruleset-write path.
 
 `Publish immutable release` is a separate manually dispatched workflow. It
 accepts only one stable numeric production release tag from the current `main`
@@ -167,11 +225,11 @@ requires the final Release to be immutable and GitHub Latest. It can resume a
 draft after the exact attestation already exists and can perform final-only
 readback without a second publication mutation.
 
-The signed-target workflow remains a separate policy owner. GitHub does not
+The release-target guard remains a separate policy owner. GitHub does not
 start another workflow for an ordinary event created by a workflow's
 `GITHUB_TOKEN`, so the publication workflow fails closed on direct signature
 readback and the release operator explicitly dispatches `Release signature
-guard` on the exact published tag afterward.
+guard` with `phase=published-release` on the exact published tag afterward.
 
 ## Immutable Release Policy
 
@@ -309,7 +367,15 @@ copy tokens or full administrative API responses into the repository.
    `creation` rule and only the exact `User`/`always` bypass for actor
    `78034820`. GitHub may omit bypass details from a response to a caller
    without ruleset write visibility. This remains a manual read-only
-   verification; do not grant a workflow administrative permission.
+   verification. The controller's dedicated App may receive administration
+   read, but no workflow receives administration write.
+
+   After the separately authorized v0.8.20 migration, this same read-back must
+   instead show exactly one configured App `Integration` / `always` bypass in
+   the creation-only ruleset, no owner-user bypass, no integrity bypass, and
+   only `Verify signed main history` as the integrity required context. Update
+   this dated snapshot in the same reviewed change; until then the controller
+   rejects the currently documented state.
 
 5. With repository administration read access, list direct collaborators and
    inspect every active ruleset's history. Confirm that a second trusted
@@ -350,6 +416,6 @@ copy tokens or full administrative API responses into the repository.
   permission. A workflow must never receive ruleset-write permission merely to
   perform an audit.
 - The repository's static validator checks that this dated snapshot retains
-  its required facts and exact critical-path owner set. It cannot contact
-  GitHub or prove that remote configuration has not drifted; manual
-  re-verification remains required.
+  its required facts, migration target, and exact critical-path owner set. It
+  cannot contact GitHub or prove that remote configuration has not drifted;
+  manual re-verification remains required.

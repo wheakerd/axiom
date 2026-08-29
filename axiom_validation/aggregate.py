@@ -39,6 +39,7 @@ from .manifests import (
 )
 from .markdown import check_documented_hook_commands, check_markdown_links
 from .release_policy import check_release_signature_workflow_contract
+from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
 from .release_facts import check_release_facts
 from .reporting import run_policy
@@ -154,6 +155,7 @@ def main() -> int:
     release_workflow_text = run_policy(
         "release", check_release_signature_workflow_contract, failures
     )
+    run_policy("release", check_controller_workflow_contract, failures)
     run_policy("release-evidence", check_publish_workflow_contract, failures)
     pull_request_fixture_count = run_policy(
         "action-graph",

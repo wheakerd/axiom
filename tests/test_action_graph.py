@@ -22,7 +22,7 @@ class ActionGraphTests(unittest.TestCase):
         document = check_distribution_workflow_contract(failures)
         unit_test_document = check_unit_test_workflow_contract(failures)
         hook_runtime_document = check_hook_runtime_workflow_contract(failures)
-        self.assertEqual(10, count)
+        self.assertEqual(13, count)
         self.assertIsNotNone(document)
         self.assertIsNotNone(unit_test_document)
         self.assertIsNotNone(hook_runtime_document)

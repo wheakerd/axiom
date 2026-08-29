@@ -209,7 +209,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.8.19 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.8.20 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -217,9 +217,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.8.19-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.8.19 \
-  --expected-tag v0.8.19 \
+  /absolute/path/axiom-v0.8.20-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.8.20 \
+  --expected-tag v0.8.20 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -229,15 +229,16 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.8.19 with a non-null `v0.8.19` tag and the
+The subject must be non-candidate v0.8.20 with a non-null `v0.8.20` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
 The completed v0.8.18 batch and immutable tag remain bound to their exact
 commit and tree, but no GitHub Release was published after its checked-in
 release notes understated the final validation counts. That observation is
-preserved as separate unpublished evidence and cannot satisfy v0.8.19; this
-fix-forward requires a fresh complete batch.
+preserved as separate unpublished evidence and cannot satisfy v0.8.20. The
+immutable v0.8.19 Release and its acceptance also remain separate; the
+release-tag controller candidate requires a fresh complete batch.
 
 The unreleased v0.8.2 release-bound batch remains terminal `FAIL` at Case 1
 after unexpected tool use. A separate corrected-preflight Case 1 diagnostic
@@ -256,10 +257,11 @@ terminate; unknown, malformed, invalid-status, pre-thread benign,
 duplicate-phase, post-terminal, and abrupt streams fail closed. Retain only the
 taxonomy's bounded public journal fields and never raw payload.
 
-Version 0.8.19 fixes release-owned evidence after v0.8.18 publication stopped.
-The installed hook and wrapper bytes remain unchanged from v0.8.18 and v0.8.17. The v0.8.16
+Version 0.8.20 changes repository release-tag policy and validation only. The
+installed hook and wrapper bytes remain unchanged from v0.8.19, v0.8.18, and
+v0.8.17. The v0.8.16
 native three-platform matrix and the earlier private native Windows
-process-boundary result remain historical evidence, not current v0.8.19 host
+process-boundary result remain historical evidence, not current v0.8.20 host
 evidence. Require the exact checked-in hook JSON and wrapper SHA-256 values to
 remain byte-identical to v0.8.17. If either byte sequence changes, repeat the
 three-platform matrix and the exact Codex `cmd.exe /C` construction on a real
@@ -269,35 +271,54 @@ model-routing asset.
 
 Use this safe release sequence:
 
-1. Verify the exact `release/v0.8.19` candidate with `Release signature guard`.
-   Require its stable numeric branch version to match both manifests and reject
-   prerelease identifiers, build metadata, leading zeros, or malformed forms.
+1. Dispatch `Release signature guard` with `phase=candidate` on the exact
+   `release/v0.8.20` branch. Require `Verify release candidate` to pass, bind
+   the branch version to both manifests, and reject prerelease identifiers,
+   build metadata, leading zeros, or malformed forms.
 2. Merge the reviewed patch as one GitHub-signed commit.
 3. Run the complete 17-call batch against that exact merged commit before
    creating the tag. Stop without tagging if any case fails.
 4. Require the exact hook JSON and wrapper bytes to remain byte-identical to
    v0.8.17. Keep any Ubuntu, Windows, and macOS matrix result attached to the
-   exact v0.8.19 commit and do not carry the v0.8.16 outcome forward. The three
+   exact v0.8.20 commit and do not carry the v0.8.16 outcome forward. The three
    checks remain non-required and do not change contributor branch or fork
    rules. Stop and repeat the three-platform matrix plus the native Windows
    process-boundary check if either digest differs.
-5. Read both active `refs/tags/v*` rulesets immediately before creation. Require
-   the creation-only ruleset to contain exactly the owner `User`/`always`
-   bypass, and require the signature, check, deletion, and non-fast-forward
-   ruleset to contain no bypass or `creation` rule.
-6. Using the authorized owner identity, create immutable tag `v0.8.19` once at
-   the same commit. On an uncertain response, query the exact ref and rule suite
-   without retrying creation.
-7. Verify the new rule suite identifies the exact actor, zero pre-creation SHA,
-   expected target SHA, audited creation bypass, and passing no-bypass integrity
-   rules. Stop before publication on any mismatch.
-8. Finalize the sanitized observation with the tag, commit, and tree; rename it
+5. Under separate repository-administration authorization, register and install
+   one dedicated release GitHub App with repository administration read and
+   contents write only. Configure `AXIOM_RELEASE_APP_CLIENT_ID`, numeric
+   `AXIOM_RELEASE_APP_ID`, and `AXIOM_RELEASE_APP_PRIVATE_KEY` only in the
+   `release-tag-creation` Actions environment. This repository-only candidate
+   does not claim those external effects.
+6. Preserve the active creation restriction while replacing its normal bypass:
+   add the exact App `Integration` / `always` actor, read it back, remove the
+   owner `User` bypass, and read it back again. Separately change only the
+   integrity ruleset's required context to `Verify signed main history`; keep
+   its signature, deletion, non-fast-forward, check-on-create, and empty bypass
+   controls intact. No workflow receives ruleset-write permission.
+7. Read all three rulesets, the environment metadata that is externally
+   visible, current `main`, and its latest checks. Require the creation-only
+   ruleset to have exactly the App bypass, the integrity ruleset to have no
+   bypass, and `Verify signed main history`, `repository-guards`, and
+   `unit-and-integration-tests` to pass on the exact merged SHA. Stop on any
+   missing field or drift.
+8. Dispatch `Create protected release tag` on `refs/heads/main` with
+   `version=0.8.20` and `tag=v0.8.20`. The controller binds the exact version,
+   tag, commit, tree, manifests, checks, signature, absence state, App identity,
+   repository scope, and rulesets; rereads them immediately before one
+   `POST /git/refs`; and reads the created ref back. On an uncertain response it
+   reads once, fails, and never retries. A rerun must detect the existing ref
+   and perform zero mutation.
+9. Require `Verify created release tag` to pass for the exact new ref and
+   re-read both tag rulesets. The App must still be unable to bypass signature,
+   required-check, deletion, or non-fast-forward rules.
+10. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-9. Create one draft `Axiom v0.8.19` Release targeting the exact 40-character
+11. Create one draft `Axiom v0.8.20` Release targeting the exact 40-character
    commit and upload only the validated observation asset.
-10. With an owner credential, read the repository immutable-release setting and
+12. With an owner credential, read the repository immutable-release setting and
    require `enabled: true`; then dispatch `Publish immutable release` on the
-   exact `v0.8.19` ref with only `tag=v0.8.19`. The workflow requires the tag
+   exact `v0.8.20` ref with only `tag=v0.8.20`. The workflow requires the tag
    commit to remain on live `main` history and requires `main` to equal it
    immediately before mutation, plus REST and GraphQL GitHub-made signature. It
    also rejects a different equal-or-newer current stable release version. It freezes the
@@ -308,11 +329,12 @@ Use this safe release sequence:
    by frozen Release ID and proven absent before the workflow fails. A rerun may
    clean a matching mutable remnant, resume an exact draft, or perform
    final-only readback; it never replaces either asset.
-11. Explicitly dispatch `Release signature guard` on `v0.8.19` and
-   require the exact-tag run to pass. A Release mutation made with the
-   publication workflow's `GITHUB_TOKEN` does not automatically start another
-   workflow from the resulting ordinary release event.
-12. Publish or close any coordinated security record only under its separate
+13. Explicitly dispatch `Release signature guard` with
+   `phase=published-release` on `v0.8.20` and require
+   `Observe published immutable release` to pass. A Release mutation made with
+   the publication workflow's `GITHUB_TOKEN` does not automatically start
+   another workflow from the resulting ordinary release event.
+14. Publish or close any coordinated security record only under its separate
    exact authorization after the signature guard, publication workflow,
    immutable Release, Latest marker, asset identities, and attestation all pass.
 

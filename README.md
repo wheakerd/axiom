@@ -127,19 +127,20 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.19` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.8.20` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. This fix-forward preserves the stable numeric
-production-release grammar introduced by v0.8.18 and corrects its release-owned
-validation evidence. It changes no installed Skill, hook, route, action
-authority, benchmark, or runtime dependency. Current Codex installed-host
+release-bound host observation. This candidate adds a closed release-tag
+controller and separates candidate, main-history, created-tag, and published-
+release checks. It changes no installed Skill, hook, route, action authority,
+benchmark, or runtime dependency. Current Codex installed-host
 observation remains `NOT-RUN`, and authenticated Claude Code observation
-remains `UNAVAILABLE / NOT-RUN`. The immutable v0.8.18 tag and its unpublished
-external observation, immutable v0.8.17 Release, and all prior native-runner,
-process-boundary, and host observations remain separate.
+remains `UNAVAILABLE / NOT-RUN`. The immutable v0.8.19 Release and all prior
+native-runner, process-boundary, and host observations remain separate. The
+dedicated GitHub App, Actions environment, and ruleset migration are external
+state and are not claimed by this repository-only candidate.
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.19 routing-context record](evals/context-budget/results/v0.8.19.json) uses the
+The [v0.8.20 routing-context record](evals/context-budget/results/v0.8.20.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
@@ -503,7 +504,7 @@ and report an unavailable validator as unavailable, not passed.
   verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.19 release notes](docs/releases/v0.8.19.md):
+- [Changelog](CHANGELOG.md) and [v0.8.20 release notes](docs/releases/v0.8.20.md):
   release history and version-specific evidence.
 
 ## Contributing
@@ -551,12 +552,29 @@ a proposed tree only. Release provenance is established separately for
 protected `main`, immutable `v*` tags, bounded release candidates, and GitHub
 Releases.
 
-Formal upstream `v*` creation is restricted by a separate creation-only
-ruleset whose only bypass actor is the repository owner `wheakerd`. The
-signature, required-check, deletion, and non-fast-forward rules remain in a
-second ruleset with no bypass actor. This does not restrict fork contributions
-or pull requests. The required check is commit-level defense in depth and is
-not treated as authorization for the exact tag-creation operation.
+The dated live snapshot still restricts formal upstream `v*` creation through
+a creation-only ruleset whose bypass actor is the repository owner. The
+v0.8.20 migration target replaces that normal user bypass with one dedicated
+GitHub App and keeps the App out of the separate signature, required-check,
+deletion, and non-fast-forward ruleset. Fork contributions and pull requests
+remain unchanged. The checked-in controller rejects the current live owner
+bypass and old overloaded check context, so it cannot create a tag until the
+App, environment values, and both rulesets are separately configured and read
+back.
+
+`Create protected release tag` runs only by manual dispatch on current
+protected `main`. It binds the version, tag, commit, tree, both manifests,
+required checks, GitHub-made signature, tag and Release absence, dedicated App
+identity, and all live rulesets. It rereads the complete state immediately
+before one exact `POST /git/refs`, then reads the created ref back. It never
+updates or deletes a tag, never retries an uncertain mutation, and never
+receives pull-request code. Its App token is repository-scoped and requests
+only `administration: read` and `contents: write`.
+
+`Release signature guard` assigns distinct stable contexts: `Verify signed
+main history`, `Verify release candidate`, `Verify created release tag`, and
+`Observe published immutable release`. A `release/v<version>` result is
+candidate evidence only and cannot satisfy the controller's exact-main gate.
 
 Production releases use only stable numeric `MAJOR.MINOR.PATCH` manifest
 versions and matching `vMAJOR.MINOR.PATCH` tags. Leading-zero components,
@@ -578,9 +596,9 @@ readback after publication. Final verification requires the same assets,
 `immutable=true`, and the GitHub Latest identity. GitHub's immutable-release
 guarantee covers the tag and assets; the attestation makes title/body drift
 detectable without claiming that every Release metadata edit or deletion is
-platform-blocked. The operator explicitly dispatches the unchanged release
-signature guard on the tag after publication because events created with
-`GITHUB_TOKEN` do not start that separate workflow automatically.
+platform-blocked. The operator explicitly dispatches `Release signature guard`
+with `phase=published-release` on the tag after publication because events
+created with `GITHUB_TOKEN` do not start that separate workflow automatically.
 
 ## License
 

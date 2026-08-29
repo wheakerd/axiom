@@ -13,13 +13,21 @@ on:
       - published
       - edited
   workflow_dispatch:
+    inputs:
+      phase:
+        description: Exact release evidence boundary to verify
+        required: true
+        type: choice
+        options:
+          - candidate
+          - published-release
 
 permissions:
   contents: read
 
 jobs:
   verify-github-signature:
-    name: Verify GitHub-signed release target
+    name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'Verify signed main history' || github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && 'Verify created release tag' || github.event_name == 'workflow_dispatch' && inputs.phase == 'candidate' && 'Verify release candidate' || 'Observe published immutable release' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -155,7 +163,9 @@ jobs:
             let targetCommit;
             let targetVersion = null;
             let targetMustDescendFromDefault = false;
+            let targetPhase;
             if (context.eventName === "release") {
+              targetPhase = "published-release";
               const tagName = context.payload.release?.tag_name;
               const version = releaseTagVersion(tagName);
               if (version === null) {
@@ -175,9 +185,11 @@ jobs:
               targetCommit = await peelRefToCommit(targetRef);
             } else if (context.eventName === "push") {
               if (context.ref === defaultRef) {
+                targetPhase = "main-history";
                 targetRef = defaultRef;
                 targetCommit = context.payload.after;
               } else if (context.ref.startsWith("refs/tags/")) {
+                targetPhase = "created-tag";
                 const tagName = context.ref.slice("refs/tags/".length);
                 const version = releaseTagVersion(tagName);
                 if (version === null) {
@@ -200,20 +212,21 @@ jobs:
                 return;
               }
             } else if (context.eventName === "workflow_dispatch") {
-              if (context.ref === defaultRef) {
-                targetRef = defaultRef;
-              } else if (context.ref.startsWith("refs/tags/")) {
+              const manualPhase = context.payload.inputs?.phase;
+              if (manualPhase === "published-release" && context.ref.startsWith("refs/tags/")) {
+                targetPhase = "published-release";
                 const tagName = context.ref.slice("refs/tags/".length);
                 const version = releaseTagVersion(tagName);
                 if (version === null) {
                   core.setFailed(
-                    `Manual tag verification requires one exact stable numeric production release tag; found ${context.ref}.`,
+                    `Published-release observation requires one exact stable numeric production release tag; found ${context.ref}.`,
                   );
                   return;
                 }
                 targetVersion = version;
                 targetRef = context.ref;
-              } else if (context.ref.startsWith(releaseBranchPrefix)) {
+              } else if (manualPhase === "candidate" && context.ref.startsWith(releaseBranchPrefix)) {
+                targetPhase = "release-candidate";
                 const candidateTagName = context.ref.slice(releaseBranchPrefix.length);
                 const version = releaseTagVersion(candidateTagName);
                 if (version === null) {
@@ -226,7 +239,9 @@ jobs:
                 targetRef = context.ref;
                 targetMustDescendFromDefault = true;
               } else {
-                core.setFailed(`Unexpected manual verification ref ${context.ref}.`);
+                core.setFailed(
+                  `Manual ${manualPhase || "missing"} verification cannot run on ${context.ref}.`,
+                );
                 return;
               }
               targetCommit = await peelRefToCommit(targetRef);
@@ -246,6 +261,36 @@ jobs:
                 `Release target ${targetRef} names version ${targetVersion}, but manifests declare ${packageVersion}.`,
               );
               return;
+            }
+
+            if (targetPhase === "published-release") {
+              const releaseResponse = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag: targetRef.slice("refs/tags/".length),
+              });
+              const publishedRelease = releaseResponse.data;
+              if (
+                publishedRelease.tag_name !== targetRef.slice("refs/tags/".length) ||
+                publishedRelease.target_commitish !== targetCommit ||
+                publishedRelease.draft !== false ||
+                publishedRelease.prerelease !== false ||
+                publishedRelease.immutable !== true
+              ) {
+                core.setFailed(
+                  `Published release ${targetRef} must be final, immutable, non-prerelease, and bound to ${targetCommit}.`,
+                );
+                return;
+              }
+              if (
+                context.eventName === "release" &&
+                context.payload.release?.id !== publishedRelease.id
+              ) {
+                core.setFailed(
+                  `Release event ID does not match the live immutable release for ${targetRef}.`,
+                );
+                return;
+              }
             }
 
             const defaultCommit = await peelRefToCommit(defaultRef);

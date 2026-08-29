@@ -68,23 +68,24 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
-For v0.8.19, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.8.20, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
-observation. The candidate preserves the stable numeric production version
-policy from v0.8.18 and corrects its release-owned evidence before publication.
-It changes no installed Skill, hook, route, action authority, benchmark, or
-runtime dependency. Installed Codex host
+observation. The candidate adds repository release-tag controller policy,
+distinct release check contexts, and offline mutation fixtures. It changes no
+installed Skill, hook, route, action authority, benchmark, or runtime
+dependency. Installed Codex host
 observation remains `NOT-RUN`; authenticated Claude Code observation remains
-`UNAVAILABLE / NOT-RUN`. The immutable v0.8.18 tag and unpublished observation,
-immutable v0.8.17 Release, and all prior native-runner, process-boundary, and
-host observations remain separate history.
+`UNAVAILABLE / NOT-RUN`. The immutable v0.8.19 Release and all prior native-
+runner, process-boundary, and host observations remain separate history. The
+dedicated release App and ruleset migration remain unconfigured external state,
+so the checked-in controller intentionally rejects the current live snapshot.
 A prior-release Codex observation also
 exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.19.
+outcomes forward to v0.8.20.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -145,12 +146,12 @@ pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.19.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.8.20.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.19 candidate gate is 6,960 bytes with SHA-256
+The v0.8.20 candidate gate is 6,960 bytes with SHA-256
 `fb27acb68971835b62b4565dced98650f8c2808a01b8e6a171f202a9d21794f1`.
 
 The candidate has 894 whitespace-delimited words, 124 logical lines, and one
@@ -158,7 +159,7 @@ unique direct reference. Its 1,740 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
 1,061 bytes, 137 words, 17 lines, zero references, and 265 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. The candidate is byte-identical to v0.8.17 and leaves the 73-case
+reviewed. The candidate is byte-identical to v0.8.19 and leaves the 73-case
 routing workload unchanged, so its reduction experiment remains null.
 The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
 workload in the v0.8.11 record
@@ -399,6 +400,36 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.8.20` reports:
+
+- synchronized `0.8.20` manifests and release-owned metadata for
+  [Issue #90](https://github.com/wheakerd/axiom/issues/90);
+- one manual-only, exact-main controller that reads version, tag, commit, tree,
+  manifests, checks, signature, absence state, App identity, repository scope,
+  and live rulesets twice before one `POST /git/refs` and immediate read-back;
+- a dedicated App token statically limited to repository-scoped
+  `administration: read` and `contents: write`, with no pull-request secret
+  path and no update, delete, publication, or ruleset-write operation;
+- four stable contexts for signed main history, release candidates, created
+  tags, and published immutable Releases, with candidate evidence excluded from
+  the controller's exact-main authorization gate;
+- offline failures for mismatched version/tag/manifests, non-main targets,
+  wrong-SHA checks, drift, pre-existing tags or Releases, owner or integrity
+  bypass, stale shared context, and uncertain-response reruns; and
+- a disposable bare-Git integration proving one creation attempt, exact
+  read-back, and zero-mutation rerun behavior.
+
+The repository candidate does not claim that the dedicated GitHub App,
+`release-tag-creation` environment, secret or variables, creation-bypass
+migration, or integrity-context migration exists live. The authenticated
+read-only snapshot still shows the owner-user bypass and old shared check, so
+the controller rejects before mutation until those separately authorized
+external changes are configured and read back. Installed Skills, hooks, routes,
+action authority, benchmarks, and runtime dependencies are unchanged. Current
+installed Codex host and lifecycle observation is `NOT-RUN`, and authenticated
+Claude Code observation is `UNAVAILABLE / NOT-RUN`. See the
+[v0.8.20 release notes](releases/v0.8.20.md).
 
 The Git record for `v0.8.19` reports:
 

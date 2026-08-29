@@ -4,6 +4,7 @@ import unittest
 
 from axiom_validation.release_policy import check_release_signature_workflow_contract
 from axiom_validation.cases.release_policy import check_release_script_runtime_contract
+from axiom_validation.release_tag_controller import check_controller_workflow_contract
 
 
 class ReleasePolicyTests(unittest.TestCase):
@@ -12,7 +13,12 @@ class ReleasePolicyTests(unittest.TestCase):
         workflow = check_release_signature_workflow_contract(failures)
         self.assertIsNotNone(workflow)
         count = check_release_script_runtime_contract(workflow, failures)
-        self.assertEqual(54, count)
+        self.assertEqual(55, count)
+        self.assertEqual([], failures)
+
+    def test_checked_in_release_tag_controller_workflow(self):
+        failures = []
+        check_controller_workflow_contract(failures)
         self.assertEqual([], failures)
 
 

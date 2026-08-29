@@ -240,13 +240,23 @@ tree satisfies the checked-in static policy. It does not establish release
 provenance and does not authorize publication.
 
 `Release signature guard` starts after protected history or release state
-changes. It covers pushes to `main`, strict `v*` tag events, published or edited
-GitHub Releases, and manual checks limited to `main`, an exact stable numeric
-`v<version>` tag, or a stable numeric `release/v<version>` branch. A version
-named by either a candidate branch or tag must match both manifests. Every
-target must remain on approved `main` history and carry a valid signature made
-with GitHub's signing key. GitHub rulesets remain the server-side prevention
-layer for unsigned `main` updates and tag mutation.
+changes. Its stable check names distinguish signed `main` history, a manual
+`release/v<version>` candidate, a newly created `v<version>` tag, and a
+published immutable Release. A candidate or tag version must match both
+manifests. Every target must remain on approved `main` history and carry a
+valid signature made with GitHub's signing key. Candidate evidence never
+authorizes tag creation.
+
+`Create protected release tag` is the only checked-in normal creation path. It
+runs manually on current `main`, uses the dedicated release GitHub App only
+inside the `release-tag-creation` environment, validates live rulesets and
+exact commit evidence twice, attempts one `POST /git/refs`, and reads the ref
+back. Pull-request code receives neither the private key nor the App token.
+Repository code cannot configure the App or ruleset bypass: until a live
+authenticated read-back matches the documented migration target, the
+controller must reject before mutation. GitHub rulesets remain the server-side
+prevention layer for unsigned `main` updates and tag creation, movement, or
+deletion.
 
 ## Pull requests
 
