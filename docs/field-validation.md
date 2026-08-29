@@ -162,8 +162,12 @@ offline plugin validator is a separate static check.
 
 ## Machine-Readable Records
 
-The versioned format is defined by
-[`evidence/schema-v1.json`](../evidence/schema-v1.json). A checked-in host record
+The immutable historical format is defined by
+[`evidence/schema-v1.json`](../evidence/schema-v1.json). Existing v1 records
+remain byte-preserved evidence. New observations use
+[`evidence/schema-v2.json`](../evidence/schema-v2.json), which adds the exact
+`pluginVersion`, `runtimeContractDigest`, and observation subject without
+changing the six lifecycle cases inherited from v1. A checked-in host record
 belongs below `evidence/v<version>/<host>/<operating-system>.json` and must bind
 to an already existing immutable tag and 40-character commit. Each record has
 exactly six cases: startup routed and control, manual-compaction routed and
@@ -181,6 +185,10 @@ results. A passing case requires a matching observed route, a verified
 installed-hook digest, and minimal sanitized output. A not-run or unavailable
 case must have no observed route or claimed output and must explain the exact
 limitation. All cases must record attempted and observed mutation separately.
+An observation whose runtime digest also applies to another plugin version may
+be referenced for that identical installed contract, but its host version,
+lifecycle source, timestamp, and subject remain those of the original run. It
+must not be relabeled as a new observation.
 
 Do not include authentication material, tokens, private or absolute user
 paths, private URLs, customer data, session identifiers, or full transcripts.

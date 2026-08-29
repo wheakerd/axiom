@@ -68,6 +68,14 @@ canonical current-release summary. It binds prior observations to their exact
 tag and commit, records current host results separately, and prevents an older
 record from being interpreted as current evidence.
 
+The current release status also binds the three-subject
+[runtime identity](runtime-identity.md). New observations use the successor
+`evidence/schema-v2.json` contract and include the exact plugin version and
+runtime digest while retaining their original host version, lifecycle source,
+observation subject, and timestamp. An identical digest can make a prior record
+applicable to the same installed bytes, but it never relabels that record as a
+new host run or current-date evidence.
+
 For v0.8.20, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
 observation. The candidate adds repository release-tag controller policy,

@@ -26,6 +26,13 @@ from axiom_validation.route_catalog import (  # noqa: E402
     load_route_catalog,
     replace_route_block,
 )
+from axiom_validation.runtime_identity import (  # noqa: E402
+    IDENTITY_RELATIVE,
+    RUNTIME_IDENTITY_SURFACES,
+    check_runtime_identity,
+    load_json_document,
+    replace_runtime_identity_block,
+)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -59,14 +66,21 @@ def _render() -> tuple[int, list[str]]:
         if (document := load_release_facts(version, failures)) is not None
     }
     route_document = load_route_catalog(failures)
+    identity_document = load_json_document(
+        REPOSITORY_ROOT / IDENTITY_RELATIVE,
+        failures,
+    )
     if (
         len(release_documents) != len(set(FACTS_SURFACE_VERSIONS.values()))
         or route_document is None
+        or identity_document is None
     ):
         return 0, failures
 
     rendered: dict[Path, str] = {}
-    for relative_path in sorted(set((*FACTS_SURFACES, *ROUTE_SURFACES))):
+    for relative_path in sorted(
+        set((*FACTS_SURFACES, *ROUTE_SURFACES, *RUNTIME_IDENTITY_SURFACES))
+    ):
         path = REPOSITORY_ROOT / relative_path
         try:
             text = _load_regular_text(path)
@@ -77,7 +91,9 @@ def _render() -> tuple[int, list[str]]:
                 text = replace_release_block(relative_path, text, release_document)
             if relative_path in ROUTE_SURFACES:
                 text = replace_route_block(text, route_document)
-        except (OSError, UnicodeError, ValueError) as error:
+            if relative_path in RUNTIME_IDENTITY_SURFACES:
+                text = replace_runtime_identity_block(text, identity_document)
+        except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
             failures.append(f"cannot render {relative_path}: {error}")
             continue
         rendered[path] = text
@@ -95,11 +111,12 @@ def _render() -> tuple[int, list[str]]:
     return changed, failures
 
 
-def _check() -> tuple[int, int, list[str]]:
+def _check() -> tuple[int, int, int, list[str]]:
     failures: list[str] = []
     fact_surfaces = check_release_facts(failures)
     route_scenarios = check_route_catalog(failures)
-    return fact_surfaces, route_scenarios, failures
+    runtime_inputs = check_runtime_identity(failures)
+    return fact_surfaces, route_scenarios, runtime_inputs, failures
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -113,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"- {failure}", file=sys.stderr)
             return 1
 
-    fact_surfaces, route_scenarios, failures = _check()
+    fact_surfaces, route_scenarios, runtime_inputs, failures = _check()
     if failures:
         print("Canonical fact validation failed:", file=sys.stderr)
         for failure in failures:
@@ -123,7 +140,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "Canonical fact validation passed: "
         f"{action}{fact_surfaces} release-fact surfaces and "
-        f"{route_scenarios} structured route scenarios; static counts remain "
+        f"{route_scenarios} structured route scenarios with "
+        f"{runtime_inputs} canonical runtime inputs; static counts remain "
         "proxies, token figures remain estimates, and host observation is not inferred."
     )
     return 0

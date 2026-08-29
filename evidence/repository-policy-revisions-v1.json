@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1",
+  "revisions": [
+    {
+      "revision": 1,
+      "recordedOn": "2026-08-29",
+      "baselineCommit": "58863cb47e49ae588e7f0549b5232fa1e4726a51",
+      "sourceIssue": 94,
+      "summary": "Bootstrap separate installed-runtime and repository-policy identities with deterministic runtime digest validation.",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f"
+    }
+  ]
+}

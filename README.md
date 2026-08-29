@@ -139,6 +139,20 @@ native-runner, process-boundary, and host observations remain separate. The
 dedicated GitHub App, Actions environment, and ruleset migration are external
 state and are not claimed by this repository-only candidate.
 
+### Runtime And Repository Identity
+
+Axiom separates the installed package version, append-only repository-policy
+revision, and deterministic installed-runtime digest. See
+[Runtime And Repository Identity](docs/runtime-identity.md) for the v1 input
+classification, version policy, historical derivation, and evidence boundary.
+
+<!-- runtime-identity:current:start -->
+- `pluginVersion`: `0.8.20`
+- `repositoryPolicyRevision`: `1`
+- `runtimeContractDigest` (schema v1): `sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f`
+- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v1.json`](axiom_validation/runtime-contract-inputs-v1.json)
+<!-- runtime-identity:current:end -->
+
 <!-- release-facts:current-context-budget:start -->
 The [v0.8.20 routing-context record](evals/context-budget/results/v0.8.20.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899

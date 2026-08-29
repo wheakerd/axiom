@@ -5,10 +5,22 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.20 release-tag controller candidate. It does not
-claim that the dedicated GitHub App, Actions environment, or live ruleset
-migration has been configured; tag creation remains fail-closed until those
-external objects are separately authorized and read back.
+### Repository Policy
+
+- Separated installed `pluginVersion`, append-only
+  `repositoryPolicyRevision`, and deterministic `runtimeContractDigest`
+  identities without advancing the v0.8.20 installed package version.
+- Added a versioned, path-contained, symlink-safe runtime input manifest,
+  standard-library generator and checker, historical tag characterization, and
+  negative fixtures for missing, duplicate, unordered, escaping, symlinked,
+  and unclassified inputs.
+- Added successor host-evidence and current-status bindings that preserve the
+  original host, version, lifecycle, subject, and timestamp when an identical
+  runtime digest makes prior evidence applicable.
+
+This repository-policy revision does not claim that the dedicated GitHub App,
+Actions environment, or live ruleset migration has been configured. Those
+external objects remain separately authorized and verified boundaries.
 
 ## 0.8.20 - unreleased candidate
 

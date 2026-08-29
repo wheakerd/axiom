@@ -1,5 +1,22 @@
 # Repository Governance
 
+## Repository Policy Identity
+
+Repository governance has an identity separate from the installed plugin.
+[`repository-policy-revisions-v1.json`](../evidence/repository-policy-revisions-v1.json)
+is an append-only, contiguous record. CI, validator, release-automation,
+governance-documentation, and evidence-policy changes append a revision when
+the installed
+[`runtimeContractDigest`](../evidence/runtime-identity.json) remains unchanged.
+The signed merge commit containing the entry and its required checks are the
+durable record; a repository-policy revision does not create an installed
+package Release by default.
+
+An installed Skill, hook, wrapper, route, action-authority contract, or other
+classified runtime input instead changes the digest and requires a new
+`pluginVersion`. See [Runtime And Repository Identity](runtime-identity.md) for
+the complete classification and release decision.
+
 This document is a dated, read-only observation of GitHub repository policy.
 It does not configure GitHub, grant authority, or replace server-side rulesets.
 A failed workflow is detection evidence, not server-side mutation prevention.
