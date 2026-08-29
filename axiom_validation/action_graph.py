@@ -1198,17 +1198,13 @@ def check_github_action_pins(failures: list[str]) -> int:
     return check_github_action_pin_counts(failures).total
 
 
-def check_distribution_workflow_contract(
+def check_distribution_workflow_text(
+    text: str,
     failures: list[str],
+    *,
+    label: str = ".github/workflows/distribution-drift.yml",
 ) -> dict[str, Any] | None:
-    path = REPOSITORY_ROOT / ".github" / "workflows" / "distribution-drift.yml"
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read {display_path(path)}: {error}")
-        return None
-
-    label = display_path(path)
+    """Validate the exact read-only repository-guards workflow contract."""
     try:
         document = parse_canonical_yaml_document(text, label)
     except CanonicalYamlError as error:
@@ -1270,18 +1266,21 @@ def check_distribution_workflow_contract(
             f"{label} repository-guards must contain only runner, timeout, and steps"
         )
     elif (
-        scalar(job.get("runs-on")) != "ubuntu-latest"
+        scalar(job.get("runs-on")) != "ubuntu-24.04"
         or scalar(job.get("timeout-minutes")) != "5"
     ):
-        failures.append(f"{label} repository-guards runner or timeout changed")
+        failures.append(
+            f"{label} must pin repository-guards to ubuntu-24.04 with a "
+            "five-minute timeout"
+        )
 
     steps = job.get("steps") if isinstance(job, dict) else None
-    if not isinstance(steps, list) or len(steps) != 3 or any(
+    if not isinstance(steps, list) or len(steps) != 6 or any(
         not isinstance(step, dict) for step in steps
     ):
-        failures.append(f"{label} must contain exactly three canonical validation steps")
+        failures.append(f"{label} must contain exactly six canonical validation steps")
     else:
-        checkout, distribution, publication = steps
+        checkout, python, node, environment, distribution, publication = steps
         checkout_with = checkout.get("with")
         if (
             set(checkout) != {"name", "uses", "with"}
@@ -1295,16 +1294,66 @@ def check_distribution_workflow_contract(
             failures.append(
                 f"{label} checkout must remain immutable and must not persist credentials"
             )
+
+        python_with = python.get("with")
+        if (
+            set(python) != {"name", "uses", "with"}
+            or scalar(python.get("name")) != "Set up Python"
+            or scalar(python.get("uses"))
+            != "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1"
+            or not isinstance(python_with, dict)
+            or set(python_with) != {"python-version"}
+            or scalar(python_with.get("python-version")) != "3.14.7"
+        ):
+            failures.append(
+                f"{label} must pin the exact Python 3.14.7 setup environment"
+            )
+
+        node_with = node.get("with")
+        if (
+            set(node) != {"name", "uses", "with"}
+            or scalar(node.get("name")) != "Set up Node.js"
+            or scalar(node.get("uses"))
+            != "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38"
+            or not isinstance(node_with, dict)
+            or set(node_with) != {"node-version", "package-manager-cache"}
+            or scalar(node_with.get("node-version")) != "24.19.0"
+            or scalar(node_with.get("package-manager-cache")) != "false"
+        ):
+            failures.append(
+                f"{label} must pin Node.js 24.19.0 with package-manager caching disabled"
+            )
+
+        expected_environment_block = (
+            "      - name: Report canonical environment\n"
+            "        run: |\n"
+            "          cat /etc/os-release\n"
+            "          python --version\n"
+            "          node --version\n"
+            "          git --version\n"
+            "\n"
+            "      - name: Check distribution agreement\n"
+        )
+        if (
+            set(environment) != {"name", "run"}
+            or scalar(environment.get("name")) != "Report canonical environment"
+            or scalar(environment.get("run")) != "|"
+            or expected_environment_block not in text
+        ):
+            failures.append(
+                f"{label} must report the exact Ubuntu, Python, Node.js, and Git environment"
+            )
+
         expected_commands = (
             (
                 distribution,
                 "Check distribution agreement",
-                "python3 scripts/check-distribution-drift.py",
+                "python -B scripts/check-distribution-drift.py",
             ),
             (
                 publication,
                 "Check publication invariants",
-                "python3 scripts/check-publication.py",
+                "python -B scripts/check-publication.py",
             ),
         )
         for step, expected_name, expected_command in expected_commands:
@@ -1317,15 +1366,22 @@ def check_distribution_workflow_contract(
                     f"{label} must run exact read-only validator step {expected_name!r}"
                 )
 
-    for forbidden in (
-        "pull_request_target",
-        "${{ secrets.",
-        "${{ github.token",
-        "GITHUB_TOKEN",
-    ):
+    for forbidden in ("pull_request_target", "${{", "GITHUB_TOKEN", "permissions: write"):
         if forbidden in text:
             failures.append(f"{label} exposes forbidden pull-request surface {forbidden!r}")
     return document
+
+
+def check_distribution_workflow_contract(
+    failures: list[str],
+) -> dict[str, Any] | None:
+    path = REPOSITORY_ROOT / ".github" / "workflows" / "distribution-drift.yml"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(path)}: {error}")
+        return None
+    return check_distribution_workflow_text(text, failures, label=display_path(path))
 
 
 def check_unit_test_workflow_text(

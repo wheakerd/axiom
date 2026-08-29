@@ -179,6 +179,30 @@ It validates a proposed pull-request tree with read-only repository checks. It
 does not establish release provenance, prevent a Git ref mutation, or authorize
 publication.
 
+### Repository Guards Canonical Environment
+
+The checked-in workflow contract pins the required `repository-guards` job to
+the exact `ubuntu-24.04` runner. Full-commit-SHA setup Actions select Python
+`3.14.7` and Node.js `24.19.0`; the exact `package-manager-cache: false`
+setting keeps package-manager caching disabled. Checkout credentials remain
+non-persistent. Before validation, the job reports `/etc/os-release`, `python --version`,
+`node --version`, and `git --version`. It then preserves the two policy owners
+as separate read-only commands: `python -B scripts/check-distribution-drift.py`
+and `python -B scripts/check-publication.py`.
+
+Fork pull requests use ordinary `pull_request`, receive only `contents: read`,
+and receive no repository secret. The job ID and stable required-check name
+remain `repository-guards`; the workflow performs no repository or external
+mutation.
+
+No moving `ubuntu-latest` compatibility canary is currently defined. This
+omission is deliberate: without reviewed ownership, cadence, failure triage,
+and runner-upgrade criteria, a non-required canary would create an unowned
+signal that could be mistaken for canonical acceptance. Any future canary must
+define those responsibilities in a separate reviewed contract, remain
+read-only with a distinct non-required check name, and never be described as
+release provenance or installed-host evidence.
+
 `Unit and integration tests` produces the exact
 `unit-and-integration-tests` check. It runs the complete standard-library
 unittest discovery command in the fixed blocking environment and remains
