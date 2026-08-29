@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1",
+  "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
+  "inputManifestSha256": "f313a9ae8f113db83144b1b9d0fc3755838939078e3834daac202c22ccdab854",
+  "entries": [
+    {
+      "pluginVersion": "0.7.4",
+      "tag": "v0.7.4",
+      "commit": "ce34437e6ebf1cdaf5e55d40dc36e16c692875d5",
+      "runtimeContractDigest": "sha256:bff47a4c9f2cb773ddcee6a7d927081a2c630d7df272565841b2c435658ee144",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.14",
+      "tag": "v0.8.14",
+      "commit": "45f7834f5703a1d14a63451be2e07bc3ebca367e",
+      "runtimeContractDigest": "sha256:bc29f4712c0f351ad1fb5cce5c028e4df2e517f025b57ea89dc14e7708f9c2ab",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.15",
+      "tag": "v0.8.15",
+      "commit": "5a5b98e9aaf833406476e8fbf9b40aa431a2d5c3",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.16",
+      "tag": "v0.8.16",
+      "commit": "8c932c4ec1844d2d86cd1d3d7ea9d1321fa42680",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.17",
+      "tag": "v0.8.17",
+      "commit": "f0abb36276a61d6f8b273bb95985675281f7d577",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.18",
+      "tag": "v0.8.18",
+      "commit": "76c287bd38bed0cb22eac00c740be5b6477b8eeb",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.19",
+      "tag": "v0.8.19",
+      "commit": "bf39b50f2a2624c4200a7f5ce50edd9ab4046dea",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    },
+    {
+      "pluginVersion": "0.8.20",
+      "tag": "v0.8.20",
+      "commit": "6581813f058dc5383759309f524fc2292caca122",
+      "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
+      "derivation": "derived-from-immutable-tag-with-schema-v1"
+    }
+  ],
+  "characterizations": [
+    {
+      "fromVersion": "0.8.14",
+      "toVersion": "0.8.15",
+      "changeClass": "installed-runtime-change",
+      "expectedDigestRelation": "different",
+      "rationale": "v0.8.15 changed the installed Codex hook and added its Windows command wrapper."
+    },
+    {
+      "fromVersion": "0.8.15",
+      "toVersion": "0.8.16",
+      "changeClass": "repository-policy-only",
+      "expectedDigestRelation": "equal",
+      "rationale": "v0.8.16 added repository CI and validation without changing installed inputs."
+    },
+    {
+      "fromVersion": "0.8.16",
+      "toVersion": "0.8.17",
+      "changeClass": "repository-policy-only",
+      "expectedDigestRelation": "equal",
+      "rationale": "v0.8.17 changed repository governance evidence without changing installed inputs."
+    },
+    {
+      "fromVersion": "0.8.17",
+      "toVersion": "0.8.18",
+      "changeClass": "repository-policy-only",
+      "expectedDigestRelation": "equal",
+      "rationale": "v0.8.18 hardened version grammar and release validation without changing installed inputs."
+    },
+    {
+      "fromVersion": "0.8.18",
+      "toVersion": "0.8.19",
+      "changeClass": "repository-policy-only",
+      "expectedDigestRelation": "equal",
+      "rationale": "v0.8.19 corrected release evidence without changing installed inputs."
+    },
+    {
+      "fromVersion": "0.8.19",
+      "toVersion": "0.8.20",
+      "changeClass": "repository-policy-only",
+      "expectedDigestRelation": "equal",
+      "rationale": "v0.8.20 added release-tag controller policy without changing installed inputs."
+    }
+  ]
+}

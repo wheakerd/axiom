@@ -60,6 +60,7 @@ from .routing_contracts import (
 )
 from .route_catalog import check_route_catalog
 from .routing_evals import check_review_sequence_contracts, check_routing_evaluations
+from .runtime_identity import check_runtime_identity
 
 
 def main() -> int:
@@ -75,6 +76,9 @@ def main() -> int:
     )
     route_catalog_scenario_count = run_policy(
         "route-catalog", check_route_catalog, failures
+    )
+    runtime_contract_input_count = run_policy(
+        "runtime-identity", check_runtime_identity, failures
     )
     context_scenario_count = run_policy(
         "context-budget", check_context_budget, failures
@@ -236,6 +240,7 @@ def main() -> int:
         f"{context_scenario_count} routing-context lifecycle scenarios, "
         f"{release_fact_surface_count} canonical release-fact surfaces, "
         f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
+        f"{runtime_contract_input_count} canonical installed-runtime inputs, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "

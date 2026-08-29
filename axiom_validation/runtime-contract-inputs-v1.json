@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1",
+  "digestAlgorithm": "sha256",
+  "canonicalization": {
+    "recordFormat": "canonical-json-records-v1",
+    "textEncoding": "utf-8",
+    "lineEndings": "lf",
+    "pathOrder": "utf-8-bytewise"
+  },
+  "installedSurfaceRoots": [
+    ".agents/plugins",
+    ".claude-plugin",
+    ".codex-plugin",
+    "assets",
+    "hooks",
+    "skills"
+  ],
+  "inputs": [
+    {
+      "path": ".claude-plugin/plugin.json",
+      "kind": "json-fields",
+      "includedFields": [
+        "hooks",
+        "name",
+        "skills"
+      ],
+      "excludedFields": [
+        "$schema",
+        "author.name",
+        "author.url",
+        "description",
+        "displayName",
+        "homepage",
+        "keywords",
+        "license",
+        "repository",
+        "version"
+      ],
+      "rationale": "Plugin identity and component paths affect installed discovery; version and publisher fields are distribution metadata."
+    },
+    {
+      "path": ".codex-plugin/plugin.json",
+      "kind": "json-fields",
+      "includedFields": [
+        "hooks",
+        "interface.capabilities",
+        "interface.defaultPrompt",
+        "name",
+        "skills"
+      ],
+      "excludedFields": [
+        "author.name",
+        "author.url",
+        "description",
+        "homepage",
+        "interface.brandColor",
+        "interface.brandColorDark",
+        "interface.category",
+        "interface.composerIcon",
+        "interface.developerName",
+        "interface.displayName",
+        "interface.logo",
+        "interface.longDescription",
+        "interface.shortDescription",
+        "interface.supportURL",
+        "interface.websiteURL",
+        "keywords",
+        "license",
+        "repository",
+        "version"
+      ],
+      "rationale": "Plugin identity, component paths, declared capabilities, and starter prompts affect the installed host contract; version, publisher, and presentation fields do not."
+    },
+    {
+      "path": "hooks",
+      "kind": "tree",
+      "rationale": "Host hook declarations and command wrappers define installed lifecycle behavior."
+    },
+    {
+      "path": "skills",
+      "kind": "tree",
+      "rationale": "Every shared Skill, agent metadata file, and root-reachable reference is installed behavior."
+    }
+  ],
+  "exclusions": [
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "kind": "file",
+      "classification": "distribution-metadata",
+      "rationale": "The Codex marketplace wrapper controls installation and catalog presentation, not the loaded runtime contract."
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "kind": "file",
+      "classification": "distribution-metadata",
+      "rationale": "The Claude Code marketplace catalog controls distribution, not the loaded runtime contract."
+    },
+    {
+      "path": "assets",
+      "kind": "tree",
+      "classification": "presentation-only",
+      "rationale": "Current assets are branding images referenced only by excluded install-surface presentation fields; a behavior-bearing asset requires a successor input schema."
+    }
+  ]
+}

@@ -19,7 +19,8 @@ silently broaden what the user authorized.
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
 | `evals/` | Versioned black-box routing contracts and separately labeled host observations |
 | `evals/context-budget/` | Versioned always-loaded routing proxies, lifecycle slots, and reduction evidence |
-| `axiom_validation/` | Standard-library publication policy modules; not installed runtime behavior |
+| `axiom_validation/runtime-contract-inputs-v1.json` | Versioned installed-runtime input classification |
+| `axiom_validation/` | Standard-library publication policy modules; otherwise not installed runtime behavior |
 | `tests/` | Focused unit tests and isolated policy fixtures; not installed runtime behavior |
 | `scripts/` and `.github/workflows/` | Stable validation entrypoints and CI wiring; not installed runtime behavior |
 
@@ -36,10 +37,14 @@ platform-specific copy of a shared skill.
 2. Identify whether the change affects shared skills, one platform wrapper, or
    both. A shared behavior change normally needs a parity review in Codex and
    Claude Code.
-3. Separate route selection from action authorization. Loading a skill never
+3. Classify the change against
+   [`docs/runtime-identity.md`](docs/runtime-identity.md). An included runtime
+   change must alter the digest and advance `pluginVersion`; a repository-only
+   change appends `repositoryPolicyRevision` and must retain the digest.
+4. Separate route selection from action authorization. Loading a skill never
    grants permission to commit, push, deploy, delete, promote, read a secret,
    or mutate a remote system.
-4. Keep the change within its stated scope. Call out any routing or
+5. Keep the change within its stated scope. Call out any routing or
    authorization impact explicitly in the pull request.
 
 ## Shared routing invariants
@@ -123,6 +128,7 @@ Run checks from the repository root and record the exact commands and outcomes:
 
 ```bash
 python3 scripts/check-distribution-drift.py
+python3 scripts/check-runtime-identity.py --check
 python3 scripts/check-compatibility-evidence.py --self-test
 python3 scripts/measure-routing-context.py --check
 python3 scripts/check-publication.py
@@ -165,12 +171,16 @@ Dockerfile input pins`. `FROM scratch`, references to an already validated
 local build stage, and validated action-local `COPY` or `ADD` sources are
 accepted but do not increase either Dockerfile count.
 
-Compatibility records must validate against `evidence/schema-v1.json`, bind to
-an already existing immutable tag and commit, preserve every not-run or
-unavailable case, and contain only minimal sanitized output. Never carry an old
-record forward as evidence for a newer release. The checked-in current release
-status stays `STATIC-ONLY`; use the validator's post-tag `--record` mode for a
-same-release asset after the immutable tag and commit exist.
+Historical compatibility records remain valid against the immutable
+`evidence/schema-v1.json` contract and must not be rewritten. New observations
+must validate against `evidence/schema-v2.json`, bind to an already existing
+immutable tag and commit, include the exact plugin version and runtime contract
+digest, preserve every not-run or unavailable case, and contain only minimal
+sanitized output. A prior observation may be referenced for an identical
+runtime digest, but never relabeled as evidence of a new host, lifecycle,
+version, or date. The checked-in current release status stays `STATIC-ONLY`;
+use the validator's post-tag `--record` mode for a same-release asset after the
+immutable tag and commit exist.
 
 Host-native validation is valuable but optional because the relevant CLI may
 not be installed. If a current Codex or Claude Code validator is already

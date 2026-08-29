@@ -30,6 +30,21 @@ copied Codex tree and a copied Claude Code tree. The distribution drift guard
 compares that tree with both manifests, both marketplace wrappers, and the
 README shared-skill list.
 
+### Installed Runtime Versus Repository Policy
+
+Package identity is not repository-policy identity. `pluginVersion` names the
+installed package, `repositoryPolicyRevision` advances append-only repository
+governance, and `runtimeContractDigest` identifies the canonical installed
+behavior inputs. The deterministic input schema includes Skills, hooks,
+wrappers, component paths, and behavior-relevant manifest fields while
+excluding version and distribution metadata.
+
+The validator requires an immutable version's current tree to retain that
+version's recorded runtime digest. A repository-only change keeps the plugin
+version and digest and appends a policy revision; an installed-runtime change
+must change the digest and advance the plugin version. See
+[Runtime And Repository Identity](runtime-identity.md).
+
 ## 2. Session And Compaction Hooks
 
 The hooks expose the routing gate to the active host session. They do not
