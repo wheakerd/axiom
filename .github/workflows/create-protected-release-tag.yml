@@ -58,13 +58,17 @@ jobs:
         with:
           client-id: ${{ vars.AXIOM_RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.AXIOM_RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
           permission-administration: read
           permission-contents: write
 
       - name: Validate live state and create one exact tag
         env:
           AXIOM_RELEASE_APP_ID: ${{ vars.AXIOM_RELEASE_APP_ID }}
+          AXIOM_RELEASE_APP_SLUG: ${{ steps.release-app-token.outputs.app-slug }}
           AXIOM_RELEASE_APP_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          AXIOM_RELEASE_INSTALLATION_ID: ${{ steps.release-app-token.outputs.installation-id }}
           GITHUB_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
           RELEASE_VERSION: ${{ inputs.version }}
@@ -75,3 +79,5 @@ jobs:
           --tag "$RELEASE_TAG"
           --expected-main-sha "$GITHUB_SHA"
           --expected-app-id "$AXIOM_RELEASE_APP_ID"
+          --app-slug "$AXIOM_RELEASE_APP_SLUG"
+          --installation-id "$AXIOM_RELEASE_INSTALLATION_ID"

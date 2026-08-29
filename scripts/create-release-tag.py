@@ -16,6 +16,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
 from axiom_validation.release_tag_controller import (  # noqa: E402
     ControllerError,
     GitHubApi,
+    ReleaseAppTokenIdentity,
     ReleaseTagRequest,
     canonical_result,
     run_controller,
@@ -41,6 +42,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--tag", required=True)
     parser.add_argument("--expected-main-sha", required=True)
     parser.add_argument("--expected-app-id", required=True, type=_positive_int)
+    parser.add_argument("--app-slug")
+    parser.add_argument("--installation-id", type=_positive_int)
     return parser.parse_args(argv)
 
 
@@ -77,10 +80,18 @@ def main(argv: list[str] | None = None) -> int:
             raise ControllerError("both read and dedicated release App tokens are required")
         if read_token == app_token:
             raise ControllerError("read and mutation tokens must use distinct identities")
+        if args.app_slug is None or args.installation_id is None:
+            raise ControllerError(
+                "create mode requires the token action's App slug and installation ID"
+            )
         result = run_controller(
             GitHubApi(api_url, read_token),
             GitHubApi(api_url, app_token),
             request,
+            ReleaseAppTokenIdentity(
+                app_slug=args.app_slug,
+                installation_id=args.installation_id,
+            ),
         )
     except ControllerError as error:
         print(f"Release tag controller rejected the request: {error}", file=sys.stderr)
