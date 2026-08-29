@@ -4,16 +4,15 @@ This document is a dated, read-only observation of GitHub repository policy.
 It does not configure GitHub, grant authority, or replace server-side rulesets.
 A failed workflow is detection evidence, not server-side mutation prevention.
 
-Last verified (UTC): `2026-08-28`
+Last verified (UTC): `2026-08-29`
 
 Verification used authenticated GitHub REST queries for the public
-`wheakerd/axiom` repository after a separately authorized two-step tag-ruleset
-migration. The migration first created and read back the active
-`restrict-release-tag-creation` ruleset while the earlier global creation freeze
-remained active, then removed only the temporary `creation` rule from the
-integrity ruleset. At least one server-side creation restriction remained active
-throughout. Follow-up verification was read-only and changed no branch, tag,
-release, workflow, permission, or collaborator. The
+`wheakerd/axiom` repository after the separately authorized release-App
+migration. The migration added and read back the App bypass while the owner-user
+bypass remained active, removed and read back only the owner-user bypass, then
+migrated only the integrity check context. At least one server-side creation
+restriction remained active throughout. Follow-up verification was read-only
+and changed no branch, tag, release, workflow, permission, or collaborator. The
 [ruleset REST API](https://docs.github.com/en/rest/repos/rules),
 [ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets),
 and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
@@ -21,9 +20,10 @@ are the external interpretation references.
 
 ## Main Branch Policy
 
-The active repository ruleset `require-signed-commits-on-main` targets exactly
-`refs/heads/main`. Its REST response reported `bypass_actors: []` and
-`current_user_can_bypass: never`. It contains:
+The active repository ruleset `require-signed-commits-on-main`, ID `20677005`
+and updated at `2026-08-26T04:46:04.609Z`, targets exactly
+`refs/heads/main`. Its administrator-visible REST response reported
+`bypass_actors: []` and `current_user_can_bypass: never`. It contains:
 
 - `pull_request`, with `required_approving_review_count: 0`,
   `dismiss_stale_reviews_on_push: false`, `required_reviewers: []`,
@@ -52,12 +52,13 @@ enforced deletion restriction.
 ## Release Tag Policy
 
 The active repository ruleset `require-github-signed-release-tags` targets
-exactly `refs/tags/v*`. Its REST response reported `bypass_actors: []` and
-`current_user_can_bypass: never`. It contains:
+exactly `refs/tags/v*`. The administrator-visible REST response for ruleset
+`20724385`, updated at `2026-08-29T01:53:08.312Z`, reported
+`bypass_actors: []` and `current_user_can_bypass: never`. It contains:
 
 - `required_signatures`;
 - `required_status_checks`, with the exact required GitHub Actions check
-  `Verify GitHub-signed release target`,
+  `Verify signed main history`,
   `strict_required_status_checks_policy: false`, and
   `do_not_enforce_on_create: false`;
 - `deletion`, which prevents ordinary actors from deleting matching tags; and
@@ -69,11 +70,13 @@ integrity rule in this ruleset, including the required signature, required
 check, deletion, and non-fast-forward controls.
 
 The separate active ruleset `restrict-release-tag-creation` also targets
-exactly `refs/tags/v*`. It contains exactly one `creation` rule. Its only bypass
-entry is `actor_id: 78034820`, `actor_type: User`, and
-`bypass_mode: always`, which identifies the repository owner `wheakerd`; the
-owner-visible response reported `current_user_can_bypass: always`. Because the
-bypass is scoped to this creation-only ruleset, it does not bypass any rule in
+exactly `refs/tags/v*`. Ruleset `21703772`, updated at
+`2026-08-29T01:52:49.941Z`, contains exactly one `creation` rule. Its only
+administrator-visible bypass entry is `actor_id: 4756785`,
+`actor_type: Integration`, and `bypass_mode: always`, which identifies the
+dedicated `axiom-release-tag-controller` GitHub App. The owner-visible response
+reported `current_user_can_bypass: never`. Because the App bypass is scoped to
+this creation-only ruleset, it does not bypass any rule in
 `require-github-signed-release-tags`.
 
 Together, the observed deletion and non-fast-forward rules prevent ordinary
@@ -86,7 +89,7 @@ Only the exact bypass actor may create a matching upstream tag. Other
 contributors can continue to fork the repository, create branches and tags in
 their forks, and propose pull requests; repository write access alone does not
 authorize formal release-tag creation.
-Release-tag creator allowlist: **user `wheakerd` only**.
+Release-tag creator allowlist: **GitHub App `axiom-release-tag-controller` only**.
 
 The required status check remains commit-level evidence and may be reusable for
 the same commit independently of the event that produced it. Commit-level
@@ -96,20 +99,13 @@ the server-side creation authorization boundary.
 
 ## Release Tag Controller Migration
 
-The checked-in v0.8.20 candidate adds `Create protected release tag` as the
-normal pre-creation controller. This dated document does not claim that its
-dedicated GitHub App, Actions environment, secrets, variables, or ruleset
-migration already exists on GitHub. The live read-back above remains the
-current evidence: the creation-only bypass is still the owner user and the
-integrity ruleset still requires the overloaded
-`Verify GitHub-signed release target` context. The controller intentionally
-rejects that state before mutation.
-
-The migration target has one dedicated GitHub App as the only `Integration` /
-`always` bypass actor in `restrict-release-tag-creation`. The owner-user bypass
-is removed from normal operation. The same App is absent from every bypass
-entry in `require-github-signed-release-tags`, whose required check becomes
-`Verify signed main history` from GitHub Actions. A break-glass operation is a
+The v0.8.20 migration registered GitHub App ID `4756785` with slug
+`axiom-release-tag-controller`, installed it only on `wheakerd/axiom`, and
+created the `release-tag-creation` Actions environment. The administrator
+read-back above confirms that the App is the only `Integration` / `always`
+bypass actor in `restrict-release-tag-creation`, the former owner-user bypass
+is absent, and `require-github-signed-release-tags` has no bypass actor and
+requires only `Verify signed main history`. A break-glass operation remains a
 separately authorized, audited ruleset change; no permanent interactive-user
 bypass is retained merely for convenience.
 
@@ -131,6 +127,16 @@ and immediately reads the ref back. It has no update or delete operation. An
 uncertain response is read back once and reported as a failure without retry;
 a rerun rejects the existing ref with zero mutation.
 
+GitHub returns `bypass_actors` only to a caller with ruleset write access. The
+controller deliberately retains `administration: read`, so its App-token view
+must omit the `bypass_actors` property. It binds ruleset IDs `20677005`, `20724385`,
+and `21703772` plus their normalized server update instants to the reviewed
+administrator-visible snapshot, then requires the App's effective bypass
+states to be `never`, `never`, and `always` for main, tag integrity, and tag
+creation respectively. Any actor or rule edit changes the server-owned update
+instant and fails before tag mutation; no workflow receives ruleset-write
+permission merely to reveal the actor arrays.
+
 The checked-in `Release signature guard` assigns distinct stable check names:
 `Verify signed main history`, `Verify release candidate`,
 `Verify created release tag`, and `Observe published immutable release`.
@@ -138,11 +144,11 @@ The checked-in `Release signature guard` assigns distinct stable check names:
 accepts only the exact current `main` SHA and the main-history context, so a
 candidate result cannot authorize production tag creation.
 
-Until the dedicated App is installed, its environment values are configured,
-the owner-user bypass is replaced, the integrity context is migrated, and all
-of those live objects are read back, v0.8.20 tag creation remains intentionally
-blocked. Repository code, tests, and documentation alone cannot establish that
-external state.
+The App, environment names, repository scope, ruleset actors, ruleset update
+instants, and migrated check context were read back directly before tag
+creation. At this dated snapshot `v0.8.20` remained absent after fail-closed
+controller refusals; repository code and offline tests alone are not used as
+evidence of those external facts.
 
 ## Production Release Version Policy
 
@@ -364,18 +370,14 @@ copy tokens or full administrative API responses into the repository.
 4. With a repository administrator present, repeat the individual ruleset GET
    and verify that `require-github-signed-release-tags` has no bypass actors or
    `creation` rule, while `restrict-release-tag-creation` has exactly one
-   `creation` rule and only the exact `User`/`always` bypass for actor
-   `78034820`. GitHub may omit bypass details from a response to a caller
-   without ruleset write visibility. This remains a manual read-only
-   verification. The controller's dedicated App may receive administration
-   read, but no workflow receives administration write.
-
-   After the separately authorized v0.8.20 migration, this same read-back must
-   instead show exactly one configured App `Integration` / `always` bypass in
-   the creation-only ruleset, no owner-user bypass, no integrity bypass, and
-   only `Verify signed main history` as the integrity required context. Update
-   this dated snapshot in the same reviewed change; until then the controller
-   rejects the currently documented state.
+   `creation` rule and only App ID `4756785` as an `Integration` / `always`
+   bypass. The same read-back must show no owner-user bypass, no integrity
+   bypass, and only `Verify signed main history` as the integrity required
+   context. GitHub omits bypass details from callers without ruleset write
+   visibility. The controller therefore binds the administrator-verified IDs
+   and update instants while requiring the read-only App's effective bypass
+   states to remain `never`, `never`, and `always`; no workflow receives
+   administration write.
 
 5. With repository administration read access, list direct collaborators and
    inspect every active ruleset's history. Confirm that a second trusted

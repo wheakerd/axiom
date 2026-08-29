@@ -416,19 +416,21 @@ The Git record for `v0.8.20` reports:
   the controller's exact-main authorization gate;
 - offline failures for mismatched version/tag/manifests, non-main targets,
   wrong-SHA checks, drift, pre-existing tags or Releases, owner or integrity
-  bypass, stale shared context, and uncertain-response reruns; and
+  bypass, ruleset-snapshot or visibility drift, stale shared context, and
+  uncertain-response reruns; and
 - a disposable bare-Git integration proving one creation attempt, exact
   read-back, and zero-mutation rerun behavior.
 
-The repository candidate does not claim that the dedicated GitHub App,
-`release-tag-creation` environment, secret or variables, creation-bypass
-migration, or integrity-context migration exists live. The authenticated
-read-only snapshot still shows the owner-user bypass and old shared check, so
-the controller rejects before mutation until those separately authorized
-external changes are configured and read back. Installed Skills, hooks, routes,
-action authority, benchmarks, and runtime dependencies are unchanged. Current
-installed Codex host and lifecycle observation is `NOT-RUN`, and authenticated
-Claude Code observation is `UNAVAILABLE / NOT-RUN`. See the
+The separately authorized live migration installed the dedicated App only on
+`wheakerd/axiom`, configured the `release-tag-creation` environment, replaced
+the owner-user bypass, and migrated the integrity context. Because GitHub
+omits the bypass actor property from the administration/read App token, the
+controller binds the administrator-verified ruleset IDs and update instants and requires
+the App's effective bypass states to remain `never`, `never`, and `always`.
+Installed Skills, hooks, routes, action authority, benchmarks, and runtime
+dependencies are unchanged. Current installed Codex host and lifecycle
+observation is `NOT-RUN`, and authenticated Claude Code observation is
+`UNAVAILABLE / NOT-RUN`. See the
 [v0.8.20 release notes](releases/v0.8.20.md).
 
 The Git record for `v0.8.19` reports:
