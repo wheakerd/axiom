@@ -212,6 +212,28 @@ class RepositoryPolicyTests(unittest.TestCase):
                     failures,
                 )
 
+    def test_repository_governance_rejects_controller_permission_drift(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        mutated = governance.replace(
+            "only `administration: read` plus `contents: write`; administration write is not\n"
+            "granted.",
+            "`administration: write` and `contents: write`.",
+            1,
+        )
+        self.assertNotEqual(governance, mutated)
+
+        failures = []
+        check_repository_governance_documents(mutated, codeowners, failures)
+        self.assertTrue(
+            any("Release Tag Controller Migration" in failure for failure in failures),
+            failures,
+        )
+
     def test_external_action_fixtures(self):
         failures = []
         self.assertEqual(155, check_external_action_scenarios(failures))

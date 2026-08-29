@@ -69,6 +69,13 @@ const github = Object.freeze({
           },
         };
       },
+      async getReleaseByTag({ tag }) {
+        const published = __scenario.publishedRelease;
+        if (!published || published.tag_name !== tag) {
+          throw new Error("Unexpected published Release lookup " + tag + ".");
+        }
+        return { data: published };
+      },
       async compareCommitsWithBasehead({ basehead }) {
         const base = String(basehead).split("...")[0];
         const configured = __scenario.comparison;
@@ -187,6 +194,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         comparison: dict[str, str] | None = None,
         signature: dict[str, Any] | None = None,
         package_version: str = RELEASE_VERSION,
+        published_release: dict[str, Any] | None = None,
         expected_failure: str | None = None,
     ) -> dict[str, Any]:
         refs: dict[str, dict[str, str]] = {
@@ -206,6 +214,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             "packageVersion": package_version,
             "comparison": comparison,
             "signature": signature,
+            "publishedRelease": published_release,
             "expectedFailure": expected_failure,
         }
 
@@ -271,37 +280,63 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             "release",
             "release",
             f"refs/tags/{release_tag}",
-            {"release": {"tag_name": release_tag}},
+            {"release": {"id": 700, "tag_name": release_tag}},
             target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
+            published_release={
+                "id": 700,
+                "tag_name": release_tag,
+                "target_commitish": tag_sha,
+                "draft": False,
+                "prerelease": False,
+                "immutable": True,
+            },
+        ),
+        fixture(
+            "release-not-immutable",
+            "release",
+            f"refs/tags/{release_tag}",
+            {"release": {"id": 701, "tag_name": release_tag}},
+            target_ref=f"refs/tags/{release_tag}",
+            target_sha=tag_sha,
+            published_release={
+                "id": 701,
+                "tag_name": release_tag,
+                "target_commitish": tag_sha,
+                "draft": False,
+                "prerelease": False,
+                "immutable": False,
+            },
+            expected_failure="must be final, immutable, non-prerelease",
         ),
         fixture(
             "release-event-ref-mismatch",
             "release",
             f"refs/tags/{mismatched_tag}",
-            {"release": {"tag_name": release_tag}},
+            {"release": {"id": 700, "tag_name": release_tag}},
             expected_failure="does not match event ref",
         ),
         fixture(
             "release-version-mismatch",
             "release",
             f"refs/tags/{mismatched_tag}",
-            {"release": {"tag_name": mismatched_tag}},
+            {"release": {"id": 700, "tag_name": mismatched_tag}},
             target_ref=f"refs/tags/{mismatched_tag}",
             target_sha=tag_sha,
             expected_failure="but manifests declare",
         ),
         fixture(
-            "workflow-dispatch-main",
+            "workflow-dispatch-main-rejected",
             "workflow_dispatch",
             "refs/heads/main",
-            {},
+            {"inputs": {"phase": "candidate"}},
+            expected_failure="Manual candidate verification cannot run",
         ),
         fixture(
             "workflow-dispatch-release-branch",
             "workflow_dispatch",
             f"refs/heads/release/{release_tag}",
-            {},
+            {"inputs": {"phase": "candidate"}},
             target_ref=f"refs/heads/release/{release_tag}",
             target_sha=release_branch_sha,
         ),
@@ -309,17 +344,25 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             "workflow-dispatch-release-tag",
             "workflow_dispatch",
             f"refs/tags/{release_tag}",
-            {},
+            {"inputs": {"phase": "published-release"}},
             target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
+            published_release={
+                "id": 700,
+                "tag_name": release_tag,
+                "target_commitish": tag_sha,
+                "draft": False,
+                "prerelease": False,
+                "immutable": True,
+            },
         ),
         fixture(
             "workflow-dispatch-malformed-tag",
             "workflow_dispatch",
             "refs/tags/v01",
-            {},
+            {"inputs": {"phase": "published-release"}},
             expected_failure=(
-                "Manual tag verification requires one exact stable numeric "
+                "Published-release observation requires one exact stable numeric "
                 "production release tag"
             ),
         ),
@@ -449,7 +492,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             f"release-candidate-version-{case_id}",
             "workflow_dispatch",
             f"refs/heads/release/v{version}",
-            {},
+            {"inputs": {"phase": "candidate"}},
             target_ref=f"refs/heads/release/v{version}",
             target_sha=release_branch_sha,
             package_version=version,
@@ -479,7 +522,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         "release-candidate-manifest-version-mismatch",
         "workflow_dispatch",
         f"refs/heads/release/{release_tag}",
-        {},
+        {"inputs": {"phase": "candidate"}},
         target_ref=f"refs/heads/release/{release_tag}",
         target_sha=release_branch_sha,
         package_version=mismatched_tag.removeprefix("v"),

@@ -5,11 +5,47 @@ the repository's version tags and the commits they identify.
 
 ## Unreleased
 
-The active tree is the v0.8.19 release-evidence fix-forward candidate. It
-preserves the immutable v0.8.18 tag without publishing a Release for it, and
-does not reuse that tag's external routing observation as v0.8.19 evidence.
+The active tree is the v0.8.20 release-tag controller candidate. It does not
+claim that the dedicated GitHub App, Actions environment, or live ruleset
+migration has been configured; tag creation remains fail-closed until those
+external objects are separately authorized and read back.
 
-## 0.8.19 - unreleased candidate
+## 0.8.20 - unreleased candidate
+
+### Security
+
+- Added one manual-only, exact-main pre-creation controller that binds version,
+  tag, commit, tree, both manifests, required checks, GitHub-made signature,
+  tag and Release absence, App identity, repository scope, and all live
+  rulesets twice before one exact `POST /git/refs` and immediate read-back.
+- Limited the dedicated App token request to this repository with
+  `administration: read` and `contents: write`; pull-request code receives no
+  secret, and the controller exposes no tag update, deletion, publication, or
+  ruleset-write operation.
+- Split the release guard into `Verify signed main history`, `Verify release
+  candidate`, `Verify created release tag`, and `Observe published immutable
+  release`, so candidate evidence cannot authorize production tag creation.
+
+### Regression Contract
+
+- Added offline failures for version, tag, manifest, target, check-SHA,
+  signature, absence, ruleset, bypass, identity, repository-scope, and drift
+  mismatches, including an uncertain mutation response that is read back once
+  and never retried.
+- Added a disposable bare-Git integration that creates one exact tag, verifies
+  it, and proves an interrupted or completed rerun performs zero additional
+  mutation.
+- Preserved the dated live snapshot truthfully: it still reports the owner-user
+  bypass and old shared required context. The new controller rejects that state
+  until the dedicated App and ruleset migration are externally configured.
+
+Installed Skills, hooks, routes, action authority, benchmarks, and runtime
+dependencies are unchanged. Current Codex host and lifecycle observation is
+`NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`.
+
+See [the v0.8.20 release notes](docs/releases/v0.8.20.md).
+
+## 0.8.19 - 2026-08-28
 
 ### Fixed
 
@@ -18,9 +54,9 @@ does not reuse that tag's external routing observation as v0.8.19 evidence.
   still reported the earlier test and release-provenance counts.
 - Advanced manifests and current release-bound evidence to the immediate next
   patch version without moving or deleting the immutable v0.8.18 tag.
-- Required a fresh signed candidate, exact-host acceptance batch, tag, draft,
-  publication workflow, and signature guard for v0.8.19; the successful
-  v0.8.18 batch remains separate unpublished evidence.
+- Published a fresh signed candidate, exact-host acceptance batch, immutable
+  tag and Release, Latest transition, and signature guard for v0.8.19; the
+  successful v0.8.18 batch remains separate unpublished evidence.
 
 See [the v0.8.19 release notes](docs/releases/v0.8.19.md).
 

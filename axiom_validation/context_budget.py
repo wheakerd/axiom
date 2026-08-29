@@ -64,8 +64,8 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.19 fixes release-owned evidence after v0.8.18 publication "
-            "stopped; installed Skills, hooks, routes, and action authority are "
+            "Axiom v0.8.20 adds repository release-tag controller policy and "
+            "validation only; installed Skills, hooks, routes, and action authority are "
             "unchanged. No current installed Codex host or lifecycle observation was "
             "run; prior evidence remains separate."
         ),
@@ -79,8 +79,8 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.19 fixes release-owned evidence after v0.8.18 publication "
-            "stopped; the installed Claude hook is unchanged. Authenticated installed-"
+            "Axiom v0.8.20 adds repository release-tag controller policy and "
+            "validation only; the installed Claude hook is unchanged. Authenticated installed-"
             "host and lifecycle observation are unavailable and not run; prior "
             "evidence remains separate."
         ),

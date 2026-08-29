@@ -52,10 +52,12 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/results/v0.7.7/claude-code/linux.json",
     "scripts/check-compatibility-evidence.py",
     "scripts/check-release-evidence.py",
+    "scripts/create-release-tag.py",
     "scripts/measure-routing-context.py",
     "scripts/render-release-facts.py",
     "axiom_validation/route-boundaries-v1.json",
     ".github/workflows/publish-immutable-release.yml",
+    ".github/workflows/create-protected-release-tag.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -188,6 +190,37 @@ RELEASE_TAG_POLICY_ANCHORS = (
     "Release-tag creator allowlist: **user `wheakerd` only**.",
     "Commit-level required-check evidence is defense in depth, not exact "
     "tag-creation authorization.",
+)
+RELEASE_TAG_CONTROLLER_HEADING = "## Release Tag Controller Migration"
+RELEASE_TAG_CONTROLLER_ANCHORS = (
+    "The checked-in v0.8.20 candidate adds `Create protected release tag` as the "
+    "normal pre-creation controller.",
+    "This dated document does not claim that its dedicated GitHub App, Actions "
+    "environment, secrets, variables, or ruleset migration already exists on GitHub.",
+    "The controller intentionally rejects that state before mutation.",
+    "The migration target has one dedicated GitHub App as the only `Integration` / "
+    "`always` bypass actor in `restrict-release-tag-creation`.",
+    "The same App is absent from every bypass entry in "
+    "`require-github-signed-release-tags`, whose required check becomes "
+    "`Verify signed main history` from GitHub Actions.",
+    "A break-glass operation is a separately authorized, audited ruleset change; "
+    "no permanent interactive-user bypass is retained merely for convenience.",
+    "The `release-tag-creation` Actions environment owns "
+    "`AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric "
+    "`AXIOM_RELEASE_APP_ID`.",
+    "The minted App token is scoped to this repository and requests only "
+    "`administration: read` plus `contents: write`; administration write is not granted.",
+    "Before one exact `POST /git/refs`, the controller binds the requested version "
+    "and tag, live protected-main commit and tree, both manifest versions",
+    "It performs the same complete read a second time, rejects any difference, "
+    "creates only the exact absent tag, and immediately reads the ref back.",
+    "An uncertain response is read back once and reported as a failure without retry; "
+    "a rerun rejects the existing ref with zero mutation.",
+    "`Verify signed main history`, `Verify release candidate`, "
+    "`Verify created release tag`, and `Observe published immutable release`.",
+    "The controller accepts only the exact current `main` SHA and the main-history "
+    "context, so a candidate result cannot authorize production tag creation.",
+    "v0.8.20 tag creation remains intentionally blocked.",
 )
 GOVERNANCE_REVIEW_BOUNDARY_HEADING = "## Human Review Trust Boundary"
 GOVERNANCE_REVIEW_BOUNDARY_ANCHORS = (
@@ -417,6 +450,24 @@ def check_repository_governance_documents(
                 failures.append(
                     "docs/repository-governance.md Release Tag Policy is missing "
                     f"scoped anchor {anchor!r}"
+                )
+
+    controller_heading = RELEASE_TAG_CONTROLLER_HEADING
+    if governance_text.count(controller_heading) != 1:
+        failures.append(
+            "docs/repository-governance.md must contain exactly one Release Tag "
+            "Controller Migration section"
+        )
+    else:
+        controller_section = governance_text.split(controller_heading, 1)[1].split(
+            "\n## ", 1
+        )[0]
+        normalized_controller_section = " ".join(controller_section.split())
+        for anchor in RELEASE_TAG_CONTROLLER_ANCHORS:
+            if " ".join(anchor.split()) not in normalized_controller_section:
+                failures.append(
+                    "docs/repository-governance.md Release Tag Controller Migration "
+                    f"is missing scoped anchor {anchor!r}"
                 )
 
     review_heading = GOVERNANCE_REVIEW_BOUNDARY_HEADING

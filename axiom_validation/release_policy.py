@@ -48,6 +48,9 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
                 return None
             return [item.value for item in value]
 
+        def scalar(value: Any) -> str | None:
+            return value.value if isinstance(value, CanonicalYamlScalar) else None
+
         if (
             not isinstance(push, dict)
             or scalar_values(push.get("branches")) != ["main"]
@@ -62,8 +65,50 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
                 f"{label} release trigger must cover published and edited events"
             )
         manual = triggers.get("workflow_dispatch")
-        if not isinstance(manual, CanonicalYamlScalar) or manual.value:
-            failures.append(f"{label} workflow_dispatch trigger must not accept inputs")
+        inputs = manual.get("inputs") if isinstance(manual, dict) else None
+        phase = inputs.get("phase") if isinstance(inputs, dict) else None
+        if (
+            not isinstance(manual, dict)
+            or set(manual) != {"inputs"}
+            or not isinstance(inputs, dict)
+            or set(inputs) != {"phase"}
+            or not isinstance(phase, dict)
+            or set(phase) != {"description", "required", "type", "options"}
+            or scalar(phase.get("required")) != "true"
+            or scalar(phase.get("type")) != "choice"
+            or scalar_values(phase.get("options")) != ["candidate", "published-release"]
+        ):
+            failures.append(
+                f"{label} workflow_dispatch must select only candidate or published-release"
+            )
+
+    context_name = (
+        "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && "
+        "'Verify signed main history' || github.event_name == 'push' && "
+        "startsWith(github.ref, 'refs/tags/') && 'Verify created release tag' || "
+        "github.event_name == 'workflow_dispatch' && inputs.phase == 'candidate' && "
+        "'Verify release candidate' || 'Observe published immutable release' }}"
+    )
+    jobs = document.get("jobs")
+    job = jobs.get("verify-github-signature") if isinstance(jobs, dict) else None
+    job_name = job.get("name") if isinstance(job, dict) else None
+    if not isinstance(job_name, CanonicalYamlScalar) or job_name.value != context_name:
+        failures.append(f"{label} must map events to four distinct stable check contexts")
+    for check_context in (
+        "Verify signed main history",
+        "Verify release candidate",
+        "Verify created release tag",
+        "Observe published immutable release",
+    ):
+        owners = [
+            candidate
+            for candidate in sorted((REPOSITORY_ROOT / ".github" / "workflows").glob("*.y*ml"))
+            if check_context in candidate.read_text(encoding="utf-8")
+        ]
+        if owners != [path] or text.count(check_context) != 1:
+            failures.append(
+                f"release check context {check_context!r} must have exactly one workflow owner"
+            )
 
     canonical_version_declaration = (
         f"const productionReleaseVersion = /^{PRODUCTION_RELEASE_VERSION_PATTERN}$/;"
@@ -92,24 +137,32 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "versions[0] !== versions[1]",
             "async function peelRefToCommit(qualifiedRef, expectedObjectSha = null)",
             "object.sha !== expectedObjectSha",
+            "let targetPhase;",
             "context.payload.release?.tag_name",
             "const version = releaseTagVersion(tagName);",
             "context.ref !== targetRef",
             "GitHub Release tag ${targetRef} does not match event ref ${context.ref}.",
             "targetCommit = await peelRefToCommit(targetRef);",
             "context.ref === defaultRef",
+            'targetPhase = "main-history";',
             'context.ref.startsWith("refs/tags/")',
+            'targetPhase = "created-tag";',
             "!isSingleTagCreation(context.payload)",
             "failClosedTagMutation(",
             "targetCommit = await peelRefToCommit(targetRef, context.payload.after);",
-            "Manual tag verification requires one exact stable numeric production release tag",
-            "context.ref.startsWith(releaseBranchPrefix)",
+            'const manualPhase = context.payload.inputs?.phase;',
+            'manualPhase === "published-release"',
+            'manualPhase === "candidate" && context.ref.startsWith(releaseBranchPrefix)',
+            'targetPhase = "release-candidate";',
             "const candidateTagName = context.ref.slice(releaseBranchPrefix.length);",
             "Manual release-candidate verification requires",
-            "Unexpected manual verification ref",
             "const packageVersion = await packageVersionAtCommit(targetCommit);",
             "packageVersion !== targetVersion",
             "names version ${targetVersion}, but manifests declare ${packageVersion}",
+            'targetPhase === "published-release"',
+            "github.rest.repos.getReleaseByTag",
+            "publishedRelease.immutable !== true",
+            "Release event ID does not match the live immutable release",
             "const defaultCommit = await peelRefToCommit(defaultRef);",
             "const historyBase = targetMustDescendFromDefault",
             "github.rest.repos.compareCommitsWithBasehead",
@@ -144,6 +197,15 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             failures.append(
                 f"{label} still applies release provenance to pull requests via "
                 f"{removed_pull_request_gate!r}"
+            )
+    for overloaded_context in (
+        "Verify GitHub-signed release target",
+        "Manual tag verification requires",
+        "workflow-dispatch-main",
+    ):
+        if overloaded_context in text:
+            failures.append(
+                f"{label} retains overloaded release-check context {overloaded_context!r}"
             )
     return text
 

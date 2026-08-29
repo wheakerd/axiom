@@ -1,0 +1,77 @@
+name: Create protected release tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable numeric version declared by both manifests on current main
+        required: true
+        type: string
+      tag:
+        description: Exact absent v<version> tag to create on current main
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: create-protected-release-tag
+  cancel-in-progress: false
+
+jobs:
+  create-protected-release-tag:
+    name: Create protected release tag
+    if: "github.ref == 'refs/heads/main'"
+    environment: release-tag-creation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the authorized main commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Validate the non-secret release request
+        env:
+          AXIOM_RELEASE_APP_ID: ${{ vars.AXIOM_RELEASE_APP_ID }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: >-
+          python3 scripts/create-release-tag.py validate-request
+          --repository "$GITHUB_REPOSITORY"
+          --version "$RELEASE_VERSION"
+          --tag "$RELEASE_TAG"
+          --expected-main-sha "$GITHUB_SHA"
+          --expected-app-id "$AXIOM_RELEASE_APP_ID"
+
+      - name: Mint the repository-scoped release App token
+        id: release-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.AXIOM_RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AXIOM_RELEASE_APP_PRIVATE_KEY }}
+          permission-administration: read
+          permission-contents: write
+
+      - name: Validate live state and create one exact tag
+        env:
+          AXIOM_RELEASE_APP_ID: ${{ vars.AXIOM_RELEASE_APP_ID }}
+          AXIOM_RELEASE_APP_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: >-
+          python3 scripts/create-release-tag.py create
+          --repository "$GITHUB_REPOSITORY"
+          --version "$RELEASE_VERSION"
+          --tag "$RELEASE_TAG"
+          --expected-main-sha "$GITHUB_SHA"
+          --expected-app-id "$AXIOM_RELEASE_APP_ID"
