@@ -1060,7 +1060,7 @@ def check_hook_runtime_workflow_text(
     *,
     label: str = ".github/workflows/hook-runtime-integration.yml",
 ) -> dict[str, Any] | None:
-    """Validate the exact read-only native hook-runtime matrix."""
+    """Validate the read-only native hook matrix and its stable aggregate gate."""
     try:
         document = parse_canonical_yaml_document(text, label)
     except CanonicalYamlError as error:
@@ -1083,9 +1083,14 @@ def check_hook_runtime_workflow_text(
         failures.append(f"{label} must keep its exact public workflow name")
 
     triggers = document.get("on")
-    if not isinstance(triggers, dict) or set(triggers) != {"pull_request", "push"}:
+    if not isinstance(triggers, dict) or set(triggers) != {
+        "pull_request",
+        "push",
+        "schedule",
+    }:
         failures.append(
-            f"{label} must structurally declare only pull_request and push triggers"
+            f"{label} must structurally declare only pull_request, push, and the "
+            "bounded weekly schedule"
         )
     else:
         for event_name in ("pull_request", "push"):
@@ -1094,6 +1099,17 @@ def check_hook_runtime_workflow_text(
                 "main"
             ]:
                 failures.append(f"{label} {event_name} trigger must target only main")
+        schedule = triggers.get("schedule")
+        if (
+            not isinstance(schedule, list)
+            or len(schedule) != 1
+            or not isinstance(schedule[0], dict)
+            or set(schedule[0]) != {"cron"}
+            or scalar(schedule[0].get("cron")) != "17 6 * * 1"
+        ):
+            failures.append(
+                f"{label} must keep the exact bounded weekly compatibility schedule"
+            )
 
     permissions = document.get("permissions")
     if not isinstance(permissions, dict) or set(permissions) != {"contents"}:
@@ -1103,8 +1119,14 @@ def check_hook_runtime_workflow_text(
 
     jobs = document.get("jobs")
     job = jobs.get("hook-runtime") if isinstance(jobs, dict) else None
-    if not isinstance(jobs, dict) or set(jobs) != {"hook-runtime"}:
-        failures.append(f"{label} must declare only the hook-runtime job")
+    gate = jobs.get("hook-runtime-gate") if isinstance(jobs, dict) else None
+    if not isinstance(jobs, dict) or set(jobs) != {
+        "hook-runtime",
+        "hook-runtime-gate",
+    }:
+        failures.append(
+            f"{label} must declare only hook-runtime and hook-runtime-gate jobs"
+        )
     expected_job_keys = {
         "name",
         "strategy",
@@ -1209,9 +1231,75 @@ def check_hook_runtime_workflow_text(
                     f"{label} must run exact local step {expected_name!r}"
                 )
 
-    expression_free = text.replace("${{ matrix.os }}", "")
-    if text.count("${{ matrix.os }}") != 2 or "${{" in expression_free:
-        failures.append(f"{label} may use only the exact matrix.os expression")
+    expected_gate_keys = {
+        "name",
+        "if",
+        "needs",
+        "runs-on",
+        "timeout-minutes",
+        "steps",
+    }
+    if not isinstance(gate, dict) or set(gate) != expected_gate_keys:
+        failures.append(
+            f"{label} hook-runtime-gate must contain only stable name, always "
+            "condition, dependency, runner, timeout, and steps"
+        )
+    elif (
+        scalar(gate.get("name")) != "hook-runtime-gate"
+        or scalar(gate.get("if")) != "${{ always() }}"
+        or scalar_values(gate.get("needs")) != ["hook-runtime"]
+        or scalar(gate.get("runs-on")) != "ubuntu-24.04"
+        or scalar(gate.get("timeout-minutes")) != "2"
+    ):
+        failures.append(
+            f"{label} hook-runtime-gate must keep its stable name, use if: always(), "
+            "depend only on the full hook-runtime matrix, and keep its fixed runner "
+            "and timeout"
+        )
+
+    gate_steps = gate.get("steps") if isinstance(gate, dict) else None
+    if (
+        not isinstance(gate_steps, list)
+        or len(gate_steps) != 1
+        or not isinstance(gate_steps[0], dict)
+    ):
+        failures.append(
+            f"{label} hook-runtime-gate must contain exactly one fail-closed step"
+        )
+    else:
+        gate_step = gate_steps[0]
+        gate_env = gate_step.get("env")
+        if (
+            set(gate_step) != {"name", "env", "run"}
+            or scalar(gate_step.get("name")) != "Require successful native matrix"
+            or not isinstance(gate_env, dict)
+            or set(gate_env) != {"HOOK_RUNTIME_RESULT"}
+            or scalar(gate_env.get("HOOK_RUNTIME_RESULT"))
+            != "${{ needs.hook-runtime.result }}"
+            or scalar(gate_step.get("run"))
+            != 'test "$HOOK_RUNTIME_RESULT" = success'
+        ):
+            failures.append(
+                f"{label} hook-runtime-gate must fail closed on every current-run "
+                "matrix result other than success"
+            )
+
+    allowed_expressions = {
+        "${{ matrix.os }}": 2,
+        "${{ always() }}": 1,
+        "${{ needs.hook-runtime.result }}": 1,
+    }
+    expression_free = text
+    for expression, expected_count in allowed_expressions.items():
+        if text.count(expression) != expected_count:
+            failures.append(
+                f"{label} must use {expression!r} exactly {expected_count} time(s)"
+            )
+        expression_free = expression_free.replace(expression, "")
+    if "${{" in expression_free:
+        failures.append(
+            f"{label} may use only the exact matrix, always, and current-result expressions"
+        )
     for forbidden in (
         "pull_request_target",
         "${{ secrets.",

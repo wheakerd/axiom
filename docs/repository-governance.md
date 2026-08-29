@@ -193,12 +193,60 @@ checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
 credentials, and exercise only temporary roots through `cmd.exe` or
 no-profile Bash, as applicable to the checked-in command.
 
-These three matrix checks are intentionally not required by the active `main`
-ruleset during their initial native-CI observation period. A platform failure
-is review evidence, but does not yet block an external contributor's branch or
-fork while runner stability is being established. Only `repository-guards`
-and `unit-and-integration-tests` are server-side merge requirements in this
-dated snapshot; a future ruleset change requires separate live verification.
+### Hook Runtime Promotion Gate
+
+The same workflow defines one stable aggregate job and check,
+`hook-runtime-gate`. It uses `if: always()`, depends on the complete
+`hook-runtime` matrix job, and accepts only the current workflow run's
+`needs.hook-runtime.result == success`. Failed, cancelled, skipped, neutral, or
+missing current-run evidence therefore cannot produce a successful aggregate
+check. Because the dependency is the matrix job ID rather than a list of
+platform check names, an approved matrix expansion is included without
+changing the public aggregate name. The aggregate job performs no checkout,
+receives no secret, and has no repository mutation step.
+
+The workflow also runs at `17 6 * * 1`, a bounded weekly compatibility
+observation on the default branch. A scheduled failure reports runner-image,
+shell, runtime, setup-action, or command drift through ordinary Actions state;
+it does not mutate repository settings and is not installed-host or
+model-session evidence. Pull requests continue to use ordinary
+`pull_request`, global `contents: read`, and checkout with credential
+persistence disabled; `pull_request_target` and repository secrets remain
+absent.
+
+The observation period exits only when direct GitHub Actions history satisfies
+all of these conditions:
+
+- at least 30 consecutive completed `push` runs on `main` have a successful
+  workflow conclusion and successful Ubuntu, Windows, and macOS matrix jobs;
+- the interval from the first qualifying run to the last is at least 14 full
+  days;
+- there is no unresolved runner-specific false failure or scheduled
+  compatibility failure;
+- the three platform check names and `hook-runtime-gate` remain stable, and at
+  least one successful aggregate result has been observed on `main` before
+  ruleset promotion; and
+- when an eligible fork pull request is available during the observation
+  period, its ordinary read-only `pull_request` run succeeds. Without such a
+  run, fork execution remains **NOT-RUN** and same-repository pull requests are
+  not represented as fork evidence.
+
+Any failed, cancelled, skipped, neutral, stale, or missing required platform
+result breaks the consecutive sequence. Promotion then requires a new
+qualifying sequence, a separately authorized main-ruleset edit that requires
+only `hook-runtime-gate` in addition to the existing checks, and an immediate
+administrator-visible read-back of the exact ruleset.
+
+The read-only Issue #91 inspection on `2026-08-29` found seven consecutive
+successful `main` push runs, IDs `33157277902`, `33165891508`, `33189905453`,
+`33193216120`, `33226776075`, `33229067054`, and `33230600290`. Each run had
+successful Ubuntu, Windows, and macOS jobs, but the sequence spanned only
+`2026-08-28T08:55:43Z` through `2026-08-29T03:07:12Z`, less than one day. Seven
+same-repository pull-request runs also succeeded; no scheduled run or fork
+pull-request run was available. The observation gate is therefore **NOT
+SATISFIED**. The authenticated live read-back still reports only
+`repository-guards` and `unit-and-integration-tests` as required by ruleset
+`20677005`; `hook-runtime-gate` must not be promoted from this evidence.
 
 The checked-in v0.8.20 `Release signature guard` maps each evidence boundary to
 one stable name: `Verify signed main history`, `Verify release candidate`,
@@ -331,7 +379,8 @@ Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator
 permission, or required check. The external contribution flow and merge gates
 therefore remain unchanged: `repository-guards` and
 `unit-and-integration-tests` remain the only required checks, and the three
-hook-runtime matrix checks remain non-required review evidence.
+hook-runtime matrix checks plus `hook-runtime-gate` remain non-required review
+evidence.
 
 ## Manual Re-verification
 
