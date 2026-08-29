@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
 
@@ -35,6 +36,48 @@ DOCKER_PARSER_DIRECTIVE_PATTERN = re.compile(
     r"^[ \t]*#[ \t]*(?:escape|syntax|check)[ \t]*=",
     re.IGNORECASE,
 )
+DOCKER_REMOTE_ADD_SOURCE_PATTERN = re.compile(
+    r"^(?:[A-Za-z][A-Za-z0-9+.-]*://|[^/@\s]+@[^:/\s]+:)"
+)
+DOCKERFILE_INSTRUCTIONS = frozenset(
+    {
+        "add",
+        "arg",
+        "cmd",
+        "copy",
+        "entrypoint",
+        "env",
+        "expose",
+        "from",
+        "healthcheck",
+        "label",
+        "maintainer",
+        "onbuild",
+        "run",
+        "shell",
+        "stopsignal",
+        "user",
+        "volume",
+        "workdir",
+    }
+)
+
+
+@dataclass(frozen=True)
+class DockerfilePinCounts:
+    base_images: int
+    other_inputs: int
+
+    @property
+    def total(self) -> int:
+        return self.base_images + self.other_inputs
+
+
+@dataclass(frozen=True)
+class ActionGraphPinCounts:
+    total: int
+    dockerfile_base_images: int
+    dockerfile_other_inputs: int
 
 
 def walk_yaml_uses(
@@ -409,21 +452,369 @@ def dockerfile_logical_lines(
     return logical_lines
 
 
-def check_dockerfile_base_images(
+def docker_source_kind(
+    source: str,
+    stages: set[str],
+    instruction: str,
+    location: str,
+    failures: list[str],
+    *,
+    allow_scratch: bool = False,
+) -> str | None:
+    """Classify one literal stage or digest-pinned image source."""
+    if not source or any(character in source for character in "$'\"`"):
+        failures.append(
+            f"{location} {instruction} variables, expressions, and quoted "
+            "values are unsupported"
+        )
+        return None
+
+    source_key = source.casefold()
+    if allow_scratch and source_key == "scratch":
+        return "scratch"
+    if source_key in stages:
+        return "stage"
+    if is_digest_pinned_docker_source(source):
+        return "remote"
+    failures.append(
+        f"{location} remote {instruction} source {source!r} must use "
+        "@sha256:<64 hex> or reference a previously validated stage"
+    )
+    return None
+
+
+def canonical_docker_local_source(
+    raw: str,
+    instruction: str,
+    location: str,
+    failures: list[str],
+) -> PurePosixPath | None:
+    """Accept one literal source relative to the local action directory."""
+    if raw == ".":
+        return PurePosixPath(".")
+    tail = raw[2:] if raw.startswith("./") else raw
+    if (
+        not tail
+        or raw.startswith("/")
+        or raw.startswith(".//")
+        or "\\" in raw
+        or "\x00" in raw
+        or re.fullmatch(r"[A-Za-z0-9._/-]+", tail) is None
+    ):
+        failures.append(
+            f"{location} {instruction} local source {raw!r} uses traversal, "
+            "expansion, or unsupported path syntax"
+        )
+        return None
+    relative = PurePosixPath(tail)
+    if (
+        relative.is_absolute()
+        or relative.as_posix() != tail
+        or any(part in {"", ".", ".."} for part in relative.parts)
+    ):
+        failures.append(
+            f"{location} {instruction} local source {raw!r} uses traversal, "
+            "expansion, or unsupported path syntax"
+        )
+        return None
+    return relative
+
+
+def check_docker_local_source(
+    action_directory: Path,
+    relative: PurePosixPath,
+    raw: str,
+    instruction: str,
+    location: str,
+    failures: list[str],
+) -> bool:
+    """Require a contained ordinary source tree without symbolic links."""
+    root = action_directory.resolve()
+    lexical = root / Path(*relative.parts)
+    current = root
+    for part in relative.parts:
+        current /= part
+        if current.is_symlink():
+            failures.append(
+                f"{location} {instruction} local source {raw!r} must not use "
+                "a symbolic link"
+            )
+            return False
+
+    candidate = lexical.resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        failures.append(
+            f"{location} {instruction} local source {raw!r} resolves outside "
+            "the action directory"
+        )
+        return False
+    if not candidate.exists():
+        failures.append(
+            f"{location} {instruction} local source {raw!r} does not exist "
+            "in the action directory"
+        )
+        return False
+    if not candidate.is_file() and not candidate.is_dir():
+        failures.append(
+            f"{location} {instruction} local source {raw!r} is not an ordinary "
+            "file or directory"
+        )
+        return False
+    if candidate.is_file():
+        return True
+
+    try:
+        descendants = candidate.rglob("*")
+        for descendant in descendants:
+            relative_descendant = descendant.relative_to(root).as_posix()
+            if descendant.is_symlink():
+                failures.append(
+                    f"{location} {instruction} local source {raw!r} contains "
+                    f"symbolic link {relative_descendant!r}"
+                )
+                return False
+            if not descendant.is_file() and not descendant.is_dir():
+                failures.append(
+                    f"{location} {instruction} local source {raw!r} contains "
+                    f"non-ordinary entry {relative_descendant!r}"
+                )
+                return False
+    except OSError as error:
+        failures.append(
+            f"{location} cannot inspect {instruction} local source {raw!r}: {error}"
+        )
+        return False
+    return True
+
+
+def check_docker_copy_or_add(
+    arguments: str | None,
+    instruction: str,
+    stages: set[str],
+    action_directory: Path,
+    location: str,
+    failures: list[str],
+) -> int:
+    """Validate bounded COPY or ADD syntax and return non-base remote pins."""
+    tokens = arguments.split() if arguments is not None else []
+    if not tokens:
+        failures.append(f"{location} {instruction} must name a source and destination")
+        return 0
+    if any(
+        any(character in token for character in "$'\"`\\") for token in tokens
+    ):
+        failures.append(
+            f"{location} {instruction} variables, expressions, quoted values, "
+            "and escapes are unsupported"
+        )
+        return 0
+
+    from_source: str | None = None
+    invalid_flag = False
+    while tokens and tokens[0].startswith("--"):
+        flag = tokens.pop(0)
+        if instruction == "COPY" and flag.startswith("--from="):
+            if from_source is not None:
+                failures.append(f"{location} COPY repeats the --from flag")
+                invalid_flag = True
+            else:
+                from_source = flag.removeprefix("--from=")
+        else:
+            failures.append(
+                f"{location} {instruction} uses unsupported or noncanonical flag {flag!r}"
+            )
+            invalid_flag = True
+    if invalid_flag:
+        return 0
+    if len(tokens) < 2:
+        failures.append(f"{location} {instruction} must name a source and destination")
+        return 0
+    if any(token.startswith("--") for token in tokens):
+        failures.append(f"{location} {instruction} has a misplaced instruction flag")
+        return 0
+
+    sources = tokens[:-1]
+    if from_source is not None:
+        if any(any(character in source for character in "*?[]{}") for source in sources):
+            failures.append(
+                f"{location} COPY --from uses unsupported source expansion"
+            )
+            return 0
+        source_kind = docker_source_kind(
+            from_source,
+            stages,
+            "COPY --from",
+            location,
+            failures,
+        )
+        return int(source_kind == "remote")
+
+    for source in sources:
+        if instruction == "ADD" and DOCKER_REMOTE_ADD_SOURCE_PATTERN.match(source):
+            failures.append(
+                f"{location} ADD remote URL or Git source {source!r} is prohibited"
+            )
+            continue
+        relative = canonical_docker_local_source(
+            source,
+            instruction,
+            location,
+            failures,
+        )
+        if relative is not None:
+            check_docker_local_source(
+                action_directory,
+                relative,
+                source,
+                instruction,
+                location,
+                failures,
+            )
+    return 0
+
+
+def check_docker_run_mount(
+    arguments: str | None,
+    stages: set[str],
+    location: str,
+    failures: list[str],
+) -> int:
+    """Validate the bounded RUN --mount=from form and return remote pins."""
+    tokens = arguments.split() if arguments is not None else []
+    if not tokens:
+        failures.append(f"{location} RUN must name a command")
+        return 0
+
+    flags: list[str] = []
+    while tokens and tokens[0].startswith("--"):
+        flags.append(tokens.pop(0))
+    if not flags:
+        return 0
+    if not tokens:
+        failures.append(f"{location} RUN flags must be followed by a command")
+        return 0
+    if len(flags) != 1:
+        failures.append(
+            f"{location} RUN uses duplicate or multiple Dockerfile flags"
+        )
+        return 0
+
+    flag = flags[0]
+    if not flag.startswith("--mount="):
+        failures.append(
+            f"{location} RUN uses unsupported or noncanonical flag {flag!r}"
+        )
+        return 0
+    raw_options = flag.removeprefix("--mount=")
+    if not raw_options or any(
+        character in raw_options for character in "$'\"`\\"
+    ):
+        failures.append(
+            f"{location} RUN --mount variables, expressions, quoted values, "
+            "and escapes are unsupported"
+        )
+        return 0
+
+    aliases = {
+        "destination": "target",
+        "dst": "target",
+        "readwrite": "rw",
+        "readonly": "ro",
+        "src": "source",
+    }
+    options: dict[str, str | None] = {}
+    invalid_option = False
+    for raw_option in raw_options.split(","):
+        if not raw_option:
+            failures.append(f"{location} RUN --mount contains an empty option")
+            invalid_option = True
+            continue
+        key, separator, value = raw_option.partition("=")
+        if key != key.casefold():
+            failures.append(
+                f"{location} RUN --mount option {key!r} is noncanonical"
+            )
+            invalid_option = True
+            continue
+        key = aliases.get(key, key)
+        if key not in {"type", "from", "source", "target", "ro", "rw"}:
+            failures.append(
+                f"{location} RUN --mount uses unsupported option {key!r}"
+            )
+            invalid_option = True
+            continue
+        if key in options:
+            failures.append(f"{location} RUN --mount repeats option {key!r}")
+            invalid_option = True
+            continue
+        if key in {"ro", "rw"}:
+            if separator:
+                failures.append(
+                    f"{location} RUN --mount boolean option {key!r} must not have a value"
+                )
+                invalid_option = True
+                continue
+            options[key] = None
+        else:
+            if not separator or not value:
+                failures.append(
+                    f"{location} RUN --mount option {key!r} must have one literal value"
+                )
+                invalid_option = True
+                continue
+            options[key] = value
+    if invalid_option:
+        return 0
+    if options.get("type", "bind") != "bind":
+        failures.append(f"{location} RUN --mount supports only type=bind")
+        return 0
+    if "ro" in options and "rw" in options:
+        failures.append(f"{location} RUN --mount cannot combine ro and rw")
+        return 0
+    from_source = options.get("from")
+    if not isinstance(from_source, str):
+        failures.append(
+            f"{location} RUN --mount must name one explicit from source"
+        )
+        return 0
+    for key in ("source", "target"):
+        value = options.get(key)
+        if isinstance(value, str) and any(
+            character in value for character in "$'\"`\\"
+        ):
+            failures.append(
+                f"{location} RUN --mount option {key!r} must be literal"
+            )
+            return 0
+    source_kind = docker_source_kind(
+        from_source,
+        stages,
+        "RUN --mount=from",
+        location,
+        failures,
+    )
+    return int(source_kind == "remote")
+
+
+def check_dockerfile_inputs(
     path: Path,
     label: str,
     failures: list[str],
-) -> int:
-    """Validate each local Docker action stage and count remote digest pins."""
+) -> DockerfilePinCounts:
+    """Validate every declared source in one referenced local Docker action."""
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as error:
         failures.append(f"cannot read {label}: {error}")
-        return 0
+        return DockerfilePinCounts(0, 0)
 
     stages: set[str] = set()
     from_count = 0
-    pinned = 0
+    current_stage_is_valid = False
+    base_image_pins = 0
+    other_input_pins = 0
     logical_lines = dockerfile_logical_lines(
         text,
         label,
@@ -434,82 +825,115 @@ def check_dockerfile_base_images(
             failures.append(
                 f"{label}:{line_number} uses unsupported Dockerfile heredoc syntax"
             )
-            return 0
+            return DockerfilePinCounts(0, 0)
 
     for line_number, logical_line in logical_lines:
+        location = f"{label}:{line_number}"
         instruction_match = re.fullmatch(
             r"([A-Za-z]+)(?:[ \t]+(.*))?",
             logical_line,
         )
         if instruction_match is None:
-            if re.match(r"(?i)^from\b", logical_line):
-                failures.append(f"{label}:{line_number} has malformed FROM syntax")
+            failures.append(f"{location} has malformed Dockerfile instruction syntax")
             continue
         instruction, arguments = instruction_match.groups()
-        if instruction.casefold() != "from":
+        instruction_key = instruction.casefold()
+        if instruction_key not in DOCKERFILE_INSTRUCTIONS:
+            failures.append(
+                f"{location} uses unsupported Dockerfile instruction {instruction!r}"
+            )
+            continue
+        if instruction_key == "onbuild":
+            failures.append(
+                f"{location} uses unsupported ONBUILD deferred input context"
+            )
+            continue
+        if instruction_key != "from":
+            if instruction_key == "arg":
+                continue
+            if not current_stage_is_valid:
+                failures.append(
+                    f"{location} {instruction.upper()} must follow a validated FROM"
+                )
+                continue
+            if instruction_key in {"copy", "add"}:
+                other_input_pins += check_docker_copy_or_add(
+                    arguments,
+                    instruction_key.upper(),
+                    stages,
+                    path.parent,
+                    location,
+                    failures,
+                )
+            elif instruction_key == "run":
+                other_input_pins += check_docker_run_mount(
+                    arguments,
+                    stages,
+                    location,
+                    failures,
+                )
             continue
 
         from_count += 1
+        current_stage_is_valid = False
         tokens = arguments.split() if arguments is not None else []
         if not tokens:
-            failures.append(f"{label}:{line_number} FROM must name one immutable source")
+            failures.append(f"{location} FROM must name one immutable source")
             continue
         if any(
-            "$" in token or any(character in token for character in "'\"`")
+            any(character in token for character in "$'\"`")
             for token in tokens
         ):
             failures.append(
-                f"{label}:{line_number} FROM variables, expressions, and quoted "
-                "values are unsupported"
+                f"{location} FROM variables, expressions, and quoted values "
+                "are unsupported"
             )
             continue
 
         if tokens[0].startswith("--"):
             if DOCKER_PLATFORM_PATTERN.fullmatch(tokens[0]) is None:
                 failures.append(
-                    f"{label}:{line_number} FROM uses an unsupported or variable platform selector"
+                    f"{location} FROM uses an unsupported or variable platform selector"
                 )
                 continue
             tokens = tokens[1:]
         if len(tokens) not in {1, 3} or (
             len(tokens) == 3 and tokens[1].casefold() != "as"
         ):
-            failures.append(f"{label}:{line_number} has malformed or ambiguous FROM syntax")
+            failures.append(f"{location} has malformed or ambiguous FROM syntax")
             continue
 
         source = tokens[0]
         stage_name = tokens[2] if len(tokens) == 3 else None
         if stage_name is not None and DOCKER_STAGE_PATTERN.fullmatch(stage_name) is None:
-            failures.append(f"{label}:{line_number} has an invalid Docker build stage name")
+            failures.append(f"{location} has an invalid Docker build stage name")
             continue
 
-        source_key = source.casefold()
-        accepted_source = False
-        if source_key == "scratch":
-            accepted_source = True
-        elif source_key in stages:
-            accepted_source = True
-        elif is_digest_pinned_docker_source(source):
-            accepted_source = True
-            pinned += 1
-        else:
-            failures.append(
-                f"{label}:{line_number} remote FROM source {source!r} must use "
-                "@sha256:<64 hex> or reference a previously validated stage"
-            )
+        source_kind = docker_source_kind(
+            source,
+            stages,
+            "FROM",
+            location,
+            failures,
+            allow_scratch=True,
+        )
+        accepted_source = source_kind is not None
+        current_stage_is_valid = accepted_source
+        if source_kind == "remote":
+            base_image_pins += 1
 
         if stage_name is not None and accepted_source:
             stage_key = stage_name.casefold()
             if stage_key == "scratch" or stage_key in stages:
                 failures.append(
-                    f"{label}:{line_number} Docker build stage name {stage_name!r} is ambiguous"
+                    f"{location} Docker build stage name {stage_name!r} is ambiguous"
                 )
             else:
                 stages.add(stage_key)
 
     if from_count == 0:
         failures.append(f"{label} must contain at least one FROM instruction")
-    return pinned
+    return DockerfilePinCounts(base_image_pins, other_input_pins)
 
 
 def scalar_field(
@@ -525,7 +949,10 @@ def scalar_field(
     return scalar.value
 
 
-def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
+def check_github_action_pin_counts_from_root(
+    root: Path,
+    failures: list[str],
+) -> ActionGraphPinCounts:
     github_action = re.compile(
         r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_./-]+)?@([0-9a-fA-F]{40})$"
     )
@@ -539,6 +966,8 @@ def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
     scanned: set[Path] = set()
     visiting: list[Path] = []
     pinned = 0
+    dockerfile_base_images = 0
+    dockerfile_other_inputs = 0
 
     def read_yaml(path: Path) -> tuple[dict[str, Any] | None, str]:
         label = path.relative_to(root).as_posix()
@@ -668,7 +1097,7 @@ def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
         leave(path)
 
     def inspect_action(path: Path) -> None:
-        nonlocal pinned
+        nonlocal pinned, dockerfile_base_images, dockerfile_other_inputs
         label = path.relative_to(root).as_posix()
         if not enter(path, label):
             return
@@ -731,25 +1160,42 @@ def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
                         dockerfile_label = dockerfile.relative_to(
                             root.resolve()
                         ).as_posix()
-                        pinned += check_dockerfile_base_images(
+                        dockerfile_pins = check_dockerfile_inputs(
                             dockerfile,
                             dockerfile_label,
                             failures,
                         )
+                        pinned += dockerfile_pins.total
+                        dockerfile_base_images += dockerfile_pins.base_images
+                        dockerfile_other_inputs += dockerfile_pins.other_inputs
         elif using is not None:
             failures.append(f"{label} runs.using {using!r} is not an accepted local action runtime")
         leave(path)
 
     for workflow in workflows:
         inspect_workflow(workflow)
-    return pinned
+    return ActionGraphPinCounts(
+        pinned,
+        dockerfile_base_images,
+        dockerfile_other_inputs,
+    )
+
+
+def check_github_action_pins_from_root(root: Path, failures: list[str]) -> int:
+    """Compatibility wrapper for callers that need only the aggregate total."""
+    return check_github_action_pin_counts_from_root(root, failures).total
+
+
+def check_github_action_pin_counts(failures: list[str]) -> ActionGraphPinCounts:
+    counts = check_github_action_pin_counts_from_root(REPOSITORY_ROOT, failures)
+    if counts.total == 0:
+        failures.append("no immutable third-party GitHub Action pins were found")
+    return counts
 
 
 def check_github_action_pins(failures: list[str]) -> int:
-    pinned = check_github_action_pins_from_root(REPOSITORY_ROOT, failures)
-    if pinned == 0:
-        failures.append("no immutable third-party GitHub Action pins were found")
-    return pinned
+    """Compatibility wrapper for callers that need only the aggregate total."""
+    return check_github_action_pin_counts(failures).total
 
 
 def check_distribution_workflow_contract(

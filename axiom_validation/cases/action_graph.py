@@ -7,7 +7,10 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from axiom_validation.action_graph import check_github_action_pins_from_root
+from axiom_validation.action_graph import (
+    check_github_action_pin_counts_from_root,
+    check_github_action_pins_from_root,
+)
 from axiom_validation.manifests import check_manifest_versions
 from axiom_validation.yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonical_yaml_document
 
@@ -62,6 +65,12 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
         )
         if dockerfile:
             write(root, ".github/actions/docker/Dockerfile", dockerfile)
+            write(root, ".github/actions/docker/local-file", "fixture\n")
+            write(
+                root,
+                ".github/actions/docker/local-dir/nested-file",
+                "nested fixture\n",
+            )
 
     with tempfile.TemporaryDirectory(prefix="axiom-action-fixtures-") as raw_root:
         fixture_root = Path(raw_root)
@@ -201,11 +210,13 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 "digest-pinned-remote",
                 f"FROM ubuntu@sha256:{digest_a}\n",
                 1,
+                0,
             ),
             (
                 "tag-and-digest-pinned-remote",
                 f"FROM ubuntu:24.04@sha256:{digest_a}\n",
                 1,
+                0,
             ),
             (
                 "all-pinned-multi-stage",
@@ -213,10 +224,12 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 f"FROM ghcr.io/example/helper@sha256:{digest_b} AS helper\n"
                 "FROM build AS final\n",
                 2,
+                0,
             ),
             (
                 "prior-local-stage",
                 "FROM scratch AS build\nFROM build AS final\n",
+                0,
                 0,
             ),
             (
@@ -226,6 +239,7 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 f"    ghcr.io/example/build@sha256:{digest_a} aS Build\n"
                 "FrOm Build As final\n",
                 1,
+                0,
             ),
             (
                 "comment-inside-continuation",
@@ -234,19 +248,101 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 "scratch AS build\n"
                 "FROM build AS final\n",
                 0,
+                0,
+            ),
+            (
+                "copy-prior-local-stage",
+                "FROM scratch AS source\n"
+                "FROM scratch\n"
+                "COPY --from=source /tool /tool\n",
+                0,
+                0,
+            ),
+            (
+                "copy-digest-pinned-remote",
+                "FROM scratch\n"
+                f"COPY --from=ghcr.io/example/tool@sha256:{digest_a} /tool /tool\n",
+                0,
+                1,
+            ),
+            (
+                "run-mount-prior-local-stage",
+                "FROM scratch AS source\n"
+                "FROM scratch\n"
+                "RUN --mount=type=bind,from=source,target=/tool,ro echo test\n",
+                0,
+                0,
+            ),
+            (
+                "run-mount-digest-pinned-remote",
+                "FROM scratch\n"
+                "RUN --mount=target=/tool,"
+                f"from=ghcr.io/example/tool@sha256:{digest_b},"
+                "type=bind,readonly echo test\n",
+                0,
+                1,
+            ),
+            (
+                "literal-local-copy",
+                "FROM scratch\nCOPY local-file /local-file\n",
+                0,
+                0,
+            ),
+            (
+                "literal-local-directory-copy",
+                "FROM scratch\nCOPY local-dir /local-dir\n",
+                0,
+                0,
+            ),
+            (
+                "multiple-literal-local-copy-sources",
+                "FROM scratch\nCOPY local-file local-dir /sources/\n",
+                0,
+                0,
+            ),
+            (
+                "literal-local-add",
+                "FROM scratch\nADD local-file /local-file\n",
+                0,
+                0,
+            ),
+            (
+                "literal-local-directory-add",
+                "FROM scratch\nADD local-dir /local-dir\n",
+                0,
+                0,
+            ),
+            (
+                "literal-current-context-copy",
+                "FROM scratch\nCOPY . /src\n",
+                0,
+                0,
+            ),
+            (
+                "case-and-continuation-copy-from",
+                "FROM scratch AS source\n"
+                "FROM scratch\n"
+                "cOpY --from=source \\\n"
+                "    /tool /tool\n",
+                0,
+                0,
             ),
         )
-        for name, dockerfile, expected_pins in valid_dockerfiles:
+        for name, dockerfile, expected_base_pins, expected_other_pins in valid_dockerfiles:
             root = fixture_root / name
             write_docker_action(root, dockerfile)
             scenario_failures: list[str] = []
-            observed_pins = check_github_action_pins_from_root(
+            observed_pins = check_github_action_pin_counts_from_root(
                 root,
                 scenario_failures,
             )
-            if scenario_failures or observed_pins != expected_pins:
+            if scenario_failures or (
+                observed_pins.dockerfile_base_images != expected_base_pins
+                or observed_pins.dockerfile_other_inputs != expected_other_pins
+                or observed_pins.total != expected_base_pins + expected_other_pins
+            ):
                 detail = "; ".join(scenario_failures) or (
-                    f"observed {observed_pins} pins"
+                    f"observed {observed_pins!r}"
                 )
                 failures.append(f"valid Dockerfile fixture {name} failed: {detail}")
             else:
@@ -371,6 +467,218 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 + "\nFROM ubuntu:latest\n",
                 "ubuntu:latest",
             ),
+            (
+                "mutable-copy-from",
+                "FROM scratch\nCOPY --from=nginx:latest /tool /tool\n",
+                "Dockerfile:2 remote COPY --from source 'nginx:latest'",
+            ),
+            (
+                "variable-copy-from",
+                "FROM scratch\nCOPY --from=${SOURCE} /tool /tool\n",
+                "COPY variables, expressions",
+            ),
+            (
+                "forward-copy-stage",
+                "FROM scratch\n"
+                "COPY --from=builder /tool /tool\n"
+                "FROM scratch AS builder\n",
+                "remote COPY --from source 'builder'",
+            ),
+            (
+                "numeric-copy-stage",
+                "FROM scratch AS builder\nCOPY --from=0 /tool /tool\n",
+                "remote COPY --from source '0'",
+            ),
+            (
+                "named-context-copy",
+                "FROM scratch\nCOPY --from=external-context /tool /tool\n",
+                "remote COPY --from source 'external-context'",
+            ),
+            (
+                "wrong-digest-copy",
+                f"FROM scratch\nCOPY --from=tool@sha256:{'a' * 63} /tool /tool\n",
+                "must use @sha256",
+            ),
+            (
+                "duplicate-copy-from-flag",
+                "FROM scratch AS source\n"
+                "COPY --from=source --from=source /tool /tool\n",
+                "repeats the --from flag",
+            ),
+            (
+                "separated-copy-from-flag",
+                "FROM scratch AS source\nCOPY --from source /tool /tool\n",
+                "unsupported or noncanonical flag '--from'",
+            ),
+            (
+                "unsupported-copy-flag",
+                "FROM scratch\nCOPY --chown=0:0 local-file /local-file\n",
+                "unsupported or noncanonical flag '--chown=0:0'",
+            ),
+            (
+                "misplaced-copy-flag",
+                "FROM scratch\nCOPY local-file --from=source /local-file\n",
+                "misplaced instruction flag",
+            ),
+            (
+                "json-copy",
+                'FROM scratch\nCOPY ["local-file", "/local-file"]\n',
+                "COPY variables, expressions, quoted values",
+            ),
+            (
+                "copy-source-expansion",
+                "FROM scratch\nCOPY local-* /local/\n",
+                "uses traversal, expansion, or unsupported path syntax",
+            ),
+            (
+                "copy-from-source-expansion",
+                "FROM scratch AS source\nCOPY --from=source /tool* /tool\n",
+                "COPY --from uses unsupported source expansion",
+            ),
+            (
+                "copy-source-traversal",
+                "FROM scratch\nCOPY ../outside /outside\n",
+                "uses traversal, expansion, or unsupported path syntax",
+            ),
+            (
+                "copy-absolute-source",
+                "FROM scratch\nCOPY /outside /outside\n",
+                "uses traversal, expansion, or unsupported path syntax",
+            ),
+            (
+                "copy-missing-source",
+                "FROM scratch\nCOPY missing-file /missing-file\n",
+                "does not exist in the action directory",
+            ),
+            (
+                "copy-before-from",
+                "COPY local-file /local-file\nFROM scratch\n",
+                "COPY must follow a validated FROM",
+            ),
+            (
+                "mutable-copy-in-multi-stage-file",
+                "FROM scratch AS source\n"
+                "FROM scratch\n"
+                "COPY --from=source /safe /safe\n"
+                "COPY --from=nginx:latest /tool /tool\n",
+                "remote COPY --from source 'nginx:latest'",
+            ),
+            (
+                "continued-mutable-copy-from",
+                "FROM scratch\n"
+                "CO\\\n"
+                "PY --from=nginx:latest /tool /tool\n",
+                "remote COPY --from source 'nginx:latest'",
+            ),
+            (
+                "mutable-run-mount-from",
+                "FROM scratch\n"
+                "RUN --mount=type=bind,from=example/image:latest,target=/tool echo test\n",
+                "remote RUN --mount=from source 'example/image:latest'",
+            ),
+            (
+                "variable-run-mount-from",
+                "FROM scratch\nRUN --mount=from=${SOURCE},target=/tool echo test\n",
+                "RUN --mount variables, expressions",
+            ),
+            (
+                "named-context-run-mount",
+                "FROM scratch\nRUN --mount=from=external-context,target=/tool echo test\n",
+                "remote RUN --mount=from source 'external-context'",
+            ),
+            (
+                "forward-run-mount-stage",
+                "FROM scratch\n"
+                "RUN --mount=from=builder,target=/tool echo test\n"
+                "FROM scratch AS builder\n",
+                "remote RUN --mount=from source 'builder'",
+            ),
+            (
+                "multiple-run-mount-flags",
+                "FROM scratch AS source\n"
+                "RUN --mount=from=source,target=/one "
+                "--mount=from=source,target=/two echo test\n",
+                "duplicate or multiple Dockerfile flags",
+            ),
+            (
+                "duplicate-run-mount-from-option",
+                "FROM scratch AS source\n"
+                "RUN --mount=from=source,from=source,target=/tool echo test\n",
+                "repeats option 'from'",
+            ),
+            (
+                "malformed-run-mount-flag",
+                "FROM scratch\nRUN --mount from=source echo test\n",
+                "unsupported or noncanonical flag '--mount'",
+            ),
+            (
+                "run-cache-mount",
+                "FROM scratch\nRUN --mount=type=cache,target=/cache echo test\n",
+                "supports only type=bind",
+            ),
+            (
+                "run-bind-mount-without-from",
+                "FROM scratch\nRUN --mount=type=bind,source=local-dir,target=/src echo test\n",
+                "must name one explicit from source",
+            ),
+            (
+                "run-mount-conflicting-access",
+                "FROM scratch AS source\n"
+                "RUN --mount=from=source,target=/tool,ro,rw echo test\n",
+                "cannot combine ro and rw",
+            ),
+            (
+                "unsupported-run-network-flag",
+                "FROM scratch\nRUN --network=none echo test\n",
+                "unsupported or noncanonical flag '--network=none'",
+            ),
+            (
+                "remote-url-add",
+                "FROM scratch\nADD https://example.invalid/tool /tool\n",
+                "ADD remote URL or Git source",
+            ),
+            (
+                "remote-git-add",
+                "FROM scratch\nADD git@example.invalid:owner/repo.git /src\n",
+                "ADD remote URL or Git source",
+            ),
+            (
+                "checksum-remote-add",
+                "FROM scratch\n"
+                "ADD --checksum=sha256:abcd https://example.invalid/tool /tool\n",
+                "unsupported or noncanonical flag '--checksum=sha256:abcd'",
+            ),
+            (
+                "add-source-traversal",
+                "FROM scratch\nADD ../outside /outside\n",
+                "uses traversal, expansion, or unsupported path syntax",
+            ),
+            (
+                "add-source-expansion",
+                "FROM scratch\nADD local-* /local/\n",
+                "uses traversal, expansion, or unsupported path syntax",
+            ),
+            (
+                "json-add",
+                'FROM scratch\nADD ["local-file", "/local-file"]\n',
+                "ADD variables, expressions, quoted values",
+            ),
+            (
+                "onbuild-copy-context",
+                "FROM scratch\nONBUILD COPY local-file /local-file\n",
+                "unsupported ONBUILD deferred input context",
+            ),
+            (
+                "onbuild-run-mount-context",
+                "FROM scratch AS source\n"
+                "ONBUILD RUN --mount=from=source,target=/tool echo test\n",
+                "unsupported ONBUILD deferred input context",
+            ),
+            (
+                "unknown-external-context-instruction",
+                "FROM scratch\nINCLUDE https://example.invalid/source\n",
+                "unsupported Dockerfile instruction 'INCLUDE'",
+            ),
         )
         for name, dockerfile, expected_failure in invalid_dockerfiles:
             root = fixture_root / name
@@ -381,6 +689,49 @@ def check_action_graph_fixtures(failures: list[str]) -> int:
                 rejected += 1
             else:
                 failures.append(f"invalid Dockerfile fixture {name} was not rejected")
+
+        symlinked_copy_source = fixture_root / "symlinked-copy-source"
+        write_docker_action(
+            symlinked_copy_source,
+            "FROM scratch\nCOPY escape-link /escape-link\n",
+        )
+        write(symlinked_copy_source, "outside", "outside fixture\n")
+        (
+            symlinked_copy_source
+            / ".github/actions/docker/escape-link"
+        ).symlink_to(symlinked_copy_source / "outside")
+        symlinked_copy_failures: list[str] = []
+        check_github_action_pins_from_root(
+            symlinked_copy_source,
+            symlinked_copy_failures,
+        )
+        if any("must not use a symbolic link" in failure for failure in symlinked_copy_failures):
+            rejected += 1
+        else:
+            failures.append("symlinked COPY source fixture was not rejected")
+
+        nested_symlinked_add_source = fixture_root / "nested-symlinked-add-source"
+        write_docker_action(
+            nested_symlinked_add_source,
+            "FROM scratch\nADD local-dir /local-dir\n",
+        )
+        write(nested_symlinked_add_source, "outside", "outside fixture\n")
+        (
+            nested_symlinked_add_source
+            / ".github/actions/docker/local-dir/escape-link"
+        ).symlink_to(nested_symlinked_add_source / "outside")
+        nested_symlinked_add_failures: list[str] = []
+        check_github_action_pins_from_root(
+            nested_symlinked_add_source,
+            nested_symlinked_add_failures,
+        )
+        if any(
+            "contains symbolic link" in failure
+            for failure in nested_symlinked_add_failures
+        ):
+            rejected += 1
+        else:
+            failures.append("nested symlinked ADD source fixture was not rejected")
 
         symlinked = fixture_root / "symlinked-dockerfile"
         write_docker_action(symlinked, "")

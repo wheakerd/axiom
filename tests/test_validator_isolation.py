@@ -20,12 +20,13 @@ EXPECTED_SUCCESS_SUMMARY = (
     "16 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
     "12 critical-path CODEOWNERS entries, 238 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "
-    "5 source-linked cross-route/resume contracts, 50 validator parser fixtures, "
+    "5 source-linked cross-route/resume contracts, 102 validator parser fixtures, "
     f"version {RELEASE_VERSION}, 2 compatibility evidence records, "
     "10 compatibility evidence negative fixtures, 21 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
-    "55 release-provenance fixtures, 13 immutable external action and image pins, "
-    "hooks, and packaged skills."
+    "55 release-provenance fixtures, 13 immutable external action and image pins "
+    "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "
+    "packaged skills."
 )
 
 

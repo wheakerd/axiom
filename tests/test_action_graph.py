@@ -5,6 +5,7 @@ from unittest import mock
 
 from axiom_validation.action_graph import (
     check_distribution_workflow_contract,
+    check_github_action_pin_counts,
     check_github_action_pins,
     check_hook_runtime_workflow_contract,
     check_hook_runtime_workflow_text,
@@ -18,11 +19,15 @@ from axiom_validation.cases.action_graph import check_action_graph_fixtures
 class ActionGraphTests(unittest.TestCase):
     def test_checked_in_action_graph(self):
         failures = []
-        count = check_github_action_pins(failures)
+        counts = check_github_action_pin_counts(failures)
+        count = check_github_action_pins([])
         document = check_distribution_workflow_contract(failures)
         unit_test_document = check_unit_test_workflow_contract(failures)
         hook_runtime_document = check_hook_runtime_workflow_contract(failures)
         self.assertEqual(13, count)
+        self.assertEqual(13, counts.total)
+        self.assertEqual(0, counts.dockerfile_base_images)
+        self.assertEqual(0, counts.dockerfile_other_inputs)
         self.assertIsNotNone(document)
         self.assertIsNotNone(unit_test_document)
         self.assertIsNotNone(hook_runtime_document)
@@ -177,7 +182,7 @@ class ActionGraphTests(unittest.TestCase):
     def test_action_graph_mutations_are_rejected(self):
         failures = []
         count = check_action_graph_fixtures(failures)
-        self.assertEqual(40, count)
+        self.assertEqual(92, count)
         self.assertEqual([], failures)
 
     def test_docker_action_validation_does_not_open_a_network_socket(self):
@@ -187,7 +192,7 @@ class ActionGraphTests(unittest.TestCase):
             side_effect=AssertionError("action-graph validation must stay offline"),
         ):
             count = check_action_graph_fixtures(failures)
-        self.assertEqual(40, count)
+        self.assertEqual(92, count)
         self.assertEqual([], failures)
 
 

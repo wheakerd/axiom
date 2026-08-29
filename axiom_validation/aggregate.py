@@ -8,7 +8,7 @@ from typing import Any
 
 from .action_graph import (
     check_distribution_workflow_contract,
-    check_github_action_pins,
+    check_github_action_pin_counts,
     check_hook_runtime_workflow_contract,
     check_unit_test_workflow_contract,
 )
@@ -144,7 +144,11 @@ def main() -> int:
         failures,
     )
 
-    action_pin_count = run_policy("action-graph", check_github_action_pins, failures)
+    action_pin_counts = run_policy(
+        "action-graph",
+        check_github_action_pin_counts,
+        failures,
+    )
     distribution_workflow_document = run_policy(
         "action-graph", check_distribution_workflow_contract, failures
     )
@@ -244,7 +248,9 @@ def main() -> int:
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
         f"{pull_request_fixture_count} pull-request event-graph fixtures, "
         f"{release_provenance_fixture_count} release-provenance fixtures, "
-        f"{action_pin_count} immutable external action and image pins, hooks, "
+        f"{action_pin_counts.total} immutable external action and image pins "
+        f"({action_pin_counts.dockerfile_base_images} Dockerfile base-image pins; "
+        f"{action_pin_counts.dockerfile_other_inputs} other Dockerfile input pins), hooks, "
         "and packaged skills."
     )
     return 0
