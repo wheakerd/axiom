@@ -21,6 +21,7 @@ from axiom_validation.release_tag_controller import (
     SIGNED_MAIN_CHECK,
     ControllerError,
     GitHubRequestError,
+    ReleaseAppTokenIdentity,
     ReleaseTagRequest,
     run_controller,
     validate_request,
@@ -29,6 +30,7 @@ from axiom_validation.release_tag_controller import (
 
 REPOSITORY = "wheakerd/axiom"
 APP_ID = 424242
+APP_SLUG = "axiom-release-tag-controller"
 
 
 class FixtureRepository:
@@ -166,6 +168,12 @@ class FixtureRepository:
             expected_app_id=APP_ID,
         )
 
+    def app_identity(self) -> ReleaseAppTokenIdentity:
+        return ReleaseAppTokenIdentity(
+            app_slug=APP_SLUG,
+            installation_id=77,
+        )
+
     def manifest_content(self, _path: str) -> bytes:
         return (json.dumps({"version": self.version}) + "\n").encode("utf-8")
 
@@ -187,16 +195,16 @@ class FixtureRepository:
 class FixtureApi:
     def __init__(self, repository: FixtureRepository) -> None:
         self.repository = repository
+        self.get_paths: list[str] = []
 
     def get(self, path: str, *, allow_not_found: bool = False) -> Any:
+        self.get_paths.append(path)
         repo = self.repository
         if path == f"/repos/{REPOSITORY}":
             repo.snapshot_reads += 1
             if repo.snapshot_reads == 2 and repo.before_second_snapshot is not None:
                 repo.before_second_snapshot(repo)
             return {"full_name": REPOSITORY, "default_branch": "main"}
-        if path == "/installation":
-            return {"id": 77, "app_id": APP_ID}
         if path == "/installation/repositories?per_page=100":
             return {
                 "total_count": len(repo.installation_repositories),
@@ -346,13 +354,24 @@ class ReleaseTagControllerTests(unittest.TestCase):
     def test_correct_current_main_creates_once_and_rerun_is_read_only(self):
         fixture = FixtureRepository()
         api = FixtureApi(fixture)
-        result = run_controller(api, api, fixture.request())
+        result = run_controller(
+            api, api, fixture.request(), fixture.app_identity()
+        )
         self.assertEqual("created-and-verified", result["outcome"])
+        self.assertEqual(APP_SLUG, result["appSlug"])
+        self.assertEqual(77, result["installationId"])
         self.assertEqual(1, result["mutationAttempts"])
         self.assertEqual(1, fixture.mutation_attempts)
+        self.assertNotIn("/installation", api.get_paths)
+        self.assertEqual(
+            2,
+            api.get_paths.count("/installation/repositories?per_page=100"),
+        )
 
         with self.assertRaisesRegex(ControllerError, "already exists; no mutation attempted"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(1, fixture.mutation_attempts)
 
     def test_wrong_requested_tag_is_rejected_before_api_access(self):
@@ -370,6 +389,31 @@ class ReleaseTagControllerTests(unittest.TestCase):
         self.assertEqual(0, fixture.snapshot_reads)
         self.assertEqual(0, fixture.mutation_attempts)
 
+    def test_invalid_action_identity_is_rejected_before_api_access(self):
+        fixture = FixtureRepository()
+        for identity, message in (
+            (
+                ReleaseAppTokenIdentity(
+                    app_slug="Axiom Release Tag Controller",
+                    installation_id=77,
+                ),
+                "lowercase GitHub App slug",
+            ),
+            (
+                ReleaseAppTokenIdentity(
+                    app_slug=APP_SLUG,
+                    installation_id=0,
+                ),
+                "positive ID",
+            ),
+        ):
+            with self.subTest(message=message):
+                api = FixtureApi(fixture)
+                with self.assertRaisesRegex(ControllerError, message):
+                    run_controller(api, api, fixture.request(), identity)
+                self.assertEqual([], api.get_paths)
+                self.assertEqual(0, fixture.mutation_attempts)
+
     def test_non_main_candidate_is_rejected(self):
         fixture = FixtureRepository()
         request = fixture.request()
@@ -382,7 +426,7 @@ class ReleaseTagControllerTests(unittest.TestCase):
         )
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "live main does not equal"):
-            run_controller(api, api, descendant)
+            run_controller(api, api, descendant, fixture.app_identity())
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_candidate_context_cannot_replace_signed_main_context(self):
@@ -392,7 +436,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
                 run["name"] = "Verify release candidate"
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "Verify signed main history"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_required_check_for_another_sha_is_rejected(self):
@@ -400,7 +446,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         fixture.check_runs[0]["head_sha"] = "4" * 40
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "exact main"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_invalid_github_signature_is_rejected(self):
@@ -412,7 +460,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         }
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "signed with GitHub's signing key"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_app_token_with_another_repository_is_rejected(self):
@@ -420,7 +470,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         fixture.installation_repositories = [REPOSITORY, "wheakerd/another"]
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "scoped to exactly this repository"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_main_drift_between_reads_is_rejected(self):
@@ -428,7 +480,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         fixture.before_second_snapshot = lambda repository: setattr(repository, "main_sha", "5" * 40)
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "live main does not equal"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_preexisting_release_is_rejected(self):
@@ -436,7 +490,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         fixture.release = {"id": 99, "tag_name": f"v{RELEASE_VERSION}"}
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "GitHub Release .* already exists"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_manifest_version_mismatch_is_rejected(self):
@@ -451,7 +507,7 @@ class ReleaseTagControllerTests(unittest.TestCase):
         )
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "manifests must equal"):
-            run_controller(api, api, request)
+            run_controller(api, api, request, fixture.app_identity())
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_uncertain_creation_reads_back_once_and_rerun_does_not_mutate(self):
@@ -459,11 +515,15 @@ class ReleaseTagControllerTests(unittest.TestCase):
         fixture.raise_after_creation = True
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "controller will not retry"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(1, fixture.mutation_attempts)
         fixture.raise_after_creation = False
         with self.assertRaisesRegex(ControllerError, "already exists; no mutation attempted"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(1, fixture.mutation_attempts)
 
     def test_creation_app_cannot_bypass_integrity_rules(self):
@@ -478,7 +538,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         fixture.rulesets[INTEGRITY_RULESET]["current_user_can_bypass"] = "always"
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "must retain no bypass actor"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_owner_user_bypass_is_rejected(self):
@@ -488,7 +550,9 @@ class ReleaseTagControllerTests(unittest.TestCase):
         ]
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "dedicated release GitHub App"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_old_shared_integrity_context_is_rejected(self):
@@ -500,20 +564,26 @@ class ReleaseTagControllerTests(unittest.TestCase):
         )
         api = FixtureApi(fixture)
         with self.assertRaisesRegex(ControllerError, "Verify signed main history"):
-            run_controller(api, api, fixture.request())
+            run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
         self.assertEqual(0, fixture.mutation_attempts)
 
     def test_disposable_bare_repository_integration(self):
         with tempfile.TemporaryDirectory(prefix="axiom-release-tag-") as temporary:
             fixture = BareFixtureRepository(Path(temporary))
             api = FixtureApi(fixture)
-            result = run_controller(api, api, fixture.request())
+            result = run_controller(
+                api, api, fixture.request(), fixture.app_identity()
+            )
             self.assertEqual("created-and-verified", result["outcome"])
             self.assertEqual(1, fixture.mutation_attempts)
             self.assertEqual(fixture.main_sha, fixture.read_tag(f"v{RELEASE_VERSION}")["object"]["sha"])
 
             with self.assertRaisesRegex(ControllerError, "already exists; no mutation attempted"):
-                run_controller(api, api, fixture.request())
+                run_controller(
+                    api, api, fixture.request(), fixture.app_identity()
+                )
             self.assertEqual(1, fixture.mutation_attempts)
 
 

@@ -25,6 +25,7 @@ MAIN_REQUIRED_CHECKS = ("repository-guards", "unit-and-integration-tests")
 SIGNED_MAIN_CHECK = "Verify signed main history"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 REPOSITORY_PATTERN = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+APP_SLUG_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 
 class ControllerError(RuntimeError):
@@ -125,6 +126,12 @@ class ReleaseTagRequest:
     expected_app_id: int
 
 
+@dataclass(frozen=True)
+class ReleaseAppTokenIdentity:
+    app_slug: str
+    installation_id: int
+
+
 def validate_request(request: ReleaseTagRequest) -> None:
     if REPOSITORY_PATTERN.fullmatch(request.repository) is None:
         raise ControllerError("repository must be one exact owner/name pair")
@@ -138,6 +145,16 @@ def validate_request(request: ReleaseTagRequest) -> None:
         raise ControllerError("expected main SHA must be one lowercase 40-character Git SHA")
     if type(request.expected_app_id) is not int or request.expected_app_id <= 0:
         raise ControllerError("expected release App ID must be a positive integer")
+
+
+def validate_app_token_identity(identity: ReleaseAppTokenIdentity) -> None:
+    if (
+        type(identity.app_slug) is not str
+        or APP_SLUG_PATTERN.fullmatch(identity.app_slug) is None
+    ):
+        raise ControllerError("release App slug must be one lowercase GitHub App slug")
+    if type(identity.installation_id) is not int or identity.installation_id <= 0:
+        raise ControllerError("release App installation must have a positive ID")
 
 
 def _require_object(value: Any, label: str) -> dict[str, Any]:
@@ -392,10 +409,12 @@ def _load_named_rulesets(
     return detailed
 
 
-def _validate_app_identity(admin: ApiClient, request: ReleaseTagRequest) -> dict[str, Any]:
-    installation = _require_object(admin.get("/installation"), "App installation")
-    if installation.get("app_id") != request.expected_app_id:
-        raise ControllerError("mutation token does not belong to the expected release App")
+def _validate_app_identity(
+    admin: ApiClient,
+    request: ReleaseTagRequest,
+    token_identity: ReleaseAppTokenIdentity,
+) -> dict[str, Any]:
+    validate_app_token_identity(token_identity)
     repositories = _require_object(
         admin.get("/installation/repositories?per_page=100"),
         "App installation repositories",
@@ -407,12 +426,10 @@ def _validate_app_identity(admin: ApiClient, request: ReleaseTagRequest) -> dict
     ]
     if repositories.get("total_count") != 1 or names != [request.repository]:
         raise ControllerError("release App token must be scoped to exactly this repository")
-    installation_id = installation.get("id")
-    if type(installation_id) is not int or installation_id <= 0:
-        raise ControllerError("release App installation must have a positive ID")
     return {
         "appId": request.expected_app_id,
-        "installationId": installation_id,
+        "appSlug": token_identity.app_slug,
+        "installationId": token_identity.installation_id,
         "repositories": names,
     }
 
@@ -614,12 +631,18 @@ def run_controller(
     read: ApiClient,
     admin_and_mutation: ApiClient,
     request: ReleaseTagRequest,
+    token_identity: ReleaseAppTokenIdentity,
 ) -> dict[str, Any]:
     """Validate twice, attempt one ref creation, and immediately read it back."""
     validate_request(request)
-    initial_identity = _validate_app_identity(admin_and_mutation, request)
+    validate_app_token_identity(token_identity)
+    initial_identity = _validate_app_identity(
+        admin_and_mutation, request, token_identity
+    )
     initial = collect_state(read, admin_and_mutation, request, initial_identity)
-    final_identity = _validate_app_identity(admin_and_mutation, request)
+    final_identity = _validate_app_identity(
+        admin_and_mutation, request, token_identity
+    )
     final = collect_state(read, admin_and_mutation, request, final_identity)
     if initial != final:
         raise ControllerError("release state changed during the final live-state gate")
@@ -663,6 +686,8 @@ def run_controller(
         "commit": request.expected_main_sha,
         "tree": final["mainTree"],
         "appId": request.expected_app_id,
+        "appSlug": final_identity["appSlug"],
+        "installationId": final_identity["installationId"],
         "mutationAttempts": 1,
     }
 
@@ -789,6 +814,8 @@ def check_controller_workflow_contract(failures: list[str]) -> None:
     expected_token_with = {
         "client-id": "${{ vars.AXIOM_RELEASE_APP_CLIENT_ID }}",
         "private-key": "${{ secrets.AXIOM_RELEASE_APP_PRIVATE_KEY }}",
+        "owner": "${{ github.repository_owner }}",
+        "repositories": "${{ github.event.repository.name }}",
         "permission-administration": "read",
         "permission-contents": "write",
     }
@@ -805,6 +832,27 @@ def check_controller_workflow_contract(failures: list[str]) -> None:
             "and contents/write only"
         )
 
+    create_env = create.get("env")
+    expected_create_env = {
+        "AXIOM_RELEASE_APP_ID": "${{ vars.AXIOM_RELEASE_APP_ID }}",
+        "AXIOM_RELEASE_APP_SLUG": "${{ steps.release-app-token.outputs.app-slug }}",
+        "AXIOM_RELEASE_APP_TOKEN": "${{ steps.release-app-token.outputs.token }}",
+        "AXIOM_RELEASE_INSTALLATION_ID": (
+            "${{ steps.release-app-token.outputs.installation-id }}"
+        ),
+        "GITHUB_TOKEN": "${{ github.token }}",
+        "RELEASE_TAG": "${{ inputs.tag }}",
+        "RELEASE_VERSION": "${{ inputs.version }}",
+    }
+    if (
+        not isinstance(create_env, dict)
+        or {key: scalar(value) for key, value in create_env.items()}
+        != expected_create_env
+    ):
+        failures.append(
+            f"{label} must bind the exact App-token identity outputs into the controller"
+        )
+
     if "python3 scripts/create-release-tag.py validate-request" not in text:
         failures.append(f"{label} must validate the request before minting a secret token")
     if "python3 scripts/create-release-tag.py create" not in text:
@@ -818,6 +866,14 @@ def check_controller_workflow_contract(failures: list[str]) -> None:
         failures.append(f"{label} must consume the private key in exactly one token step")
     if text.count("${{ steps.release-app-token.outputs.token }}") != 1:
         failures.append(f"{label} must pass one minted token to one controller step")
+    if text.count("${{ steps.release-app-token.outputs.app-slug }}") != 1:
+        failures.append(f"{label} must pass one App slug to one controller step")
+    if text.count("${{ steps.release-app-token.outputs.installation-id }}") != 1:
+        failures.append(f"{label} must pass one installation ID to one controller step")
+    if '--app-slug "$AXIOM_RELEASE_APP_SLUG"' not in text:
+        failures.append(f"{label} must bind the App slug CLI input")
+    if '--installation-id "$AXIOM_RELEASE_INSTALLATION_ID"' not in text:
+        failures.append(f"{label} must bind the installation ID CLI input")
     for forbidden in (
         "pull_request_target",
         "\n  pull_request:",
