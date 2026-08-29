@@ -156,11 +156,14 @@ domain-local assertions. Keep fixture names in failure messages, and let the
 aggregate reporter add the policy domain. Do not move fixture payloads back
 into production modules or add a third-party test/runtime dependency.
 
-The aggregate summary's `immutable external action and image pins` count adds
+The aggregate summary's `immutable external action and image pins` total adds
 one for each validated full-SHA GitHub Action, digest-pinned `docker://` action,
-workflow job or service image, and digest-pinned remote `FROM` source in a
-local Docker action. `FROM scratch` and references to an already validated
-local build stage are accepted but do not increase the count.
+workflow job or service image, and digest-pinned remote Dockerfile source. Its
+parenthetical breakdown reports remote `FROM` sources as `Dockerfile base-image
+pins` and digest-pinned `COPY --from` or `RUN --mount=from` sources as `other
+Dockerfile input pins`. `FROM scratch`, references to an already validated
+local build stage, and validated action-local `COPY` or `ADD` sources are
+accepted but do not increase either Dockerfile count.
 
 Compatibility records must validate against `evidence/schema-v1.json`, bind to
 an already existing immutable tag and commit, preserve every not-run or
