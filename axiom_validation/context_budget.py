@@ -64,10 +64,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.20 adds repository release-tag controller policy and "
-            "validation only; installed Skills, hooks, routes, and action authority are "
-            "unchanged. No current installed Codex host or lifecycle observation was "
-            "run; prior evidence remains separate."
+            "Axiom v0.9.0 adds a shared machine-credential lifecycle protocol and "
+            "fixed routing corpus. No installed Codex host or lifecycle observation "
+            "was run for this candidate; static validation and prior evidence remain "
+            "separate."
         ),
     },
     "claude-code": {
@@ -79,10 +79,10 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.8.20 adds repository release-tag controller policy and "
-            "validation only; the installed Claude hook is unchanged. Authenticated installed-"
-            "host and lifecycle observation are unavailable and not run; prior "
-            "evidence remains separate."
+            "Axiom v0.9.0 changes shared Skill routing for machine-credential "
+            "lifecycle work. Authenticated Claude Code installed-host and lifecycle "
+            "observation are unavailable and not run; offline validation and prior "
+            "evidence remain separate."
         ),
     },
 }

@@ -61,7 +61,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     def test_checked_in_identity_history_and_rendered_surface(self):
         failures: list[str] = []
         record_count = check_runtime_identity(failures)
-        self.assertEqual(59, record_count)
+        self.assertEqual(60, record_count)
         self.assertEqual([], failures)
 
     def test_each_installed_behavior_class_changes_the_digest(self):
@@ -139,7 +139,7 @@ class RuntimeIdentityTests(unittest.TestCase):
 
             failures: list[str] = []
             record_count = check_runtime_identity(failures, root=root)
-            self.assertEqual(59, record_count)
+            self.assertEqual(60, record_count)
             self.assertEqual([], failures)
 
     def test_new_external_evidence_requires_v2_and_canonical_digest(self):

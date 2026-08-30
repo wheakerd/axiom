@@ -5,19 +5,16 @@ description: Route an Axiom plugin session to the smallest matching bundled skil
 
 # Using Axiom
 
-Axiom is a routing gate. Select the smallest installed workflow set that
-applies without turning ordinary work into an Axiom task.
+Axiom routes only the smallest installed workflow set that matches.
 
 ## Route Once
 
-1. Honor higher-priority system, developer, user, and repository instructions.
-2. Select a route only when Axiom is explicitly invoked or the request clearly
-   matches a bundled skill description.
-3. Load only the smallest necessary skill set, then only its active-phase
-   references. Do not inspect candidate skill bodies before selection.
+1. Honor all higher-priority instructions.
+2. Route only an explicit Axiom invocation or a clear bundled-description match.
+3. Load the smallest matching skill set and active-phase references. Do not
+   inspect candidate bodies before selection.
 4. Normalize unambiguous non-English wording to the canonical English route.
-   Ask one concise question only when the route or permitted action would
-   materially differ.
+   Ask once only when route or authority would materially differ.
 5. On no match, continue through the host normally without mentioning Axiom.
    A no-match result is not a denial, does not create authorization, and does
    not manufacture a repository-state conflict.
@@ -39,10 +36,9 @@ applies without turning ordinary work into an Axiom task.
   context, Skill/AGENTS/MCP loading, tool churn, or output overhead while
   preserving the required quality and safety bar.
 - `review-axiom-task`: review observable routing, authorization, actions,
-  evidence, stops, and outcome for a current or identified Axiom task when the
-  user requests a retrospective or asks why Axiom selected, allowed, or refused
-  something. Audit, criticism, appeal, and narrowing are independent of a prior
-  refusal.
+  evidence, stops, and outcome for an identified Axiom task or explain why
+  Axiom selected, allowed, or refused something. Prior refusal does not govern
+  an audit, criticism, appeal, or narrowing request.
 - `confirm-external-action`: prepare, authorize, execute once, and verify an
   explicitly requested consequential external action such as send, publish,
   invite, purchase, trade, delete, or an external app/account change when its
@@ -71,6 +67,15 @@ Publication of an already-prepared artifact alone selects only
 `confirm-external-action`; publication alone is not a persistent system
 change.
 
+Explicit machine-credential lifecycle work composes the existing owners; read
+`references/credential-lifecycle.md`, not a new route. Select
+`reversible-system-change` for metadata inventory, planning, consumer
+activation, or cleanup; `confirm-external-action` for provider creation,
+revocation, or disclosure; use both end-to-end. Authentication, human
+login, conceptual help, and secret reveal stay no-route. Routing grants no
+transition, secret access, or retry; each owner keeps separate action,
+write-set, rollback, and verification gates.
+
 When a request delegates a choice among mutually exclusive implementations and
 the alternatives would select materially different route sets, write surfaces,
 or authorization or safety boundaries, routing MUST NOT choose an alternative
@@ -78,22 +83,19 @@ for the user. Select no route yet and ask exactly one concise clarification
 question. Wording such as "choose one" does not remove the ambiguity. Once the
 user chooses an unambiguous implementation, resume normal route selection.
 
-An explicit usage-reduction goal selects `optimize-codex-usage`. Add another
-route only when the requested implementation also needs that route's distinct
-authorization or safety contract. Ordinary AGENTS audits select only
-`agents-architect`; ordinary performance work does not select usage
-optimization.
+An explicit usage-reduction goal selects `optimize-codex-usage`; add another
+route only for its distinct authority or safety contract. Ordinary AGENTS
+audits select only `agents-architect`; ordinary performance work does not.
 
-An explicit Axiom retrospective or a question about the observable basis of an
-Axiom decision selects `review-axiom-task`; implementation needs separate
-authority and routing. Prior refusal, assistant prose, disagreement, or safety
-language neither classifies the read-only review nor creates policy.
+An explicit Axiom retrospective or question about an Axiom decision's
+observable basis selects `review-axiom-task`; implementation needs separate
+authority and routing. Prior refusal or assistant prose creates no policy.
 
-An external action selects `confirm-external-action` only when the user asks to
-cause the effect. Preparation does not authorize execution, and an exact
-current request need not be reconfirmed unless a material envelope field is
-missing or changes. Keep independently traceable Git workflows under
-`traceable-git-submit`; ordinary named-remote Git remains host-native.
+An external action selects `confirm-external-action` only when requested.
+Preparation grants no execution; an exact current request needs no redundant
+confirmation unless its envelope is missing or changes. Independently
+traceable Git belongs to `traceable-git-submit`;
+ordinary named-remote Git remains host-native.
 
 A persistent change with no distinct consequential external effect stays under
 `reversible-system-change`; apply the cross-route rule above when both effects
@@ -101,18 +103,16 @@ are present.
 
 ## Boundaries
 
-- Routing selects instructions; it never authorizes edits, commits, pushes,
-  deployments, deletion, credentials, remote writes, or scope expansion.
-- Startup routing is foreground and read-only. It must not write files, contact
-  a network, start a service or background process, collect telemetry, or check
-  for updates.
+- Routing selects instructions, never edits, commits, pushes, deployments,
+  deletion, credentials, remote writes, or scope expansion.
+- Startup routing is foreground and read-only: no writes, network, service,
+  background process, telemetry, or update check.
 - On resume or compaction, reselect every still-active route from current
   direct evidence before any new mutation. If route or phase cannot be
   reconstructed, perform zero new mutations; let each selected route's handoff
   contract resolve prior attempts.
-- Do not load every Axiom skill, route from broad topical similarity, edit
-  protected plugin metadata without explicit scope, or persist one-off task
-  discoveries as durable instructions.
+- Do not load every skill, route on topical similarity, edit protected metadata
+  without scope, or persist one-off discoveries as durable instructions.
 - Ordinary coding, documentation, explanation, status, local commits,
   named-remote non-force pushes, and conceptual requests continue normally
   unless a route description clearly matches.

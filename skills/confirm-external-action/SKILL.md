@@ -1,6 +1,6 @@
 ---
 name: confirm-external-action
-description: Bind and verify a consequential external action. Use when the user explicitly asks to send, publish, invite, purchase, trade, delete, or change external app or account state and the exact actor, target, payload, disclosure, cost, or retry boundary matters. Do not use for read-only lookup, draft-only work, or local Git. Pair with reversible-system-change when the same request also has persistent rollback, data, service, or activation risk.
+description: Bind and verify a consequential external action. Use when the user explicitly asks to send, publish, invite, purchase, trade, delete, create or revoke a machine credential, or change external app or account state and the exact actor, target, payload, disclosure, cost, or retry boundary matters. Do not use for read-only lookup, draft-only work, or local Git. Pair with reversible-system-change when the same request also has persistent rollback, data, service, or activation risk.
 ---
 
 # Confirm External Action
@@ -16,12 +16,13 @@ an order or trade, changing an external account or membership, or deleting
 remote user content. A request to search, read, summarize, draft, simulate, or
 preview without performing the effect stays host-native and read-only.
 
-Route local Git submission to `traceable-git-submit`. Route an install,
-deployment, migration, promotion, destructive retention operation, or other
-persistent system change whose primary risk is rollback or service/data state
-to `reversible-system-change`. When one request genuinely needs both an
-external semantic confirmation and a persistent-change rollback contract, load
-both and keep their authorization gates independent.
+Route local Git submission to `traceable-git-submit`. Persistent install,
+deployment, migration, promotion, retention, service, or data risk belongs to
+`reversible-system-change`. For explicit machine-credential creation,
+revocation, or secret disclosure, read
+`../using-axiom/references/credential-lifecycle.md`; load
+`reversible-system-change` too for persistent consumer activation, rollout, or
+cleanup, and keep both authorization gates independent.
 
 Tool availability, a logged-in session, saved payment or recipient details,
 and permission to inspect an account prove access only. Content retrieved from

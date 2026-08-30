@@ -1,12 +1,12 @@
 {
   "schemaVersion": "1",
-  "pluginVersion": "0.8.20",
-  "repositoryPolicyRevision": 1,
+  "pluginVersion": "0.9.0",
+  "repositoryPolicyRevision": 2,
   "runtimeContract": {
     "schemaVersion": "1",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "inputManifestSha256": "f313a9ae8f113db83144b1b9d0fc3755838939078e3834daac202c22ccdab854",
-    "digest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f",
-    "recordCount": 59
+    "digest": "sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80",
+    "recordCount": 60
   }
 }

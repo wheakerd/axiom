@@ -23,6 +23,7 @@ CASE_FILES = (
     "optimize-codex-usage.jsonl",
     "review-axiom-task.jsonl",
     "confirm-external-action.jsonl",
+    "credential-lifecycle.jsonl",
     "traceable-git-submit.jsonl",
     "reversible-system-change.jsonl",
     "no-route.jsonl",

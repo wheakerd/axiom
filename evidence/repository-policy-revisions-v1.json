@@ -8,6 +8,14 @@
       "sourceIssue": 94,
       "summary": "Bootstrap separate installed-runtime and repository-policy identities with deterministic runtime digest validation.",
       "runtimeContractDigest": "sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f"
+    },
+    {
+      "revision": 2,
+      "recordedOn": "2026-08-30",
+      "baselineCommit": "1b1da516f910ae2faff9f864974122fc07558c0b",
+      "sourceIssue": 95,
+      "summary": "Add fixed credential-lifecycle routing and source-contract validation alongside the composed installed Skill protocol.",
+      "runtimeContractDigest": "sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80"
     }
   ]
 }
