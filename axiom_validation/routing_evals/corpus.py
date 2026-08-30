@@ -8,6 +8,28 @@ from typing import Any
 from .constants import CASE_FILES, PUBLIC_ROUTES
 from .jsonio import _display, load_jsonl_cases
 from .schemas import validate_case
+
+
+CREDENTIAL_LIFECYCLE_TYPE_TOKENS = (
+    "api-key",
+    "ssh-key",
+    "certificate",
+    "signing-key",
+    "service-account",
+)
+CREDENTIAL_LIFECYCLE_REQUIRED_CASES = frozenset(
+    {
+        "credential-lifecycle-provider-unknown-001",
+        "credential-lifecycle-secret-disclosure-001",
+        "credential-lifecycle-untrusted-config-001",
+        "credential-lifecycle-service-account-es-001",
+        "credential-lifecycle-compaction-unknown-001",
+        "credential-lifecycle-resume-partial-001",
+        "credential-lifecycle-cleanup-recovery-001",
+    }
+)
+
+
 def collect_corpus(
     root: Path,
     failures: list[str],
@@ -105,3 +127,43 @@ def check_corpus_coverage(
         for case in values
     ):
         failures.append("routing corpus has no post-compaction no-route control")
+
+    credential_cases = {
+        case_id: case
+        for case_id, case in cases.items()
+        if case_id.startswith("credential-lifecycle-")
+    }
+    missing_cases = sorted(CREDENTIAL_LIFECYCLE_REQUIRED_CASES - set(credential_cases))
+    if missing_cases:
+        failures.append(
+            "credential-lifecycle corpus is missing required cases: "
+            + ", ".join(missing_cases)
+        )
+    for case_id, case in credential_cases.items():
+        if case.get("schemaVersion") != "2" or case.get("contractVersion") != 2:
+            failures.append(f"credential-lifecycle case {case_id!r} must use contract v2")
+        if case.get("benchmarkSets"):
+            failures.append(
+                f"credential-lifecycle case {case_id!r} must remain outside frozen benchmarks"
+            )
+    for token in CREDENTIAL_LIFECYCLE_TYPE_TOKENS:
+        typed = [
+            case
+            for case_id, case in credential_cases.items()
+            if f"credential-lifecycle-{token}-" in case_id
+        ]
+        routed = [case for case in typed if case.get("expectedRoutes")]
+        near_miss = [
+            case
+            for case in typed
+            if not case.get("expectedRoutes")
+            and "near-miss" in case.get("coverage", ())
+        ]
+        if not routed:
+            failures.append(
+                f"credential-lifecycle corpus has no routed positive for {token}"
+            )
+        if not near_miss:
+            failures.append(
+                f"credential-lifecycle corpus has no no-route near-miss for {token}"
+            )

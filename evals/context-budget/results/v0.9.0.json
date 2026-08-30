@@ -1,0 +1,339 @@
+{
+  "$schema": "../schema-v1.json",
+  "baseline": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "method": "ceil(utf8-bytes/4)",
+        "value": 1475
+      },
+      "logicalLines": 107,
+      "utf8Bytes": 5899,
+      "whitespaceDelimitedWords": 757
+    },
+    "release": {
+      "commit": "4c24ba6c016945038778475ce6b69ac9e9a5ce3b",
+      "tag": "v0.7.9",
+      "tree": "719622eff9654dd1050863213d2bf81d3455d6f6",
+      "version": "0.7.9"
+    },
+    "sha256": "1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011"
+  },
+  "candidate": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "directReferenceCount": 2,
+      "directReferences": [
+        "references/credential-lifecycle.md",
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "method": "ceil(utf8-bytes/4)",
+        "value": 1740
+      },
+      "logicalLines": 124,
+      "utf8Bytes": 6960,
+      "whitespaceDelimitedWords": 871
+    },
+    "sha256": "55bbff945d557161c94c625fb4136eafa3ff68b2e2fe0fd06b7bb3c8f50f464e"
+  },
+  "comparison": {
+    "absoluteThresholdReached": true,
+    "estimatedTokenDelta": 265,
+    "justification": "The v0.9.0 gate stays byte-identical to v0.8.20 while adding one routed credential-lifecycle reference and preserving more than 15 percent headroom. The 90-case workload tests composition and no-route boundaries without adding a public route.",
+    "lineDelta": 17,
+    "meaningfulIncrease": true,
+    "method": "same-English-Markdown-surface",
+    "referenceDelta": 1,
+    "relativeThresholdReached": true,
+    "reviewStatus": "reviewed",
+    "utf8ByteDelta": 1061,
+    "wordDelta": 114
+  },
+  "hostMetrics": [
+    {
+      "cachedInputTokens": null,
+      "credits": null,
+      "exactUsageExposed": false,
+      "host": "codex",
+      "inputTokens": null,
+      "reason": "Axiom v0.9.0 adds a shared machine-credential lifecycle protocol and fixed routing corpus. No installed Codex host or lifecycle observation was run for this candidate; static validation and prior evidence remain separate.",
+      "status": "not-run",
+      "wallClockMilliseconds": null
+    },
+    {
+      "cachedInputTokens": null,
+      "credits": null,
+      "exactUsageExposed": false,
+      "host": "claude-code",
+      "inputTokens": null,
+      "reason": "Axiom v0.9.0 changes shared Skill routing for machine-credential lifecycle work. Authenticated Claude Code installed-host and lifecycle observation are unavailable and not run; offline validation and prior evidence remain separate.",
+      "status": "unavailable",
+      "wallClockMilliseconds": null
+    }
+  ],
+  "measurementBoundary": {
+    "estimatedTokens": "estimate",
+    "exactHostUsage": "not-run",
+    "modelOrReasoningChanged": false,
+    "networkOrTelemetryUsed": false,
+    "staticCounts": "proxy",
+    "volatilePricingIncluded": false
+  },
+  "recordId": "routing-context-budget-v0-9-0",
+  "reviewThreshold": {
+    "absoluteUtf8Bytes": 256,
+    "comparison": "cumulative-from-immutable-baseline",
+    "effect": "review-and-justify-not-automatic-rejection",
+    "operator": "either",
+    "relativeBasisPoints": 500
+  },
+  "routingQuality": {
+    "reductionExperiment": null,
+    "reductionPolicy": {
+      "requiredForAnyReduction": true,
+      "requiredResults": [
+        "routing",
+        "no-route"
+      ],
+      "requiredStatus": "pass",
+      "sameWorkloadRequired": true,
+      "staticAndHostEvidenceRemainDistinct": true
+    },
+    "workload": {
+      "caseCount": 90,
+      "classification": "static-contract-workload-identity",
+      "fileCount": 12,
+      "noRouteCaseCount": 25,
+      "path": "evals/routing",
+      "routedCaseCount": 65,
+      "sha256": "ca2bcb00605d3150288fdfa94cb75666f819d16ecbb06c84eae1e0002210a4b7"
+    }
+  },
+  "scenarios": [
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "fresh-startup-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "fresh-startup-routed",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "review-axiom-task-observable-refusal-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "resume-no-route",
+      "lifecycleSource": "resume",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "resumed"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "clear-routed",
+      "lifecycleSource": "clear",
+      "requestCaseIds": [
+        "review-axiom-task-independent-audit-001"
+      ],
+      "sessionState": "cleared"
+    },
+    {
+      "compactionMode": "manual",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "manual-compaction-no-route",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-no-route-manual-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "automatic",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "automatic-compaction-routed",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-plugin-architecture-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No v0.9.0 Codex lifecycle observation was run; the credential-lifecycle protocol and routing corpus have static validation only.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "No authenticated Claude Code session was available; this repeated-request scenario was not run.",
+          "status": "unavailable"
+        }
+      ],
+      "id": "unchanged-session-repeated-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "unchanged-session"
+    }
+  ],
+  "schemaVersion": "1",
+  "surface": {
+    "alwaysLoaded": true,
+    "language": "en",
+    "path": "skills/using-axiom/SKILL.md"
+  },
+  "targetRelease": {
+    "binding": "pending-immutable-release",
+    "commit": null,
+    "version": "0.9.0"
+  }
+}

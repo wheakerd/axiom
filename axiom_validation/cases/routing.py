@@ -375,6 +375,77 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         ),
     },
     {
+        "name": "credential-metadata-inventory",
+        "request": "Audit this old SSH machine key's consumer references using metadata only.",
+        "route": "reversible-system-change",
+        "phase": "credential-inventory-plan",
+        "references": (
+            "../using-axiom/references/credential-lifecycle.md",
+        ),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "credential-provider-revocation",
+        "request": (
+            "Revoke the exact old service-account credential at the provider and "
+            "change no consumer configuration."
+        ),
+        "route": "confirm-external-action",
+        "phase": "credential-external-effect",
+        "references": (
+            "../using-axiom/references/credential-lifecycle.md",
+        ),
+        "authorization": frozenset({"read", "external-write"}),
+    },
+    {
+        "name": "credential-end-to-end-rotation",
+        "request": (
+            "Create a replacement signing key at the provider, activate it for "
+            "the build service, verify it, and revoke the old key."
+        ),
+        "route": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+        "phase": "credential-lifecycle",
+        "references": (
+            "../using-axiom/references/credential-lifecycle.md",
+        ),
+        "authorization": frozenset({"read"}),
+        "authorization_gates": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+    },
+    {
+        "name": "credential-concept-no-route",
+        "request": "Explain how API keys work conceptually.",
+        "route": None,
+        "phase": "normal",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "credential-compaction-fail-closed",
+        "request": (
+            "After compaction, resume this service-certificate rotation across "
+            "provider state and persistent consumers only from direct evidence."
+        ),
+        "route": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+        "phase": "credential-lifecycle",
+        "references": (
+            "../using-axiom/references/credential-lifecycle.md",
+        ),
+        "authorization": frozenset({"read"}),
+        "authorization_gates": (
+            "confirm-external-action",
+            "reversible-system-change",
+        ),
+    },
+    {
         "name": "explicit-usage-optimization",
         "request": "Reduce the Codex credits and context used by these Skills without weakening validation.",
         "route": "optimize-codex-usage",

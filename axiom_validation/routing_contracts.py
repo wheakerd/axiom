@@ -246,6 +246,41 @@ def route_contract(request: str) -> dict[str, Any]:
         and re.search(r"\b(?:already-prepared|prepared|confirm|execute)\b", normalized)
         and not external_effect_prohibited
     )
+    credential_kind = bool(
+        re.search(
+            r"\b(?:api[ -]key|ssh[ -](?:key|machine key)|certificate|signing[ -]key|service[ -]account credential|machine[ -]credential|replacement token)\b",
+            normalized,
+        )
+    )
+    credential_lifecycle = bool(
+        credential_kind
+        and re.search(
+            r"\b(?:inventory|audit|plan|rotat\w*|creat\w*|provision\w*|activat\w*|revok\w*|revocation|retir\w*|cleanup|disclos\w*|send)\b",
+            normalized,
+        )
+    )
+    credential_provider_effect = bool(
+        credential_lifecycle
+        and re.search(
+            r"\b(?:creat\w*|provision\w*|revok\w*|revocation|provider|disclos\w*|send)\b",
+            normalized,
+        )
+        and not re.search(
+            r"\b(?:do not|don't)\s+(?:create|provision|revoke|send|disclose)\b",
+            normalized,
+        )
+    )
+    credential_persistent_effect = bool(
+        credential_lifecycle
+        and re.search(
+            r"\b(?:inventory|audit|plan|rotat\w*|activat\w*|consumer|rollout|retir\w*|cleanup|configuration|service)\b",
+            normalized,
+        )
+        and "change no consumer configuration" not in normalized
+    )
+    credential_reference = (
+        "../using-axiom/references/credential-lifecycle.md",
+    )
 
     plugin_ambiguity = bool(
         re.search(r"\b(?:either|choose one)\b", normalized)
@@ -318,6 +353,35 @@ def route_contract(request: str) -> dict[str, Any]:
                 if audit_only
                 else frozenset({"read", "edit", "test"})
             ),
+        }
+
+    if credential_lifecycle:
+        if credential_provider_effect and credential_persistent_effect:
+            return {
+                "route": (
+                    "confirm-external-action",
+                    "reversible-system-change",
+                ),
+                "phase": "credential-lifecycle",
+                "references": credential_reference,
+                "authorization": frozenset({"read"}),
+                "authorization_gates": (
+                    "confirm-external-action",
+                    "reversible-system-change",
+                ),
+            }
+        if credential_provider_effect:
+            return {
+                "route": "confirm-external-action",
+                "phase": "credential-external-effect",
+                "references": credential_reference,
+                "authorization": frozenset({"read", "external-write"}),
+            }
+        return {
+            "route": "reversible-system-change",
+            "phase": "credential-inventory-plan",
+            "references": credential_reference,
+            "authorization": frozenset({"read"}),
         }
 
     if persistent and external_action:
@@ -636,6 +700,8 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "confirm-external-action",
                 "reversible-system-change",
                 "authorization under either route never satisfies the other.",
+                "Explicit machine-credential lifecycle work composes the existing owners",
+                "references/credential-lifecycle.md",
                 "When a request delegates a choice among mutually exclusive implementations",
                 "materially different route sets, write surfaces, or authorization or safety boundaries",
                 "routing MUST NOT choose an alternative for the user.",
@@ -663,6 +729,7 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
             skills / "confirm-external-action/SKILL.md",
             "external-action resume",
             (
+                "../using-axiom/references/credential-lifecycle.md",
                 "## Resume And Compaction Handoff",
                 "host-native task context and current direct evidence from the owning system",
                 "perform zero new mutations",
@@ -675,12 +742,32 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
             skills / "reversible-system-change/SKILL.md",
             "reversible-change resume",
             (
+                "../using-axiom/references/credential-lifecycle.md",
                 "## Resume And Compaction Handoff",
                 "host-native task context and current direct evidence from the owning system",
                 "perform zero new mutations",
                 "Never adopt post-change state as the prior rollback baseline.",
                 "An unknown external outcome enters Verify only and must not be resent.",
                 "Do not add a daemon, cache, telemetry, or persistent handoff tool",
+            ),
+        ),
+        (
+            skills / "using-axiom/references/credential-lifecycle.md",
+            "machine-credential lifecycle",
+            (
+                "## Route And Ownership Decision",
+                "Add no `credential-lifecycle` route",
+                "## State Machine And Evidence",
+                "inventory -> created -> activated -> verified -> revoked",
+                "`unknown`",
+                "## Independent Authority Matrix",
+                "Creation does not authorize delivery or activation.",
+                "## Secret-Handling Contract",
+                "Never print, quote, summarize, hash, encode, broadly copy, log, cache, attach, or persist a secret",
+                "## Unknown Results, Resume, And Compaction",
+                "After resume or compaction, mutate nothing unless direct evidence reconstructs",
+                "## Stops And Incomplete Outcomes",
+                "`partial`",
             ),
         ),
     )

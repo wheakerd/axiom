@@ -35,6 +35,13 @@ envelope and retry boundary are identical, while available confirmation UI,
 idempotency support, and authoritative verification depend on the connected
 service and host tool.
 
+The shared source includes one on-demand machine-credential lifecycle
+reference on both hosts. It composes `confirm-external-action` with
+`reversible-system-change` for API keys, SSH keys, certificates, signing keys,
+service accounts, and other machine credentials without exposing another
+public route. Provider and persistent-consumer observations still depend on
+the connected service, host tools, and current authority.
+
 The shared source includes `agent-plugin-architect` on both hosts without a
 host-specific Skill copy. Static discovery, route parity, wrapper and hook
 shape, and version-bound evidence are checked separately from authenticated
@@ -76,24 +83,21 @@ observation subject, and timestamp. An identical digest can make a prior record
 applicable to the same installed bytes, but it never relabels that record as a
 new host run or current-date evidence.
 
-For v0.8.20, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.9.0, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
-observation. The candidate adds repository release-tag controller policy,
-distinct release check contexts, and offline mutation fixtures. It changes no
-installed Skill, hook, route, action authority, benchmark, or runtime
-dependency. Installed Codex host
+observation. The candidate changes installed Skill routing through one shared
+credential-lifecycle protocol and 17 current-schema cases while retaining the
+seven-route public surface and unchanged host benchmarks. Installed Codex host
 observation remains `NOT-RUN`; authenticated Claude Code observation remains
-`UNAVAILABLE / NOT-RUN`. The immutable v0.8.19 Release and all prior native-
-runner, process-boundary, and host observations remain separate history. The
-dedicated release App and ruleset migration remain unconfigured external state,
-so the checked-in controller intentionally rejects the current live snapshot.
+`UNAVAILABLE / NOT-RUN`. The immutable v0.8.20 Release and all prior native-
+runner, process-boundary, and host observations remain separate history.
 A prior-release Codex observation also
 exists for immutable v0.7.4:
 Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.8.20.
+outcomes forward to v0.9.0.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -154,21 +158,22 @@ pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.8.20.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.9.0.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.8.20 candidate gate is 6,960 bytes with SHA-256
-`fb27acb68971835b62b4565dced98650f8c2808a01b8e6a171f202a9d21794f1`.
+The v0.9.0 candidate gate is 6,960 bytes with SHA-256
+`55bbff945d557161c94c625fb4136eafa3ff68b2e2fe0fd06b7bb3c8f50f464e`.
 
-The candidate has 894 whitespace-delimited words, 124 logical lines, and one
-unique direct reference. Its 1,740 `ceil(bytes / 4)` value is an estimate only
+The candidate has 871 whitespace-delimited words, 124 logical lines, and two
+unique direct references. Its 1,740 `ceil(bytes / 4)` value is an estimate only
 for comparing the same English Markdown surface. The exact cumulative delta is
-1,061 bytes, 137 words, 17 lines, zero references, and 265 estimated tokens.
+1,061 bytes, 114 words, 17 lines, one reference, and 265 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. The candidate is byte-identical to v0.8.19 and leaves the 73-case
-routing workload unchanged, so its reduction experiment remains null.
+reviewed. The candidate is byte-identical in size to v0.8.20 while adding one
+on-demand reference, and the workload grows to 90 cases. Because the gate did
+not shrink, its reduction experiment remains null.
 The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
 workload in the v0.8.11 record
 and is not relabeled as current evidence. Current host usage and lifecycle remain
@@ -188,7 +193,7 @@ count.
 Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
 requires review and justification, not automatic rejection. Any actual
 reduction requires equivalent before/after `PASS` evidence for both routed and
-no-route cases over the same fixed 73-case workload, with the before surface
+no-route cases over the same fixed 90-case workload, with the before surface
 bound to the immediate predecessor candidate. Static validation and host
 observation remain separate evidence classes. No model, reasoning, hook,
 telemetry, runtime dependency, safety, authorization, or stop rule changed to
@@ -197,13 +202,11 @@ obtain the measured result.
 ## Routing Corpus And Host Benchmarks
 
 The [routing evaluation corpus](../evals/README.md) is a second, narrower
-evidence surface for route selection. Its 67 host-independent JSONL records are
-reviewable expectations, not observed model behavior. The frozen 47-case v1
-corpus and 13-case `codex-core-v1` benchmark remain bound to the historical
-six-route contract. The successor v2 contract contains 20 cases for the
-seven-route contract, including the stale-tracking case plus two append-only
-v0.8.4 direct-submit boundary cases outside the unchanged 17-case
-`codex-core-v2` benchmark.
+evidence surface for route selection. Its 90 host-independent JSONL records are
+reviewable expectations, not observed model behavior. The v1 contract contains
+53 records and retains the 13-case `codex-core-v1` benchmark. The current v2
+contract contains 37 records, including 17 credential-lifecycle cases outside
+the unchanged 17-case `codex-core-v2` benchmark.
 
 The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
 cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
@@ -408,6 +411,27 @@ proves compaction lifecycle behavior.
 
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
+
+The Git record for `v0.9.0` reports:
+
+- synchronized `0.9.0` manifests and installed-runtime identity for
+  [Issue #95](https://github.com/wheakerd/axiom/issues/95);
+- one shared on-demand credential-lifecycle reference used by the external-
+  action and reversible-change owners without adding a public route;
+- separate inventory, creation, activation, replacement verification,
+  revocation, revocation verification, cleanup, unknown-result, resume, and
+  compaction boundaries that require no secret value for metadata inventory;
+- 17 current-schema cases for five credential types, bringing the static corpus
+  to 90 cases while leaving both frozen host benchmarks unchanged; and
+- runtime digest
+  `sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80`
+  across 60 classified inputs, with repository policy revision 2 bound to the
+  same candidate.
+
+Installed Codex host and lifecycle observation is `NOT-RUN`; authenticated
+Claude Code observation is `UNAVAILABLE / NOT-RUN`. No tag, GitHub Release,
+marketplace publication, credential effect, or prior host outcome is inferred.
+See the [v0.9.0 release notes](releases/v0.9.0.md).
 
 The Git record for `v0.8.20` reports:
 

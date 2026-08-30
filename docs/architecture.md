@@ -100,6 +100,10 @@ results byte-identical while current contracts advance additively.
 The selected task skill establishes its own phase and evidence contract. Every
 supporting reference is directly discoverable from its parent `SKILL.md`:
 
+- `using-axiom` owns one shared machine-credential lifecycle reference. It
+  loads only for explicit API-key, SSH-key, certificate, signing-key,
+  service-account, or other machine-credential work and does not create a
+  public route.
 - `agents-architect` performs only the metadata inventory needed to select one
   direct audit, initialization, design, migration, maintenance, runtime, or
   validation route.
@@ -126,6 +130,14 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
   non-mutating rehearsals, and separately authorized isolated restore
   rehearsals. It adds the execution reference only for a complete authorized
   change, promotion, rollback, or completion claim.
+
+For a machine-credential lifecycle, `confirm-external-action` and
+`reversible-system-change` both link directly to the shared `using-axiom`
+reference. Provider creation and revocation remain external action envelopes;
+metadata inventory and persistent consumer activation or cleanup remain
+reversible-change phases. An end-to-end rotation selects both owners and loads
+the shared protocol once. Secret values, generic authentication, and human
+login do not create another route or a cross-owner authorization shortcut.
 
 This keeps unrelated workflow instructions out of the active context. A child
 route may narrow permissions or add checks; it cannot broaden authorization or

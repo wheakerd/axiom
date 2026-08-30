@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, or active-version promotion with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; isolated restore rehearsals require exact rehearsal-write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, status queries, or conceptual explanations.
+description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, active-version promotion, or explicit machine-credential lifecycle inventory, plan, activation, or retirement with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; isolated restore rehearsals require exact rehearsal-write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, generic status queries, or conceptual explanations.
 ---
 
 # Reversible System Change
@@ -10,6 +10,12 @@ restore, and verify the prior working state.
 
 ## Select One Phase
 
+- Explicit machine-credential lifecycle: read
+  `../using-axiom/references/credential-lifecycle.md` first. A metadata-only
+  inventory stops there. For persistent activation, rollout, retirement, or
+  cleanup, continue into the applicable phase below; provider-side creation,
+  revocation, or secret disclosure also loads `confirm-external-action` under
+  an independent envelope.
 - Plan or non-mutating workflow rehearsal: read
   `references/preflight-and-rollback.md`. Keep the entire phase read-only; do
   not create a candidate, backup, capsule, cache, remote record, or sensitive

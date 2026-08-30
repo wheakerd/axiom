@@ -3,13 +3,36 @@
 This file records notable changes to Axiom. Historical entries are based on
 the repository's version tags and the commits they identify.
 
-## Unreleased
+## 0.9.0 - unreleased candidate
+
+### Added
+
+- Added one on-demand machine-credential lifecycle reference shared by
+  `confirm-external-action` and `reversible-system-change`, without adding a
+  public route.
+- Defined metadata-only inventory, provider creation, persistent activation,
+  replacement verification, old-credential revocation, revocation
+  verification, and recovery-preserving cleanup as separate evidence states
+  and authorities.
+- Added 17 fixed routing cases for API keys, SSH keys, certificates, signing
+  keys, and service accounts across positive, near-miss, overlap, multilingual,
+  untrusted-data, retry, resume, and compaction boundaries.
+
+### Safety
+
+- Kept secret values out of inventory, previews, evidence, logs, caches, and
+  handoffs; requests to reveal a current secret receive no lifecycle route.
+- Made unknown provider outcomes verification-only with no automatic retry,
+  and made resume or compaction fail closed unless direct evidence reconstructs
+  the complete lifecycle state and authorities.
+- Preserved the seven-route public surface and the 6,960-byte always-loaded
+  gate while routing lifecycle detail through a second direct reference.
 
 ### Repository Policy
 
 - Separated installed `pluginVersion`, append-only
   `repositoryPolicyRevision`, and deterministic `runtimeContractDigest`
-  identities without advancing the v0.8.20 installed package version.
+  identities before advancing the installed package for this runtime mode.
 - Added a versioned, path-contained, symlink-safe runtime input manifest,
   standard-library generator and checker, historical tag characterization, and
   negative fixtures for missing, duplicate, unordered, escaping, symlinked,
@@ -21,6 +44,10 @@ the repository's version tags and the commits they identify.
 This repository-policy revision does not claim that the dedicated GitHub App,
 Actions environment, or live ruleset migration has been configured. Those
 external objects remain separately authorized and verified boundaries.
+
+Current installed Codex host and lifecycle observation is `NOT-RUN`;
+authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See
+[the v0.9.0 release notes](docs/releases/v0.9.0.md).
 
 ## 0.8.20 - unreleased candidate
 

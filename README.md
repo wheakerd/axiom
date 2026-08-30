@@ -92,6 +92,7 @@ rewriting local state.
 | Reduce Codex usage overhead | `optimize-codex-usage` | Preserve the required quality and safety bar; never invent hidden usage data |
 | Review an Axiom-guided decision | `review-axiom-task` | Evaluate the review independently, explain the observable basis, and label unavailable evidence |
 | Confirm a consequential external action | `confirm-external-action` | Bind actor, target, payload, disclosure, count, and retry semantics before one verified effect |
+| Coordinate a machine-credential lifecycle | `confirm-external-action` and/or `reversible-system-change` | Load one shared state machine on demand; keep provider effects, persistent consumers, secrets, rollback, and retries independently gated |
 | Make Git publication traceable | `traceable-git-submit` | Keep checkpoint, consolidation, remote refresh, push, and cleanup independent; use the live remote tip for one verified non-force direct push |
 | Plan or execute a reversible persistent change | `reversible-system-change` | Separate planning, rehearsal, promotion, rollback, and destructive retention authority |
 
@@ -102,6 +103,14 @@ for explicit packaged Codex or Claude Code plugin architecture. Repository-local
 ordinary plugin code and documentation still follow the no-route path. Git
 submission, installation, publication, deployment, and external actions remain
 separate active phases with their own owners.
+
+Version 0.9.0 composes explicit API-key, SSH-key, certificate, signing-key,
+service-account, and other machine-credential lifecycle work through the two
+existing owners. Metadata inventory and persistent consumer changes belong to
+`reversible-system-change`; provider creation, revocation, and secret
+disclosure belong to `confirm-external-action`; an end-to-end rotation selects
+both. No new public route is added, and secret values are never required for
+metadata-only inventory. See the [v0.9.0 release notes](docs/releases/v0.9.0.md).
 
 ## When Normal Execution Continues
 
@@ -127,17 +136,14 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.8.20` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
-future signed merge commit, tag, final GitHub Actions runs, or external
-release-bound host observation. This candidate adds a closed release-tag
-controller and separates candidate, main-history, created-tag, and published-
-release checks. It changes no installed Skill, hook, route, action authority,
-benchmark, or runtime dependency. Current Codex installed-host
-observation remains `NOT-RUN`, and authenticated Claude Code observation
-remains `UNAVAILABLE / NOT-RUN`. The immutable v0.8.19 Release and all prior
-native-runner, process-boundary, and host observations remain separate. The
-dedicated GitHub App, Actions environment, and ruleset migration are external
-state and are not claimed by this repository-only candidate.
+`0.9.0` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+future signed merge commit, tag, final GitHub Actions runs, or release-bound
+host observation. It adds a shared machine-credential lifecycle protocol and
+17 fixed cases without adding a public route, background service, secret cache,
+or automatic rotation. Current Codex installed-host observation remains
+`NOT-RUN`; authenticated Claude Code observation remains `UNAVAILABLE /
+NOT-RUN`. The immutable v0.8.20 Release and all prior host observations remain
+separate.
 
 ### Runtime And Repository Identity
 
@@ -147,19 +153,19 @@ revision, and deterministic installed-runtime digest. See
 classification, version policy, historical derivation, and evidence boundary.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.8.20`
-- `repositoryPolicyRevision`: `1`
-- `runtimeContractDigest` (schema v1): `sha256:76af486607fbb24e7fae186a900468e1a9d95926479e19dd6655775c437c292f`
+- `pluginVersion`: `0.9.0`
+- `repositoryPolicyRevision`: `2`
+- `runtimeContractDigest` (schema v1): `sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v1.json`](axiom_validation/runtime-contract-inputs-v1.json)
 <!-- runtime-identity:current:end -->
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.8.20 routing-context record](evals/context-budget/results/v0.8.20.json) uses the
+The [v0.9.0 routing-context record](evals/context-budget/results/v0.9.0.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
-an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 894 whitespace-delimited
-words, 124 logical lines, 1 direct reference, and an estimated 1,740 tokens. Its
-cumulative deltas are +1,061 bytes, +137 words, +17 lines, 0 references, and +265
+an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 871 whitespace-delimited
+words, 124 logical lines, 2 direct references, and an estimated 1,740 tokens. Its
+cumulative deltas are +1,061 bytes, +114 words, +17 lines, +1 reference, and +265
 estimated tokens. The record marks the absolute threshold `reached`, the relative
 threshold `reached`, and review status `reviewed`. The exact static counts are context
 proxies, and each `ceil(UTF-8 bytes / 4)` figure is only an estimate for the same
@@ -168,7 +174,7 @@ observation remains `NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE /
 NOT-RUN`. No host observation is inferred from these static values.
 <!-- release-facts:current-context-budget:end -->
 
-The [routing evaluation corpus](evals/README.md) makes 73 host-independent
+The [routing evaluation corpus](evals/README.md) makes 90 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
 historical 13-case Codex benchmark and nine labeled observations remain bound
 to v1. The 17-case `codex-core-v2` benchmark has one immutable v0.8.0 Codex
@@ -313,6 +319,9 @@ decision basis and reporting a missing basis as unavailable. Selecting
 `reversible-system-change` for a migration plan keeps the work read-only. An
 explicit consequential app action selects `confirm-external-action`; a preview
 does not authorize execution, and an uncertain result is not retried blindly.
+An explicit machine-credential lifecycle loads one shared on-demand reference;
+provider effects and persistent consumer changes retain independent owners and
+authority even when one rotation selects both routes.
 
 <!-- route-boundary:traceable-git-submit-v1:start -->
 Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
@@ -349,7 +358,9 @@ content is copied or forked for a host.
 - `traceable-git-submit`, the checkpoint and Git submission workflow.
 - `reversible-system-change`, the persistent-change workflow.
 
-Each task workflow loads its supporting Markdown references on demand.
+Each task workflow loads its supporting Markdown references on demand. The
+credential-lifecycle protocol is one `using-axiom` reference shared by the
+external-action and reversible-change owners; it is not a ninth Skill.
 
 ### Platform wrappers
 
@@ -518,7 +529,7 @@ and report an unavailable validator as unavailable, not passed.
   verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.8.20 release notes](docs/releases/v0.8.20.md):
+- [Changelog](CHANGELOG.md) and [v0.9.0 release notes](docs/releases/v0.9.0.md):
   release history and version-specific evidence.
 
 ## Contributing

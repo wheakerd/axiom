@@ -350,6 +350,12 @@ def _delta(value: int) -> str:
     return f"{value:+,}" if value else "0"
 
 
+def _quantity(value: int, noun: str, *, delta: bool = False) -> str:
+    rendered = _delta(value) if delta else _count(value)
+    suffix = "" if abs(value) == 1 else "s"
+    return f"{rendered} {noun}{suffix}"
+
+
 def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
     """Render exact static facts while preserving proxy and observation labels."""
     version = document["targetRelease"]["version"]
@@ -371,17 +377,17 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
         f"{_count(baseline['utf8Bytes'])} UTF-8 bytes, "
         f"{_count(baseline['whitespaceDelimitedWords'])} whitespace-delimited words, "
         f"{_count(baseline['logicalLines'])} logical lines, "
-        f"{_count(baseline['directReferenceCount'])} direct reference, and an estimated "
+        f"{_quantity(baseline['directReferenceCount'], 'direct reference')}, and an estimated "
         f"{_count(baseline['estimatedTokens']['value'])} tokens. The candidate has "
         f"{_count(candidate['utf8Bytes'])} UTF-8 bytes, "
         f"{_count(candidate['whitespaceDelimitedWords'])} whitespace-delimited words, "
         f"{_count(candidate['logicalLines'])} logical lines, "
-        f"{_count(candidate['directReferenceCount'])} direct reference, and an estimated "
+        f"{_quantity(candidate['directReferenceCount'], 'direct reference')}, and an estimated "
         f"{_count(candidate['estimatedTokens']['value'])} tokens. Its cumulative deltas "
         f"are {_delta(comparison['utf8ByteDelta'])} bytes, "
         f"{_delta(comparison['wordDelta'])} words, "
         f"{_delta(comparison['lineDelta'])} lines, "
-        f"{_delta(comparison['referenceDelta'])} references, and "
+        f"{_quantity(comparison['referenceDelta'], 'reference', delta=True)}, and "
         f"{_delta(comparison['estimatedTokenDelta'])} estimated tokens. "
         f"The record marks the absolute threshold `{absolute_status}`, the relative "
         f"threshold `{relative_status}`, and review status `{review_status}`. "
