@@ -16,6 +16,14 @@
       "sourceIssue": 95,
       "summary": "Add fixed credential-lifecycle routing and source-contract validation alongside the composed installed Skill protocol.",
       "runtimeContractDigest": "sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80"
+    },
+    {
+      "revision": 3,
+      "recordedOn": "2026-08-30",
+      "baselineCommit": "057f3cfde5c860d564678caf26926b62dd41e4b8",
+      "sourceIssue": 96,
+      "summary": "Add fixed release-readiness routing and source-contract validation alongside the on-demand installed Skill audit.",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
     }
   ]
 }

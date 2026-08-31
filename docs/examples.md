@@ -40,6 +40,12 @@ only `agents-architect`. "Fix the parser in this plugin repository" and
 "summarize this plugin README" select no Axiom route. The word "plugin" alone
 does not establish packaged agent-plugin architecture intent.
 
+"Audit whether this packaged Codex and Claude Code plugin tree is ready for its
+next release" selects `agent-plugin-architect`, loads the package inventory and
+release-readiness reference, and returns only classified evidence and at most
+one bounded decision. A later request to commit, tag, publish, install, or
+deploy starts a separately owned phase; readiness grants none of that authority.
+
 An explicit request to redesign packaged routing and measure its Codex context
 cost selects `agent-plugin-architect` plus `optimize-codex-usage`, in gate
 order. Work that later reaches Git submission, installation, or publication is

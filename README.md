@@ -112,6 +112,13 @@ disclosure belong to `confirm-external-action`; an end-to-end rotation selects
 both. No new public route is added, and secret values are never required for
 metadata-only inventory. See the [v0.9.0 release notes](docs/releases/v0.9.0.md).
 
+Version 0.10.0 adds a read-only release-readiness audit inside the existing
+`agent-plugin-architect` route. It freezes one packaged candidate, classifies
+its exact impact and runtime identity, separates missing and unavailable
+evidence, checks fresh remote prerequisites, and stops before every mutation
+phase. No `release-readiness` route or startup text is added. See the
+[v0.10.0 release notes](docs/releases/v0.10.0.md).
+
 ## When Normal Execution Continues
 
 Ordinary coding, documentation, explanation, status, local-commit, and
@@ -136,13 +143,13 @@ result as checked in, statically validated, host observed, externally
 reproduced, not verified, or unavailable. Current release-specific evidence is
 kept in [Compatibility](docs/compatibility.md), with the machine-readable
 current boundary in [release status](evidence/release-status.json). Version
-`0.9.0` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
+`0.10.0` is `STATIC-ONLY`: the checked-in candidate cannot bind itself to its
 future signed merge commit, tag, final GitHub Actions runs, or release-bound
-host observation. It adds a shared machine-credential lifecycle protocol and
-17 fixed cases without adding a public route, background service, secret cache,
-or automatic rotation. Current Codex installed-host observation remains
+host observation. It adds one on-demand release-readiness audit and five fixed
+cases without adding a public route, startup context, background process, write
+token, or release mutation. Current Codex installed-host observation remains
 `NOT-RUN`; authenticated Claude Code observation remains `UNAVAILABLE /
-NOT-RUN`. The immutable v0.8.20 Release and all prior host observations remain
+NOT-RUN`. The immutable v0.9.0 Release and all prior host observations remain
 separate.
 
 ### Runtime And Repository Identity
@@ -153,14 +160,14 @@ revision, and deterministic installed-runtime digest. See
 classification, version policy, historical derivation, and evidence boundary.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.9.0`
-- `repositoryPolicyRevision`: `2`
-- `runtimeContractDigest` (schema v1): `sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80`
+- `pluginVersion`: `0.10.0`
+- `repositoryPolicyRevision`: `3`
+- `runtimeContractDigest` (schema v1): `sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v1.json`](axiom_validation/runtime-contract-inputs-v1.json)
 <!-- runtime-identity:current:end -->
 
 <!-- release-facts:current-context-budget:start -->
-The [v0.9.0 routing-context record](evals/context-budget/results/v0.9.0.json) uses the
+The [v0.10.0 routing-context record](evals/context-budget/results/v0.10.0.json) uses the
 immutable v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has 5,899
 UTF-8 bytes, 757 whitespace-delimited words, 107 logical lines, 1 direct reference, and
 an estimated 1,475 tokens. The candidate has 6,960 UTF-8 bytes, 871 whitespace-delimited
@@ -174,7 +181,7 @@ observation remains `NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE /
 NOT-RUN`. No host observation is inferred from these static values.
 <!-- release-facts:current-context-budget:end -->
 
-The [routing evaluation corpus](evals/README.md) makes 90 host-independent
+The [routing evaluation corpus](evals/README.md) makes 95 host-independent
 expectations reviewable across the frozen v1 and current v2 contracts. The
 historical 13-case Codex benchmark and nine labeled observations remain bound
 to v1. The 17-case `codex-core-v2` benchmark has one immutable v0.8.0 Codex
@@ -529,7 +536,7 @@ and report an unavailable validator as unavailable, not passed.
   verification evidence.
 - [Distribution and Launch](docs/marketing/distribution-plan.md): current
   channel requirements, prepared listing copy, and publication gates.
-- [Changelog](CHANGELOG.md) and [v0.9.0 release notes](docs/releases/v0.9.0.md):
+- [Changelog](CHANGELOG.md) and [v0.10.0 release notes](docs/releases/v0.10.0.md):
   release history and version-specific evidence.
 
 ## Contributing
