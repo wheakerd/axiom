@@ -15,7 +15,7 @@ class RoutingContractTests(unittest.TestCase):
     def test_all_routing_fixtures(self):
         failures = []
         check_routing_scenarios(ROUTING_SCENARIOS, failures)
-        self.assertEqual(63 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
+        self.assertEqual(68 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
         self.assertEqual(10, len(ROUTE_BOUNDARY_SCENARIOS))
         self.assertEqual([], failures)
 
@@ -88,7 +88,7 @@ class RoutingContractTests(unittest.TestCase):
     def test_source_routes_and_phase_contracts_are_reachable(self):
         failures = []
         check_routing_source_contracts(failures)
-        self.assertEqual(6, check_cross_route_resume_contracts(failures))
+        self.assertEqual(7, check_cross_route_resume_contracts(failures))
         self.assertEqual([], failures)
 
 

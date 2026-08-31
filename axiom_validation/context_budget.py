@@ -64,8 +64,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.9.0 adds a shared machine-credential lifecycle protocol and "
-            "fixed routing corpus. No installed Codex host or lifecycle observation "
+            "Axiom v0.10.0 adds an on-demand release-readiness audit and fixed "
+            "routing cases without adding a public route. No installed Codex host "
+            "or lifecycle observation "
             "was run for this candidate; static validation and prior evidence remain "
             "separate."
         ),
@@ -79,8 +80,8 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.9.0 changes shared Skill routing for machine-credential "
-            "lifecycle work. Authenticated Claude Code installed-host and lifecycle "
+            "Axiom v0.10.0 changes shared Skill behavior for release-readiness "
+            "audits. Authenticated Claude Code installed-host and lifecycle "
             "observation are unavailable and not run; offline validation and prior "
             "evidence remain separate."
         ),

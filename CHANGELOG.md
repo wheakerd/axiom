@@ -3,7 +3,45 @@
 This file records notable changes to Axiom. Historical entries are based on
 the repository's version tags and the commits they identify.
 
-## 0.9.0 - unreleased candidate
+## 0.10.0 - unreleased candidate
+
+### Added
+
+- Added one directly reachable, read-only release-readiness reference under
+  `agent-plugin-architect` without adding a public route or startup context.
+- Added explicit installed-runtime, routing-contract, action-authority,
+  host-compatibility, release-infrastructure, repository-policy, and
+  documentation-only impact classification backed by changed paths and direct
+  evidence.
+- Added five fixed cases for positive, near-miss, mutation-separation,
+  multilingual, and untrusted-data boundaries while preserving both frozen
+  host benchmarks.
+
+### Safety
+
+- Kept readiness separate from edit, commit, tag, push, Release, marketplace,
+  installation, deployment, and external-action authority.
+- Required fresh read-only remote evidence, stable numeric release grammar,
+  exact runtime identity, tag-controller prerequisites, distinct check
+  contexts, and truthful `passed`, `failed`, `notRun`, `unavailable`,
+  `blocked`, and `incomplete` outcomes.
+- Limited unresolved input to one bounded next decision and prohibited
+  telemetry, daemons, watchers, automatic updates, write tokens, and release
+  mutation shortcuts.
+
+### Repository Policy
+
+- Advanced the installed candidate to `0.10.0`, repository policy revision 3,
+  and 61 runtime inputs with digest
+  `sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3`.
+- Appended immutable `v0.9.0` to runtime-contract history without rewriting
+  prior tags, evidence, benchmarks, or observations.
+
+Current installed Codex host and lifecycle observation is `NOT-RUN`;
+authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See
+[the v0.10.0 release notes](docs/releases/v0.10.0.md).
+
+## 0.9.0 - 2026-08-31
 
 ### Added
 

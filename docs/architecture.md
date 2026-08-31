@@ -108,9 +108,10 @@ supporting reference is directly discoverable from its parent `SKILL.md`:
   direct audit, initialization, design, migration, maintenance, runtime, or
   validation route.
 - `agent-plugin-architect` inventories a packaged plugin, then loads only the
-  directly linked architecture, route, trust, cross-host, evidence, or
-  validation reference needed for the active phase. It does not duplicate
-  Skills per host or infer host behavior from package shape.
+  directly linked release-readiness, architecture, route, trust, cross-host,
+  evidence, or validation reference needed for the active phase. Readiness is
+  read-only and grants no later mutation authority. The Skill does not
+  duplicate content per host or infer host behavior from package shape.
 - `optimize-codex-usage` keeps conceptual answers in its main Skill and loads
   one context-audit reference only for measurement or implementation. It uses
   host metrics when exposed and otherwise labels size and call counts as

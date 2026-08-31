@@ -83,13 +83,13 @@ observation subject, and timestamp. An identical digest can make a prior record
 applicable to the same installed bytes, but it never relabels that record as a
 new host run or current-date evidence.
 
-For v0.9.0, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
+For v0.10.0, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
 its future signed merge commit, final GitHub Actions runs, or post-merge host
-observation. The candidate changes installed Skill routing through one shared
-credential-lifecycle protocol and 17 current-schema cases while retaining the
-seven-route public surface and unchanged host benchmarks. Installed Codex host
-observation remains `NOT-RUN`; authenticated Claude Code observation remains
-`UNAVAILABLE / NOT-RUN`. The immutable v0.8.20 Release and all prior native-
+observation. The candidate adds one on-demand release-readiness audit and five
+current-schema cases while retaining the seven-route public surface, unchanged
+startup gate, and frozen host benchmarks. Installed Codex host observation
+remains `NOT-RUN`; authenticated Claude Code observation remains `UNAVAILABLE /
+NOT-RUN`. The immutable v0.9.0 Release and all prior native-
 runner, process-boundary, and host observations remain separate history.
 A prior-release Codex observation also
 exists for immutable v0.7.4:
@@ -97,7 +97,7 @@ Codex `0.149.0` loaded the startup front door in one fresh routed session and
 selected no Axiom route in a separate fresh control session. Codex compaction
 remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
 See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.9.0.
+outcomes forward to v0.10.0.
 
 The standard-library validator checks the complete record matrix and the
 release boundary:
@@ -137,7 +137,7 @@ without removing the fields from the release manifest.
 
 Version 0.8.3 retains the route implemented in v0.8.0 from the
 [agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
-as one directly packaged Skill with seven root-reachable references. It owns
+as one directly packaged Skill with eight root-reachable references. It owns
 only explicit Codex or Claude Code plugin architecture across shared Skills,
 routes, manifests, marketplace wrappers, hooks, and version-bound evidence.
 
@@ -158,12 +158,12 @@ pass.
 
 ## Routing Context Budget
 
-The [versioned routing-context record](../evals/context-budget/results/v0.9.0.json)
+The [versioned routing-context record](../evals/context-budget/results/v0.10.0.json)
 binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
 `4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
 `719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
 `1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.9.0 candidate gate is 6,960 bytes with SHA-256
+The v0.10.0 candidate gate is 6,960 bytes with SHA-256
 `55bbff945d557161c94c625fb4136eafa3ff68b2e2fe0fd06b7bb3c8f50f464e`.
 
 The candidate has 871 whitespace-delimited words, 124 logical lines, and two
@@ -172,7 +172,7 @@ for comparing the same English Markdown surface. The exact cumulative delta is
 1,061 bytes, 114 words, 17 lines, one reference, and 265 estimated tokens.
 Both the 256-byte and 5% triggers are reached, so the record marks the change
 reviewed. The candidate is byte-identical in size to v0.8.20 while adding one
-on-demand reference, and the workload grows to 90 cases. Because the gate did
+on-demand reference, and the workload grows to 95 cases. Because the gate did
 not shrink, its reduction experiment remains null.
 The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
 workload in the v0.8.11 record
@@ -412,6 +412,25 @@ proves compaction lifecycle behavior.
 Historical results describe the tree and tooling at the time they were
 recorded; they are not a current pass.
 
+The Git record for `v0.10.0` reports:
+
+- synchronized `0.10.0` manifests and installed-runtime identity for
+  [Issue #96](https://github.com/wheakerd/axiom/issues/96);
+- one directly reachable release-readiness reference under
+  `agent-plugin-architect`, with no new public route or startup context;
+- explicit impact, version, runtime-digest, local, remote, host, evidence-state,
+  one-decision, and zero-mutation contracts;
+- five additive current-schema cases, bringing the static corpus to 95 while
+  leaving both frozen host benchmarks unchanged; and
+- runtime digest
+  `sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3`
+  across 61 classified inputs, with repository policy revision 3.
+
+Installed Codex host and lifecycle observation is `NOT-RUN`; authenticated
+Claude Code observation is `UNAVAILABLE / NOT-RUN`. No tag, GitHub Release,
+marketplace publication, or prior host outcome is inferred. See the
+[v0.10.0 release notes](releases/v0.10.0.md).
+
 The Git record for `v0.9.0` reports:
 
 - synchronized `0.9.0` manifests and installed-runtime identity for
@@ -428,10 +447,9 @@ The Git record for `v0.9.0` reports:
   across 60 classified inputs, with repository policy revision 2 bound to the
   same candidate.
 
-Installed Codex host and lifecycle observation is `NOT-RUN`; authenticated
-Claude Code observation is `UNAVAILABLE / NOT-RUN`. No tag, GitHub Release,
-marketplace publication, credential effect, or prior host outcome is inferred.
-See the [v0.9.0 release notes](releases/v0.9.0.md).
+The immutable `v0.9.0` Release and its release-bound Codex acceptance remain
+separate prior-version evidence; authenticated Claude Code remained
+`UNAVAILABLE / NOT-RUN`. See the [v0.9.0 release notes](releases/v0.9.0.md).
 
 The Git record for `v0.8.20` reports:
 

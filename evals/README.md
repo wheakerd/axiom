@@ -106,20 +106,20 @@ python3 scripts/check-publication.py
 
 A static pass proves only that the checked-in contracts are internally
 consistent. It is never labeled as a Codex or Claude Code host observation.
-For the v0.9.0 candidate, the 90-case combined routing corpus, eight bounded
+For the v0.10.0 candidate, the 95-case combined routing corpus, eight bounded
 review sequences with 11 review checkpoints, 30 total benchmark memberships,
 and 11 preserved observations pass static validation.
 The ordinary host-native, explicit lightweight direct-submit, and
 stale-tracking cases remain outside both frozen benchmarks. Historical v0.8.4
-and earlier evidence remains distinct; no current v0.9.0 host result is
+and earlier evidence remains distinct; no current v0.10.0 host result is
 inferred from it.
 
 The exact v0.8.18 release-bound batch completed 17/17 `PASS` and remains bound
 to its immutable tag, commit, and tree. Publication stopped before a Draft or
 GitHub Release because the checked-in release notes understated the final
 validation counts. Its sanitized ledger and observation remain separate
-unpublished evidence; neither is promoted or reused for v0.9.0. The immutable
-v0.8.20 Release and its acceptance also remain separate history.
+unpublished evidence; neither is promoted or reused for v0.10.0. The immutable
+v0.9.0 Release and its acceptance also remain separate history.
 
 The explicit external mode validates one content-addressed post-merge record
 without changing aggregate behavior:
@@ -127,9 +127,9 @@ without changing aggregate behavior:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.9.0-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.9.0 \
-  --expected-tag v0.9.0 \
+  /absolute/path/axiom-v0.10.0-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.10.0 \
+  --expected-tag v0.10.0 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```

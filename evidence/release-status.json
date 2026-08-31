@@ -1,16 +1,16 @@
 {
   "schemaVersion": "2",
   "targetRelease": {
-    "version": "0.9.0",
-    "tag": "v0.9.0",
+    "version": "0.10.0",
+    "tag": "v0.10.0",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
   "runtimeIdentity": {
-    "pluginVersion": "0.9.0",
-    "repositoryPolicyRevision": 2,
+    "pluginVersion": "0.10.0",
+    "repositoryPolicyRevision": 3,
     "runtimeContractSchemaVersion": "1",
-    "runtimeContractDigest": "sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80",
+    "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "history": "evidence/runtime-contract-history-v1.json"
   },
@@ -22,10 +22,10 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.9.0",
-      "runtimeContractDigest": "sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80",
+      "pluginVersion": "0.10.0",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
       "status": "not-run",
-      "reason": "Axiom v0.9.0 adds a shared machine-credential lifecycle protocol and fixed routing corpus. No installed Codex host or lifecycle observation was run for this candidate; static validation and prior evidence remain separate."
+      "reason": "Axiom v0.10.0 adds an on-demand release-readiness audit and fixed routing cases without adding a public route. No installed Codex host or lifecycle observation was run for this candidate; static validation and prior evidence remain separate."
     },
     {
       "host": "claude-code",
@@ -33,10 +33,10 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.9.0",
-      "runtimeContractDigest": "sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80",
+      "pluginVersion": "0.10.0",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
       "status": "unavailable",
-      "reason": "Axiom v0.9.0 changes shared Skill routing for machine-credential lifecycle work. Authenticated Claude Code installed-host and lifecycle observation are unavailable and not run; offline validation and prior evidence remain separate."
+      "reason": "Axiom v0.10.0 changes shared Skill behavior for release-readiness audits. Authenticated Claude Code installed-host and lifecycle observation are unavailable and not run; offline validation and prior evidence remain separate."
     }
   ],
   "priorReleaseEvidence": [

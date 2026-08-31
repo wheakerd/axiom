@@ -217,7 +217,7 @@ ability to replace or delete an asset is an unacceptable risk.
 
 ## Post-Merge Routing Observation
 
-For the v0.9.0 candidate, a final Stage 3 result belongs outside the checked-in
+For the v0.10.0 candidate, a final Stage 3 result belongs outside the checked-in
 tree because the release commit cannot contain a record bound to its own object ID. The
 external mode accepts one existing schema-v2 `codex-core-v2` record and does no
 network access:
@@ -225,9 +225,9 @@ network access:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.9.0-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.9.0 \
-  --expected-tag v0.9.0 \
+  /absolute/path/axiom-v0.10.0-codex-core-v2-<full-sha256>.json \
+  --expected-version 0.10.0 \
+  --expected-tag v0.10.0 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
@@ -237,15 +237,15 @@ the exact 17 unique cases in benchmark order, one fresh call per case, 17/17
 `PASS`, V3 response binding, verified installation and startup hook, no
 limitations or unavailable suffix, and zero canonical false negatives,
 high-impact false positives, clarification mismatches, and mutation attempts.
-The subject must be non-candidate v0.9.0 with a non-null `v0.9.0` tag and the
+The subject must be non-candidate v0.10.0 with a non-null `v0.10.0` tag and the
 exact expected 40-character commit and tree. Normal aggregate validation is
 unchanged when this explicit mode is absent.
 
 The completed v0.8.18 batch and immutable tag remain bound to their exact
 commit and tree, but no GitHub Release was published after its checked-in
 release notes understated the final validation counts. That observation is
-preserved as separate unpublished evidence and cannot satisfy v0.9.0. The
-immutable v0.8.20 Release and its acceptance also remain separate; the changed
+preserved as separate unpublished evidence and cannot satisfy v0.10.0. The
+immutable v0.9.0 Release and its acceptance also remain separate; the changed
 runtime contract requires a fresh complete batch.
 
 The unreleased v0.8.2 release-bound batch remains terminal `FAIL` at Case 1
@@ -265,10 +265,10 @@ terminate; unknown, malformed, invalid-status, pre-thread benign,
 duplicate-phase, post-terminal, and abrupt streams fail closed. Retain only the
 taxonomy's bounded public journal fields and never raw payload.
 
-Version 0.9.0 changes installed Skill routing and its runtime digest. The hook
-and wrapper bytes remain unchanged from v0.8.20. The v0.8.16
+Version 0.10.0 changes installed Skill behavior and its runtime digest. The hook
+and wrapper bytes remain unchanged from v0.9.0. The v0.8.16
 native three-platform matrix and the earlier private native Windows
-process-boundary result remain historical evidence, not current v0.9.0 host
+process-boundary result remain historical evidence, not current v0.10.0 host
 evidence. Require the exact checked-in hook JSON and wrapper SHA-256 values to
 remain byte-identical to v0.8.17. If either byte sequence changes, repeat the
 three-platform matrix and the exact Codex `cmd.exe /C` construction on a real
@@ -279,7 +279,7 @@ model-routing asset.
 Use this safe release sequence:
 
 1. Dispatch `Release signature guard` with `phase=candidate` on the exact
-   `release/v0.9.0` branch. Require `Verify release candidate` to pass, bind
+   `release/v0.10.0` branch. Require `Verify release candidate` to pass, bind
    the branch version to both manifests, and reject prerelease identifiers,
    build metadata, leading zeros, or malformed forms.
 2. Merge the reviewed patch as one GitHub-signed commit.
@@ -287,7 +287,7 @@ Use this safe release sequence:
    creating the tag. Stop without tagging if any case fails.
 4. Require the exact hook JSON and wrapper bytes to remain byte-identical to
    v0.8.17. Keep any Ubuntu, Windows, and macOS matrix result attached to the
-   exact v0.9.0 commit and do not carry the v0.8.16 outcome forward. The three
+   exact v0.10.0 commit and do not carry the v0.8.16 outcome forward. The three
    checks remain non-required and do not change contributor branch or fork
    rules. Stop and repeat the three-platform matrix plus the native Windows
    process-boundary check if either digest differs.
@@ -314,7 +314,7 @@ Use this safe release sequence:
    bypass states `never`, `never`, and `always`; stop on any missing field or
    drift without granting ruleset-write permission.
 8. Dispatch `Create protected release tag` on `refs/heads/main` with
-   `version=0.9.0` and `tag=v0.9.0`. The controller binds the exact version,
+   `version=0.10.0` and `tag=v0.10.0`. The controller binds the exact version,
    tag, commit, tree, manifests, checks, signature, absence state, App identity,
    repository scope, and rulesets; rereads them immediately before one
    `POST /git/refs`; and reads the created ref back. On an uncertain response it
@@ -325,11 +325,11 @@ Use this safe release sequence:
    required-check, deletion, or non-fast-forward rules.
 10. Finalize the sanitized observation with the tag, commit, and tree; rename it
    to the content-addressed filename; and run the external validator above.
-11. Create one draft `Axiom v0.9.0` Release targeting the exact 40-character
+11. Create one draft `Axiom v0.10.0` Release targeting the exact 40-character
    commit and upload only the validated observation asset.
 12. With an owner credential, read the repository immutable-release setting and
    require `enabled: true`; then dispatch `Publish immutable release` on the
-   exact `v0.9.0` ref with only `tag=v0.9.0`. The workflow requires the tag
+   exact `v0.10.0` ref with only `tag=v0.10.0`. The workflow requires the tag
    commit to remain on live `main` history and requires `main` to equal it
    immediately before mutation, plus REST and GraphQL GitHub-made signature. It
    also rejects a different equal-or-newer current stable release version. It freezes the
@@ -341,7 +341,7 @@ Use this safe release sequence:
    clean a matching mutable remnant, resume an exact draft, or perform
    final-only readback; it never replaces either asset.
 13. Explicitly dispatch `Release signature guard` with
-   `phase=published-release` on `v0.9.0` and require
+   `phase=published-release` on `v0.10.0` and require
    `Observe published immutable release` to pass. A Release mutation made with
    the publication workflow's `GITHUB_TOKEN` does not automatically start
    another workflow from the resulting ordinary release event.

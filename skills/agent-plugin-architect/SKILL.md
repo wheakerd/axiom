@@ -17,17 +17,21 @@ shared Skill tree when both hosts can discover it without weakening Codex.
    route solely because it lives in a plugin repository.
 2. Inventory the package before editing. Read
    `references/package-inventory.md`.
-3. Define route ownership and trigger boundaries with
+3. For a read-only audit of one packaged release candidate, read
+   `references/release-readiness.md`. It classifies impact, version and runtime
+   identity, local and remote evidence, and the one next decision, then stops
+   before every mutation phase.
+4. Define route ownership and trigger boundaries with
    `references/route-and-trigger-contracts.md`.
-4. For shared Skill structure and direct discovery, read
+5. For shared Skill structure and direct discovery, read
    `references/packaged-skill-architecture.md`.
-5. For startup hooks, untrusted content, credentials, or runtime effects, read
+6. For startup hooks, untrusted content, credentials, or runtime effects, read
    `references/hooks-and-trust-boundaries.md`.
-6. For manifests, wrappers, and Codex/Claude Code parity, read
+7. For manifests, wrappers, and Codex/Claude Code parity, read
    `references/cross-host-packaging.md`.
-7. For routing cases, context cost, or host observations, read
+8. For routing cases, context cost, or host observations, read
    `references/evaluation-and-evidence.md`.
-8. Before completion, read `references/validation-reporting.md`.
+9. Before completion, read `references/validation-reporting.md`.
 
 Load only references needed for the active phase. A request may compose this
 route with at most one other Axiom route when both contracts are independently

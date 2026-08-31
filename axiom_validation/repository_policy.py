@@ -117,6 +117,7 @@ AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",
+    "references/release-readiness.md",
     "references/route-and-trigger-contracts.md",
     "references/packaged-skill-architecture.md",
     "references/hooks-and-trust-boundaries.md",
