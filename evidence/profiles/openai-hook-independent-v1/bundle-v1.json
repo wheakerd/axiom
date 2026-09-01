@@ -52,7 +52,7 @@
       ],
       "bundleSchema": {
         "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-        "sha256": "3273b9bce3dae9c7af56955b68e1206ce211b36589d6cb012e77ebda74111121"
+        "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
       }
     },
     "runtimeCanonicalization": {
@@ -509,20 +509,20 @@
         {
           "path": "scripts/build-no-hook-bundle.py",
           "role": "entrypoint",
-          "size": 1899,
-          "sha256": "78f90d415d8a4fcaa6cecfeee6aa7ec7b3da5646c2e7841753efc210c553c57b"
+          "size": 2154,
+          "sha256": "6198b516d20529caf53bca0c86a42f8d3509a3317766372bddb8e304582b9c5d"
         },
         {
           "path": "axiom_validation/no_hook_bundle.py",
           "role": "implementation",
-          "size": 77782,
-          "sha256": "ae6c3d9136faa9f2d06c58b74d33c871c972193b857a58dee5fb3561b4a045af"
+          "size": 108652,
+          "sha256": "bddbf3768729b38bf808df6f064d4a6b8912f8625f495311399ba489a82f274b"
         },
         {
           "path": "evals/no-hook/bundle-manifest-schema-v1.json",
           "role": "contract-schema",
-          "size": 12383,
-          "sha256": "3273b9bce3dae9c7af56955b68e1206ce211b36589d6cb012e77ebda74111121"
+          "size": 12426,
+          "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
         }
       ]
     },
@@ -545,7 +545,7 @@
       "dataDescriptor": false,
       "archiveDigestLocation": "BUNDLE-ENVELOPE.json"
     },
-    "bundleManifestDigest": "sha256:812981a11a74f69cf5689dada701145372dcf555daa2ebbbde1c278af60e51fe"
+    "bundleManifestDigest": "sha256:bfbfada8e1a3f505bc699487fdfc91c200d1061736d4acd31c414c203705e048"
   },
   "builds": {
     "independentBuildCount": 2,
@@ -553,8 +553,8 @@
     "directoryFileSetsEqual": true,
     "directoryBytesEqual": true,
     "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
-    "bundleManifestDigest": "sha256:812981a11a74f69cf5689dada701145372dcf555daa2ebbbde1c278af60e51fe",
-    "archiveSha256": "35431bf7029f39ca3e15edd29f0f9a77d25c44fddd3b343ac1df90c6fa430a2a",
+    "bundleManifestDigest": "sha256:bfbfada8e1a3f505bc699487fdfc91c200d1061736d4acd31c414c203705e048",
+    "archiveSha256": "9ca2cf1f4b77e71076efbba1c04bdebf7d2d7b5f284ea643aeaa687019221ad5",
     "archiveBytesEqual": true,
     "envelopeSemanticFieldsEqual": true
   },

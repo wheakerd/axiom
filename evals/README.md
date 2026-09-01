@@ -115,14 +115,30 @@ Static validation is not Codex or ChatGPT execution, both of which remain
 boundary merely because the profiles share canonical Skill bytes.
 
 Repository policy revision 6 implements a deterministic derived bundle from
-the single canonical `skills/` source. The builder reads exact commit, tree,
-and blob objects; emits a minimal no-Hook manifest, all 50 files under the
-eight canonical Skill roots, and `BUNDLE-MANIFEST.json`; and produces a
-ZIP_STORED archive plus an external completion envelope. The generated outputs
-are not tracked or published. Tracked static evidence records the independent
-profile runtime, bundle manifest, and archive identities after two equal
-builds. Codex and ChatGPT host observations remain `NOT-RUN`, and full-profile
-evidence remains outside this acceptance boundary.
+the single canonical `skills/` source. The builder freezes an explicit absolute
+Git executable, disables replacement objects, hooks, credentials, protocols,
+and filesystem monitoring, and reads exact commit, tree, and blob objects. It
+does not invoke `git status`: a standard-library `lstat`/`scandir` snapshot
+rejects missing, extra, dirty, ignored, symlinked, reparse-point, or otherwise
+non-regular `skills/` state before and after construction, while runtime bytes
+still come only from Git blobs. The builder emits a minimal no-Hook manifest,
+all 50 files under the eight canonical Skill roots, and
+`BUNDLE-MANIFEST.json`; and produces a ZIP_STORED archive plus an external
+completion envelope. Its v1 validator closes every manifest field, nested
+object, canonical surface, behavior dependency, transport rule, schema const,
+and the one-field digest self-reference instead of treating equality with one
+known manifest as generic validation.
+
+The logical package contract always records files as `100644`, directories as
+`040755`, and those exact modes in ZIP metadata. POSIX output validation also
+requires physical `0644`/`0755`. Windows output validation requires ordinary
+files and directories, rejects symlink and junction/reparse traversal, and
+verifies the exact path set, bytes, and logical ZIP modes; Windows ACLs or
+emulated mode bits are not presented as a POSIX-mode observation. The
+generated outputs are not tracked or published. Tracked static evidence
+records the independent profile runtime, bundle manifest, and archive
+identities after two equal builds. Codex and ChatGPT host observations remain
+`NOT-RUN`, and full-profile evidence remains outside this acceptance boundary.
 
 ## Contract changes
 

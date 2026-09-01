@@ -23,6 +23,12 @@ from axiom_validation.no_hook_bundle import (  # noqa: E402
 def parser() -> argparse.ArgumentParser:
     argument_parser = argparse.ArgumentParser(description=__doc__)
     argument_parser.add_argument(
+        "--git-executable",
+        type=Path,
+        required=True,
+        help="absolute path to the Git executable frozen for every object read",
+    )
+    argument_parser.add_argument(
         "--source-repository",
         type=Path,
         required=True,
@@ -42,7 +48,7 @@ def parser() -> argparse.ArgumentParser:
         "--destination",
         type=Path,
         required=True,
-        help="existing empty directory outside the source repository",
+        help="existing empty external directory exclusively owned by the caller",
     )
     return argument_parser
 
@@ -55,6 +61,7 @@ def main(argv: list[str] | None = None) -> int:
             arguments.source_commit,
             arguments.expected_source_tree,
             arguments.destination,
+            git_executable=arguments.git_executable,
         )
     except BundleContractError as error:
         print(f"Hook-independent bundle build failed: {error}", file=sys.stderr)

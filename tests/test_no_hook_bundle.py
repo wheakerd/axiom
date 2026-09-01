@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import ast
 import copy
+import hashlib
 import io
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -39,6 +41,10 @@ from axiom_validation.no_hook_bundle import (
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+GIT_COMMAND = shutil.which("git")
+if GIT_COMMAND is None:
+    raise RuntimeError("focused no-Hook bundle tests require Git")
+GIT_EXECUTABLE = Path(GIT_COMMAND).resolve()
 SOURCE_FILES = (
     ".codex-plugin/plugin.json",
     "evidence/runtime-identity.json",
@@ -79,7 +85,7 @@ class SourceFixture:
         check: bool = True,
     ) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
-            ["git", "-C", str(self.root), *arguments],
+            [str(GIT_EXECUTABLE), "-C", str(self.root), *arguments],
             input=input_bytes,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -110,6 +116,7 @@ def _build(fixture: SourceFixture, destination: Path):
         fixture.commit_oid,
         fixture.tree_oid,
         destination,
+        git_executable=GIT_EXECUTABLE,
         schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
         entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
         module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
@@ -122,6 +129,33 @@ def _directory_files(root: Path) -> dict[str, bytes]:
         for path in sorted(root.rglob("*"))
         if path.is_file()
     }
+
+
+def _rebind_manifest(document: dict[str, object]) -> None:
+    digest_input = dict(document)
+    digest_input.pop("bundleManifestDigest", None)
+    payload = json.dumps(
+        digest_input,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("ascii")
+    document["bundleManifestDigest"] = "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _marker_command(parent: Path, name: str, marker: Path) -> Path:
+    if os.name == "nt":
+        command = parent / f"{name}.cmd"
+        command.write_text(f'@echo executed>"{marker}"\n', encoding="utf-8")
+    else:
+        command = parent / name
+        command.write_text(
+            f"#!{sys.executable}\nfrom pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('executed\\n', encoding='utf-8')\n",
+            encoding="utf-8",
+        )
+        command.chmod(0o755)
+    return command
 
 
 class NoHookBundleTests(unittest.TestCase):
@@ -270,7 +304,7 @@ class NoHookBundleTests(unittest.TestCase):
     def test_source_symlink_submodule_and_executable_modes_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture = SourceFixture(Path(directory))
-            source = GitObjectSource(fixture.root)
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
 
             link_blob = fixture.git("hash-object", "-w", "--stdin", input_bytes=b"SKILL.md").stdout.decode("ascii").strip()
             fixture.git(
@@ -293,33 +327,72 @@ class NoHookBundleTests(unittest.TestCase):
             )
             fixture.git("commit", "--quiet", "-m", "submodule tree")
             with self.assertRaises(BundleContractError):
-                GitObjectSource(fixture.root).list_files(fixture.commit_oid, "skills")
+                GitObjectSource(fixture.root, GIT_EXECUTABLE).list_files(
+                    fixture.commit_oid, "skills"
+                )
 
         with tempfile.TemporaryDirectory() as directory:
             fixture = SourceFixture(Path(directory))
             fixture.git("update-index", "--chmod=+x", "skills/using-axiom/SKILL.md")
             fixture.git("commit", "--quiet", "-m", "executable tree")
             with self.assertRaisesRegex(BundleContractError, "100644 blob"):
-                GitObjectSource(fixture.root).list_files(fixture.commit_oid, "skills")
+                GitObjectSource(fixture.root, GIT_EXECUTABLE).list_files(
+                    fixture.commit_oid, "skills"
+                )
 
-    def test_dirty_untracked_and_ignored_runtime_state_is_rejected(self):
-        with tempfile.TemporaryDirectory() as directory:
-            fixture = SourceFixture(Path(directory))
-            (fixture.root / "skills/using-axiom/untracked.md").write_text(
-                "untracked\n", encoding="utf-8"
-            )
-            with self.assertRaisesRegex(BundleContractError, "dirty, untracked, or ignored"):
-                _build(fixture, fixture.destination("output"))
+    def test_fsmonitor_is_not_executed_and_python_snapshot_rejects_runtime_drift(self):
+        for mutation in ("clean", "dirty", "untracked", "ignored"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                parent = Path(directory)
+                fixture = SourceFixture(parent)
+                marker = parent / "fsmonitor-executed.txt"
+                command = _marker_command(parent, "fsmonitor-marker", marker)
+                fixture.git("config", "core.fsmonitor", str(command))
 
+                if mutation == "dirty":
+                    skill = fixture.root / "skills/using-axiom/SKILL.md"
+                    skill.write_bytes(skill.read_bytes() + b"dirty\n")
+                elif mutation == "untracked":
+                    (fixture.root / "skills/using-axiom/untracked.md").write_text(
+                        "untracked\n", encoding="utf-8"
+                    )
+                elif mutation == "ignored":
+                    exclude = fixture.root / ".git/info/exclude"
+                    exclude.write_text(
+                        exclude.read_text(encoding="utf-8")
+                        + "skills/using-axiom/ignored.md\n",
+                        encoding="utf-8",
+                    )
+                    (fixture.root / "skills/using-axiom/ignored.md").write_text(
+                        "ignored\n", encoding="utf-8"
+                    )
+
+                destination = fixture.destination("output")
+                if mutation == "clean":
+                    self.assertEqual(52, _build(fixture, destination).directory_file_count)
+                else:
+                    with self.assertRaisesRegex(
+                        BundleContractError,
+                        "dirty, untracked, or ignored",
+                    ):
+                        _build(fixture, destination)
+                self.assertFalse(marker.exists())
+
+    def test_explicit_git_executable_ignores_path_shadowing(self):
         with tempfile.TemporaryDirectory() as directory:
-            fixture = SourceFixture(Path(directory))
-            (fixture.root / ".gitignore").write_text("skills/using-axiom/ignored.md\n", encoding="utf-8")
-            fixture.commit("ignore policy")
-            (fixture.root / "skills/using-axiom/ignored.md").write_text(
-                "ignored\n", encoding="utf-8"
-            )
-            with self.assertRaisesRegex(BundleContractError, "dirty, untracked, or ignored"):
-                _build(fixture, fixture.destination("output"))
+            parent = Path(directory)
+            fixture = SourceFixture(parent)
+            shadow = parent / "shadow"
+            shadow.mkdir()
+            marker = parent / "fake-git-executed.txt"
+            _marker_command(shadow, "git", marker)
+            environment_path = str(shadow) + os.pathsep + os.environ.get("PATH", "")
+            with mock.patch.dict(os.environ, {"PATH": environment_path}):
+                result = _build(fixture, fixture.destination("output"))
+            self.assertEqual(52, result.directory_file_count)
+            self.assertFalse(marker.exists())
+            with self.assertRaisesRegex(BundleContractError, "explicit absolute path"):
+                GitObjectSource(fixture.root, Path("git"))
 
     def test_source_commit_tree_object_and_environment_mismatch_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -331,6 +404,7 @@ class NoHookBundleTests(unittest.TestCase):
                     fixture.commit_oid,
                     "0" * 40,
                     output,
+                    git_executable=GIT_EXECUTABLE,
                     schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
                     entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
                     module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
@@ -341,10 +415,11 @@ class NoHookBundleTests(unittest.TestCase):
                     "HEAD",
                     fixture.tree_oid,
                     fixture.destination("short-ref"),
+                    git_executable=GIT_EXECUTABLE,
                 )
             with mock.patch.dict(os.environ, {"GIT_DIR": str(fixture.root / ".git")}):
                 with self.assertRaisesRegex(BundleContractError, "dangerous ambient Git"):
-                    GitObjectSource(fixture.root)
+                    GitObjectSource(fixture.root, GIT_EXECUTABLE)
 
     def test_replace_refs_and_object_alternates_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -355,7 +430,7 @@ class NoHookBundleTests(unittest.TestCase):
                 fixture.commit_oid,
             )
             with self.assertRaisesRegex(BundleContractError, "replace refs"):
-                GitObjectSource(fixture.root)
+                GitObjectSource(fixture.root, GIT_EXECUTABLE)
 
         with tempfile.TemporaryDirectory() as directory:
             fixture = SourceFixture(Path(directory))
@@ -363,7 +438,7 @@ class NoHookBundleTests(unittest.TestCase):
             alternates.parent.mkdir(parents=True, exist_ok=True)
             alternates.write_text(str(fixture.root / ".git/objects") + "\n", encoding="utf-8")
             with self.assertRaisesRegex(BundleContractError, "object alternates"):
-                GitObjectSource(fixture.root)
+                GitObjectSource(fixture.root, GIT_EXECUTABLE)
 
     def test_stale_contract_and_host_case_set_bindings_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -399,6 +474,7 @@ class NoHookBundleTests(unittest.TestCase):
                     fixture.commit_oid,
                     fixture.tree_oid,
                     fixture.destination("output"),
+                    git_executable=GIT_EXECUTABLE,
                     schema_path=schema_path,
                     entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
                     module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
@@ -411,14 +487,62 @@ class NoHookBundleTests(unittest.TestCase):
                 fixture.root,
                 fixture.commit_oid,
                 fixture.tree_oid,
+                git_executable=GIT_EXECUTABLE,
                 schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
                 entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
                 module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
             )
             skill = fixture.root / "skills/using-axiom/SKILL.md"
             skill.write_bytes(skill.read_bytes() + b"changed\n")
-            with self.assertRaisesRegex(BundleContractError, "working-tree state changed"):
+            with self.assertRaisesRegex(
+                BundleContractError,
+                "skills/using-axiom/SKILL.md bytes drifted",
+            ):
                 inputs.verify_source_unchanged()
+
+    def test_physical_mode_policy_is_posix_exact_and_windows_logical(self):
+        file_metadata = mock.Mock(st_mode=stat.S_IFREG | 0o600)
+        directory_metadata = mock.Mock(st_mode=stat.S_IFDIR | 0o700)
+
+        with self.assertRaisesRegex(BundleContractError, "mode must be 0644"):
+            bundle_module._validate_physical_mode(
+                file_metadata,
+                0o644,
+                "generated file",
+                platform_name="posix",
+            )
+        with self.assertRaisesRegex(BundleContractError, "mode must be 0755"):
+            bundle_module._validate_physical_mode(
+                directory_metadata,
+                0o755,
+                "generated directory",
+                platform_name="posix",
+            )
+
+        bundle_module._validate_physical_mode(
+            file_metadata,
+            0o644,
+            "generated file",
+            platform_name="nt",
+        )
+        bundle_module._validate_physical_mode(
+            directory_metadata,
+            0o755,
+            "generated directory",
+            platform_name="nt",
+        )
+        with mock.patch.object(bundle_module.os, "chmod") as chmod:
+            bundle_module._set_posix_mode(
+                Path("unused"), 0o644, platform_name="nt"
+            )
+            chmod.assert_not_called()
+            bundle_module._set_posix_mode(
+                Path("unused"), 0o644, platform_name="posix"
+            )
+            chmod.assert_called_once_with(Path("unused"), 0o644)
+
+        reparse_metadata = mock.Mock(st_file_attributes=0x0400)
+        self.assertTrue(bundle_module._is_reparse_point(reparse_metadata))
 
     def test_derived_manifest_forbids_full_profile_and_unknown_fields(self):
         valid = {
@@ -464,6 +588,152 @@ class NoHookBundleTests(unittest.TestCase):
                     files=files,
                     archive_bytes=archive_bytes,
                 )
+
+    def test_manifest_semantic_mutations_fail_after_digest_rebinding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            result = _build(fixture, fixture.destination("output"))
+            manifest = result.bundle_manifest
+
+            mutations = (
+                (
+                    "contract-binding",
+                    lambda value: value["contractBindings"]["profileContract"].__setitem__(
+                        "sha256", "0" * 64
+                    ),
+                    "contract bindings drifted",
+                ),
+                (
+                    "canonicalization",
+                    lambda value: value["runtimeCanonicalization"].__setitem__(
+                        "pathOrder", "locale-order"
+                    ),
+                    "runtime canonicalization drifted",
+                ),
+                (
+                    "included-surface",
+                    lambda value: value["includedSurfaces"][0].__setitem__(
+                        "rationale", "drifted"
+                    ),
+                    "included surfaces drifted",
+                ),
+                (
+                    "excluded-surface",
+                    lambda value: value["excludedSurfaces"][0].__setitem__(
+                        "rationale", "drifted"
+                    ),
+                    "excluded surfaces drifted",
+                ),
+                (
+                    "transport-compression",
+                    lambda value: value["transport"].__setitem__(
+                        "compression", "deflate"
+                    ),
+                    "transport contract drifted",
+                ),
+                (
+                    "transport-timestamp",
+                    lambda value: value["transport"].__setitem__(
+                        "timestamp", "1981-01-01T00:00:00"
+                    ),
+                    "transport contract drifted",
+                ),
+                (
+                    "transport-mode",
+                    lambda value: value["transport"].__setitem__(
+                        "fileMode", "100755"
+                    ),
+                    "transport contract drifted",
+                ),
+                (
+                    "transport-archive-name",
+                    lambda value: value["transport"].__setitem__(
+                        "archiveFilename", "drifted.zip"
+                    ),
+                    "transport contract drifted",
+                ),
+                (
+                    "dependency-path",
+                    lambda value: value["builder"]["behaviorDependencies"][0].__setitem__(
+                        "path", "scripts/other.py"
+                    ),
+                    "path, role, or order drifted",
+                ),
+                (
+                    "dependency-size",
+                    lambda value: value["builder"]["behaviorDependencies"][0].__setitem__(
+                        "size",
+                        value["builder"]["behaviorDependencies"][0]["size"] + 1,
+                    ),
+                    "dependency identity drifted",
+                ),
+                (
+                    "dependency-sha",
+                    lambda value: value["builder"]["behaviorDependencies"][0].__setitem__(
+                        "sha256", "0" * 64
+                    ),
+                    "dependency identity drifted",
+                ),
+                (
+                    "dependency-order",
+                    lambda value: value["builder"]["behaviorDependencies"].__setitem__(
+                        slice(0, 2),
+                        list(reversed(value["builder"]["behaviorDependencies"][:2])),
+                    ),
+                    "path, role, or order drifted",
+                ),
+            )
+            for label, mutate, diagnostic in mutations:
+                with self.subTest(label=label):
+                    mutated = copy.deepcopy(manifest)
+                    mutate(mutated)
+                    _rebind_manifest(mutated)
+                    with self.assertRaisesRegex(BundleContractError, diagnostic):
+                        validate_bundle_manifest(mutated)
+
+    def test_schema_closure_and_consts_fail_after_manifest_rebinding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            result = _build(fixture, fixture.destination("output"))
+            original_schema = json.loads(
+                (REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+
+            for label in ("closure", "const"):
+                with self.subTest(label=label):
+                    schema = copy.deepcopy(original_schema)
+                    if label == "closure":
+                        schema["$defs"]["transport"]["additionalProperties"] = True
+                    elif label == "const":
+                        schema["$defs"]["transport"]["properties"]["compression"][
+                            "const"
+                        ] = "deflate"
+                    schema_bytes = (
+                        json.dumps(schema, indent=2, ensure_ascii=True) + "\n"
+                    ).encode("ascii")
+                    dependencies = copy.deepcopy(
+                        result.bundle_manifest["builder"]["behaviorDependencies"]
+                    )
+                    dependencies[2]["size"] = len(schema_bytes)
+                    dependencies[2]["sha256"] = hashlib.sha256(schema_bytes).hexdigest()
+                    mutated = copy.deepcopy(result.bundle_manifest)
+                    mutated["contractBindings"]["bundleSchema"]["sha256"] = hashlib.sha256(
+                        schema_bytes
+                    ).hexdigest()
+                    mutated["builder"]["behaviorDependencies"] = dependencies
+                    _rebind_manifest(mutated)
+                    with self.assertRaisesRegex(
+                        BundleContractError,
+                        "bundle schema .* drifted",
+                    ):
+                        validate_bundle_manifest(
+                            mutated,
+                            schema=schema,
+                            schema_bytes=schema_bytes,
+                            behavior_dependencies=tuple(dependencies),
+                        )
 
     def test_zip_timestamp_order_mode_extra_and_member_bytes_are_bound(self):
         with tempfile.TemporaryDirectory() as directory:

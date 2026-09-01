@@ -40,6 +40,27 @@ Generated directories, ZIPs, and envelopes are temporary caller-owned outputs
 outside the repository. Static construction does not establish Codex or
 ChatGPT host acceptance and has no installation or publication effect.
 
+Construction binds one caller-supplied absolute Git executable and rechecks
+its physical identity around every read-only invocation. Git replacement
+objects, hooks, protocols, credentials, filesystem monitoring, and ambient
+repository/object redirection are disabled or rejected. Runtime working-tree
+state is checked without `git status`: Python `lstat`/`scandir` snapshots before
+and after construction must match the exact Git-object path set and bytes, so a
+repository-local `core.fsmonitor` command and a PATH-shadowed `git` are not
+executed. Runtime payload bytes themselves continue to come only from the
+frozen commit's blobs.
+
+The package's logical mode contract is always `100644` for files and `040755`
+for directories, including ZIP metadata. On POSIX, generated objects must also
+have physical `0644`/`0755` modes. On Windows, the validator instead requires
+ordinary files and directories, rejects symlinks and junction/reparse points,
+and binds the exact paths and bytes; it does not claim that Windows ACLs or
+mode emulation are a POSIX-mode observation. The destination must be an empty,
+external directory under exclusive caller ownership for the duration of the
+build. Concurrent same-user path substitution is outside this v1 construction
+contract; if destination identity becomes uncertain, the caller must retain
+the output for manual inspection rather than treat it as accepted evidence.
+
 ## Runtime Contract V1
 
 [`runtime-contract-inputs-v1.json`](../axiom_validation/runtime-contract-inputs-v1.json)

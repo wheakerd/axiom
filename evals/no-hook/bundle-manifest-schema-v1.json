@@ -65,13 +65,15 @@
     "includedSurfaces": {
       "type": "array",
       "minItems": 3,
+      "maxItems": 3,
       "items": {
         "$ref": "#/$defs/surface"
       }
     },
     "excludedSurfaces": {
       "type": "array",
-      "minItems": 12,
+      "minItems": 13,
+      "maxItems": 13,
       "items": {
         "$ref": "#/$defs/surface"
       }
