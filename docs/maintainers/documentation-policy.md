@@ -62,6 +62,8 @@ The documentation migration began with overlapping responsibilities:
 - `docs/compatibility.md` owns the concise current support contract and links
   to historical records without reproducing their run narratives;
 - `docs/releases/` contains version notes;
+- `docs/maintainers/release-documentation.md` defines release-document and
+  evidence responsibilities for future releases;
 - `project/README.md` and `project/marketing/` own project-operation plans and
   dated channel status outside current guidance;
 - `evidence/` and `evals/results/` retain machine records and observations.
@@ -107,9 +109,11 @@ Equivalent, simpler groupings are acceptable when ownership remains clear.
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
 | Historical host observations | `evidence/**` and `evals/results/**` | Current and preserved |
-| User-visible release changes | `CHANGELOG.md` | Current; responsibility clarification is pending |
-| Exceptional migration or release detail | Version notes when warranted | Current; responsibility clarification is pending |
-| Final remote publication facts | Immutable post-publication Release evidence | Current; responsibility clarification is pending |
+| User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
+| Exceptional migration, architecture, security, compatibility, or evidence detail | `docs/releases/v<version>.md` when warranted | Current; never reused as the final Release body |
+| GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
+| Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
+| Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | Dated governance evidence and maintainer reference | Current |
 | Marketing, distribution, channel status, launch plans, and editorial plans | `project/README.md` and `project/marketing/**` with absolute verification dates | Current and outside user guidance |
 
@@ -144,6 +148,9 @@ redefine their values.
 - Keep project plans and channel status out of current user guidance. Preserve
   their absolute verification dates and truthful planned, submitted, or
   published state.
+- Do not copy candidate-only absence or future-tense publication text into a
+  final Release body. Render future bodies from the tagged Changelog entry and
+  establish final evidence only from the immutable remote objects.
 - Use repository-relative links for checked-in files. External URLs are
   permitted when the external destination is the actual owner.
 - Keep public documentation free of non-public repository content,

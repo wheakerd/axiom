@@ -242,6 +242,20 @@ focused, standard-library-only validation when adding repository checks.
 
 ## Pull-request validation and release provenance
 
+Release documentation and evidence have separate canonical owners. Read
+[`docs/maintainers/release-documentation.md`](docs/maintainers/release-documentation.md)
+before preparing a version. For a future tag that contains this policy, render
+the exact draft Release body from its Changelog entry with:
+
+```bash
+python3 scripts/check-release-evidence.py render-body --expected-version X.Y.Z
+```
+
+This command is offline and writes only to standard output. It does not create
+a tag, draft, Release, asset, or Latest transition. The separately authorized
+draft must use the exact rendered bytes; publication validation compares those
+bytes again at the tag commit.
+
 `Distribution and publication guards` runs for pull requests targeting `main`,
 including same-repository and fork pull requests. It validates the proposed
 merge tree with repository-local distribution and publication checks. The

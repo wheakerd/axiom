@@ -3,6 +3,12 @@
 This file records notable changes to Axiom. Historical entries are based on
 the repository's version tags and the commits they identify.
 
+For versions after `0.10.0`, each new entry states what changed, the behavioral
+impact, and any required user action (including `None`). The future GitHub
+Release body is rendered deterministically from that entry at the exact tag;
+version notes and candidate evidence remain separate detail surfaces. Existing
+entries, tags, Releases, and evidence are not rewritten to adopt this policy.
+
 ## 0.10.0 - unreleased candidate
 
 ### Added
