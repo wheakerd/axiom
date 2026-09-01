@@ -46,7 +46,8 @@ The current repository still has transitional overlap:
 - `docs/reference/hooks.md` renders the canonical Hook declarations and
   wrapper, while `docs/getting-started.md` remains only as a compatibility
   entry for historical links;
-- `docs/compatibility.md` combines current support with historical evidence;
+- `docs/compatibility.md` owns the concise current support contract and links
+  to preserved current and historical evidence;
 - `docs/marketing/` sits beside current user documentation.
 
 The accepted target separates current user guides, concepts, references,

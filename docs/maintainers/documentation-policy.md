@@ -59,8 +59,8 @@ The documentation migration began with overlapping responsibilities:
 - `docs/reference/hooks.md` renders the canonical Hook declarations and
   wrapper, while `docs/getting-started.md` is a compatibility entry for
   historical links;
-- `docs/compatibility.md` combines the current support contract with historical
-  runs and candidate investigations;
+- `docs/compatibility.md` owns the concise current support contract and links
+  to historical records without reproducing their run narratives;
 - `docs/releases/` contains version notes;
 - `docs/marketing/` contains project-operation plans beside current guidance;
 - `evidence/` and `evals/results/` retain machine records and observations.
@@ -105,7 +105,7 @@ Equivalent, simpler groupings are acceptable when ownership remains clear.
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Synchronized plugin manifests | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current |
-| Current compatibility boundary | Current release-status evidence with a concise rendered reference | Compatibility reduction is pending |
+| Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
 | Historical host observations | `evidence/**` and `evals/results/**` | Current and preserved |
 | User-visible release changes | `CHANGELOG.md` | Current; responsibility clarification is pending |
 | Exceptional migration or release detail | Version notes when warranted | Current; responsibility clarification is pending |

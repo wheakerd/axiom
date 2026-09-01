@@ -1,1301 +1,158 @@
 # Compatibility
 
-Axiom's compatibility claims are evidence-bounded. Checked-in support,
-historical validation, documentation-derived expectations, a current local
-observation, and an unverified environment are different states.
+Axiom's compatibility claims are evidence-bounded. Checked-in integration,
+static validation, an observed host session, and an independent reproduction
+are different levels. A prior observation remains attached to its original
+host, version, lifecycle, commit, and date; it is never silently promoted to
+the current release.
 
-## Checked-In Support
+## Support Levels
 
-The release tree contains two wrappers over one shared skill source:
+| Level | Meaning |
+| --- | --- |
+| `CHECKED-IN` | The repository contains the named manifest, Hook, wrapper, Skill, or contract. |
+| `STATICALLY-VALIDATED` | Deterministic repository checks passed for an identified tree. This is not host execution. |
+| `HOST-OBSERVED` | Behavior was observed in a named host/version and lifecycle against an immutable subject. |
+| `EXTERNALLY-REPRODUCED` | An independent user supplied a reviewable result for the named subject. |
+| `NOT-VERIFIED` | The claim has not been checked at the level it requires. |
+| `NOT-RUN` | The case was intentionally or procedurally not executed. |
+| `UNAVAILABLE` | A required host, interface, permission, authenticated session, or evidence source was unavailable. |
 
-| Host | Checked-in support surface | Lifecycle surface |
+These labels are not interchangeable. A passing static validator cannot turn a
+`NOT-RUN` or `UNAVAILABLE` host case into a pass. See
+[Field Validation](field-validation.md) for the reporting protocol.
+
+## Supported Hosts
+
+The release tree provides separate host wrappers over one shared Skill source:
+
+| Host | Checked-in integration | Lifecycle contract |
 | --- | --- | --- |
-| Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, and `./skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are present |
-| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `./skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; the `compact` source follows manual or automatic compaction, and no Axiom `PreCompact` handler is declared |
+| Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are declared |
+| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; no Axiom `PreCompact` handler is declared |
 
-Both manifests declare the same `./skills/` directory. Platform-specific
-marketplaces, manifests, and hooks remain separate. The distribution drift
-guard checks agreement among the skill tree, both manifests, both marketplace
-wrappers, and the README shared-skill list.
+Both manifests point to `./skills/`. The wrappers and Hooks remain
+platform-specific; the public Skills do not have host-specific copies. This is
+repository support, not proof of execution on every host release, operating
+system, shell, installation method, or policy configuration.
 
-The shared source includes `optimize-codex-usage` on both hosts; neither host
-receives a platform-specific copy. Its byte, word, line, reference, and
-scenario measurements are repository-level proxies unless the active host
-separately exposes exact usage for the scoped run.
+Inspect the exact commands in the [Hook Reference](reference/hooks.md) before
+trusting an installation.
 
-The shared source also includes `review-axiom-task` on both hosts. Its review
-contract is identical, but coverage depends on the task history, summaries,
-tool results, and task-inspection interfaces each active host exposes. The
-contract protects raw hidden reasoning while requiring a bounded rationale from
-observable evidence and independently evaluating later review, appeal,
-criticism, and narrowing requests.
-
-The shared source includes `confirm-external-action` on both hosts. Its action
-envelope and retry boundary are identical, while available confirmation UI,
-idempotency support, and authoritative verification depend on the connected
-service and host tool.
-
-The shared source includes one on-demand machine-credential lifecycle
-reference on both hosts. It composes `confirm-external-action` with
-`reversible-system-change` for API keys, SSH keys, certificates, signing keys,
-service accounts, and other machine credentials without exposing another
-public route. Provider and persistent-consumer observations still depend on
-the connected service, host tools, and current authority.
-
-The shared source includes `agent-plugin-architect` on both hosts without a
-host-specific Skill copy. Static discovery, route parity, wrapper and hook
-shape, and version-bound evidence are checked separately from authenticated
-host loading, lifecycle routing, model behavior, and marketplace acceptance.
-
-This is repository support: it proves that the integration files exist and
-declare the intended shape. It does not prove execution on every host release,
-operating system, shell, installation method, or policy configuration.
-
-## Current Observation
-
-A current observation belongs to one installed host version and one fresh
-session. To produce it:
-
-1. Record the host and version plus the Axiom version or commit.
-2. Open `/hooks` and compare every installed handler with the exact checked-in
-   command in the [Hook Reference](reference/hooks.md).
-3. Start or reload the session.
-4. Try the routed request and non-routing control in
-   [Getting Started](guides/getting-started.md), plus the explicit usage-optimization,
-   packaged-plugin architecture, task-review, and external-action requests in
-   [Examples](examples.md) when validating those routes.
-5. For Claude Code compaction coverage, observe manual and automatic compaction
-   separately. Record whether exactly one `SessionStart` event with source
-   `compact` loaded the gate, then run the routed request and no-route control
-   after compaction in separate reviewed sessions.
-6. Record pass, fail, not run, and unavailable results separately.
+## Current Bounded Status
 
 The machine-readable [release status](../evidence/release-status.json) is the
-canonical current-release summary. It binds prior observations to their exact
-tag and commit, records current host results separately, and prevents an older
-record from being interpreted as current evidence.
+canonical current summary. It binds the current plugin and runtime identity,
+keeps current host states separate from prior evidence, and requires an
+immutable subject before a host pass can be claimed.
 
-The current release status also binds the three-subject
-[runtime identity](runtime-identity.md). New observations use the successor
-`evidence/schema-v2.json` contract and include the exact plugin version and
-runtime digest while retaining their original host version, lifecycle source,
-observation subject, and timestamp. An identical digest can make a prior record
-applicable to the same installed bytes, but it never relabels that record as a
-new host run or current-date evidence.
+The Git record for `v0.10.0` reports:
 
-For v0.10.0, that status is `STATIC-ONLY`. The checked-in candidate cannot embed
-its future signed merge commit, final GitHub Actions runs, or post-merge host
-observation. The candidate adds one on-demand release-readiness audit and five
-current-schema cases while retaining the seven-route public surface, unchanged
-startup gate, and frozen host benchmarks. Installed Codex host observation
-remains `NOT-RUN`; authenticated Claude Code observation remains `UNAVAILABLE /
-NOT-RUN`. The immutable v0.9.0 Release and all prior native-
-runner, process-boundary, and host observations remain separate history.
-A prior-release Codex observation also
-exists for immutable v0.7.4:
-Codex `0.149.0` loaded the startup front door in one fresh routed session and
-selected no Axiom route in a separate fresh control session. Codex compaction
-remains `NOT-RUN`; every authenticated Claude Code case remains `UNAVAILABLE`.
-See the [version-bound records](../evidence/v0.7.4/) and do not carry their
-outcomes forward to v0.10.0.
+- target binding: `pending-immutable-tag`;
+- checked-in status: `STATIC-ONLY`;
+- installed-runtime identity: plugin `0.10.0`, runtime-contract schema v1;
+- current Codex installed-host observation: `NOT-RUN`;
+- current authenticated Claude Code observation: `UNAVAILABLE / NOT-RUN`.
 
-The standard-library validator checks the complete record matrix and the
-release boundary:
+See the [v0.10.0 version notes](releases/v0.10.0.md) for candidate-specific
+architecture and validation detail. The candidate cannot bind itself to a
+future signed merge, immutable tag, final workflow result, or post-publication
+host observation.
+
+### Current Matrix
+
+| Host | Repository support | Current installed-host evidence | Current claim |
+| --- | --- | --- | --- |
+| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.10.0 | Static support only |
+| Claude Code | `CHECKED-IN`; deterministic package and contract checks are available | `UNAVAILABLE / NOT-RUN` for v0.10.0 | Static support only |
+
+An identical runtime digest may make older evidence relevant to the same bytes,
+but it does not create a new observation or change the older record's host,
+version, date, lifecycle, or status.
+
+## Known Limitations
+
+Unless a current immutable result states otherwise, do not assume:
+
+- compatibility with every earlier or later Codex or Claude Code version;
+- execution across every POSIX shell, Windows configuration, operating system,
+  installation method, or host policy;
+- successful marketplace fetch, update, cache refresh, or remote release
+  availability from repository presence alone;
+- end-to-end routing in a session that was not freshly started or reloaded;
+- exactly-once Claude Code post-compaction loading without a current
+  `SessionStart` observation for both routed and control requests;
+- semantic parity between hosts when one host observation is unavailable;
+- recovery of task history or tool output that the host no longer exposes;
+- exact tokens, credits, reasoning work, cache hits, or latency that the host
+  does not expose for the scoped run; or
+- a missing optional native validator, command error, or unavailable host is a
+  pass.
+
+Static workflow execution on native runners is useful process-boundary evidence
+for the exact checked-in commands, but it is not an installed-plugin or model-
+session observation.
+
+## Report A Compatibility Result
+
+Use a disposable, non-sensitive repository and keep the test read-only:
+
+1. Record the host and exact version, operating system, Axiom version or
+   immutable commit, installation method, and lifecycle source.
+2. Compare the installed Hook with the [checked-in reference](reference/hooks.md).
+3. Start a new session or reload plugins.
+4. Run the routed and control requests in
+   [Getting Started](guides/getting-started.md).
+5. Preserve `PASS`, `FAIL`, `NOT-RUN`, and `UNAVAILABLE` separately and record
+   whether any mutation or tool event occurred.
+
+Submit the bounded result with the
+[compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml).
+Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml)
+for a false positive, false negative, or unexpected clarification. Do not
+include credentials, private conversations, or sensitive repository content.
+
+The standard-library evidence validator is:
 
 ```bash
 python3 scripts/check-compatibility-evidence.py --self-test
 ```
 
-A present executable or manifest alone remains too weak to support a host
-claim.
-
-## Marketplace Presentation
-
-The Codex manifest declares Axiom's repository website, Issue tracker support
-URL, `#111827` light-surface brand color, `#5EEAD4` dark-surface brand color,
-one repository-owned SVG for both the logo and composer icon, and exactly three
-single-line non-mutating starter prompts. The short description is 28
-characters. The asset is square, font-free, and contains no scripts, event
-handlers, external references, or embedded active content.
-
-Axiom has Skills and no MCP custom UI, so `interface.screenshots` remains
-absent. No marketplace screenshot was synthesized. Codex portal draft,
-preview, and submission validation are `NOT-RUN`; the local Codex CLI exposes
-no plugin-validation or marketplace-preview command. Claude Code metadata stays
-within its supported schema rather than adding Codex-only listing fields, and
-Claude Code `2.1.220` strict offline package validation passed in an isolated
-configuration directory. Authenticated Claude Code remains
-`UNAVAILABLE / NOT-RUN`.
-
-The bundled local `plugin-creator` remains stale against the current documented
-Codex presentation contract. It preserves the pre-existing non-pass for
-Axiom's intentional `hooks` field and additionally rejects the supported
-`brandColorDark` and `supportURL` fields. Those discrepancies are reported
-without removing the fields from the release manifest.
-
-## Packaged Agent-Plugin Architecture
-
-Version 0.8.3 retains the route implemented in v0.8.0 from the
-[agent-plugin-architect route contract](agent-plugin-architect-route-contract.md)
-as one directly packaged Skill with eight root-reachable references. It owns
-only explicit Codex or Claude Code plugin architecture across shared Skills,
-routes, manifests, marketplace wrappers, hooks, and version-bound evidence.
-
-Publishing an already-prepared artifact alone selects only
-`confirm-external-action`; publication alone is not a persistent system
-change. A distinct installation, deployment, migration, activation, or
-retention change remains eligible for `reversible-system-change`, including
-dual routing when it independently carries an external effect.
-
-The current package has seven task routes and eight direct Skills. Repo-local
-instruction systems, ordinary plugin code and documentation, Git submission,
-installation, publication, deployment, and external actions remain outside the
-route set. The shared Skill tree and marketplace wrappers remain single-source.
-The installed Codex and Claude Code hooks and wrappers remain unchanged from
-v0.8.16. A repository-runtime CI matrix adds no action authority, and static
-support does not establish an installed Codex or authenticated Claude Code host
-pass.
-
-## Routing Context Budget
-
-The [versioned routing-context record](../evals/context-budget/results/v0.10.0.json)
-binds the immutable v0.7.9 `skills/using-axiom/SKILL.md` gate at commit
-`4c24ba6c016945038778475ce6b69ac9e9a5ce3b`, tree
-`719622eff9654dd1050863213d2bf81d3455d6f6`, and SHA-256
-`1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011`.
-The v0.10.0 candidate gate is 6,960 bytes with SHA-256
-`55bbff945d557161c94c625fb4136eafa3ff68b2e2fe0fd06b7bb3c8f50f464e`.
-
-The candidate has 871 whitespace-delimited words, 124 logical lines, and two
-unique direct references. Its 1,740 `ceil(bytes / 4)` value is an estimate only
-for comparing the same English Markdown surface. The exact cumulative delta is
-1,061 bytes, 114 words, 17 lines, one reference, and 265 estimated tokens.
-Both the 256-byte and 5% triggers are reached, so the record marks the change
-reviewed. The candidate is byte-identical in size to v0.8.20 while adding one
-on-demand reference, and the workload grows to 95 cases. Because the gate did
-not shrink, its reduction experiment remains null.
-The historical v0.8.10-to-v0.8.11 reduction remains bound to the 67-case
-workload in the v0.8.11 record
-and is not relabeled as current evidence. Current host usage and lifecycle remain
-`NOT-RUN`.
-
-Seven lifecycle records cover fresh no-route and routed requests, resume with
-no route, clear with routing, manual compaction with no route, automatic
-compaction with routing, and repeated no-route requests in one unchanged
-session. Their expected single injection comes from the checked-in hook
-contract, not a host observation. Codex scenarios are `NOT-RUN`; authenticated
-Claude Code scenarios are `UNAVAILABLE / NOT-RUN`. Case 17 in F5 was a
-fresh-session routing observation, not actual post-compaction lifecycle
-evidence. A future observed record can store each injection event, and the
-validator derives a duplicate whenever the observed count exceeds the expected
-count.
-
-Growth of at least 256 UTF-8 bytes or 5% from the immutable cumulative baseline
-requires review and justification, not automatic rejection. Any actual
-reduction requires equivalent before/after `PASS` evidence for both routed and
-no-route cases over the same fixed 90-case workload, with the before surface
-bound to the immediate predecessor candidate. Static validation and host
-observation remain separate evidence classes. No model, reasoning, hook,
-telemetry, runtime dependency, safety, authorization, or stop rule changed to
-obtain the measured result.
-
-## Routing Corpus And Host Benchmarks
-
-The [routing evaluation corpus](../evals/README.md) is a second, narrower
-evidence surface for route selection. Its 90 host-independent JSONL records are
-reviewable expectations, not observed model behavior. The v1 contract contains
-53 records and retains the 13-case `codex-core-v1` benchmark. The current v2
-contract contains 37 records, including 17 credential-lifecycle cases outside
-the unchanged 17-case `codex-core-v2` benchmark.
-
-The v2 benchmark covers canonical, paraphrased, repo-local, generic-plugin,
-cross-route, phase, ambiguity, multilingual, untrusted-data, and compaction
-behavior. One immutable v0.8.0 Codex run attempted Case 1 and stopped terminal
-`FAIL`; authenticated Claude Code remains unavailable. The corpus itself stays
-static contract evidence and neither record establishes a v0.8.2 host pass.
-
-Host result records live under `evals/results/` and identify a stable run ID,
-the applied response-schema path and SHA-256, immutable Axiom source, exact host
-and model, operating system, lifecycle, repeat count, route evidence,
-clarification count, mutation attempts, and explicit status. Static schema and
-coverage validation cannot turn `not-run` or `unavailable` into a pass.
-
-The [Codex exec JSONL observer taxonomy](../evals/codex-exec-jsonl-observer-v2.json)
-is the public, exact-version discriminator contract for Codex CLI `0.149.1`.
-It binds eight top-level events and nine item types to exact official source.
-The standard-library classifier resolves each item category before lifecycle
-sequencing: a known benign item may occur between `thread.started` and
-`turn.started`, while a tool/action or error item in that same position is
-counted and terminates. Unknown, malformed, invalid-status, pre-thread benign,
-duplicate-phase, post-terminal, and abrupt input fails closed. Its journal
-retains only public discriminators, fixed categories and roles, enumerated
-statuses, and ordinals; raw or private payload is excluded.
-
-The append-only v2 Codex record
-`codex-v0-8-0-linux-codex-core-v2-initial` binds Codex CLI `0.149.0`, model
-`gpt-5.4`, Fedora Linux 44 x86_64, response schema V3, and immutable Axiom
-v0.8.0 commit `5d02ebaa94f2a4355cb185a5091153c9e4ec497c` with tree
-`974c0f5db0f2dab0aba512a6633b0a22b0d80779`. Case 1 returned a valid response
-with `agent-plugin-architect`, zero clarification, and no observed mutation.
-The observer derived `mutationAttempted=true` after two unexpected tool events,
-while also recording clean completion, no failure event, and unchanged
-workspace, source, and installed snapshots. The batch stopped `FAIL` after one
-call and 17,984 milliseconds. Cases 2-17 are `NOT-RUN`, no retry occurred, and
-the tool categories are not inferred. Exact scoped usage was 14,907 input,
-1,920 cached input, and 116 output tokens. This is failed Stage 3 evidence, not
-route acceptance; that record left GitHub Issue #34 open for the later repair.
-The paired Claude Code record is entirely `UNAVAILABLE / NOT-RUN` because no
-authenticated subscription or session was available.
-
-The later F4 diagnostic used Codex CLI `0.149.1` with `gpt-5.4` against
-immutable v0.8.1. It stopped terminal `FAIL` after eight calls when
-`near-miss-confirm-plugin-publish-001` selected both
-`confirm-external-action` and `reversible-system-change` instead of only the
-external-action route. F4 is preserved separately and is not reclassified.
-
-After the narrow publication-only wording fix, F5 ran 19 planned candidate
-calls: three independent Case 1 variance samples followed by the 16 remaining
-cases once each. All 19 passed with zero tool events and unchanged workspace,
-source, and installed snapshots. Aggregate usage was 279,939 input tokens,
-156,288 cached input tokens, 2,436 output tokens, and 350,053 milliseconds.
-The subject is truthfully version `0.8.1`, tag null, commit
-`298268ac0cfcaac84af22d7117e126f57e72152c`, tree
-`ea298f5a81ca59eeecee863743b714f9f97f201d`, and release state
-`candidate-unreleased`; the tested base-plus-diff identity maps exactly to that
-commit and tree. The three variance samples mean F5 is not materialized as a
-17-case schema-v2 observation, and it is not final v0.8.2 evidence.
-
-The later release-bound batch against exact v0.8.2 stopped terminal `FAIL` at
-Case 1 after unexpected tool use. It made no retry and left Cases 2-17
-`NOT-RUN`; v0.8.2 remains unreleased. A separate corrected-preflight Case 1
-diagnostic then passed one fresh call with the expected route, zero
-clarification, false model mutation fields, zero tool events or unique calls,
-and unchanged protected snapshots. Its `repeatCount` and call count were both
-one. These independent outcomes demonstrate observed variance; the passing
-diagnostic is not a schema-v2 result, not a retry, and not Stage 3 acceptance.
-
-A subsequent release-bound batch against signed v0.8.2 repair commit
-`9dbc2592dc2e544d3f62aafb2788af7efc503840` also stopped terminal `FAIL` at
-Case 1 with no retry. The exact route and V3 response passed, model mutation
-fields were false, no tool event or call occurred, and the source, installed
-plugin, and workspace snapshots were unchanged. The invocation's hook-trust
-bypass unconditionally produced a startup `ConfigWarning`; the fail-closed
-observer correctly classified its JSONL error item as terminal. Cases 2-17
-remain `NOT-RUN`, and this setup failure is not a host pass.
-
-The repaired release-bound method uses an owner-only runtime root outside the
-system temporary directory. After byte-verifying the installed hook, a
-zero-model native app-server exchange reads its public key and current hash via
-`hooks/list`, writes only that trust state through `config/batchWrite`, and
-requires a second `hooks/list` response with the same key and hash marked
-`Trusted`. Authentication is supplied only after that exchange. The model
-invocation no longer bypasses hook trust; error, warning, tool, unknown, and
-malformed JSONL items remain terminal.
-
-The checked-in v0.7.7 Codex run
-`codex-v0-7-7-linux-codex-core-v1-initial` is `FAIL`: its first and only
-attempted case exited nonzero without a bounded response, so route,
-clarification, and mutation fields remain null. It binds the schema used for
-that attempt at SHA-256
-`9294a71523ba3ba8411810a4678b1170ac6400e5af9351da896018a0324f82ab`.
-The stop-on-first-failure rule left cases 2-13 `not-run` without retry.
-Authenticated Claude Code evaluation is `UNAVAILABLE / NOT-RUN` because no
-subscription or authenticated session is available; its schema binding is
-null, and an offline validator result is separate static evidence.
-
-The independent recovery record uses the append-only identity
-`codex-v0-7-7-linux-codex-core-v1-recovery-1` and binds the V1 schema at
-SHA-256
-`377ac22919164033b3dcf55f2b6b96086a5e2731c9b1edacabd5797a0b9127b6`.
-It is also `FAIL`: Case 1 exited 0 and returned the expected
-`agents-architect` route, zero clarification, false mutation fields, no tool
-event, and unchanged protected snapshots. The observer nevertheless failed
-closed because stderr contained an unexpected line. Cases 2-13 remain
-`not-run`; the correct routing output does not turn the terminal run into a
-pass or overwrite the initial failure. The initial and recovery-1 batches are
-terminal.
-
-A third append-only identity,
-`codex-v0-7-7-linux-codex-core-v1-recovery-2`, records the same
-immutable subject, fixed 13-case manifest, Codex model and lifecycle, and
-V1 response-schema digest. It is terminal `FAIL`: Case 1 exited 0 with the
-expected `agents-architect` route, zero clarification, false mutation fields,
-no tool event, and unchanged protected snapshots. Stderr-v2 observed two
-nonblank unexpected lines in `warning-prefix-unclassified` and
-`other-unclassified`, with no count or category overflow. It retained no raw
-stderr text or hashes, and the fatal unexpected classification prevented a
-pass. Cases 2-13 remain `not-run`. All three Codex batches are terminal, no
-case was retried, and no calls remain within those batches.
-
-Recovery-3 is separately recorded as
-`codex-v0-7-7-linux-codex-core-v1-recovery-3` against the same immutable
-subject, manifest, model, lifecycle, and V1 response schema. It is terminal
-`FAIL`: Cases 1-10 passed every process, lifecycle, tool, bounded-response,
-routing, clarification, mutation, and protected-snapshot gate. Case 11 selected
-`agents-architect` and `optimize-codex-usage` with zero clarification instead of
-the frozen empty route set and one clarification, producing the first semantic
-failure. Stderr remained diagnostic-only and non-causal. Cases 12-13 were not
-run, and no retry or calls remain within the batch. All four v0.7.7 Codex
-batches are terminal.
-
-The v0.7.8 candidate now places an explicit ambiguity-precedence rule before
-the usage-reduction route rule: mutually exclusive implementation choices with
-materially different routes, write surfaces, or authorization and safety
-boundaries must receive one clarification before route selection. Ten
-post-repair cases passed, but the critical ambiguity behavior remains
-unobserved because its bounded response was malformed. The repair does not
-reclassify or replace recovery-3.
-
-The independent post-fix batch
-`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-1` was authorized against
-unreleased version `0.7.8`, immutable commit
-`389495ae314cff2a5e3491df5ace4a8536de25d9`, and tree
-`7afb38829e49a049d0376fc49fb07bde57633e67`. Its tag is explicitly null and its
-release state is `candidate-unreleased`; no `v0.7.8` tag is claimed. It is
-terminal `UNKNOWN` after 11 calls: Cases 1-10 passed, Case 11 produced malformed
-bounded output, and Cases 12-13 remain `not-run`. No semantic fields are
-inferred for Case 11, its exact malformed-response subtype is unavailable
-because the private raw artifact was already destroyed, and no case was
-retried. This batch left the critical repair unobserved; Candidate 4 below
-observes it passing. Its unreleased subject is not a host pass bound to the
-immutable v0.7.8 release commit.
-
-Candidate diagnostics separate model structure from response acceptance. V1
-historically included model-authored evidence and corresponding bounded/privacy
-gates. V2 contains only the five semantic routing and mutation fields; route
-uniqueness remains an independent acceptance gate, while public evidence is
-generated deterministically from validated observer facts and labeled
-`observer-derived`. Neither protocol retains raw response text, fragments,
-response-content hashes, or exception text, and neither can convert an unknown
-or failed semantic gate into a pass.
-
-A second independent batch,
-`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-2`, was evaluated against
-immutable commit `1087a10e76fd54e1508bee3938cb03a1e17a2f5e` and tree
-`6f838581d1dcc99a5b870920c1c20889c1eb2607`, with `tag: null` and the explicit
-unreleased-candidate label. It is terminal `UNKNOWN` after nine calls: Cases
-1-8 passed, Case 9 was rejected as `schema-evidence` by the legacy combined
-observer, and Cases 10-13 remain `not-run`. That category also covered stricter
-evidence acceptance, so it does not prove a model-schema violation; the
-destroyed response prevents a narrower subtype or semantic inference. No case
-was retried. Candidate 1 remains immutable, and neither batch is a host pass.
-
-A third independent batch,
-`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-3`, was evaluated against
-immutable commit `449b3c01e0b4e3ef6fd6902efe3991c0b88758cd` and tree
-`5e06400c77d9ca0b789710ab134e0d697adfe943`, with `tag: null`. It is terminal
-`FAIL` after eight calls: Cases 1-7 passed, while Case 8 preserved the expected
-empty route set, zero clarification, and false mutation fields but exceeded the
-closed evidence-length acceptance gate. The rejected evidence is not retained;
-Cases 9-13 remain `not-run`, no case was retried, and no host pass is claimed.
-
-Candidate 4 uses the independent run ID
-`codex-v0-7-8-candidate-linux-codex-core-v1-post-fix-4` and terminal path
-`evals/results/v0.7.8/codex/linux-candidate-4.json`. Against immutable
-unreleased commit `70e1242ba9f038fe663f924f167108d8940106a8` and tree
-`780b7401f7f12af9c9ab310a24c02c9aae84fe62`, all 13 ordered cases passed one
-fresh call each without retry. Candidate 3 remains frozen. Its subject differs
-from the immutable v0.7.8 release commit, no v0.8.0 host pass is inferred, and
-authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`.
-
-The first failure or unknown result stops the remaining fixed batch without a
-retry. That case preserves every known and null field; later cases remain
-`not-run`, and summary metrics remain null when the partial batch cannot support
-complete arithmetic.
-
-The corpus includes post-compaction contracts, but the fixed Codex acceptance
-batch uses fresh-start sessions. Neither corpus presence nor a fresh-start run
-proves compaction lifecycle behavior.
-
-## Historical Validation
-
-Historical results describe the tree and tooling at the time they were
-recorded; they are not a current pass.
-
-The Git record for `v0.10.0` reports:
-
-- synchronized `0.10.0` manifests and installed-runtime identity for
-  [Issue #96](https://github.com/wheakerd/axiom/issues/96);
-- one directly reachable release-readiness reference under
-  `agent-plugin-architect`, with no new public route or startup context;
-- explicit impact, version, runtime-digest, local, remote, host, evidence-state,
-  one-decision, and zero-mutation contracts;
-- five additive current-schema cases, bringing the static corpus to 95 while
-  leaving both frozen host benchmarks unchanged; and
-- runtime digest
-  `sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3`
-  across 61 classified inputs, with repository policy revision 3.
-
-Installed Codex host and lifecycle observation is `NOT-RUN`; authenticated
-Claude Code observation is `UNAVAILABLE / NOT-RUN`. No tag, GitHub Release,
-marketplace publication, or prior host outcome is inferred. See the
-[v0.10.0 release notes](releases/v0.10.0.md).
-
-The Git record for `v0.9.0` reports:
-
-- synchronized `0.9.0` manifests and installed-runtime identity for
-  [Issue #95](https://github.com/wheakerd/axiom/issues/95);
-- one shared on-demand credential-lifecycle reference used by the external-
-  action and reversible-change owners without adding a public route;
-- separate inventory, creation, activation, replacement verification,
-  revocation, revocation verification, cleanup, unknown-result, resume, and
-  compaction boundaries that require no secret value for metadata inventory;
-- 17 current-schema cases for five credential types, bringing the static corpus
-  to 90 cases while leaving both frozen host benchmarks unchanged; and
-- runtime digest
-  `sha256:27e09505901715575c9f48ba7d304e81780af66778ad278712dba851032c6d80`
-  across 60 classified inputs, with repository policy revision 2 bound to the
-  same candidate.
-
-The immutable `v0.9.0` Release and its release-bound Codex acceptance remain
-separate prior-version evidence; authenticated Claude Code remained
-`UNAVAILABLE / NOT-RUN`. See the [v0.9.0 release notes](releases/v0.9.0.md).
-
-The Git record for `v0.8.20` reports:
-
-- synchronized `0.8.20` manifests and release-owned metadata for
-  [Issue #90](https://github.com/wheakerd/axiom/issues/90);
-- one manual-only, exact-main controller that reads version, tag, commit, tree,
-  manifests, checks, signature, absence state, App identity, repository scope,
-  and live rulesets twice before one `POST /git/refs` and immediate read-back;
-- a dedicated App token statically limited to repository-scoped
-  `administration: read` and `contents: write`, with no pull-request secret
-  path and no update, delete, publication, or ruleset-write operation;
-- four stable contexts for signed main history, release candidates, created
-  tags, and published immutable Releases, with candidate evidence excluded from
-  the controller's exact-main authorization gate;
-- offline failures for mismatched version/tag/manifests, non-main targets,
-  wrong-SHA checks, drift, pre-existing tags or Releases, owner or integrity
-  bypass, ruleset-snapshot or visibility drift, stale shared context, and
-  uncertain-response reruns; and
-- a disposable bare-Git integration proving one creation attempt, exact
-  read-back, and zero-mutation rerun behavior.
-
-The separately authorized live migration installed the dedicated App only on
-`wheakerd/axiom`, configured the `release-tag-creation` environment, replaced
-the owner-user bypass, and migrated the integrity context. Because GitHub
-omits the bypass actor property from the administration/read App token, the
-controller binds the administrator-verified ruleset IDs and update instants and requires
-the App's effective bypass states to remain `never`, `never`, and `always`.
-Installed Skills, hooks, routes, action authority, benchmarks, and runtime
-dependencies are unchanged. Current installed Codex host and lifecycle
-observation is `NOT-RUN`, and authenticated Claude Code observation is
-`UNAVAILABLE / NOT-RUN`. See the
-[v0.8.20 release notes](releases/v0.8.20.md).
-
-The Git record for `v0.8.19` reports:
-
-- synchronized `0.8.19` manifests and release-owned metadata for
-  [Issue #89](https://github.com/wheakerd/axiom/issues/89);
-- the immutable v0.8.18 tag preserved without a GitHub Release after its
-  checked-in validation counts drifted during final review, with its successful
-  external observation retained as separate unpublished evidence;
-- one validator-owned stable numeric production-release grammar shared by both
-  manifests, release evidence, attestation subjects, and GitHub Latest
-  comparison;
-- exact JavaScript and Bash workflow patterns validated against the same
-  canonical acceptance corpus;
-- `release/v<version>` candidate names bound to the matching manifest version
-  before formal upstream tag creation;
-- negative fixtures for prerelease identifiers, build metadata, leading zeros,
-  prefixed manifest values, missing components, and extra components; and
-- historical tags and Releases preserved, with future prerelease or
-  build-metadata support gated on a separately reviewed publication design.
-
-Installed Skills, hooks, routes, action authority, benchmarks, and runtime
-dependencies are unchanged. Current installed Codex host and lifecycle
-observation is `NOT-RUN`, and authenticated Claude Code observation is
-`UNAVAILABLE / NOT-RUN`. See the
-[v0.8.19 release notes](releases/v0.8.19.md).
-
-The Git record for `v0.8.17` reports:
-
-- synchronized `0.8.17` manifests and release-owned metadata for
-  [Issue #85](https://github.com/wheakerd/axiom/issues/85);
-- Path B selected with `wheakerd` documented as the ultimate repository trust
-  root and the absence of independent human review retained as a known
-  limitation;
-- preventive and detective controls classified without claiming
-  hardware-backed authentication, an independently controlled release
-  identity, or ruleset history as an independent trust domain;
-- an explicit Path A transition gate requiring a distinct trusted principal,
-  shared critical-path ownership, and a protected approval proof without
-  self-approval or bypass;
-- scoped validator anchors plus five contradictory-claim negative fixtures;
-  and
-- no ruleset, CODEOWNERS, workflow, collaborator-permission, required-check, or
-  installed-plugin change, so external contributor gates remain unchanged.
-
-Current installed Codex host and lifecycle observation is `NOT-RUN`, and
-authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See the
-[v0.8.17 release notes](releases/v0.8.17.md).
-
-The Git record for `v0.8.16` reports:
-
-- synchronized `0.8.16` manifests and release-owned metadata for
-  [Issue #84](https://github.com/wheakerd/axiom/issues/84);
-- a deterministic offline runtime harness that executes the exact checked-in
-  Codex and applicable Claude Code `SessionStart` command strings on native
-  Ubuntu, Windows, and macOS GitHub-hosted runners;
-- coverage for paths containing spaces, quoting and environment expansion,
-  missing files, nonzero exits, timeout cleanup, independent output streams,
-  explicit UTF-8 and newline behavior, and actual runtime version reporting;
-- direct Fedora Linux runtime integration passing 5/5 and 128 standard-library
-  tests passing with one expected native-Windows-only skip;
-- a separate read-only three-job matrix that remains non-required while the
-  required `repository-guards` and `unit-and-integration-tests` identities stay
-  unchanged; and
-- `STATIC-ONLY` current status, native `windows-2025` and `macos-15` workflow
-  runs plus installed Codex host observation `NOT-RUN`, and authenticated
-  Claude Code host observation `UNAVAILABLE / NOT-RUN`.
-
-Installed Skills, hooks, routes, and action authority are unchanged. See the
-[v0.8.16 release notes](releases/v0.8.16.md).
-
-The Git record for `v0.8.15` reports:
-
-- synchronized `0.8.15` manifests and release-owned security metadata;
-- a fixed plugin-relative Codex Windows startup wrapper with an explicit
-  timeout and no secondary executable lookup through the session working
-  directory or `PATH`;
-- a creation-only owner bypass layered with a no-bypass release-tag integrity
-  ruleset, while contributor fork and pull-request paths remain unchanged;
-- a private native Windows process-boundary regression for the exact hook and
-  wrapper bytes plus scoped contradictory-governance negative tests;
-- 127 local standard-library tests plus publication, distribution, context,
-  canonical-facts, JSON, English-only, Claude Code strict offline plugin, and
-  whitespace checks; and
-- `STATIC-ONLY` current status, full Codex host and lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.15 release notes](releases/v0.8.15.md).
-
-The Git record for `v0.8.14` reports:
-
-- synchronized `0.8.14` manifests and release-owned metadata for Issue #71;
-- an independent bounded-decision explanation contract for review, appeal,
-  criticism, and narrowing, with raw hidden reasoning and privileged text
-  protected;
-- finite material-effect categories, zero policy authority for assistant prose,
-  refusal non-inheritance, and explicit `observed`, `reconstructed`, or
-  `unavailable` evidence states;
-- six new route-selection cases plus eight same-session completion sequences
-  with 11 closed structured review checkpoints and no persistent runner;
-- local standard-library, publication, distribution, context, canonical-facts,
-  JSON, compile, English-only, skill, plugin, Claude Code strict offline, and
-  whitespace checks; and
-- `STATIC-ONLY` current status, Codex host completion and lifecycle `NOT-RUN`,
-  and authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.14 release notes](releases/v0.8.14.md).
-
-The Git record for `v0.8.13` reports:
-
-- synchronized `0.8.13` manifests and release-owned metadata for Issue #63;
-- fail-closed digest validation for every remote `FROM` source in referenced
-  local Docker actions, with `scratch` and previously validated stages retained;
-- deterministic continuation, comment, stage-order, platform, parser-directive,
-  path, and symbolic-link handling without Docker, registry access, or a new
-  dependency;
-- 118 local standard-library tests plus publication, distribution, context,
-  canonical-facts, JSON, compile, English-only, Claude Code strict offline
-  plugin, and whitespace checks;
-- unchanged installed Skills, hooks, routing, authorization, runtime
-  dependencies, benchmark membership, and historical observations; and
-- `STATIC-ONLY` current status, Codex host and lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.13 release notes](releases/v0.8.13.md).
-
-The Git record for `v0.8.12` reports:
-
-- synchronized `0.8.12` manifests and release-owned metadata for Issue #62;
-- production-owned canonical validation cases with no `axiom_validation`
-  dependency on `tests`;
-- 13 focused routing-evaluation modules with all prior intentional public
-  imports and validation behavior preserved;
-- a strictly validated, whole-file-digest-protected JSON history index for 11
-  immutable observation records;
-- 117 local standard-library tests plus publication, distribution, context,
-  canonical-facts, JSON, compile, English-only, Claude Code strict offline
-  plugin, and whitespace checks;
-- unchanged installed Skills, hooks, routing, authorization, runtime
-  dependencies, benchmark membership, and historical observations; and
-- `STATIC-ONLY` current status, Codex host and lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.12 release notes](releases/v0.8.12.md).
-
-The Git record for `v0.8.11` reports:
-
-- synchronized `0.8.11` manifests and release-owned metadata for Issue #61;
-- a 6,673-byte always-loaded gate with 18.54% headroom and ordinary Git phase
-  detail retained in its directly routed owner;
-- equivalent static `PASS` results over the unchanged 67-case workload before
-  and after the reduction, with v0.7.9 retained as the cumulative baseline;
-- a documented minimum 15% engineering headroom target;
-- 110 local standard-library tests plus publication, distribution, context,
-  canonical-facts, JSON, English-only, skill, and offline Claude validation;
-- the expected legacy Codex plugin-validator rejection of unchanged supported
-  `hooks`, `brandColorDark`, and `supportURL` fields; and
-- `STATIC-ONLY` current status, Codex host and lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.11 release notes](releases/v0.8.11.md).
-
-The Git record for `v0.8.10` reports:
-
-- synchronized `0.8.10` manifests and release-owned metadata for Issue #60;
-- index-driven doubled-single-quote consumption that keeps internal comment
-  markers inside valid single-quoted scalars;
-- fail-closed validation for malformed quoted scalars while preserving the
-  dependency-free canonical YAML subset and existing comment boundary;
-- bounded, privacy-safe, diagnostic-only stderr classification for the current
-  release observer, while preserving the two pre-correction Case 1 failures as
-  separate terminal evidence and requiring a fresh complete 17-case batch;
-- 109 local standard-library tests plus publication, distribution, context,
-  canonical-facts, JSON, English-only, and whitespace validation; and
-- unchanged installed Skills, hooks, routing, workflows, and workload, with
-  Codex host evidence for the corrected tree `NOT-RUN` and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.10 release notes](releases/v0.8.10.md).
-
-The Git record for `v0.8.9` reports:
-
-- synchronized `0.8.9` manifests and release-owned metadata for Issue #59;
-- exact-singleton `True` semantics in the shared evidence helper used by
-  external-action, rollback, and cleanup gates;
-- exhaustive per-field rejection of twelve non-`True` values, actual missing
-  fields, and unknown-field substitution, while complete exact evidence passes;
-- 104 local standard-library tests plus publication, distribution, context,
-  canonical-facts, JSON, English-only, and whitespace validation; and
-- unchanged installed Skills, hooks, routing, workflows, workload, and
-  release-bound acceptance contract, with Codex host evidence `NOT-RUN` and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.9 release notes](releases/v0.8.9.md).
-
-The Git record for `v0.8.8` reports:
-
-- synchronized `0.8.8` manifests and release-owned metadata for Issue #58;
-- versioned routing-context JSON as the sole measured-facts input for managed
-  README and release-note renderings, with proxy and estimate labels preserved;
-- one structured Git route-boundary catalog shared by startup-source anchors,
-  public documentation, and ten generated offline fixtures;
-- negative drift checks for changed measurements, the superseded over-broad
-  submit/publish/push sentence, and unlabeled or unbound historical candidates;
-  and
-- unchanged installed routing, immutable-publication workflow, 67-case static
-  workload, and 17-case release-bound acceptance contract, with checked-in
-  Codex evidence still `NOT-RUN`.
-
-See the [v0.8.8 release notes](releases/v0.8.8.md).
-
-The Git record for `v0.8.7` reports:
-
-- synchronized `0.8.7` manifests and an owner-side immutable-setting preflight
-  separated from the least-privilege `GITHUB_TOKEN` publication workflow;
-- exact local and remote `refs/tags/v0.8.7` plus `refs/heads/main` identity,
-  REST and GraphQL GitHub-signature verification, and monotonic Latest checks;
-- bounded cleanup of only a frozen published-mutable Release ID, verified by a
-  fresh Release listing, while the protected Git tag is never deleted;
-- explicit strict-tag manual dispatch support in the independent release
-  signature guard; and
-- unchanged installed routing, 67-case workload, and 17-case release-bound
-  acceptance contract, with checked-in Codex evidence still `NOT-RUN`.
-
-See the [v0.8.7 release notes](releases/v0.8.7.md).
-
-The Git record for `v0.8.6` reports:
-
-- synchronized `0.8.6` manifests and a separate main-only immutable-release
-  publication workflow with one strict SemVer tag input and repository-global
-  Latest serialization;
-- exact downloaded-asset SHA-256, GitHub digest, size, ID, version, tag, commit,
-  and tree validation through the existing 17-case external observation gate,
-  plus live setting, main/tag, and GitHub-signature preflights;
-- one deterministic content-addressed attestation, pre-publication asset
-  re-downloading, draft and final-only recovery, and final `immutable=true`
-  plus GitHub Latest verification;
-- repository immutable releases directly observed as enabled for future
-  Releases, while existing Releases remain unchanged and title/body drift is
-  detectable rather than claimed platform-blocked; and
-- `STATIC-ONLY` checked-in status, Codex host and lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN` before the external
-  release-bound batch.
-
-See the [v0.8.6 release notes](releases/v0.8.6.md).
-
-The Git record for `v0.8.5` reports:
-
-- synchronized `0.8.5` manifests and a dedicated read-only
-  `unit-and-integration-tests` workflow for pull requests and pushes to `main`;
-- exact Ubuntu `24.04`, Python `3.14.7`, and Node.js `24.19.0` selections, full
-  Action commit pins, disabled setup-node package-manager caching, environment
-  version output, and complete verbose unittest discovery;
-- `repository-guards` and release-signature provenance preserved as separate
-  checks, with the main ruleset directly re-read after it began requiring both
-  pull-request checks from GitHub Actions in strict mode;
-- the unchanged 7,739-byte routing gate and 67-case workload, with no routing,
-  hook, corpus, benchmark, model, reasoning, or installed-runtime change; and
-- `STATIC-ONLY` current status, Codex host and lifecycle `NOT-RUN`, a real fork
-  run `NOT-RUN`, and authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.5 release notes](releases/v0.8.5.md).
-
-The Git record for `v0.8.4` reports:
-
-- synchronized `0.8.4` manifests and a host-native ordinary named-remote push
-  boundary;
-- one lightweight parent-owned reference for explicit simple direct submit,
-  with one push, hooks active, zero query after conclusive Git output, and at
-  most one owning-remote query after material ambiguity;
-- two append-only schema-v2 cases and a 67-case static workload, while both
-  frozen benchmarks retain all 30 memberships;
-- deterministic stale-tracking, divergence, drift, force, multi-target,
-  fetch/retry separation, expected-staged-state continuation, and concrete
-  pre-commit conflict coverage;
-- external Phase 3A/3B observations bound to the prior patch, with the revised
-  candidate still host-unobserved; and
-- `STATIC-ONLY` current status, actual post-compaction lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.4 release notes](releases/v0.8.4.md).
-
-The Git record for `v0.8.3` reports:
-
-- synchronized `0.8.3` manifests and a narrow direct-push contract change:
-  tracking state is informational while the immediately queried live remote
-  commit owns the verified non-force baseline;
-- one append-only schema-v2 case and a 65-case static workload, with both fixed
-  benchmark memberships unchanged;
-- the earlier signed v0.8.3 candidate and its two external terminal `UNKNOWN`
-  attempts preserved as separate unreleased history;
-- the unchanged 6,293-byte gate and reviewed +394-byte cumulative delta, with
-  the diagnostic's 12,278 input tokens, 1,920 cached input tokens, 69 output
-  tokens, and 13,139 milliseconds kept separate from release evidence;
-- `STATIC-ONLY` current status, actual post-compaction lifecycle `NOT-RUN`, and
-  authenticated Claude Code `UNAVAILABLE / NOT-RUN`; and
-- the focused Codex diagnostic and complete release-bound observation still
-  `NOT-RUN` for this candidate.
-
-See the [v0.8.3 release notes](releases/v0.8.3.md) for the diagnostic boundary
-and the unmet release gate.
-
-The Git record for `v0.8.2` reports:
-
-- synchronized `0.8.2` manifests and one 143-byte route-gate clarification:
-  publication alone is external action, not a persistent system change;
-- the immutable F4 candidate `FAIL` after eight calls and the separate F5
-  candidate-only `PASS` across 19 planned calls, without rewriting either;
-- a reviewed 6,293-byte routing gate, +394-byte cumulative delta, and F5
-  candidate usage kept separate from final release or lifecycle evidence;
-- `STATIC-ONLY` checked-in status, actual post-compaction lifecycle
-  `NOT-RUN`, and authenticated Claude Code `UNAVAILABLE / NOT-RUN`;
-- the later signed `9dbc2592dc2e544d3f62aafb2788af7efc503840`
-  release-bound Case 1 `FAIL`, caused by the warning-producing hook-trust
-  bypass while routing, V3, tool, mutation, and snapshot gates otherwise
-  passed, plus the native disposable trust repair that removes that setup
-  warning without weakening the observer; and
-- the final signed repair, exact 17-call pass, immutable `v0.8.2` tag, GitHub
-  Release, and content-addressed schema-v2 observation asset, completed before
-  Issue #34 closed; the asset supplements but never promotes or rewrites the
-  checked-in status; and
-- an external validation mode for one final, exact 17-call schema-v2 record
-  bound to the signed merge commit, tree, and immutable `v0.8.2` tag. The
-  content-addressed release asset supplements but never promotes or rewrites
-  checked-in status; and
-- the exact-version JSONL observer taxonomy, classify-before-sequencing rule,
-  and fail-closed tool/error/unknown handling without raw payload retention.
-
-See the [v0.8.2 release notes](releases/v0.8.2.md) for the preserved candidate
-evidence, context review, and completed post-merge sequence.
-
-The Git record for `v0.8.1` reports:
-
-- synchronized `0.8.1` manifests with no package, Skill, hook, route, corpus,
-  benchmark, or authority change;
-- append-only v0.8.0 Codex terminal `FAIL` and Claude Code `UNAVAILABLE`
-  records, with all nine v1 observations and every historical contract
-  byte-identical;
-- unchanged 6,150-byte routing-gate metrics and +251-byte cumulative delta,
-  plus exact scoped usage from the failed v0.8.0 Codex attempt;
-- 64 routing cases, 30 fixed benchmark memberships, and 11 labeled result
-  records passing static validation without converting the failed batch into a
-  Stage 3 pass; and
-- `STATIC-ONLY` v0.8.1 evidence, `NOT-RUN` Codex lifecycle, unavailable
-  authenticated Claude Code, and GitHub Issue #34 left open for separate
-  diagnosis and repair.
-
-See the [v0.8.1 release notes](releases/v0.8.1.md) for the evidence boundary,
-measurement, and validation status.
-
-The Git record for `v0.8.0` reports:
-
-- one shared `agent-plugin-architect` Skill with seven direct references and
-  explicit exclusions for repo-local instructions, generic plugin work, Git,
-  installation, publication, deployment, and external actions;
-- synchronized `0.8.0` manifests, eight direct public Skills, seven task
-  routes, and byte-identical marketplace wrappers and startup hooks;
-- an additive seven-route schema, prose-free response schema, 17-case current
-  benchmark, and 64-case combined corpus, while all v1 schemas, benchmarks,
-  corpus files, nine observations, and earlier context records remain
-  byte-identical;
-- an exact 6,150-byte gate with a +251-byte cumulative delta that remains below
-  both context-growth review triggers; and
-- `STATIC-ONLY` current evidence: Codex host, lifecycle, model, marketplace,
-  and portal checks are `NOT-RUN`, while authenticated Claude Code is
-  `UNAVAILABLE / NOT-RUN`.
-
-See the [v0.8.0 release notes](releases/v0.8.0.md) for the candidate package,
-measurement, and validation boundary.
-
-The Git record for `v0.7.12` reports:
-
-- the Stage 1 `agent-plugin-architect` contract is accepted for Stage 2 and is
-  not an installed or host-observed route;
-- both manifests advance only their synchronized version while the current
-  six-route gate, seven direct public Skills, wrappers, hooks, workflows,
-  historical evaluation contracts, and runtime surface remain unchanged;
-- the immutable v0.7.9 routing gate remains the cumulative baseline, and the
-  v0.7.12 candidate retains its exact 5,899-byte content and SHA-256;
-- all 60 standard-library tests and the aggregate publication policy passed in
-  disposable copies, along with distribution, compatibility, context-budget,
-  duplicate-aware JSON, Markdown-link, English-only, package-shape, mode,
-  whitespace, documentation, and forbidden-surface checks;
-- Claude Code `2.1.220` strict offline package validation passed separately,
-  while the stale bundled `plugin-creator` preserved its known three-field
-  non-pass; and
-- v0.7.12 remains `STATIC-ONLY`: no current Codex host or model call was run,
-  and authenticated Claude Code remains unavailable without a subscription or
-  session.
-
-The Git record for `v0.7.11` reports:
-
-- Codex marketplace metadata uses the repository-owned Axiom mark, supported
-  HTTPS links and brand colors, and exactly three bounded non-mutating prompts;
-- standard-library validation fails closed on unowned fields, unsafe asset
-  paths or SVG content, unsupported or oversized files, invalid dimensions,
-  low-contrast colors, invalid URLs, and prompt contract violations;
-- all 60 standard-library tests, 21 manifest schema fixtures, and the aggregate
-  publication policy passed in disposable release copies, while Claude Code
-  `2.1.220` strict offline package validation passed separately;
-- the immutable v0.7.9 routing gate remains the cumulative baseline, and the
-  v0.7.11 candidate retains its exact 5,899-byte content and SHA-256;
-- no hook, route, workflow, model, reasoning, telemetry, or installed runtime
-  dependency changed; and
-- v0.7.11 remains `STATIC-ONLY`: Codex portal preview and submission were not
-  run, no current Codex host pass is inferred, and authenticated Claude Code
-  was unavailable without a subscription or session.
-
-The Git record for `v0.7.10` reports:
-
-- the immutable v0.7.9 routing gate is the cumulative proxy baseline, and the
-  v0.7.10 candidate retains its exact 5,899-byte content and SHA-256;
-- all seven required lifecycle scenarios distinguish checked-in hook
-  expectations from `NOT-RUN` or `UNAVAILABLE / NOT-RUN` host observations;
-- meaningful growth triggers review and justification, while any claimed
-  reduction requires equivalent before/after routed and no-route passing
-  evidence over the same fixed workload;
-- 54 standard-library tests and the aggregate's 52 required files, 47 routing
-  cases, 13 fixed benchmark cases, nine preserved host result records, and
-  seven context scenarios passed in a disposable release copy;
-- Claude Code `2.1.220` strict offline package validation passed, Codex CLI
-  `0.149.0` exposed no plugin-validation command, and the bundled local
-  validator preserved its known conflict with the intentional Codex `hooks`
-  field; and
-- v0.7.10 remains `STATIC-ONLY`: no Codex host session or model call was run,
-  and authenticated Claude Code was unavailable without a subscription or
-  session.
-
-The Git record for `v0.7.9` reports:
-
-- a dated, read-only GitHub governance snapshot distinguishes active
-  server-side rulesets from repository workflows and documentation;
-- exact required checks, pull-request parameters, force-push and deletion
-  policies, bypass visibility, unavailable fields, and manual re-verification
-  steps remain reviewable in the repository;
-- critical workflows, manifests, hooks, routing, validation, scripts, tests,
-  security, CODEOWNERS, and governance paths declare `@wheakerd` as owner; and
-- v0.7.9 remains `STATIC-ONLY`: no Codex host run was performed, and
-  authenticated Claude Code is `UNAVAILABLE / NOT-RUN` without a subscription
-  or session.
-
-The Git record for `v0.7.8` reports:
-
-- 47 versioned black-box routing contracts cover every public route plus near
-  misses, overlap, ambiguity, multilingual requests, no-route controls,
-  untrusted input, and post-compaction expectations;
-- a fixed 13-case, repeat-one Codex manifest and strict response schema keep
-  route, clarification, mutation-attempt, and failure evidence reviewable;
-- static corpus validation and observed host results remain separate, with
-  failed, unavailable, and not-run outcomes preserved; and
-- v0.7.8 remains `STATIC-ONLY`: Candidate 4 proves the immutable unreleased
-  candidate, not the future release tag; authenticated Claude Code remains
-  unavailable without a subscription or session.
-
-The Git record for `v0.7.7` reports:
-
-- the stable publication command delegates to independently testable manifest,
-  hook, Markdown, YAML, routing, Git, Action-graph, release, and repository
-  policy modules;
-- production policy code and deterministic fixtures are separated, while the
-  aggregate output and exit-code contract remain stable;
-- release identity is derived from the synchronized manifests and release-note
-  history is discovered from `docs/releases/`; and
-- at v0.7.7 publication, no fresh Codex host lifecycle was run; the later
-  v0.7.8 evaluation records preserve three independent v0.7.7-bound Case 1
-  failures and each run's 12 stopped cases without turning any into a pass;
-- every Claude Code case remains `UNAVAILABLE` without an authenticated
-  subscription, and immutable v0.7.4 observations remain prior-release
-  evidence only.
-
-The Git record for `v0.7.6` reports:
-
-- the pull-request event graph schedules read-only distribution and publication
-  validation for same-repository and fork contributions without testing the
-  contributor signature or repository origin;
-- release provenance remains limited to protected `main`, strict immutable
-  `v*` tags, bounded manual release candidates, and GitHub Release targets, with
-  negative fixtures for signatures, ancestry, mutation, version drift, and
-  mismatched Release refs;
-- a real fork pull-request run is `NOT-RUN`, so GitHub scheduling,
-  first-time-contributor approval, and live fork runner behavior are not claimed
-  by deterministic fixtures; and
-- v0.7.6 remains `STATIC-ONLY`: the current Codex cases were not rerun, all
-  Claude Code cases remain `UNAVAILABLE` without an authenticated subscription,
-  and immutable v0.7.4 observations are retained only as prior-release evidence.
-
-The Git record for `v0.7.5` reports:
-
-- the versioned evidence schema, two immutable v0.7.4 host records, current
-  release status, standard-library validator, and negative fixtures passed
-  publication integration;
-- a privacy-isolated Codex `0.149.0` local-marketplace installation of Axiom
-  v0.7.4 matched the checked-in SessionStart command digest, while separate
-  fresh sessions observed `agents-architect` for the routed request and no
-  route for the arithmetic control;
-- Codex manual and automatic compaction route and control cases remain
-  `NOT-RUN`, while all Claude Code startup and compaction cases remain
-  `UNAVAILABLE` because no authenticated Claude Code session or subscription
-  was available; and
-- v0.7.5 remains `STATIC-ONLY`: its commit cannot self-embed its final object
-  ID, and v0.7.4 evidence is not a current-release pass.
-
-The Git record for `v0.7.4` reports:
-
-- the distribution and publication guards, JSON parsing, hook and documentation
-  agreement, packaged Skill shape, protected schemas, English-only, size, link,
-  artifact, and whitespace checks passed for the release candidate;
-- three hook-lifecycle fixtures accepted the checked-in `SessionStart(compact)`
-  control and rejected both an Axiom `PreCompact` context loader and a Claude
-  Code `SessionStart` matcher without `compact`;
-- the unchanged seven-Skill package shape passed the distribution and
-  publication guards, while Claude Code `2.1.220` strict plugin and marketplace
-  validation passed; and
-- fresh manual and automatic compaction, exactly-one-injection, and
-  post-compaction routed and no-route observations are `NOT-RUN` /
-  `UNAVAILABLE`: the available environment had no Claude Code subscription or
-  authenticated session, and no pass is implied.
-
-The Git record for `v0.7.3` reports:
-
-- the distribution and publication guards, JSON and strict YAML parsing, hook
-  and documentation agreement, packaged Skill shape, transitive immutable
-  Action pins, exact manifest schemas, English-only, size, link, artifact, and
-  whitespace checks passed for the release candidate;
-- thirty routing-contract fixtures, fifty-six traceable-Git contract fixtures,
-  twelve external-action gate fixtures, ten rollback gate fixtures, four
-  source-linked cross-route and resume contracts, and seventeen parser fixtures
-  passed without being presented as fresh host semantic-routing evidence;
-- focused disposable Git probes confirmed frozen-tree checkpoint construction,
-  compare-and-swap branch installation, effective push-target precedence,
-  one-time later-push target binding, and hostile commit-metadata rejection;
-- the exact release-workflow JavaScript passed fifteen signed-target, strict
-  tag, immutable-creation, version-binding, and event fixtures, while a mutated
-  bypass copy was rejected by the publication guard;
-- all seven packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin and marketplace validation passed; and
-- the bundled local `plugin-creator` validator still rejected the intentional
-  Codex `hooks` field, while a fresh installation, fresh-session route test,
-  Codex Security Deep Scan, real external app action, and real persistent
-  system change were not run.
-
-The Git record for `v0.7.2` reports:
-
-- the distribution and publication guards, JSON and strict YAML parsing, hook
-  and documentation agreement, packaged Skill shape, immutable action pins,
-  English-only, size, link, artifact, and whitespace checks passed for the
-  release candidate;
-- thirty routing-contract fixtures, fifty-six traceable-Git contract fixtures,
-  twelve external-action gate fixtures, ten rollback gate fixtures, four
-  source-linked cross-route and resume contracts, and sixteen parser fixtures
-  passed without being presented as fresh host semantic-routing evidence;
-- disposable Git `2.55.0` probes confirmed exact no-prune refresh, one-ref push,
-  no followed tag, bypass of an unapproved pre-push hook, SHA-256 OIDs, and
-  create-only backup-ref collision handling;
-- all seven packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin and marketplace validation passed;
-- malformed Skill frontmatter, malformed agent metadata, alternate moving
-  Action syntax, and missing version-derived release notes were rejected; and
-- the bundled local `plugin-creator` validator still rejected the intentional
-  Codex `hooks` field, while a fresh installation, fresh-session route test,
-  Codex Security Deep Scan, real external app action, and real persistent
-  system change were not run.
-
-The Git record for `v0.7.1` reports:
-
-- the distribution and publication guards, JSON parsing, hook and
-  documentation agreement, packaged Skill shape, immutable action pins,
-  English-only, size, link, artifact, and whitespace checks passed for the
-  release candidate;
-- twenty-eight routing scenarios, thirty-seven traceable-Git security
-  scenarios, twelve external-action scenarios, and ten rollback scenarios
-  passed without being presented as fresh host semantic-routing evidence;
-- focused Linux and Git `2.55.0` probes reproduced target-controlled
-  `core.fsmonitor` and `core.sshCommand` execution, then confirmed the frozen
-  non-executable process envelope blocked both paths while benign status still
-  worked;
-- all seven packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin and marketplace validation passed;
-- a complete security review covered seventy-one artifacts across ten attack
-  surfaces with no remaining reportable finding, while the rehearsal routing
-  regressions selected read-only, clarification, and exact isolated-write
-  outcomes as intended;
-- the bundled local `plugin-creator` validator still rejected the intentional
-  Codex `hooks` field, while Codex CLI `0.148.0` exposed no native
-  plugin-validation command; and
-- a fresh installation, fresh-session route-selection test, real external app
-  action, and real persistent system change were not run.
-
-The Git record for `v0.7.0` reports:
-
-- the distribution and publication guards, JSON parsing, hook and
-  documentation agreement, packaged Skill shape, immutable action pins,
-  English-only, size, link, artifact, and whitespace checks passed for the
-  release candidate;
-- twenty-four routing scenarios, twenty-seven traceable-Git security
-  scenarios, twelve external-action scenarios, and ten rollback scenarios
-  passed without being presented as fresh host semantic-routing evidence;
-- all seven packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin and marketplace validation passed;
-- focused negative checks rejected a moving GitHub Action reference, an
-  incomplete external-action contract, an unsafe Git transport, missing exact
-  cleanup authority, and the absence of the current release document;
-- the bundled local `plugin-creator` validator rejected the intentional Codex
-  `hooks` field on both the candidate and clean `v0.6.1` baseline, while Codex
-  CLI `0.148.0` exposed no native plugin-validation command; and
-- a fresh installation, fresh-session route-selection test, and real external
-  action were not run.
-
-The Git record for `v0.6.1` reports:
-
-- the distribution and publication guards, JSON parsing, hook and
-  documentation agreement, skill shape, English-only, size, link, and
-  whitespace checks passed for the release candidate;
-- all six packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin and marketplace validation passed;
-- negative checks rejected a fourth Codex starter prompt, a missing canonical
-  route token, the prior broken relative link, and non-strict SemVer; and
-- fresh install, disable, removal, and session-level semantic-routing checks
-  were not run.
-
-The Git record for `v0.6.0` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- focused reconciliation scenarios covered explicit preview and apply,
-  non-English normalization, no-trigger controls, live-tree divergence,
-  partial rollback, normative constraints, worker conflict, active-chain
-  authority, and single-writer isolation;
-- all six packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin validation passed;
-- a fresh Codex or Claude Code session-level semantic-routing check was not
-  run; and
-- the bundled local `plugin-creator` validator continued to reject the Codex
-  manifest's intentional `hooks` field on both the release candidate and its
-  clean baseline, so that result remains a validator discrepancy rather than
-  a pass.
-
-The Git record for `v0.5.1` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- a compacted task-context regression scenario kept turn coverage separate
-  from raw-output coverage, admitted only the controlling user decision,
-  rejected superseded candidates, and preserved the current-run versus
-  later-run activation boundary;
-- all six packaged Skills passed the local Skill Creator quick validator and
-  Claude Code strict plugin validation passed;
-- a fresh Codex or Claude Code session-level semantic-routing check was not
-  run; and
-- the bundled local `plugin-creator` validator continued to reject the Codex
-  manifest's intentional `hooks` field, so that result remains a recorded
-  validator discrepancy rather than a pass.
-
-The Git record for `v0.5.0` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- fifteen static routing-contract scenarios and ten rollback-gate scenarios
-  passed without being presented as host-native semantic routing evidence;
-- all six packaged Skills passed the local Skill Creator quick validator and
-  Claude Code strict plugin validation passed;
-- a fresh Codex or Claude Code session-level semantic-routing check was not
-  run; and
-- the bundled local `plugin-creator` validator continued to reject the Codex
-  manifest's intentional `hooks` field, so that result remains a recorded
-  validator discrepancy rather than a pass.
-
-The Git record for `v0.4.2` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- a complete real-task-history scenario confirmed that a first durable review
-  with eight earlier completed turns and no prior update baseline starts at the
-  task's oldest available turn rather than its latest work phase;
-- all five packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin validation passed;
-- Codex CLI `0.147.0` exposed no plugin-validation command; and
-- the bundled local `plugin-creator` validator continued to reject the Codex
-  manifest's intentional `hooks` field, so that result remains a recorded
-  validator discrepancy rather than a pass.
-
-The Git record for `v0.4.1` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- read-only forward scenarios distinguished a reusable instruction conflict
-  from a one-off code defect without treating source-read volume as proof;
-- all five packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin validation passed;
-- Codex CLI `0.147.0` exposed no plugin-validation command; and
-- the bundled local `plugin-creator` validator continued to reject the Codex
-  manifest's intentional `hooks` field, so that result remains a recorded
-  validator discrepancy rather than a pass.
-
-The Git record for `v0.4.0` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- ten static routing-contract scenarios and ten rollback-gate scenarios
-  passed without being presented as host-native semantic routing evidence;
-- all five packaged Skills passed the local Skill Creator quick validator and
-  Claude Code `2.1.220` strict plugin validation passed;
-- Codex CLI `0.147.0` exposed no plugin-validation command; and
-- the bundled local `plugin-creator` validator continued to reject the Codex
-  manifest's intentional `hooks` field, so that result remains a recorded
-  validator discrepancy rather than a pass.
-
-The Git record for `v0.3.1` reports:
-
-- the distribution and publication guards, JSON and YAML parsing, hook and
-  documentation agreement, skill-shape, English-only, size, artifact, and
-  whitespace checks passed for the release candidate;
-- Claude Code `2.1.220` strict marketplace and plugin validation passed;
-- Codex CLI `0.146.0` exposed no plugin-validation command; and
-- the bundled local `plugin-creator` validator rejected the Codex manifest's
-  intentional `hooks` field even though its accompanying field guide describes
-  that field, so the result remains a recorded validator discrepancy rather
-  than a pass.
-
-The earlier Git record for `v0.3.0` reports:
-
-- the distribution drift, JSON, YAML, hook equality and safety, skill-shape,
-  English-only, size, and whitespace checks passed for that release work;
-- Claude Code 2.1.220 strict plugin validation passed; and
-- a legacy local Codex validator reported a hooks-field compatibility conflict,
-  while the release record noted that the then-current official schema
-  supported the field.
-
-See the durable [v0.8.3 release notes](releases/v0.8.3.md),
-[v0.8.2 release notes](releases/v0.8.2.md),
-[v0.8.1 release notes](releases/v0.8.1.md),
-[v0.8.0 release notes](releases/v0.8.0.md),
-[v0.7.12 release notes](releases/v0.7.12.md),
-[v0.7.11 release notes](releases/v0.7.11.md),
-[v0.7.10 release notes](releases/v0.7.10.md),
-[v0.7.9 release notes](releases/v0.7.9.md),
-[v0.7.8 release notes](releases/v0.7.8.md),
-[v0.7.7 release notes](releases/v0.7.7.md),
-[v0.7.6 release notes](releases/v0.7.6.md),
-[v0.7.5 release notes](releases/v0.7.5.md),
-[v0.7.4 release notes](releases/v0.7.4.md),
-[v0.7.3 release notes](releases/v0.7.3.md),
-[v0.7.2 release notes](releases/v0.7.2.md),
-[v0.7.1 release notes](releases/v0.7.1.md),
-[v0.7.0 release notes](releases/v0.7.0.md),
-[v0.6.1 release notes](releases/v0.6.1.md),
-[v0.6.0 release notes](releases/v0.6.0.md),
-[v0.5.1 release notes](releases/v0.5.1.md),
-[v0.5.0 release notes](releases/v0.5.0.md),
-[v0.4.2 release notes](releases/v0.4.2.md),
-[v0.4.1 release notes](releases/v0.4.1.md),
-[v0.4.0 release notes](releases/v0.4.0.md),
-[v0.3.1 release notes](releases/v0.3.1.md), and
-[v0.3.0 release notes](releases/v0.3.0.md) for their release narratives. These
-historical results should not be generalized to a newer host, a different
-platform, or the present working tree without fresh validation.
-
-## Documentation-Derived Expectations
-
-The installation, update, reload, and `/hooks` review commands in the
-[README](../README.md) are the repository's checked-in user guidance. The
-event names in this document reflect the checked-in hook matchers. The host,
-however, owns marketplace behavior, command availability, lifecycle delivery,
-trust UI, and plugin execution.
-
-Claude Code's official lifecycle documentation identifies `SessionStart` with
-the `compact` matcher as the post-compaction context-loading path for both
-manual and automatic compaction. It does not make ordinary successful
-`PreCompact` stdout available as model context. The checked-in wrapper follows
-that distinction; a host observation is still required before claiming that a
-particular installed version delivered it exactly once.
-
-When host behavior changes, compare this guidance with current official host
-documentation and an installed-session observation. Documentation consistency
-is useful evidence; it is not runtime proof.
-
-## Unverified Or Unavailable
-
-Unless a current validation report says otherwise, treat these as unverified:
-
-- compatibility with every earlier or later Codex or Claude Code version;
-- every POSIX shell, Windows configuration, operating system, and host policy;
-- successful marketplace fetch or remote release availability;
-- end-to-end routing in a session that was not freshly started or reloaded;
-- manual or automatic Claude Code compaction reinjection without a current
-  observation of the `SessionStart` `compact` delivery and post-compaction
-  routed and control requests;
-- recovery of task history or raw tool output the host no longer exposes after
-  compaction;
-- semantic equivalence of task-review selection and reports across Codex and
-  Claude Code without current observations from both hosts;
-- exact tokens, credits, reasoning work, or cache hits not exposed by the
-  current host;
-- Windows hook execution inferred only from the presence of `commandWindows`;
-  and
-- any optional host-native validator that is missing or cannot run.
-
-Do not convert an unavailable validator, missing host, command error, or
-unobserved downstream behavior into a pass. Record the limitation and narrow
-the compatibility claim to what was directly checked.
+It validates checked-in records and negative fixtures; it does not execute a
+host or create an observation.
+
+## Evidence Paths
+
+Current sources:
+
+- [current release status](../evidence/release-status.json);
+- [runtime identity](../evidence/runtime-identity.json) and its
+  [policy](runtime-identity.md);
+- [current routing-context record](../evals/context-budget/results/v0.10.0.json);
+- [current route corpus](../evals/README.md); and
+- [v0.10.0 version notes](releases/v0.10.0.md).
+
+Historical sources:
+
+- [version-bound host records](../evidence/);
+- [routing observation records](../evals/results/);
+- [routing-context history](../evals/context-budget/results/); and
+- [version notes](releases/).
+
+These collections retain their original identities and terminal `FAIL`,
+`UNKNOWN`, `NOT-RUN`, and `UNAVAILABLE` states. Read the records directly for
+case-level, observer, commit/tree, token, timing, and investigation detail;
+those historical streams are intentionally not reproduced in this current
+user reference.
 
 ## Version Interpretation
 
-Use the version in the platform manifests and an immutable version tag when
-describing a release. Do not infer the current version from a floating tag or a
-marketplace cache. An installed marketplace snapshot may also lag the checkout;
-the hook review and explicit version record are therefore part of a current
-observation.
+Use the synchronized manifest version and an immutable version tag when
+describing a release. Do not infer the current version from a floating tag,
+marketplace cache, or working-tree checkout. An installed marketplace snapshot
+may lag the repository, so current observations include an explicit version and
+Hook review.
 
-Release history is tracked in the [Changelog](../CHANGELOG.md). Contributor
-requirements for compatibility claims and optional host-native validation are
-in [CONTRIBUTING.md](../CONTRIBUTING.md).
+User-visible release history belongs in the [Changelog](../CHANGELOG.md).
+Contributor requirements for compatibility claims and optional native
+validation are in [CONTRIBUTING.md](../CONTRIBUTING.md).
