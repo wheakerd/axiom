@@ -1,0 +1,300 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-hook-independent-profile",
+  "profileId": "openai-hook-independent-v1",
+  "identifier": {
+    "owner": "axiom",
+    "scope": "openai-host-family-compatibility",
+    "nonClaims": [
+      "openai-authorship",
+      "openai-approval",
+      "openai-listing",
+      "openai-endorsement"
+    ]
+  },
+  "phase": "behavioral-contract",
+  "status": "contract-only",
+  "motivatingHosts": [
+    {
+      "host": "codex",
+      "executionModes": [
+        "direct-skill-invocation",
+        "host-native-skill-discovery"
+      ]
+    },
+    {
+      "host": "chatgpt",
+      "executionModes": [
+        "direct-skill-invocation",
+        "host-native-skill-discovery"
+      ]
+    }
+  ],
+  "excludedHosts": [
+    {
+      "host": "claude-code",
+      "reason": "The existing Claude Code full profile remains Hook-enabled; profile v1 has no independent Claude Code motivation or evidence."
+    }
+  ],
+  "package": {
+    "model": "deterministic-derived-package",
+    "canonicalSkillRoot": "skills",
+    "editableSkillSourceCount": 1,
+    "derivedBundleStatus": "not-built",
+    "includedRuntimeSurface": "canonical-skills",
+    "excludedRuntimeSurfaces": [
+      "hooks",
+      "full-profile-host-wrappers"
+    ]
+  },
+  "capabilityModel": {
+    "capabilityStatuses": [
+      "contract-target",
+      "not-applicable",
+      "excluded"
+    ],
+    "evidenceStatuses": [
+      "not-run",
+      "host-observed"
+    ],
+    "contractTargetMeaning": "Eligible for future host acceptance only when the required host surface is present.",
+    "hostObservedRequiresDirectEvidence": true
+  },
+  "hostAcceptance": {
+    "corpusModel": "shared-golden-set-with-host-subsets",
+    "hostCaseSetOwner": "benchmark",
+    "hostIdentityOwner": "observer",
+    "modelReportedHostIdentityTrusted": false
+  },
+  "skills": [
+    {
+      "id": "using-axiom",
+      "role": "router",
+      "delivery": "explicit-host-discovery-only",
+      "requiredSurface": "explicit-skill-discovery",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "agents-architect",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "repository-instruction-files",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "agent-plugin-architect",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "plugin-project-files",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "optimize-codex-usage",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "codex-usage-controls",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "not-applicable",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "review-axiom-task",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "task-history",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "confirm-external-action",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "external-action-interface",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "traceable-git-submit",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "local-git-repository",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "not-applicable",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "reversible-system-change",
+      "role": "workflow",
+      "delivery": "host-native-discovery",
+      "requiredSurface": "persistent-local-system",
+      "hostCapabilities": [
+        {
+          "host": "codex",
+          "capability": "contract-target",
+          "evidence": "not-run"
+        },
+        {
+          "host": "chatgpt",
+          "capability": "not-applicable",
+          "evidence": "not-run"
+        },
+        {
+          "host": "claude-code",
+          "capability": "excluded",
+          "evidence": "not-run"
+        }
+      ]
+    }
+  ],
+  "discovery": {
+    "sessionStartRequired": false,
+    "sessionStartDelivery": "absent",
+    "usingAxiomDelivery": "explicit-only",
+    "automaticAxiomRoutingGate": false,
+    "workflowSelectionModes": [
+      "direct-skill-invocation",
+      "host-native-metadata",
+      "host-native-implicit-intent"
+    ],
+    "unsupportedDiscoveryResult": "unavailable-or-no-route",
+    "supportedSessionState": "fresh-isolated",
+    "unsupportedLifecycleClaims": [
+      "resume",
+      "clear",
+      "post-compaction"
+    ]
+  },
+  "authority": {
+    "routingGrantsAuthority": false,
+    "mutationWorkflowPolicy": "existing-skill-authorization-and-phase-gates-only",
+    "forbiddenAuthorityExpansion": [
+      "edit",
+      "git",
+      "credential",
+      "external-action",
+      "installation",
+      "deployment",
+      "system-change",
+      "publication"
+    ]
+  },
+  "identity": {
+    "pluginVersionBinding": "canonical-base-package",
+    "repositoryPolicyRevisionBinding": "repository-governance",
+    "runtimeContractDigestModel": "profile-scoped-derived-runtime",
+    "profileRuntimeDigestStatus": "unavailable-not-created",
+    "fullProfileDigestReusable": false
+  },
+  "evidence": {
+    "profileBindingRequired": true,
+    "fullProfileEvidenceReusable": false,
+    "staticAndHostEvidenceSeparate": true,
+    "currentHostClaim": "none"
+  }
+}

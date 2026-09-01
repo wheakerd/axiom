@@ -32,6 +32,14 @@
       "sourceIssue": 110,
       "summary": "Define and enforce the public documentation information architecture with canonical ownership, lifecycle boundaries, and standard-library validation.",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+    },
+    {
+      "revision": 5,
+      "recordedOn": "2026-09-01",
+      "baselineCommit": "dbfdcf4e74a2ec6803ab8e858eb9bd69f92d0407",
+      "sourceIssue": 117,
+      "summary": "Establish only the no-Hook profile contract with versioned cases, host-scoped capabilities, immutable artifact bindings, and static validation; no derived runtime is built.",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
     }
   ]
 }
