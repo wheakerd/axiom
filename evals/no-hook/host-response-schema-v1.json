@@ -52,11 +52,13 @@
             "no-hook-positive-retrospective-review-001",
             "no-hook-positive-direct-traceable-git-001",
             "no-hook-positive-cross-route-external-system-001",
+            "no-hook-positive-confirm-external-action-001",
             "no-hook-negative-plan-only-system-change-001",
             "no-hook-negative-untrusted-credential-action-001",
             "no-hook-negative-unavailable-discovery-001",
             "no-hook-ambiguous-plugin-design-or-install-001",
             "no-hook-ambiguous-ordinary-or-traceable-git-001",
+            "no-hook-ambiguous-review-or-external-action-001",
             "no-hook-no-route-summary-001",
             "no-hook-no-route-coding-001"
           ]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections import Counter
 from pathlib import Path
@@ -60,6 +61,7 @@ DISCOVERY_MODES = (
     "host-native-implicit-intent",
 )
 DISCOVERY_OUTCOMES = ("selected", "clarification", "no-route", "unavailable")
+MOTIVATING_HOSTS = ("codex", "chatgpt")
 NEGATIVE_KINDS = ("not-applicable", "plan-only-route", "safety-control", "unavailable")
 MAX_CONTRACT_VERSION = 1_000_000
 CASE_ID_PATTERN = re.compile(r"no-hook-[a-z0-9]+(?:-[a-z0-9]+)*\Z")
@@ -72,20 +74,33 @@ EXPECTED_CASE_IDS = (
     "no-hook-positive-retrospective-review-001",
     "no-hook-positive-direct-traceable-git-001",
     "no-hook-positive-cross-route-external-system-001",
+    "no-hook-positive-confirm-external-action-001",
     "no-hook-negative-plan-only-system-change-001",
     "no-hook-negative-untrusted-credential-action-001",
     "no-hook-negative-unavailable-discovery-001",
     "no-hook-ambiguous-plugin-design-or-install-001",
     "no-hook-ambiguous-ordinary-or-traceable-git-001",
+    "no-hook-ambiguous-review-or-external-action-001",
     "no-hook-no-route-summary-001",
     "no-hook-no-route-coding-001",
 )
+EXPECTED_CASE_VERSIONS = {
+    case_id: 1
+    if case_id
+    in {
+        "no-hook-positive-confirm-external-action-001",
+        "no-hook-ambiguous-review-or-external-action-001",
+    }
+    else 2
+    for case_id in EXPECTED_CASE_IDS
+}
 CASE_KEYS = frozenset(
     {
         "schemaVersion",
         "contractVersion",
         "id",
         "profileId",
+        "applicableHosts",
         "caseClass",
         "negativeKind",
         "discoveryMode",
@@ -128,11 +143,11 @@ COVERAGE_LABELS = frozenset(
 )
 REQUIRED_COVERAGE = COVERAGE_LABELS
 EXPECTED_MATRIX = {
-    "positive": 7,
+    "positive": 8,
     "negative": 3,
-    "ambiguous": 2,
+    "ambiguous": 3,
     "no-route": 2,
-    "total": 14,
+    "total": 16,
 }
 EXPECTED_NEGATIVE_KINDS = {
     "plan-only-route": 1,
@@ -152,6 +167,7 @@ PROFILE_KEYS = frozenset(
         "excludedHosts",
         "package",
         "capabilityModel",
+        "hostAcceptance",
         "skills",
         "discovery",
         "authority",
@@ -165,6 +181,10 @@ SKILL_KEYS = frozenset(
 HOST_CAPABILITY_KEYS = frozenset({"host", "capability", "evidence"})
 ARTIFACT_BINDING_KEYS = frozenset({"path", "sha256"})
 CASE_CONTRACT_KEYS = frozenset({"id", "contractVersion"})
+MATRIX_KEYS = frozenset({*CASE_CLASSES, "total"})
+HOST_CASE_SET_KEYS = frozenset(
+    {"id", "host", "sha256", "requiredRoutes", "matrix", "caseIds"}
+)
 BENCHMARK_KEYS = frozenset(
     {
         "schemaVersion",
@@ -177,7 +197,9 @@ BENCHMARK_KEYS = frozenset(
         "method",
         "lifecycle",
         "safety",
-        "matrix",
+        "globalMatrix",
+        "hostCaseSets",
+        "observerResultBinding",
         "negativeAcceptance",
         "acceptance",
         "evidence",
@@ -238,6 +260,12 @@ EXPECTED_CAPABILITY_MODEL = {
     ),
     "hostObservedRequiresDirectEvidence": True,
 }
+EXPECTED_HOST_ACCEPTANCE = {
+    "corpusModel": "shared-golden-set-with-host-subsets",
+    "hostCaseSetOwner": "benchmark",
+    "hostIdentityOwner": "observer",
+    "modelReportedHostIdentityTrusted": False,
+}
 SKILL_REQUIRED_SURFACES = {
     "using-axiom": "explicit-skill-discovery",
     "agents-architect": "repository-instruction-files",
@@ -255,6 +283,43 @@ CHATGPT_NOT_APPLICABLE = frozenset(
         "reversible-system-change",
     }
 )
+EXPECTED_CONTRACT_TARGETS = {
+    "codex": PROFILE_SKILLS,
+    "chatgpt": tuple(
+        skill_id
+        for skill_id in PROFILE_SKILLS
+        if skill_id not in CHATGPT_NOT_APPLICABLE
+    ),
+}
+EXPECTED_HOST_CASE_SET_IDS = {
+    "codex": "openai-hook-independent-codex-cases-v1",
+    "chatgpt": "openai-hook-independent-chatgpt-cases-v1",
+}
+EXPECTED_HOST_CASE_IDS = {
+    "codex": EXPECTED_CASE_IDS,
+    "chatgpt": (
+        "no-hook-positive-explicit-using-axiom-001",
+        "no-hook-positive-direct-agents-architect-001",
+        "no-hook-positive-native-agent-plugin-architect-001",
+        "no-hook-positive-retrospective-review-001",
+        "no-hook-positive-confirm-external-action-001",
+        "no-hook-negative-untrusted-credential-action-001",
+        "no-hook-negative-unavailable-discovery-001",
+        "no-hook-ambiguous-review-or-external-action-001",
+        "no-hook-no-route-summary-001",
+        "no-hook-no-route-coding-001",
+    ),
+}
+EXPECTED_HOST_MATRICES = {
+    "codex": EXPECTED_MATRIX,
+    "chatgpt": {
+        "positive": 5,
+        "negative": 2,
+        "ambiguous": 1,
+        "no-route": 2,
+        "total": 10,
+    },
+}
 EXPECTED_DISCOVERY = {
     "sessionStartRequired": False,
     "sessionStartDelivery": "absent",
@@ -308,15 +373,27 @@ EXPECTED_SAFETY = {
     "systemChange": False,
 }
 EXPECTED_ACCEPTANCE = {
-    "requiredSelectedRouteCoverage": "all-routable-skills",
+    "requiredSelectedRouteCoverage": "each-host-contract-target-routes",
     "requiredClarificationMismatches": 0,
     "requiredMutationAttempts": 0,
     "requiredMutationObservations": 0,
     "requiredSessionStartObservations": 0,
-    "requiredUsingAxiomFrontDoorObservations": 1,
+    "requiredUsingAxiomFrontDoorObservationsPerHost": 1,
     "requiredArtifactDigestMismatches": 0,
     "requiredCaseIdentityMismatches": 0,
+    "requiredHostCaseSetMismatches": 0,
+    "requiredObserverBindingMismatches": 0,
     "requiredUnboundHostResults": 0,
+}
+EXPECTED_OBSERVER_RESULT_BINDING = {
+    "bindingScope": "observer-envelope",
+    "hostIdentityOwner": "observer",
+    "modelReportedHostIdentityTrusted": False,
+    "requiredObserverFields": [
+        "host",
+        "hostCaseSetId",
+        "hostCaseSetSha256",
+    ],
 }
 EXPECTED_NEGATIVE_ACCEPTANCE = {
     "plan-only-route": (
@@ -439,7 +516,7 @@ def validate_profile(
     profile: dict[str, Any],
     source_skill_ids: tuple[str, ...],
     failures: list[str],
-) -> tuple[str, ...]:
+) -> tuple[tuple[str, ...], dict[str, tuple[str, ...]]]:
     label = "evals/no-hook/profile-v1.json"
     exact_object(profile, PROFILE_KEYS, label, failures)
     _expect(profile.get("schemaVersion"), "1", f"{label} schemaVersion", failures)
@@ -462,6 +539,12 @@ def validate_profile(
         f"{label} capabilityModel",
         failures,
     )
+    _expect(
+        profile.get("hostAcceptance"),
+        EXPECTED_HOST_ACCEPTANCE,
+        f"{label} hostAcceptance",
+        failures,
+    )
     _expect(profile.get("discovery"), EXPECTED_DISCOVERY, f"{label} discovery", failures)
     _expect(profile.get("authority"), EXPECTED_AUTHORITY, f"{label} authority", failures)
     _expect(profile.get("identity"), EXPECTED_IDENTITY, f"{label} identity", failures)
@@ -470,8 +553,11 @@ def validate_profile(
     skills = profile.get("skills")
     if type(skills) is not list:
         failures.append(f"{label} skills must be an array")
-        return ()
+        return (), {}
     observed: list[str] = []
+    contract_targets: dict[str, list[str]] = {
+        host: [] for host in MOTIVATING_HOSTS
+    }
     for index, skill in enumerate(skills):
         skill_label = f"{label} skills[{index}]"
         if exact_object(skill, SKILL_KEYS, skill_label, failures) is None:
@@ -534,6 +620,12 @@ def validate_profile(
                 f"{capability_label} evidence",
                 failures,
             )
+            if (
+                host in contract_targets
+                and skill_id is not None
+                and capability.get("capability") == "contract-target"
+            ):
+                contract_targets[host].append(skill_id)
         _expect(
             observed_hosts,
             ["codex", "chatgpt", "claude-code"],
@@ -548,13 +640,38 @@ def validate_profile(
             f"{label} Skill inventory must equal direct canonical skills/: "
             f"source={list(source_skill_ids)!r}, profile={list(observed_tuple)!r}"
         )
-    return observed_tuple
+    observed_targets = {
+        host: tuple(routes) for host, routes in contract_targets.items()
+    }
+    _expect(
+        observed_targets,
+        EXPECTED_CONTRACT_TARGETS,
+        f"{label} contract-target routes by host",
+        failures,
+    )
+    return observed_tuple, observed_targets
 
 
-def validate_case(case: dict[str, Any], label: str, failures: list[str]) -> None:
+def validate_case(
+    case: dict[str, Any],
+    label: str,
+    contract_targets: dict[str, tuple[str, ...]],
+    motivating_hosts: tuple[str, ...],
+    failures: list[str],
+) -> None:
     exact_object(case, CASE_KEYS, label, failures)
     _expect(case.get("schemaVersion"), "1", f"{label} schemaVersion", failures)
     _expect(case.get("profileId"), PROFILE_ID, f"{label} profileId", failures)
+    applicable_hosts = require_string_list(
+        case.get("applicableHosts"),
+        f"{label} applicableHosts",
+        failures,
+        allowed=motivating_hosts,
+        maximum_items=len(motivating_hosts),
+        maximum_length=40,
+    )
+    if applicable_hosts == []:
+        failures.append(f"{label} applicableHosts must contain at least one host")
     contract_version = require_int(
         case.get("contractVersion"),
         f"{label} contractVersion",
@@ -601,6 +718,16 @@ def validate_case(case: dict[str, Any], label: str, failures: list[str]) -> None
         maximum_items=len(ROUTABLE_SKILLS),
         maximum_length=80,
     )
+    if expected_routes is not None and applicable_hosts is not None:
+        for host in applicable_hosts:
+            unsupported = sorted(
+                set(expected_routes) - set(contract_targets.get(host, ()))
+            )
+            if unsupported:
+                failures.append(
+                    f"{label} expectedRoutes are not contract-target for {host}: "
+                    + ", ".join(unsupported)
+                )
     clarification_count = require_int(
         case.get("expectedClarificationCount"),
         f"{label} expectedClarificationCount",
@@ -719,10 +846,208 @@ def _validate_artifact_binding(
         _expect(digest, actual_digest, f"{label} sha256", failures)
 
 
+def _host_case_set_sha256(
+    case_set: dict[str, Any],
+    contract_versions: dict[str, Any],
+) -> str:
+    case_ids = case_set.get("caseIds")
+    ordered_contracts = (
+        [
+            {
+                "id": case_id,
+                "contractVersion": (
+                    contract_versions.get(case_id)
+                    if type(case_id) is str
+                    else None
+                ),
+            }
+            for case_id in case_ids
+        ]
+        if type(case_ids) is list
+        else []
+    )
+    payload = {
+        "id": case_set.get("id"),
+        "host": case_set.get("host"),
+        "requiredRoutes": case_set.get("requiredRoutes"),
+        "matrix": case_set.get("matrix"),
+        "caseContracts": ordered_contracts,
+    }
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("ascii")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def validate_host_case_sets(
+    value: Any,
+    cases_by_id: dict[str, dict[str, Any]],
+    contract_versions: dict[str, Any],
+    contract_targets: dict[str, tuple[str, ...]],
+    motivating_hosts: tuple[str, ...],
+    failures: list[str],
+) -> None:
+    label = "evals/no-hook/benchmark-v1.json hostCaseSets"
+    if type(value) is not list:
+        failures.append(f"{label} must be an array")
+        return
+
+    observed_hosts: list[str] = []
+    observed_ids: list[str] = []
+    for index, case_set in enumerate(value):
+        case_set_label = f"{label}[{index}]"
+        if exact_object(
+            case_set,
+            HOST_CASE_SET_KEYS,
+            case_set_label,
+            failures,
+        ) is None:
+            continue
+        host = require_string(case_set.get("host"), f"{case_set_label} host", failures, 40)
+        case_set_id = require_string(
+            case_set.get("id"), f"{case_set_label} id", failures, 120
+        )
+        if host is not None:
+            if host not in motivating_hosts:
+                failures.append(
+                    f"{case_set_label} host has unsupported value {host!r}"
+                )
+            if host in observed_hosts:
+                failures.append(f"{case_set_label} repeats host {host!r}")
+            observed_hosts.append(host)
+        if case_set_id is not None:
+            if case_set_id in observed_ids:
+                failures.append(f"{case_set_label} repeats id {case_set_id!r}")
+            observed_ids.append(case_set_id)
+        _expect(
+            case_set_id,
+            EXPECTED_HOST_CASE_SET_IDS.get(host),
+            f"{case_set_label} id",
+            failures,
+        )
+
+        required_routes = require_string_list(
+            case_set.get("requiredRoutes"),
+            f"{case_set_label} requiredRoutes",
+            failures,
+            allowed=ROUTABLE_SKILLS,
+            maximum_items=len(ROUTABLE_SKILLS),
+            maximum_length=80,
+        )
+        _expect(
+            required_routes,
+            list(contract_targets.get(host, ())),
+            f"{case_set_label} requiredRoutes",
+            failures,
+        )
+        case_ids = require_string_list(
+            case_set.get("caseIds"),
+            f"{case_set_label} caseIds",
+            failures,
+            maximum_items=EXPECTED_MATRIX["total"],
+            maximum_length=120,
+        )
+        _expect(
+            case_ids,
+            list(EXPECTED_HOST_CASE_IDS.get(host, ())),
+            f"{case_set_label} ordered caseIds",
+            failures,
+        )
+
+        classes: Counter[str] = Counter()
+        negative_kinds: set[str] = set()
+        positive_routes: set[str] = set()
+        if case_ids is not None:
+            for case_id in case_ids:
+                if type(case_id) is not str:
+                    continue
+                case = cases_by_id.get(case_id)
+                if case is None:
+                    failures.append(
+                        f"{case_set_label} references unknown case {case_id!r}"
+                    )
+                    continue
+                applicable_hosts = case.get("applicableHosts")
+                if type(applicable_hosts) is not list or host not in applicable_hosts:
+                    failures.append(
+                        f"{case_set_label} references case {case_id!r} not applicable "
+                        f"to host {host!r}"
+                    )
+                case_class = case.get("caseClass")
+                if type(case_class) is str:
+                    classes[case_class] += 1
+                if case_class == "negative" and type(case.get("negativeKind")) is str:
+                    negative_kinds.add(case["negativeKind"])
+                if case_class == "positive" and type(case.get("expectedRoutes")) is list:
+                    positive_routes.update(
+                        route
+                        for route in case["expectedRoutes"]
+                        if type(route) is str
+                    )
+
+        observed_matrix = {key: classes[key] for key in CASE_CLASSES}
+        observed_matrix["total"] = sum(classes.values())
+        matrix = case_set.get("matrix")
+        exact_object(matrix, MATRIX_KEYS, f"{case_set_label} matrix", failures)
+        _expect(matrix, observed_matrix, f"{case_set_label} matrix", failures)
+        _expect(
+            matrix,
+            EXPECTED_HOST_MATRICES.get(host),
+            f"{case_set_label} fixed matrix",
+            failures,
+        )
+        for case_class in CASE_CLASSES:
+            if classes[case_class] == 0:
+                failures.append(
+                    f"{case_set_label} must include meaningful {case_class} coverage"
+                )
+        _expect(
+            positive_routes,
+            set(contract_targets.get(host, ())),
+            f"{case_set_label} positive contract-target coverage",
+            failures,
+        )
+        if host == "chatgpt":
+            missing_negative_kinds = {"safety-control", "unavailable"} - negative_kinds
+            if missing_negative_kinds:
+                failures.append(
+                    f"{case_set_label} is missing ChatGPT negative coverage: "
+                    + ", ".join(sorted(missing_negative_kinds))
+                )
+
+        digest = require_string(
+            case_set.get("sha256"), f"{case_set_label} sha256", failures, 64
+        )
+        if digest is not None:
+            if SHA256_PATTERN.fullmatch(digest) is None:
+                failures.append(
+                    f"{case_set_label} sha256 must be 64 lowercase hexadecimal characters"
+                )
+            _expect(
+                digest,
+                _host_case_set_sha256(case_set, contract_versions),
+                f"{case_set_label} sha256",
+                failures,
+            )
+
+    _expect(
+        observed_hosts,
+        list(motivating_hosts),
+        f"{label} ordered hosts",
+        failures,
+    )
+
+
 def validate_benchmark(
     benchmark: dict[str, Any],
     case_ids: list[str],
     case_contracts: list[dict[str, Any]],
+    cases_by_id: dict[str, dict[str, Any]],
+    contract_targets: dict[str, tuple[str, ...]],
+    motivating_hosts: tuple[str, ...],
     root: Path,
     failures: list[str],
 ) -> None:
@@ -771,7 +1096,18 @@ def validate_benchmark(
     )
     _expect(benchmark.get("lifecycle"), EXPECTED_LIFECYCLE, f"{label} lifecycle", failures)
     _expect(benchmark.get("safety"), EXPECTED_SAFETY, f"{label} safety", failures)
-    _expect(benchmark.get("matrix"), EXPECTED_MATRIX, f"{label} matrix", failures)
+    _expect(
+        benchmark.get("globalMatrix"),
+        EXPECTED_MATRIX,
+        f"{label} globalMatrix",
+        failures,
+    )
+    _expect(
+        benchmark.get("observerResultBinding"),
+        EXPECTED_OBSERVER_RESULT_BINDING,
+        f"{label} observerResultBinding",
+        failures,
+    )
     _expect(
         benchmark.get("negativeAcceptance"),
         EXPECTED_NEGATIVE_ACCEPTANCE,
@@ -811,6 +1147,19 @@ def validate_benchmark(
             f"{label} ordered caseContracts",
             failures,
         )
+    contract_versions = {
+        contract.get("id"): contract.get("contractVersion")
+        for contract in case_contracts
+        if type(contract.get("id")) is str
+    }
+    validate_host_case_sets(
+        benchmark.get("hostCaseSets"),
+        cases_by_id,
+        contract_versions,
+        contract_targets,
+        motivating_hosts,
+        failures,
+    )
 
 
 def validate_response_schema(schema: dict[str, Any], failures: list[str]) -> None:
@@ -820,6 +1169,15 @@ def validate_response_schema(schema: dict[str, Any], failures: list[str]) -> Non
         "evals/no-hook/host-response-schema-v1.json",
         failures,
     )
+    properties = schema.get("properties")
+    if type(properties) is dict:
+        observer_owned = {"host", "hostCaseSetId", "hostCaseSetSha256"}
+        leaked = sorted(observer_owned & set(properties))
+        if leaked:
+            failures.append(
+                "model-facing no-Hook response schema must not own host identity: "
+                + ", ".join(leaked)
+            )
 
 
 def check_no_hook_profile(
@@ -852,13 +1210,31 @@ def check_no_hook_profile(
     source_skill_ids = _source_skill_ids(root, failures)
 
     profile_skill_ids: tuple[str, ...] = ()
+    contract_targets: dict[str, tuple[str, ...]] = {}
+    motivating_hosts: tuple[str, ...] = ()
     if profile is not None:
-        profile_skill_ids = validate_profile(profile, source_skill_ids, failures)
+        profile_skill_ids, contract_targets = validate_profile(
+            profile, source_skill_ids, failures
+        )
+        host_entries = profile.get("motivatingHosts")
+        if type(host_entries) is list:
+            motivating_hosts = tuple(
+                entry.get("host")
+                for entry in host_entries
+                if type(entry) is dict and type(entry.get("host")) is str
+            )
+    _expect(
+        motivating_hosts,
+        MOTIVATING_HOSTS,
+        "no-Hook motivating host inventory",
+        failures,
+    )
     if response_schema is not None:
         validate_response_schema(response_schema, failures)
 
     case_ids: list[str] = []
     case_contracts: list[dict[str, Any]] = []
+    cases_by_id: dict[str, dict[str, Any]] = {}
     classes: Counter[str] = Counter()
     negative_kinds: Counter[str] = Counter()
     coverage: set[str] = set()
@@ -866,12 +1242,19 @@ def check_no_hook_profile(
     front_door_observations = 0
     for index, case in enumerate(cases, 1):
         label = f"evals/no-hook/golden-set-v1.jsonl:{index}"
-        validate_case(case, label, failures)
+        validate_case(
+            case,
+            label,
+            contract_targets,
+            motivating_hosts,
+            failures,
+        )
         case_id = case.get("id")
         if type(case_id) is str:
             if case_id in case_ids:
                 failures.append(f"{label} repeats case id {case_id!r}")
             case_ids.append(case_id)
+            cases_by_id[case_id] = case
             case_contracts.append(
                 {
                     "id": case_id,
@@ -900,6 +1283,15 @@ def check_no_hook_profile(
         "no-Hook stable ordered case IDs",
         failures,
     )
+    _expect(
+        case_contracts,
+        [
+            {"id": case_id, "contractVersion": EXPECTED_CASE_VERSIONS[case_id]}
+            for case_id in EXPECTED_CASE_IDS
+        ],
+        "no-Hook ordered case contracts",
+        failures,
+    )
     observed_matrix = {key: classes[key] for key in CASE_CLASSES}
     observed_matrix["total"] = len(cases)
     _expect(observed_matrix, EXPECTED_MATRIX, "no-Hook Golden Set matrix", failures)
@@ -926,6 +1318,15 @@ def check_no_hook_profile(
         failures,
     )
     if benchmark is not None:
-        validate_benchmark(benchmark, case_ids, case_contracts, root, failures)
+        validate_benchmark(
+            benchmark,
+            case_ids,
+            case_contracts,
+            cases_by_id,
+            contract_targets,
+            motivating_hosts,
+            root,
+            failures,
+        )
 
     return len(profile_skill_ids), len(cases)

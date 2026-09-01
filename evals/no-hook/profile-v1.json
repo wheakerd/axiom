@@ -60,6 +60,12 @@
     "contractTargetMeaning": "Eligible for future host acceptance only when the required host surface is present.",
     "hostObservedRequiresDirectEvidence": true
   },
+  "hostAcceptance": {
+    "corpusModel": "shared-golden-set-with-host-subsets",
+    "hostCaseSetOwner": "benchmark",
+    "hostIdentityOwner": "observer",
+    "modelReportedHostIdentityTrusted": false
+  },
   "skills": [
     {
       "id": "using-axiom",
