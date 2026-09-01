@@ -91,8 +91,8 @@ endorsements.
   `git-workflow`, `rollback`, `auditability`, `developer-tools`.
 - Compatibility statement: checked-in wrappers target Codex and Claude Code;
   current compatibility depends on the identified host version and installed
-  snapshot. See [Compatibility](../compatibility.md) and
-  [Field Validation](../field-validation.md).
+  snapshot. See [Compatibility](../../docs/compatibility.md) and
+  [Field Validation](../../docs/field-validation.md).
 
 ## Channel Readiness
 

@@ -13,7 +13,7 @@ from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 
 EXPECTED_SUCCESS_SUMMARY = (
     "Publication validation passed: 101 required files, 6 JSON files, "
-    "115 Markdown files, 78 offline route contract fixtures, "
+    "116 Markdown files, 78 offline route contract fixtures, "
     "95 black-box routing cases, 30 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 7 routing-context lifecycle scenarios, "
