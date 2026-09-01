@@ -1,9 +1,8 @@
 # Axiom Documentation
 
 Use this index to find the document that owns the task or fact you need. The
-documentation architecture is being migrated in reviewable phases under
-[Issue #110](https://github.com/wheakerd/axiom/issues/110); the locations below
-describe the repository as it exists now, not the completed target layout.
+locations below are the current canonical public structure; historical
+evidence and project-operation plans remain outside current user guidance.
 
 ## Start By Task
 
@@ -38,9 +37,10 @@ security concerns through the process in [SECURITY.md](../SECURITY.md).
 Project-operation material is intentionally outside this current user
 documentation tree under `project/`; it is not current product guidance.
 
-## Current Structure And Migration
+## Current Structure
 
-The current repository still has transitional overlap:
+The repository separates current guidance from historical evidence and project
+operations:
 
 - `README.md` is the bounded product landing page;
 - `docs/guides/` owns first use and the host-managed installation lifecycle;
@@ -53,11 +53,6 @@ The current repository still has transitional overlap:
   among the Changelog, version notes, Release body, and evidence;
 - `project/` separately owns marketing, distribution, channel-status, launch,
   and editorial plans.
-
-The accepted target separates current user guides, concepts, references,
-maintainer policy, historical evidence, and project operations. Each migration
-phase must preserve working links and historical records. Until a phase moves
-content, the existing file remains the truthful public location.
 
 See the [Documentation Policy](maintainers/documentation-policy.md) for the
 document classes, lifecycle vocabulary, canonical owners, migration rules, and

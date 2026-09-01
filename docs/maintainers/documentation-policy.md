@@ -48,10 +48,15 @@ Lifecycle metadata is optional when the directory and index make the state
 unambiguous. If metadata is present, it must use one of these values. A claim
 about an external platform or channel must include an absolute
 `last_verified` date; conceptual prose does not need an artificial timestamp.
+Place optional metadata near the document H1 using this exact form:
+
+```markdown
+<!-- lifecycle: current -->
+```
 
 ## Current Repository State
 
-The documentation migration began with overlapping responsibilities:
+The current repository assigns these responsibilities:
 
 - `README.md` owns the bounded public introduction and safe-start summary;
 - `docs/guides/` owns installation, first use, update, removal, and
@@ -68,14 +73,14 @@ The documentation migration began with overlapping responsibilities:
   dated channel status outside current guidance;
 - `evidence/` and `evals/results/` retain machine records and observations.
 
-During migration, [the documentation index](../README.md) must describe these
-current locations truthfully. A target path does not become canonical until
-the content and its links move in a merged change.
+[The documentation index](../README.md) describes these current locations by
+audience and task. A proposed path does not become canonical until the content,
+inbound links, and lifecycle classification move in one merged change.
 
-## Target Structure
+## Canonical Structure
 
-The repository should converge on this responsibility split without creating
-unnecessary short documents:
+The repository uses this responsibility split without creating unnecessary
+short documents:
 
 ```text
 README.md
@@ -85,9 +90,9 @@ SECURITY.md
 docs/
 |-- README.md
 |-- guides/
-|-- concepts/
 |-- reference/
-`-- maintainers/
+|-- maintainers/
+`-- releases/
 project/
 |-- README.md
 `-- marketing/
@@ -95,11 +100,12 @@ evidence/
 evals/
 ```
 
-Equivalent, simpler groupings are acceptable when ownership remains clear.
+Topical current references may remain directly under `docs/` when another
+directory would create artificial fragmentation.
 
 ## Canonical Ownership
 
-| Fact | Canonical owner | Migration status |
+| Fact | Canonical owner | Current rule |
 | --- | --- | --- |
 | Product introduction and safe first step | `README.md` | Current and within the documented size budget |
 | Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; README keeps a validated rendering |
@@ -135,7 +141,7 @@ redefine their values.
 | External publication or channel state | Record an absolute verification date and do not promote planned or submitted work to published |
 | Document move or lifecycle change | Update inbound links, the documentation index, and the lifecycle classification atomically |
 
-## Migration Rules
+## Migration And Move Rules
 
 - Use staged, reviewable changes and keep links valid at every merged phase.
 - Describe the current repository before the target state; do not claim a later
@@ -180,9 +186,14 @@ Every documentation change must, at minimum:
   wrappers; and
 - keep historical and project-plan documents out of current user navigation.
 
-The repository will add a deterministic, offline where practical,
-Python-standard-library-only validator as the final migration phase. Until that
-validator lands, contributors must perform the applicable checks manually and
-run the existing publication aggregate and unit suite. External URL
-availability, spelling, and prose style remain advisory or scheduled signals
-rather than unstable required gates.
+Run the deterministic, Python-standard-library-only documentation validator
+from the repository root:
+
+```bash
+python3 scripts/check-documentation.py
+```
+
+It runs offline checks for repository-owned facts and is included in the
+publication aggregate and full unit suite. External URL availability, spelling,
+and prose style remain advisory or scheduled signals rather than unstable
+required gates.

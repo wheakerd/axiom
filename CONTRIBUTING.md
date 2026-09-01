@@ -98,12 +98,12 @@ lifecycle states, and update navigation. The [documentation index](docs/README.m
 is the task- and audience-oriented entry point.
 
 Keep public documentation in English and tie claims to checked-in behavior or
-clearly identified historical evidence. During the staged migration for
-Issue #110, preserve the parseable README `### Shared skills` inventory, keep
-current Hook renderings synchronized with the checked-in declarations and
-wrappers, and do not claim a target location is current before its migration
-lands. Use repository-relative links and run the applicable documentation,
-publication, and unit checks before opening a pull request.
+clearly identified historical evidence. Preserve the parseable README
+`### Shared skills` inventory, keep current Hook renderings synchronized with
+the checked-in declarations and wrappers, and do not claim a proposed location
+is current before its content and links move. Use repository-relative links and
+run the applicable documentation, publication, and unit checks before opening a
+pull request.
 
 ## Hook changes need extra review
 
@@ -133,6 +133,7 @@ python3 scripts/check-distribution-drift.py
 python3 scripts/check-runtime-identity.py --check
 python3 scripts/check-compatibility-evidence.py --self-test
 python3 scripts/measure-routing-context.py --check
+python3 scripts/check-documentation.py
 python3 scripts/check-publication.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 -m unittest tests.test_routing_evals -v

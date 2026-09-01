@@ -56,7 +56,10 @@ def fenced_blocks_and_masked_text(text: str) -> tuple[list[str], str]:
 
 def check_documented_hook_command_text(
     text: str,
-    documents: dict[str, dict[str, Any]], failures: list[str]
+    documents: dict[str, dict[str, Any]],
+    failures: list[str],
+    *,
+    wrapper_text: str = CODEX_WINDOWS_WRAPPER_TEXT,
 ) -> None:
     expected: dict[str, list[str]] = {}
     for relative_path in HOOK_FILES:
@@ -65,7 +68,7 @@ def check_documented_hook_command_text(
             continue
         for command, labels in hook_commands(relative_path, document, failures).items():
             expected.setdefault(command, []).extend(labels)
-    expected.setdefault(CODEX_WINDOWS_WRAPPER_TEXT.strip(), []).append(
+    expected.setdefault(wrapper_text.strip(), []).append(
         "hooks/codex-session-start.cmd"
     )
 
@@ -208,7 +211,17 @@ def validate_link(
     raw_destination: str,
     anchor_cache: dict[Path, set[str]],
     failures: list[str],
+    *,
+    root: Path = REPOSITORY_ROOT,
 ) -> None:
+    root = root.resolve()
+
+    def label(path: Path) -> str:
+        try:
+            return path.relative_to(root).as_posix()
+        except ValueError:
+            return str(path)
+
     destination = link_destination(raw_destination)
     if not destination:
         return
@@ -219,21 +232,21 @@ def validate_link(
 
     decoded_path = unquote(parsed.path)
     if decoded_path:
-        base = REPOSITORY_ROOT if decoded_path.startswith("/") else source.parent
+        base = root if decoded_path.startswith("/") else source.parent
         candidate = (base / decoded_path.lstrip("/")).resolve()
     else:
         candidate = source.resolve()
     try:
-        candidate.relative_to(REPOSITORY_ROOT)
+        candidate.relative_to(root)
     except ValueError:
         failures.append(
-            f"{display_path(source)}:{line_number} link escapes the repository: {destination!r}"
+            f"{label(source)}:{line_number} link escapes the repository: {destination!r}"
         )
         return
     if not candidate.exists():
         failures.append(
-            f"{display_path(source)}:{line_number} has broken repository-relative link "
-            f"{destination!r} (resolved to {display_path(candidate)})"
+            f"{label(source)}:{line_number} has broken repository-relative link "
+            f"{destination!r} (resolved to {label(candidate)})"
         )
         return
 
@@ -242,21 +255,31 @@ def validate_link(
         anchors = anchor_cache.get(candidate)
         if anchors is None:
             failures.append(
-                f"{display_path(source)}:{line_number} cannot validate fragment "
-                f"{fragment!r}; Markdown target {display_path(candidate)} was not indexed"
+                f"{label(source)}:{line_number} cannot validate fragment "
+                f"{fragment!r}; Markdown target {label(candidate)} was not indexed"
             )
         elif fragment not in anchors:
             failures.append(
-                f"{display_path(source)}:{line_number} links to missing Markdown fragment "
-                f"{fragment!r} in {display_path(candidate)}"
+                f"{label(source)}:{line_number} links to missing Markdown fragment "
+                f"{fragment!r} in {label(candidate)}"
             )
 
 
-def check_markdown_links(failures: list[str]) -> int:
+def check_markdown_links(
+    failures: list[str], *, root: Path = REPOSITORY_ROOT
+) -> int:
+    root = root.resolve()
+
+    def label(path: Path) -> str:
+        try:
+            return path.relative_to(root).as_posix()
+        except ValueError:
+            return str(path)
+
     markdown_files = sorted(
         path
-        for path in REPOSITORY_ROOT.rglob("*.md")
-        if ".git" not in path.relative_to(REPOSITORY_ROOT).parts and path.is_file()
+        for path in root.rglob("*.md")
+        if ".git" not in path.relative_to(root).parts and path.is_file()
     )
     searchable_documents: dict[Path, str] = {}
     anchor_cache: dict[Path, set[str]] = {}
@@ -264,7 +287,7 @@ def check_markdown_links(failures: list[str]) -> int:
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
-            failures.append(f"cannot read Markdown file {display_path(path)}: {error}")
+            failures.append(f"cannot read Markdown file {label(path)}: {error}")
             continue
         _, searchable = fenced_blocks_and_masked_text(text)
         searchable_documents[path] = searchable
@@ -274,7 +297,12 @@ def check_markdown_links(failures: list[str]) -> int:
         for line_number, line in enumerate(searchable.splitlines(), start=1):
             for raw_destination in inline_link_destinations(line):
                 validate_link(
-                    path, line_number, raw_destination, anchor_cache, failures
+                    path,
+                    line_number,
+                    raw_destination,
+                    anchor_cache,
+                    failures,
+                    root=root,
                 )
             reference = REFERENCE_LINK.match(mask_inline_code(line))
             if reference and not reference.group(1).startswith("^"):
@@ -284,5 +312,6 @@ def check_markdown_links(failures: list[str]) -> int:
                     reference.group(2) or reference.group(3) or "",
                     anchor_cache,
                     failures,
+                    root=root,
                 )
     return len(markdown_files)
