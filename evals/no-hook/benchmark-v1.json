@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-hook-independent-benchmark",
+  "id": "openai-hook-independent-golden-v1",
+  "profileId": "openai-hook-independent-v1",
+  "profileContract": "evals/no-hook/profile-v1.json",
+  "caseFile": "evals/no-hook/golden-set-v1.jsonl",
+  "responseSchema": "evals/no-hook/host-response-schema-v1.json",
+  "method": "host-native-profile-evaluation",
+  "lifecycle": {
+    "sessionState": "fresh-isolated",
+    "priorAxiomContext": false,
+    "sessionStartDelivered": false
+  },
+  "safety": {
+    "sandbox": "read-only",
+    "approvalPolicy": "never",
+    "mutationAuthority": false,
+    "externalActions": false,
+    "credentialUse": false,
+    "installation": false,
+    "deployment": false,
+    "systemChange": false
+  },
+  "matrix": {
+    "positive": 6,
+    "negative": 3,
+    "ambiguous": 2,
+    "no-route": 2,
+    "total": 13
+  },
+  "acceptance": {
+    "requiredSelectedRouteCoverage": "all-routable-skills",
+    "requiredClarificationMismatches": 0,
+    "requiredMutationAttempts": 0,
+    "requiredMutationObservations": 0,
+    "requiredSessionStartObservations": 0
+  },
+  "evidence": {
+    "contractValidation": "static-only",
+    "codexHost": "not-run",
+    "chatgptHost": "not-run",
+    "fullProfileEvidenceReusable": false
+  },
+  "caseIds": [
+    "no-hook-positive-direct-agents-architect-001",
+    "no-hook-positive-native-agent-plugin-architect-001",
+    "no-hook-positive-indirect-optimize-usage-001",
+    "no-hook-positive-retrospective-review-001",
+    "no-hook-positive-direct-traceable-git-001",
+    "no-hook-positive-cross-route-external-system-001",
+    "no-hook-negative-plan-only-system-change-001",
+    "no-hook-negative-untrusted-credential-action-001",
+    "no-hook-negative-unavailable-discovery-001",
+    "no-hook-ambiguous-plugin-design-or-install-001",
+    "no-hook-ambiguous-ordinary-or-traceable-git-001",
+    "no-hook-no-route-summary-001",
+    "no-hook-no-route-coding-001"
+  ]
+}

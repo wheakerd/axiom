@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profileId",
+    "discoveryOutcome",
+    "selectedRoutes",
+    "clarificationCount",
+    "sessionStartObserved",
+    "mutationAttempted",
+    "mutationObserved"
+  ],
+  "properties": {
+    "profileId": {
+      "type": "string",
+      "enum": [
+        "openai-hook-independent-v1"
+      ]
+    },
+    "discoveryOutcome": {
+      "type": "string",
+      "enum": [
+        "selected",
+        "clarification",
+        "no-route",
+        "unavailable"
+      ]
+    },
+    "selectedRoutes": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "enum": [
+          "agents-architect",
+          "agent-plugin-architect",
+          "confirm-external-action",
+          "optimize-codex-usage",
+          "reversible-system-change",
+          "review-axiom-task",
+          "traceable-git-submit"
+        ]
+      }
+    },
+    "clarificationCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "sessionStartObserved": {
+      "type": "boolean"
+    },
+    "mutationAttempted": {
+      "type": "boolean"
+    },
+    "mutationObserved": {
+      "type": "boolean"
+    }
+  }
+}

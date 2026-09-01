@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-hook-independent-profile",
+  "profileId": "openai-hook-independent-v1",
+  "phase": "behavioral-contract",
+  "status": "contract-only",
+  "motivatingHosts": [
+    {
+      "host": "codex",
+      "executionModes": [
+        "direct-skill-invocation",
+        "host-native-skill-discovery"
+      ]
+    },
+    {
+      "host": "chatgpt",
+      "executionModes": [
+        "direct-skill-invocation",
+        "host-native-skill-discovery"
+      ]
+    }
+  ],
+  "excludedHosts": [
+    {
+      "host": "claude-code",
+      "reason": "The existing Claude Code full profile remains Hook-enabled; profile v1 has no independent Claude Code motivation or evidence."
+    }
+  ],
+  "package": {
+    "model": "deterministic-derived-package",
+    "canonicalSkillRoot": "skills",
+    "editableSkillSourceCount": 1,
+    "derivedBundleStatus": "not-built",
+    "includedRuntimeSurface": "canonical-skills",
+    "excludedRuntimeSurfaces": [
+      "hooks",
+      "full-profile-host-wrappers"
+    ]
+  },
+  "skills": [
+    {
+      "id": "using-axiom",
+      "role": "router",
+      "support": "supported",
+      "delivery": "explicit-host-discovery-only"
+    },
+    {
+      "id": "agents-architect",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    },
+    {
+      "id": "agent-plugin-architect",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    },
+    {
+      "id": "optimize-codex-usage",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    },
+    {
+      "id": "review-axiom-task",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    },
+    {
+      "id": "confirm-external-action",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    },
+    {
+      "id": "traceable-git-submit",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    },
+    {
+      "id": "reversible-system-change",
+      "role": "workflow",
+      "support": "supported",
+      "delivery": "host-native-discovery"
+    }
+  ],
+  "discovery": {
+    "sessionStartRequired": false,
+    "sessionStartDelivery": "absent",
+    "usingAxiomDelivery": "explicit-only",
+    "automaticAxiomRoutingGate": false,
+    "workflowSelectionModes": [
+      "direct-skill-invocation",
+      "host-native-metadata",
+      "host-native-implicit-intent"
+    ],
+    "unsupportedDiscoveryResult": "unavailable-or-no-route",
+    "supportedSessionState": "fresh-isolated",
+    "unsupportedLifecycleClaims": [
+      "resume",
+      "clear",
+      "post-compaction"
+    ]
+  },
+  "authority": {
+    "routingGrantsAuthority": false,
+    "mutationWorkflowPolicy": "existing-skill-authorization-and-phase-gates-only",
+    "forbiddenAuthorityExpansion": [
+      "edit",
+      "git",
+      "credential",
+      "external-action",
+      "installation",
+      "deployment",
+      "system-change",
+      "publication"
+    ]
+  },
+  "identity": {
+    "pluginVersionBinding": "canonical-base-package",
+    "repositoryPolicyRevisionBinding": "repository-governance",
+    "runtimeContractDigestModel": "profile-scoped-derived-runtime",
+    "profileRuntimeDigestStatus": "deferred-until-derived-bundle",
+    "fullProfileDigestReusable": false
+  },
+  "evidence": {
+    "profileBindingRequired": true,
+    "fullProfileEvidenceReusable": false,
+    "staticAndHostEvidenceSeparate": true,
+    "currentHostClaim": "none"
+  }
+}

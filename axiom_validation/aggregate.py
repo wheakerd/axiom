@@ -39,6 +39,7 @@ from .manifests import (
     check_shared_source_roots,
     load_json,
 )
+from .no_hook_profile import check_no_hook_profile
 from .release_policy import check_release_signature_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
@@ -201,6 +202,7 @@ def main() -> int:
     routing_eval_case_count, routing_benchmark_case_count, routing_result_count = (
         run_policy("routing-evals", check_routing_evaluations, failures)
     )
+    run_policy("no-hook-profile", check_no_hook_profile, failures)
     review_sequence_count, review_checkpoint_count = run_policy(
         "review-evals", check_review_sequence_contracts, failures
     )

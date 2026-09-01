@@ -20,6 +20,9 @@ replace them and it is not installed runtime behavior.
   prose-free contract. `host-response-schema-v3.json` keeps the same five
   semantic fields and adds only the current route while retaining two routes
   maximum.
+- [`no-hook/profile-v1.json`](no-hook/profile-v1.json) defines the separate contract-only
+  `openai-hook-independent-v1` profile, its 13-case Golden Set, and its
+  profile-bound response shape. It does not inherit full-profile evidence.
 - `results/v0.7.7/` keeps Codex and Claude Code outcomes in separately labeled,
   append-only run records bound to immutable Axiom source.
 - `results/v0.7.8/codex/linux-candidate-1.json` records the terminal `UNKNOWN`
@@ -34,6 +37,37 @@ replace them and it is not installed runtime behavior.
 All evaluation prompts set `mutationAuthorized` to `false`. A route-positive
 request tests route selection only; it never authorizes a commit, push,
 deployment, deletion, message, purchase, credential use, or other effect.
+
+## Hook-independent profile contract
+
+The `openai-hook-independent-v1` profile is a compatibility contract, not an
+installed bundle, official-directory submission, or host observation.
+[`profile-v1.json`](no-hook/profile-v1.json) is its canonical owner for profile
+identity, the supported canonical Skill inventory, discovery, package,
+authority, and evidence boundaries. The adjacent
+[`golden-set-v1.jsonl`](no-hook/golden-set-v1.jsonl),
+[`benchmark-v1.json`](no-hook/benchmark-v1.json), and
+[`host-response-schema-v1.json`](no-hook/host-response-schema-v1.json) own the
+fixed cases, fresh-session method, safety envelope, and profile-bound response.
+
+The profile does not use or require `SessionStart`. `using-axiom` remains in
+the inventory for explicit host discovery only; it is never injected as an
+automatic routing gate. Individual workflows rely on direct Skill invocation
+or host-native Skill discovery. A missing discovery facility produces
+`unavailable` or `no-route`, never a fabricated selection. Only fresh,
+isolated sessions are in the v1 evidence boundary; resume, clear, and
+post-compaction behavior have no support claim.
+
+Route selection grants no edit, Git, credential, external-action,
+installation, deployment, system-change, or publication authority. All
+effect-capable workflows retain their own authorization and phase gates.
+Static validation is not Codex or ChatGPT execution, both of which remain
+`NOT-RUN`; full-profile Codex or Claude Code evidence cannot cross this profile
+boundary merely because the profiles share canonical Skill bytes.
+
+The derived bundle and its profile-scoped runtime digest remain unimplemented.
+They require a separately approved phase and must be generated from the single
+canonical `skills/` source.
 
 ## Contract changes
 
