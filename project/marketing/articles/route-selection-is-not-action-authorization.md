@@ -223,6 +223,6 @@ material effect before execution, and demand evidence from the layer that owns
 the outcome.
 
 If you want to evaluate Axiom's implementation, use its read-only
-[field-validation protocol](../../field-validation.md): inspect the hook, test
+[field-validation protocol](../../../docs/field-validation.md): inspect the hook, test
 one routed request and one no-route control, and report the observed evidence,
 including failures.

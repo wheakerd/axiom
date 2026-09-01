@@ -17,7 +17,7 @@ silently broaden what the user authorized.
 | `hooks/claude-hooks.json` | Claude Code-specific session and compaction hooks |
 | `README.md` | Product landing page and safe-start entry point |
 | `docs/README.md` and `docs/` | Task navigation, user guidance, concepts, references, and maintainer policy |
-| `project/` | Project operations after their staged migration from `docs/marketing/` |
+| `project/` | Project operations: marketing, distribution, channel status, launch plans, and editorial plans |
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
 | `evals/` | Versioned black-box routing contracts and separately labeled host observations |
 | `evals/context-budget/` | Versioned always-loaded routing proxies, lifecycle slots, and reduction evidence |

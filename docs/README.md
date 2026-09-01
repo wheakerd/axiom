@@ -33,9 +33,9 @@ security concerns through the process in [SECURITY.md](../SECURITY.md).
 - [Evidence](../evidence/) and [evaluation results](../evals/) retain
   machine-readable facts and historical observations. A historical record is
   not a statement about the current host.
-- [Marketing and distribution material](marketing/) is project-operations
-  content. It remains in its current location until its dedicated migration
-  phase and is not core user guidance.
+
+Project-operation material is intentionally outside this current user
+documentation tree under `project/`; it is not current product guidance.
 
 ## Current Structure And Migration
 
@@ -48,7 +48,8 @@ The current repository still has transitional overlap:
   entry for historical links;
 - `docs/compatibility.md` owns the concise current support contract and links
   to preserved current and historical evidence;
-- `docs/marketing/` sits beside current user documentation.
+- `project/` separately owns marketing, distribution, channel-status, launch,
+  and editorial plans.
 
 The accepted target separates current user guides, concepts, references,
 maintainer policy, historical evidence, and project operations. Each migration

@@ -62,7 +62,8 @@ The documentation migration began with overlapping responsibilities:
 - `docs/compatibility.md` owns the concise current support contract and links
   to historical records without reproducing their run narratives;
 - `docs/releases/` contains version notes;
-- `docs/marketing/` contains project-operation plans beside current guidance;
+- `project/README.md` and `project/marketing/` own project-operation plans and
+  dated channel status outside current guidance;
 - `evidence/` and `evals/results/` retain machine records and observations.
 
 During migration, [the documentation index](../README.md) must describe these
@@ -86,9 +87,8 @@ docs/
 |-- reference/
 `-- maintainers/
 project/
-|-- marketing/
-|-- distribution/
-`-- archive/
+|-- README.md
+`-- marketing/
 evidence/
 evals/
 ```
@@ -111,7 +111,7 @@ Equivalent, simpler groupings are acceptable when ownership remains clear.
 | Exceptional migration or release detail | Version notes when warranted | Current; responsibility clarification is pending |
 | Final remote publication facts | Immutable post-publication Release evidence | Current; responsibility clarification is pending |
 | Repository governance | Dated governance evidence and maintainer reference | Current |
-| Marketing and channel status | `project/**` with absolute verification dates | Migration from `docs/marketing/` is pending |
+| Marketing, distribution, channel status, launch plans, and editorial plans | `project/README.md` and `project/marketing/**` with absolute verification dates | Current and outside user guidance |
 
 Machine-derived facts should use bounded generated regions or deterministic
 checks where practical. Human prose may explain their meaning but must not

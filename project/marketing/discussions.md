@@ -25,7 +25,7 @@ Published: [Discussion #18](https://github.com/wheakerd/axiom/discussions/18)
 
 Axiom is in public beta, and repository checks are not a substitute for an
 installed-session observation. Please try the safe
-[field-validation protocol](../field-validation.md) in a fresh Codex or Claude
+[field-validation protocol](../../docs/field-validation.md) in a fresh Codex or Claude
 Code session:
 
 1. record the host, exact host version, operating system, Axiom version or

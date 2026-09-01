@@ -227,5 +227,5 @@ claim, verify external effects at their system of record, preserve partial
 state, and stop before an uncertain retry creates a second effect.
 
 To inspect Axiom's version of this discipline, follow the read-only
-[field-validation protocol](../../field-validation.md). Report the host,
+[field-validation protocol](../../../docs/field-validation.md). Report the host,
 version, routed request, no-route control, visible evidence, and limitations.
