@@ -13,6 +13,7 @@ from .action_graph import (
     check_unit_test_workflow_contract,
 )
 from .cases.action_graph import check_pull_request_validation_fixtures
+from .cases.documentation import check_documentation_negative_fixtures
 from .cases.external_action import check_external_action_scenarios
 from .cases.git_contracts import check_traceable_security_contracts
 from .cases.hooks import check_hook_lifecycle_fixtures
@@ -23,6 +24,7 @@ from .cases.rollback import check_reversible_safety_scenarios
 from .cases.routing import ROUTING_SCENARIOS
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
 from .context_budget import check_context_budget
+from .documentation import check_documentation
 from .hooks import (
     check_codex_windows_hook_security,
     check_declared_hook_paths,
@@ -37,7 +39,6 @@ from .manifests import (
     check_shared_source_roots,
     load_json,
 )
-from .markdown import check_documented_hook_commands, check_markdown_links
 from .release_policy import check_release_signature_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
@@ -131,7 +132,6 @@ def main() -> int:
         check_declared_hook_paths,
         check_exact_hook_shapes,
         check_codex_windows_hook_security,
-        check_documented_hook_commands,
     ):
         run_policy(
             "hooks",
@@ -213,7 +213,18 @@ def main() -> int:
     rollback_scenarios = run_policy(
         "rollback", check_reversible_safety_scenarios, failures
     )
-    markdown_count = run_policy("markdown", check_markdown_links, failures)
+    documentation_report = run_policy(
+        "documentation",
+        lambda domain_failures: check_documentation(
+            domain_failures, include_canonical_owners=False
+        ),
+        failures,
+    )
+    documentation_fixture_count = run_policy(
+        "documentation",
+        check_documentation_negative_fixtures,
+        failures,
+    )
 
     conventional_hook = REPOSITORY_ROOT / "hooks" / "hooks.json"
     if conventional_hook.exists():
@@ -231,7 +242,9 @@ def main() -> int:
     print(
         "Publication validation passed: "
         f"{len(REQUIRED_PUBLIC_FILES)} required files, {len(JSON_FILES)} JSON files, "
-        f"{markdown_count} Markdown files, {len(ROUTING_SCENARIOS)} offline route contract fixtures, "
+        f"{documentation_report.markdown_count} Markdown files, "
+        f"{documentation_fixture_count} documentation negative fixtures, "
+        f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
         f"{routing_eval_case_count} black-box routing cases, "
         f"{routing_benchmark_case_count} fixed host benchmark cases, "
         f"{routing_result_count} labeled host result records, "

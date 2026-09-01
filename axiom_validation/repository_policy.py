@@ -63,6 +63,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/results/v0.7.7/codex/linux-recovery-2.json",
     "evals/results/v0.7.7/claude-code/linux.json",
     "scripts/check-compatibility-evidence.py",
+    "scripts/check-documentation.py",
     "scripts/check-runtime-identity.py",
     "scripts/check-release-evidence.py",
     "scripts/create-release-tag.py",
@@ -101,16 +102,6 @@ EXPECTED_DIRECT_SKILLS = (
     "review-axiom-task",
     "traceable-git-submit",
     "using-axiom",
-)
-EXPECTED_README_SKILLS = (
-    "using-axiom",
-    "agents-architect",
-    "agent-plugin-architect",
-    "optimize-codex-usage",
-    "review-axiom-task",
-    "confirm-external-action",
-    "traceable-git-submit",
-    "reversible-system-change",
 )
 INSTRUCTION_MAX_BYTES = 8192
 AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
@@ -407,17 +398,6 @@ def check_skill_contracts(failures: list[str]) -> None:
         failures.append(
             "using-axiom route list is not the exact direct task-skill set: "
             + ", ".join(declared_routes)
-        )
-
-    readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
-    shared_section = readme.split("### Shared skills", 1)[-1].split("\n### ", 1)[0]
-    readme_skills = tuple(
-        re.findall(r"^- `([a-z0-9-]+)`,", shared_section, re.MULTILINE)
-    )
-    if readme_skills != EXPECTED_README_SKILLS:
-        failures.append(
-            "README Shared skills list is not the expected parseable ordered set: "
-            + ", ".join(readme_skills)
         )
 
     architect_root = REPOSITORY_ROOT / "skills" / "agent-plugin-architect"
