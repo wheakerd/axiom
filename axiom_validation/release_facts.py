@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -33,10 +32,7 @@ def discover_fact_surface_versions(
     current_version: str = RELEASE_VERSION,
 ) -> dict[str, str]:
     """Discover current and already-managed historical documentation surfaces."""
-    surfaces = {
-        "README.md": current_version,
-        f"docs/releases/v{current_version}.md": current_version,
-    }
+    surfaces = {f"docs/releases/v{current_version}.md": current_version}
     release_root = root / "docs" / "releases"
     for path in sorted(release_root.glob("v*.md")):
         try:
@@ -63,11 +59,7 @@ def facts_record_path(version: str) -> Path:
 
 
 def facts_markers(relative_path: str) -> tuple[str, str]:
-    marker = (
-        "release-facts:current-context-budget"
-        if relative_path == "README.md"
-        else f"release-facts:v{FACTS_SURFACE_VERSIONS[relative_path]}-context-budget"
-    )
+    marker = f"release-facts:v{FACTS_SURFACE_VERSIONS[relative_path]}-context-budget"
     return f"<!-- {marker}:start -->", f"<!-- {marker}:end -->"
 
 
@@ -360,7 +352,7 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
     """Render exact static facts while preserving proxy and observation labels."""
     version = document["targetRelease"]["version"]
     record_relative = facts_record_relative(version)
-    link = record_relative if relative_path == "README.md" else f"../../{record_relative}"
+    link = f"../../{record_relative}"
     baseline = document["baseline"]["metrics"]
     candidate = document["candidate"]["metrics"]
     comparison = document["comparison"]
@@ -402,16 +394,7 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
 def rendered_release_block(relative_path: str, document: dict[str, Any]) -> str:
     start_marker, end_marker = facts_markers(relative_path)
     rendered = render_release_facts(relative_path, document)
-    body = (
-        textwrap.fill(
-            rendered,
-            width=88,
-            break_long_words=False,
-            break_on_hyphens=False,
-        )
-        if relative_path == "README.md"
-        else rendered
-    )
+    body = rendered
     return (
         f"{start_marker}\n"
         f"{body}\n"

@@ -53,9 +53,12 @@ about an external platform or channel must include an absolute
 
 The documentation migration began with overlapping responsibilities:
 
-- `README.md` owns the public introduction but also contains detailed setup,
-  Hook, lifecycle, troubleshooting, release, and evidence material;
-- `docs/getting-started.md` repeats part of the user lifecycle;
+- `README.md` owns the bounded public introduction and safe-start summary;
+- `docs/guides/` owns installation, first use, update, removal, and
+  troubleshooting;
+- `docs/reference/hooks.md` renders the canonical Hook declarations and
+  wrapper, while `docs/getting-started.md` is a compatibility entry for
+  historical links;
 - `docs/compatibility.md` combines the current support contract with historical
   runs and candidate investigations;
 - `docs/releases/` contains version notes;
@@ -96,10 +99,10 @@ Equivalent, simpler groupings are acceptable when ownership remains clear.
 
 | Fact | Canonical owner | Migration status |
 | --- | --- | --- |
-| Product introduction and safe first step | `README.md` | Current; README reduction is pending |
+| Product introduction and safe first step | `README.md` | Current and within the documented size budget |
 | Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; README keeps a validated rendering |
-| Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; a public reference rendering is pending |
-| Installation, first use, update, removal, troubleshooting | One canonical guide or compact guide set | Transitional overlap with README and `docs/getting-started.md` |
+| Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
+| Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Synchronized plugin manifests | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current |
 | Current compatibility boundary | Current release-status evidence with a concise rendered reference | Compatibility reduction is pending |
@@ -167,7 +170,7 @@ Every documentation change must, at minimum:
 - preserve the parseable README `### Shared skills` inventory until its owning
   validator is migrated atomically;
 - validate the public Hook reference against checked-in declarations and
-  wrappers once that reference exists; and
+  wrappers; and
 - keep historical and project-plan documents out of current user navigation.
 
 The repository will add a deterministic, offline where practical,

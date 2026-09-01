@@ -9,7 +9,9 @@ describe the repository as it exists now, not the completed target layout.
 
 | I want to | Start here | Audience |
 | --- | --- | --- |
-| Install Axiom and try one routed request | [Getting Started](getting-started.md) | Users |
+| Install Axiom and try one routed request | [Getting Started](guides/getting-started.md) | Users |
+| Update, disable, remove, or troubleshoot Axiom | [Managing an Installation](guides/managing-installation.md) | Users |
+| Inspect exact Hook commands | [Hook Reference](reference/hooks.md) | Users and auditors |
 | Understand what Axiom does | [Architecture](architecture.md) | Users and reviewers |
 | Review permissions and trust boundaries | [Trust Model](trust-model.md) | Users and security reviewers |
 | Check current host support | [Compatibility](compatibility.md) | Users and auditors |
@@ -39,10 +41,11 @@ security concerns through the process in [SECURITY.md](../SECURITY.md).
 
 The current repository still has transitional overlap:
 
-- `README.md` contains the product landing page plus detailed procedures and
-  release history;
-- `docs/getting-started.md` repeats part of the installation and Hook review
-  path;
+- `README.md` is the bounded product landing page;
+- `docs/guides/` owns first use and the host-managed installation lifecycle;
+- `docs/reference/hooks.md` renders the canonical Hook declarations and
+  wrapper, while `docs/getting-started.md` remains only as a compatibility
+  entry for historical links;
 - `docs/compatibility.md` combines current support with historical evidence;
 - `docs/marketing/` sits beside current user documentation.
 

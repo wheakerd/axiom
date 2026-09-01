@@ -58,10 +58,10 @@ session. To produce it:
 
 1. Record the host and version plus the Axiom version or commit.
 2. Open `/hooks` and compare every installed handler with the exact checked-in
-   command in the [README](../README.md#inspect-the-hooks).
+   command in the [Hook Reference](reference/hooks.md).
 3. Start or reload the session.
 4. Try the routed request and non-routing control in
-   [Getting Started](getting-started.md), plus the explicit usage-optimization,
+   [Getting Started](guides/getting-started.md), plus the explicit usage-optimization,
    packaged-plugin architecture, task-review, and external-action requests in
    [Examples](examples.md) when validating those routes.
 5. For Claude Code compaction coverage, observe manual and automatic compaction

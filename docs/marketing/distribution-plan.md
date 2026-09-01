@@ -25,7 +25,7 @@ on that date. A prepared submission is not an authorized submission.
   /reload-plugins
   ```
 
-- Hook review and lifecycle details: [README](../../README.md#60-second-start).
+- Safe start and Hook review entry: [README](../../README.md#start-safely).
 - Evidence status: public beta; package and route contracts are checked in and
   statically validated for identified trees, while fresh host and independent
   results must be reported separately.

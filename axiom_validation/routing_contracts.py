@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-from .context import README_PATH, REPOSITORY_ROOT, display_path
+from .context import REPOSITORY_ROOT, display_path
 from .repository_policy import parse_skill_frontmatter
 from .route_catalog import load_route_catalog
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document
@@ -28,7 +28,8 @@ ROUTE_SOURCE_ANCHORS = {
     "traceable-git-submit": ("checkpoint", "push"),
     "reversible-system-change": ("plan", "persistent", "rollback"),
 }
-README_LIFECYCLE_COMMANDS = (
+LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
+LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
     "/plugin marketplace update axiom",
     "/plugin update axiom@axiom",
@@ -850,12 +851,17 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
     return len(contracts)
 
 
-def check_readme_lifecycle_commands(failures: list[str]) -> None:
-    readme = README_PATH.read_text(encoding="utf-8")
-    for command in README_LIFECYCLE_COMMANDS:
-        if command not in readme:
+def check_lifecycle_guide_commands(failures: list[str]) -> None:
+    guide_path = REPOSITORY_ROOT / LIFECYCLE_GUIDE_RELATIVE
+    try:
+        guide = guide_path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {LIFECYCLE_GUIDE_RELATIVE}: {error}")
+        return
+    for command in LIFECYCLE_COMMANDS:
+        if command not in guide:
             failures.append(
-                f"README lifecycle documentation is missing exact command {command!r}"
+                f"{LIFECYCLE_GUIDE_RELATIVE} is missing exact lifecycle command {command!r}"
             )
 
 

@@ -19,7 +19,12 @@ from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, pars
 _BASE_REQUIRED_PUBLIC_FILES = (
     "README.md",
     ".github/CODEOWNERS",
+    "docs/README.md",
     "docs/getting-started.md",
+    "docs/guides/getting-started.md",
+    "docs/guides/managing-installation.md",
+    "docs/reference/hooks.md",
+    "docs/maintainers/documentation-policy.md",
     "docs/architecture.md",
     "docs/examples.md",
     "docs/trust-model.md",
