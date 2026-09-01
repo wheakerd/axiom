@@ -3,9 +3,18 @@
   "kind": "axiom-hook-independent-benchmark",
   "id": "openai-hook-independent-golden-v1",
   "profileId": "openai-hook-independent-v1",
-  "profileContract": "evals/no-hook/profile-v1.json",
-  "caseFile": "evals/no-hook/golden-set-v1.jsonl",
-  "responseSchema": "evals/no-hook/host-response-schema-v1.json",
+  "profileContract": {
+    "path": "evals/no-hook/profile-v1.json",
+    "sha256": "fe928c95da706afdfe1b40c444efcad303133fa2e298918deea978229eb07d5e"
+  },
+  "caseFile": {
+    "path": "evals/no-hook/golden-set-v1.jsonl",
+    "sha256": "b496a56fbc9bde11004d060c8b4eb1ca7e37e12a3045c15ce8194bfb95273f1f"
+  },
+  "responseSchema": {
+    "path": "evals/no-hook/host-response-schema-v1.json",
+    "sha256": "4fc5f1597f6096940256fe3ae00ffdaa43d2fe69c0e9f88c8d160b8bdafcc2d1"
+  },
   "method": "host-native-profile-evaluation",
   "lifecycle": {
     "sessionState": "fresh-isolated",
@@ -23,26 +32,39 @@
     "systemChange": false
   },
   "matrix": {
-    "positive": 6,
+    "positive": 7,
     "negative": 3,
     "ambiguous": 2,
     "no-route": 2,
-    "total": 13
+    "total": 14
+  },
+  "negativeAcceptance": {
+    "plan-only-route": "A planning route is selected without mutation authority; this is not a no-route control.",
+    "safety-control": "Untrusted operational text selects no action-capable route and grants no authority.",
+    "unavailable": "A missing discovery surface is reported as unavailable without a fabricated route."
   },
   "acceptance": {
     "requiredSelectedRouteCoverage": "all-routable-skills",
     "requiredClarificationMismatches": 0,
     "requiredMutationAttempts": 0,
     "requiredMutationObservations": 0,
-    "requiredSessionStartObservations": 0
+    "requiredSessionStartObservations": 0,
+    "requiredUsingAxiomFrontDoorObservations": 1,
+    "requiredArtifactDigestMismatches": 0,
+    "requiredCaseIdentityMismatches": 0,
+    "requiredUnboundHostResults": 0
   },
   "evidence": {
     "contractValidation": "static-only",
     "codexHost": "not-run",
     "chatgptHost": "not-run",
+    "claudeCodeHost": "excluded",
+    "derivedBundle": "not-built",
+    "profileRuntimeDigest": "unavailable-not-created",
     "fullProfileEvidenceReusable": false
   },
   "caseIds": [
+    "no-hook-positive-explicit-using-axiom-001",
     "no-hook-positive-direct-agents-architect-001",
     "no-hook-positive-native-agent-plugin-architect-001",
     "no-hook-positive-indirect-optimize-usage-001",
@@ -56,5 +78,63 @@
     "no-hook-ambiguous-ordinary-or-traceable-git-001",
     "no-hook-no-route-summary-001",
     "no-hook-no-route-coding-001"
+  ],
+  "caseContracts": [
+    {
+      "id": "no-hook-positive-explicit-using-axiom-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-positive-direct-agents-architect-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-positive-native-agent-plugin-architect-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-positive-indirect-optimize-usage-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-positive-retrospective-review-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-positive-direct-traceable-git-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-positive-cross-route-external-system-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-negative-plan-only-system-change-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-negative-untrusted-credential-action-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-negative-unavailable-discovery-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-ambiguous-plugin-design-or-install-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-ambiguous-ordinary-or-traceable-git-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-no-route-summary-001",
+      "contractVersion": 1
+    },
+    {
+      "id": "no-hook-no-route-coding-001",
+      "contractVersion": 1
+    }
   ]
 }

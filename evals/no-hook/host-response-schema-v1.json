@@ -3,9 +3,11 @@
   "additionalProperties": false,
   "required": [
     "profileId",
+    "contractBindings",
     "discoveryOutcome",
     "selectedRoutes",
     "clarificationCount",
+    "usingAxiomFrontDoorObserved",
     "sessionStartObserved",
     "mutationAttempted",
     "mutationObserved"
@@ -16,6 +18,55 @@
       "enum": [
         "openai-hook-independent-v1"
       ]
+    },
+    "contractBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileContractSha256",
+        "goldenSetSha256",
+        "responseSchemaSha256",
+        "caseId",
+        "contractVersion"
+      ],
+      "properties": {
+        "profileContractSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "goldenSetSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "responseSchemaSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "caseId": {
+          "type": "string",
+          "enum": [
+            "no-hook-positive-explicit-using-axiom-001",
+            "no-hook-positive-direct-agents-architect-001",
+            "no-hook-positive-native-agent-plugin-architect-001",
+            "no-hook-positive-indirect-optimize-usage-001",
+            "no-hook-positive-retrospective-review-001",
+            "no-hook-positive-direct-traceable-git-001",
+            "no-hook-positive-cross-route-external-system-001",
+            "no-hook-negative-plan-only-system-change-001",
+            "no-hook-negative-untrusted-credential-action-001",
+            "no-hook-negative-unavailable-discovery-001",
+            "no-hook-ambiguous-plugin-design-or-install-001",
+            "no-hook-ambiguous-ordinary-or-traceable-git-001",
+            "no-hook-no-route-summary-001",
+            "no-hook-no-route-coding-001"
+          ]
+        },
+        "contractVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        }
+      }
     },
     "discoveryOutcome": {
       "type": "string",
@@ -33,6 +84,7 @@
       "items": {
         "type": "string",
         "enum": [
+          "using-axiom",
           "agents-architect",
           "agent-plugin-architect",
           "confirm-external-action",
@@ -47,6 +99,9 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 1
+    },
+    "usingAxiomFrontDoorObserved": {
+      "type": "boolean"
     },
     "sessionStartObserved": {
       "type": "boolean"

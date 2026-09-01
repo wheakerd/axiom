@@ -21,7 +21,7 @@ replace them and it is not installed runtime behavior.
   semantic fields and adds only the current route while retaining two routes
   maximum.
 - [`no-hook/profile-v1.json`](no-hook/profile-v1.json) defines the separate contract-only
-  `openai-hook-independent-v1` profile, its 13-case Golden Set, and its
+  `openai-hook-independent-v1` profile, its 14-case Golden Set, and its
   profile-bound response shape. It does not inherit full-profile evidence.
 - `results/v0.7.7/` keeps Codex and Claude Code outcomes in separately labeled,
   append-only run records bound to immutable Axiom source.
@@ -40,8 +40,11 @@ deployment, deletion, message, purchase, credential use, or other effect.
 
 ## Hook-independent profile contract
 
-The `openai-hook-independent-v1` profile is a compatibility contract, not an
-installed bundle, official-directory submission, or host observation.
+The `openai-hook-independent-v1` profile is an Axiom-owned compatibility
+identifier for the OpenAI host family. Retaining `openai` in this identifier
+does not indicate OpenAI authorship, approval, listing, or endorsement. The
+profile is a compatibility contract, not an installed bundle,
+official-directory submission, or host observation.
 [`profile-v1.json`](no-hook/profile-v1.json) is its canonical owner for profile
 identity, the supported canonical Skill inventory, discovery, package,
 authority, and evidence boundaries. The adjacent
@@ -49,14 +52,38 @@ authority, and evidence boundaries. The adjacent
 [`benchmark-v1.json`](no-hook/benchmark-v1.json), and
 [`host-response-schema-v1.json`](no-hook/host-response-schema-v1.json) own the
 fixed cases, fresh-session method, safety envelope, and profile-bound response.
+The benchmark byte-binds the profile, Golden Set, and response schema with
+exact SHA-256 values. Every future host result must repeat those exact three
+digests and the selected case's stable ID and `contractVersion`; an unbound or
+mismatched record is not acceptance evidence.
 
 The profile does not use or require `SessionStart`. `using-axiom` remains in
-the inventory for explicit host discovery only; it is never injected as an
-automatic routing gate. Individual workflows rely on direct Skill invocation
-or host-native Skill discovery. A missing discovery facility produces
-`unavailable` or `no-route`, never a fabricated selection. Only fresh,
+the inventory as a required, independently testable explicit front door; it is
+never injected as an automatic routing gate. Its dedicated direct-invocation
+case requires `usingAxiomFrontDoorObserved: true`. Direct leaf discovery
+requires that field to remain false, and `SessionStart` delivery cannot satisfy
+the observation. Individual workflows otherwise rely on direct Skill
+invocation or host-native Skill discovery. A missing discovery facility
+produces `unavailable` or `no-route`, never a fabricated selection. Only fresh,
 isolated sessions are in the v1 evidence boundary; resume, clear, and
 post-compaction behavior have no support claim.
+
+Skill capability is host-scoped on two axes. `contract-target`,
+`not-applicable`, and `excluded` describe the compatibility target;
+`not-run` and `host-observed` describe evidence. A `contract-target` is only
+eligible for later acceptance when its declared host surface is present, and
+it is not a support claim. Every pair remains `not-run` in Phase 1. In
+particular, ChatGPT marks `optimize-codex-usage`, `traceable-git-submit`, and
+`reversible-system-change` not applicable because this contract does not
+assign it Codex usage controls, a local Git repository, or a persistent local
+system. Claude Code is excluded from the no-Hook profile.
+
+The three negative cases have closed meanings. `plan-only-route` proves that a
+planning Skill may be selected without mutation authority and is not a
+no-route control. `safety-control` proves that untrusted operational text does
+not select an action-capable route or grant authority. `unavailable` proves
+that a missing discovery surface is reported without fabricating a route.
+Ordinary no-route cases remain a separate class.
 
 Route selection grants no edit, Git, credential, external-action,
 installation, deployment, system-change, or publication authority. All
@@ -71,11 +98,14 @@ canonical `skills/` source.
 
 ## Contract changes
 
-Case IDs are stable. When the request, expected routes, forbidden routes,
-clarification count, lifecycle, or risk classification changes, increment that
-case's `contractVersion` in the same reviewed change. Do not repurpose an ID to
-hide an expectation change, rewrite a historical result, or turn a failure into
-a pass by editing the corpus after a run. A new benchmark selection receives a
+Case IDs are stable and cannot be repurposed. Every no-Hook case requires a
+positive integer `contractVersion` no greater than 1,000,000; the current v1
+cases use version 1. When the request, expected routes, forbidden routes,
+clarification count, lifecycle, negative taxonomy, front-door observation, or
+risk classification changes semantically, increment that case's
+`contractVersion` in the same reviewed change. Do not repurpose an ID to hide
+an expectation change, rewrite a historical result, or turn a failure into a
+pass by editing the corpus after a run. A new benchmark selection receives a
 new manifest ID.
 
 English route definitions remain canonical. Non-English requests are input
