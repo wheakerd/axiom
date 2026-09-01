@@ -32,8 +32,7 @@ from axiom_validation.route_catalog import (
 
 
 class ReleaseFactTests(unittest.TestCase):
-    def test_current_readme_and_historical_release_note_follow_owned_records(self):
-        self.assertEqual(RELEASE_VERSION, FACTS_SURFACE_VERSIONS["README.md"])
+    def test_current_and_historical_release_notes_follow_owned_records(self):
         self.assertEqual(
             RELEASE_VERSION,
             FACTS_SURFACE_VERSIONS[f"docs/releases/v{RELEASE_VERSION}.md"],
@@ -113,7 +112,6 @@ class ReleaseFactTests(unittest.TestCase):
             root = Path(directory)
             release_root = root / "docs" / "releases"
             release_root.mkdir(parents=True)
-            (root / "README.md").write_text("# Fixture\n", encoding="utf-8")
             (release_root / "v0.8.8.md").write_text("current\n", encoding="utf-8")
             (release_root / "v0.8.7.md").write_text(
                 "<!-- release-facts:v0.8.7-context-budget:start -->\n",
@@ -123,7 +121,6 @@ class ReleaseFactTests(unittest.TestCase):
             surfaces = discover_fact_surface_versions(root, "0.8.8")
         self.assertEqual(
             {
-                "README.md": "0.8.8",
                 "docs/releases/v0.8.8.md": "0.8.8",
                 "docs/releases/v0.8.7.md": "0.8.7",
             },

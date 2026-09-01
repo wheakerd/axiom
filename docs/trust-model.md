@@ -26,7 +26,7 @@ authorize an action.
 Plugin hooks execute in a host session. Review them before trusting them.
 Axiom's checked-in handlers use the host-provided plugin root, print a loading
 message, and read `skills/using-axiom/SKILL.md`. The exact commands appear in
-[README: Inspect The Hooks](../README.md#inspect-the-hooks).
+the [Hook Reference](reference/hooks.md).
 
 The command surface is deliberately small: POSIX handlers use `printf` or
 `echo` plus `cat`; the Codex Windows handler invokes a fixed wrapper below the
@@ -157,8 +157,9 @@ third-party and local marketplace auto-update setting is disabled by default,
 but a user or administrator can enable it. The running session keeps its
 already-loaded version until reload or the next launch.
 
-Use [README: Updating](../README.md#updating) for manual refresh and auto-update
-details, or [README: Disabling Or Removing](../README.md#disabling-or-removing)
+Use [Managing an Installation](guides/managing-installation.md#updating) for
+manual refresh and auto-update details, or
+[Disabling Or Removing](guides/managing-installation.md#disabling-or-removing)
 to stop loading Axiom through the host. After any installed snapshot changes,
 start or reload the session and review the installed hook again. A previously
 trusted hook does not make a changed definition automatically trustworthy, and
@@ -171,5 +172,5 @@ host, incorrect credential configuration, unsafe user instruction, or external
 service failure. It does not make an unreviewed installed package trustworthy,
 and a no-route result does not certify that an ordinary task is harmless.
 
-For a bounded first-install check, follow [Getting Started](getting-started.md).
+For a bounded first-install check, follow [Getting Started](guides/getting-started.md).
 For version and host evidence, see [Compatibility](compatibility.md).

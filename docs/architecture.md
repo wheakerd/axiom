@@ -61,8 +61,8 @@ context. Axiom therefore uses that one post-compaction path and declares no
 `PreCompact` handler; ordinary successful stdout from `PreCompact` is not a
 context-injection path.
 
-The exact commands are published for independent review in
-[README: Inspect The Hooks](../README.md#inspect-the-hooks). Each invocation is
+The exact commands are published for independent review in the
+[Hook Reference](reference/hooks.md). Each invocation is
 a bounded foreground command. No hook writes a file, contacts a network
 service, launches background work, or performs an update.
 
@@ -174,7 +174,8 @@ refresh a marketplace and update installed plugins on disk after startup when
 auto-update is enabled. The running Claude Code session keeps the version it
 loaded at launch until plugins are reloaded or a new session starts. In every
 case, review any changed hook before trusting the new snapshot. See
-[README: Updating](../README.md#updating) for the host-specific lifecycle.
+[Managing an Installation](guides/managing-installation.md#updating) for the
+host-specific lifecycle.
 
 For the checked-in support boundary and evidence categories, see
 [Compatibility](compatibility.md).

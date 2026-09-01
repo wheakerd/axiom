@@ -1,4 +1,4 @@
-"""Markdown parsing, hook-snippet, and repository-link policy."""
+"""Markdown parsing, Hook-reference, and repository-link policy."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from html import unescape
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-from .context import README_PATH, REPOSITORY_ROOT, display_path
-from .hooks import APPROVED_HOOKS, HOOK_FILES, hook_commands
+from .context import REPOSITORY_ROOT, display_path
+from .hooks import CODEX_WINDOWS_WRAPPER_TEXT, HOOK_FILES, hook_commands
 
 FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})(.*)$")
 ATX_HEADING = re.compile(r"^[ \t]{0,3}#{1,6}(?:[ \t]+|$)(.*)$")
@@ -16,6 +16,8 @@ GFM_PUNCTUATION = re.compile(r"[\\!\"#$%&'()*+,./:;<=>?@\[\]^`{|}~]")
 REFERENCE_LINK = re.compile(
     r"^[ \t]{0,3}\[([^]]+)\]:[ \t]*(?:<([^>]+)>|(\S+))"
 )
+HOOK_REFERENCE_RELATIVE = "docs/reference/hooks.md"
+HOOK_REFERENCE_PATH = REPOSITORY_ROOT / HOOK_REFERENCE_RELATIVE
 
 
 def fenced_blocks_and_masked_text(text: str) -> tuple[list[str], str]:
@@ -52,7 +54,8 @@ def fenced_blocks_and_masked_text(text: str) -> tuple[list[str], str]:
     return blocks, "\n".join(masked_lines)
 
 
-def check_documented_hook_commands(
+def check_documented_hook_command_text(
+    text: str,
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> None:
     expected: dict[str, list[str]] = {}
@@ -62,33 +65,48 @@ def check_documented_hook_commands(
             continue
         for command, labels in hook_commands(relative_path, document, failures).items():
             expected.setdefault(command, []).extend(labels)
+    expected.setdefault(CODEX_WINDOWS_WRAPPER_TEXT.strip(), []).append(
+        "hooks/codex-session-start.cmd"
+    )
 
-    try:
-        readme = README_PATH.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read README.md for hook command comparison: {error}")
-        return
-
-    blocks, _ = fenced_blocks_and_masked_text(readme)
+    blocks, _ = fenced_blocks_and_masked_text(text)
     block_set = set(blocks)
     for command, labels in expected.items():
         if command not in block_set:
             failures.append(
-                "README.md is missing an exact fenced command block for "
+                f"{HOOK_REFERENCE_RELATIVE} is missing an exact fenced command block for "
                 f"{', '.join(labels)}; expected {command!r}"
             )
 
     documented_hook_commands = {
         block
         for block in block_set
-        if "skills/using-axiom/SKILL.md" in block
-        and ("PLUGIN_ROOT" in block or "CLAUDE_PLUGIN_ROOT" in block)
+        if "using-axiom" in block
+        and (
+            "PLUGIN_ROOT" in block
+            or "CLAUDE_PLUGIN_ROOT" in block
+            or "%~dp0" in block
+        )
     }
     for command in sorted(documented_hook_commands - set(expected)):
         failures.append(
-            "README.md contains a hook command block not present in the checked-in hook JSON: "
+            f"{HOOK_REFERENCE_RELATIVE} contains a Hook command block not present in "
+            "the checked-in declarations or wrapper: "
             f"{command!r}"
         )
+
+
+def check_documented_hook_commands(
+    documents: dict[str, dict[str, Any]], failures: list[str]
+) -> None:
+    try:
+        text = HOOK_REFERENCE_PATH.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(
+            f"cannot read {HOOK_REFERENCE_RELATIVE} for Hook command comparison: {error}"
+        )
+        return
+    check_documented_hook_command_text(text, documents, failures)
 
 
 def mask_inline_code(line: str) -> str:

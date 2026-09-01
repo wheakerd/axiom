@@ -27,8 +27,8 @@ reproduction. A missing interface is unavailable, not passed.
 2. Record the host name and exact version, operating system, shell when
    relevant, Axiom version or immutable commit, and installation method.
 3. Start a new session or reload plugins as documented by the host.
-4. Open `/hooks`. Compare every installed Axiom command with
-   [the checked-in commands](../README.md#inspect-the-hooks). Stop if they
+4. Open `/hooks`. Compare every installed Axiom command with the
+   [Hook Reference](reference/hooks.md). Stop if they
    differ; do not execute an unfamiliar handler merely to investigate it.
 5. Keep the test read-only. Do not grant edit, commit, push, deployment,
    deletion, credential, or external-action authority.

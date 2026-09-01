@@ -54,7 +54,7 @@ from .repository_policy import (
 )
 from .routing_contracts import (
     check_cross_route_resume_contracts,
-    check_readme_lifecycle_commands,
+    check_lifecycle_guide_commands,
     check_routing_scenarios,
     check_routing_source_contracts,
 )
@@ -184,7 +184,7 @@ def main() -> int:
         failures,
     )
 
-    run_policy("routing", check_readme_lifecycle_commands, failures)
+    run_policy("routing", check_lifecycle_guide_commands, failures)
     run_policy("repository", check_packaged_skills, failures)
     run_policy("repository", check_skill_contracts, failures)
     run_policy("routing", check_routing_source_contracts, failures)
