@@ -15,7 +15,9 @@ silently broaden what the user authorized.
 | `.claude-plugin/marketplace.json` | Claude Code marketplace wrapper |
 | `hooks/codex-hooks.json` | Codex-specific startup hook |
 | `hooks/claude-hooks.json` | Claude Code-specific session and compaction hooks |
-| `README.md` and `docs/` | Public onboarding, behavior, trust, and release documentation |
+| `README.md` | Product landing page and safe-start entry point |
+| `docs/README.md` and `docs/` | Task navigation, user guidance, concepts, references, and maintainer policy |
+| `project/` | Project operations after their staged migration from `docs/marketing/` |
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
 | `evals/` | Versioned black-box routing contracts and separately labeled host observations |
 | `evals/context-budget/` | Versioned always-loaded routing proxies, lifecycle slots, and reduction evidence |
@@ -88,20 +90,20 @@ permission expansion. State separately whether the change affects matching,
 planning, mutation authority, stop conditions, rollback, or completion
 evidence.
 
-## Documentation consistency
+## Documentation policy
 
-- Keep public documentation in English and tie claims to checked-in behavior
-  or clearly identified historical evidence.
-- Preserve the `### Shared skills` heading and its parseable backtick list in
-  `README.md`; the distribution drift guard reads that section.
-- Keep installation and update commands aligned with the current host wrappers.
-- Keep hook commands in the README synchronized exactly with the checked-in
-  hook JSON. If an installed definition differs, documentation must tell users
-  to stop and review it rather than trust it automatically.
-- Update `CHANGELOG.md` from tags and commits. Do not infer a GitHub Release,
-  release date, security fix, or breaking change from a version number alone.
-- Use repository-relative links for checked-in documentation and run the link
-  validation before opening a pull request.
+Use the public [Documentation Policy](docs/maintainers/documentation-policy.md)
+to classify documents, select one canonical owner for each fact, apply
+lifecycle states, and update navigation. The [documentation index](docs/README.md)
+is the task- and audience-oriented entry point.
+
+Keep public documentation in English and tie claims to checked-in behavior or
+clearly identified historical evidence. During the staged migration for
+Issue #110, preserve the parseable README `### Shared skills` inventory, keep
+current Hook renderings synchronized with the checked-in declarations and
+wrappers, and do not claim a target location is current before its migration
+lands. Use repository-relative links and run the applicable documentation,
+publication, and unit checks before opening a pull request.
 
 ## Hook changes need extra review
 
