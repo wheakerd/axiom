@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "pluginVersion": "0.10.0",
-  "repositoryPolicyRevision": 5,
+  "repositoryPolicyRevision": 6,
   "runtimeContract": {
     "schemaVersion": "1",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",

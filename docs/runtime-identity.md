@@ -13,6 +13,33 @@ The current machine-readable identities are in
 policy revisions are append-only in
 [`evidence/repository-policy-revisions-v1.json`](../evidence/repository-policy-revisions-v1.json).
 
+## Derived profile identity
+
+The Hook-independent compatibility artifact has an independent identity stack;
+none of its values replaces or reuses the installed full-profile digest:
+
+- `profileRuntimeDigest` hashes the profile ID, runtime canonicalization
+  version, behavior-bearing fields of the derived manifest, and the ordered
+  path, kind, mode, size, and SHA-256 records for all 50 canonical Skill files.
+  Source commit, repository policy, timestamps, ZIP metadata, and the bundle
+  manifest itself are excluded, so identical runtime bytes retain one runtime
+  identity across source commits.
+- `bundleManifestDigest` hashes the complete canonical bundle manifest except
+  only its own digest field. It binds the frozen Phase 1 contracts, ordered
+  host case sets, source commit and tree, source and candidate policy revisions,
+  derived manifest raw bytes, runtime records, builder dependency closure, and
+  transport contract.
+- `archiveSha256` hashes the final deterministic ZIP bytes. It is stored only
+  in the external completion envelope and tracked static evidence, avoiding a
+  self-reference in the archive.
+
+Repository policy revision 6 owns the builder, closed schema, and static
+evidence at
+[`evidence/profiles/openai-hook-independent-v1/bundle-v1.json`](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
+Generated directories, ZIPs, and envelopes are temporary caller-owned outputs
+outside the repository. Static construction does not establish Codex or
+ChatGPT host acceptance and has no installation or publication effect.
+
 ## Runtime Contract V1
 
 [`runtime-contract-inputs-v1.json`](../axiom_validation/runtime-contract-inputs-v1.json)

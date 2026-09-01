@@ -29,6 +29,7 @@ CASE_FILE = PROFILE_ROOT / "golden-set-v1.jsonl"
 RESPONSE_SCHEMA_FILE = PROFILE_ROOT / "host-response-schema-v1.json"
 EXPECTED_PROFILE_ENTRIES = (
     "benchmark-v1.json",
+    "bundle-manifest-schema-v1.json",
     "golden-set-v1.jsonl",
     "host-response-schema-v1.json",
     "profile-v1.json",

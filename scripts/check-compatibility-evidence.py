@@ -19,6 +19,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
+from axiom_validation.no_hook_bundle import check_no_hook_bundle  # noqa: E402
 from axiom_validation.runtime_identity import check_runtime_identity  # noqa: E402
 
 
@@ -29,6 +30,9 @@ STATUS_PATH = EVIDENCE_ROOT / "release-status.json"
 RUNTIME_IDENTITY_PATH = EVIDENCE_ROOT / "runtime-identity.json"
 RUNTIME_HISTORY_PATH = EVIDENCE_ROOT / "runtime-contract-history-v1.json"
 POLICY_REVISIONS_PATH = EVIDENCE_ROOT / "repository-policy-revisions-v1.json"
+PROFILE_STATIC_EVIDENCE_PATH = (
+    EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-v1.json"
+)
 MANIFEST_PATHS = (
     REPOSITORY_ROOT / ".codex-plugin" / "plugin.json",
     REPOSITORY_ROOT / ".claude-plugin" / "plugin.json",
@@ -883,6 +887,7 @@ def collect_records(failures: list[str]) -> dict[str, dict[str, Any]]:
         RUNTIME_IDENTITY_PATH.resolve(),
         RUNTIME_HISTORY_PATH.resolve(),
         POLICY_REVISIONS_PATH.resolve(),
+        PROFILE_STATIC_EVIDENCE_PATH.resolve(),
     }
     expected_json.update((REPOSITORY_ROOT / path).resolve() for path in records)
     unexpected_json = sorted(
@@ -1049,6 +1054,7 @@ def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str 
     if schema_v2 is not None:
         check_schema_v2_contract(schema_v2, failures)
     records = collect_records(failures)
+    check_no_hook_bundle(failures, REPOSITORY_ROOT)
     current_version = manifest_version(failures)
     runtime_identity = load_json(RUNTIME_IDENTITY_PATH, failures) or {}
     runtime_history = load_json(RUNTIME_HISTORY_PATH, failures) or {}

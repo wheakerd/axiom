@@ -24,6 +24,9 @@ replace them and it is not installed runtime behavior.
   `openai-hook-independent-v1` profile, its 16-case shared Golden Set, the
   16-case Codex subset, the 10-case ChatGPT subset, and its profile-bound
   response shape. It does not inherit full-profile evidence.
+- [`no-hook/bundle-manifest-schema-v1.json`](no-hook/bundle-manifest-schema-v1.json)
+  closes the deterministic derived-bundle manifest and freezes the Phase 1
+  contract bindings, runtime inventory, and source/candidate policy boundary.
 - `results/v0.7.7/` keeps Codex and Claude Code outcomes in separately labeled,
   append-only run records bound to immutable Axiom source.
 - `results/v0.7.8/codex/linux-candidate-1.json` records the terminal `UNKNOWN`
@@ -111,9 +114,15 @@ Static validation is not Codex or ChatGPT execution, both of which remain
 `NOT-RUN`; full-profile Codex or Claude Code evidence cannot cross this profile
 boundary merely because the profiles share canonical Skill bytes.
 
-The derived bundle and its profile-scoped runtime digest remain unimplemented.
-They require a separately approved phase and must be generated from the single
-canonical `skills/` source.
+Repository policy revision 6 implements a deterministic derived bundle from
+the single canonical `skills/` source. The builder reads exact commit, tree,
+and blob objects; emits a minimal no-Hook manifest, all 50 files under the
+eight canonical Skill roots, and `BUNDLE-MANIFEST.json`; and produces a
+ZIP_STORED archive plus an external completion envelope. The generated outputs
+are not tracked or published. Tracked static evidence records the independent
+profile runtime, bundle manifest, and archive identities after two equal
+builds. Codex and ChatGPT host observations remain `NOT-RUN`, and full-profile
+evidence remains outside this acceptance boundary.
 
 ## Contract changes
 
