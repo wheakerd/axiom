@@ -14,6 +14,7 @@ from .context import (
     REPOSITORY_ROOT,
     display_path,
 )
+from .release_evidence import render_release_body
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
 
 _BASE_REQUIRED_PUBLIC_FILES = (
@@ -25,6 +26,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "docs/guides/managing-installation.md",
     "docs/reference/hooks.md",
     "docs/maintainers/documentation-policy.md",
+    "docs/maintainers/release-documentation.md",
     "docs/architecture.md",
     "docs/examples.md",
     "docs/trust-model.md",
@@ -670,23 +672,38 @@ def check_release_version_surfaces(failures: list[str]) -> None:
             release_path,
             (f"Version `{RELEASE_VERSION}`", "## Exact Draft Evidence Validation"),
         ),
+        (
+            REPOSITORY_ROOT / "docs" / "README.md",
+            ("](maintainers/release-documentation.md)",),
+        ),
+        (
+            REPOSITORY_ROOT / "docs" / "maintainers" / "release-documentation.md",
+            (
+                "## Responsibility Map",
+                "render-body --expected-version X.Y.Z",
+                "`notesSha256`",
+                "## Fix-Forward Boundary",
+            ),
+        ),
     )
+    documents: dict[Path, str] = {}
     for path, anchors in surface_contracts:
         try:
             text = path.read_text(encoding="utf-8")
         except OSError as error:
             failures.append(f"cannot read {display_path(path)}: {error}")
             continue
+        documents[path] = text
         for anchor in anchors:
             if anchor not in text:
                 failures.append(
                     f"{display_path(path)} is missing current release anchor {anchor!r} "
                     f"derived from RELEASE_VERSION={RELEASE_VERSION!r}"
                 )
-        if path == release_path and (text.startswith("# ") or "\n# " in text):
-            failures.append(
-                f"{display_path(path)} must be a compact Release body without a duplicate title"
-            )
+    rendered_body = render_release_body(RELEASE_VERSION, failures)
+    release_notes = documents.get(release_path)
+    if rendered_body is not None and release_notes is not None and rendered_body == release_notes:
+        failures.append("future GitHub Release body must remain distinct from the version note")
 
 
 def check_packaged_skills(failures: list[str]) -> None:

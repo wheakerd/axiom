@@ -20,6 +20,7 @@ describe the repository as it exists now, not the completed target layout.
 | Understand package identity | [Runtime and Repository Identity](runtime-identity.md) | Maintainers and auditors |
 | Review repository controls | [Repository Governance](repository-governance.md) | Maintainers |
 | Contribute documentation | [Documentation Policy](maintainers/documentation-policy.md) | Contributors |
+| Prepare release documentation and evidence | [Release Documentation And Evidence](maintainers/release-documentation.md) | Maintainers and auditors |
 | Review plugin-architecture audit rules | [Agent Plugin Architect Route Contract](agent-plugin-architect-route-contract.md) | Maintainers |
 
 For help, use [GitHub Issues](https://github.com/wheakerd/axiom/issues). Report
@@ -28,8 +29,8 @@ security concerns through the process in [SECURITY.md](../SECURITY.md).
 ## Current Collections
 
 - [Version notes](releases/) retain version-specific migration, architecture,
-  compatibility, security, and evidence detail. They are not the current
-  installation guide.
+  compatibility, security, and evidence detail. They are neither the current
+  installation guide nor the final GitHub Release body.
 - [Evidence](../evidence/) and [evaluation results](../evals/) retain
   machine-readable facts and historical observations. A historical record is
   not a statement about the current host.
@@ -48,6 +49,8 @@ The current repository still has transitional overlap:
   entry for historical links;
 - `docs/compatibility.md` owns the concise current support contract and links
   to preserved current and historical evidence;
+- `docs/maintainers/release-documentation.md` defines the fix-forward boundary
+  among the Changelog, version notes, Release body, and evidence;
 - `project/` separately owns marketing, distribution, channel-status, launch,
   and editorial plans.
 

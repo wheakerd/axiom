@@ -28,6 +28,29 @@ PLAN_SCHEMA_VERSION = "2"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
 PUBLISH_WORKFLOW_SHA256 = "571181a832014bddf3088bca27eb02ce9ec5a03104f3244d6ad4b9224447d252"
+RELEASE_BODY_POLICY_BASELINE_VERSION = "0.10.0"
+RELEASE_BODY_MAX_BYTES = 8192
+PUBLIC_REPOSITORY_BLOB_ROOT = "https://github.com/wheakerd/axiom/blob"
+RELEASE_BODY_CHANGE_HEADINGS = frozenset(
+    {"added", "changed", "fixed", "removed", "deprecated", "security"}
+)
+RELEASE_BODY_REQUIRED_HEADINGS = frozenset({"behavioral impact", "required action"})
+RELEASE_BODY_FORBIDDEN_PHRASES = (
+    "unreleased candidate",
+    "pending-immutable-tag",
+    "tag absence",
+    "release absence",
+    "tag does not exist",
+    "release does not exist",
+)
+RELEASE_BODY_FUTURE_FORBIDDEN_PHRASES = (
+    "candidate",
+    "unreleased",
+    "no github release",
+    "future github release",
+    "future tag",
+    "would identify a later",
+)
 
 
 class DuplicateJsonKeyError(ValueError):
@@ -122,6 +145,125 @@ def _attestation_prefix(version: str) -> str:
     return f"axiom-v{version}-release-evidence-"
 
 
+def render_release_body(
+    version: str,
+    failures: list[str],
+    *,
+    root: Path = REPOSITORY_ROOT,
+) -> str | None:
+    """Render one future GitHub Release body from its exact Changelog entry."""
+    precedence = parse_production_release_version(version)
+    if precedence is None:
+        failures.append("release body version must be one stable numeric production version")
+        return None
+    changelog_path = root / "CHANGELOG.md"
+    try:
+        changelog = changelog_path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(changelog_path)}: {error}")
+        return None
+
+    heading_pattern = re.compile(
+        rf"^## {re.escape(version)} - [^\n]+$",
+        flags=re.MULTILINE,
+    )
+    matches = list(heading_pattern.finditer(changelog))
+    if len(matches) != 1:
+        failures.append(
+            f"CHANGELOG.md must contain exactly one release entry for {version}"
+        )
+        return None
+    start = matches[0].end()
+    if changelog[start : start + 1] == "\n":
+        start += 1
+    next_heading = re.search(r"^## ", changelog[start:], flags=re.MULTILINE)
+    end = start + next_heading.start() if next_heading is not None else len(changelog)
+    entry = changelog[start:end].strip()
+    if not entry:
+        failures.append(f"CHANGELOG.md release entry for {version} is empty")
+        return None
+
+    headings = {
+        heading.strip().casefold()
+        for heading in re.findall(r"^### ([^\n]+)$", entry, flags=re.MULTILINE)
+    }
+    baseline = parse_production_release_version(RELEASE_BODY_POLICY_BASELINE_VERSION)
+    if baseline is not None and precedence > baseline:
+        if headings.isdisjoint(RELEASE_BODY_CHANGE_HEADINGS):
+            failures.append(
+                "fix-forward Changelog entry must contain at least one change section"
+            )
+        missing = sorted(RELEASE_BODY_REQUIRED_HEADINGS - headings)
+        if missing:
+            failures.append(
+                "fix-forward Changelog entry is missing required sections: "
+                + ", ".join(missing)
+            )
+
+    body = re.sub(
+        r"^(#{3,6}) ",
+        lambda match: match.group(1)[:-1] + " ",
+        entry,
+        flags=re.MULTILINE,
+    )
+
+    relative_link_pattern = re.compile(r"\]\(([^)]+)\)")
+
+    def rewrite_link(match: re.Match[str]) -> str:
+        raw_target = match.group(1).strip()
+        target, *title = raw_target.split(maxsplit=1)
+        if target.startswith(("https://", "http://", "mailto:", "#")):
+            return match.group(0)
+        path, separator, fragment = target.partition("#")
+        parts = path.split("/")
+        if (
+            not path
+            or path.startswith(("/", "<"))
+            or any(part in {"", ".", ".."} for part in parts)
+        ):
+            failures.append(
+                "release body link must be repository-relative without traversal: "
+                f"{target!r}"
+            )
+            return match.group(0)
+        immutable = f"{PUBLIC_REPOSITORY_BLOB_ROOT}/v{version}/{path}"
+        if separator:
+            immutable += f"#{fragment}"
+        suffix = f" {title[0]}" if title else ""
+        return f"]({immutable}{suffix})"
+
+    body = relative_link_pattern.sub(rewrite_link, body).strip() + "\n"
+    remaining_relative = [
+        target
+        for target in relative_link_pattern.findall(body)
+        if not target.startswith(("https://", "http://", "mailto:", "#"))
+    ]
+    if remaining_relative:
+        failures.append(
+            "release body contains unbound repository-relative links: "
+            + ", ".join(remaining_relative)
+        )
+    lowered = body.casefold()
+    for phrase in RELEASE_BODY_FORBIDDEN_PHRASES:
+        if phrase in lowered:
+            failures.append(
+                f"release body contains candidate-only publication text {phrase!r}"
+            )
+    if baseline is not None and precedence > baseline:
+        for phrase in RELEASE_BODY_FUTURE_FORBIDDEN_PHRASES:
+            if phrase in lowered:
+                failures.append(
+                    f"fix-forward release body contains pre-publication text {phrase!r}"
+                )
+    if re.search(r"^# ", body, flags=re.MULTILINE):
+        failures.append("release body must not duplicate the GitHub Release title")
+    if len(body.encode("utf-8")) > RELEASE_BODY_MAX_BYTES:
+        failures.append(
+            f"release body exceeds the {RELEASE_BODY_MAX_BYTES}-byte fix-forward budget"
+        )
+    return None if failures else body
+
+
 def _normalize_asset(asset: Any, label: str, failures: list[str]) -> dict[str, Any] | None:
     if type(asset) is not dict:
         failures.append(f"{label} must be an object")
@@ -184,15 +326,10 @@ def _inspect_release(
     for field, expected in expected_fields.items():
         if document.get(field) != expected:
             failures.append(f"release.{field} must equal {expected!r}")
-    notes_path = REPOSITORY_ROOT / "docs" / "releases" / f"v{version}.md"
-    try:
-        expected_notes = notes_path.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read exact release notes {display_path(notes_path)}: {error}")
-        expected_notes = None
-    if expected_notes is not None and document.get("body") != expected_notes:
+    expected_body = render_release_body(version, failures)
+    if expected_body is not None and document.get("body") != expected_body:
         failures.append(
-            f"release.body must exactly match {display_path(notes_path)} at the release commit"
+            "release.body must exactly match the rendered Changelog entry at the release commit"
         )
     immutable = document.get("immutable")
     if type(immutable) is not bool:
@@ -209,8 +346,8 @@ def _inspect_release(
         "targetCommit": commit,
         "name": f"Axiom {tag}",
         "notesSha256": (
-            hashlib.sha256(expected_notes.encode("utf-8")).hexdigest()
-            if expected_notes is not None
+            hashlib.sha256(expected_body.encode("utf-8")).hexdigest()
+            if expected_body is not None
             else None
         ),
     }
@@ -1096,6 +1233,10 @@ def _add_subject_arguments(parser: argparse.ArgumentParser) -> None:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    render_body = commands.add_parser(
+        "render-body", help="render the exact future GitHub Release body"
+    )
+    render_body.add_argument("--expected-version", required=True)
     select = commands.add_parser("select", help="select one exact Release from a listing")
     select.add_argument("--release-collection", type=Path, required=True)
     select.add_argument("--release-output", type=Path, required=True)
@@ -1164,7 +1305,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     failures: list[str] = []
-    if args.command == "select":
+    if args.command == "render-body":
+        if args.expected_version != RELEASE_VERSION:
+            failures.append("release body version must match both current manifests")
+        else:
+            body = render_release_body(args.expected_version, failures)
+            if body is not None and not failures:
+                sys.stdout.write(body)
+    elif args.command == "select":
         select_release_from_collection(
             args.release_collection,
             args.release_output,

@@ -16,6 +16,7 @@ from axiom_validation.release_evidence import (
     check_publish_workflow_contract,
     classify_publication_state,
     prepare_release_plan,
+    render_release_body,
     select_release_from_collection,
     validate_downloaded_observation,
     verify_remote_release_preflight,
@@ -69,6 +70,10 @@ def release_metadata(
     immutable: bool = False,
     attestation: dict | None = None,
 ) -> dict:
+    body_failures: list[str] = []
+    body = render_release_body(RELEASE_VERSION, body_failures)
+    if body is None or body_failures:
+        raise AssertionError(body_failures)
     assets = [observation]
     if attestation is not None:
         assets.append(attestation)
@@ -77,12 +82,7 @@ def release_metadata(
         "tag_name": TAG,
         "target_commitish": COMMIT,
         "name": f"Axiom {TAG}",
-        "body": (
-            Path(__file__).resolve().parents[1]
-            / "docs"
-            / "releases"
-            / f"v{RELEASE_VERSION}.md"
-        ).read_text(encoding="utf-8"),
+        "body": body,
         "draft": draft,
         "prerelease": False,
         "immutable": immutable,
@@ -119,6 +119,107 @@ class ReleaseEvidenceTests(unittest.TestCase):
         failures: list[str] = []
         self.assertIsNotNone(check_publish_workflow_contract(failures))
         self.assertEqual([], failures)
+
+    def test_release_body_is_rendered_from_changelog_not_version_notes(self):
+        failures: list[str] = []
+        body = render_release_body(RELEASE_VERSION, failures)
+        self.assertEqual([], failures)
+        self.assertIsNotNone(body)
+        assert body is not None
+        version_notes = (
+            Path(__file__).resolve().parents[1]
+            / "docs"
+            / "releases"
+            / f"v{RELEASE_VERSION}.md"
+        ).read_text(encoding="utf-8")
+        self.assertNotEqual(version_notes, body)
+        self.assertNotIn("unreleased candidate", body.casefold())
+        self.assertIn(
+            f"https://github.com/wheakerd/axiom/blob/v{RELEASE_VERSION}/"
+            f"docs/releases/v{RELEASE_VERSION}.md",
+            body,
+        )
+
+    def test_render_body_cli_emits_exact_current_body(self):
+        failures: list[str] = []
+        expected = render_release_body(RELEASE_VERSION, failures)
+        self.assertEqual([], failures)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/check-release-evidence.py",
+                "render-body",
+                "--expected-version",
+                RELEASE_VERSION,
+            ],
+            cwd=Path(__file__).resolve().parents[1],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(expected, result.stdout)
+
+    def test_fix_forward_release_body_contract_rejects_missing_or_candidate_text(self):
+        valid = """# Changelog
+
+## 0.10.1 - unreleased
+
+### Fixed
+
+- Fixed the [guide](docs/guides/getting-started.md).
+
+### Behavioral impact
+
+- Existing behavior is unchanged.
+
+### Required action
+
+- None.
+"""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            changelog = root / "CHANGELOG.md"
+            for case_id, payload, expected_failure in (
+                (
+                    "missing-action",
+                    valid.replace("### Required action\n\n- None.\n", ""),
+                    "missing required sections",
+                ),
+                (
+                    "candidate-state",
+                    valid.replace("- None.", "- GitHub Release does not exist."),
+                    "candidate-only publication text",
+                ),
+                (
+                    "candidate-word",
+                    valid.replace("- None.", "- This candidate needs no action."),
+                    "pre-publication text",
+                ),
+            ):
+                with self.subTest(case_id=case_id):
+                    changelog.write_text(payload, encoding="utf-8")
+                    failures: list[str] = []
+                    self.assertIsNone(
+                        render_release_body("0.10.1", failures, root=root)
+                    )
+                    self.assertTrue(
+                        any(expected_failure in failure for failure in failures),
+                        failures,
+                    )
+
+            changelog.write_text(valid, encoding="utf-8")
+            failures = []
+            body = render_release_body("0.10.1", failures, root=root)
+            self.assertEqual([], failures)
+            self.assertIsNotNone(body)
+            assert body is not None
+            self.assertIn("## Fixed", body)
+            self.assertIn(
+                "https://github.com/wheakerd/axiom/blob/v0.10.1/"
+                "docs/guides/getting-started.md",
+                body,
+            )
 
     def test_publish_workflow_contract_rejects_an_appended_command(self):
         workflow = (
