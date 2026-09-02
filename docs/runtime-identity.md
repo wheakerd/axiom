@@ -40,15 +40,26 @@ Generated directories, ZIPs, and envelopes are temporary caller-owned outputs
 outside the repository. Static construction does not establish Codex or
 ChatGPT host acceptance and has no installation or publication effect.
 
-Construction binds one caller-supplied absolute Git executable and rechecks
-its physical identity around every read-only invocation. Git replacement
-objects, hooks, protocols, credentials, filesystem monitoring, and ambient
-repository/object redirection are disabled or rejected. Runtime working-tree
-state is checked without `git status`: Python `lstat`/`scandir` snapshots before
-and after construction must match the exact Git-object path set and bytes, so a
-repository-local `core.fsmonitor` command and a PATH-shadowed `git` are not
-executed. Runtime payload bytes themselves continue to come only from the
-frozen commit's blobs.
+Construction binds one caller-supplied absolute Git executable, requires its
+`--no-lazy-fetch` capability, and rechecks its physical identity around every
+read-only invocation. Each invocation uses both `--no-lazy-fetch` and
+`GIT_NO_LAZY_FETCH=1`, with `GIT_PROTOCOL_FROM_USER=0`; a missing partial-clone
+or promisor object therefore fails locally even if repository configuration
+allows a protocol-specific remote helper. Git replacement objects, hooks,
+generic protocols, credentials, filesystem monitoring, and ambient
+repository/object redirection are disabled or rejected.
+
+Runtime working-tree state is checked without `git status`. Before reading a
+file, Python `lstat`/`scandir` snapshots derive its expected type and byte count
+from the exact Git entry, enforce per-file, aggregate, file-count, directory,
+and total-entry limits, and reject unknown children during streaming
+enumeration. An opened file must retain the same identity and size; at most the
+expected bytes plus one EOF-check byte are read before its identity, size,
+exact blob bytes, and path are rechecked. The snapshots run before and after
+construction, so repository-local `core.fsmonitor`, PATH-shadowed `git`, lazy
+promisor helpers, dirty or oversized files, and substituted paths cannot enter
+the runtime payload. Runtime payload bytes themselves continue to come only
+from the frozen commit's blobs.
 
 The package's logical mode contract is always `100644` for files and `040755`
 for directories, including ZIP metadata. On POSIX, generated objects must also

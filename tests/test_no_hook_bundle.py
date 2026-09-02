@@ -83,6 +83,7 @@ class SourceFixture:
         *arguments: str,
         input_bytes: bytes | None = None,
         check: bool = True,
+        env: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
             [str(GIT_EXECUTABLE), "-C", str(self.root), *arguments],
@@ -90,6 +91,7 @@ class SourceFixture:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=check,
+            env=env,
         )
 
     def commit(self, message: str) -> None:
@@ -156,6 +158,28 @@ def _marker_command(parent: Path, name: str, marker: Path) -> Path:
         )
         command.chmod(0o755)
     return command
+
+
+def _object_database_inventory(root: Path) -> dict[str, tuple[int, int, str]]:
+    objects = root / ".git/objects"
+    inventory: dict[str, tuple[int, int, str]] = {}
+    for path in sorted(objects.rglob("*")):
+        if not path.is_file():
+            continue
+        data = path.read_bytes()
+        inventory[path.relative_to(objects).as_posix()] = (
+            stat.S_IMODE(path.stat().st_mode),
+            len(data),
+            hashlib.sha256(data).hexdigest(),
+        )
+    return inventory
+
+
+def _changed_stat(metadata: os.stat_result, **changes: int) -> mock.Mock:
+    result = mock.Mock(wraps=metadata)
+    for name, value in changes.items():
+        setattr(result, name, value)
+    return result
 
 
 class NoHookBundleTests(unittest.TestCase):
@@ -394,6 +418,294 @@ class NoHookBundleTests(unittest.TestCase):
             with self.assertRaisesRegex(BundleContractError, "explicit absolute path"):
                 GitObjectSource(fixture.root, Path("git"))
 
+    def test_git_requires_no_lazy_fetch_capability_before_object_reads(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            unsupported = subprocess.CompletedProcess(
+                args=[],
+                returncode=129,
+                stdout=b"",
+                stderr=b"unknown option: --no-lazy-fetch\n",
+            )
+            with mock.patch.object(
+                bundle_module.subprocess,
+                "run",
+                return_value=unsupported,
+            ) as invoked:
+                with self.assertRaisesRegex(
+                    BundleContractError,
+                    "lacks required --no-lazy-fetch capability",
+                ):
+                    GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            invoked.assert_called_once()
+            command = invoked.call_args.args[0]
+            self.assertIn("--no-lazy-fetch", command)
+            self.assertEqual("--version", command[-1])
+
+    def test_each_git_invocation_requires_both_no_lazy_fetch_defenses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            source.git_global_options = tuple(
+                option
+                for option in source.git_global_options
+                if option != "--no-lazy-fetch"
+            )
+            with mock.patch.object(bundle_module.subprocess, "run") as invoked:
+                with self.assertRaisesRegex(
+                    BundleContractError,
+                    "every Git invocation requires --no-lazy-fetch",
+                ):
+                    source.run(("rev-parse", "HEAD"))
+            invoked.assert_not_called()
+
+            source.git_global_options = bundle_module.REQUIRED_GIT_GLOBAL_OPTIONS
+            source.environment.pop("GIT_NO_LAZY_FETCH")
+            with mock.patch.object(bundle_module.subprocess, "run") as invoked:
+                with self.assertRaisesRegex(
+                    BundleContractError,
+                    "every Git invocation requires --no-lazy-fetch",
+                ):
+                    source.run(("rev-parse", "HEAD"))
+            invoked.assert_not_called()
+
+    def test_partial_promisor_missing_blob_never_runs_remote_helper(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            fixture = SourceFixture(parent)
+            relative = "skills/using-axiom/SKILL.md"
+            blob_oid = fixture.git("rev-parse", f"HEAD:{relative}").stdout.decode(
+                "ascii"
+            ).strip()
+            object_path = fixture.root / ".git/objects" / blob_oid[:2] / blob_oid[2:]
+            self.assertTrue(object_path.is_file())
+
+            fixture.git("config", "core.repositoryformatversion", "1")
+            fixture.git("config", "extensions.partialClone", "origin")
+            fixture.git("config", "remote.origin.promisor", "true")
+            fixture.git("config", "remote.origin.partialclonefilter", "blob:none")
+            fixture.git("config", "remote.origin.url", "marker::missing")
+            fixture.git("config", "protocol.marker.allow", "always")
+            helper_directory = parent / "helpers"
+            helper_directory.mkdir()
+            marker = parent / "promisor-helper-executed.txt"
+            _marker_command(helper_directory, "git-remote-marker", marker)
+            environment = dict(os.environ)
+            environment["PATH"] = (
+                str(helper_directory)
+                + os.pathsep
+                + environment.get("PATH", "")
+            )
+
+            object_path.unlink()
+            object_inventory = _object_database_inventory(fixture.root)
+            source_files = _directory_files(fixture.root / "skills")
+
+            control = fixture.git(
+                "cat-file",
+                "blob",
+                blob_oid,
+                check=False,
+                env=environment,
+            )
+            self.assertNotEqual(0, control.returncode)
+            self.assertTrue(marker.is_file(), "fixture must prove the helper is observable")
+            marker.unlink()
+            self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+
+            destination = fixture.destination("output")
+            with mock.patch.dict(os.environ, {"PATH": environment["PATH"]}):
+                with self.assertRaisesRegex(
+                    BundleContractError,
+                    "unavailable while lazy fetching is disabled",
+                ):
+                    _build(fixture, destination)
+
+            self.assertFalse(marker.exists())
+            self.assertFalse(object_path.exists())
+            self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+            self.assertEqual(source_files, _directory_files(fixture.root / "skills"))
+            self.assertEqual([], list(destination.iterdir()))
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_snapshot_rejects_oversized_sparse_and_same_size_drift_before_output(self):
+        for mutation in ("oversized", "sparse", "same-size"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                target = fixture.root / "skills/using-axiom/SKILL.md"
+                original = target.read_bytes()
+                if mutation == "oversized":
+                    target.write_bytes(b"x" * (bundle_module.MAX_RUNTIME_FILE_BYTES + 1))
+                elif mutation == "sparse":
+                    with target.open("r+b") as handle:
+                        handle.truncate(bundle_module.MAX_RUNTIME_FILE_BYTES + 1)
+                else:
+                    changed = bytearray(original)
+                    changed[0] = ord("X") if changed[0] != ord("X") else ord("Y")
+                    target.write_bytes(changed)
+
+                destination = fixture.destination("output")
+                diagnostic = "per-file safety limit" if mutation != "same-size" else "bytes drifted"
+                with self.assertRaisesRegex(BundleContractError, diagnostic):
+                    _build(fixture, destination)
+                self.assertEqual([], list(destination.iterdir()))
+
+    def test_snapshot_file_rejects_growth_after_open(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            entries = source.list_files(fixture.commit_oid, "skills")
+            entry = next(item for item in entries if item.path == "skills/using-axiom/SKILL.md")
+            target = fixture.root / entry.path
+            metadata = target.lstat()
+            original_read = os.read
+            grew = False
+
+            def read_then_grow(descriptor: int, length: int) -> bytes:
+                nonlocal grew
+                data = original_read(descriptor, length)
+                if data and not grew:
+                    with target.open("ab") as handle:
+                        handle.write(b"growth\n")
+                    grew = True
+                return data
+
+            with mock.patch.object(bundle_module.os, "read", side_effect=read_then_grow):
+                with self.assertRaisesRegex(
+                    BundleContractError,
+                    "changed size or did not end at the expected EOF",
+                ):
+                    source._read_snapshot_file(
+                        target,
+                        metadata,
+                        entry.path,
+                        entry.size,
+                        entry.data,
+                    )
+
+    def test_snapshot_file_rechecks_identity_and_size_after_read(self):
+        for mutation in ("identity", "size"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+                entries = source.list_files(fixture.commit_oid, "skills")
+                entry = next(
+                    item for item in entries if item.path == "skills/using-axiom/SKILL.md"
+                )
+                target = fixture.root / entry.path
+                metadata = target.lstat()
+                original_fstat = os.fstat
+                calls = 0
+
+                def changed_after_read(descriptor: int):
+                    nonlocal calls
+                    calls += 1
+                    current = original_fstat(descriptor)
+                    if calls == 1:
+                        return current
+                    if mutation == "identity":
+                        return _changed_stat(current, st_ino=current.st_ino + 1)
+                    return _changed_stat(current, st_size=current.st_size + 1)
+
+                with mock.patch.object(
+                    bundle_module.os,
+                    "fstat",
+                    side_effect=changed_after_read,
+                ):
+                    with self.assertRaises(BundleContractError):
+                        source._read_snapshot_file(
+                            target,
+                            metadata,
+                            entry.path,
+                            entry.size,
+                            entry.data,
+                        )
+
+    def test_snapshot_streaming_stops_at_first_unknown_child(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            entries = source.list_files(fixture.commit_oid, "skills")
+            target_directory = fixture.root / "skills/using-axiom"
+            for index in range(300):
+                (target_directory / f"unexpected-{index:03d}.txt").write_text(
+                    "unexpected\n",
+                    encoding="utf-8",
+                )
+            destination = fixture.destination("output")
+            real_scandir = os.scandir
+            observed = 0
+
+            class CountingScandir:
+                def __init__(self, path: os.PathLike[str] | str) -> None:
+                    self.iterator = real_scandir(path)
+
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *unused: object) -> None:
+                    self.iterator.close()
+
+                def __iter__(self):
+                    return self
+
+                def __next__(self):
+                    nonlocal observed
+                    observed += 1
+                    return next(self.iterator)
+
+            def bounded_scandir(path: os.PathLike[str] | str):
+                if Path(path) == target_directory:
+                    return CountingScandir(path)
+                return real_scandir(path)
+
+            with mock.patch.object(bundle_module.os, "scandir", side_effect=bounded_scandir):
+                with self.assertRaisesRegex(BundleContractError, "entry set drifted"):
+                    _build(fixture, destination)
+            self.assertLess(observed, 300)
+            self.assertEqual([], list(destination.iterdir()))
+
+    def test_snapshot_observed_entry_count_is_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "source"
+            skills = root / "skills"
+            skills.mkdir(parents=True)
+            expected: list[GitEntry] = []
+            for index in range(bundle_module.MAX_RUNTIME_FILES):
+                relative = f"skills/file-{index:03d}.txt"
+                (root / relative).write_bytes(b"x")
+                expected.append(GitEntry(relative, "100644", "blob", "0" * 40, 1, b"x"))
+            overflow = skills / "overflow.txt"
+            overflow.write_bytes(b"x")
+            source = object.__new__(GitObjectSource)
+            source.repository = root
+            real_scandir = os.scandir
+            ordered = list(real_scandir(skills))
+            ordered.sort(key=lambda child: (child.name == overflow.name, child.name))
+
+            class OrderedScandir:
+                def __init__(self) -> None:
+                    self.iterator = iter(ordered)
+
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *unused: object) -> None:
+                    return None
+
+                def __iter__(self):
+                    return self
+
+                def __next__(self):
+                    return next(self.iterator)
+
+            with mock.patch.object(bundle_module.os, "scandir", return_value=OrderedScandir()):
+                with self.assertRaisesRegex(
+                    BundleContractError,
+                    "observed entry count exceeds",
+                ):
+                    source.runtime_snapshot(tuple(expected))
+
     def test_source_commit_tree_object_and_environment_mismatch_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture = SourceFixture(Path(directory))
@@ -496,7 +808,7 @@ class NoHookBundleTests(unittest.TestCase):
             skill.write_bytes(skill.read_bytes() + b"changed\n")
             with self.assertRaisesRegex(
                 BundleContractError,
-                "skills/using-axiom/SKILL.md bytes drifted",
+                "skills/using-axiom/SKILL.md size drifted",
             ):
                 inputs.verify_source_unchanged()
 

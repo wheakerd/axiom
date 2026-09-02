@@ -66,6 +66,11 @@ WINDOWS_RESERVED_NAMES = frozenset(
 ALLOWED_GIT_COMMANDS = frozenset(
     {"cat-file", "for-each-ref", "hash-object", "ls-tree", "rev-parse"}
 )
+REQUIRED_GIT_GLOBAL_OPTIONS = (
+    "--no-replace-objects",
+    "--no-lazy-fetch",
+    "--no-pager",
+)
 DANGEROUS_GIT_ENVIRONMENT = frozenset(
     {
         "GIT_ALTERNATE_OBJECT_DIRECTORIES",
@@ -568,10 +573,14 @@ class GitObjectSource:
                 "GIT_CONFIG_GLOBAL": os.devnull,
                 "GIT_CONFIG_NOSYSTEM": "1",
                 "GIT_CONFIG_SYSTEM": os.devnull,
+                "GIT_NO_LAZY_FETCH": "1",
                 "GIT_OPTIONAL_LOCKS": "0",
+                "GIT_PROTOCOL_FROM_USER": "0",
                 "GIT_TERMINAL_PROMPT": "0",
             }
         )
+        self.git_global_options = REQUIRED_GIT_GLOBAL_OPTIONS
+        self._verify_required_git_capability()
         actual_root = Path(
             self.run(("rev-parse", "--show-toplevel")).decode("utf-8").strip()
         )
@@ -603,14 +612,10 @@ class GitObjectSource:
         ):
             raise BundleContractError("Git executable identity changed during build")
 
-    def run(self, arguments: tuple[str, ...], *, input_bytes: bytes | None = None) -> bytes:
-        if not arguments or arguments[0] not in ALLOWED_GIT_COMMANDS:
-            raise BundleContractError("builder attempted a non-read-only Git command")
-        self._verify_git_executable()
+    def _git_command(self, arguments: tuple[str, ...]) -> list[str]:
         command = [
             str(self.git_executable),
-            "--no-replace-objects",
-            "--no-pager",
+            *self.git_global_options,
             "-c",
             f"core.hooksPath={os.devnull}",
             "-c",
@@ -625,6 +630,27 @@ class GitObjectSource:
             str(self.repository),
             *arguments,
         ]
+        if (
+            tuple(self.git_global_options) != REQUIRED_GIT_GLOBAL_OPTIONS
+            or command.count("--no-lazy-fetch") != 1
+            or self.environment.get("GIT_NO_LAZY_FETCH") != "1"
+            or self.environment.get("GIT_PROTOCOL_FROM_USER") != "0"
+        ):
+            raise BundleContractError(
+                "every Git invocation requires --no-lazy-fetch, "
+                "GIT_NO_LAZY_FETCH=1, and GIT_PROTOCOL_FROM_USER=0"
+            )
+        return command
+
+    def _run_process(
+        self,
+        arguments: tuple[str, ...],
+        *,
+        input_bytes: bytes | None = None,
+        capability_probe: bool = False,
+    ) -> bytes:
+        self._verify_git_executable()
+        command = self._git_command(arguments)
         try:
             result = subprocess.run(
                 command,
@@ -640,10 +666,23 @@ class GitObjectSource:
         self._verify_git_executable()
         if result.returncode != 0:
             detail = result.stderr.decode("utf-8", errors="replace").strip()
+            if capability_probe:
+                raise BundleContractError(
+                    "Git executable lacks required --no-lazy-fetch capability: "
+                    f"{detail or 'no diagnostic'}"
+                )
             raise BundleContractError(
                 f"read-only Git command failed ({arguments[0]}): {detail or 'no diagnostic'}"
             )
         return result.stdout
+
+    def _verify_required_git_capability(self) -> None:
+        self._run_process(("--version",), capability_probe=True)
+
+    def run(self, arguments: tuple[str, ...], *, input_bytes: bytes | None = None) -> bytes:
+        if not arguments or arguments[0] not in ALLOWED_GIT_COMMANDS:
+            raise BundleContractError("builder attempted a non-read-only Git command")
+        return self._run_process(arguments, input_bytes=input_bytes)
 
     def object_type(self, oid: str) -> str:
         return self.run(("cat-file", "-t", oid)).decode("ascii").strip()
@@ -677,7 +716,26 @@ class GitObjectSource:
         path: Path,
         metadata: os.stat_result,
         relative: str,
+        expected_size: int,
+        expected_data: bytes,
     ) -> tuple[bytes, PhysicalIdentity]:
+        if expected_size < 0 or expected_size != len(expected_data):
+            raise BundleContractError(
+                f"runtime snapshot expectation for {relative} has an invalid size"
+            )
+        if expected_size > MAX_RUNTIME_FILE_BYTES:
+            raise BundleContractError(
+                f"runtime path {relative} exceeds the per-file safety limit"
+            )
+        if metadata.st_size > MAX_RUNTIME_FILE_BYTES:
+            raise BundleContractError(
+                f"runtime path {relative} exceeds the per-file safety limit"
+            )
+        if metadata.st_size != expected_size:
+            raise BundleContractError(
+                f"runtime path contains dirty, untracked, or ignored working-tree state: {relative} size drifted"
+            )
+        initial_identity = _physical_identity(metadata)
         flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
         try:
             descriptor = os.open(path, flags)
@@ -685,25 +743,49 @@ class GitObjectSource:
             raise BundleContractError(f"cannot open runtime path {relative}: {error}") from error
         try:
             opened = os.fstat(descriptor)
+            opened_identity = _physical_identity(opened)
             if (
                 _is_link_or_reparse(opened)
                 or not stat.S_ISREG(opened.st_mode)
-                or opened.st_dev != metadata.st_dev
-                or opened.st_ino != metadata.st_ino
+                or opened_identity != initial_identity
+                or opened.st_size != expected_size
             ):
                 raise BundleContractError(
                     f"runtime path {relative} changed identity while it was opened"
                 )
-            chunks: list[bytes] = []
-            while True:
-                chunk = os.read(descriptor, 64 * 1024)
+            data = bytearray()
+            while len(data) < expected_size:
+                chunk = os.read(descriptor, min(64 * 1024, expected_size - len(data)))
                 if not chunk:
                     break
-                chunks.append(chunk)
+                data.extend(chunk)
+            extra = os.read(descriptor, 1)
             completed = os.fstat(descriptor)
-            if _physical_identity(completed) != _physical_identity(opened):
+            try:
+                current = path.lstat()
+            except OSError as error:
+                raise BundleContractError(
+                    f"cannot revalidate runtime path {relative}: {error}"
+                ) from error
+            if (
+                len(data) != expected_size
+                or extra
+                or completed.st_size != expected_size
+            ):
+                raise BundleContractError(
+                    f"runtime path {relative} changed size or did not end at the expected EOF"
+                )
+            if (
+                _physical_identity(completed) != opened_identity
+                or _physical_identity(current) != opened_identity
+            ):
                 raise BundleContractError(f"runtime path {relative} changed while it was read")
-            return b"".join(chunks), _physical_identity(completed)
+            result = bytes(data)
+            if result != expected_data:
+                raise BundleContractError(
+                    f"runtime path contains dirty, untracked, or ignored working-tree state: {relative} bytes drifted"
+                )
+            return result, _physical_identity(completed)
         finally:
             os.close(descriptor)
 
@@ -712,8 +794,49 @@ class GitObjectSource:
         expected_entries: tuple[GitEntry, ...],
     ) -> tuple[tuple[Any, ...], ...]:
         """Compare physical skills/ state with exact blobs without invoking Git status."""
+        if len(expected_entries) > MAX_RUNTIME_FILES:
+            raise BundleContractError("runtime file count exceeds the snapshot safety maximum")
+        expected_paths = tuple(entry.path for entry in expected_entries)
+        validate_path_set(expected_paths, label="runtime snapshot paths")
+        expected_total_bytes = 0
+        for entry in expected_entries:
+            if (
+                entry.mode != "100644"
+                or entry.object_type != "blob"
+                or entry.size < 0
+                or entry.size != len(entry.data)
+                or entry.size > MAX_RUNTIME_FILE_BYTES
+            ):
+                raise BundleContractError(
+                    f"runtime snapshot expectation for {entry.path} is invalid"
+                )
+            expected_total_bytes += entry.size
+            if expected_total_bytes > MAX_RUNTIME_BYTES:
+                raise BundleContractError(
+                    "runtime byte count exceeds the snapshot safety maximum"
+                )
         expected_files = {entry.path: entry for entry in expected_entries}
         expected_directories = self._expected_runtime_directories(expected_entries)
+        expected_entry_count = len(expected_files) + len(expected_directories) - 1
+        if expected_entry_count > MAX_RUNTIME_FILES:
+            raise BundleContractError("runtime entry count exceeds the snapshot safety maximum")
+        expected_children: dict[str, dict[str, tuple[str, str]]] = {
+            directory: {} for directory in expected_directories
+        }
+
+        def add_expected_child(path: str, kind: str) -> None:
+            parsed = PurePosixPath(path)
+            parent = parsed.parent.as_posix()
+            name = parsed.name
+            if parent not in expected_children or name in expected_children[parent]:
+                raise BundleContractError("runtime snapshot expectation contains a path collision")
+            expected_children[parent][name] = (kind, path)
+
+        for directory in expected_directories:
+            if directory != "skills":
+                add_expected_child(directory, "directory")
+        for path in expected_files:
+            add_expected_child(path, "file")
         skills_root = self.repository / "skills"
         try:
             root_metadata = skills_root.lstat()
@@ -726,13 +849,107 @@ class GitObjectSource:
         physical_directories: dict[str, PhysicalIdentity] = {
             "skills": _physical_identity(root_metadata)
         }
+        observed_entries = 0
+        observed_files = 0
+        observed_directories = 1
+        physical_total_bytes = 0
         pending = [(skills_root, "skills")]
         while pending:
             directory, relative_directory = pending.pop()
+            expected_in_directory = expected_children[relative_directory]
+            seen_names: set[str] = set()
             try:
                 with os.scandir(directory) as iterator:
-                    children = list(iterator)
-                children.sort(key=lambda item: item.name.encode("utf-8"))
+                    for child in iterator:
+                        observed_entries += 1
+                        if (
+                            observed_entries > expected_entry_count
+                            or observed_entries > MAX_RUNTIME_FILES
+                        ):
+                            raise BundleContractError(
+                                "runtime observed entry count exceeds the snapshot safety maximum"
+                            )
+                        relative = f"{relative_directory}/{child.name}"
+                        validate_portable_path(relative, label="runtime working-tree path")
+                        if child.name in seen_names:
+                            raise BundleContractError(
+                                "runtime path contains dirty, untracked, or ignored working-tree state: entry set drifted"
+                            )
+                        expected_child = expected_in_directory.get(child.name)
+                        if expected_child is None:
+                            raise BundleContractError(
+                                "runtime path contains dirty, untracked, or ignored working-tree state: entry set drifted"
+                            )
+                        seen_names.add(child.name)
+                        expected_kind, expected_path = expected_child
+                        if relative != expected_path:
+                            raise BundleContractError("runtime snapshot child path drifted")
+                        try:
+                            metadata = child.stat(follow_symlinks=False)
+                        except OSError as error:
+                            raise BundleContractError(
+                                f"cannot inspect runtime path {relative}: {error}"
+                            ) from error
+                        if _is_link_or_reparse(metadata):
+                            raise BundleContractError(
+                                f"runtime path {relative} must not be a symlink or reparse point"
+                            )
+                        path = Path(child.path)
+                        if expected_kind == "directory":
+                            if not stat.S_ISDIR(metadata.st_mode):
+                                raise BundleContractError(
+                                    f"runtime path {relative} must be an expected directory"
+                                )
+                            observed_directories += 1
+                            if (
+                                observed_directories > len(expected_directories)
+                                or observed_directories > MAX_RUNTIME_FILES
+                            ):
+                                raise BundleContractError(
+                                    "runtime observed directory count exceeds the snapshot safety maximum"
+                                )
+                            physical_directories[relative] = _physical_identity(metadata)
+                            pending.append((path, relative))
+                            continue
+                        if not stat.S_ISREG(metadata.st_mode):
+                            raise BundleContractError(
+                                f"runtime path {relative} must be an expected regular file"
+                            )
+                        observed_files += 1
+                        if observed_files > len(expected_files) or observed_files > MAX_RUNTIME_FILES:
+                            raise BundleContractError(
+                                "runtime observed file count exceeds the snapshot safety maximum"
+                            )
+                        expected = expected_files[relative]
+                        if metadata.st_size > MAX_RUNTIME_FILE_BYTES:
+                            raise BundleContractError(
+                                f"runtime path {relative} exceeds the per-file safety limit"
+                            )
+                        if metadata.st_size != expected.size:
+                            raise BundleContractError(
+                                f"runtime path contains dirty, untracked, or ignored working-tree state: {relative} size drifted"
+                            )
+                        physical_total_bytes += metadata.st_size
+                        if (
+                            physical_total_bytes > expected_total_bytes
+                            or physical_total_bytes > MAX_RUNTIME_BYTES
+                        ):
+                            raise BundleContractError(
+                                "runtime physical byte count exceeds the snapshot safety maximum"
+                            )
+                        if os.name != "nt" and stat.S_IMODE(metadata.st_mode) & 0o111:
+                            raise BundleContractError(f"runtime path {relative} must not be executable")
+                        physical_files[relative] = self._read_snapshot_file(
+                            path,
+                            metadata,
+                            relative,
+                            expected.size,
+                            expected.data,
+                        )
+                if seen_names != set(expected_in_directory):
+                    raise BundleContractError(
+                        "runtime path contains dirty, untracked, or ignored working-tree state: entry set drifted"
+                    )
             except UnicodeError as error:
                 raise BundleContractError(
                     f"runtime directory {relative_directory} contains a non-UTF-8 name"
@@ -741,41 +958,12 @@ class GitObjectSource:
                 raise BundleContractError(
                     f"cannot enumerate runtime directory {relative_directory}: {error}"
                 ) from error
-            for child in children:
-                relative = f"{relative_directory}/{child.name}"
-                validate_portable_path(relative, label="runtime working-tree path")
-                try:
-                    metadata = child.stat(follow_symlinks=False)
-                except OSError as error:
-                    raise BundleContractError(
-                        f"cannot inspect runtime path {relative}: {error}"
-                    ) from error
-                if _is_link_or_reparse(metadata):
-                    raise BundleContractError(
-                        f"runtime path {relative} must not be a symlink or reparse point"
-                    )
-                path = Path(child.path)
-                if stat.S_ISDIR(metadata.st_mode):
-                    if relative not in expected_directories:
-                        raise BundleContractError(
-                            "runtime path contains dirty, untracked, or ignored working-tree state: entry set drifted"
-                        )
-                    physical_directories[relative] = _physical_identity(metadata)
-                    pending.append((path, relative))
-                    continue
-                if not stat.S_ISREG(metadata.st_mode):
-                    raise BundleContractError(
-                        f"runtime path {relative} must be a regular file or directory"
-                    )
-                if relative not in expected_files:
-                    raise BundleContractError(
-                        "runtime path contains dirty, untracked, or ignored working-tree state: entry set drifted"
-                    )
-                if os.name != "nt" and stat.S_IMODE(metadata.st_mode) & 0o111:
-                    raise BundleContractError(f"runtime path {relative} must not be executable")
-                physical_files[relative] = self._read_snapshot_file(path, metadata, relative)
 
-        if set(physical_files) != set(expected_files) or set(physical_directories) != expected_directories:
+        if (
+            set(physical_files) != set(expected_files)
+            or set(physical_directories) != expected_directories
+            or physical_total_bytes != expected_total_bytes
+        ):
             raise BundleContractError(
                 "runtime path contains dirty, untracked, or ignored working-tree state: entry set drifted"
             )
@@ -785,11 +973,6 @@ class GitObjectSource:
             records.append(("directory", relative, *self._identity_values(identity)))
         for relative in sorted(physical_files, key=lambda item: item.encode("utf-8")):
             data, identity = physical_files[relative]
-            expected = expected_files[relative]
-            if data != expected.data or len(data) != expected.size:
-                raise BundleContractError(
-                    f"runtime path contains dirty, untracked, or ignored working-tree state: {relative} bytes drifted"
-                )
             records.append(
                 ("file", relative, *self._identity_values(identity), _sha256(data))
             )
@@ -821,7 +1004,13 @@ class GitObjectSource:
                 metadata, raw_path = record.split(b"\t", 1)
                 mode, object_type, oid, raw_size = metadata.split(b" ", 3)
                 path = raw_path.decode("utf-8")
+                if raw_size.strip() == b"BAD":
+                    raise BundleContractError(
+                        f"source object size for {path} is unavailable while lazy fetching is disabled"
+                    )
                 size = int(raw_size)
+            except BundleContractError:
+                raise
             except (ValueError, UnicodeError) as error:
                 raise BundleContractError(f"invalid git ls-tree record: {error}") from error
             parsed.append(

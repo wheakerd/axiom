@@ -116,13 +116,19 @@ boundary merely because the profiles share canonical Skill bytes.
 
 Repository policy revision 6 implements a deterministic derived bundle from
 the single canonical `skills/` source. The builder freezes an explicit absolute
-Git executable, disables replacement objects, hooks, credentials, protocols,
-and filesystem monitoring, and reads exact commit, tree, and blob objects. It
-does not invoke `git status`: a standard-library `lstat`/`scandir` snapshot
-rejects missing, extra, dirty, ignored, symlinked, reparse-point, or otherwise
-non-regular `skills/` state before and after construction, while runtime bytes
-still come only from Git blobs. The builder emits a minimal no-Hook manifest,
-all 50 files under the eight canonical Skill roots, and
+Git executable and requires its `--no-lazy-fetch` capability. Every Git
+invocation also sets `GIT_NO_LAZY_FETCH=1` and `GIT_PROTOCOL_FROM_USER=0`, so a
+missing promisor object fails locally even when repository configuration
+allows a protocol-specific remote helper. Replacement objects, hooks,
+credentials, generic protocols, and filesystem monitoring remain disabled. The
+builder does not invoke `git status`: a standard-library `lstat`/`scandir`
+snapshot derives exact type and size expectations from Git, streams each
+directory within the fixed entry bound, and reads each regular file through a
+stable descriptor for at most its expected size plus one byte. Missing, extra,
+oversized, dirty, ignored, substituted, symlinked, reparse-point, or otherwise
+non-regular `skills/` state fails before and after construction, while runtime
+bytes still come only from Git blobs. The builder emits a minimal no-Hook
+manifest, all 50 files under the eight canonical Skill roots, and
 `BUNDLE-MANIFEST.json`; and produces a ZIP_STORED archive plus an external
 completion envelope. Its v1 validator closes every manifest field, nested
 object, canonical surface, behavior dependency, transport rule, schema const,
