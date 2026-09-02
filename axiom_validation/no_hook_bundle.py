@@ -10,6 +10,7 @@ import re
 import shutil
 import stat
 import subprocess
+import threading
 import unicodedata
 import zipfile
 from dataclasses import dataclass
@@ -42,6 +43,11 @@ MAX_RUNTIME_BYTES = 2 * 1024 * 1024
 MAX_BUNDLE_MANIFEST_BYTES = 512 * 1024
 MAX_ARCHIVE_BYTES = 4 * 1024 * 1024
 MAX_PATH_BYTES = 240
+MAX_GIT_CONTROL_OUTPUT_BYTES = 64 * 1024
+MAX_GIT_STDERR_BYTES = 64 * 1024
+MAX_GIT_LS_TREE_RECORD_BYTES = MAX_PATH_BYTES + 160
+GIT_PIPE_CHUNK_BYTES = 64 * 1024
+GIT_PROCESS_WAIT_SECONDS = 10
 ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 ZIP_TIMESTAMP_TEXT = "1980-01-01T00:00:00"
 FILE_MODE = 0o100644
@@ -642,30 +648,145 @@ class GitObjectSource:
             )
         return command
 
-    def _run_process(
+    @staticmethod
+    def _read_bounded_pipe(stream: Any, maximum: int, label: str) -> bytes:
+        if maximum < 0:
+            raise BundleContractError(f"{label} limit must not be negative")
+        data = bytearray()
+        while True:
+            remaining = maximum - len(data)
+            chunk = stream.read(min(GIT_PIPE_CHUNK_BYTES, remaining + 1))
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > maximum:
+                raise BundleContractError(f"{label} exceeds its {maximum}-byte limit")
+        return bytes(data)
+
+    @staticmethod
+    def _reap_process(process: subprocess.Popen[bytes], *, terminate: bool) -> int:
+        if terminate and process.poll() is None:
+            process.terminate()
+        try:
+            return process.wait(timeout=GIT_PROCESS_WAIT_SECONDS)
+        except subprocess.TimeoutExpired as error:
+            if process.poll() is None:
+                process.kill()
+            try:
+                process.wait(timeout=GIT_PROCESS_WAIT_SECONDS)
+            except subprocess.TimeoutExpired as final_error:
+                raise BundleContractError(
+                    "read-only Git command could not be reaped after termination"
+                ) from final_error
+            raise BundleContractError("read-only Git command exceeded its wait limit") from error
+
+    def _execute_process(
         self,
         arguments: tuple[str, ...],
+        stdout_reader: Any,
         *,
         input_bytes: bytes | None = None,
         capability_probe: bool = False,
-    ) -> bytes:
+    ) -> Any:
+        if input_bytes is not None and len(input_bytes) > MAX_BUNDLE_MANIFEST_BYTES:
+            raise BundleContractError("bounded Git command input exceeds the JSON safety limit")
         self._verify_git_executable()
         command = self._git_command(arguments)
         try:
-            result = subprocess.run(
+            process = subprocess.Popen(
                 command,
-                input=input_bytes,
+                stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=self.environment,
                 shell=False,
-                check=False,
+                bufsize=0,
             )
         except OSError as error:
             raise BundleContractError(f"read-only Git command could not run: {error}") from error
+        if process.stdout is None or process.stderr is None:
+            self._reap_process(process, terminate=True)
+            raise BundleContractError("read-only Git command pipes were not created")
+
+        stderr_values: list[bytes] = []
+        worker_errors: list[BaseException] = []
+
+        def capture_stderr() -> None:
+            try:
+                stderr_values.append(
+                    self._read_bounded_pipe(
+                        process.stderr,
+                        MAX_GIT_STDERR_BYTES,
+                        "read-only Git stderr",
+                    )
+                )
+            except BaseException as error:  # pragma: no cover - defensive thread handoff
+                worker_errors.append(error)
+                if process.poll() is None:
+                    process.terminate()
+
+        def write_stdin() -> None:
+            if process.stdin is None or input_bytes is None:
+                return
+            try:
+                remaining = memoryview(input_bytes)
+                while remaining:
+                    written = process.stdin.write(remaining)
+                    if written is None or written <= 0:
+                        raise BundleContractError("read-only Git command stopped accepting input")
+                    remaining = remaining[written:]
+            except BrokenPipeError:
+                pass
+            except BaseException as error:  # pragma: no cover - defensive thread handoff
+                worker_errors.append(error)
+                if process.poll() is None:
+                    process.terminate()
+            finally:
+                process.stdin.close()
+
+        stderr_thread = threading.Thread(target=capture_stderr, name="axiom-git-stderr")
+        stderr_thread.start()
+        stdin_thread: threading.Thread | None = None
+        if input_bytes is not None:
+            stdin_thread = threading.Thread(target=write_stdin, name="axiom-git-stdin")
+            stdin_thread.start()
+
+        stdout_error: BaseException | None = None
+        wait_error: BaseException | None = None
+        output: Any = None
+        returncode = -1
+        try:
+            output = stdout_reader(process.stdout)
+        except BaseException as error:
+            stdout_error = error
+        try:
+            returncode = self._reap_process(process, terminate=stdout_error is not None)
+        except BaseException as error:
+            wait_error = error
+        finally:
+            process.stdout.close()
+            if stdin_thread is not None:
+                stdin_thread.join(timeout=GIT_PROCESS_WAIT_SECONDS)
+            stderr_thread.join(timeout=GIT_PROCESS_WAIT_SECONDS)
+            process.stderr.close()
         self._verify_git_executable()
-        if result.returncode != 0:
-            detail = result.stderr.decode("utf-8", errors="replace").strip()
+
+        if stdin_thread is not None and stdin_thread.is_alive():
+            raise BundleContractError("read-only Git input worker did not terminate")
+        if stderr_thread.is_alive():
+            raise BundleContractError("read-only Git stderr worker did not terminate")
+        if wait_error is not None:
+            raise wait_error
+        if stdout_error is not None:
+            raise stdout_error
+        if worker_errors:
+            error = worker_errors[0]
+            if isinstance(error, BundleContractError):
+                raise error
+            raise BundleContractError(f"read-only Git pipe failed: {error}") from error
+        if returncode != 0:
+            stderr = stderr_values[0] if stderr_values else b""
+            detail = stderr.decode("utf-8", errors="replace").strip()
             if capability_probe:
                 raise BundleContractError(
                     "Git executable lacks required --no-lazy-fetch capability: "
@@ -674,21 +795,53 @@ class GitObjectSource:
             raise BundleContractError(
                 f"read-only Git command failed ({arguments[0]}): {detail or 'no diagnostic'}"
             )
-        return result.stdout
+        return output
+
+    def _run_process(
+        self,
+        arguments: tuple[str, ...],
+        *,
+        input_bytes: bytes | None = None,
+        capability_probe: bool = False,
+        maximum_bytes: int = MAX_GIT_CONTROL_OUTPUT_BYTES,
+    ) -> bytes:
+        return self._execute_process(
+            arguments,
+            lambda stream: self._read_bounded_pipe(
+                stream,
+                maximum_bytes,
+                "read-only Git stdout",
+            ),
+            input_bytes=input_bytes,
+            capability_probe=capability_probe,
+        )
 
     def _verify_required_git_capability(self) -> None:
-        self._run_process(("--version",), capability_probe=True)
+        self._run_process(("--version",), capability_probe=True, maximum_bytes=4096)
 
-    def run(self, arguments: tuple[str, ...], *, input_bytes: bytes | None = None) -> bytes:
+    def run(
+        self,
+        arguments: tuple[str, ...],
+        *,
+        input_bytes: bytes | None = None,
+        maximum_bytes: int = MAX_GIT_CONTROL_OUTPUT_BYTES,
+    ) -> bytes:
         if not arguments or arguments[0] not in ALLOWED_GIT_COMMANDS:
             raise BundleContractError("builder attempted a non-read-only Git command")
-        return self._run_process(arguments, input_bytes=input_bytes)
+        return self._run_process(
+            arguments,
+            input_bytes=input_bytes,
+            maximum_bytes=maximum_bytes,
+        )
 
     def object_type(self, oid: str) -> str:
-        return self.run(("cat-file", "-t", oid)).decode("ascii").strip()
+        return self.run(("cat-file", "-t", oid), maximum_bytes=64).decode("ascii").strip()
 
     def tree_for_commit(self, commit: str) -> str:
-        return self.run(("rev-parse", f"{commit}^{{tree}}")).decode("ascii").strip()
+        return self.run(
+            ("rev-parse", f"{commit}^{{tree}}"),
+            maximum_bytes=128,
+        ).decode("ascii").strip()
 
     @staticmethod
     def _expected_runtime_directories(entries: tuple[GitEntry, ...]) -> set[str]:
@@ -995,62 +1148,202 @@ class GitObjectSource:
             raise BundleContractError("runtime path working-tree state changed during build")
 
     @staticmethod
-    def _parse_ls_tree(output: bytes) -> tuple[tuple[str, str, str, int, str], ...]:
-        parsed: list[tuple[str, str, str, int, str]] = []
-        for record in output.split(b"\0"):
-            if not record:
-                continue
-            try:
-                metadata, raw_path = record.split(b"\t", 1)
-                mode, object_type, oid, raw_size = metadata.split(b" ", 3)
-                path = raw_path.decode("utf-8")
-                if raw_size.strip() == b"BAD":
-                    raise BundleContractError(
-                        f"source object size for {path} is unavailable while lazy fetching is disabled"
-                    )
-                size = int(raw_size)
-            except BundleContractError:
-                raise
-            except (ValueError, UnicodeError) as error:
-                raise BundleContractError(f"invalid git ls-tree record: {error}") from error
-            parsed.append(
-                (
-                    mode.decode("ascii"),
-                    object_type.decode("ascii"),
-                    oid.decode("ascii"),
-                    size,
-                    path,
-                )
+    def _parse_ls_tree_record(record: bytes) -> tuple[str, str, str, int, str]:
+        if not record:
+            raise BundleContractError("git ls-tree emitted an empty record")
+        if len(record) > MAX_GIT_LS_TREE_RECORD_BYTES:
+            raise BundleContractError(
+                f"git ls-tree record exceeds its {MAX_GIT_LS_TREE_RECORD_BYTES}-byte limit"
             )
-        return tuple(parsed)
+        try:
+            metadata, raw_path = record.split(b"\t", 1)
+            raw_mode, raw_type, raw_oid, raw_size = metadata.split(b" ", 3)
+            mode = raw_mode.decode("ascii")
+            object_type = raw_type.decode("ascii")
+            oid = raw_oid.decode("ascii")
+            path = raw_path.decode("utf-8")
+        except (ValueError, UnicodeError) as error:
+            raise BundleContractError(f"invalid git ls-tree record: {error}") from error
+        validate_portable_path(path, label="git ls-tree path")
+        if mode != "100644" or object_type != "blob":
+            raise BundleContractError(
+                f"source path {path} must be a non-executable 100644 blob; "
+                f"found {mode} {object_type}"
+            )
+        if OID_PATTERN.fullmatch(oid) is None:
+            raise BundleContractError(f"source object OID for {path} is not a full SHA-1 OID")
+        raw_size = raw_size.strip()
+        if raw_size == b"BAD":
+            raise BundleContractError(
+                f"source object size for {path} is unavailable while lazy fetching is disabled"
+            )
+        if not raw_size or not raw_size.isdigit():
+            raise BundleContractError(f"source object size for {path} is invalid")
+        size = int(raw_size)
+        return mode, object_type, oid, size, path
 
-    def list_files(self, commit: str, prefix: str) -> tuple[GitEntry, ...]:
-        output = self.run(
-            ("ls-tree", "-r", "-z", "-l", "--full-tree", commit, "--", prefix)
+    def _list_tree_records(
+        self,
+        commit: str,
+        prefix: str,
+        *,
+        maximum_files: int,
+        maximum_file_bytes: int,
+        maximum_total_bytes: int,
+        expected_files: int | None = None,
+        expected_total_bytes: int | None = None,
+    ) -> tuple[tuple[str, str, str, int, str], ...]:
+        validate_portable_path(prefix, label="git ls-tree prefix")
+        if maximum_files <= 0 or maximum_file_bytes < 0 or maximum_total_bytes < 0:
+            raise BundleContractError("git ls-tree resource limits must be bounded and non-negative")
+        if expected_files is not None and not 0 <= expected_files <= maximum_files:
+            raise BundleContractError("expected git ls-tree file count exceeds its safety limit")
+        if expected_total_bytes is not None and not 0 <= expected_total_bytes <= maximum_total_bytes:
+            raise BundleContractError("expected git ls-tree byte count exceeds its safety limit")
+        maximum_stdout_bytes = maximum_files * (MAX_GIT_LS_TREE_RECORD_BYTES + 1)
+
+        def read_records(stream: Any) -> tuple[tuple[str, str, str, int, str], ...]:
+            records: list[tuple[str, str, str, int, str]] = []
+            partial = bytearray()
+            total_output_bytes = 0
+            declared_bytes = 0
+            previous_path: bytes | None = None
+            seen_paths: set[str] = set()
+            seen_casefolded: set[str] = set()
+            while True:
+                byte = stream.read(1)
+                if not byte:
+                    break
+                total_output_bytes += len(byte)
+                if total_output_bytes > maximum_stdout_bytes:
+                    raise BundleContractError(
+                        "git ls-tree output exceeds its bounded stdout limit"
+                    )
+                if byte != b"\0":
+                    partial.extend(byte)
+                    if len(partial) > MAX_GIT_LS_TREE_RECORD_BYTES:
+                        raise BundleContractError(
+                            "git ls-tree partial record exceeds its bounded record limit"
+                        )
+                    continue
+
+                record = self._parse_ls_tree_record(bytes(partial))
+                partial.clear()
+                mode, object_type, oid, size, path = record
+                if len(records) >= maximum_files:
+                    raise BundleContractError("git ls-tree file count exceeds its safety limit")
+                if expected_files is not None and len(records) >= expected_files:
+                    raise BundleContractError("git ls-tree file count exceeds the frozen inventory")
+                if size > maximum_file_bytes:
+                    raise BundleContractError(
+                        f"source file {path} exceeds the {maximum_file_bytes}-byte pre-read limit"
+                    )
+                declared_bytes += size
+                if declared_bytes > maximum_total_bytes:
+                    raise BundleContractError(
+                        "git ls-tree declared bytes exceed the cumulative pre-read limit"
+                    )
+                if expected_total_bytes is not None and declared_bytes > expected_total_bytes:
+                    raise BundleContractError(
+                        "git ls-tree declared bytes exceed the frozen inventory"
+                    )
+                encoded_path = path.encode("utf-8")
+                folded_path = path.casefold()
+                if path in seen_paths:
+                    raise BundleContractError("git ls-tree contains a duplicate path")
+                if folded_path in seen_casefolded:
+                    raise BundleContractError("git ls-tree contains a Unicode casefold collision")
+                if previous_path is not None and encoded_path <= previous_path:
+                    raise BundleContractError("git ls-tree paths must use UTF-8 bytewise order")
+                seen_paths.add(path)
+                seen_casefolded.add(folded_path)
+                previous_path = encoded_path
+                records.append((mode, object_type, oid, size, path))
+            if partial:
+                raise BundleContractError("git ls-tree output ended before a NUL record terminator")
+            if expected_files is not None and len(records) != expected_files:
+                raise BundleContractError("git ls-tree file count drifted from the frozen inventory")
+            if expected_total_bytes is not None and declared_bytes != expected_total_bytes:
+                raise BundleContractError("git ls-tree byte count drifted from the frozen inventory")
+            return tuple(records)
+
+        return self._execute_process(
+            ("ls-tree", "-r", "-z", "-l", "--full-tree", commit, "--", prefix),
+            read_records,
+        )
+
+    def _read_blob(self, oid: str, expected_size: int, *, maximum_bytes: int) -> bytes:
+        if OID_PATTERN.fullmatch(oid) is None:
+            raise BundleContractError("source blob OID must be a full lowercase SHA-1 OID")
+        if expected_size < 0 or expected_size > maximum_bytes:
+            raise BundleContractError(
+                f"source blob exceeds the {maximum_bytes}-byte pre-read limit"
+            )
+
+        def read_blob(stream: Any) -> bytes:
+            data = bytearray()
+            while len(data) < expected_size:
+                chunk = stream.read(
+                    min(GIT_PIPE_CHUNK_BYTES, expected_size - len(data))
+                )
+                if not chunk:
+                    break
+                data.extend(chunk)
+            extra = stream.read(1)
+            if len(data) != expected_size:
+                raise BundleContractError("source blob ended before its tree-declared size")
+            if extra:
+                raise BundleContractError("source blob exceeds its tree-declared size")
+            return bytes(data)
+
+        data = self._execute_process(("cat-file", "blob", oid), read_blob)
+        computed_oid = self.run(
+            ("hash-object", "--stdin"),
+            input_bytes=data,
+            maximum_bytes=128,
+        ).decode("ascii").strip()
+        if OID_PATTERN.fullmatch(computed_oid) is None or computed_oid != oid:
+            raise BundleContractError("source blob OID mismatch")
+        return data
+
+    def list_files(
+        self,
+        commit: str,
+        prefix: str,
+        *,
+        maximum_files: int = MAX_RUNTIME_FILES,
+        maximum_file_bytes: int = MAX_RUNTIME_FILE_BYTES,
+        maximum_total_bytes: int = MAX_RUNTIME_BYTES,
+        expected_files: int | None = None,
+        expected_total_bytes: int | None = None,
+    ) -> tuple[GitEntry, ...]:
+        records = self._list_tree_records(
+            commit,
+            prefix,
+            maximum_files=maximum_files,
+            maximum_file_bytes=maximum_file_bytes,
+            maximum_total_bytes=maximum_total_bytes,
+            expected_files=expected_files,
+            expected_total_bytes=expected_total_bytes,
         )
         entries: list[GitEntry] = []
-        for mode, object_type, oid, size, path in self._parse_ls_tree(output):
-            if mode != "100644" or object_type != "blob":
-                raise BundleContractError(
-                    f"source path {path} must be a non-executable 100644 blob; found {mode} {object_type}"
-                )
-            if self.object_type(oid) != "blob":
-                raise BundleContractError(f"source object {oid} for {path} is not a blob")
-            data = self.run(("cat-file", "blob", oid))
-            if len(data) != size:
-                raise BundleContractError(f"source blob size mismatch for {path}")
-            computed_oid = self.run(("hash-object", "--stdin"), input_bytes=data).decode("ascii").strip()
-            if computed_oid != oid:
-                raise BundleContractError(f"source blob OID mismatch for {path}")
+        for mode, object_type, oid, size, path in records:
+            data = self._read_blob(oid, size, maximum_bytes=maximum_file_bytes)
             entries.append(GitEntry(path, mode, object_type, oid, size, data))
         return tuple(entries)
 
-    def read_file(self, commit: str, path: str) -> GitEntry:
-        entries = self.list_files(commit, path)
-        exact = [entry for entry in entries if entry.path == path]
-        if len(exact) != 1 or len(entries) != 1:
+    def read_file(self, commit: str, path: str, *, maximum_bytes: int) -> GitEntry:
+        entries = self.list_files(
+            commit,
+            path,
+            maximum_files=1,
+            maximum_file_bytes=maximum_bytes,
+            maximum_total_bytes=maximum_bytes,
+            expected_files=1,
+        )
+        if entries[0].path != path:
             raise BundleContractError(f"source path {path} must resolve to exactly one regular blob")
-        return exact[0]
+        return entries[0]
 
 
 def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
@@ -1510,7 +1803,11 @@ def inspect_source(
     artifact_bytes: dict[str, bytes] = {}
     for key in PROFILE_ARTIFACT_KEYS:
         binding = frozen_bindings[key]
-        entry = source.read_file(source_commit, binding["path"])
+        entry = source.read_file(
+            source_commit,
+            binding["path"],
+            maximum_bytes=MAX_BUNDLE_MANIFEST_BYTES,
+        )
         artifact_bytes[key] = entry.data
         if _sha256(entry.data) != binding["sha256"]:
             raise BundleContractError(f"stale {key} digest or source bytes")
@@ -1560,7 +1857,11 @@ def inspect_source(
     source_documents: dict[str, dict[str, Any]] = {}
     for path in SOURCE_SUPPORT_PATHS:
         source_documents[path] = _load_json_bytes(
-            source.read_file(source_commit, path).data,
+            source.read_file(
+                source_commit,
+                path,
+                maximum_bytes=MAX_BUNDLE_MANIFEST_BYTES,
+            ).data,
             path,
         )
     full_manifest = source_documents[".codex-plugin/plugin.json"]
@@ -1605,8 +1906,16 @@ def inspect_source(
     if len(skill_roots) != len(set(skill_roots)):
         raise BundleContractError("profile Skill inventory contains duplicates")
 
-    runtime_files = source.list_files(source_commit, "skills")
     inventory = contract["runtimeInventory"]
+    runtime_files = source.list_files(
+        source_commit,
+        "skills",
+        maximum_files=MAX_RUNTIME_FILES,
+        maximum_file_bytes=MAX_RUNTIME_FILE_BYTES,
+        maximum_total_bytes=MAX_RUNTIME_BYTES,
+        expected_files=inventory["runtimeFiles"],
+        expected_total_bytes=inventory["runtimeBytes"],
+    )
     if len(runtime_files) > MAX_RUNTIME_FILES:
         raise BundleContractError("runtime file count exceeds the builder safety maximum")
     if len(runtime_files) != inventory["runtimeFiles"]:

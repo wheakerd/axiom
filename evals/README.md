@@ -121,10 +121,18 @@ invocation also sets `GIT_NO_LAZY_FETCH=1` and `GIT_PROTOCOL_FROM_USER=0`, so a
 missing promisor object fails locally even when repository configuration
 allows a protocol-specific remote helper. Replacement objects, hooks,
 credentials, generic protocols, and filesystem monitoring remain disabled. The
-builder does not invoke `git status`: a standard-library `lstat`/`scandir`
-snapshot derives exact type and size expectations from Git, streams each
-directory within the fixed entry bound, and reads each regular file through a
-stable descriptor for at most its expected size plus one byte. Missing, extra,
+builder does not invoke `git status`. Git tree output is consumed as bounded
+NUL-delimited records: record bytes, path bytes, entry count, per-file size,
+cumulative declared size, total stdout, and stderr are limited before any blob
+is requested. The current runtime tree is additionally frozen at 50 files and
+230826 declared bytes. Each accepted blob is then read only to its tree-declared
+size plus one EOF-check byte; profile and support JSON use a separate 512 KiB
+pre-read ceiling. Any overflow terminates and reaps the Git process.
+
+A standard-library `lstat`/`scandir` snapshot derives exact physical type and
+size expectations from those bounded Git records, streams each directory
+within the fixed entry bound, and reads each regular file through a stable
+descriptor for at most its expected size plus one byte. Missing, extra,
 oversized, dirty, ignored, substituted, symlinked, reparse-point, or otherwise
 non-regular `skills/` state fails before and after construction, while runtime
 bytes still come only from Git blobs. The builder emits a minimal no-Hook

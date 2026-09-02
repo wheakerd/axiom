@@ -49,17 +49,27 @@ allows a protocol-specific remote helper. Git replacement objects, hooks,
 generic protocols, credentials, filesystem monitoring, and ambient
 repository/object redirection are disabled or rejected.
 
-Runtime working-tree state is checked without `git status`. Before reading a
-file, Python `lstat`/`scandir` snapshots derive its expected type and byte count
-from the exact Git entry, enforce per-file, aggregate, file-count, directory,
-and total-entry limits, and reject unknown children during streaming
-enumeration. An opened file must retain the same identity and size; at most the
-expected bytes plus one EOF-check byte are read before its identity, size,
-exact blob bytes, and path are rechecked. The snapshots run before and after
-construction, so repository-local `core.fsmonitor`, PATH-shadowed `git`, lazy
-promisor helpers, dirty or oversized files, and substituted paths cannot enter
-the runtime payload. Runtime payload bytes themselves continue to come only
-from the frozen commit's blobs.
+Git tree enumeration is a bounded pre-read gate rather than a buffered
+post-read check. NUL-delimited records are consumed incrementally, with fixed
+limits for each partial record, portable path, entry count, per-file declared
+size, cumulative declared size, complete stdout, and stderr. The runtime tree
+is also required to match its frozen 50-file, 230826-byte inventory before any
+runtime blob is requested. A blob is read only after its tree-declared size has
+passed the applicable limit: 256 KiB for runtime files and 512 KiB for profile
+or support JSON. The reader consumes exactly that declared size and at most one
+additional EOF-check byte; overflow terminates and reaps the Git process.
+
+Runtime working-tree state is checked without `git status`. Python
+`lstat`/`scandir` snapshots derive expected type and byte count from the bounded
+Git entries, enforce per-file, aggregate, file-count, directory, and total-entry
+limits, and reject unknown children during streaming enumeration. An opened
+file must retain the same identity and size; at most the expected bytes plus one
+EOF-check byte are read before its identity, size, exact blob bytes, and path
+are rechecked. The snapshots run before and after construction, so
+repository-local `core.fsmonitor`, PATH-shadowed `git`, lazy promisor helpers,
+dirty or oversized files, and substituted paths cannot enter the runtime
+payload. Runtime payload bytes themselves continue to come only from the
+frozen commit's blobs.
 
 The package's logical mode contract is always `100644` for files and `040755`
 for directories, including ZIP metadata. On POSIX, generated objects must also

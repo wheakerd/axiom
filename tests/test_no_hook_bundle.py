@@ -182,6 +182,68 @@ def _changed_stat(metadata: os.stat_result, **changes: int) -> mock.Mock:
     return result
 
 
+class TrackingPipe:
+    """A finite fake pipe that rejects unbounded reads and records consumption."""
+
+    def __init__(self, data: bytes) -> None:
+        self._data = data
+        self._offset = 0
+        self.bytes_read = 0
+        self.maximum_request = 0
+        self.closed = False
+
+    def read(self, length: int = -1) -> bytes:
+        if length < 0:
+            raise AssertionError("production code attempted an unbounded pipe read")
+        self.maximum_request = max(self.maximum_request, length)
+        end = min(len(self._data), self._offset + length)
+        result = self._data[self._offset:end]
+        self._offset = end
+        self.bytes_read += len(result)
+        return result
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class ScriptedProcess:
+    """Minimal Popen-compatible process for bounded-reader regressions."""
+
+    def __init__(
+        self,
+        stdout: bytes,
+        *,
+        stderr: bytes = b"",
+        returncode: int = 0,
+    ) -> None:
+        self.stdout = TrackingPipe(stdout)
+        self.stderr = TrackingPipe(stderr)
+        self.stdin = io.BytesIO()
+        self._planned_returncode = returncode
+        self.returncode: int | None = None
+        self.terminated = False
+        self.killed = False
+        self.wait_count = 0
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def terminate(self) -> None:
+        self.terminated = True
+        self.returncode = -15
+
+    def kill(self) -> None:
+        self.killed = True
+        self.returncode = -9
+
+    def wait(self, timeout: int | None = None) -> int:
+        del timeout
+        self.wait_count += 1
+        if self.returncode is None:
+            self.returncode = self._planned_returncode
+        return self.returncode
+
+
 class NoHookBundleTests(unittest.TestCase):
     def test_checked_in_static_evidence_reproduces_without_output(self):
         failures: list[str] = []
@@ -421,15 +483,14 @@ class NoHookBundleTests(unittest.TestCase):
     def test_git_requires_no_lazy_fetch_capability_before_object_reads(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture = SourceFixture(Path(directory))
-            unsupported = subprocess.CompletedProcess(
-                args=[],
-                returncode=129,
-                stdout=b"",
+            unsupported = ScriptedProcess(
+                b"",
                 stderr=b"unknown option: --no-lazy-fetch\n",
+                returncode=129,
             )
             with mock.patch.object(
                 bundle_module.subprocess,
-                "run",
+                "Popen",
                 return_value=unsupported,
             ) as invoked:
                 with self.assertRaisesRegex(
@@ -441,6 +502,7 @@ class NoHookBundleTests(unittest.TestCase):
             command = invoked.call_args.args[0]
             self.assertIn("--no-lazy-fetch", command)
             self.assertEqual("--version", command[-1])
+            self.assertEqual(1, unsupported.wait_count)
 
     def test_each_git_invocation_requires_both_no_lazy_fetch_defenses(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -451,7 +513,7 @@ class NoHookBundleTests(unittest.TestCase):
                 for option in source.git_global_options
                 if option != "--no-lazy-fetch"
             )
-            with mock.patch.object(bundle_module.subprocess, "run") as invoked:
+            with mock.patch.object(bundle_module.subprocess, "Popen") as invoked:
                 with self.assertRaisesRegex(
                     BundleContractError,
                     "every Git invocation requires --no-lazy-fetch",
@@ -461,7 +523,7 @@ class NoHookBundleTests(unittest.TestCase):
 
             source.git_global_options = bundle_module.REQUIRED_GIT_GLOBAL_OPTIONS
             source.environment.pop("GIT_NO_LAZY_FETCH")
-            with mock.patch.object(bundle_module.subprocess, "run") as invoked:
+            with mock.patch.object(bundle_module.subprocess, "Popen") as invoked:
                 with self.assertRaisesRegex(
                     BundleContractError,
                     "every Git invocation requires --no-lazy-fetch",
@@ -527,6 +589,263 @@ class NoHookBundleTests(unittest.TestCase):
             self.assertEqual(source_files, _directory_files(fixture.root / "skills"))
             self.assertEqual([], list(destination.iterdir()))
             self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_committed_runtime_blob_limits_are_enforced_before_blob_reads(self):
+        for mutation in ("oversized", "sparse"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                target = fixture.root / "skills/using-axiom/SKILL.md"
+                if mutation == "oversized":
+                    target.write_bytes(b"x" * (bundle_module.MAX_RUNTIME_FILE_BYTES + 1))
+                else:
+                    with target.open("r+b") as handle:
+                        handle.truncate(bundle_module.MAX_RUNTIME_FILE_BYTES + 1)
+                fixture.commit(f"{mutation} committed blob")
+                object_inventory = _object_database_inventory(fixture.root)
+                source_status = fixture.git(
+                    "status", "--porcelain=v1", "--untracked-files=all"
+                ).stdout
+                source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+                with mock.patch.object(source, "_read_blob", wraps=source._read_blob) as read_blob:
+                    with self.assertRaisesRegex(BundleContractError, "pre-read limit"):
+                        source.list_files(fixture.commit_oid, "skills")
+                read_blob.assert_not_called()
+
+                destination = fixture.destination("output")
+                with self.assertRaisesRegex(BundleContractError, "pre-read limit"):
+                    _build(fixture, destination)
+                self.assertEqual([], list(destination.iterdir()))
+                self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+                self.assertEqual(
+                    source_status,
+                    fixture.git("status", "--porcelain=v1", "--untracked-files=all").stdout,
+                )
+
+    def test_committed_runtime_tree_count_total_and_path_limits_precede_blob_reads(self):
+        for mutation in ("count", "total", "path"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                if mutation == "count":
+                    current_count = sum(
+                        1 for path in (fixture.root / "skills").rglob("*") if path.is_file()
+                    )
+                    for index in range(
+                        bundle_module.MAX_RUNTIME_FILES - current_count + 1
+                    ):
+                        (fixture.root / f"skills/using-axiom/count-{index:03d}.md").write_bytes(
+                            b"x\n"
+                        )
+                    diagnostic = "file count exceeds"
+                elif mutation == "total":
+                    runtime_paths = sorted(
+                        path for path in (fixture.root / "skills").rglob("*") if path.is_file()
+                    )
+                    for path in runtime_paths[:8]:
+                        path.write_bytes(
+                            b"x" * (bundle_module.MAX_RUNTIME_FILE_BYTES - 1) + b"\n"
+                        )
+                    diagnostic = "cumulative pre-read limit"
+                else:
+                    long_name = "p" * 220 + ".md"
+                    (fixture.root / "skills/using-axiom" / long_name).write_bytes(b"x\n")
+                    diagnostic = "240-byte path limit"
+                fixture.commit(f"{mutation} runtime tree")
+                object_inventory = _object_database_inventory(fixture.root)
+                source_status = fixture.git(
+                    "status", "--porcelain=v1", "--untracked-files=all"
+                ).stdout
+                source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+                with mock.patch.object(source, "_read_blob", wraps=source._read_blob) as read_blob:
+                    with self.assertRaisesRegex(BundleContractError, diagnostic):
+                        source.list_files(fixture.commit_oid, "skills")
+                read_blob.assert_not_called()
+
+                destination = fixture.destination("output")
+                build_diagnostic = (
+                    "frozen inventory" if mutation == "total" else diagnostic
+                )
+                with self.assertRaisesRegex(BundleContractError, build_diagnostic):
+                    _build(fixture, destination)
+                self.assertEqual([], list(destination.iterdir()))
+                self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+                self.assertEqual(
+                    source_status,
+                    fixture.git("status", "--porcelain=v1", "--untracked-files=all").stdout,
+                )
+
+    def test_source_json_limits_are_enforced_before_oversized_blob_reads(self):
+        for relative in (
+            "evals/no-hook/profile-v1.json",
+            ".codex-plugin/plugin.json",
+            "evidence/runtime-identity.json",
+        ):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                target = fixture.root / relative
+                target.write_bytes(
+                    b'{"padding":"'
+                    + b"x" * bundle_module.MAX_BUNDLE_MANIFEST_BYTES
+                    + b'"}\n'
+                )
+                fixture.commit("oversized source JSON")
+                object_inventory = _object_database_inventory(fixture.root)
+                source_status = fixture.git(
+                    "status", "--porcelain=v1", "--untracked-files=all"
+                ).stdout
+                destination = fixture.destination("output")
+                with self.assertRaisesRegex(BundleContractError, "pre-read limit"):
+                    _build(fixture, destination)
+                self.assertEqual([], list(destination.iterdir()))
+                self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+                self.assertEqual(
+                    source_status,
+                    fixture.git("status", "--porcelain=v1", "--untracked-files=all").stdout,
+                )
+
+    def test_streamed_ls_tree_rejects_truncation_and_bounds_partial_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            commit_oid = fixture.commit_oid
+            oid = "a" * 40
+            truncated = ScriptedProcess(
+                f"100644 blob {oid} 1\tskills/example.md".encode("ascii")
+            )
+            with mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                return_value=truncated,
+            ):
+                with self.assertRaisesRegex(BundleContractError, "NUL record terminator"):
+                    source.list_files(
+                        commit_oid,
+                        "skills",
+                        maximum_files=1,
+                        maximum_file_bytes=1,
+                        maximum_total_bytes=1,
+                    )
+            self.assertTrue(truncated.terminated)
+            self.assertEqual(1, truncated.wait_count)
+
+            partial = ScriptedProcess(
+                f"100644 blob {oid} 1\t".encode("ascii")
+                + b"p" * (bundle_module.MAX_GIT_LS_TREE_RECORD_BYTES + 100)
+            )
+            with mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                return_value=partial,
+            ):
+                with self.assertRaisesRegex(BundleContractError, "partial record"):
+                    source.list_files(
+                        commit_oid,
+                        "skills",
+                        maximum_files=1,
+                        maximum_file_bytes=1,
+                        maximum_total_bytes=1,
+                    )
+            self.assertEqual(
+                bundle_module.MAX_GIT_LS_TREE_RECORD_BYTES + 1,
+                partial.stdout.bytes_read,
+            )
+            self.assertEqual(1, partial.stdout.maximum_request)
+            self.assertTrue(partial.terminated)
+            self.assertEqual(1, partial.wait_count)
+
+    def test_declared_blob_size_bounds_actual_pipe_consumption_and_reaps_process(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            commit_oid = fixture.commit_oid
+            oid = "b" * 40
+            tree = ScriptedProcess(
+                f"100644 blob {oid} 1\tskills/example.md\0".encode("ascii")
+            )
+            blob = ScriptedProcess(b"x" * (bundle_module.MAX_RUNTIME_FILE_BYTES + 1))
+            object_inventory = _object_database_inventory(fixture.root)
+            source_status = fixture.git(
+                "status", "--porcelain=v1", "--untracked-files=all"
+            ).stdout
+            with mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                side_effect=(tree, blob),
+            ) as invoked:
+                with self.assertRaisesRegex(BundleContractError, "tree-declared size"):
+                    source.list_files(
+                        commit_oid,
+                        "skills",
+                        maximum_files=1,
+                        maximum_file_bytes=bundle_module.MAX_RUNTIME_FILE_BYTES,
+                        maximum_total_bytes=bundle_module.MAX_RUNTIME_BYTES,
+                    )
+            self.assertEqual(2, len(invoked.call_args_list))
+            self.assertEqual(2, blob.stdout.bytes_read)
+            self.assertEqual(1, blob.stdout.maximum_request)
+            self.assertTrue(blob.terminated)
+            self.assertEqual(1, blob.wait_count)
+            self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+            self.assertEqual(
+                source_status,
+                fixture.git("status", "--porcelain=v1", "--untracked-files=all").stdout,
+            )
+
+            maximum = bundle_module.MAX_RUNTIME_FILE_BYTES
+            maximum_tree = ScriptedProcess(
+                f"100644 blob {oid} {maximum}\tskills/example.md\0".encode("ascii")
+            )
+            maximum_blob = ScriptedProcess(b"x" * (maximum + 4096))
+            with mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                side_effect=(maximum_tree, maximum_blob),
+            ):
+                with self.assertRaisesRegex(BundleContractError, "tree-declared size"):
+                    source.list_files(
+                        commit_oid,
+                        "skills",
+                        maximum_files=1,
+                        maximum_file_bytes=maximum,
+                        maximum_total_bytes=maximum,
+                    )
+            self.assertEqual(maximum + 1, maximum_blob.stdout.bytes_read)
+            self.assertLessEqual(
+                maximum_blob.stdout.maximum_request,
+                bundle_module.GIT_PIPE_CHUNK_BYTES,
+            )
+            self.assertTrue(maximum_blob.terminated)
+            self.assertEqual(1, maximum_blob.wait_count)
+
+    def test_oversized_first_tree_record_stops_before_later_objects(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            source = GitObjectSource(fixture.root, GIT_EXECUTABLE)
+            commit_oid = fixture.commit_oid
+            oid = "c" * 40
+            first = (
+                f"100644 blob {oid} {bundle_module.MAX_RUNTIME_FILE_BYTES + 1}"
+                "\tskills/first.md\0"
+            ).encode("ascii")
+            second = f"100644 blob {oid} 1\tskills/second.md\0".encode("ascii")
+            tree = ScriptedProcess(first + second)
+            with mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                return_value=tree,
+            ) as invoked:
+                with self.assertRaisesRegex(BundleContractError, "pre-read limit"):
+                    source.list_files(
+                        commit_oid,
+                        "skills",
+                        maximum_files=2,
+                        maximum_file_bytes=bundle_module.MAX_RUNTIME_FILE_BYTES,
+                        maximum_total_bytes=bundle_module.MAX_RUNTIME_BYTES,
+                    )
+            self.assertEqual(1, len(invoked.call_args_list))
+            self.assertEqual(len(first), tree.stdout.bytes_read)
+            self.assertLess(tree.stdout.bytes_read, len(first + second))
+            self.assertTrue(tree.terminated)
+            self.assertEqual(1, tree.wait_count)
 
     def test_snapshot_rejects_oversized_sparse_and_same_size_drift_before_output(self):
         for mutation in ("oversized", "sparse", "same-size"):
