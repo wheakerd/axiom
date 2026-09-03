@@ -71,6 +71,20 @@ dirty or oversized files, and substituted paths cannot enter the runtime
 payload. Runtime payload bytes themselves continue to come only from the
 frozen commit's blobs.
 
+Static-evidence replay applies the same resource discipline independently of
+construction. After the closed manifest and its self-digest pass, its ordered
+runtime records become a constrained expected child graph, not trusted input.
+The replay validates the 50-file, 230826-byte inventory and the 128-file,
+2 MiB safety ceilings before enumerating `skills/`; then it consumes each
+`scandir` entry incrementally under explicit directory and total-entry limits.
+An unknown child is rejected before its metadata or body is read. Expected
+files must match their declared type, size, order, and SHA-256 and are read
+through stable descriptors for at most the expected size plus one EOF-check
+byte. Schema, evidence, Phase 1 contract, benchmark, Golden Set, response
+schema, runtime identity, policy revision, and builder dependency files use
+the same descriptor identity checks with an explicit per-input maximum rather
+than `Path.read_bytes()`.
+
 The package's logical mode contract is always `100644` for files and `040755`
 for directories, including ZIP metadata. On POSIX, generated objects must also
 have physical `0644`/`0755` modes. On Windows, the validator instead requires

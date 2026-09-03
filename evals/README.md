@@ -143,6 +143,16 @@ object, canonical surface, behavior dependency, transport rule, schema const,
 and the one-field digest self-reference instead of treating equality with one
 known manifest as generic validation.
 
+The separately owned static-evidence replay also treats the validated manifest
+records as bounded input. It freezes their ordered 50-file, 230826-byte child
+graph before touching `skills/`, rejects an unknown directory entry before
+reading its body, and enforces the expected count and bytes plus the 128-file
+and 2 MiB safety maxima during streaming enumeration. Runtime files and every
+JSON or text input used by `check_no_hook_bundle()` are read through stable
+descriptors with pre-read size checks, a maximum-plus-one EOF probe, and
+post-read path, identity, and size checks. Benchmark and Golden Set bindings
+therefore no longer use unbounded filesystem reads during evidence replay.
+
 The logical package contract always records files as `100644`, directories as
 `040755`, and those exact modes in ZIP metadata. POSIX output validation also
 requires physical `0644`/`0755`. Windows output validation requires ordinary

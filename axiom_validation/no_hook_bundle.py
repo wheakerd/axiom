@@ -40,6 +40,8 @@ SOURCE_REPOSITORY_SLUG = "wheakerd/axiom"
 MAX_RUNTIME_FILES = 128
 MAX_RUNTIME_FILE_BYTES = 256 * 1024
 MAX_RUNTIME_BYTES = 2 * 1024 * 1024
+MAX_RUNTIME_DIRECTORIES = MAX_RUNTIME_FILES
+MAX_RUNTIME_ENTRIES = MAX_RUNTIME_FILES * 2
 MAX_BUNDLE_MANIFEST_BYTES = 512 * 1024
 MAX_ARCHIVE_BYTES = 4 * 1024 * 1024
 MAX_PATH_BYTES = 240
@@ -404,7 +406,21 @@ def _validate_physical_mode(
         raise BundleContractError(f"{label} mode must be {expected:04o}")
 
 
-def _read_regular_file(path: Path, label: str, *, maximum: int) -> bytes:
+def _read_regular_file(
+    path: Path,
+    label: str,
+    *,
+    maximum: int,
+    expected_size: int | None = None,
+) -> bytes:
+    if type(maximum) is not int or maximum < 0:
+        raise BundleContractError(f"{label} read limit must be a non-negative integer")
+    if expected_size is not None and (
+        type(expected_size) is not int
+        or expected_size < 0
+        or expected_size > maximum
+    ):
+        raise BundleContractError(f"{label} expected size exceeds its bounded read limit")
     try:
         metadata = path.lstat()
     except OSError as error:
@@ -415,10 +431,53 @@ def _read_regular_file(path: Path, label: str, *, maximum: int) -> bytes:
         raise BundleContractError(f"{label} must be a regular file")
     if metadata.st_size > maximum:
         raise BundleContractError(f"{label} exceeds its {maximum}-byte limit")
+    bounded_size = metadata.st_size if expected_size is None else expected_size
+    if metadata.st_size != bounded_size:
+        raise BundleContractError(f"{label} size differs from its expected bounded size")
+    initial_identity = _physical_identity(metadata)
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
-        return path.read_bytes()
+        descriptor = os.open(path, flags)
     except OSError as error:
-        raise BundleContractError(f"cannot read {label}: {error}") from error
+        raise BundleContractError(f"cannot open {label}: {error}") from error
+    try:
+        opened = os.fstat(descriptor)
+        opened_identity = _physical_identity(opened)
+        if (
+            _is_link_or_reparse(opened)
+            or not stat.S_ISREG(opened.st_mode)
+            or opened_identity != initial_identity
+            or opened.st_size != bounded_size
+        ):
+            raise BundleContractError(f"{label} changed identity while it was opened")
+
+        data = bytearray()
+        while len(data) < bounded_size:
+            chunk = os.read(descriptor, min(64 * 1024, bounded_size - len(data)))
+            if not chunk:
+                break
+            data.extend(chunk)
+        extra = os.read(descriptor, 1)
+        completed = os.fstat(descriptor)
+        try:
+            current = path.lstat()
+        except OSError as error:
+            raise BundleContractError(f"cannot revalidate {label}: {error}") from error
+
+        if len(data) != bounded_size:
+            raise BundleContractError(f"{label} ended before its expected bounded size")
+        if extra:
+            raise BundleContractError(f"{label} exceeds its expected bounded size")
+        if completed.st_size != bounded_size:
+            raise BundleContractError(f"{label} changed size while it was read")
+        if (
+            _physical_identity(completed) != opened_identity
+            or _physical_identity(current) != opened_identity
+        ):
+            raise BundleContractError(f"{label} changed identity while it was read")
+        return bytes(data)
+    finally:
+        os.close(descriptor)
 
 
 def _pretty_json_bytes(document: dict[str, Any]) -> bytes:
@@ -2723,7 +2782,130 @@ def build_bundle(
 def _filesystem_runtime(
     root: Path,
     expected_inventory: dict[str, Any],
+    expected_records: list[dict[str, Any]],
 ) -> tuple[tuple[dict[str, Any], ...], tuple[GitEntry, ...]]:
+    inventory = _exact_object(
+        expected_inventory,
+        {"directSkillRoots", "runtimeFiles", "runtimeBytes", "allowedExtensions"},
+        "static replay runtime inventory",
+    )
+    expected_file_count = inventory["runtimeFiles"]
+    expected_total_bytes = inventory["runtimeBytes"]
+    expected_root_count = inventory["directSkillRoots"]
+    allowed_extensions_value = inventory["allowedExtensions"]
+    if (
+        type(expected_file_count) is not int
+        or not 0 < expected_file_count <= MAX_RUNTIME_FILES
+    ):
+        raise BundleContractError("static replay runtime file count exceeds its safety maximum")
+    if (
+        type(expected_total_bytes) is not int
+        or not 0 <= expected_total_bytes <= MAX_RUNTIME_BYTES
+    ):
+        raise BundleContractError("static replay runtime bytes exceed their safety maximum")
+    if (
+        type(expected_root_count) is not int
+        or not 0 < expected_root_count <= MAX_RUNTIME_DIRECTORIES
+    ):
+        raise BundleContractError("static replay Skill root count exceeds its safety maximum")
+    if (
+        type(allowed_extensions_value) is not list
+        or not allowed_extensions_value
+        or not all(type(value) is str and value.startswith(".") for value in allowed_extensions_value)
+    ):
+        raise BundleContractError("static replay allowed extensions are invalid")
+    if type(expected_records) is not list or len(expected_records) != expected_file_count:
+        raise BundleContractError("static replay runtime records differ from the frozen file count")
+
+    allowed_extensions = set(allowed_extensions_value)
+    frozen_records: list[dict[str, Any]] = []
+    expected_paths: list[str] = []
+    declared_total_bytes = 0
+    for index, value in enumerate(expected_records):
+        record = _exact_object(
+            value,
+            {"path", "kind", "mode", "size", "sha256"},
+            f"static replay runtimeFiles[{index}]",
+        )
+        path = record["path"]
+        validate_portable_path(path, label=f"static replay runtimeFiles[{index}].path")
+        if not path.startswith("skills/"):
+            raise BundleContractError("static replay runtime path must remain under skills/")
+        if PurePosixPath(path).suffix not in allowed_extensions:
+            raise BundleContractError(f"static replay runtime path {path} has an unapproved extension")
+        if record["kind"] != _runtime_kind(path) or record["mode"] != "100644":
+            raise BundleContractError(f"static replay runtime record for {path} has invalid type or mode")
+        size = record["size"]
+        if type(size) is not int or not 0 < size <= MAX_RUNTIME_FILE_BYTES:
+            raise BundleContractError(f"static replay runtime record for {path} exceeds its per-file limit")
+        declared_total_bytes += size
+        if declared_total_bytes > expected_total_bytes or declared_total_bytes > MAX_RUNTIME_BYTES:
+            raise BundleContractError("static replay runtime records exceed their aggregate byte limit")
+        if type(record["sha256"]) is not str or SHA256_PATTERN.fullmatch(record["sha256"]) is None:
+            raise BundleContractError(f"static replay runtime record for {path} has an invalid digest")
+        expected_paths.append(path)
+        frozen_records.append(
+            {
+                "path": path,
+                "kind": record["kind"],
+                "mode": record["mode"],
+                "size": size,
+                "sha256": record["sha256"],
+            }
+        )
+    validate_path_set(tuple(expected_paths), label="static replay runtime paths")
+    if declared_total_bytes != expected_total_bytes:
+        raise BundleContractError("static replay runtime records differ from the frozen byte total")
+    roots = {PurePosixPath(path).parts[1] for path in expected_paths}
+    if len(roots) != expected_root_count:
+        raise BundleContractError("static replay direct Skill root count differs from evidence")
+
+    expected_files = {record["path"]: record for record in frozen_records}
+    expected_directories = {"skills"}
+    for path in expected_paths:
+        parent = PurePosixPath(path).parent
+        while parent.as_posix() != ".":
+            expected_directories.add(parent.as_posix())
+            parent = parent.parent
+    if any(path in expected_directories for path in expected_files):
+        raise BundleContractError("static replay runtime records contain a file/directory collision")
+    ordered_directories = tuple(
+        sorted(expected_directories, key=lambda value: value.encode("utf-8"))
+    )
+    validate_path_set(ordered_directories, label="static replay runtime directories")
+    if len(expected_directories) > MAX_RUNTIME_DIRECTORIES:
+        raise BundleContractError("static replay runtime directory count exceeds its safety maximum")
+    expected_entry_count = len(expected_files) + len(expected_directories) - 1
+    if expected_entry_count > MAX_RUNTIME_ENTRIES:
+        raise BundleContractError("static replay runtime entry count exceeds its safety maximum")
+
+    expected_children: dict[str, dict[str, tuple[str, str]]] = {
+        directory: {} for directory in expected_directories
+    }
+    expected_child_casefolds: dict[str, set[str]] = {
+        directory: set() for directory in expected_directories
+    }
+
+    def add_expected_child(path: str, kind: str) -> None:
+        parsed = PurePosixPath(path)
+        parent = parsed.parent.as_posix()
+        name = parsed.name
+        folded = name.casefold()
+        if (
+            parent not in expected_children
+            or name in expected_children[parent]
+            or folded in expected_child_casefolds[parent]
+        ):
+            raise BundleContractError("static replay runtime records contain a child collision")
+        expected_children[parent][name] = (kind, path)
+        expected_child_casefolds[parent].add(folded)
+
+    for directory in expected_directories:
+        if directory != "skills":
+            add_expected_child(directory, "directory")
+    for path in expected_paths:
+        add_expected_child(path, "file")
+
     skills_root = root / "skills"
     try:
         root_metadata = skills_root.lstat()
@@ -2731,70 +2913,167 @@ def _filesystem_runtime(
         raise BundleContractError(f"cannot inspect current skills/: {error}") from error
     if _is_link_or_reparse(root_metadata) or not stat.S_ISDIR(root_metadata.st_mode):
         raise BundleContractError("current skills/ must be an ordinary directory")
-    entries: list[GitEntry] = []
+    physical_directories: dict[str, PhysicalIdentity] = {
+        "skills": _physical_identity(root_metadata)
+    }
+    physical_files: dict[str, GitEntry] = {}
+    observed_entries = 0
+    observed_directories = 1
+    observed_files = 0
+    observed_total_bytes = 0
     pending = [(skills_root, "skills")]
     while pending:
         directory, prefix = pending.pop()
+        expected_in_directory = expected_children[prefix]
+        seen_names: set[str] = set()
+        seen_casefolds: set[str] = set()
         try:
             with os.scandir(directory) as iterator:
-                children = list(iterator)
-            children.sort(key=lambda item: item.name.encode("utf-8"), reverse=True)
+                for child in iterator:
+                    observed_entries += 1
+                    if (
+                        observed_entries > expected_entry_count
+                        or observed_entries > MAX_RUNTIME_ENTRIES
+                    ):
+                        raise BundleContractError(
+                            "static replay observed entry count exceeds its bounded inventory"
+                        )
+                    relative = f"{prefix}/{child.name}"
+                    validate_portable_path(relative, label="current runtime path")
+                    folded = child.name.casefold()
+                    if child.name in seen_names or folded in seen_casefolds:
+                        raise BundleContractError("current runtime entry set contains a collision")
+                    expected_child = expected_in_directory.get(child.name)
+                    if expected_child is None:
+                        raise BundleContractError(
+                            "current runtime entry set differs from bundle evidence"
+                        )
+                    seen_names.add(child.name)
+                    seen_casefolds.add(folded)
+                    expected_kind, expected_path = expected_child
+                    if relative != expected_path:
+                        raise BundleContractError("current runtime child path differs from bundle evidence")
+                    try:
+                        metadata = child.stat(follow_symlinks=False)
+                    except OSError as error:
+                        raise BundleContractError(
+                            f"cannot inspect current runtime path {relative}: {error}"
+                        ) from error
+                    if _is_link_or_reparse(metadata):
+                        raise BundleContractError(
+                            f"current runtime path {relative} must not be a symlink or reparse point"
+                        )
+                    path = Path(child.path)
+                    if expected_kind == "directory":
+                        if not stat.S_ISDIR(metadata.st_mode):
+                            raise BundleContractError(
+                                f"current runtime path {relative} must be an expected directory"
+                            )
+                        observed_directories += 1
+                        if (
+                            observed_directories > len(expected_directories)
+                            or observed_directories > MAX_RUNTIME_DIRECTORIES
+                        ):
+                            raise BundleContractError(
+                                "static replay observed directory count exceeds its bounded inventory"
+                            )
+                        physical_directories[relative] = _physical_identity(metadata)
+                        pending.append((path, relative))
+                        continue
+                    if not stat.S_ISREG(metadata.st_mode):
+                        raise BundleContractError(
+                            f"current runtime path {relative} must be an expected regular file"
+                        )
+                    observed_files += 1
+                    if observed_files > expected_file_count or observed_files > MAX_RUNTIME_FILES:
+                        raise BundleContractError(
+                            "static replay observed file count exceeds its bounded inventory"
+                        )
+                    expected = expected_files[relative]
+                    expected_size = expected["size"]
+                    if metadata.st_size > MAX_RUNTIME_FILE_BYTES:
+                        raise BundleContractError(
+                            f"current runtime path {relative} exceeds its per-file limit"
+                        )
+                    if metadata.st_size != expected_size:
+                        raise BundleContractError(
+                            f"current runtime path {relative} size differs from bundle evidence"
+                        )
+                    observed_total_bytes += metadata.st_size
+                    if (
+                        observed_total_bytes > expected_total_bytes
+                        or observed_total_bytes > MAX_RUNTIME_BYTES
+                    ):
+                        raise BundleContractError(
+                            "static replay observed bytes exceed their aggregate limit"
+                        )
+                    if os.name != "nt" and stat.S_IMODE(metadata.st_mode) & 0o111:
+                        raise BundleContractError(
+                            f"current runtime path {relative} must not be executable"
+                        )
+                    data = _read_regular_file(
+                        path,
+                        f"current runtime path {relative}",
+                        maximum=MAX_RUNTIME_FILE_BYTES,
+                        expected_size=expected_size,
+                    )
+                    _validate_runtime_text(data, relative)
+                    if _sha256(data) != expected["sha256"]:
+                        raise BundleContractError(
+                            f"current runtime path {relative} digest differs from bundle evidence"
+                        )
+                    physical_files[relative] = GitEntry(
+                        relative,
+                        "100644",
+                        "blob",
+                        "0" * 40,
+                        len(data),
+                        data,
+                    )
+            if seen_names != set(expected_in_directory):
+                raise BundleContractError("current runtime entry set differs from bundle evidence")
         except (OSError, UnicodeError) as error:
             raise BundleContractError(f"cannot enumerate current runtime: {error}") from error
-        for child in children:
-            relative = f"{prefix}/{child.name}"
-            validate_portable_path(relative, label="current runtime path")
-            try:
-                metadata = child.stat(follow_symlinks=False)
-            except OSError as error:
-                raise BundleContractError(
-                    f"cannot inspect current runtime path {relative}: {error}"
-                ) from error
-            if _is_link_or_reparse(metadata):
-                raise BundleContractError(
-                    f"current runtime path {relative} must not be a symlink or reparse point"
-                )
-            path = Path(child.path)
-            if stat.S_ISDIR(metadata.st_mode):
-                pending.append((path, relative))
-                continue
-            if not stat.S_ISREG(metadata.st_mode):
-                raise BundleContractError(f"current runtime path {relative} must be a regular file")
-            if os.name != "nt" and stat.S_IMODE(metadata.st_mode) & 0o111:
-                raise BundleContractError(f"current runtime path {relative} must not be executable")
-            data = _read_regular_file(
-                path,
-                f"current runtime path {relative}",
-                maximum=MAX_RUNTIME_FILE_BYTES,
-            )
-            entries.append(GitEntry(relative, "100644", "blob", "0" * 40, len(data), data))
-    entries.sort(key=lambda entry: entry.path.encode("utf-8"))
-    paths = tuple(entry.path for entry in entries)
-    validate_path_set(paths, label="current runtime paths")
-    if len(entries) != expected_inventory["runtimeFiles"]:
-        raise BundleContractError("current runtime file count differs from bundle evidence")
-    if sum(entry.size for entry in entries) != expected_inventory["runtimeBytes"]:
-        raise BundleContractError("current runtime bytes differ from bundle evidence")
-    allowed_extensions = set(expected_inventory["allowedExtensions"])
-    records: list[dict[str, Any]] = []
-    for entry in entries:
-        if PurePosixPath(entry.path).suffix not in allowed_extensions:
-            raise BundleContractError(f"current runtime path {entry.path} has an unapproved extension")
-        _validate_runtime_text(entry.data, entry.path)
-        records.append(
-            {
-                "path": entry.path,
-                "kind": _runtime_kind(entry.path),
-                "mode": "100644",
-                "size": entry.size,
-                "sha256": _sha256(entry.data),
-            }
-        )
-    roots = tuple(sorted({PurePosixPath(path).parts[1] for path in paths}))
-    if len(roots) != expected_inventory["directSkillRoots"]:
-        raise BundleContractError("current direct Skill root count differs from bundle evidence")
-    _validate_reference_closure(tuple(entries), roots)
-    return tuple(records), tuple(entries)
+
+    if (
+        observed_entries != expected_entry_count
+        or observed_directories != len(expected_directories)
+        or observed_files != expected_file_count
+        or observed_total_bytes != expected_total_bytes
+        or set(physical_files) != set(expected_files)
+        or set(physical_directories) != expected_directories
+    ):
+        raise BundleContractError("current runtime entry or byte total differs from bundle evidence")
+    for relative, identity in physical_directories.items():
+        try:
+            current = (root / relative).lstat()
+        except OSError as error:
+            raise BundleContractError(
+                f"cannot revalidate current runtime directory {relative}: {error}"
+            ) from error
+        if (
+            _is_link_or_reparse(current)
+            or not stat.S_ISDIR(current.st_mode)
+            or _physical_identity(current) != identity
+        ):
+            raise BundleContractError(f"current runtime directory {relative} changed during replay")
+
+    entries = tuple(physical_files[path] for path in expected_paths)
+    records = tuple(
+        {
+            "path": entry.path,
+            "kind": _runtime_kind(entry.path),
+            "mode": entry.mode,
+            "size": entry.size,
+            "sha256": _sha256(entry.data),
+        }
+        for entry in entries
+    )
+    if records != tuple(frozen_records):
+        raise BundleContractError("current runtime record order or identity differs from bundle evidence")
+    ordered_roots = tuple(sorted(roots))
+    _validate_reference_closure(entries, ordered_roots)
+    return records, entries
 
 
 def _evidence_inputs(
@@ -2822,7 +3101,11 @@ def _evidence_inputs(
             "skills": full_manifest.get("skills"),
         }
     )
-    records, runtime_files = _filesystem_runtime(root, contract["runtimeInventory"])
+    records, runtime_files = _filesystem_runtime(
+        root,
+        contract["runtimeInventory"],
+        manifest["runtimeFiles"],
+    )
     dependencies = (
         _implementation_identity(root / ENTRYPOINT_RELATIVE, ENTRYPOINT_RELATIVE, "entrypoint"),
         _implementation_identity(root / MODULE_RELATIVE, MODULE_RELATIVE, "implementation"),
@@ -2929,10 +3212,18 @@ def check_no_hook_bundle(
             if _sha256(data) != binding["sha256"]:
                 raise BundleContractError(f"tracked {key} bytes drifted from Phase 1")
         benchmark = _load_json_bytes(
-            (root / frozen_bindings["benchmark"]["path"]).read_bytes(),
+            _read_regular_file(
+                root / frozen_bindings["benchmark"]["path"],
+                frozen_bindings["benchmark"]["path"],
+                maximum=MAX_BUNDLE_MANIFEST_BYTES,
+            ),
             "no-Hook benchmark",
         )
-        golden = (root / frozen_bindings["goldenSet"]["path"]).read_bytes()
+        golden = _read_regular_file(
+            root / frozen_bindings["goldenSet"]["path"],
+            frozen_bindings["goldenSet"]["path"],
+            maximum=MAX_BUNDLE_MANIFEST_BYTES,
+        )
         versions = _load_contract_versions(golden)
         actual_host_sets = []
         for case_set in benchmark.get("hostCaseSets", []):

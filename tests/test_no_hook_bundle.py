@@ -15,7 +15,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest import mock
 
 import axiom_validation.no_hook_bundle as bundle_module
@@ -131,6 +131,24 @@ def _directory_files(root: Path) -> dict[str, bytes]:
         for path in sorted(root.rglob("*"))
         if path.is_file()
     }
+
+
+def _static_runtime_inputs() -> tuple[dict[str, object], list[dict[str, object]]]:
+    schema = json.loads(
+        (REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    evidence = json.loads(
+        (
+            REPOSITORY_ROOT
+            / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    return (
+        copy.deepcopy(schema["x-axiom-contract"]["runtimeInventory"]),
+        copy.deepcopy(evidence["bundleManifest"]["runtimeFiles"]),
+    )
 
 
 def _rebind_manifest(document: dict[str, object]) -> None:
@@ -249,6 +267,279 @@ class NoHookBundleTests(unittest.TestCase):
         failures: list[str] = []
         self.assertEqual((50, 2), check_no_hook_bundle(failures))
         self.assertEqual([], failures)
+
+    def test_regular_file_reader_bounds_extra_short_growth_and_identity_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "bounded.json"
+            target.write_bytes(b"x")
+            metadata = target.lstat()
+
+            for label, payload, diagnostic in (
+                ("extra", b"xy", "exceeds its expected bounded size"),
+                ("short", b"", "ended before its expected bounded size"),
+            ):
+                with self.subTest(label=label):
+                    offset = 0
+                    consumed = 0
+                    maximum_request = 0
+
+                    def bounded_read(unused_descriptor: int, length: int) -> bytes:
+                        nonlocal offset, consumed, maximum_request
+                        maximum_request = max(maximum_request, length)
+                        result = payload[offset : offset + length]
+                        offset += len(result)
+                        consumed += len(result)
+                        return result
+
+                    with (
+                        mock.patch.object(bundle_module.os, "open", return_value=91),
+                        mock.patch.object(bundle_module.os, "fstat", return_value=metadata),
+                        mock.patch.object(bundle_module.os, "read", side_effect=bounded_read),
+                        mock.patch.object(bundle_module.os, "close") as close,
+                    ):
+                        with self.assertRaisesRegex(BundleContractError, diagnostic):
+                            bundle_module._read_regular_file(
+                                target,
+                                "bounded fixture",
+                                maximum=1,
+                                expected_size=1,
+                            )
+                    self.assertLessEqual(consumed, 2)
+                    self.assertLessEqual(maximum_request, 1)
+                    close.assert_called_once_with(91)
+
+            target.write_bytes(b"x")
+            original_read = os.read
+            consumed = 0
+            grew = False
+
+            def read_then_grow(descriptor: int, length: int) -> bytes:
+                nonlocal consumed, grew
+                data = original_read(descriptor, length)
+                consumed += len(data)
+                if data and not grew:
+                    with target.open("ab") as handle:
+                        handle.write(b"y")
+                    grew = True
+                return data
+
+            with mock.patch.object(bundle_module.os, "read", side_effect=read_then_grow):
+                with self.assertRaisesRegex(BundleContractError, "expected bounded size"):
+                    bundle_module._read_regular_file(
+                        target,
+                        "growing fixture",
+                        maximum=1,
+                        expected_size=1,
+                    )
+            self.assertLessEqual(consumed, 2)
+
+            target.write_bytes(b"identity")
+            original_fstat = os.fstat
+            for mutation in ("identity", "size"):
+                with self.subTest(mutation=mutation):
+                    calls = 0
+
+                    def changed_after_read(descriptor: int):
+                        nonlocal calls
+                        calls += 1
+                        current = original_fstat(descriptor)
+                        if calls == 1:
+                            return current
+                        if mutation == "identity":
+                            return _changed_stat(current, st_ino=current.st_ino + 1)
+                        return _changed_stat(current, st_size=current.st_size + 1)
+
+                    with mock.patch.object(
+                        bundle_module.os,
+                        "fstat",
+                        side_effect=changed_after_read,
+                    ):
+                        with self.assertRaisesRegex(BundleContractError, "changed (identity|size)"):
+                            bundle_module._read_regular_file(
+                                target,
+                                "changing fixture",
+                                maximum=len(b"identity"),
+                                expected_size=len(b"identity"),
+                            )
+
+    def test_static_replay_streaming_stops_at_first_extra_without_reading_bodies(self):
+        inventory, records = _static_runtime_inputs()
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            skills_root = fixture.root / "skills"
+            for index in range(300):
+                (skills_root / f"unexpected-{index:03d}.md").write_text(
+                    "unexpected\n",
+                    encoding="utf-8",
+                )
+            destination = fixture.destination("output")
+            object_inventory = _object_database_inventory(fixture.root)
+            source_status = fixture.git(
+                "status", "--porcelain=v1", "--untracked-files=all"
+            ).stdout
+            real_scandir = os.scandir
+            observed = 0
+
+            class CountingScandir:
+                def __init__(self, path: os.PathLike[str] | str) -> None:
+                    self.iterator = real_scandir(path)
+
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *unused: object) -> None:
+                    self.iterator.close()
+
+                def __iter__(self):
+                    return self
+
+                def __next__(self):
+                    nonlocal observed
+                    child = next(self.iterator)
+                    observed += 1
+                    return child
+
+            def counting_scandir(path: os.PathLike[str] | str):
+                if Path(path) == skills_root:
+                    return CountingScandir(path)
+                return real_scandir(path)
+
+            with (
+                mock.patch.object(bundle_module.os, "scandir", side_effect=counting_scandir),
+                mock.patch.object(
+                    bundle_module,
+                    "_read_regular_file",
+                    wraps=bundle_module._read_regular_file,
+                ) as read_file,
+            ):
+                with self.assertRaisesRegex(BundleContractError, "entry set differs"):
+                    bundle_module._filesystem_runtime(fixture.root, inventory, records)
+            expected_root_children = {
+                PurePosixPath(record["path"]).parts[1] for record in records
+            }
+            self.assertLessEqual(observed, len(expected_root_children) + 1)
+            read_file.assert_not_called()
+            self.assertEqual(object_inventory, _object_database_inventory(fixture.root))
+            self.assertEqual(
+                source_status,
+                fixture.git("status", "--porcelain=v1", "--untracked-files=all").stdout,
+            )
+            self.assertEqual([], list(destination.iterdir()))
+
+    def test_static_replay_rejects_untrusted_count_and_aggregate_before_enumeration(self):
+        def record(index: int, size: int) -> dict[str, object]:
+            return {
+                "path": f"skills/example/file-{index:03d}.md",
+                "kind": "resource",
+                "mode": "100644",
+                "size": size,
+                "sha256": "0" * 64,
+            }
+
+        cases = (
+            (
+                "file count",
+                bundle_module.MAX_RUNTIME_FILES + 1,
+                1,
+                None,
+                "file count exceeds",
+            ),
+            (
+                "aggregate bytes",
+                9,
+                bundle_module.MAX_RUNTIME_FILE_BYTES,
+                None,
+                "runtime bytes exceed",
+            ),
+            ("frozen byte total", 1, 1, 2, "differ from the frozen byte total"),
+        )
+        for label, count, size, total_override, diagnostic in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
+                records = [record(index, size) for index in range(count)]
+                inventory = {
+                    "directSkillRoots": 1,
+                    "runtimeFiles": count,
+                    "runtimeBytes": count * size if total_override is None else total_override,
+                    "allowedExtensions": [".md"],
+                }
+                with mock.patch.object(bundle_module.os, "scandir") as scandir:
+                    with self.assertRaisesRegex(BundleContractError, diagnostic):
+                        bundle_module._filesystem_runtime(Path(directory), inventory, records)
+                scandir.assert_not_called()
+
+    def test_static_replay_rejects_physical_size_before_file_body_read(self):
+        inventory, records = _static_runtime_inputs()
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            target = fixture.root / "skills/using-axiom/SKILL.md"
+            target.write_bytes(target.read_bytes() + b"drift\n")
+            read_paths: list[Path] = []
+            original = bundle_module._read_regular_file
+
+            def record_read(path: Path, *args: object, **kwargs: object) -> bytes:
+                read_paths.append(path)
+                return original(path, *args, **kwargs)
+
+            with mock.patch.object(
+                bundle_module,
+                "_read_regular_file",
+                side_effect=record_read,
+            ):
+                with self.assertRaisesRegex(BundleContractError, "size differs"):
+                    bundle_module._filesystem_runtime(fixture.root, inventory, records)
+            self.assertNotIn(target, read_paths)
+
+    def test_static_replay_bounds_all_json_inputs_and_rejects_bound_links(self):
+        oversized_paths = (
+            "evals/no-hook/bundle-manifest-schema-v1.json",
+            "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
+            "evals/no-hook/benchmark-v1.json",
+            "evals/no-hook/golden-set-v1.jsonl",
+        )
+        for relative in oversized_paths:
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
+                root = self._copy_repository(Path(directory))
+                target = root / relative
+                with target.open("r+b") as handle:
+                    handle.truncate(bundle_module.MAX_BUNDLE_MANIFEST_BYTES + 1)
+                failures: list[str] = []
+                self.assertEqual((0, 0), check_no_hook_bundle(failures, root))
+                self.assertEqual(1, len(failures))
+                self.assertIn("524288-byte", failures[0])
+                self.assertFalse((root / "plugin").exists())
+                self.assertFalse((root / BUNDLE_ENVELOPE_NAME).exists())
+
+        for relative in (
+            "evals/no-hook/benchmark-v1.json",
+            "evals/no-hook/golden-set-v1.jsonl",
+        ):
+            with self.subTest(relative=f"symlink:{relative}"), tempfile.TemporaryDirectory() as directory:
+                root = self._copy_repository(Path(directory))
+                target = root / relative
+                target.unlink()
+                try:
+                    target.symlink_to(root / "evals/no-hook/profile-v1.json")
+                except OSError as error:
+                    self.skipTest(f"file symlink unavailable: {error}")
+                failures = []
+                self.assertEqual((0, 0), check_no_hook_bundle(failures, root))
+                self.assertEqual(1, len(failures))
+                self.assertIn("must not be a symbolic link", failures[0])
+
+    def test_static_replay_module_has_no_unbounded_path_reads(self):
+        tree = ast.parse(
+            (REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py").read_text(
+                encoding="utf-8"
+            )
+        )
+        calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "read_bytes"
+        ]
+        self.assertEqual([], calls)
 
     def test_two_independent_builds_are_byte_identical(self):
         with tempfile.TemporaryDirectory() as directory:
