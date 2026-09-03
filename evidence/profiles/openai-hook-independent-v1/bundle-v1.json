@@ -1,0 +1,580 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-hook-independent-bundle-static-evidence",
+  "profileId": "openai-hook-independent-v1",
+  "source": {
+    "repository": "wheakerd/axiom",
+    "commit": "de365be1797ab897a8889bc6c42d82268741d12e",
+    "tree": "1d12e98347c27cf61cbdf4de1765b3a914dcc277",
+    "repositoryPolicyRevision": 5
+  },
+  "candidateRepositoryPolicyRevision": 6,
+  "bundleManifest": {
+    "schemaVersion": "1",
+    "kind": "axiom-hook-independent-derived-bundle",
+    "profileId": "openai-hook-independent-v1",
+    "pluginVersion": "0.10.0",
+    "repositoryPolicyRevision": 6,
+    "source": {
+      "repository": "wheakerd/axiom",
+      "commit": "de365be1797ab897a8889bc6c42d82268741d12e",
+      "tree": "1d12e98347c27cf61cbdf4de1765b3a914dcc277",
+      "repositoryPolicyRevision": 5
+    },
+    "contractBindings": {
+      "profileContract": {
+        "path": "evals/no-hook/profile-v1.json",
+        "sha256": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+      },
+      "goldenSet": {
+        "path": "evals/no-hook/golden-set-v1.jsonl",
+        "sha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+      },
+      "responseSchema": {
+        "path": "evals/no-hook/host-response-schema-v1.json",
+        "sha256": "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb670dcd2db4"
+      },
+      "benchmark": {
+        "path": "evals/no-hook/benchmark-v1.json",
+        "sha256": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
+      },
+      "hostCaseSets": [
+        {
+          "id": "openai-hook-independent-codex-cases-v1",
+          "host": "codex",
+          "sha256": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
+        },
+        {
+          "id": "openai-hook-independent-chatgpt-cases-v1",
+          "host": "chatgpt",
+          "sha256": "7fc872ae3d72bfd6bc27129e7c81e7e4a44bc3b613fcab222046c4e9c9885f1f"
+        }
+      ],
+      "bundleSchema": {
+        "path": "evals/no-hook/bundle-manifest-schema-v1.json",
+        "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
+      }
+    },
+    "runtimeCanonicalization": {
+      "version": "1",
+      "domainSeparator": "axiom-profile-runtime",
+      "pathOrder": "utf-8-bytewise",
+      "pathNormalization": "utf-8-nfc-preserved",
+      "textEncoding": "utf-8",
+      "lineEndings": "lf",
+      "finalNewline": "required",
+      "fileMode": "100644",
+      "directoryMode": "040755",
+      "serialization": "canonical-json-sort-keys-v1"
+    },
+    "derivedPluginManifest": {
+      "path": ".codex-plugin/plugin.json",
+      "size": 114,
+      "sha256": "82825ee740ad8be2c8de13b109e81f8e05c4b29ea6cc43c25298d8d3c99fbab7",
+      "fields": {
+        "name": "axiom",
+        "version": "0.10.0",
+        "description": "Think before AI thinks.",
+        "skills": "./skills/"
+      }
+    },
+    "runtimeFiles": [
+      {
+        "path": "skills/agent-plugin-architect/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 2794,
+        "sha256": "92bc94408ffa557107e19dea3d13b72c7427f53d07928d7106a595f33879499f"
+      },
+      {
+        "path": "skills/agent-plugin-architect/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 291,
+        "sha256": "ce40879868112c899035f4c36de1ae3dd5ac037a1a1e313c9b49061d13823dcc"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/cross-host-packaging.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 1019,
+        "sha256": "e283f2b70644d7722c2b37792febaa4a400d1768f33034a1a8f329ef1936497e"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/evaluation-and-evidence.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 1199,
+        "sha256": "cfe78d526496ef47cd2c4e85cd882a845e6ce82d0a1ebfb03cf5918567f9f657"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/hooks-and-trust-boundaries.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 1030,
+        "sha256": "eaa467b9e3b4b8efe8c12a4aef57b3579a855ab602ea302b0a53dad49872fcd3"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/package-inventory.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 1119,
+        "sha256": "65dbf74e17c27f69eeb9198d6044db7cbcbd9ddbb16421c6722791f741a1bbca"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/packaged-skill-architecture.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 986,
+        "sha256": "d5fa2ad39d74f473404478d98d96189732375d2ba908c3ccf59bd1dacb0c6ab0"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/release-readiness.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7112,
+        "sha256": "bba15cc096d8a961f48246026615df0fe311f4c3ce83f8674f7ecd1dd8d46925"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/route-and-trigger-contracts.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 1426,
+        "sha256": "1b4071997996625ae3ca76a41753145961805f584e33e4187035dd3b43be915f"
+      },
+      {
+        "path": "skills/agent-plugin-architect/references/validation-reporting.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 1300,
+        "sha256": "29b24570a820989148dd17ecfc836f242fc6d722c18862d6695e7fa45cc18386"
+      },
+      {
+        "path": "skills/agents-architect/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 5436,
+        "sha256": "6c0ff3138829fd094d9e9b3eb5569fef05b01532f55ac6449b3d1f0c4776410d"
+      },
+      {
+        "path": "skills/agents-architect/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 276,
+        "sha256": "5e793c5899f80d1a9bcd6ec15846c3c09a003087c1caa1ca83044ba5280b5eea"
+      },
+      {
+        "path": "skills/agents-architect/references/instruction-document-contracts.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 8001,
+        "sha256": "9f4ba5f21680402d3564be31c946011673941b80d7220648896aa500d122cfe1"
+      },
+      {
+        "path": "skills/agents-architect/references/inventory-audit.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5406,
+        "sha256": "68c52a54152c7d180b960cb08288d6bf4991ab8c5b1e677e017c843349ae9a13"
+      },
+      {
+        "path": "skills/agents-architect/references/maintenance/authorization-and-safety.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 3819,
+        "sha256": "bd5d01b978135d6d4bd3d81a83cd95b6c4a21f106ef856b28073e18c631b67f4"
+      },
+      {
+        "path": "skills/agents-architect/references/maintenance/context-evidence.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 6871,
+        "sha256": "c772a7ed534014274b2136a3fb6f13877fd25f90efb4ef759a57540d4dc11942"
+      },
+      {
+        "path": "skills/agents-architect/references/maintenance/implementation-reconciliation.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7445,
+        "sha256": "d03e0e3f7f9783ff41f50ad16c4ef44539c8d036889fc2ce2993a39e37dc9d5c"
+      },
+      {
+        "path": "skills/agents-architect/references/maintenance/maintenance-application.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5627,
+        "sha256": "25a6ae3d30e5271fcce7a8516aefbe3f8364f13851c756a8e832a125fa959adc"
+      },
+      {
+        "path": "skills/agents-architect/references/maintenance/repo-local-skills.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 3183,
+        "sha256": "72312c9474e8e6750be68c5ff44b6f63e02a35403c9ba40c237d8b7d974ad50d"
+      },
+      {
+        "path": "skills/agents-architect/references/migration-policy.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5509,
+        "sha256": "c2ed3265aa9c565e8faa92315f2d3e6d99033b5966d92e2f966d370c2dd5e86e"
+      },
+      {
+        "path": "skills/agents-architect/references/project-initialization.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 6701,
+        "sha256": "20163f49c73b65ffbc84bc95b89561fb48bcc2d6b5a2e3b2ca713b383f18b54e"
+      },
+      {
+        "path": "skills/agents-architect/references/routing-architecture.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7318,
+        "sha256": "31c65896dae5fd66994e4038588656209bf6c1fac3e06fc02f15e988bdbaed2b"
+      },
+      {
+        "path": "skills/agents-architect/references/runtime-and-updates.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 6755,
+        "sha256": "8f407a5c11b862a24ad729d700b091f39c2c6f5f91dc451876b41b0412efccc1"
+      },
+      {
+        "path": "skills/agents-architect/references/validation-reporting.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 6320,
+        "sha256": "3b64889257c13b80cc04fb7c98cb5a1d102c1bb08ab8b604cf812870be5ea4e3"
+      },
+      {
+        "path": "skills/confirm-external-action/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 7967,
+        "sha256": "278a6f07e8d513cfd8d9b66ffe85cc35bb651cf7c6c1c6adf63d2a72bb03c1ee"
+      },
+      {
+        "path": "skills/confirm-external-action/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 253,
+        "sha256": "d24bc7313c8a37ec1ae7e1583e4b187bb02ee066ac91e7b1e74e408d8d7ed332"
+      },
+      {
+        "path": "skills/optimize-codex-usage/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 3834,
+        "sha256": "03c3a48c6b6a7be27d04dccdbaceca39e936ee63477b871b393b982a5c7cfe8d"
+      },
+      {
+        "path": "skills/optimize-codex-usage/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 260,
+        "sha256": "a6fd5714fab7d433d59291f7d59c85dcc517e73a531cf30b96a2a25660028b4b"
+      },
+      {
+        "path": "skills/optimize-codex-usage/references/context-audit.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5302,
+        "sha256": "f6b31598c6d232a83745becd8b299ff0f86513e93e0760ba53064f13f11b8cfe"
+      },
+      {
+        "path": "skills/reversible-system-change/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 6908,
+        "sha256": "12308ebc64be7b1c82f62feb34836cf74470a3cacf98aefca68db829ad27221e"
+      },
+      {
+        "path": "skills/reversible-system-change/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 380,
+        "sha256": "7cb1b8eec718949d03b32098b57c11d0b4e67e896b22df1a5167404c177894f2"
+      },
+      {
+        "path": "skills/reversible-system-change/references/execution-and-verification.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5642,
+        "sha256": "1ded34ef0aad9d84ec387a2bac54fa8503a24eebf80f249e576ec4a9a600f183"
+      },
+      {
+        "path": "skills/reversible-system-change/references/preflight-and-rollback.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7735,
+        "sha256": "ba073fe014e5a1dac41a5faaaee39e00416f606cca5ae87b65660125d74b6daa"
+      },
+      {
+        "path": "skills/review-axiom-task/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 8079,
+        "sha256": "04bb26729693bf25294f60163fe258efea93cd5164dfcf155a9081031f3d2068"
+      },
+      {
+        "path": "skills/review-axiom-task/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 332,
+        "sha256": "9bb38b2e1991e2de8db51876d64030c7a398fa6ae971c0f20cc44e1f059a7304"
+      },
+      {
+        "path": "skills/traceable-git-submit/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 8175,
+        "sha256": "d9147c167464ceb4c469d9b6b55e7e45d34bce6a79c63bb3e31f75283e8347e3"
+      },
+      {
+        "path": "skills/traceable-git-submit/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 273,
+        "sha256": "20b06a49cda79ab7ad55773fcd5722b0cdbb5d20316a8b7901c035bf268b6153"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/baseline-and-preflight.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 8036,
+        "sha256": "c40cc38d77eb95110c41f3848d032ea1bf3d3a7332c95e8a57462c9cdb3d5ce5"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/checkpoint-execution.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 8071,
+        "sha256": "11ab8ec7591c3190f1ff4d7dddcd9b1d064760421cc2ff7bd0ed386232892246"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/checkpoint-provenance.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7159,
+        "sha256": "3eee329fc8aff74775a4a7aabb637da65f1b176d6b54cbb7358ba57bababab3c"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/commit-construction.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5025,
+        "sha256": "9397d049027f46b1c726aa1648c03ce2b27f51ae0d7ffff75d0328b89fac03c2"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/consolidation-and-push.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7578,
+        "sha256": "eaf094ae95cfcdc364c88d7850a4337675e511f38b07877bd406acd94310d97e"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/direct-submit.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 4982,
+        "sha256": "7da6abb702b5e39d9f5412bfea03f250c52a1a06ad7367b9b1ffc89271c62d88"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/post-consolidation-recovery.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 5886,
+        "sha256": "f71f128b7a39a4577fa8458b31a834dc4bd7dbd8d8446a168d6cdef972fba5b8"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/repository-and-remote-targets.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 8190,
+        "sha256": "cee6b58510330d2ce57727198fa6d9fd8ee3f49720f585c5c4aed89f38984229"
+      },
+      {
+        "path": "skills/traceable-git-submit/references/safe-git-values-and-metadata.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 8038,
+        "sha256": "fbc27e145ed2c6e9268d5096ad11ff337ae50c4abc649a0a85a6d40edfcfb43e"
+      },
+      {
+        "path": "skills/using-axiom/SKILL.md",
+        "kind": "skill",
+        "mode": "100644",
+        "size": 6960,
+        "sha256": "55bbff945d557161c94c625fb4136eafa3ff68b2e2fe0fd06b7bb3c8f50f464e"
+      },
+      {
+        "path": "skills/using-axiom/agents/openai.yaml",
+        "kind": "agent-metadata",
+        "mode": "100644",
+        "size": 259,
+        "sha256": "6cff3042bd0eb49a27d0f0dadbb17ea57b4fcdb0fa2f521af9b0f01b4d23b03a"
+      },
+      {
+        "path": "skills/using-axiom/references/credential-lifecycle.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 7887,
+        "sha256": "7d601ef151c46f72f23ac5c60970c548286a3a9ef95efa10e5c839d48e022c24"
+      },
+      {
+        "path": "skills/using-axiom/references/updating.md",
+        "kind": "reference",
+        "mode": "100644",
+        "size": 672,
+        "sha256": "e99a497b2415d4069abc69ec714fca8d89d17529f8bc464b014c3b19dd305a8d"
+      }
+    ],
+    "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
+    "includedSurfaces": [
+      {
+        "surface": ".codex-plugin/plugin.json",
+        "rationale": "A minimal derived manifest exposes only package identity and the shared Skill root."
+      },
+      {
+        "surface": "skills/**",
+        "rationale": "All eight canonical Skill roots and their complete tracked reference and resource closure are runtime payload."
+      },
+      {
+        "surface": "BUNDLE-MANIFEST.json",
+        "rationale": "The closed manifest binds runtime identity, source provenance, contract inputs, builder identity, and transport policy."
+      }
+    ],
+    "excludedSurfaces": [
+      {
+        "surface": "hooks/**",
+        "rationale": "The compatibility profile is Hook-independent and never executes a Hook lifecycle."
+      },
+      {
+        "surface": "source .codex-plugin full-profile fields",
+        "rationale": "Hooks, interface presentation, assets, apps, and MCP declarations are not copied into the derived manifest."
+      },
+      {
+        "surface": ".claude-plugin/**",
+        "rationale": "Claude Code is excluded from the Hook-independent profile and its full-profile wrapper is not transported."
+      },
+      {
+        "surface": ".agents/plugins/**",
+        "rationale": "Marketplace installation metadata is distribution policy rather than profile runtime payload."
+      },
+      {
+        "surface": "assets/**",
+        "rationale": "No asset field exists in the minimal derived manifest."
+      },
+      {
+        "surface": "evals/**",
+        "rationale": "Contract artifacts are digest-bound metadata and are not copied into the runtime package."
+      },
+      {
+        "surface": "evidence/**",
+        "rationale": "Repository evidence is not installed or transported as Skill runtime."
+      },
+      {
+        "surface": "tests/**",
+        "rationale": "Tests validate the builder but are not runtime payload."
+      },
+      {
+        "surface": "scripts/**",
+        "rationale": "The builder entrypoint is identity-bound but is not included in its generated package."
+      },
+      {
+        "surface": "axiom_validation/**",
+        "rationale": "Repository validators and builder implementation are identity-bound tooling, not packaged Skill behavior."
+      },
+      {
+        "surface": ".github/**",
+        "rationale": "Repository automation is excluded from the compatibility artifact."
+      },
+      {
+        "surface": "private maintenance content",
+        "rationale": "The private maintenance repository is outside the public source tree and cannot enter generated output."
+      },
+      {
+        "surface": "untracked, ignored, and cache paths",
+        "rationale": "Git-tree extraction includes only validated tracked blobs from the exact source commit."
+      }
+    ],
+    "builder": {
+      "id": "axiom-no-hook-bundle-builder",
+      "version": "1",
+      "implementation": "python-standard-library-only",
+      "gitAccess": "read-only-commit-tree-blob",
+      "network": "disabled",
+      "behaviorDependencies": [
+        {
+          "path": "scripts/build-no-hook-bundle.py",
+          "role": "entrypoint",
+          "size": 2154,
+          "sha256": "6198b516d20529caf53bca0c86a42f8d3509a3317766372bddb8e304582b9c5d"
+        },
+        {
+          "path": "axiom_validation/no_hook_bundle.py",
+          "role": "implementation",
+          "size": 144640,
+          "sha256": "1c15b1789bfaee7f374b94f95cad94875de26aa37d699d93b9ba184e8742b1de"
+        },
+        {
+          "path": "evals/no-hook/bundle-manifest-schema-v1.json",
+          "role": "contract-schema",
+          "size": 12426,
+          "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
+        }
+      ]
+    },
+    "transport": {
+      "directoryRoot": "plugin/",
+      "archiveFilename": "axiom-openai-hook-independent-v1-0.10.0.zip",
+      "archiveContentRoot": ".",
+      "format": "zip",
+      "compression": "stored",
+      "memberOrder": "utf-8-bytewise",
+      "timestamp": "1980-01-01T00:00:00",
+      "fileMode": "100644",
+      "directoryMode": "040755",
+      "creatorSystem": "unix",
+      "explicitDirectoryMembers": false,
+      "extraFields": "empty",
+      "comments": "empty",
+      "uidGid": "absent",
+      "encryption": false,
+      "dataDescriptor": false,
+      "archiveDigestLocation": "BUNDLE-ENVELOPE.json"
+    },
+    "bundleManifestDigest": "sha256:f945d861ee87fd5b46b32b711bcdf99bd97b346554f0d3ea82ca16c2e0a22e42"
+  },
+  "builds": {
+    "independentBuildCount": 2,
+    "repositoryOutsideDestinations": true,
+    "directoryFileSetsEqual": true,
+    "directoryBytesEqual": true,
+    "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
+    "bundleManifestDigest": "sha256:f945d861ee87fd5b46b32b711bcdf99bd97b346554f0d3ea82ca16c2e0a22e42",
+    "archiveSha256": "4b70e13ed1fdae047aeb1c38694f7a7b52efc6567e646ad827e5928f1f9772e9",
+    "archiveBytesEqual": true,
+    "envelopeSemanticFieldsEqual": true
+  },
+  "artifactRetention": {
+    "generatedArtifactsTracked": false,
+    "generatedArtifactsRetained": false,
+    "generatedArtifactsPublished": false,
+    "generatedArtifactsInstalled": false
+  },
+  "evidenceBoundary": {
+    "staticBundleValidation": "pass",
+    "codexNoHookObservation": "not-run",
+    "chatgptNoHookObservation": "not-run",
+    "fullProfileInstalledObservation": "not-run",
+    "claudeCodeNoHookProfile": "excluded",
+    "installation": "not-run",
+    "marketplace": "not-run",
+    "portal": "not-run",
+    "officialDirectory": "not-run",
+    "tagReleaseLatestPublication": "not-run",
+    "fullProfileDigestReused": false
+  }
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import tempfile
@@ -46,6 +47,29 @@ class NoHookProfileTests(unittest.TestCase):
         failures: list[str] = []
         self.assertEqual((8, 16), check_no_hook_profile(failures))
         self.assertEqual([], failures)
+
+    def test_phase1_artifact_bytes_remain_frozen(self):
+        expected = {
+            "profile-v1.json": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88",
+            "golden-set-v1.jsonl": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c",
+            "host-response-schema-v1.json": "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb670dcd2db4",
+            "benchmark-v1.json": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa",
+        }
+        for name, digest in expected.items():
+            with self.subTest(name=name):
+                data = (REPOSITORY_ROOT / "evals" / "no-hook" / name).read_bytes()
+                self.assertEqual(digest, hashlib.sha256(data).hexdigest())
+
+    def test_bundle_schema_is_required_in_the_profile_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._fixture_root(directory)
+            (root / "evals/no-hook/bundle-manifest-schema-v1.json").unlink()
+            failures: list[str] = []
+            check_no_hook_profile(failures, root)
+            self.assertTrue(
+                any("evals/no-hook/ entry set drifted" in failure for failure in failures),
+                failures,
+            )
 
     def test_contract_version_is_required_positive_and_bounded(self):
         mutations = (

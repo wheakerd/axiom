@@ -40,6 +40,14 @@
       "sourceIssue": 117,
       "summary": "Establish only the no-Hook profile contract with versioned cases, host-scoped capabilities, immutable artifact bindings, and static validation; no derived runtime is built.",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+    },
+    {
+      "revision": 6,
+      "recordedOn": "2026-09-01",
+      "baselineCommit": "de365be1797ab897a8889bc6c42d82268741d12e",
+      "sourceIssue": 117,
+      "summary": "Add the deterministic no-Hook derived bundle builder, three-layer identity, and static evidence without changing or publishing the installed full profile.",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
     }
   ]
 }

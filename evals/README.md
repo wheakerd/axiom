@@ -24,6 +24,9 @@ replace them and it is not installed runtime behavior.
   `openai-hook-independent-v1` profile, its 16-case shared Golden Set, the
   16-case Codex subset, the 10-case ChatGPT subset, and its profile-bound
   response shape. It does not inherit full-profile evidence.
+- [`no-hook/bundle-manifest-schema-v1.json`](no-hook/bundle-manifest-schema-v1.json)
+  closes the deterministic derived-bundle manifest and freezes the Phase 1
+  contract bindings, runtime inventory, and source/candidate policy boundary.
 - `results/v0.7.7/` keeps Codex and Claude Code outcomes in separately labeled,
   append-only run records bound to immutable Axiom source.
 - `results/v0.7.8/codex/linux-candidate-1.json` records the terminal `UNKNOWN`
@@ -111,9 +114,55 @@ Static validation is not Codex or ChatGPT execution, both of which remain
 `NOT-RUN`; full-profile Codex or Claude Code evidence cannot cross this profile
 boundary merely because the profiles share canonical Skill bytes.
 
-The derived bundle and its profile-scoped runtime digest remain unimplemented.
-They require a separately approved phase and must be generated from the single
-canonical `skills/` source.
+Repository policy revision 6 implements a deterministic derived bundle from
+the single canonical `skills/` source. The builder freezes an explicit absolute
+Git executable and requires its `--no-lazy-fetch` capability. Every Git
+invocation also sets `GIT_NO_LAZY_FETCH=1` and `GIT_PROTOCOL_FROM_USER=0`, so a
+missing promisor object fails locally even when repository configuration
+allows a protocol-specific remote helper. Replacement objects, hooks,
+credentials, generic protocols, and filesystem monitoring remain disabled. The
+builder does not invoke `git status`. Git tree output is consumed as bounded
+NUL-delimited records: record bytes, path bytes, entry count, per-file size,
+cumulative declared size, total stdout, and stderr are limited before any blob
+is requested. The current runtime tree is additionally frozen at 50 files and
+230826 declared bytes. Each accepted blob is then read only to its tree-declared
+size plus one EOF-check byte; profile and support JSON use a separate 512 KiB
+pre-read ceiling. Any overflow terminates and reaps the Git process.
+
+A standard-library `lstat`/`scandir` snapshot derives exact physical type and
+size expectations from those bounded Git records, streams each directory
+within the fixed entry bound, and reads each regular file through a stable
+descriptor for at most its expected size plus one byte. Missing, extra,
+oversized, dirty, ignored, substituted, symlinked, reparse-point, or otherwise
+non-regular `skills/` state fails before and after construction, while runtime
+bytes still come only from Git blobs. The builder emits a minimal no-Hook
+manifest, all 50 files under the eight canonical Skill roots, and
+`BUNDLE-MANIFEST.json`; and produces a ZIP_STORED archive plus an external
+completion envelope. Its v1 validator closes every manifest field, nested
+object, canonical surface, behavior dependency, transport rule, schema const,
+and the one-field digest self-reference instead of treating equality with one
+known manifest as generic validation.
+
+The separately owned static-evidence replay also treats the validated manifest
+records as bounded input. It freezes their ordered 50-file, 230826-byte child
+graph before touching `skills/`, rejects an unknown directory entry before
+reading its body, and enforces the expected count and bytes plus the 128-file
+and 2 MiB safety maxima during streaming enumeration. Runtime files and every
+JSON or text input used by `check_no_hook_bundle()` are read through stable
+descriptors with pre-read size checks, a maximum-plus-one EOF probe, and
+post-read path, identity, and size checks. Benchmark and Golden Set bindings
+therefore no longer use unbounded filesystem reads during evidence replay.
+
+The logical package contract always records files as `100644`, directories as
+`040755`, and those exact modes in ZIP metadata. POSIX output validation also
+requires physical `0644`/`0755`. Windows output validation requires ordinary
+files and directories, rejects symlink and junction/reparse traversal, and
+verifies the exact path set, bytes, and logical ZIP modes; Windows ACLs or
+emulated mode bits are not presented as a POSIX-mode observation. The
+generated outputs are not tracked or published. Tracked static evidence
+records the independent profile runtime, bundle manifest, and archive
+identities after two equal builds. Codex and ChatGPT host observations remain
+`NOT-RUN`, and full-profile evidence remains outside this acceptance boundary.
 
 ## Contract changes
 

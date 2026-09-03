@@ -13,6 +13,89 @@ The current machine-readable identities are in
 policy revisions are append-only in
 [`evidence/repository-policy-revisions-v1.json`](../evidence/repository-policy-revisions-v1.json).
 
+## Derived profile identity
+
+The Hook-independent compatibility artifact has an independent identity stack;
+none of its values replaces or reuses the installed full-profile digest:
+
+- `profileRuntimeDigest` hashes the profile ID, runtime canonicalization
+  version, behavior-bearing fields of the derived manifest, and the ordered
+  path, kind, mode, size, and SHA-256 records for all 50 canonical Skill files.
+  Source commit, repository policy, timestamps, ZIP metadata, and the bundle
+  manifest itself are excluded, so identical runtime bytes retain one runtime
+  identity across source commits.
+- `bundleManifestDigest` hashes the complete canonical bundle manifest except
+  only its own digest field. It binds the frozen Phase 1 contracts, ordered
+  host case sets, source commit and tree, source and candidate policy revisions,
+  derived manifest raw bytes, runtime records, builder dependency closure, and
+  transport contract.
+- `archiveSha256` hashes the final deterministic ZIP bytes. It is stored only
+  in the external completion envelope and tracked static evidence, avoiding a
+  self-reference in the archive.
+
+Repository policy revision 6 owns the builder, closed schema, and static
+evidence at
+[`evidence/profiles/openai-hook-independent-v1/bundle-v1.json`](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
+Generated directories, ZIPs, and envelopes are temporary caller-owned outputs
+outside the repository. Static construction does not establish Codex or
+ChatGPT host acceptance and has no installation or publication effect.
+
+Construction binds one caller-supplied absolute Git executable, requires its
+`--no-lazy-fetch` capability, and rechecks its physical identity around every
+read-only invocation. Each invocation uses both `--no-lazy-fetch` and
+`GIT_NO_LAZY_FETCH=1`, with `GIT_PROTOCOL_FROM_USER=0`; a missing partial-clone
+or promisor object therefore fails locally even if repository configuration
+allows a protocol-specific remote helper. Git replacement objects, hooks,
+generic protocols, credentials, filesystem monitoring, and ambient
+repository/object redirection are disabled or rejected.
+
+Git tree enumeration is a bounded pre-read gate rather than a buffered
+post-read check. NUL-delimited records are consumed incrementally, with fixed
+limits for each partial record, portable path, entry count, per-file declared
+size, cumulative declared size, complete stdout, and stderr. The runtime tree
+is also required to match its frozen 50-file, 230826-byte inventory before any
+runtime blob is requested. A blob is read only after its tree-declared size has
+passed the applicable limit: 256 KiB for runtime files and 512 KiB for profile
+or support JSON. The reader consumes exactly that declared size and at most one
+additional EOF-check byte; overflow terminates and reaps the Git process.
+
+Runtime working-tree state is checked without `git status`. Python
+`lstat`/`scandir` snapshots derive expected type and byte count from the bounded
+Git entries, enforce per-file, aggregate, file-count, directory, and total-entry
+limits, and reject unknown children during streaming enumeration. An opened
+file must retain the same identity and size; at most the expected bytes plus one
+EOF-check byte are read before its identity, size, exact blob bytes, and path
+are rechecked. The snapshots run before and after construction, so
+repository-local `core.fsmonitor`, PATH-shadowed `git`, lazy promisor helpers,
+dirty or oversized files, and substituted paths cannot enter the runtime
+payload. Runtime payload bytes themselves continue to come only from the
+frozen commit's blobs.
+
+Static-evidence replay applies the same resource discipline independently of
+construction. After the closed manifest and its self-digest pass, its ordered
+runtime records become a constrained expected child graph, not trusted input.
+The replay validates the 50-file, 230826-byte inventory and the 128-file,
+2 MiB safety ceilings before enumerating `skills/`; then it consumes each
+`scandir` entry incrementally under explicit directory and total-entry limits.
+An unknown child is rejected before its metadata or body is read. Expected
+files must match their declared type, size, order, and SHA-256 and are read
+through stable descriptors for at most the expected size plus one EOF-check
+byte. Schema, evidence, Phase 1 contract, benchmark, Golden Set, response
+schema, runtime identity, policy revision, and builder dependency files use
+the same descriptor identity checks with an explicit per-input maximum rather
+than `Path.read_bytes()`.
+
+The package's logical mode contract is always `100644` for files and `040755`
+for directories, including ZIP metadata. On POSIX, generated objects must also
+have physical `0644`/`0755` modes. On Windows, the validator instead requires
+ordinary files and directories, rejects symlinks and junction/reparse points,
+and binds the exact paths and bytes; it does not claim that Windows ACLs or
+mode emulation are a POSIX-mode observation. The destination must be an empty,
+external directory under exclusive caller ownership for the duration of the
+build. Concurrent same-user path substitution is outside this v1 construction
+contract; if destination identity becomes uncertain, the caller must retain
+the output for manual inspection rather than treat it as accepted evidence.
+
 ## Runtime Contract V1
 
 [`runtime-contract-inputs-v1.json`](../axiom_validation/runtime-contract-inputs-v1.json)
