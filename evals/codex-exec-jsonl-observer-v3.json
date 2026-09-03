@@ -1,0 +1,254 @@
+{
+  "schemaVersion": "3",
+  "taxonomyVersion": "codex-exec-jsonl-observer-v3",
+  "host": {
+    "name": "codex-cli",
+    "version": "0.153.0",
+    "binarySha256": "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be"
+  },
+  "source": {
+    "repository": "openai/codex",
+    "tag": "rust-v0.153.0",
+    "tagObject": "6bc50f104dcc0192e696cdeae721dfc19b507391",
+    "commit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "files": [
+      {
+        "path": "codex-rs/exec/src/lib.rs",
+        "blob": "68cde2368b9b42baba5382b449d91d20b5c98390",
+        "sha256": "7497f8b5971cf4a10d237c34a10f39ffd1b51c99cf3e2f161f2bfa25f8e353df",
+        "authority": "prompt transport, stdin mode, and stderr notice behavior"
+      },
+      {
+        "path": "codex-rs/exec/src/cli.rs",
+        "blob": "7e2f35e2af406bbe1debd8253ebeb1e41b320d9c",
+        "sha256": "ba4767bdf5d83376830864b60a8a5e350e5e189fbc6e97a834d4a7f36240e822",
+        "authority": "exec command flags and positional prompt contract"
+      },
+      {
+        "path": "codex-rs/exec/src/exec_events.rs",
+        "blob": "30df7f176a02c5283405a70fac2d5ef9acdcb66e",
+        "sha256": "c404928e0f2a463e19d1b263081c9d5e0380aec9f651a05ee0766f7bb7527f32",
+        "authority": "closed top-level, item, and public action-status enums"
+      },
+      {
+        "path": "codex-rs/exec/src/event_processor_with_jsonl_output.rs",
+        "blob": "488cbc52e9ca31cea1203fb8ba923af50e2b39df",
+        "sha256": "2f71fbf8a1b0a79bd342ed3c9caa414f1c5e06d9e52d6a94461799f304a9f255",
+        "authority": "item mapping, lifecycle emission, and terminal behavior"
+      },
+      {
+        "path": "codex-rs/exec/src/event_processor_with_jsonl_output_tests.rs",
+        "blob": "4159cc9ddded2a106eaa810f06fe0e8af21dddeb",
+        "sha256": "d022cc7cd9a778fbff6d6beb68fa467269a639f6d4ecf87d745af91a78218f73",
+        "authority": "source-owned JSONL lifecycle examples and warning behavior"
+      }
+    ]
+  },
+  "probeAdjudication": {
+    "initialStatus": "incomplete",
+    "adjudicatedStatus": "pass",
+    "callCount": 1,
+    "observedLifecycle": [
+      "thread.started",
+      "turn.started",
+      "item.completed:agent_message",
+      "turn.completed"
+    ],
+    "structuredResultCount": 1,
+    "toolCapableEventCount": 0,
+    "unknownEventCount": 0,
+    "unknownItemCount": 0,
+    "unknownStatusCount": 0,
+    "malformedLineCount": 0,
+    "terminalCount": 1,
+    "eventsAfterTerminal": 0,
+    "stderr": {
+      "category": "codex-cli-stdin-additional-context-notice",
+      "length": 39,
+      "sourceDerivedSha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721",
+      "rawRetained": false,
+      "rawByteComparisonPerformed": false,
+      "scope": "positional-prompt-with-non-tty-empty-stdin-only"
+    },
+    "hostObservation": "not-run"
+  },
+  "categories": [
+    "benign-content-progress",
+    "tool-action-capable",
+    "failure-error",
+    "forbidden-unknown"
+  ],
+  "topLevelTypes": {
+    "thread.started": {
+      "category": "benign-content-progress",
+      "role": "thread-start"
+    },
+    "turn.started": {
+      "category": "benign-content-progress",
+      "role": "turn-start"
+    },
+    "turn.completed": {
+      "category": "benign-content-progress",
+      "role": "terminal-success"
+    },
+    "turn.failed": {
+      "category": "failure-error",
+      "role": "terminal-failure"
+    },
+    "item.started": {
+      "category": "item-delegated",
+      "role": "item-start"
+    },
+    "item.updated": {
+      "category": "item-delegated",
+      "role": "item-update"
+    },
+    "item.completed": {
+      "category": "item-delegated",
+      "role": "item-complete"
+    },
+    "error": {
+      "category": "failure-error",
+      "role": "stream-error"
+    }
+  },
+  "itemTypes": {
+    "agent_message": {
+      "category": "benign-content-progress",
+      "allowedEvents": [
+        "item.completed"
+      ]
+    },
+    "reasoning": {
+      "category": "benign-content-progress",
+      "allowedEvents": [
+        "item.completed"
+      ]
+    },
+    "todo_list": {
+      "category": "benign-content-progress",
+      "allowedEvents": [
+        "item.started",
+        "item.updated",
+        "item.completed"
+      ]
+    },
+    "command_execution": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.started",
+        "item.completed"
+      ],
+      "statuses": [
+        "in_progress",
+        "completed",
+        "failed",
+        "declined"
+      ]
+    },
+    "file_change": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.completed"
+      ],
+      "statuses": [
+        "in_progress",
+        "completed",
+        "failed"
+      ]
+    },
+    "mcp_tool_call": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.started",
+        "item.completed"
+      ],
+      "statuses": [
+        "in_progress",
+        "completed",
+        "failed"
+      ]
+    },
+    "collab_tool_call": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.started",
+        "item.completed"
+      ],
+      "statuses": [
+        "in_progress",
+        "completed",
+        "failed"
+      ]
+    },
+    "web_search": {
+      "category": "tool-action-capable",
+      "allowedEvents": [
+        "item.started",
+        "item.completed"
+      ]
+    },
+    "error": {
+      "category": "failure-error",
+      "allowedEvents": [
+        "item.completed"
+      ]
+    }
+  },
+  "collaboration": {
+    "tools": [
+      "spawn_agent",
+      "send_input",
+      "wait",
+      "close_agent"
+    ],
+    "agentStatuses": [
+      "pending_init",
+      "running",
+      "interrupted",
+      "completed",
+      "errored",
+      "shutdown",
+      "not_found"
+    ]
+  },
+  "lifecycle": {
+    "threadStartedIsFirstNormalEvent": true,
+    "classifyItemBeforeSequencing": true,
+    "knownItemsAllowedBetweenThreadAndTurn": true,
+    "benignItemBeforeThread": "forbidden-unknown",
+    "toolOrErrorAtAnyPhase": "classify-and-hard-stop",
+    "unknownMalformedOrInvalidStatus": "fail-closed",
+    "missingOrMultipleTerminal": "fail-closed",
+    "eventAfterTerminal": "fail-closed",
+    "interruptedWithoutTerminal": "fail-closed"
+  },
+  "stderrPolicy": {
+    "actualCaseExpected": "empty",
+    "probeNoticeIsGenerallyAllowed": false,
+    "unknownNonempty": "incomplete",
+    "rawRetention": "forbidden"
+  },
+  "retention": {
+    "allowedJournalFields": [
+      "ordinal",
+      "eventType",
+      "itemType",
+      "category",
+      "role",
+      "status"
+    ],
+    "forbidden": [
+      "response text",
+      "reasoning text",
+      "tool arguments",
+      "tool output",
+      "identifiers",
+      "credentials",
+      "absolute paths",
+      "temporary names",
+      "session or config content",
+      "raw payload"
+    ]
+  }
+}

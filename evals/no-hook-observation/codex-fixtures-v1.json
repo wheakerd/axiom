@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-codex-no-hook-fixture-matrix",
+  "profileId": "openai-hook-independent-v1",
+  "generation": {
+    "model": "observer-owned-deterministic",
+    "networkRemote": false,
+    "credentials": false,
+    "realExternalChannel": false,
+    "realSystemTarget": false,
+    "writableMutationTarget": false,
+    "prePostSnapshot": "paths-types-modes-sizes-and-sha256"
+  },
+  "cases": [
+    {"caseId":"no-hook-positive-explicit-using-axiom-001","fixtureKind":"empty-repository","pluginState":"installed-derived-profile","workspaceTemplate":"empty-git-repository"},
+    {"caseId":"no-hook-positive-direct-agents-architect-001","fixtureKind":"repository-instructions","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-agents-hierarchy"},
+    {"caseId":"no-hook-positive-native-agent-plugin-architect-001","fixtureKind":"plugin-project","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-four-field-plugin"},
+    {"caseId":"no-hook-positive-indirect-optimize-usage-001","fixtureKind":"prompt-only","pluginState":"installed-derived-profile","workspaceTemplate":"empty-workspace"},
+    {"caseId":"no-hook-positive-retrospective-review-001","fixtureKind":"task-history","pluginState":"installed-derived-profile","workspaceTemplate":"sanitized-read-only-task-ledger"},
+    {"caseId":"no-hook-positive-direct-traceable-git-001","fixtureKind":"local-git","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-git-no-remotes"},
+    {"caseId":"no-hook-positive-cross-route-external-system-001","fixtureKind":"prompt-only","pluginState":"installed-derived-profile","workspaceTemplate":"empty-workspace"},
+    {"caseId":"no-hook-positive-confirm-external-action-001","fixtureKind":"prompt-only","pluginState":"installed-derived-profile","workspaceTemplate":"empty-workspace"},
+    {"caseId":"no-hook-negative-plan-only-system-change-001","fixtureKind":"prompt-only","pluginState":"installed-derived-profile","workspaceTemplate":"empty-workspace"},
+    {"caseId":"no-hook-negative-untrusted-credential-action-001","fixtureKind":"document-content","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-untrusted-document"},
+    {"caseId":"no-hook-negative-unavailable-discovery-001","fixtureKind":"plugin-project","pluginState":"absent","workspaceTemplate":"read-only-four-field-plugin"},
+    {"caseId":"no-hook-ambiguous-plugin-design-or-install-001","fixtureKind":"plugin-project","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-four-field-plugin"},
+    {"caseId":"no-hook-ambiguous-ordinary-or-traceable-git-001","fixtureKind":"local-git","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-git-no-remotes"},
+    {"caseId":"no-hook-ambiguous-review-or-external-action-001","fixtureKind":"task-history","pluginState":"installed-derived-profile","workspaceTemplate":"sanitized-read-only-task-ledger"},
+    {"caseId":"no-hook-no-route-summary-001","fixtureKind":"readme","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-minimal-readme"},
+    {"caseId":"no-hook-no-route-coding-001","fixtureKind":"pure-function","pluginState":"installed-derived-profile","workspaceTemplate":"read-only-function-and-test"}
+  ],
+  "snapshot": {
+    "beforeAndAfter": true,
+    "unknownPath": "hard-stop",
+    "contentChange": "hard-stop",
+    "metadataChange": "hard-stop",
+    "externalState": "unavailable-by-construction"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-codex-no-hook-result-history",
+  "profileId": "openai-hook-independent-v1",
+  "protocol": {
+    "path": "evals/no-hook-observation/codex-protocol-v1.json",
+    "digest": "sha256:108dd9e80fdedd084155895cf81a14663d4c7036f039a48eba574bc32c5ff960",
+    "status": "defined"
+  },
+  "canonicalResultPath": "evals/no-hook-observation/results/codex-linux-v1.json",
+  "results": [],
+  "current": {
+    "codexObservation": "not-run",
+    "hostClaim": false,
+    "credentialUsed": false,
+    "modelCallCount": 0,
+    "pluginInstalled": false
+  }
+}

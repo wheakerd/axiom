@@ -48,6 +48,14 @@
       "sourceIssue": 117,
       "summary": "Add the deterministic no-Hook derived bundle builder, three-layer identity, and static evidence without changing or publishing the installed full profile.",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+    },
+    {
+      "revision": 7,
+      "recordedOn": "2026-09-03",
+      "baselineCommit": "c7a3b5988cf0d922762bb4498e0a833c7412ea8d",
+      "sourceIssue": 117,
+      "summary": "Define the Codex no-Hook protocol and keep revision 6 bundle evidence valid in append-only history, refreshing builder-bound transport identities without changing runtime bytes or host claims.",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
     }
   ]
 }

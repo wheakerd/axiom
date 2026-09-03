@@ -76,6 +76,9 @@ class SourceFixture:
         self.git("init", "--quiet")
         self.git("config", "user.name", "Axiom Test")
         self.git("config", "user.email", "axiom-test@example.invalid")
+        self.git("config", "gc.auto", "0")
+        self.git("config", "gc.autoPackLimit", "0")
+        self.git("config", "maintenance.auto", "false")
         self.commit("fixture")
 
     def git(
@@ -267,6 +270,139 @@ class NoHookBundleTests(unittest.TestCase):
         failures: list[str] = []
         self.assertEqual((50, 2), check_no_hook_bundle(failures))
         self.assertEqual([], failures)
+
+    def test_static_evidence_keeps_revision_six_owner_after_revision_seven(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._copy_repository(Path(directory))
+            revisions = json.loads(
+                (root / "evidence/repository-policy-revisions-v1.json").read_text(
+                    encoding="utf-8"
+                )
+            )["revisions"]
+            evidence = json.loads(
+                (
+                    root
+                    / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
+                ).read_text(encoding="utf-8")
+            )
+            manifest = evidence["bundleManifest"]
+            before = _directory_files(root)
+
+            self.assertEqual(7, revisions[-1]["revision"])
+            self.assertEqual(6, evidence["candidateRepositoryPolicyRevision"])
+            self.assertEqual(6, manifest["repositoryPolicyRevision"])
+            failures: list[str] = []
+            self.assertEqual((50, 2), check_no_hook_bundle(failures, root))
+            self.assertEqual([], failures)
+            self.assertEqual(before, _directory_files(root))
+            self.assertFalse((root / "plugin").exists())
+            self.assertFalse((root / BUNDLE_ENVELOPE_NAME).exists())
+            self.assertEqual(8, len({record["path"].split("/", 2)[1] for record in manifest["runtimeFiles"]}))
+            self.assertEqual(50, len(manifest["runtimeFiles"]))
+            self.assertEqual(230826, sum(record["size"] for record in manifest["runtimeFiles"]))
+            self.assertEqual(
+                {
+                    "name": "axiom",
+                    "version": "0.10.0",
+                    "description": "Think before AI thinks.",
+                    "skills": "./skills/",
+                },
+                manifest["derivedPluginManifest"]["fields"],
+            )
+            self.assertEqual(
+                "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
+                manifest["profileRuntimeDigest"],
+            )
+
+    def test_static_evidence_rejects_invalid_bundle_owner_revision_binding(self):
+        def mutate_missing(
+            evidence: dict[str, object], revisions: list[dict[str, object]]
+        ) -> None:
+            del evidence
+            revisions[:] = [revision for revision in revisions if revision["revision"] != 6]
+
+        def mutate_duplicate(
+            evidence: dict[str, object], revisions: list[dict[str, object]]
+        ) -> None:
+            del evidence
+            revision = next(item for item in revisions if item["revision"] == 6)
+            revisions.insert(-1, copy.deepcopy(revision))
+
+        def mutate_revision_field(
+            field: str, value: object
+        ):
+            def mutate(
+                evidence: dict[str, object], revisions: list[dict[str, object]]
+            ) -> None:
+                del evidence
+                revision = next(item for item in revisions if item["revision"] == 6)
+                revision[field] = value
+
+            return mutate
+
+        def mutate_candidate(
+            evidence: dict[str, object], revisions: list[dict[str, object]]
+        ) -> None:
+            del revisions
+            evidence["candidateRepositoryPolicyRevision"] = 7
+
+        cases = (
+            (
+                "missing-revision-six-latest-seven-not-owner",
+                mutate_missing,
+                "bundle owner revision 6 is missing",
+            ),
+            (
+                "duplicate-revision-six",
+                mutate_duplicate,
+                "bundle owner revision 6 is duplicated",
+            ),
+            (
+                "baseline",
+                mutate_revision_field("baselineCommit", "0" * 40),
+                "revision 6 baselineCommit does not bind",
+            ),
+            (
+                "source-issue",
+                mutate_revision_field("sourceIssue", 999),
+                "revision 6 sourceIssue must be 117",
+            ),
+            (
+                "runtime-digest",
+                mutate_revision_field("runtimeContractDigest", "sha256:" + "0" * 64),
+                "revision 6 runtimeContractDigest does not bind",
+            ),
+            (
+                "candidate-manifest-mismatch",
+                mutate_candidate,
+                "candidate repositoryPolicyRevision differs from its bundle manifest",
+            ),
+        )
+        for label, mutate, diagnostic in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
+                root = self._copy_repository(Path(directory))
+                evidence_path = (
+                    root
+                    / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
+                )
+                revisions_path = root / "evidence/repository-policy-revisions-v1.json"
+                evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+                revision_document = json.loads(revisions_path.read_text(encoding="utf-8"))
+                revisions = revision_document["revisions"]
+                mutate(evidence, revisions)
+                evidence_path.write_text(
+                    json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
+                )
+                revisions_path.write_text(
+                    json.dumps(revision_document, indent=2) + "\n", encoding="utf-8"
+                )
+
+                failures: list[str] = []
+                self.assertEqual((0, 0), check_no_hook_bundle(failures, root))
+                self.assertEqual(1, len(failures))
+                self.assertIn(diagnostic, failures[0])
+                self.assertFalse((root / "plugin").exists())
+                self.assertFalse((root / BUNDLE_ENVELOPE_NAME).exists())
 
     def test_regular_file_reader_bounds_extra_short_growth_and_identity_drift(self):
         with tempfile.TemporaryDirectory() as directory:

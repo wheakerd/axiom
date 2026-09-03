@@ -164,6 +164,51 @@ records the independent profile runtime, bundle manifest, and archive
 identities after two equal builds. Codex and ChatGPT host observations remain
 `NOT-RUN`, and full-profile evidence remains outside this acceptance boundary.
 
+## Codex no-Hook observation protocol
+
+Repository policy revision 7 defines, but does not execute, the Codex no-Hook
+host-observation protocol. It also makes revision 6 bundle evidence compatible
+with later append-only policy records. That validator maintenance refreshes
+the builder-bound bundle manifest and archive identities without changing
+runtime bytes, the profile runtime digest, the revision 6 artifact owner, or
+any host claim. The canonical protocol owners are the
+[`codex-protocol-v1.json`](no-hook-observation/codex-protocol-v1.json) run
+contract, [`codex-prompt-envelope-v1.json`](no-hook-observation/codex-prompt-envelope-v1.json)
+model-input envelope, [`codex-fixtures-v1.json`](no-hook-observation/codex-fixtures-v1.json)
+fixture matrix, closed
+[`codex-result-schema-v1.json`](no-hook-observation/codex-result-schema-v1.json),
+and empty append-only
+[`result-history-v1.json`](no-hook-observation/result-history-v1.json). The
+history reserves one result path without creating a placeholder result or host
+claim.
+
+The source-bound
+[`codex-exec-jsonl-observer-v3.json`](codex-exec-jsonl-observer-v3.json)
+taxonomy binds Codex CLI 0.153.0 to the exact `openai/codex` `rust-v0.153.0`
+tag object, commit, and five source blobs. It closes every public top-level
+event, item type, applicable status, lifecycle edge, terminal rule, and
+privacy-safe retained field. The one-call compatibility probe's initial
+`INCOMPLETE` result was adjudicated `PASS` only for JSONL compatibility: exact
+source and invocation semantics uniquely account for the complete 39-byte
+positional-prompt stdin notice. The probe did not install Axiom, run a Golden
+Set case, or establish host evidence.
+
+The canonical 16-case runner instead uses `codex exec - --json` and writes the
+complete envelope to stdin. Normal stderr is empty; the probe-only notice is
+not an allowed actual-case warning. Default and repository-validation modes
+are no-call. A later execution requires the explicit execution flag, exact
+protocol and binary digests, authorization for exactly 16 calls, and a
+dedicated credential precondition. Each case then requires a fresh isolated
+process, Codex home, workspace, and ephemeral session; Case 11 alone has no
+installed plugin. Hard observer-integrity, schema, tool, mutation, identity,
+or cleanup failures stop the batch and mark every later case `NOT-RUN`.
+
+Only normalized, observer-owned facts may enter the reserved result. Raw
+JSONL, stderr, model or reasoning text, tool arguments and output, identifiers,
+credentials, configuration, absolute paths, temporary names, and environment
+dumps are forbidden. Protocol validation and fake-CLI tests are not Codex
+no-Hook host observation; that status remains `NOT-RUN`.
+
 ## Contract changes
 
 Case IDs are stable and cannot be repurposed. Every no-Hook case requires a

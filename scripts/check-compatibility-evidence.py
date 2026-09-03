@@ -20,6 +20,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from axiom_validation.no_hook_bundle import check_no_hook_bundle  # noqa: E402
+from axiom_validation.no_hook_observation import check_no_hook_observation  # noqa: E402
 from axiom_validation.runtime_identity import check_runtime_identity  # noqa: E402
 
 
@@ -1055,6 +1056,7 @@ def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str 
         check_schema_v2_contract(schema_v2, failures)
     records = collect_records(failures)
     check_no_hook_bundle(failures, REPOSITORY_ROOT)
+    check_no_hook_observation(failures, REPOSITORY_ROOT)
     current_version = manifest_version(failures)
     runtime_identity = load_json(RUNTIME_IDENTITY_PATH, failures) or {}
     runtime_history = load_json(RUNTIME_HISTORY_PATH, failures) or {}

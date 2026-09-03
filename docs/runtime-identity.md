@@ -40,6 +40,26 @@ Generated directories, ZIPs, and envelopes are temporary caller-owned outputs
 outside the repository. Static construction does not establish Codex or
 ChatGPT host acceptance and has no installation or publication effect.
 
+Repository policy revision 7 owns the Codex no-Hook observation protocol,
+source-bound JSONL taxonomy, guarded runner, deterministic fixture matrix,
+prompt envelope, closed result schema, and empty result history. It also makes
+the revision 6 bundle evidence valid under later append-only policy revisions:
+the evidence finds its immutable owner revision uniquely instead of assuming
+that owner is the latest record. Because the validator module is a bound
+builder dependency, this maintenance refreshes `bundleManifestDigest` and
+`archiveSha256`; revision 6 remains the artifact owner, and the 50-file runtime
+payload and `profileRuntimeDigest` do not change. The protocol binds Codex CLI
+0.153.0 and its binary identity for a future Linux observation, but the
+runner's default validation path cannot make a model call. No credential was
+used, no plugin was installed, and the Codex observation remains `NOT-RUN`.
+
+The prompt-envelope and protocol digests use canonical JSON with sorted keys,
+UTF-8 encoding, and no insignificant whitespace after excluding exactly their
+own digest field. File bindings for the taxonomy, fixture matrix, result
+schema, runner entry point, and implementation hash their exact tracked bytes.
+The empty result history binds the protocol digest and reserves one canonical
+future result path; it is not a placeholder observation.
+
 Construction binds one caller-supplied absolute Git executable, requires its
 `--no-lazy-fetch` capability, and rechecks its physical identity around every
 read-only invocation. Each invocation uses both `--no-lazy-fetch` and

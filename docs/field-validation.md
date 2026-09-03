@@ -20,6 +20,32 @@ These levels are not interchangeable. A checked-in hook is not a host
 observation. A host observation by the maintainer is not an independent
 reproduction. A missing interface is unavailable, not passed.
 
+## Codex no-Hook protocol-only status
+
+The Codex no-Hook protocol under
+[`evals/no-hook-observation/`](../evals/no-hook-observation/) is currently
+defined and statically validated, but its 16 cases have not run. Its JSONL
+taxonomy is bound to Codex CLI 0.153.0 source and one no-plugin compatibility
+probe. That probe established only the closed event grammar needed by the
+observer; it did not establish Skill discovery, package installation, route
+acceptance, or no-Hook behavior.
+
+Future execution must use one fresh, isolated process, Codex home, workspace,
+and ephemeral session per case. The complete prompt envelope travels through
+stdin with the `-` sentinel, not a positional argv prompt. The model never
+receives expected routes, discovery outcomes, case classes, clarification
+counts, or acceptance labels. A dedicated execution credential, exact
+protocol and binary identities, and authorization for exactly 16 calls are
+separate preconditions; repository checks and fake-CLI tests cannot satisfy
+them.
+
+The observer may retain only the normalized fields allowed by the closed
+result schema. Raw JSONL and stderr, response and reasoning text, tool details,
+session identifiers, credentials, local paths, configuration, and environment
+dumps are destroyed. An unknown event or status, schema failure, tool or
+mutation attempt, protected-state drift, identity mismatch, or incomplete
+cleanup hard-stops the batch; later cases remain explicitly `NOT-RUN`.
+
 ## Before Testing
 
 1. Use a repository that contains no sensitive material or select a public
