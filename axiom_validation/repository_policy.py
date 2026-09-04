@@ -57,6 +57,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/no-hook-observation/codex-protocol-v1.json",
     "evals/no-hook-observation/codex-prompt-envelope-v1.json",
     "evals/no-hook-observation/codex-fixtures-v1.json",
+    "evals/no-hook-observation/codex-model-response-schema-v1.json",
     "evals/no-hook-observation/codex-result-schema-v1.json",
     "evals/no-hook-observation/result-history-v1.json",
     "evals/benchmarks/codex-core-v1.json",

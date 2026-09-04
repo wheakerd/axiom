@@ -185,28 +185,52 @@ claim.
 The source-bound
 [`codex-exec-jsonl-observer-v3.json`](codex-exec-jsonl-observer-v3.json)
 taxonomy binds Codex CLI 0.153.0 to the exact `openai/codex` `rust-v0.153.0`
-tag object, commit, and five source blobs. It closes every public top-level
-event, item type, applicable status, lifecycle edge, terminal rule, and
-privacy-safe retained field. The one-call compatibility probe's initial
+tag object, commit, and twelve source blobs, including item, notification,
+feature, plugin, and marketplace owners. It closes every public top-level
+event, source-required payload, item type, applicable status, lifecycle edge,
+terminal rule, and privacy-safe retained field; source-valid action items are
+never acceptance-safe. Source-suppressed action surfaces are bound to explicit
+feature controls and are disabled in the canonical invocation. The one-call
+compatibility probe's initial
 `INCOMPLETE` result was adjudicated `PASS` only for JSONL compatibility: exact
 source and invocation semantics uniquely account for the complete 39-byte
 positional-prompt stdin notice. The probe did not install Axiom, run a Golden
 Set case, or establish host evidence.
 
 The canonical 16-case runner instead uses `codex exec - --json` and writes the
-complete envelope to stdin. Normal stderr is empty; the probe-only notice is
-not an allowed actual-case warning. Default and repository-validation modes
-are no-call. A later execution requires the explicit execution flag, exact
-protocol and binary digests, authorization for exactly 16 calls, and a
-dedicated credential precondition. Each case then requires a fresh isolated
+complete envelope with bounded write-all semantics. Normal stderr is empty;
+the probe-only notice is not an allowed actual-case warning. The model-facing
+schema is separate from the frozen host response contract and contains no
+descriptive case ID or expected answer. A fresh random opaque binding, its
+digest, the materialized schema digest, and the exact prompt digest bind each
+case without unblinding it. Default and repository-validation modes are
+no-call. A later execution requires the explicit execution flag plus a
+registry-backed capability that binds exact protocol, runner/module, binary,
+source, host, model, run-root, credential-presence, nonce, ordered launch plan,
+and irreversible 16-call budget. Each case then requires a fresh isolated
 process, Codex home, workspace, and ephemeral session; Case 11 alone has no
-installed plugin. Hard observer-integrity, schema, tool, mutation, identity,
-or cleanup failures stop the batch and mark every later case `NOT-RUN`.
+installed plugin.
+
+All sixteen deterministic fixtures are materialized by the production runner
+from closed logical file records and observer-owned Git facts. Marketplace and
+plugin receipts use the bounded Codex 0.153.0 JSON shapes, installed paths must
+resolve inside the exact temporary Codex home, and the installed tree is
+rechecked at the model-launch boundary. Linux cleanup is descriptor-anchored,
+device/inode checked, symlink refusing, and replacement preserving; Windows is
+rejected by this protocol and remains a separate `NOT-RUN` track. Hard
+observer-integrity, schema, tool, mutation, identity, prompt-delivery, or
+cleanup failures revoke the launch budget and mark every later case `NOT-RUN`.
 
 Only normalized, observer-owned facts may enter the reserved result. Raw
 JSONL, stderr, model or reasoning text, tool arguments and output, identifiers,
 credentials, configuration, absolute paths, temporary names, and environment
-dumps are forbidden. Protocol validation and fake-CLI tests are not Codex
+dumps are forbidden. Free-form limitations are replaced by closed diagnostic
+codes. The validator recomputes each case, summary, route coverage, safety
+invariants, cleanup, and overall status from frozen contracts; synchronized
+unsafe status arithmetic cannot create `PASS`. Codex 0.153.0 public JSONL
+suppresses Hook lifecycle telemetry, so no-Hook proof is owned by verified
+package, installed-tree, temporary-config, and wrapper-absence facts rather
+than JSONL silence. Protocol validation and fake-CLI tests are not Codex
 no-Hook host observation; that status remains `NOT-RUN`.
 
 ## Contract changes

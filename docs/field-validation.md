@@ -34,17 +34,35 @@ Future execution must use one fresh, isolated process, Codex home, workspace,
 and ephemeral session per case. The complete prompt envelope travels through
 stdin with the `-` sentinel, not a positional argv prompt. The model never
 receives expected routes, discovery outcomes, case classes, clarification
-counts, or acceptance labels. A dedicated execution credential, exact
-protocol and binary identities, and authorization for exactly 16 calls are
-separate preconditions; repository checks and fake-CLI tests cannot satisfy
-them.
+counts, descriptive case IDs, contract versions, or acceptance labels. Each
+case instead receives a random opaque binding and a separately materialized
+closed model-response schema; only binding digests enter normalized evidence.
+A dedicated execution credential, exact protocol, runner, module, binary,
+source, host, model, and run-root identities, and authorization for exactly 16
+ordered calls are separate preconditions. The sole internal launcher consumes
+that opaque capability once per model call; repository checks and fake-CLI
+tests cannot mint real-execution authority.
 
 The observer may retain only the normalized fields allowed by the closed
 result schema. Raw JSONL and stderr, response and reasoning text, tool details,
 session identifiers, credentials, local paths, configuration, and environment
-dumps are destroyed. An unknown event or status, schema failure, tool or
-mutation attempt, protected-state drift, identity mismatch, or incomplete
-cleanup hard-stops the batch; later cases remain explicitly `NOT-RUN`.
+dumps are destroyed; diagnostic and limitation values are a closed,
+observer-owned code set. The observer recomputes every case outcome, summary,
+and overall status from the frozen Golden Set and benchmark rather than
+trusting retained status fields. An unknown event or status, schema failure,
+tool or mutation attempt, protected-state drift, identity mismatch, partial
+prompt write, or incomplete cleanup hard-stops the batch; later cases remain
+explicitly `NOT-RUN`.
+
+Codex 0.153.0 public JSONL suppresses Hook lifecycle items, so JSONL silence is
+not evidence that a Hook did not run. The no-Hook proof is instead owned by the
+verified four-field package, installed-tree equality, a temporary configuration
+without Hook registration, and absence of the full-profile wrapper. Public
+JSONL still closes the source-required payload and lifecycle grammar and
+fail-closes every visible tool or action item. Source-suppressed action surfaces,
+including collaboration, are explicitly disabled in the canonical invocation.
+Linux execution uses descriptor-anchored, identity-preserving cleanup and
+refuses Windows rather than falling back to unsafe path deletion.
 
 ## Before Testing
 
