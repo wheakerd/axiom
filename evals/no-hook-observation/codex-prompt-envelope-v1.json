@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1",
+  "kind": "axiom-codex-no-hook-prompt-envelope",
+  "profileId": "openai-hook-independent-v1",
+  "transport": {
+    "promptArgument": "-",
+    "channel": "stdin",
+    "encoding": "utf-8",
+    "lineEndings": "lf",
+    "finalNewline": true,
+    "positionalPromptForbidden": true
+  },
+  "contractBindings": {
+    "profileContractSha256": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88",
+    "goldenSetSha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c",
+    "modelResponseSchemaSha256": "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002",
+    "hostCaseSetId": "openai-hook-independent-codex-cases-v1",
+    "hostCaseSetSha256": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
+  },
+  "opaqueBinding": {
+    "owner": "observer",
+    "entropyBitsMinimum": 128,
+    "encoding": "lowercase-hex",
+    "rawRetention": "forbidden",
+    "trackedForm": "sha256-only"
+  },
+  "fixedInstructions": [
+    "Perform route assessment only for the user request below.",
+    "Do not perform the requested task, mutate state, call tools, inspect unrelated files, use credentials, contact external services, or request approval.",
+    "This fresh session has no SessionStart delivery; report only facts observed in this session.",
+    "Echo the opaque case binding and return exactly one JSON object matching the supplied closed response schema."
+  ],
+  "renderOrder": [
+    "profileId",
+    "opaqueCaseBinding",
+    "profileContractSha256",
+    "goldenSetSha256",
+    "modelResponseSchemaSha256",
+    "hostCaseSetId",
+    "hostCaseSetSha256",
+    "sessionStartDelivered",
+    "routeAssessmentOnly",
+    "fixedInstructions",
+    "request"
+  ],
+  "forbiddenModelInputs": [
+    "canonical descriptive case identifier",
+    "case class",
+    "contract version",
+    "expected clarification count",
+    "expected discovery outcome",
+    "expected routes",
+    "expected using-axiom result",
+    "pass or fail label"
+  ],
+  "requestBindings": [
+    {"ordinal": 1, "requestSha256": "78cf963914a1943ec579e7c08328b3277206df7d5897289d90b2acc14bc4c137"},
+    {"ordinal": 2, "requestSha256": "192eaa0a9f2b44827e7ab769c31be0aba1fb615ba217e5dacf4a2a2da66f851a"},
+    {"ordinal": 3, "requestSha256": "7463ba35c69350197f14ae771ff565e04b2ea57f6676f4fd78511c451029eb8b"},
+    {"ordinal": 4, "requestSha256": "5d57f2eafbcb51b08565d533aea118c2bcf12902757b6cade84778ab96ef200b"},
+    {"ordinal": 5, "requestSha256": "ed883c1022a4128dd495838c56274f5f654d5ed2826831d6222eb3de491926de"},
+    {"ordinal": 6, "requestSha256": "08268ec9bca806e03db280dafca3b56744da7c87fbcf08a87c802193b10b8bc1"},
+    {"ordinal": 7, "requestSha256": "b62867e25d2090976d395d56ebb8365f31dd933268609e8f47fea374df4633d3"},
+    {"ordinal": 8, "requestSha256": "5c8b8cb420a6d30a47e8f5ee884eac430093bf58a777bb42a28e345347e5fcb9"},
+    {"ordinal": 9, "requestSha256": "83762497b045a057177710ea8394bc3e302f7537f3fb0612132f8b8735379897"},
+    {"ordinal": 10, "requestSha256": "3fe6630198bb3a746250f89aceb8398a01c1e36fcfc9af90a3b4bfe6e4cb20ed"},
+    {"ordinal": 11, "requestSha256": "ac5a97063675570cb4ed28b59301d1d688340391c68b38b16f513f184a68b735"},
+    {"ordinal": 12, "requestSha256": "d96ae94bba4ec8d21269c3d090a9343e49d123f7f7b99680bd3c481bf91c2d9d"},
+    {"ordinal": 13, "requestSha256": "a44a0898bba13d167872e14cd5e388fa046a2baa92dfdd8d38e60a4dd943b404"},
+    {"ordinal": 14, "requestSha256": "1ce7e6a3704c0eaae5ec6ddf5ae571d0a84cbbbcd8c77ccb77e6a4a4a79d7bec"},
+    {"ordinal": 15, "requestSha256": "ecc58f9ed62ddf907c741982c7140a354eee96c821400fa988ffdfc6b258115a"},
+    {"ordinal": 16, "requestSha256": "02d537ebf47c5fe6f86ac7c9a3a5531d9638d0aa1d3cd758060337a532ebf77a"}
+  ],
+  "promptEnvelopeDigest": "sha256:418371038eb0c88380860b5b0b37c2c92ebe1c2ed469ff5eed15b74192f3e40d"
+}

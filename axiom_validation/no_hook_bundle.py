@@ -36,6 +36,9 @@ BUNDLE_SCHEMA_VERSION = "1"
 BUILDER_ID = "axiom-no-hook-bundle-builder"
 BUILDER_VERSION = "1"
 SOURCE_REPOSITORY_SLUG = "wheakerd/axiom"
+FULL_PROFILE_RUNTIME_DIGEST = (
+    "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+)
 
 MAX_RUNTIME_FILES = 128
 MAX_RUNTIME_FILE_BYTES = 256 * 1024
@@ -3179,7 +3182,12 @@ def check_no_hook_bundle(
         )
         if evidence["source"] != manifest["source"]:
             raise BundleContractError("static evidence source differs from its bundle manifest")
-        if evidence["candidateRepositoryPolicyRevision"] != 6:
+        candidate_revision = evidence["candidateRepositoryPolicyRevision"]
+        if candidate_revision != manifest["repositoryPolicyRevision"]:
+            raise BundleContractError(
+                "static evidence candidate repositoryPolicyRevision differs from its bundle manifest"
+            )
+        if candidate_revision != 6:
             raise BundleContractError("static evidence candidate repositoryPolicyRevision must be 6")
 
         revision_document = _load_json_bytes(
@@ -3191,15 +3199,33 @@ def check_no_hook_bundle(
             "evidence/repository-policy-revisions-v1.json",
         )
         revisions = revision_document.get("revisions")
-        if type(revisions) is not list or not revisions or type(revisions[-1]) is not dict:
+        if type(revisions) is not list or not revisions:
             raise BundleContractError("repository policy revision history is unavailable")
-        revision = revisions[-1]
-        if (
-            revision.get("revision") != 6
-            or revision.get("baselineCommit") != manifest["source"]["commit"]
-            or revision.get("sourceIssue") != 117
-        ):
-            raise BundleContractError("revision 6 does not bind the frozen Phase 2 source")
+        matching_revisions = [
+            revision
+            for revision in revisions
+            if type(revision) is dict
+            and revision.get("revision") == candidate_revision
+        ]
+        if not matching_revisions:
+            raise BundleContractError(
+                "bundle owner revision 6 is missing from repository policy history"
+            )
+        if len(matching_revisions) != 1:
+            raise BundleContractError(
+                "bundle owner revision 6 is duplicated in repository policy history"
+            )
+        revision = matching_revisions[0]
+        if revision.get("baselineCommit") != manifest["source"]["commit"]:
+            raise BundleContractError(
+                "bundle owner revision 6 baselineCommit does not bind the frozen bundle source"
+            )
+        if revision.get("sourceIssue") != 117:
+            raise BundleContractError("bundle owner revision 6 sourceIssue must be 117")
+        if revision.get("runtimeContractDigest") != FULL_PROFILE_RUNTIME_DIGEST:
+            raise BundleContractError(
+                "bundle owner revision 6 runtimeContractDigest does not bind the frozen full profile"
+            )
 
         frozen_bindings = contract["contractBindings"]
         for key in PROFILE_ARTIFACT_KEYS:

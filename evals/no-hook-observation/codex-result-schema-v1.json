@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wheakerd/axiom/blob/main/evals/no-hook-observation/codex-result-schema-v1.json",
+  "title": "Axiom Codex no-Hook normalized observation result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "installationFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes"],
+  "properties": {
+    "schemaVersion": {"const": "1"},
+    "kind": {"const": "axiom-codex-no-hook-observation-result"},
+    "runMode": {"enum": ["host-observation", "fake-validation"]},
+    "runId": {"type": "string", "pattern": "^codex-no-hook-[0-9a-f]{32}$"},
+    "recordedAt": {"type": "string", "format": "date-time"},
+    "overallStatus": {"enum": ["pass", "fail", "incomplete"]},
+    "observationProtocol": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "schemaVersion", "digest"],
+      "properties": {
+        "id": {"const": "axiom-codex-no-hook-observation-v1"},
+        "schemaVersion": {"const": "1"},
+        "digest": {"$ref": "#/$defs/prefixedSha256"}
+      }
+    },
+    "runner": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "entrypointSha256", "moduleSha256", "taxonomySha256", "modelResponseSchemaSha256", "resultSchemaSha256", "fakeCliSha256"],
+      "properties": {
+        "version": {"const": "1"},
+        "entrypointSha256": {"$ref": "#/$defs/sha256"},
+        "moduleSha256": {"$ref": "#/$defs/sha256"},
+        "taxonomySha256": {"$ref": "#/$defs/sha256"},
+        "modelResponseSchemaSha256": {"$ref": "#/$defs/sha256"},
+        "resultSchemaSha256": {"$ref": "#/$defs/sha256"},
+        "fakeCliSha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "axiomIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceCommit", "sourceTree", "repositoryPolicyRevision", "pluginVersion", "fullProfileInputCount", "fullProfileRuntimeContractDigest", "profileRuntimeDigest", "bundleManifestDigest", "archiveSha256"],
+      "properties": {
+        "sourceCommit": {"const": "c7a3b5988cf0d922762bb4498e0a833c7412ea8d"},
+        "sourceTree": {"const": "9428574283cd9f58f6db0d50687592aca2ca497f"},
+        "repositoryPolicyRevision": {"const": 7},
+        "pluginVersion": {"const": "0.10.0"},
+        "fullProfileInputCount": {"const": 61},
+        "fullProfileRuntimeContractDigest": {"const": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"},
+        "profileRuntimeDigest": {"const": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"},
+        "bundleManifestDigest": {"const": "sha256:36a183abcdc04faf1e9edf13172d4f16b8ff3e813803be8b74d090b5965a8652"},
+        "archiveSha256": {"const": "24213ff9e239cb304a40c480ff36731f1260ecf4aa518d53e037805d64acc283"}
+      }
+    },
+    "contractBindings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["profileContractSha256", "goldenSetSha256", "responseSchemaSha256", "modelResponseSchemaSha256", "benchmarkSha256", "hostCaseSetId", "hostCaseSetSha256", "promptEnvelopeDigest", "fixtureMatrixSha256"],
+      "properties": {
+        "profileContractSha256": {"const": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"},
+        "goldenSetSha256": {"const": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"},
+        "responseSchemaSha256": {"const": "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb670dcd2db4"},
+        "modelResponseSchemaSha256": {"$ref": "#/$defs/sha256"},
+        "benchmarkSha256": {"const": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"},
+        "hostCaseSetId": {"const": "openai-hook-independent-codex-cases-v1"},
+        "hostCaseSetSha256": {"const": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"},
+        "promptEnvelopeDigest": {"$ref": "#/$defs/prefixedSha256"},
+        "fixtureMatrixSha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "hostIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["host", "codexCliVersion", "codexBinarySha256", "model", "reasoningEffort", "operatingSystem", "architecture", "sandbox", "approvalPolicy", "isolatedCodexHome"],
+      "properties": {
+        "host": {"const": "codex"},
+        "codexCliVersion": {"const": "0.153.0"},
+        "codexBinarySha256": {"const": "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be"},
+        "model": {"const": "gpt-5.6-sol"},
+        "reasoningEffort": {"const": "medium"},
+        "operatingSystem": {"const": "linux"},
+        "architecture": {"const": "x86_64"},
+        "sandbox": {"const": "read-only"},
+        "approvalPolicy": {"const": "never"},
+        "isolatedCodexHome": {"const": true}
+      }
+    },
+    "executionFacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["executableKind", "executedBinarySha256", "credentialBoundary", "authorizedModelCallCount", "modelProcessStartedCount", "promptFullyDeliveredCount", "marketplaceProcessCount", "pluginInstallProcessCount"],
+      "properties": {
+        "executableKind": {"enum": ["codex-cli", "repository-fake-cli"]},
+        "executedBinarySha256": {"$ref": "#/$defs/sha256"},
+        "credentialBoundary": {"enum": ["dedicated-inline-process-only", "not-used-fake-validation"]},
+        "authorizedModelCallCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "modelProcessStartedCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "promptFullyDeliveredCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "marketplaceProcessCount": {"type": "integer", "minimum": 0, "maximum": 15},
+        "pluginInstallProcessCount": {"type": "integer", "minimum": 0, "maximum": 15}
+      }
+    },
+    "installationFacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scope", "installedPathWithinTemporaryHome", "installedTreeVerified", "installedCaseCount", "noPluginControlCaseCount", "persistentUserStateChanged", "cleanupVerified"],
+      "properties": {
+        "scope": {"const": "isolated-ephemeral-test-only"},
+        "installedPathWithinTemporaryHome": {"type": "boolean"},
+        "installedTreeVerified": {"type": "boolean"},
+        "installedCaseCount": {"type": "integer", "minimum": 0, "maximum": 15},
+        "noPluginControlCaseCount": {"type": "integer", "minimum": 0, "maximum": 1},
+        "persistentUserStateChanged": {"const": false},
+        "cleanupVerified": {"type": "boolean"}
+      }
+    },
+    "noHookProof": {
+      "type": "object", "additionalProperties": false,
+      "required": ["packageHookSurfaceAbsent", "installedHookSurfaceAbsent", "temporaryConfigHookRegistrationAbsent", "fullProfileWrapperAbsent", "publicJsonlHookTelemetry", "modelReportedSessionStartObservedCount"],
+      "properties": {
+        "packageHookSurfaceAbsent": {"type": "boolean"},
+        "installedHookSurfaceAbsent": {"type": "boolean"},
+        "temporaryConfigHookRegistrationAbsent": {"type": "boolean"},
+        "fullProfileWrapperAbsent": {"type": "boolean"},
+        "publicJsonlHookTelemetry": {"const": "not-exposed-by-codex-0.153.0"},
+        "modelReportedSessionStartObservedCount": {"type": "integer", "minimum": 0, "maximum": 16}
+      }
+    },
+    "cases": {"type": "array", "minItems": 16, "maxItems": 16, "items": {"$ref": "#/$defs/caseResult"}},
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["evaluatedCases", "passCount", "failCount", "notRunCount", "incompleteCount", "selectedRouteCoverage", "clarificationMismatchCount", "bindingMismatchCount", "fixtureMismatchCount", "usingAxiomFrontDoorObservationCount", "toolActionCount", "mutationAttemptCount", "mutationObservationCount", "externalActionCount", "deniedOperationCount", "sessionStartObservationCount", "unknownEventCount", "malformedEventCount", "protectedStateDriftCount", "modelCallCount", "modelCallBudgetConsumed", "promptFullyDeliveredCount", "remainingCallBudget", "hardStop", "cleanupStatus"],
+      "properties": {
+        "evaluatedCases": {"type": "integer", "minimum": 0, "maximum": 16},
+        "passCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "failCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "notRunCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "incompleteCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "selectedRouteCoverage": {"type": "array", "uniqueItems": true, "items": {"enum": ["using-axiom", "agents-architect", "agent-plugin-architect", "confirm-external-action", "optimize-codex-usage", "reversible-system-change", "review-axiom-task", "traceable-git-submit"]}},
+        "clarificationMismatchCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "bindingMismatchCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "fixtureMismatchCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "usingAxiomFrontDoorObservationCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "toolActionCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "mutationAttemptCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "mutationObservationCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "externalActionCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "deniedOperationCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "sessionStartObservationCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "unknownEventCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "malformedEventCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "protectedStateDriftCount": {"type": "integer", "minimum": 0, "maximum": 64},
+        "modelCallCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "modelCallBudgetConsumed": {"type": "integer", "minimum": 0, "maximum": 16},
+        "promptFullyDeliveredCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "remainingCallBudget": {"type": "integer", "minimum": 0, "maximum": 16},
+        "hardStop": {"type": "boolean"},
+        "cleanupStatus": {"enum": ["verified", "incomplete"]}
+      }
+    },
+    "cleanup": {
+      "type": "object", "additionalProperties": false,
+      "required": ["temporaryRootsRemoved", "userCodexStateUnchanged", "sourceBundleUnchanged", "manualCleanupRequired"],
+      "properties": {
+        "temporaryRootsRemoved": {"type": "boolean"},
+        "userCodexStateUnchanged": {"type": "boolean"},
+        "sourceBundleUnchanged": {"type": "boolean"},
+        "manualCleanupRequired": {"type": "boolean"}
+      }
+    },
+    "diagnosticCodes": {"$ref": "#/$defs/diagnosticCodes"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "prefixedSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "diagnosticCodes": {
+      "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true,
+      "items": {"enum": ["none", "host-telemetry-not-exposed", "plugin-not-applicable-control", "case-not-run-after-hard-stop", "cleanup-manual-required", "protocol-integrity-failure", "host-capability-unavailable", "fake-validation-only"]}
+    },
+    "fixtureFacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["gitRepository", "gitHeadState", "gitClean", "gitRemoteCount", "pluginState"],
+      "properties": {
+        "gitRepository": {"type": "boolean"},
+        "gitHeadState": {"enum": ["absent", "unborn"]},
+        "gitClean": {"type": "boolean"},
+        "gitRemoteCount": {"const": 0},
+        "pluginState": {"enum": ["installed-derived-profile", "absent"]}
+      }
+    },
+    "caseResult": {
+      "type": "object", "additionalProperties": false,
+      "required": ["caseId", "contractVersion", "casePromptSha256", "modelResponseSchemaSha256", "opaqueBindingSha256", "opaqueBindingMatched", "modelResponseSchemaMatched", "fixtureDefinitionDigest", "realizedFixtureDigest", "realizedFileSetDigest", "fixturePreSnapshotSha256", "fixturePostSnapshotSha256", "fixtureMatched", "fixtureFacts", "status", "responseDiagnostic", "acceptanceDiagnostic", "discoveryOutcome", "selectedRoutes", "clarificationCount", "usingAxiomFrontDoorObserved", "sessionStartObserved", "mutationAttempted", "mutationObserved", "toolActionCount", "mutationAttemptCount", "mutationObservationCount", "externalActionCount", "deniedOperationCount", "unknownEventCount", "malformedEventCount", "workspaceUnchanged", "bundleUnchanged", "installedCopyUnchanged", "temporaryUserStateUnchanged", "modelCallAuthorized", "modelProcessStarted", "promptFullyDelivered", "marketplaceProcessStarted", "pluginInstallProcessStarted", "diagnosticCodes"],
+      "properties": {
+        "caseId": {"type": "string", "pattern": "^no-hook-[a-z0-9-]+-[0-9]{3}$"},
+        "contractVersion": {"type": "integer", "minimum": 1, "maximum": 1000000},
+        "casePromptSha256": {"$ref": "#/$defs/sha256"},
+        "modelResponseSchemaSha256": {"$ref": "#/$defs/sha256"},
+        "opaqueBindingSha256": {"$ref": "#/$defs/sha256"},
+        "opaqueBindingMatched": {"type": "boolean"},
+        "modelResponseSchemaMatched": {"type": "boolean"},
+        "fixtureDefinitionDigest": {"$ref": "#/$defs/sha256"},
+        "realizedFixtureDigest": {"$ref": "#/$defs/sha256"},
+        "realizedFileSetDigest": {"$ref": "#/$defs/sha256"},
+        "fixturePreSnapshotSha256": {"$ref": "#/$defs/sha256"},
+        "fixturePostSnapshotSha256": {"$ref": "#/$defs/sha256"},
+        "fixtureMatched": {"type": "boolean"},
+        "fixtureFacts": {"$ref": "#/$defs/fixtureFacts"},
+        "status": {"enum": ["pass", "fail", "not-run", "incomplete"]},
+        "responseDiagnostic": {"enum": ["matched", "missing", "duplicate", "schema-mismatch", "not-run"]},
+        "acceptanceDiagnostic": {"enum": ["matched", "route-mismatch", "clarification-mismatch", "binding-mismatch", "safety-violation", "not-run"]},
+        "discoveryOutcome": {"enum": ["selected", "clarification", "no-route", "unavailable", "not-run"]},
+        "selectedRoutes": {"type": "array", "maxItems": 2, "uniqueItems": true, "items": {"enum": ["using-axiom", "agents-architect", "agent-plugin-architect", "confirm-external-action", "optimize-codex-usage", "reversible-system-change", "review-axiom-task", "traceable-git-submit"]}},
+        "clarificationCount": {"type": "integer", "minimum": 0, "maximum": 1},
+        "usingAxiomFrontDoorObserved": {"type": "boolean"},
+        "sessionStartObserved": {"type": "boolean"},
+        "mutationAttempted": {"type": "boolean"},
+        "mutationObserved": {"type": "boolean"},
+        "toolActionCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "mutationAttemptCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "mutationObservationCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "externalActionCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "deniedOperationCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "unknownEventCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "malformedEventCount": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "workspaceUnchanged": {"type": "boolean"},
+        "bundleUnchanged": {"type": "boolean"},
+        "installedCopyUnchanged": {"type": "boolean"},
+        "temporaryUserStateUnchanged": {"type": "boolean"},
+        "modelCallAuthorized": {"type": "boolean"},
+        "modelProcessStarted": {"type": "boolean"},
+        "promptFullyDelivered": {"type": "boolean"},
+        "marketplaceProcessStarted": {"type": "boolean"},
+        "pluginInstallProcessStarted": {"type": "boolean"},
+        "diagnosticCodes": {"$ref": "#/$defs/diagnosticCodes"}
+      }
+    }
+  }
+}

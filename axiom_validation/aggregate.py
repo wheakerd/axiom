@@ -40,6 +40,7 @@ from .manifests import (
     load_json,
 )
 from .no_hook_bundle import check_no_hook_bundle
+from .no_hook_observation import check_no_hook_observation
 from .no_hook_profile import check_no_hook_profile
 from .release_policy import check_release_signature_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
@@ -205,6 +206,7 @@ def main() -> int:
     )
     run_policy("no-hook-profile", check_no_hook_profile, failures)
     run_policy("no-hook-bundle", check_no_hook_bundle, failures)
+    run_policy("no-hook-observation", check_no_hook_observation, failures)
     review_sequence_count, review_checkpoint_count = run_policy(
         "review-evals", check_review_sequence_contracts, failures
     )

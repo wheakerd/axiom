@@ -40,6 +40,41 @@ Generated directories, ZIPs, and envelopes are temporary caller-owned outputs
 outside the repository. Static construction does not establish Codex or
 ChatGPT host acceptance and has no installation or publication effect.
 
+Repository policy revision 7 owns the Codex no-Hook observation protocol,
+source-bound JSONL taxonomy, guarded runner, deterministic fixture matrix,
+prompt envelope, closed result schema, and empty result history. It also makes
+the revision 6 bundle evidence valid under later append-only policy revisions:
+the evidence finds its immutable owner revision uniquely instead of assuming
+that owner is the latest record. Because the validator module is a bound
+builder dependency, this maintenance refreshes `bundleManifestDigest` and
+`archiveSha256`; revision 6 remains the artifact owner, and the 50-file runtime
+payload and `profileRuntimeDigest` do not change. The protocol binds Codex CLI
+0.153.0 and its binary identity for a future Linux observation, but the
+runner's default validation path cannot make a model call. No credential was
+used, no plugin was installed, and the Codex observation remains `NOT-RUN`.
+
+The prompt-envelope and protocol digests use canonical JSON with sorted keys,
+UTF-8 encoding, and no insignificant whitespace after excluding exactly their
+own digest field. File bindings for the source-closed taxonomy, blinded model
+response schema, fixture matrix, normalized result schema, runner entry point,
+implementation, and fake process fixture hash their exact tracked bytes. Each
+case additionally binds a random opaque token by digest, the materialized
+model schema, the complete stdin prompt, the deterministic logical fixture,
+and its pre/post snapshots. The empty result history binds the protocol digest
+and reserves one canonical future result path; it is not a placeholder
+observation.
+
+The future Linux runner's registry-backed execution capability binds the exact
+protocol, runner/module and Codex binary identities, source commit/tree, model,
+reasoning effort, run-root identity, host, nonce, and irreversible 16-call
+budget. A sole descriptor-pinned launcher consumes the ordered plan. Receipts
+are parsed as bounded complete JSON documents using the Codex 0.153.0 shapes,
+and cleanup is anchored to parent and directory descriptors with device/inode
+rechecks. Public JSONL does not expose Hook lifecycle telemetry; no-Hook proof
+therefore belongs to package, installed-tree, temporary-config, and wrapper
+absence facts rather than an event-count claim. All protocol validation remains
+fake-only, and the Codex observation remains `NOT-RUN`.
+
 Construction binds one caller-supplied absolute Git executable, requires its
 `--no-lazy-fetch` capability, and rechecks its physical identity around every
 read-only invocation. Each invocation uses both `--no-lazy-fetch` and

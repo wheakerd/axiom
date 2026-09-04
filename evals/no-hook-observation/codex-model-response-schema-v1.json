@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wheakerd/axiom/blob/main/evals/no-hook-observation/codex-model-response-schema-v1.json",
+  "title": "Axiom Codex blinded route-assessment response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profileId",
+    "opaqueCaseBinding",
+    "contractBindings",
+    "discoveryOutcome",
+    "selectedRoutes",
+    "clarificationCount",
+    "usingAxiomFrontDoorObserved",
+    "sessionStartObserved",
+    "mutationAttempted",
+    "mutationObserved"
+  ],
+  "properties": {
+    "profileId": {
+      "const": "openai-hook-independent-v1"
+    },
+    "opaqueCaseBinding": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32,128}$"
+    },
+    "contractBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileContractSha256",
+        "goldenSetSha256",
+        "hostCaseSetSha256"
+      ],
+      "properties": {
+        "profileContractSha256": {
+          "const": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+        },
+        "goldenSetSha256": {
+          "const": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+        },
+        "hostCaseSetSha256": {
+          "const": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
+        }
+      }
+    },
+    "discoveryOutcome": {
+      "enum": [
+        "selected",
+        "clarification",
+        "no-route",
+        "unavailable"
+      ]
+    },
+    "selectedRoutes": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "using-axiom",
+          "agents-architect",
+          "agent-plugin-architect",
+          "confirm-external-action",
+          "optimize-codex-usage",
+          "reversible-system-change",
+          "review-axiom-task",
+          "traceable-git-submit"
+        ]
+      }
+    },
+    "clarificationCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "usingAxiomFrontDoorObserved": {
+      "type": "boolean"
+    },
+    "sessionStartObserved": {
+      "type": "boolean"
+    },
+    "mutationAttempted": {
+      "type": "boolean"
+    },
+    "mutationObserved": {
+      "type": "boolean"
+    }
+  }
+}

@@ -164,6 +164,75 @@ records the independent profile runtime, bundle manifest, and archive
 identities after two equal builds. Codex and ChatGPT host observations remain
 `NOT-RUN`, and full-profile evidence remains outside this acceptance boundary.
 
+## Codex no-Hook observation protocol
+
+Repository policy revision 7 defines, but does not execute, the Codex no-Hook
+host-observation protocol. It also makes revision 6 bundle evidence compatible
+with later append-only policy records. That validator maintenance refreshes
+the builder-bound bundle manifest and archive identities without changing
+runtime bytes, the profile runtime digest, the revision 6 artifact owner, or
+any host claim. The canonical protocol owners are the
+[`codex-protocol-v1.json`](no-hook-observation/codex-protocol-v1.json) run
+contract, [`codex-prompt-envelope-v1.json`](no-hook-observation/codex-prompt-envelope-v1.json)
+model-input envelope, [`codex-fixtures-v1.json`](no-hook-observation/codex-fixtures-v1.json)
+fixture matrix, closed
+[`codex-result-schema-v1.json`](no-hook-observation/codex-result-schema-v1.json),
+and empty append-only
+[`result-history-v1.json`](no-hook-observation/result-history-v1.json). The
+history reserves one result path without creating a placeholder result or host
+claim.
+
+The source-bound
+[`codex-exec-jsonl-observer-v3.json`](codex-exec-jsonl-observer-v3.json)
+taxonomy binds Codex CLI 0.153.0 to the exact `openai/codex` `rust-v0.153.0`
+tag object, commit, and twelve source blobs, including item, notification,
+feature, plugin, and marketplace owners. It closes every public top-level
+event, source-required payload, item type, applicable status, lifecycle edge,
+terminal rule, and privacy-safe retained field; source-valid action items are
+never acceptance-safe. Source-suppressed action surfaces are bound to explicit
+feature controls and are disabled in the canonical invocation. The one-call
+compatibility probe's initial
+`INCOMPLETE` result was adjudicated `PASS` only for JSONL compatibility: exact
+source and invocation semantics uniquely account for the complete 39-byte
+positional-prompt stdin notice. The probe did not install Axiom, run a Golden
+Set case, or establish host evidence.
+
+The canonical 16-case runner instead uses `codex exec - --json` and writes the
+complete envelope with bounded write-all semantics. Normal stderr is empty;
+the probe-only notice is not an allowed actual-case warning. The model-facing
+schema is separate from the frozen host response contract and contains no
+descriptive case ID or expected answer. A fresh random opaque binding, its
+digest, the materialized schema digest, and the exact prompt digest bind each
+case without unblinding it. Default and repository-validation modes are
+no-call. A later execution requires the explicit execution flag plus a
+registry-backed capability that binds exact protocol, runner/module, binary,
+source, host, model, run-root, credential-presence, nonce, ordered launch plan,
+and irreversible 16-call budget. Each case then requires a fresh isolated
+process, Codex home, workspace, and ephemeral session; Case 11 alone has no
+installed plugin.
+
+All sixteen deterministic fixtures are materialized by the production runner
+from closed logical file records and observer-owned Git facts. Marketplace and
+plugin receipts use the bounded Codex 0.153.0 JSON shapes, installed paths must
+resolve inside the exact temporary Codex home, and the installed tree is
+rechecked at the model-launch boundary. Linux cleanup is descriptor-anchored,
+device/inode checked, symlink refusing, and replacement preserving; Windows is
+rejected by this protocol and remains a separate `NOT-RUN` track. Hard
+observer-integrity, schema, tool, mutation, identity, prompt-delivery, or
+cleanup failures revoke the launch budget and mark every later case `NOT-RUN`.
+
+Only normalized, observer-owned facts may enter the reserved result. Raw
+JSONL, stderr, model or reasoning text, tool arguments and output, identifiers,
+credentials, configuration, absolute paths, temporary names, and environment
+dumps are forbidden. Free-form limitations are replaced by closed diagnostic
+codes. The validator recomputes each case, summary, route coverage, safety
+invariants, cleanup, and overall status from frozen contracts; synchronized
+unsafe status arithmetic cannot create `PASS`. Codex 0.153.0 public JSONL
+suppresses Hook lifecycle telemetry, so no-Hook proof is owned by verified
+package, installed-tree, temporary-config, and wrapper-absence facts rather
+than JSONL silence. Protocol validation and fake-CLI tests are not Codex
+no-Hook host observation; that status remains `NOT-RUN`.
+
 ## Contract changes
 
 Case IDs are stable and cannot be repurposed. Every no-Hook case requires a
