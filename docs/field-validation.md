@@ -77,6 +77,16 @@ normalized result is likewise created relative to a pre-opened external parent
 descriptor, and any parent or result-name substitution prevents publication
 and host PASS.
 
+The observation builds its derived bundle through the builder's native Linux
+directory-descriptor API rather than treating a procfs alias as a pathname.
+Builder-created objects enter a physical-identity ledger at creation, and
+failure cleanup quarantines only matching ledger objects. Read-only Git children
+receive a fixed credential-free environment. Codex 0.153.0 local-marketplace
+receipts must name the already-held source object, while plugin receipts must
+resolve through the real `plugins/cache/<marketplace>/<plugin>/<version>`
+layout below the frozen temporary Codex home. None of these checks establishes
+a host observation before the separately authorized real run.
+
 ## Before Testing
 
 1. Use a repository that contains no sensitive material or select a public

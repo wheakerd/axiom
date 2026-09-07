@@ -55,6 +55,18 @@
         "authority": "marketplace add JSON receipt and pretty-JSON serialization"
       },
       {
+        "path": "codex-rs/core-plugins/src/marketplace_add.rs",
+        "blob": "008927b70ed27b56badf9fbeacf2e1d85374cf38",
+        "sha256": "3cb6be87e681abe10ea80e0d06e46611304229ff67d619f6dbd40bf973f93c58",
+        "authority": "local marketplace sources remain the installed marketplace object"
+      },
+      {
+        "path": "codex-rs/core-plugins/src/store.rs",
+        "blob": "4f37bbef9ca47b1ca15a6a3f8d32b459f2ca6dc8",
+        "sha256": "76f5dda2d19326ec6b7640a12955f7f9663cd77d2e94abc2c8d6c32308d00737",
+        "authority": "plugin cache hierarchy is marketplace, plugin, then version"
+      },
+      {
         "path": "codex-rs/features/src/lib.rs",
         "blob": "fdeae5c6f52a3223df6759af9a2d3b4e4e2364dc",
         "sha256": "b7ef7bb1bb5517a82ae7c7294f2d7a072cb00f151a3d8f5025aa2e967b036937",

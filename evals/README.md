@@ -185,8 +185,9 @@ claim.
 The source-bound
 [`codex-exec-jsonl-observer-v3.json`](codex-exec-jsonl-observer-v3.json)
 taxonomy binds Codex CLI 0.153.0 to the exact `openai/codex` `rust-v0.153.0`
-tag object, commit, and twelve source blobs, including item, notification,
-feature, plugin, and marketplace owners. It closes every public top-level
+tag object, commit, and fourteen source blobs, including item, notification,
+feature, plugin, marketplace-command, marketplace-add, and plugin-store
+owners. It closes every public top-level
 event, source-required payload, item type, applicable status, lifecycle edge,
 terminal rule, and privacy-safe retained field; source-valid action items are
 never acceptance-safe. Source-suppressed action surfaces are bound to explicit
@@ -215,11 +216,14 @@ process, Codex home, workspace, and ephemeral session; Case 11 alone has no
 installed plugin.
 
 All sixteen deterministic fixtures are materialized by the production runner
-from closed logical file records and observer-owned Git facts. Marketplace and
-plugin receipts use the bounded Codex 0.153.0 JSON shapes and identify a closed
-child output below the held temporary Codex-home descriptor. The installed
-directory remains open and its name binding and tree are rechecked before and
-after model launch. All security-sensitive run-root writes are
+from closed logical file records and observer-owned Git facts. The local
+marketplace receipt is bound to the already-held source object; it is not
+treated as a copied child of the Codex home. Plugin receipts use the bounded
+Codex 0.153.0 JSON shape and the real
+`plugins/cache/<marketplace>/<plugin>/<version>` hierarchy below the held
+temporary Codex-home descriptor. The installed directory remains open and its
+name binding and tree are rechecked before and after model launch. All
+security-sensitive run-root writes are
 descriptor-relative, each model consumes the exact held schema through an
 inherited `/proc/self/fd` alias, and Linux cleanup quarantines only identities
 owned at creation or accepted from a closed receipt. Unknown replacements are

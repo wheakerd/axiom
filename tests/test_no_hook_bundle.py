@@ -29,6 +29,7 @@ from axiom_validation.no_hook_bundle import (
     _validate_reference_closure,
     _validate_runtime_text,
     build_bundle,
+    build_bundle_to_directory_fd,
     check_no_hook_bundle,
     inspect_source,
     validate_archive_bytes,
@@ -759,6 +760,205 @@ class NoHookBundleTests(unittest.TestCase):
             with self.assertRaisesRegex(BundleContractError, "must not be a symbolic link"):
                 _build(fixture, linked_parent / "output")
 
+    def test_descriptor_destination_builds_and_path_api_delegates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("fd-output")
+            descriptor = os.open(
+                destination,
+                os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0),
+            )
+            try:
+                metadata = os.fstat(descriptor)
+                publications: list[str] = []
+
+                def hook(phase: str, facts: dict[str, object]) -> None:
+                    if phase == "builder-after-publish":
+                        publications.append(str(facts["destination"]))
+
+                result = build_bundle_to_directory_fd(
+                    fixture.root,
+                    fixture.commit_oid,
+                    fixture.tree_oid,
+                    descriptor,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                    entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                    module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                    expected_destination_identity=(metadata.st_dev, metadata.st_ino),
+                    _test_hook=hook,
+                )
+            finally:
+                os.close(descriptor)
+            self.assertGreater(len(result.creation_records), result.directory_file_count)
+            self.assertEqual(
+                ["plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME],
+                publications,
+            )
+            self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+            self.assertEqual(
+                {"plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME},
+                {path.name for path in destination.iterdir()},
+            )
+
+            delegated = fixture.destination("delegated")
+            real_core = bundle_module.build_bundle_to_directory_fd
+            with mock.patch.object(
+                bundle_module,
+                "build_bundle_to_directory_fd",
+                wraps=real_core,
+            ) as core:
+                _build(fixture, delegated)
+            core.assert_called_once()
+
+            alias = Path(f"/proc/self/fd/{os.open(delegated, os.O_RDONLY)}")
+            try:
+                with self.assertRaisesRegex(
+                    BundleContractError, "symbolic link"
+                ):
+                    build_bundle(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        alias,
+                        git_executable=GIT_EXECUTABLE,
+                    )
+            finally:
+                os.close(int(alias.name))
+
+    def test_descriptor_destination_rejects_identity_nonempty_and_non_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("fd-errors")
+            descriptor = os.open(destination, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                metadata = os.fstat(descriptor)
+                with self.assertRaisesRegex(BundleContractError, "identity does not match"):
+                    build_bundle_to_directory_fd(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        descriptor,
+                        git_executable=GIT_EXECUTABLE,
+                        expected_destination_identity=(metadata.st_dev, metadata.st_ino + 1),
+                    )
+                (destination / "unknown").write_text("keep\n", encoding="utf-8")
+                with self.assertRaisesRegex(BundleContractError, "destination must be empty"):
+                    build_bundle_to_directory_fd(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        descriptor,
+                        git_executable=GIT_EXECUTABLE,
+                    )
+            finally:
+                os.close(descriptor)
+            regular = Path(directory) / "regular"
+            regular.write_text("not a directory\n", encoding="utf-8")
+            file_fd = os.open(regular, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+            try:
+                with self.assertRaisesRegex(BundleContractError, "ordinary directory"):
+                    build_bundle_to_directory_fd(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        file_fd,
+                        git_executable=GIT_EXECUTABLE,
+                    )
+            finally:
+                os.close(file_fd)
+
+            if hasattr(os, "O_PATH"):
+                target = Path(directory) / "symlink-target"
+                target.mkdir()
+                linked = Path(directory) / "symlink-destination"
+                try:
+                    linked.symlink_to(target, target_is_directory=True)
+                except OSError as error:
+                    self.skipTest(f"directory symlink unavailable: {error}")
+                link_fd = os.open(
+                    linked,
+                    os.O_PATH | getattr(os, "O_NOFOLLOW", 0),
+                )
+                try:
+                    with self.assertRaisesRegex(
+                        BundleContractError, "ordinary directory"
+                    ):
+                        build_bundle_to_directory_fd(
+                            fixture.root,
+                            fixture.commit_oid,
+                            fixture.tree_oid,
+                            link_fd,
+                            git_executable=GIT_EXECUTABLE,
+                        )
+                finally:
+                    os.close(link_fd)
+
+    def test_builder_creation_and_cleanup_races_preserve_unknown_objects(self):
+        for scenario in ("before-ledger", "after-ledger", "quarantine-mismatch"):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                destination = fixture.destination("race-output")
+                mutated = False
+
+                def hook(phase: str, facts: dict[str, object]) -> None:
+                    nonlocal mutated
+                    parent_fd = int(facts.get("parentDescriptor", -1))
+                    if mutated or parent_fd < 0:
+                        return
+                    if (
+                        scenario == "before-ledger"
+                        and phase == "builder-after-create-before-ledger"
+                        and facts["relativePath"] == bundle_module.STAGING_DIRECTORY_NAME
+                    ):
+                        name = str(facts["basename"])
+                        os.rename(name, "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                        os.mkdir(name, 0o700, dir_fd=parent_fd)
+                        mutated = True
+                    elif (
+                        scenario == "after-ledger"
+                        and phase == "builder-after-publish"
+                        and facts["destination"] == "plugin"
+                    ):
+                        os.rename("plugin", "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                        os.mkdir("plugin", 0o755, dir_fd=parent_fd)
+                        mutated = True
+                    elif scenario == "quarantine-mismatch" and phase == "builder-after-cleanup-quarantine":
+                        name = str(facts["quarantine"])
+                        os.rename(name, "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                        os.mkdir(name, 0o700, dir_fd=parent_fd)
+                        mutated = True
+
+                if scenario == "quarantine-mismatch":
+                    verifier = mock.patch.object(
+                        bundle_module,
+                        "_validate_published_outputs_fd",
+                        side_effect=BundleContractError("injected failure"),
+                    )
+                else:
+                    verifier = mock.patch.object(
+                        bundle_module,
+                        "_validate_published_outputs_fd",
+                        wraps=bundle_module._validate_published_outputs_fd,
+                    )
+                with verifier, self.assertRaisesRegex(
+                    bundle_module.BuilderCleanupError, "manual cleanup required"
+                ):
+                    build_bundle(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        destination,
+                        git_executable=GIT_EXECUTABLE,
+                        schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                        entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                        module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                        _test_hook=hook,
+                    )
+                self.assertTrue(mutated)
+                self.assertTrue((destination / "moved-original").exists())
+                self.assertTrue(any(path.name in {"plugin", bundle_module.STAGING_DIRECTORY_NAME} for path in destination.iterdir()))
+
     def test_runtime_path_policy_rejects_unsafe_names_and_collisions(self):
         invalid = (
             "../escape.md",
@@ -906,6 +1106,55 @@ class NoHookBundleTests(unittest.TestCase):
             self.assertFalse(marker.exists())
             with self.assertRaisesRegex(BundleContractError, "explicit absolute path"):
                 GitObjectSource(fixture.root, Path("git"))
+
+    def test_git_children_receive_only_the_credential_free_allowlist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("credential-free-git")
+            commit_oid = fixture.commit_oid
+            tree_oid = fixture.tree_oid
+            observed_environment_names: list[frozenset[str]] = []
+            real_popen = subprocess.Popen
+
+            def recording_popen(*args: object, **kwargs: object):
+                environment = kwargs.get("env")
+                self.assertIsInstance(environment, dict)
+                observed_environment_names.append(frozenset(environment))
+                return real_popen(*args, **kwargs)
+
+            synthetic_parent = {
+                "CODEX_API_KEY": "sentinel-not-a-real-secret",
+                "OPENAI_API_KEY": "second-synthetic-value",
+                "AXIOM_TEST_TOKEN": "third-synthetic-value",
+                "AXIOM_TEST_SECRET": "fourth-synthetic-value",
+                "CODEX_HOME": "/synthetic/codex-home",
+                "XDG_CONFIG_HOME": "/synthetic/xdg-config",
+            }
+            with mock.patch.object(bundle_module.os, "environ", synthetic_parent), mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                side_effect=recording_popen,
+            ):
+                result = build_bundle(
+                    fixture.root,
+                    commit_oid,
+                    tree_oid,
+                    destination,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                    entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                    module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                )
+            self.assertEqual(52, result.directory_file_count)
+            self.assertTrue(observed_environment_names)
+            allowed = {
+                "LANG", "LC_ALL", "NO_COLOR", "GIT_CONFIG_GLOBAL",
+                "GIT_CONFIG_NOSYSTEM", "GIT_CONFIG_SYSTEM", "GIT_NO_LAZY_FETCH",
+                "GIT_OPTIONAL_LOCKS", "GIT_PROTOCOL_FROM_USER", "GIT_TERMINAL_PROMPT",
+            }
+            self.assertTrue(
+                all(names == allowed for names in observed_environment_names)
+            )
 
     def test_git_requires_no_lazy_fetch_capability_before_object_reads(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -1831,7 +2080,7 @@ class NoHookBundleTests(unittest.TestCase):
 
             with mock.patch.object(
                 bundle_module,
-                "_validate_published_outputs",
+                "_validate_published_outputs_fd",
                 side_effect=fail_after_unknown,
             ):
                 with self.assertRaisesRegex(BundleContractError, "injected"):

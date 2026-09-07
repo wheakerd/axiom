@@ -70,8 +70,12 @@ not a placeholder observation.
 The future Linux runner's registry-backed execution capability binds the exact
 protocol, runner/module and Codex binary identities, source commit/tree, model,
 reasoning effort, run-root identity, host, nonce, and irreversible 16-call
-budget. A sole descriptor-pinned launcher consumes the ordered plan. Receipts
-are parsed as bounded complete JSON documents using the Codex 0.153.0 shapes.
+budget. A sole descriptor-pinned launcher consumes the ordered plan. The local
+marketplace receipt must resolve to the already-held source object; the plugin
+receipt must identify the exact
+`plugins/cache/<marketplace>/<plugin>/<version>` object below the frozen Codex
+home. Both are parsed as bounded complete JSON documents using the Codex
+0.153.0 source shapes.
 Run-root writes, model schemas, isolated homes, workspaces, accepted installed
 copies, and cleanup stay anchored to held Linux descriptors and creation-time
 object identities. Schema bytes reach the child only through an inherited
@@ -88,12 +92,23 @@ fake-only, and the Codex observation remains `NOT-RUN`.
 
 Construction binds one caller-supplied absolute Git executable, requires its
 `--no-lazy-fetch` capability, and rechecks its physical identity around every
-read-only invocation. Each invocation uses both `--no-lazy-fetch` and
-`GIT_NO_LAZY_FETCH=1`, with `GIT_PROTOCOL_FROM_USER=0`; a missing partial-clone
-or promisor object therefore fails locally even if repository configuration
-allows a protocol-specific remote helper. Git replacement objects, hooks,
-generic protocols, credentials, filesystem monitoring, and ambient
-repository/object redirection are disabled or rejected.
+read-only invocation. Git receives a fixed environment allowlist rather than
+the ambient process environment: model credentials, auth tokens, credential
+helpers, real user homes, and XDG state cannot reach a builder child. Each
+invocation uses both `--no-lazy-fetch` and `GIT_NO_LAZY_FETCH=1`, with
+`GIT_PROTOCOL_FROM_USER=0`; a missing partial-clone or promisor object therefore
+fails locally even if repository configuration allows a protocol-specific
+remote helper. Git replacement objects, hooks, generic protocols, filesystem
+monitoring, and ambient repository/object redirection are disabled or rejected.
+
+The pathname bundle API retains its preflight checks and then delegates to the
+same Linux directory-descriptor core used by observation. Every directory,
+file, staging name, deterministic ZIP, and final envelope is created or
+published relative to that held descriptor. A creation-time ledger records
+each object before content write or later publication, and both normal and
+failure cleanup use identity-checked no-replace quarantine. Unknown or replaced
+objects are preserved and require manual cleanup; the envelope remains the last
+published completion marker.
 
 Git tree enumeration is a bounded pre-read gate rather than a buffered
 post-read check. NUL-delimited records are consumed incrementally, with fixed

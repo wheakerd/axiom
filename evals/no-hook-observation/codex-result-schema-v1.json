@@ -55,8 +55,8 @@
         "fullProfileInputCount": {"const": 61},
         "fullProfileRuntimeContractDigest": {"const": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"},
         "profileRuntimeDigest": {"const": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"},
-        "bundleManifestDigest": {"const": "sha256:36a183abcdc04faf1e9edf13172d4f16b8ff3e813803be8b74d090b5965a8652"},
-        "archiveSha256": {"const": "24213ff9e239cb304a40c480ff36731f1260ecf4aa518d53e037805d64acc283"}
+        "bundleManifestDigest": {"const": "sha256:d04afb4a794bfb241941b0a6a0d6057863e3b38a5e6c2ad5983128f670c783ed"},
+        "archiveSha256": {"const": "01906537705abc4d4ee60c81d1ac458dd8eabbe3883cd8bfbe4089583c117750"}
       }
     },
     "contractBindings": {
@@ -120,12 +120,18 @@
     },
     "objectBindingFacts": {
       "type": "object", "additionalProperties": false,
-      "required": ["schemaObjectConsumptionVerified", "runRootWritesDescriptorAnchored", "installedDirectoryIdentityVerified", "externalOutputObjectBinding"],
+      "required": ["schemaObjectConsumptionVerified", "runRootWritesDescriptorAnchored", "installedDirectoryIdentityVerified", "externalOutputObjectBinding", "bundleDestinationDescriptorBound", "bundleCreationLedgerVerified", "bundleFailureCleanupIdentityBound", "bundleGitCredentialExcluded", "marketplaceSourceObjectVerified", "installedCacheLayoutVerified"],
       "properties": {
         "schemaObjectConsumptionVerified": {"type": "boolean"},
         "runRootWritesDescriptorAnchored": {"type": "boolean"},
         "installedDirectoryIdentityVerified": {"type": "boolean"},
-        "externalOutputObjectBinding": {"enum": ["pending", "verified", "not-requested-fake-validation", "failed"]}
+        "externalOutputObjectBinding": {"enum": ["pending", "verified", "not-requested-fake-validation", "failed"]},
+        "bundleDestinationDescriptorBound": {"type": "boolean"},
+        "bundleCreationLedgerVerified": {"type": "boolean"},
+        "bundleFailureCleanupIdentityBound": {"type": "boolean"},
+        "bundleGitCredentialExcluded": {"type": "boolean"},
+        "marketplaceSourceObjectVerified": {"type": "boolean"},
+        "installedCacheLayoutVerified": {"type": "boolean"}
       }
     },
     "noHookProof": {

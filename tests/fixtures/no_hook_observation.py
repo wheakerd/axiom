@@ -232,7 +232,14 @@ def validate_installed_object_visibility() -> None:
             raise ValueError("fake no-plugin control is not empty")
         return
     installed = Path(installed_alias)
-    visible = codex_home / "plugins" / "axiom"
+    visible = (
+        codex_home
+        / "plugins"
+        / "cache"
+        / "axiom-no-hook-observer"
+        / "axiom"
+        / "0.10.0"
+    )
     installed_stat = installed.stat()
     visible_stat = visible.stat()
     if (
@@ -257,13 +264,26 @@ def main() -> int:
     if isolated_plugin_arguments is not None and isolated_plugin_arguments[:3] == [
         "plugin", "marketplace", "add"
     ]:
-        Path(os.environ["AXIOM_FAKE_MARKETPLACE_ROOT"]).mkdir(
-            parents=True, exist_ok=False
+        marketplace_source = Path(os.environ["AXIOM_FAKE_MARKETPLACE_ROOT"])
+        codex_home = Path(os.environ["CODEX_HOME"])
+        metadata = marketplace_source.stat()
+        if not stat.S_ISDIR(metadata.st_mode):
+            return 44
+        # Independently mirror the rust-v0.153.0 local-source effects: the
+        # generic marketplace install root exists, while config points to the
+        # source object itself rather than to a copied marketplace.
+        (codex_home / ".tmp" / "marketplaces").mkdir(parents=True, exist_ok=False)
+        (codex_home / "config.toml").write_text(
+            "[marketplaces.axiom-no-hook-observer]\n"
+            "source_type = \"local\"\n"
+            f"source = {json.dumps(str(marketplace_source))}\n",
+            encoding="utf-8",
+            newline="\n",
         )
         append_call_fact("marketplace", arguments)
         emit_receipt({
             "marketplaceName": "axiom-no-hook-observer",
-            "installedRoot": os.environ["AXIOM_FAKE_MARKETPLACE_ROOT"],
+            "installedRoot": str(marketplace_source),
             "alreadyAdded": scenario == "invalid-marketplace-receipt",
         })
         return 0
@@ -272,6 +292,7 @@ def main() -> int:
     ]:
         source = Path(os.environ["AXIOM_FAKE_BUNDLE"])
         destination = Path(os.environ["AXIOM_FAKE_INSTALLED_PATH"])
+        destination.parent.mkdir(parents=True, exist_ok=False)
         shutil.copytree(source, destination, copy_function=shutil.copyfile)
         append_call_fact("plugin-install", arguments)
         emit_receipt({

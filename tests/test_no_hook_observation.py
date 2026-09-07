@@ -30,6 +30,10 @@ HISTORY = REPOSITORY_ROOT / "evals/no-hook-observation/result-history-v1.json"
 ENTRYPOINT = REPOSITORY_ROOT / "scripts/run-no-hook-codex-observation.py"
 MODULE = REPOSITORY_ROOT / "axiom_validation/no_hook_observation.py"
 THREAD_ID = "01890f32-7abc-7def-8abc-0123456789ab"
+GIT_EXECUTABLE = Path(shutil.which("git") or "/nonexistent/git").resolve()
+BUILDER_SOURCE_REPOSITORY = Path(
+    os.environ.get("AXIOM_TEST_BUNDLE_SOURCE_REPOSITORY", REPOSITORY_ROOT)
+).resolve()
 
 
 def load_json(path: Path) -> dict[str, object]:
@@ -112,8 +116,41 @@ def fake_run(
     *,
     hook: object | None = None,
     seed: bytes | None = None,
+    real_builder: bool = False,
 ) -> dict[str, object]:
     test_parent = Path(tempfile.mkdtemp(prefix="axiom-observer-fake-parent-"))
+    source_repository: Path | None = None
+    if real_builder:
+        source_repository = test_parent / "source"
+        clone_environment = {
+            "LANG": "C",
+            "LC_ALL": "C",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+        subprocess.run(
+            [
+                str(GIT_EXECUTABLE), "clone", "--quiet",
+                str(BUILDER_SOURCE_REPOSITORY), str(source_repository),
+            ],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=clone_environment,
+        )
+        subprocess.run(
+            [
+                str(GIT_EXECUTABLE), "-C", str(source_repository), "checkout", "--quiet",
+                observer.BUNDLE_RUNTIME_SOURCE_COMMIT,
+            ],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=clone_environment,
+        )
     run_root = test_parent / "run"
     run_root.mkdir(mode=0o700)
     fake = run_root / "fake-codex"
@@ -127,6 +164,8 @@ def fake_run(
             fake_executable=fake,
             fake_executable_sha256=digest,
             scenarios=scenarios,
+            _test_source_repository=source_repository,
+            _test_git_executable=GIT_EXECUTABLE if real_builder else None,
             _test_materialization_seed=seed,
             _test_hook=hook,
         )
@@ -150,7 +189,15 @@ def host_pass_from_fake(document: dict[str, object]) -> dict[str, object]:
         "marketplaceProcessCount": 15,
         "pluginInstallProcessCount": 15,
     }
-    candidate["objectBindingFacts"]["externalOutputObjectBinding"] = "verified"
+    candidate["objectBindingFacts"].update({
+        "externalOutputObjectBinding": "verified",
+        "bundleDestinationDescriptorBound": True,
+        "bundleCreationLedgerVerified": True,
+        "bundleFailureCleanupIdentityBound": True,
+        "bundleGitCredentialExcluded": True,
+        "marketplaceSourceObjectVerified": True,
+        "installedCacheLayoutVerified": True,
+    })
     return candidate
 
 
@@ -195,13 +242,32 @@ def remove_preserved_run_objects(identity: observer.OwnedRootIdentity) -> None:
         remove_test_tree(path)
 
 
+def find_objects_by_identity(
+    root: Path, expected: tuple[int, int]
+) -> list[Path]:
+    """Find one physical object without following links or trusting name order."""
+    matches: list[Path] = []
+    pending = [root]
+    while pending:
+        current = pending.pop()
+        with os.scandir(current) as entries:
+            for entry in entries:
+                metadata = entry.stat(follow_symlinks=False)
+                candidate = Path(entry.path)
+                if (metadata.st_dev, metadata.st_ino) == expected:
+                    matches.append(candidate)
+                if stat.S_ISDIR(metadata.st_mode):
+                    pending.append(candidate)
+    return matches
+
+
 class ProtocolContractTests(unittest.TestCase):
     def test_protocol_documents_are_closed_and_observation_is_not_run(self):
         identities = observer.validate_protocol_documents(REPOSITORY_ROOT)
         self.assertEqual(16, identities["caseCount"])
-        self.assertEqual(12, identities["sourceBindingCount"])
+        self.assertEqual(14, identities["sourceBindingCount"])
         failures: list[str] = []
-        self.assertEqual((16, 12), observer.check_no_hook_observation(failures))
+        self.assertEqual((16, 14), observer.check_no_hook_observation(failures))
         self.assertEqual([], failures)
         history = load_json(HISTORY)
         self.assertEqual([], history["results"])
@@ -745,21 +811,35 @@ class FixtureAndReceiptTests(unittest.TestCase):
         identity = observer.freeze_owned_root(root)
         session = observer.OwnedRootSession(identity)
         codex_home: observer.FrozenDirectoryIdentity | None = None
+        marketplace_source: observer.FrozenDirectoryIdentity | None = None
+        other_marketplace: observer.FrozenDirectoryIdentity | None = None
         try:
             session.mkdir(
-                f"codex-home/marketplaces/{observer.MARKETPLACE_NAME}",
+                "marketplace/.agents/plugins",
                 parents=True,
                 phase="receipt-test",
             )
-            session.mkdir("codex-home/plugins/axiom", parents=True, phase="receipt-test")
+            installed_relative = (
+                f"codex-home/plugins/cache/{observer.MARKETPLACE_NAME}/"
+                f"{observer.PLUGIN_NAME}/{observer.PLUGIN_VERSION}"
+            )
+            session.mkdir(installed_relative, parents=True, phase="receipt-test")
             codex_home = session.open_directory(
                 "codex-home", phase="receipt-test", freeze_tree=False
             )
-            marketplace = (
-                f"/proc/self/fd/{codex_home.descriptor}/marketplaces/"
-                f"{observer.MARKETPLACE_NAME}"
+            marketplace_source = session.open_directory(
+                "marketplace", phase="receipt-test", freeze_tree=False
             )
-            plugin = f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
+            session.mkdir("other-marketplace", phase="receipt-test")
+            other_marketplace = session.open_directory(
+                "other-marketplace", phase="receipt-test", freeze_tree=False
+            )
+            marketplace = f"/proc/self/fd/{marketplace_source.descriptor}"
+            plugin = (
+                f"/proc/self/fd/{codex_home.descriptor}/plugins/cache/"
+                f"{observer.MARKETPLACE_NAME}/{observer.PLUGIN_NAME}/"
+                f"{observer.PLUGIN_VERSION}"
+            )
             marketplace_receipt = json.dumps(
                 {
                     "marketplaceName": observer.MARKETPLACE_NAME,
@@ -777,9 +857,20 @@ class FixtureAndReceiptTests(unittest.TestCase):
                 "authPolicy": "ON_INSTALL",
             }
             normalized = observer.parse_marketplace_receipt(
-                marketplace_receipt, session, codex_home
+                marketplace_receipt, marketplace_source
             )
-            self.assertTrue(normalized["installedRootWithinTemporaryHome"])
+            self.assertTrue(normalized["localSourceObjectVerified"])
+            invented_copy = dict(
+                json.loads(marketplace_receipt),
+                installedRoot=f"/proc/self/fd/{other_marketplace.descriptor}",
+            )
+            with self.assertRaisesRegex(
+                observer.ObservationError,
+                "different inherited descriptor|frozen marketplace source",
+            ):
+                observer.parse_marketplace_receipt(
+                    json.dumps(invented_copy).encode(), marketplace_source
+                )
             receipt, installed = observer.parse_plugin_receipt(
                 json.dumps(plugin_document, indent=2).encode(),
                 session,
@@ -815,6 +906,8 @@ class FixtureAndReceiptTests(unittest.TestCase):
                         expected_tree=(),
                     )
         finally:
+            observer._close_frozen_directory(other_marketplace)
+            observer._close_frozen_directory(marketplace_source)
             observer._close_frozen_directory(codex_home)
             ledger = session.ledger
             session.close()
@@ -829,12 +922,20 @@ class FixtureAndReceiptTests(unittest.TestCase):
         session = observer.OwnedRootSession(identity)
         codex_home: observer.FrozenDirectoryIdentity | None = None
         try:
-            session.mkdir("codex-home/plugins/axiom", parents=True, phase="receipt-test")
+            installed_relative = (
+                f"codex-home/plugins/cache/{observer.MARKETPLACE_NAME}/"
+                f"{observer.PLUGIN_NAME}/{observer.PLUGIN_VERSION}"
+            )
+            session.mkdir(installed_relative, parents=True, phase="receipt-test")
             session.mkdir("outside", phase="receipt-test")
             codex_home = session.open_directory(
                 "codex-home", phase="receipt-test", freeze_tree=False
             )
-            inside = f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
+            inside = (
+                f"/proc/self/fd/{codex_home.descriptor}/plugins/cache/"
+                f"{observer.MARKETPLACE_NAME}/{observer.PLUGIN_NAME}/"
+                f"{observer.PLUGIN_VERSION}"
+            )
             outside = f"/proc/self/fd/{codex_home.descriptor}/outside"
             base = {
                 "pluginId": observer.PLUGIN_ID,
@@ -848,6 +949,23 @@ class FixtureAndReceiptTests(unittest.TestCase):
                 (json.dumps(base) + json.dumps(base)).encode(),
                 (json.dumps(base) + " trailing").encode(),
                 json.dumps(dict(base, installedPath=outside)).encode(),
+                json.dumps(dict(
+                    base,
+                    installedPath=(
+                        f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
+                    ),
+                )).encode(),
+                json.dumps(dict(
+                    base,
+                    installedPath=(
+                        f"/proc/self/fd/{codex_home.descriptor}/plugins/cache/"
+                        f"{observer.MARKETPLACE_NAME}/{observer.PLUGIN_ID}/"
+                        f"{observer.PLUGIN_VERSION}"
+                    ),
+                )).encode(),
+                json.dumps(dict(base, name="other-plugin")).encode(),
+                json.dumps(dict(base, marketplaceName="other-marketplace")).encode(),
+                json.dumps(dict(base, version="0.10.1")).encode(),
                 b'{"pluginId":"a","pluginId":"b"}',
             ]
             for ordinal, data in enumerate(bad):
@@ -1750,19 +1868,42 @@ class CleanupConfinementTests(unittest.TestCase):
 
 class DescriptorObjectBindingTests(unittest.TestCase):
     def test_unaccepted_child_receipt_objects_are_preserved_not_adopted(self):
-        for scenario, expected_name in (
-            ("invalid-marketplace-receipt", observer.MARKETPLACE_NAME),
-            ("invalid-plugin-receipt", "axiom"),
-        ):
+        for scenario in ("invalid-marketplace-receipt", "invalid-plugin-receipt"):
             state = {"preserved": False}
 
             def hook(phase: str, facts: dict[str, object]) -> None:
-                if phase == "after-cleanup":
+                if phase == "before-cleanup":
+                    session = facts["session"]
+                    if scenario == "invalid-marketplace-receipt":
+                        unknown = session.alias("case-01/codex-home/config.toml")
+                    else:
+                        unknown = session.alias(
+                            "case-01/codex-home/plugins/cache/"
+                            f"{observer.MARKETPLACE_NAME}/{observer.PLUGIN_NAME}/"
+                            f"{observer.PLUGIN_VERSION}"
+                        )
+                    metadata = unknown.stat(follow_symlinks=False)
+                    state["identity"] = (metadata.st_dev, metadata.st_ino)
+                    state["type"] = stat.S_IFMT(metadata.st_mode)
+                    if stat.S_ISREG(metadata.st_mode):
+                        state["size"] = metadata.st_size
+                        state["sha256"] = hashlib.sha256(
+                            unknown.read_bytes()
+                        ).hexdigest()
+                elif phase == "after-cleanup":
                     identity = facts["rootIdentity"]
                     quarantine = next(identity.path.parent.glob(".axiom-owned-cleanup-*"))
-                    state["preserved"] = any(
-                        path.name == expected_name for path in quarantine.rglob("*")
-                    )
+                    matches = find_objects_by_identity(quarantine, state["identity"])
+                    self.assertEqual(1, len(matches))
+                    preserved = matches[0].stat(follow_symlinks=False)
+                    self.assertEqual(state["type"], stat.S_IFMT(preserved.st_mode))
+                    if stat.S_ISREG(preserved.st_mode):
+                        self.assertEqual(state["size"], preserved.st_size)
+                        self.assertEqual(
+                            state["sha256"],
+                            hashlib.sha256(matches[0].read_bytes()).hexdigest(),
+                        )
+                    state["preserved"] = True
                     remove_preserved_run_objects(identity)
 
             with self.subTest(scenario=scenario):
@@ -2066,6 +2207,16 @@ class DescriptorObjectBindingTests(unittest.TestCase):
                         else:
                             path.mkdir(mode=0o700)
                             (path / "unknown").write_bytes(b"preserve")
+                        replacement = path.stat(follow_symlinks=False)
+                        state["replacementIdentity"] = (
+                            replacement.st_dev,
+                            replacement.st_ino,
+                        )
+                        state["replacementType"] = stat.S_IFMT(
+                            replacement.st_mode
+                        )
+                        if path.is_symlink():
+                            state["replacementTarget"] = os.readlink(path)
                     else:
                         target = path / ".codex-plugin" / "plugin.json"
                         target.chmod(0o600)
@@ -2076,10 +2227,19 @@ class DescriptorObjectBindingTests(unittest.TestCase):
                     quarantines = list(identity.path.parent.glob(".axiom-owned-cleanup-*"))
                     self.assertEqual(1, len(quarantines))
                     if scenario == "installed-symlink-after-receipt":
-                        state["preserved"] = any(
-                            path.is_symlink()
-                            for path in quarantines[0].rglob("axiom")
+                        matches = find_objects_by_identity(
+                            quarantines[0], state["replacementIdentity"]
                         )
+                        self.assertEqual(1, len(matches))
+                        replacement = matches[0].stat(follow_symlinks=False)
+                        self.assertEqual(
+                            state["replacementType"], stat.S_IFMT(replacement.st_mode)
+                        )
+                        self.assertTrue(stat.S_ISLNK(replacement.st_mode))
+                        self.assertEqual(
+                            state["replacementTarget"], os.readlink(matches[0])
+                        )
+                        state["preserved"] = True
                     elif phase_to_mutate == "after-plugin-receipt":
                         state["preserved"] = any(
                             path.read_bytes() == b"preserve"
@@ -2174,6 +2334,59 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         self.assertTrue(result["objectBindingFacts"]["runRootWritesDescriptorAnchored"])
         self.assertTrue(result["objectBindingFacts"]["installedDirectoryIdentityVerified"])
 
+    def test_real_builder_fake_orchestration_uses_source_compatible_receipts(self):
+        synthetic_environment = {
+            "CODEX_API_KEY": "sentinel-not-a-real-secret",
+            "OPENAI_API_KEY": "second-synthetic-value",
+            "AXIOM_TEST_TOKEN": "third-synthetic-value",
+            "AXIOM_TEST_SECRET": "fourth-synthetic-value",
+        }
+        with mock.patch.object(observer.os, "environ", synthetic_environment):
+            result = fake_run(real_builder=True, seed=b"\x31" * 32)
+        self.assertEqual("fake-validation", result["runMode"])
+        self.assertEqual("incomplete", result["overallStatus"])
+        self.assertEqual(16, result["summary"]["passCount"])
+        self.assertEqual(16, result["summary"]["modelCallCount"])
+        self.assertEqual(15, result["executionFacts"]["marketplaceProcessCount"])
+        self.assertEqual(15, result["executionFacts"]["pluginInstallProcessCount"])
+        self.assertEqual(1, result["installationFacts"]["noPluginControlCaseCount"])
+        for key in (
+            "bundleDestinationDescriptorBound",
+            "bundleCreationLedgerVerified",
+            "bundleFailureCleanupIdentityBound",
+            "bundleGitCredentialExcluded",
+            "marketplaceSourceObjectVerified",
+            "installedCacheLayoutVerified",
+        ):
+            self.assertTrue(result["objectBindingFacts"][key], key)
+        self.assertTrue(result["cleanup"]["temporaryRootsRemoved"])
+        self.assertTrue(result["cleanup"]["sourceBundleUnchanged"])
+        self.assertFalse(result["cleanup"]["manualCleanupRequired"])
+
+    def test_real_builder_failure_hard_stops_before_any_model_case(self):
+        injected = False
+
+        def hook(phase: str, facts: dict[str, object]) -> None:
+            nonlocal injected
+            if (
+                not injected
+                and phase == "builder-after-create-before-ledger"
+                and facts["relativePath"] == ".axiom-no-hook-bundle-staging"
+            ):
+                injected = True
+                raise OSError("injected builder preflight failure")
+
+        result = fake_run(real_builder=True, hook=hook, seed=b"\x32" * 32)
+        self.assertTrue(injected)
+        self.assertEqual("incomplete", result["overallStatus"])
+        self.assertEqual(0, result["summary"]["modelCallCount"])
+        self.assertEqual("incomplete", result["cases"][0]["status"])
+        self.assertTrue(
+            all(case["status"] == "not-run" for case in result["cases"][1:])
+        )
+        self.assertTrue(result["summary"]["hardStop"])
+        self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+
     def test_result_pass_is_observer_derived_not_status_or_summary_owned(self):
         fields = (
             ("discoveryOutcome", "unavailable"),
@@ -2235,6 +2448,12 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("objectBindingFacts", "runRootWritesDescriptorAnchored", False),
             ("objectBindingFacts", "installedDirectoryIdentityVerified", False),
             ("objectBindingFacts", "externalOutputObjectBinding", "pending"),
+            ("objectBindingFacts", "bundleDestinationDescriptorBound", False),
+            ("objectBindingFacts", "bundleCreationLedgerVerified", False),
+            ("objectBindingFacts", "bundleFailureCleanupIdentityBound", False),
+            ("objectBindingFacts", "bundleGitCredentialExcluded", False),
+            ("objectBindingFacts", "marketplaceSourceObjectVerified", False),
+            ("objectBindingFacts", "installedCacheLayoutVerified", False),
             ("noHookProof", "packageHookSurfaceAbsent", False),
             ("noHookProof", "installedHookSurfaceAbsent", False),
             ("noHookProof", "temporaryConfigHookRegistrationAbsent", False),

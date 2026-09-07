@@ -75,12 +75,13 @@ PROFILE_RUNTIME_DIGEST = (
     "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"
 )
 BUNDLE_MANIFEST_DIGEST = (
-    "sha256:36a183abcdc04faf1e9edf13172d4f16b8ff3e813803be8b74d090b5965a8652"
+    "sha256:d04afb4a794bfb241941b0a6a0d6057863e3b38a5e6c2ad5983128f670c783ed"
 )
-ARCHIVE_SHA256 = "24213ff9e239cb304a40c480ff36731f1260ecf4aa518d53e037805d64acc283"
+ARCHIVE_SHA256 = "01906537705abc4d4ee60c81d1ac458dd8eabbe3883cd8bfbe4089583c117750"
 
 MARKETPLACE_NAME = "axiom-no-hook-observer"
-PLUGIN_ID = f"axiom@{MARKETPLACE_NAME}"
+PLUGIN_NAME = "axiom"
+PLUGIN_ID = f"{PLUGIN_NAME}@{MARKETPLACE_NAME}"
 
 PROFILE_SHA256 = "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
 GOLDEN_SET_SHA256 = "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
@@ -88,7 +89,7 @@ RESPONSE_SCHEMA_SHA256 = "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb
 BENCHMARK_SHA256 = "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
 HOST_CASE_SET_SHA256 = "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
 MODEL_RESPONSE_SCHEMA_SHA256 = "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"
-FAKE_CLI_SHA256 = "b7ad441d807991850eed7a8e6bf887204e9d223e8e56addc967f09c23f4f4357"
+FAKE_CLI_SHA256 = "595ad0a7710cbbd407ff93fcc8923e4e83ce29c8fe39ccf7a7e4a57cd279d89e"
 
 CODEX_VERSION = "0.153.0"
 CODEX_BINARY_SHA256 = "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be"
@@ -148,6 +149,16 @@ SOURCE_FILES = (
         "codex-rs/cli/src/marketplace_cmd.rs",
         "8c78a80258ad6d52ac2259499ddcbc79fb4f361d",
         "3dd519f35ffa4ba73e23c059ca638f7893c9e84fbf9cbda0cd1519fca255d02d",
+    ),
+    (
+        "codex-rs/core-plugins/src/marketplace_add.rs",
+        "008927b70ed27b56badf9fbeacf2e1d85374cf38",
+        "3cb6be87e681abe10ea80e0d06e46611304229ff67d619f6dbd40bf973f93c58",
+    ),
+    (
+        "codex-rs/core-plugins/src/store.rs",
+        "4f37bbef9ca47b1ca15a6a3f8d32b459f2ca6dc8",
+        "76f5dda2d19326ec6b7640a12955f7f9663cd77d2e94abc2c8d6c32308d00737",
     ),
     (
         "codex-rs/features/src/lib.rs",
@@ -1322,6 +1333,97 @@ class OwnedRootSession:
             if child_fd is not None:
                 os.close(child_fd)
             os.close(parent_fd)
+
+    def import_builder_creation_records(
+        self,
+        destination: FrozenDirectoryIdentity,
+        records: Sequence[Any],
+        *,
+        phase: str,
+    ) -> None:
+        """Admit only objects bound to the builder's creation-time identities."""
+        _verify_frozen_directory(destination)
+        destination_record = self.ledger.records.get(destination.relative_path)
+        if (
+            destination_record is None
+            or destination_record.kind != "directory"
+            or (destination_record.device, destination_record.inode)
+            != (destination.device, destination.inode)
+        ):
+            raise ObservationError(
+                "bundle destination is not an observer-owned frozen directory"
+            )
+        destination_metadata = os.fstat(destination.descriptor)
+        captured = _capture_owned_tree(
+            destination.descriptor,
+            parent_relative_path=destination.relative_path,
+            parent_metadata=destination_metadata,
+            root_device=self.identity.device,
+            phase=phase,
+        )
+        actual = {record.relative_path: record for record in captured}
+        expected: dict[str, Any] = {}
+        for record in records:
+            relative = getattr(record, "relative_path", None)
+            parent_relative = getattr(record, "parent_relative_path", None)
+            basename = getattr(record, "basename", None)
+            kind = getattr(record, "kind", None)
+            device = getattr(record, "device", None)
+            inode = getattr(record, "inode", None)
+            mode = getattr(record, "mode", None)
+            creation_phase = getattr(record, "creation_phase", None)
+            if (
+                type(relative) is not str
+                or type(parent_relative) is not str
+                or type(basename) is not str
+                or kind not in {"directory", "file"}
+                or type(device) is not int
+                or type(inode) is not int
+                or type(mode) is not int
+                or type(creation_phase) is not str
+                or not creation_phase
+            ):
+                raise ObservationError("bundle creation ledger record is not closed")
+            parts = _closed_relative_parts(relative)
+            if "/".join(parts[:-1]) != parent_relative or parts[-1] != basename:
+                raise ObservationError("bundle creation ledger path fields disagree")
+            translated = _join_relative(destination.relative_path, relative)
+            if translated in expected:
+                raise ObservationError("bundle creation ledger contains a duplicate path")
+            expected[translated] = record
+        if set(actual) != set(expected):
+            raise ObservationError(
+                "bundle destination differs from its creation-time ledger"
+            )
+        for relative, record in expected.items():
+            observed = actual[relative]
+            if (
+                observed.kind != record.kind
+                or (observed.device, observed.inode) != (record.device, record.inode)
+                or stat.S_IFMT(observed.mode) != stat.S_IFMT(record.mode)
+                or stat.S_IMODE(observed.mode) != stat.S_IMODE(record.mode)
+            ):
+                raise ObservationError(
+                    "bundle object differs from its creation-time identity"
+                )
+            if observed.parent_relative_path == destination.relative_path:
+                expected_parent = destination_record
+            else:
+                expected_parent_record = expected.get(observed.parent_relative_path)
+                if expected_parent_record is None:
+                    raise ObservationError(
+                        "bundle creation ledger lacks a parent object"
+                    )
+                expected_parent = actual[observed.parent_relative_path]
+            if (observed.parent_device, observed.parent_inode) != (
+                expected_parent.device,
+                expected_parent.inode,
+            ):
+                raise ObservationError(
+                    "bundle creation ledger parent identity changed"
+                )
+        for record in captured:
+            self.ledger.add(record)
 
     def accept_file(self, relative: str | Path, *, phase: str) -> None:
         parts = _closed_relative_parts(relative)
@@ -3637,6 +3739,8 @@ def _validate_protocol(
             "cleanupAfterBatch": True,
             "persistentUserStateChangeAllowed": False,
             "installedObjectBinding": "descriptor-pinned-within-frozen-codex-home",
+            "marketplaceReceiptBinding": "held-local-source-object",
+            "installedCacheLayout": "plugins/cache/marketplace/plugin/version",
         },
         "protocol installation contract",
     )
@@ -3766,6 +3870,10 @@ def _validate_protocol(
         {
             "runRootWrites": "frozen-root-fd-relative-only",
             "runRootReplacement": "write-original-object-then-incomplete-manual-cleanup",
+            "bundleDestination": "validated-open-directory-fd-relative-core",
+            "bundleCreationOwnership": "immediate-fstat-creation-ledger",
+            "bundleFailureCleanup": "identity-bound-no-replace-quarantine",
+            "bundleGitEnvironment": "fixed-credential-free-allowlist",
             "schemaObject": "open-nofollow-regular-single-link-fd-inherited",
             "schemaArgument": "linux-proc-self-fd-alias-no-path-fallback",
             "schemaLifetime": "open-through-child-terminal",
@@ -3777,6 +3885,8 @@ def _validate_protocol(
             "externalOutputFailure": "incomplete-manual-cleanup-no-host-pass",
             "cleanupOwnership": "creation-immediate-or-validated-child-acceptance-ledger",
             "childObjectAcceptance": "closed-receipt-object-and-tree-before-ledger",
+            "marketplaceReceipt": "source-compatible-held-local-object",
+            "pluginReceipt": "source-compatible-cache-layout-from-frozen-codex-home",
             "unknownObjectPolicy": "preserve-never-delete",
             "identityFailure": "incomplete-manual-cleanup",
             "portableEvidence": "closed-normalized-facts-and-commitments-only",
@@ -4507,12 +4617,46 @@ def _receipt_relative_path(
     return "/".join((*_closed_relative_parts(codex_home.relative_path), *expected))
 
 
+def _verify_receipt_directory_hint(
+    value: str,
+    expected: FrozenDirectoryIdentity,
+    label: str,
+) -> None:
+    """Treat a receipt path only as a hint and bind it to an already-held object."""
+    path = Path(value)
+    if not path.is_absolute() or "\x00" in value:
+        raise ObservationError(f"{label} must be an absolute directory hint")
+    _verify_frozen_directory(expected)
+    alias = re.fullmatch(r"/proc/self/fd/([0-9]+)", value)
+    if alias is not None:
+        if int(alias.group(1)) != expected.descriptor:
+            raise ObservationError(
+                f"{label} names a different inherited descriptor"
+            )
+        metadata = os.fstat(expected.descriptor)
+        if not _same_identity(metadata, expected.device, expected.inode):
+            raise ObservationError(
+                f"{label} does not identify the frozen marketplace source"
+            )
+        return
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(path, _directory_flags())
+        metadata = os.fstat(descriptor)
+    except OSError as error:
+        raise ObservationError(f"{label} cannot be opened without following its final name") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if not _same_identity(metadata, expected.device, expected.inode):
+        raise ObservationError(f"{label} does not identify the frozen marketplace source")
+
+
 def parse_marketplace_receipt(
     data: bytes,
-    session: OwnedRootSession,
-    codex_home: FrozenDirectoryIdentity,
+    marketplace_source: FrozenDirectoryIdentity,
 ) -> dict[str, Any]:
-    """Validate a closed Codex marketplace-add receipt without retaining its path."""
+    """Bind a local-marketplace receipt to the already-frozen source object."""
     document = _exact_keys(
         _load_process_json(data, "marketplace receipt"),
         {"marketplaceName", "installedRoot", "alreadyAdded"},
@@ -4522,27 +4666,87 @@ def parse_marketplace_receipt(
     _expect(document["alreadyAdded"], False, "marketplace receipt alreadyAdded")
     if type(document["installedRoot"]) is not str:
         raise ObservationError("marketplace receipt installedRoot must be a string")
-    _verify_frozen_directory(codex_home)
-    _receipt_relative_path(
+    _verify_receipt_directory_hint(
         document["installedRoot"],
-        codex_home,
-        ("marketplaces", MARKETPLACE_NAME),
+        marketplace_source,
         "marketplace installed root",
     )
-    frozen = session.accept_child_directory(
-        codex_home,
-        ("marketplaces", MARKETPLACE_NAME),
-        phase="accepted-marketplace-receipt",
-    )
-    try:
-        _verify_frozen_directory(frozen)
-    finally:
-        _close_frozen_directory(frozen)
     return {
         "marketplaceName": MARKETPLACE_NAME,
-        "installedRootWithinTemporaryHome": True,
+        "localSourceObjectVerified": True,
         "alreadyAdded": False,
     }
+
+
+def _accept_marketplace_side_effects(
+    session: OwnedRootSession,
+    codex_home: FrozenDirectoryIdentity,
+    marketplace_source: FrozenDirectoryIdentity,
+) -> None:
+    """Admit only the closed local-source side effects of Codex 0.153.0."""
+    config_relative = _join_relative(codex_home.relative_path, "config.toml")
+    session.accept_file(config_relative, phase="accepted-marketplace-config")
+    config_record = session.ledger.records[config_relative]
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(
+            "config.toml",
+            os.O_RDONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_CLOEXEC", 0),
+            dir_fd=codex_home.descriptor,
+        )
+        metadata = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_nlink != 1
+            or not _same_identity(
+                metadata, config_record.device, config_record.inode
+            )
+            or metadata.st_size > MAX_CONTRACT_BYTES
+        ):
+            raise ObservationError(
+                "temporary marketplace config changed after receipt acceptance"
+            )
+        chunks = bytearray()
+        while len(chunks) <= MAX_CONTRACT_BYTES:
+            chunk = os.read(
+                descriptor,
+                min(PROCESS_CHUNK_BYTES, MAX_CONTRACT_BYTES + 1 - len(chunks)),
+            )
+            if not chunk:
+                break
+            chunks.extend(chunk)
+        if len(chunks) > MAX_CONTRACT_BYTES or len(chunks) != metadata.st_size:
+            raise ObservationError("temporary marketplace config exceeds its byte bound")
+        try:
+            config = tomllib.loads(bytes(chunks).decode("utf-8"))
+        except (UnicodeError, tomllib.TOMLDecodeError) as error:
+            raise ObservationError("temporary marketplace config is invalid TOML") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if set(config) != {"marketplaces"} or type(config["marketplaces"]) is not dict:
+        raise ObservationError("temporary marketplace config has an unexpected shape")
+    marketplace = config["marketplaces"]
+    if set(marketplace) != {MARKETPLACE_NAME}:
+        raise ObservationError("temporary marketplace config has an unexpected owner")
+    entry = marketplace[MARKETPLACE_NAME]
+    if type(entry) is not dict or set(entry) != {"source_type", "source"}:
+        raise ObservationError("temporary marketplace config entry is not closed")
+    _expect(entry["source_type"], "local", "temporary marketplace source type")
+    if type(entry["source"]) is not str:
+        raise ObservationError("temporary marketplace source must be a string")
+    _verify_receipt_directory_hint(
+        entry["source"], marketplace_source, "temporary marketplace source"
+    )
+    temporary_marketplaces = session.accept_child_directory(
+        codex_home,
+        (".tmp", "marketplaces"),
+        phase="accepted-marketplace-install-root",
+        expected_tree=(),
+    )
+    _close_frozen_directory(temporary_marketplaces)
 
 
 def parse_plugin_receipt(
@@ -4567,7 +4771,7 @@ def parse_plugin_receipt(
     )
     expected = {
         "pluginId": PLUGIN_ID,
-        "name": "axiom",
+        "name": PLUGIN_NAME,
         "marketplaceName": MARKETPLACE_NAME,
         "version": PLUGIN_VERSION,
     }
@@ -4581,12 +4785,12 @@ def parse_plugin_receipt(
     _receipt_relative_path(
         document["installedPath"],
         codex_home,
-        ("plugins", "axiom"),
+        ("plugins", "cache", MARKETPLACE_NAME, PLUGIN_NAME, PLUGIN_VERSION),
         "plugin installed path",
     )
     installed = session.accept_child_directory(
         codex_home,
-        ("plugins", "axiom"),
+        ("plugins", "cache", MARKETPLACE_NAME, PLUGIN_NAME, PLUGIN_VERSION),
         phase="accepted-plugin-receipt",
         expected_tree=expected_tree,
     )
@@ -4598,11 +4802,12 @@ def parse_plugin_receipt(
     return (
         {
             "pluginId": PLUGIN_ID,
-            "name": "axiom",
+            "name": PLUGIN_NAME,
             "marketplaceName": MARKETPLACE_NAME,
             "version": PLUGIN_VERSION,
             "authPolicy": document["authPolicy"],
             "installedPathWithinTemporaryHome": True,
+            "installedCacheLayoutVerified": True,
         },
         installed,
     )
@@ -5537,6 +5742,17 @@ def validate_normalized_result(
             document["cleanup"],
             document["runMode"],
             document["objectBindingFacts"]["externalOutputObjectBinding"],
+            {
+                key: document["objectBindingFacts"][key]
+                for key in (
+                    "bundleDestinationDescriptorBound",
+                    "bundleCreationLedgerVerified",
+                    "bundleFailureCleanupIdentityBound",
+                    "bundleGitCredentialExcluded",
+                )
+            },
+            document["objectBindingFacts"]["marketplaceSourceObjectVerified"],
+            document["objectBindingFacts"]["installedCacheLayoutVerified"],
         ),
         "observer-derived object-binding facts",
     )
@@ -5807,6 +6023,9 @@ def _derive_object_binding_facts(
     cleanup: Mapping[str, Any],
     run_mode: str,
     external_output_binding: str,
+    builder_facts: Mapping[str, Any],
+    marketplace_source_object_verified: bool,
+    installed_cache_layout_verified: bool,
 ) -> dict[str, Any]:
     """Close aggregate object proofs over case facts and output publication state."""
     if external_output_binding == "not-requested-fake-validation":
@@ -5826,6 +6045,20 @@ def _derive_object_binding_facts(
             )
     elif external_output_binding != "verified":
         raise ObservationError("external output object binding is not closed")
+    required_builder_keys = {
+        "bundleDestinationDescriptorBound",
+        "bundleCreationLedgerVerified",
+        "bundleFailureCleanupIdentityBound",
+        "bundleGitCredentialExcluded",
+    }
+    if (
+        type(builder_facts) is not dict
+        or set(builder_facts) != required_builder_keys
+        or any(type(builder_facts[key]) is not bool for key in required_builder_keys)
+        or type(marketplace_source_object_verified) is not bool
+        or type(installed_cache_layout_verified) is not bool
+    ):
+        raise ObservationError("bundle and receipt object-binding facts are not closed")
     return {
         "schemaObjectConsumptionVerified": (
             len(cases) == len(EXPECTED_CASE_IDS)
@@ -5838,6 +6071,9 @@ def _derive_object_binding_facts(
             ]
         ),
         "externalOutputObjectBinding": external_output_binding,
+        **dict(builder_facts),
+        "marketplaceSourceObjectVerified": marketplace_source_object_verified,
+        "installedCacheLayoutVerified": installed_cache_layout_verified,
     }
 
 
@@ -5894,6 +6130,12 @@ def _derive_overall_status(
             "runRootWritesDescriptorAnchored": True,
             "installedDirectoryIdentityVerified": True,
             "externalOutputObjectBinding": "verified",
+            "bundleDestinationDescriptorBound": True,
+            "bundleCreationLedgerVerified": True,
+            "bundleFailureCleanupIdentityBound": True,
+            "bundleGitCredentialExcluded": True,
+            "marketplaceSourceObjectVerified": True,
+            "installedCacheLayoutVerified": True,
         }
         and document["cleanup"] == {
             "temporaryRootsRemoved": True,
@@ -6420,43 +6662,73 @@ def _materialize_fake_bundle(session: OwnedRootSession, relative: str) -> None:
 def _prepare_disposable_bundle(
     *, session: OwnedRootSession, fake_only: bool, source_repository: Path | None,
     git_executable: Path | None,
-) -> FrozenDirectoryIdentity:
+    builder_test_hook: Callable[[str, dict[str, Any]], None] | None = None,
+) -> tuple[FrozenDirectoryIdentity, dict[str, bool], bool]:
     """Create the disposable bundle input inside the exact owned run root."""
     session.mkdir("bundle-build", mode=0o700, phase="bundle-build-root")
-    if fake_only:
+    real_builder = not fake_only or source_repository is not None
+    if not real_builder:
         session.mkdir(
             "bundle-build/plugin", parents=True, mode=0o755,
             phase="fake-bundle-materialization",
         )
         _materialize_fake_bundle(session, "bundle-build/plugin")
-        return session.open_directory(
-            "bundle-build/plugin", phase="accepted-fake-bundle"
+        return (
+            session.open_directory(
+                "bundle-build/plugin", phase="accepted-fake-bundle"
+            ),
+            {
+                "bundleDestinationDescriptorBound": False,
+                "bundleCreationLedgerVerified": False,
+                "bundleFailureCleanupIdentityBound": False,
+                "bundleGitCredentialExcluded": False,
+            },
+            False,
         )
     if source_repository is None or git_executable is None:
         raise ObservationError("actual execution requires exact source repository and Git executable")
     destination = session.open_directory(
-        "bundle-build", phase="bundle-build-destination"
+        "bundle-build", phase="bundle-build-destination", freeze_tree=False
     )
     try:
-        from .no_hook_bundle import BundleContractError, build_bundle
+        from .no_hook_bundle import (
+            BundleContractError,
+            build_bundle_to_directory_fd,
+        )
 
-        result = build_bundle(
+        result = build_bundle_to_directory_fd(
             source_repository,
             BUNDLE_RUNTIME_SOURCE_COMMIT,
             BUNDLE_RUNTIME_SOURCE_TREE,
-            Path(f"/proc/self/fd/{destination.descriptor}"),
+            destination.descriptor,
             git_executable=git_executable,
+            expected_destination_identity=(destination.device, destination.inode),
+            _test_hook=builder_test_hook,
         )
     except (OSError, BundleContractError) as error:
         raise ObservationError(f"disposable bundle build failed: {error}") from error
+    try:
+        _expect(result.profile_runtime_digest, PROFILE_RUNTIME_DIGEST, "built profile runtime identity")
+        _expect(result.bundle_manifest_digest, BUNDLE_MANIFEST_DIGEST, "built bundle manifest identity")
+        _expect(result.archive_sha256, ARCHIVE_SHA256, "built archive identity")
+        session.import_builder_creation_records(
+            destination,
+            result.creation_records,
+            phase="accepted-builder-creation-ledger",
+        )
     finally:
         _close_frozen_directory(destination)
-    _expect(result.profile_runtime_digest, PROFILE_RUNTIME_DIGEST, "built profile runtime identity")
-    _expect(result.bundle_manifest_digest, BUNDLE_MANIFEST_DIGEST, "built bundle manifest identity")
-    _expect(result.archive_sha256, ARCHIVE_SHA256, "built archive identity")
-    session.accept_subtree("bundle-build", phase="accepted-bundle-build-output")
-    return session.open_directory(
-        "bundle-build/plugin", phase="accepted-source-bundle"
+    return (
+        session.open_directory(
+            "bundle-build/plugin", phase="accepted-source-bundle"
+        ),
+        {
+            "bundleDestinationDescriptorBound": True,
+            "bundleCreationLedgerVerified": True,
+            "bundleFailureCleanupIdentityBound": True,
+            "bundleGitCredentialExcluded": True,
+        },
+        True,
     )
 
 
@@ -6613,6 +6885,9 @@ def _result_document(
     plugin_install_process_count: int,
     cleanup: Mapping[str, Any],
     materialization_seed: bytes,
+    bundle_object_facts: Mapping[str, Any],
+    marketplace_source_verified_count: int,
+    installed_cache_layout_verified_count: int,
 ) -> dict[str, Any]:
     protocol, _ = _load_json(root, PROTOCOL_RELATIVE)
     prompt, _ = _load_json(root, PROMPT_RELATIVE)
@@ -6722,6 +6997,9 @@ def _result_document(
             if run_mode == "fake-validation"
             else "pending"
         ),
+        bundle_object_facts,
+        marketplace_source_verified_count == 15,
+        installed_cache_layout_verified_count == 15,
     )
     result["summary"] = _derive_summary(cases, result["cleanup"])
     result["overallStatus"] = _derive_overall_status(
@@ -6797,6 +7075,15 @@ def run_observation_orchestration(
     plugin_install_process_count = 0
     source_bundle: FrozenDirectoryIdentity | None = None
     bundle_before: tuple[tuple[str, int, int, str], ...] = ()
+    bundle_object_facts = {
+        "bundleDestinationDescriptorBound": False,
+        "bundleCreationLedgerVerified": False,
+        "bundleFailureCleanupIdentityBound": False,
+        "bundleGitCredentialExcluded": False,
+    }
+    real_bundle_built = False
+    marketplace_source_verified_count = 0
+    installed_cache_layout_verified_count = 0
     golden: list[dict[str, Any]] = []
     case_materializations: list[CaseMaterialization] = []
     fixture_document: dict[str, Any] = {}
@@ -6819,15 +7106,6 @@ def run_observation_orchestration(
         state = _capability_state(capability)
         if state.fake_only != fake_only or state.run_root != root_identity:
             raise ObservationError("orchestration mode or root is not capability-bound")
-        invoke_test_hook("after-root-freeze", session=session)
-        invoke_test_hook("before-first-root-write", session=session)
-        source_bundle = _prepare_disposable_bundle(
-            session=session, fake_only=fake_only,
-            source_repository=source_repository, git_executable=git_executable,
-        )
-        bundle_before = _verify_bundle_surface(
-            Path(f"/proc/self/fd/{source_bundle.descriptor}"), fake_only=fake_only
-        )
         taxonomy, _ = _load_json(repository_root, TAXONOMY_RELATIVE)
         envelope, _ = _load_json(repository_root, PROMPT_RELATIVE)
         fixture_document, _ = _load_json(repository_root, FIXTURES_RELATIVE)
@@ -6844,7 +7122,45 @@ def run_observation_orchestration(
             )
             for index, case in enumerate(golden, 1)
         ]
-        for index, case in enumerate(golden):
+        invoke_test_hook("after-root-freeze", session=session)
+        invoke_test_hook("before-first-root-write", session=session)
+        try:
+            source_bundle, bundle_object_facts, real_bundle_built = _prepare_disposable_bundle(
+                session=session, fake_only=fake_only,
+                source_repository=source_repository, git_executable=git_executable,
+                builder_test_hook=_test_hook if fake_only else None,
+            )
+        except ObservationError as error:
+            first = golden[0]
+            ledger.hard_stop(first["id"])
+            _hard_stop_capability(capability)
+            case_results.append(
+                _incomplete_case_record(
+                    first,
+                    fixture_document,
+                    None,
+                    case_materializations[0],
+                    materialization_seed,
+                    identities["protocolDigest"],
+                    error,
+                )
+            )
+            case_results.extend(
+                _not_run_case_record(
+                    pending,
+                    fixture_document,
+                    case_materializations[pending_index],
+                    materialization_seed,
+                    identities["protocolDigest"],
+                )
+                for pending_index, pending in enumerate(golden[1:], 1)
+            )
+        else:
+            bundle_before = _verify_bundle_surface(
+                Path(f"/proc/self/fd/{source_bundle.descriptor}"),
+                fake_only=not real_bundle_built,
+            )
+        for index, case in enumerate(golden if source_bundle is not None else ()):
             fixture_case = fixture_document["cases"][index]
             plugin_state = fixture_case["pluginState"]
             case_materialization = case_materializations[index]
@@ -6933,10 +7249,11 @@ def run_observation_orchestration(
                         install_additions = dict(environment_additions)
                         install_additions.update({
                             "AXIOM_FAKE_MARKETPLACE_ROOT": (
-                                f"/proc/self/fd/{codex_home.descriptor}/marketplaces/{MARKETPLACE_NAME}"
+                                f"/proc/self/fd/{marketplace.descriptor}"
                             ),
                             "AXIOM_FAKE_INSTALLED_PATH": (
-                                f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
+                                f"/proc/self/fd/{codex_home.descriptor}/plugins/cache/"
+                                f"{MARKETPLACE_NAME}/{PLUGIN_NAME}/{PLUGIN_VERSION}"
                             ),
                             "AXIOM_FAKE_BUNDLE": f"/proc/self/fd/{source_bundle.descriptor}",
                         })
@@ -6993,14 +7310,23 @@ def run_observation_orchestration(
                         if capture.timed_out or capture.returncode != 0 or capture.stderr:
                             raise ObservationError(f"{purpose} process failed")
                         if purpose == "marketplace":
-                            parse_marketplace_receipt(capture.stdout, session, codex_home)
+                            receipt = parse_marketplace_receipt(
+                                capture.stdout, marketplace
+                            )
+                            _accept_marketplace_side_effects(
+                                session, codex_home, marketplace
+                            )
+                            if receipt["localSourceObjectVerified"]:
+                                marketplace_source_verified_count += 1
                         else:
-                            _, installed = parse_plugin_receipt(
+                            receipt, installed = parse_plugin_receipt(
                                 capture.stdout,
                                 session,
                                 codex_home,
                                 expected_tree=bundle_before,
                             )
+                            if receipt["installedCacheLayoutVerified"]:
+                                installed_cache_layout_verified_count += 1
                     if installed is None:
                         raise ObservationError("plugin receipt did not bind an installed object")
                     invoke_test_hook(
@@ -7145,9 +7471,10 @@ def run_observation_orchestration(
             or state_before_retire.next_launch_index != len(LAUNCH_SEQUENCE)
         ):
             raise ObservationError("orchestration did not consume the exact launch plan")
-        cleanup["sourceBundleUnchanged"] = (
-            _verify_frozen_directory(source_bundle) == bundle_before
-        )
+        if source_bundle is not None:
+            cleanup["sourceBundleUnchanged"] = (
+                _verify_frozen_directory(source_bundle) == bundle_before
+            )
     finally:
         _retire_capability(capability)
         _close_frozen_directory(source_bundle)
@@ -7172,6 +7499,9 @@ def run_observation_orchestration(
         marketplace_process_count=marketplace_process_count,
         plugin_install_process_count=plugin_install_process_count, cleanup=cleanup,
         materialization_seed=materialization_seed,
+        bundle_object_facts=bundle_object_facts,
+        marketplace_source_verified_count=marketplace_source_verified_count,
+        installed_cache_layout_verified_count=installed_cache_layout_verified_count,
     )
     validate_normalized_result(result, repository_root)
     return result
@@ -7184,10 +7514,16 @@ def run_fake_validation(
     fake_executable: Path,
     fake_executable_sha256: str,
     scenarios: Mapping[str, str] | None = None,
+    _test_source_repository: Path | None = None,
+    _test_git_executable: Path | None = None,
     _test_materialization_seed: bytes | None = None,
     _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Authorize and run fake-only production orchestration without credentials."""
+    if (_test_source_repository is None) != (_test_git_executable is None):
+        raise ObservationError(
+            "real-builder fake validation requires both source and Git inputs"
+        )
     identities = validate_protocol_documents(repository_root)
     expected_fake = (repository_root / "tests/fixtures/no_hook_observation.py").resolve(strict=True)
     expected_fake_digest = _sha256(
@@ -7207,6 +7543,8 @@ def run_fake_validation(
         repository_root=repository_root, run_root=run_root, executable=executable,
         capability=capability, credential=None,
         fake_only=True, scenarios=scenarios,
+        source_repository=_test_source_repository,
+        git_executable=_test_git_executable,
         _test_materialization_seed=_test_materialization_seed,
         _test_hook=_test_hook,
     )

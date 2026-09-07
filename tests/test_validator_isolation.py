@@ -38,7 +38,7 @@ class ValidatorIsolationTests(unittest.TestCase):
     def test_protocol_validator_never_starts_codex_or_another_process(self):
         failures: list[str] = []
         with mock.patch("axiom_validation.no_hook_observation.subprocess.Popen") as launch:
-            self.assertEqual((16, 12), check_no_hook_observation(failures))
+            self.assertEqual((16, 14), check_no_hook_observation(failures))
         self.assertEqual([], failures)
         launch.assert_not_called()
 
