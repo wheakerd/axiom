@@ -201,11 +201,14 @@ The canonical 16-case runner instead uses `codex exec - --json` and writes the
 complete envelope with bounded write-all semantics. Normal stderr is empty;
 the probe-only notice is not an allowed actual-case warning. The model-facing
 schema is separate from the frozen host response contract and contains no
-descriptive case ID or expected answer. A fresh random opaque binding, its
-digest, the materialized schema digest, and the exact prompt digest bind each
-case without unblinding it. Default and repository-validation modes are
-no-call. A later execution requires the explicit execution flag plus a
-registry-backed capability that binds exact protocol, runner/module, binary,
+descriptive case ID or expected answer. Each run records a public 256-bit
+materialization seed, while the model sees only a token derived from that seed,
+the canonical ordinal, and the protocol digest. The validator reconstructs the
+unretained token, materialized schema, and exact prompt, then recomputes every
+case commitment and their ordered 16-case root. Default and
+repository-validation modes are no-call. A later execution requires the
+explicit execution flag plus a registry-backed capability that binds exact
+protocol, runner/module, binary,
 source, host, model, run-root, credential-presence, nonce, ordered launch plan,
 and irreversible 16-call budget. Each case then requires a fresh isolated
 process, Codex home, workspace, and ephemeral session; Case 11 alone has no
@@ -213,18 +216,27 @@ installed plugin.
 
 All sixteen deterministic fixtures are materialized by the production runner
 from closed logical file records and observer-owned Git facts. Marketplace and
-plugin receipts use the bounded Codex 0.153.0 JSON shapes, installed paths must
-resolve inside the exact temporary Codex home, and the installed tree is
-rechecked at the model-launch boundary. Linux cleanup is descriptor-anchored,
-device/inode checked, symlink refusing, and replacement preserving; Windows is
-rejected by this protocol and remains a separate `NOT-RUN` track. Hard
+plugin receipts use the bounded Codex 0.153.0 JSON shapes and identify a closed
+child output below the held temporary Codex-home descriptor. The installed
+directory remains open and its name binding and tree are rechecked before and
+after model launch. All security-sensitive run-root writes are
+descriptor-relative, each model consumes the exact held schema through an
+inherited `/proc/self/fd` alias, and Linux cleanup quarantines only identities
+owned at creation or accepted from a closed receipt. Unknown replacements are
+preserved. Normalized output is created exclusively relative to a separately
+frozen external-parent descriptor; output-parent or name substitution makes
+the run incomplete. Windows is rejected by this protocol and remains a
+separate `NOT-RUN` track. Hard
 observer-integrity, schema, tool, mutation, identity, prompt-delivery, or
 cleanup failures revoke the launch budget and mark every later case `NOT-RUN`.
 
 Only normalized, observer-owned facts may enter the reserved result. Raw
 JSONL, stderr, model or reasoning text, tool arguments and output, identifiers,
-credentials, configuration, absolute paths, temporary names, and environment
-dumps are forbidden. Free-form limitations are replaced by closed diagnostic
+credentials, configuration, absolute paths, temporary names, environment
+dumps, raw opaque tokens, descriptor numbers, device/inode identities, and
+procfs aliases are forbidden. Object identities exist only during observation;
+tracked evidence keeps closed booleans/status and materialization commitments.
+Free-form limitations are replaced by closed diagnostic
 codes. The validator recomputes each case, summary, route coverage, safety
 invariants, cleanup, and overall status from frozen contracts; synchronized
 unsafe status arithmetic cannot create `PASS`. Codex 0.153.0 public JSONL

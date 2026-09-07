@@ -106,9 +106,15 @@ def happy_stream(response: dict[str, object], *, reasoning: bool = False) -> byt
     return b"".join(records)
 
 
-def fake_run(scenarios: dict[str, str] | None = None) -> dict[str, object]:
-    run_root = Path(tempfile.mkdtemp(prefix="axiom-observer-fake-"))
-    os.chmod(run_root, 0o700)
+def fake_run(
+    scenarios: dict[str, str] | None = None,
+    *,
+    hook: object | None = None,
+    seed: bytes | None = None,
+) -> dict[str, object]:
+    test_parent = Path(tempfile.mkdtemp(prefix="axiom-observer-fake-parent-"))
+    run_root = test_parent / "run"
+    run_root.mkdir(mode=0o700)
     fake = run_root / "fake-codex"
     shutil.copyfile(FIXTURE, fake)
     os.chmod(fake, 0o755)
@@ -120,10 +126,12 @@ def fake_run(scenarios: dict[str, str] | None = None) -> dict[str, object]:
             fake_executable=fake,
             fake_executable_sha256=digest,
             scenarios=scenarios,
+            _test_materialization_seed=seed,
+            _test_hook=hook,
         )
     finally:
-        if run_root.exists():
-            shutil.rmtree(run_root)
+        if test_parent.exists():
+            shutil.rmtree(test_parent)
 
 
 def host_pass_from_fake(document: dict[str, object]) -> dict[str, object]:
@@ -141,7 +149,49 @@ def host_pass_from_fake(document: dict[str, object]) -> dict[str, object]:
         "marketplaceProcessCount": 15,
         "pluginInstallProcessCount": 15,
     }
+    candidate["objectBindingFacts"]["externalOutputObjectBinding"] = "verified"
     return candidate
+
+
+def remove_test_tree(path: Path) -> None:
+    """Remove only a test-owned path after a deliberate cleanup-integrity failure."""
+    if path.is_symlink():
+        path.unlink()
+        return
+    if not path.exists():
+        return
+    for directory, subdirectories, _ in os.walk(path, topdown=True, followlinks=False):
+        Path(directory).chmod(0o700)
+        for name in subdirectories:
+            child = Path(directory) / name
+            if not child.is_symlink():
+                child.chmod(0o700)
+    for directory, subdirectories, files in os.walk(
+        path, topdown=False, followlinks=False
+    ):
+        for name in files:
+            child = Path(directory) / name
+            if child.is_symlink():
+                child.unlink()
+            else:
+                child.chmod(0o600)
+                child.unlink()
+        for name in subdirectories:
+            child = Path(directory) / name
+            if child.is_symlink():
+                child.unlink()
+            else:
+                child.chmod(0o700)
+                child.rmdir()
+    path.chmod(0o700)
+    path.rmdir()
+
+
+def remove_preserved_run_objects(identity: observer.OwnedRootIdentity) -> None:
+    remove_test_tree(identity.path)
+    remove_test_tree(identity.path.with_name(identity.path.name + "-moved"))
+    for path in identity.path.parent.glob(".axiom-owned-cleanup-*"):
+        remove_test_tree(path)
 
 
 class ProtocolContractTests(unittest.TestCase):
@@ -285,10 +335,27 @@ class ProtocolContractTests(unittest.TestCase):
         )
         seen_prompts: set[str] = set()
         seen_schemas: set[str] = set()
+        identities = observer.validate_protocol_documents(REPOSITORY_ROOT)
+        seed = bytes(range(32))
         for ordinal, case in enumerate(cases, 1):
-            token = f"{ordinal:032x}"
-            prompt = observer.render_case_prompt(envelope, case["request"], token)
-            materialized = observer.materialize_model_response_schema(schema, token)
+            contract = observer.materialize_case_contract(
+                materialization_seed=seed,
+                ordinal=ordinal,
+                protocol_digest=identities["protocolDigest"],
+                model_schema=schema,
+                prompt_envelope=envelope,
+                request=case["request"],
+            )
+            token = contract.token
+            prompt = contract.prompt_bytes
+            materialized = contract.schema_bytes
+            expected_token = "ocb1_" + hashlib.sha256(
+                observer.OPAQUE_BINDING_DOMAIN
+                + seed
+                + ordinal.to_bytes(2, "big")
+                + bytes.fromhex(identities["protocolDigest"].removeprefix("sha256:"))
+            ).hexdigest()
+            self.assertEqual(expected_token, token)
             prompt_lower = prompt.lower()
             schema_lower = materialized.lower()
             self.assertNotIn(case["id"].encode(), prompt_lower)
@@ -620,18 +687,26 @@ class FixtureAndReceiptTests(unittest.TestCase):
         cases = observer.load_golden_cases(REPOSITORY_ROOT)
         observed: list[str] = []
         with tempfile.TemporaryDirectory(prefix="axiom-fixtures-") as directory:
-            root = Path(directory)
-            for ordinal, case in enumerate(cases, 1):
-                workspace = root / f"case-{ordinal:02d}"
-                workspace.mkdir(mode=0o700)
-                fact = observer.materialize_fixture(
-                    workspace, fixture_document, case["id"]
-                )
-                self.assertRegex(fact.definition_digest, r"^[0-9a-f]{64}$")
-                self.assertRegex(fact.file_set_digest, r"^[0-9a-f]{64}$")
-                self.assertRegex(fact.realized_digest, r"^[0-9a-f]{64}$")
-                self.assertEqual(0, fact.git_remote_count)
-                observed.append(case["id"])
+            root = Path(directory) / "owned"
+            root.mkdir(mode=0o700)
+            identity = observer.freeze_owned_root(root)
+            session = observer.OwnedRootSession(identity)
+            try:
+                for ordinal, case in enumerate(cases, 1):
+                    relative = f"case-{ordinal:02d}"
+                    session.mkdir(relative, phase="fixture-test-workspace")
+                    fact = observer.materialize_fixture_owned(
+                        session, relative, fixture_document, case["id"]
+                    )
+                    self.assertRegex(fact.definition_digest, r"^[0-9a-f]{64}$")
+                    self.assertRegex(fact.file_set_digest, r"^[0-9a-f]{64}$")
+                    self.assertRegex(fact.realized_digest, r"^[0-9a-f]{64}$")
+                    self.assertEqual(0, fact.git_remote_count)
+                    observed.append(case["id"])
+            finally:
+                ledger = session.ledger
+                session.close()
+                observer.cleanup_owned_root(identity, ledger)
         self.assertEqual(list(observer.EXPECTED_CASE_IDS), observed)
         self.assertEqual("absent", fixture_document["cases"][10]["pluginState"])
         self.assertTrue(
@@ -663,17 +738,31 @@ class FixtureAndReceiptTests(unittest.TestCase):
             )
 
     def test_receipts_accept_pretty_json_and_exact_source_enums(self):
-        with tempfile.TemporaryDirectory(prefix="axiom-receipts-") as directory:
-            root = Path(directory)
-            codex_home = root / "codex-home"
-            marketplace = codex_home / "marketplaces" / observer.MARKETPLACE_NAME
-            plugin = codex_home / "plugins" / "axiom"
-            marketplace.mkdir(parents=True)
-            plugin.mkdir(parents=True)
+        parent = Path(tempfile.mkdtemp(prefix="axiom-receipts-parent-"))
+        root = parent / "owned"
+        root.mkdir(mode=0o700)
+        identity = observer.freeze_owned_root(root)
+        session = observer.OwnedRootSession(identity)
+        codex_home: observer.FrozenDirectoryIdentity | None = None
+        try:
+            session.mkdir(
+                f"codex-home/marketplaces/{observer.MARKETPLACE_NAME}",
+                parents=True,
+                phase="receipt-test",
+            )
+            session.mkdir("codex-home/plugins/axiom", parents=True, phase="receipt-test")
+            codex_home = session.open_directory(
+                "codex-home", phase="receipt-test", freeze_tree=False
+            )
+            marketplace = (
+                f"/proc/self/fd/{codex_home.descriptor}/marketplaces/"
+                f"{observer.MARKETPLACE_NAME}"
+            )
+            plugin = f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
             marketplace_receipt = json.dumps(
                 {
                     "marketplaceName": observer.MARKETPLACE_NAME,
-                    "installedRoot": str(marketplace),
+                    "installedRoot": marketplace,
                     "alreadyAdded": False,
                 },
                 indent=2,
@@ -683,80 +772,135 @@ class FixtureAndReceiptTests(unittest.TestCase):
                 "name": "axiom",
                 "marketplaceName": observer.MARKETPLACE_NAME,
                 "version": observer.PLUGIN_VERSION,
-                "installedPath": str(plugin),
+                "installedPath": plugin,
                 "authPolicy": "ON_INSTALL",
             }
             normalized = observer.parse_marketplace_receipt(
-                marketplace_receipt, codex_home
+                marketplace_receipt, session, codex_home
             )
             self.assertTrue(normalized["installedRootWithinTemporaryHome"])
             receipt, installed = observer.parse_plugin_receipt(
-                json.dumps(plugin_document, indent=2).encode(), codex_home
+                json.dumps(plugin_document, indent=2).encode(),
+                session,
+                codex_home,
+                expected_tree=(),
             )
-            self.assertEqual("ON_INSTALL", receipt["authPolicy"])
-            self.assertEqual(plugin.resolve(), installed)
+            try:
+                self.assertEqual("ON_INSTALL", receipt["authPolicy"])
+                self.assertTrue(receipt["installedPathWithinTemporaryHome"])
+                self.assertEqual((), observer._verify_frozen_directory(installed))
+            finally:
+                observer._close_frozen_directory(installed)
             on_use = dict(plugin_document, authPolicy="ON_USE")
-            receipt, _ = observer.parse_plugin_receipt(
-                json.dumps(on_use, indent=2).encode(), codex_home
+            receipt, installed = observer.parse_plugin_receipt(
+                json.dumps(on_use, indent=2).encode(),
+                session,
+                codex_home,
+                expected_tree=(),
             )
-            self.assertEqual("ON_USE", receipt["authPolicy"])
+            try:
+                self.assertEqual("ON_USE", receipt["authPolicy"])
+            finally:
+                observer._close_frozen_directory(installed)
             for bad_policy in ("on-install", "ON-USE", "ALWAYS"):
                 candidate = dict(plugin_document, authPolicy=bad_policy)
                 with self.subTest(policy=bad_policy), self.assertRaises(
                     observer.ObservationError
                 ):
                     observer.parse_plugin_receipt(
-                        json.dumps(candidate).encode(), codex_home
+                        json.dumps(candidate).encode(),
+                        session,
+                        codex_home,
+                        expected_tree=(),
                     )
+        finally:
+            observer._close_frozen_directory(codex_home)
+            ledger = session.ledger
+            session.close()
+            observer.cleanup_owned_root(identity, ledger)
+            parent.rmdir()
 
     def test_receipts_reject_duplicate_multiple_trailing_and_unconfined_paths(self):
-        with tempfile.TemporaryDirectory(prefix="axiom-receipts-") as directory:
-            root = Path(directory)
-            codex_home = root / "codex-home"
-            inside = codex_home / "plugins" / "axiom"
-            outside = root / "outside"
-            inside.mkdir(parents=True)
-            outside.mkdir()
+        parent = Path(tempfile.mkdtemp(prefix="axiom-receipts-parent-"))
+        root = parent / "owned"
+        root.mkdir(mode=0o700)
+        identity = observer.freeze_owned_root(root)
+        session = observer.OwnedRootSession(identity)
+        codex_home: observer.FrozenDirectoryIdentity | None = None
+        try:
+            session.mkdir("codex-home/plugins/axiom", parents=True, phase="receipt-test")
+            session.mkdir("outside", phase="receipt-test")
+            codex_home = session.open_directory(
+                "codex-home", phase="receipt-test", freeze_tree=False
+            )
+            inside = f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
+            outside = f"/proc/self/fd/{codex_home.descriptor}/outside"
             base = {
                 "pluginId": observer.PLUGIN_ID,
                 "name": "axiom",
                 "marketplaceName": observer.MARKETPLACE_NAME,
                 "version": observer.PLUGIN_VERSION,
-                "installedPath": str(inside),
+                "installedPath": inside,
                 "authPolicy": "ON_INSTALL",
             }
             bad = [
                 (json.dumps(base) + json.dumps(base)).encode(),
                 (json.dumps(base) + " trailing").encode(),
-                json.dumps(dict(base, installedPath=str(outside))).encode(),
+                json.dumps(dict(base, installedPath=outside)).encode(),
                 b'{"pluginId":"a","pluginId":"b"}',
             ]
             for ordinal, data in enumerate(bad):
                 with self.subTest(ordinal=ordinal), self.assertRaises(
                     observer.ObservationError
                 ):
-                    observer.parse_plugin_receipt(data, codex_home)
+                    observer.parse_plugin_receipt(
+                        data, session, codex_home, expected_tree=()
+                    )
             with self.assertRaisesRegex(observer.ObservationError, "byte limit"):
                 observer.parse_plugin_receipt(
-                    b" " * (observer.MAX_RECEIPT_BYTES + 1), codex_home
+                    b" " * (observer.MAX_RECEIPT_BYTES + 1),
+                    session,
+                    codex_home,
+                    expected_tree=(),
                 )
+        finally:
+            observer._close_frozen_directory(codex_home)
+            ledger = session.ledger
+            session.close()
+            observer.cleanup_owned_root(identity, ledger)
+            parent.rmdir()
 
     def test_inert_git_fixture_rejects_unknown_internal_state(self):
         fixture_document = load_json(FIXTURES)
         with tempfile.TemporaryDirectory(prefix="axiom-fixture-git-") as directory:
-            workspace = Path(directory) / "workspace"
-            workspace.mkdir(mode=0o700)
-            fact = observer.materialize_fixture(
-                workspace,
-                fixture_document,
-                observer.EXPECTED_CASE_IDS[0],
-            )
-            self.assertTrue(fact.git_repository)
-            os.chmod(workspace, 0o700)
-            os.chmod(workspace / ".git", 0o700)
-            (workspace / ".git" / "unknown").write_text("reject\n", encoding="ascii")
-            with self.assertRaisesRegex(observer.ObservationError, "unknown child"):
-                observer._observe_inert_git_facts(workspace, True)
+            root = Path(directory) / "owned"
+            root.mkdir(mode=0o700)
+            identity = observer.freeze_owned_root(root)
+            session = observer.OwnedRootSession(identity)
+            unknown: Path | None = None
+            try:
+                session.mkdir("workspace", phase="fixture-test-workspace")
+                fact = observer.materialize_fixture_owned(
+                    session,
+                    "workspace",
+                    fixture_document,
+                    observer.EXPECTED_CASE_IDS[0],
+                )
+                self.assertTrue(fact.git_repository)
+                workspace = session.alias("workspace")
+                git_directory = workspace / ".git"
+                os.chmod(git_directory, 0o700)
+                unknown = git_directory / "unknown"
+                unknown.write_text("reject\n", encoding="ascii")
+                with self.assertRaisesRegex(observer.ObservationError, "unknown child"):
+                    observer._observe_inert_git_facts(workspace, True)
+            finally:
+                if unknown is not None and unknown.exists():
+                    unknown.unlink()
+                    os.chmod(unknown.parent, 0o555)
+                ledger = session.ledger
+                session.close()
+                observer.cleanup_owned_root(identity, ledger)
 
 
 class WriteAllAndCapabilityTests(unittest.TestCase):
@@ -879,6 +1023,10 @@ class WriteAllAndCapabilityTests(unittest.TestCase):
 
 
 class ProcessBoundaryTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._directory_fds: dict[int, tuple[int, ...]] = {}
+        self._schema_ordinal = 0
+
     def make_capability(
         self, script: Path = FIXTURE
     ) -> tuple[Path, Path, observer.ExecutableIdentity, object]:
@@ -891,6 +1039,11 @@ class ProcessBoundaryTests(unittest.TestCase):
             executable_path,
             hashlib.sha256(executable_path.read_bytes()).hexdigest(),
         )
+        directories = {}
+        for name in ("codex-home", "home", "config", "cache", "data", "workspace"):
+            path = run_root / name
+            path.mkdir(mode=0o700)
+            directories[name] = os.open(path, observer._directory_flags())
         identities = observer.validate_protocol_documents(REPOSITORY_ROOT)
         capability = observer._mint_fake_execution_capability(
             protocol_digest=identities["protocolDigest"],
@@ -900,31 +1053,33 @@ class ProcessBoundaryTests(unittest.TestCase):
             run_root=observer.freeze_owned_root(run_root),
             test_launch_sequence=(("model-case", observer.EXPECTED_CASE_IDS[0]),),
         )
+        self._directory_fds[id(capability)] = tuple(directories.values())
         return run_root, executable_path, executable, capability
 
     def close_capability(self, run_root: Path, capability: object) -> None:
         observer._retire_capability(capability)
+        for descriptor in self._directory_fds.pop(id(capability), ()):
+            os.close(descriptor)
         if run_root.exists():
             shutil.rmtree(run_root)
 
-    def model_environment(self, run_root: Path, scenario: str) -> dict[str, str]:
-        roots = []
-        for name in ("codex-home", "home", "config", "cache", "data", "workspace"):
-            path = run_root / name
-            path.mkdir(exist_ok=True)
-            roots.append(path)
+    def model_environment(self, capability: object, scenario: str) -> dict[str, str]:
+        roots = self._directory_fds.get(id(capability))
+        if roots is None:
+            roots = next(iter(self._directory_fds.values()))
         return observer.build_isolated_environment(
-            codex_home=roots[0],
-            home=roots[1],
-            xdg_config_home=roots[2],
-            xdg_cache_home=roots[3],
-            xdg_data_home=roots[4],
+            codex_home=Path(f"/proc/self/fd/{roots[0]}"),
+            home=Path(f"/proc/self/fd/{roots[1]}"),
+            xdg_config_home=Path(f"/proc/self/fd/{roots[2]}"),
+            xdg_cache_home=Path(f"/proc/self/fd/{roots[3]}"),
+            xdg_data_home=Path(f"/proc/self/fd/{roots[4]}"),
             additions={
                 "AXIOM_FAKE_SCENARIO": scenario,
                 "AXIOM_FAKE_OUTCOME": "selected",
                 "AXIOM_FAKE_ROUTES": '["using-axiom"]',
                 "AXIOM_FAKE_CLARIFICATIONS": "0",
                 "AXIOM_FAKE_FRONT_DOOR": "true",
+                "AXIOM_FAKE_NO_PLUGIN_CONTROL": "true",
             },
         )
 
@@ -940,27 +1095,96 @@ class ProcessBoundaryTests(unittest.TestCase):
         maximum_stdout: int = observer.MAX_STDOUT_BYTES,
         maximum_stderr: int = observer.MAX_STDERR_BYTES,
         factory: object = subprocess.Popen,
-        prompt: bytes = b"opaqueCaseBinding: 00000000000000000000000000000001\n",
+        prompt: bytes | None = None,
         case_id: str = observer.EXPECTED_CASE_IDS[0],
+        schema_argument: Path | None = None,
     ) -> observer.ProcessCapture:
-        workspace = run_root / "workspace"
-        schema = run_root / "model-response-schema.json"
-        schema.write_text("{}\n", encoding="ascii")
-        argv = observer.build_codex_argv(executable_path, schema, workspace)
-        return observer._launch_bounded_process(
-            capability,
-            executable,
-            argv,
-            purpose="model-case",
-            case_id=case_id,
-            prompt=prompt,
-            cwd=workspace,
-            env=environment,
-            timeout_seconds=timeout,
-            maximum_stdout=maximum_stdout,
-            maximum_stderr=maximum_stderr,
-            popen_factory=factory,
+        roots = self._directory_fds.get(id(capability))
+        if roots is None:
+            roots = next(iter(self._directory_fds.values()))
+        workspace = Path(f"/proc/self/fd/{roots[5]}")
+        identities = observer.validate_protocol_documents(REPOSITORY_ROOT)
+        cases = observer.load_golden_cases(REPOSITORY_ROOT)
+        case_index = observer.EXPECTED_CASE_IDS.index(case_id)
+        materialization = observer.materialize_case_contract(
+            materialization_seed=b"\x01" * 32,
+            ordinal=case_index + 1,
+            protocol_digest=identities["protocolDigest"],
+            model_schema=load_json(MODEL_SCHEMA),
+            prompt_envelope=load_json(PROMPT),
+            request=cases[case_index]["request"],
         )
+        self._schema_ordinal += 1
+        schema_path = run_root / f"model-response-schema-{self._schema_ordinal}.json"
+        schema_path.write_bytes(materialization.schema_bytes)
+        schema_path.chmod(0o400)
+        schema_fd = os.open(
+            schema_path,
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0),
+        )
+        metadata = os.fstat(schema_fd)
+        schema = observer.FrozenFileIdentity(
+            descriptor=schema_fd,
+            device=metadata.st_dev,
+            inode=metadata.st_ino,
+            mode=metadata.st_mode,
+            size=metadata.st_size,
+            sha256=hashlib.sha256(materialization.schema_bytes).hexdigest(),
+        )
+        argv = observer.build_codex_argv(
+            executable_path,
+            (
+                Path(f"/proc/self/fd/{schema_fd}")
+                if schema_argument is None
+                else schema_argument
+            ),
+            workspace,
+        )
+        try:
+            return observer._launch_bounded_process(
+                capability,
+                executable,
+                argv,
+                purpose="model-case",
+                case_id=case_id,
+                prompt=materialization.prompt_bytes if prompt is None else prompt,
+                cwd=workspace,
+                env=environment,
+                timeout_seconds=timeout,
+                maximum_stdout=maximum_stdout,
+                maximum_stderr=maximum_stderr,
+                inherited_fds=roots,
+                schema_object=schema,
+                expected_schema_bytes=materialization.schema_bytes,
+                popen_factory=factory,
+            )
+        finally:
+            os.close(schema_fd)
+
+    def test_model_launch_rejects_plain_schema_path_without_starting_child(self):
+        run_root, executable_path, executable, capability = self.make_capability()
+        starts = 0
+
+        def factory(*args: object, **kwargs: object) -> subprocess.Popen[bytes]:
+            nonlocal starts
+            starts += 1
+            return subprocess.Popen(*args, **kwargs)
+
+        try:
+            with self.assertRaises(observer.ProcessBoundaryError):
+                self.launch(
+                    run_root=run_root,
+                    executable_path=executable_path,
+                    executable=executable,
+                    capability=capability,
+                    environment=self.model_environment(capability, "happy"),
+                    schema_argument=run_root / "ordinary-path-schema.json",
+                    factory=factory,
+                )
+            self.assertEqual(0, starts)
+            self.assertTrue(observer._capability_state(capability).hard_stopped)
+        finally:
+            self.close_capability(run_root, capability)
 
     def test_timeout_terminates_and_reaps_exact_child(self):
         run_root, executable_path, executable, capability = self.make_capability()
@@ -977,7 +1201,7 @@ class ProcessBoundaryTests(unittest.TestCase):
                 executable_path=executable_path,
                 executable=executable,
                 capability=capability,
-                environment=self.model_environment(run_root, "timeout"),
+                environment=self.model_environment(capability, "timeout"),
                 timeout=1,
                 factory=factory,
             )
@@ -1028,7 +1252,7 @@ class ProcessBoundaryTests(unittest.TestCase):
                         executable_path=executable_path,
                         executable=executable,
                         capability=capability,
-                        environment=self.model_environment(run_root, scenario),
+                        environment=self.model_environment(capability, scenario),
                         maximum_stdout=1024,
                         maximum_stderr=1024,
                         factory=factory,
@@ -1056,7 +1280,7 @@ class ProcessBoundaryTests(unittest.TestCase):
                     executable_path=executable_path,
                     executable=executable,
                     capability=capability,
-                    environment=self.model_environment(run_root, "early-exit"),
+                    environment=self.model_environment(capability, "early-exit"),
                     factory=factory,
                     prompt=b"x" * observer.MAX_CONTRACT_BYTES,
                 )
@@ -1077,7 +1301,7 @@ class ProcessBoundaryTests(unittest.TestCase):
             return subprocess.Popen(*args, **kwargs)
 
         try:
-            environment = self.model_environment(run_root, "happy")
+            environment = self.model_environment(capability, "happy")
             with self.assertRaises(observer.ObservationError):
                 self.launch(
                     run_root=run_root,
@@ -1118,7 +1342,7 @@ class ProcessBoundaryTests(unittest.TestCase):
                     executable_path=executable_path,
                     executable=executable,
                     capability=capability,
-                    environment=self.model_environment(run_root, "happy"),
+                    environment=self.model_environment(capability, "happy"),
                     case_id=observer.EXPECTED_CASE_IDS[1],
                     factory=factory,
                 )
@@ -1136,6 +1360,11 @@ class ProcessBoundaryTests(unittest.TestCase):
         executable = observer.freeze_executable(
             executable_path, hashlib.sha256(executable_path.read_bytes()).hexdigest()
         )
+        directory_fds = []
+        for name in ("codex-home", "home", "config", "cache", "data", "workspace"):
+            path = run_root / name
+            path.mkdir(mode=0o700)
+            directory_fds.append(os.open(path, observer._directory_flags()))
         identities = observer.validate_protocol_documents(REPOSITORY_ROOT)
         capability = observer._mint_fake_execution_capability(
             protocol_digest=identities["protocolDigest"],
@@ -1147,6 +1376,7 @@ class ProcessBoundaryTests(unittest.TestCase):
                 ("model-case", case_id) for case_id in observer.EXPECTED_CASE_IDS
             ),
         )
+        self._directory_fds[id(capability)] = tuple(directory_fds)
         starts = 0
 
         def factory(*args: object, **kwargs: object) -> subprocess.Popen[bytes]:
@@ -1155,7 +1385,7 @@ class ProcessBoundaryTests(unittest.TestCase):
             return subprocess.Popen(*args, **kwargs)
 
         try:
-            environment = self.model_environment(run_root, "happy")
+            environment = self.model_environment(capability, "happy")
             for case_id in observer.EXPECTED_CASE_IDS:
                 capture = self.launch(
                     run_root=run_root,
@@ -1224,13 +1454,27 @@ class ProcessBoundaryTests(unittest.TestCase):
 
 
 class CleanupConfinementTests(unittest.TestCase):
-    def make_root(self) -> tuple[Path, Path, observer.OwnedRootIdentity]:
+    def make_root(
+        self,
+    ) -> tuple[
+        Path,
+        Path,
+        observer.OwnedRootIdentity,
+        observer.OwnedObjectLedger,
+    ]:
         parent = Path(tempfile.mkdtemp(prefix="axiom-cleanup-parent-"))
         root = parent / "owned"
         root.mkdir(mode=0o700)
-        (root / "nested").mkdir()
-        (root / "nested" / "file").write_text("owned", encoding="ascii")
-        return parent, root, observer.freeze_owned_root(root)
+        identity = observer.freeze_owned_root(root)
+        session = observer.OwnedRootSession(identity)
+        try:
+            session.mkdir("nested", phase="cleanup-test")
+            session.create_file(
+                "nested/file", b"owned", phase="cleanup-test"
+            )
+            return parent, root, identity, session.ledger
+        finally:
+            session.close()
 
     def tear_down_parent(self, parent: Path) -> None:
         if parent.exists():
@@ -1254,9 +1498,9 @@ class CleanupConfinementTests(unittest.TestCase):
             parent.rmdir()
 
     def test_descriptor_cleanup_removes_exact_owned_tree(self):
-        parent, root, identity = self.make_root()
+        parent, root, identity, ledger = self.make_root()
         try:
-            observer.cleanup_owned_root(identity)
+            observer.cleanup_owned_root(identity, ledger)
             self.assertFalse(root.exists())
             self.assertEqual([], list(parent.iterdir()))
         finally:
@@ -1265,7 +1509,7 @@ class CleanupConfinementTests(unittest.TestCase):
     def test_cleanup_rejects_missing_rename_and_replacement(self):
         scenarios = ("missing", "rename", "replacement", "symlink")
         for scenario in scenarios:
-            parent, root, identity = self.make_root()
+            parent, root, identity, ledger = self.make_root()
             moved = parent / "moved"
             try:
                 if scenario == "missing":
@@ -1280,7 +1524,7 @@ class CleanupConfinementTests(unittest.TestCase):
                 with self.assertRaisesRegex(
                     observer.ObservationError, "manual cleanup required|identity changed"
                 ):
-                    observer.cleanup_owned_root(identity)
+                    observer.cleanup_owned_root(identity, ledger)
                 if scenario == "replacement":
                     self.assertEqual("preserve", (root / "unknown").read_text())
                 if scenario == "symlink":
@@ -1289,7 +1533,7 @@ class CleanupConfinementTests(unittest.TestCase):
                 self.tear_down_parent(parent)
 
     def test_replacement_appearing_after_root_quarantine_is_preserved(self):
-        parent, root, identity = self.make_root()
+        parent, root, identity, ledger = self.make_root()
         original_rename = observer._rename_noreplace
         calls = 0
 
@@ -1306,13 +1550,13 @@ class CleanupConfinementTests(unittest.TestCase):
                 with self.assertRaisesRegex(
                     observer.ObservationError, "replaced|manual cleanup"
                 ):
-                    observer.cleanup_owned_root(identity)
+                    observer.cleanup_owned_root(identity, ledger)
             self.assertEqual("preserve", (root / "unknown").read_text())
         finally:
             self.tear_down_parent(parent)
 
     def test_nested_replacement_after_child_quarantine_is_preserved(self):
-        parent, root, identity = self.make_root()
+        parent, root, identity, ledger = self.make_root()
         original_rename = observer._rename_noreplace
         calls = 0
 
@@ -1337,7 +1581,7 @@ class CleanupConfinementTests(unittest.TestCase):
                 with self.assertRaisesRegex(
                     observer.ObservationError, "replaced|manual cleanup"
                 ):
-                    observer.cleanup_owned_root(identity)
+                    observer.cleanup_owned_root(identity, ledger)
             preserved = [
                 candidate
                 for candidate in parent.iterdir()
@@ -1351,8 +1595,103 @@ class CleanupConfinementTests(unittest.TestCase):
         finally:
             self.tear_down_parent(parent)
 
+    def test_replacement_before_first_child_stat_is_never_adopted_or_deleted(self):
+        parent, root, identity, ledger = self.make_root()
+        original_stat = observer.os.stat
+        replaced = False
+
+        def replace_before_stat(
+            path: object, *args: object, **kwargs: object
+        ) -> os.stat_result:
+            nonlocal replaced
+            descriptor = kwargs.get("dir_fd")
+            if path == "nested" and descriptor is not None and not replaced:
+                os.rename(
+                    "nested",
+                    "moved-original",
+                    src_dir_fd=descriptor,
+                    dst_dir_fd=descriptor,
+                )
+                os.mkdir("nested", mode=0o700, dir_fd=descriptor)
+                unknown = os.open(
+                    "nested/unknown",
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                    0o600,
+                    dir_fd=descriptor,
+                )
+                os.write(unknown, b"preserve")
+                os.close(unknown)
+                replaced = True
+            return original_stat(path, *args, **kwargs)
+
+        try:
+            with mock.patch.object(observer.os, "stat", side_effect=replace_before_stat):
+                with self.assertRaisesRegex(
+                    observer.ObservationError, "creation ledger|manual cleanup"
+                ):
+                    observer.cleanup_owned_root(identity, ledger)
+            quarantine = next(parent.glob(".axiom-owned-cleanup-*"))
+            self.assertEqual(
+                b"preserve", (quarantine / "nested" / "unknown").read_bytes()
+            )
+            self.assertEqual(
+                b"owned", (quarantine / "moved-original" / "file").read_bytes()
+            )
+        finally:
+            self.tear_down_parent(parent)
+
+    def test_identity_mismatch_after_quarantine_restores_unknown_replacement(self):
+        parent, root, identity, ledger = self.make_root()
+        original_rename = observer._rename_noreplace
+        calls = 0
+
+        def replace_quarantine(
+            source_parent_fd: int,
+            source_name: str,
+            destination_parent_fd: int,
+            destination_name: str,
+        ) -> None:
+            nonlocal calls
+            original_rename(
+                source_parent_fd,
+                source_name,
+                destination_parent_fd,
+                destination_name,
+            )
+            calls += 1
+            if calls == 2:
+                os.rename(
+                    destination_name,
+                    "moved-original",
+                    src_dir_fd=destination_parent_fd,
+                    dst_dir_fd=destination_parent_fd,
+                )
+                os.mkdir(destination_name, mode=0o700, dir_fd=destination_parent_fd)
+                unknown = os.open(
+                    f"{destination_name}/unknown",
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                    0o600,
+                    dir_fd=destination_parent_fd,
+                )
+                os.write(unknown, b"preserve")
+                os.close(unknown)
+
+        try:
+            with mock.patch.object(observer, "_rename_noreplace", replace_quarantine):
+                with self.assertRaisesRegex(
+                    observer.ObservationError, "unknown and was preserved"
+                ):
+                    observer.cleanup_owned_root(identity, ledger)
+            quarantine = next(parent.glob(".axiom-owned-cleanup-*"))
+            self.assertEqual(b"preserve", (quarantine / "nested" / "unknown").read_bytes())
+            self.assertEqual(
+                b"owned", (quarantine / "moved-original" / "file").read_bytes()
+            )
+        finally:
+            self.tear_down_parent(parent)
+
     def test_busy_child_failure_is_not_reported_as_cleanup_success(self):
-        parent, root, identity = self.make_root()
+        parent, root, identity, ledger = self.make_root()
         original_rmdir = os.rmdir
 
         def busy(path: object, *args: object, **kwargs: object) -> None:
@@ -1363,12 +1702,12 @@ class CleanupConfinementTests(unittest.TestCase):
         try:
             with mock.patch.object(observer.os, "rmdir", busy):
                 with self.assertRaisesRegex(observer.ObservationError, "cannot remove"):
-                    observer.cleanup_owned_root(identity)
+                    observer.cleanup_owned_root(identity, ledger)
         finally:
             self.tear_down_parent(parent)
 
     def test_cleanup_rejects_cross_device_children_before_deletion(self):
-        parent, root, identity = self.make_root()
+        parent, root, identity, ledger = self.make_root()
         original_stat = observer.os.stat
 
         def cross_device(path: object, *args: object, **kwargs: object) -> os.stat_result:
@@ -1384,7 +1723,7 @@ class CleanupConfinementTests(unittest.TestCase):
                 with self.assertRaisesRegex(
                     observer.ObservationError, "filesystem boundary"
                 ):
-                    observer.cleanup_owned_root(identity)
+                    observer.cleanup_owned_root(identity, ledger)
             quarantined = [
                 candidate
                 for candidate in parent.iterdir()
@@ -1406,6 +1745,222 @@ class CleanupConfinementTests(unittest.TestCase):
                 observer.snapshot_tree(parent)
         finally:
             self.tear_down_parent(parent)
+
+
+class DescriptorObjectBindingTests(unittest.TestCase):
+    def test_unaccepted_child_receipt_objects_are_preserved_not_adopted(self):
+        for scenario, expected_name in (
+            ("invalid-marketplace-receipt", observer.MARKETPLACE_NAME),
+            ("invalid-plugin-receipt", "axiom"),
+        ):
+            state = {"preserved": False}
+
+            def hook(phase: str, facts: dict[str, object]) -> None:
+                if phase == "after-cleanup":
+                    identity = facts["rootIdentity"]
+                    quarantine = next(identity.path.parent.glob(".axiom-owned-cleanup-*"))
+                    state["preserved"] = any(
+                        path.name == expected_name for path in quarantine.rglob("*")
+                    )
+                    remove_preserved_run_objects(identity)
+
+            with self.subTest(scenario=scenario):
+                result = fake_run(
+                    {observer.EXPECTED_CASE_IDS[0]: scenario},
+                    hook=hook,
+                    seed=b"\x10" * 32,
+                )
+                self.assertTrue(state["preserved"])
+                self.assertEqual("incomplete", result["overallStatus"])
+                self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+                self.assertEqual(0, result["summary"]["modelCallCount"])
+
+    def test_schema_path_replacement_cannot_change_child_consumed_object(self):
+        for scenario in ("rename-away", "replacement", "symlink"):
+            state = {"mutated": False, "preserved": False}
+
+            def hook(phase: str, facts: dict[str, object]) -> None:
+                if phase == "after-schema-create" and not state["mutated"]:
+                    session = facts["session"]
+                    schema_path = session.alias(facts["schemaRelative"])
+                    moved = schema_path.with_name("original-schema")
+                    schema_path.rename(moved)
+                    if scenario == "replacement":
+                        schema_path.write_bytes(b'{"type":"object"}\n')
+                    elif scenario == "symlink":
+                        schema_path.symlink_to(moved.name)
+                    state["mutated"] = True
+                elif phase == "after-cleanup" and state["mutated"]:
+                    identity = facts["rootIdentity"]
+                    quarantine = next(identity.path.parent.glob(".axiom-owned-cleanup-*"))
+                    original = next(quarantine.rglob("original-schema"))
+                    self.assertGreater(original.stat().st_size, 100)
+                    if scenario == "replacement":
+                        replacement = next(
+                            path
+                            for path in quarantine.rglob("model-response-schema.json")
+                            if not path.is_symlink()
+                        )
+                        state["preserved"] = replacement.read_bytes() == b'{"type":"object"}\n'
+                    elif scenario == "symlink":
+                        state["preserved"] = any(
+                            path.is_symlink()
+                            for path in quarantine.rglob("model-response-schema.json")
+                        )
+                    else:
+                        state["preserved"] = True
+                    remove_preserved_run_objects(identity)
+
+            with self.subTest(scenario=scenario):
+                result = fake_run(hook=hook, seed=b"\x11" * 32)
+                self.assertTrue(state["mutated"])
+                self.assertTrue(state["preserved"])
+                expected_calls = 0 if scenario == "symlink" else 16
+                self.assertEqual(expected_calls, result["summary"]["modelCallCount"])
+                self.assertEqual(
+                    scenario != "symlink",
+                    result["cases"][0]["schemaObjectVerified"],
+                )
+                self.assertEqual("incomplete", result["overallStatus"])
+                self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+
+    def test_mutating_the_open_schema_object_fails_before_model_launch(self):
+        state = {"mutated": False}
+
+        def hook(phase: str, facts: dict[str, object]) -> None:
+            if phase == "after-schema-create" and not state["mutated"]:
+                schema = facts["schema"]
+                alias = Path(f"/proc/self/fd/{schema.descriptor}")
+                os.chmod(alias, 0o600)
+                alias.write_bytes(b'{"type":"object"}\n')
+                state["mutated"] = True
+            elif phase == "after-cleanup" and state["mutated"]:
+                remove_preserved_run_objects(facts["rootIdentity"])
+
+        result = fake_run(hook=hook, seed=b"\x12" * 32)
+        self.assertTrue(state["mutated"])
+        self.assertEqual(0, result["summary"]["modelCallCount"])
+        self.assertEqual("0" * 64, result["cases"][0]["casePromptSha256"])
+        self.assertEqual("incomplete", result["overallStatus"])
+
+    def test_run_root_rename_and_repository_symlink_receive_no_writes(self):
+        repository_before = observer.snapshot_tree(REPOSITORY_ROOT)
+        state = {"moved_has_bundle": False, "repository_unchanged": False}
+
+        def hook(phase: str, facts: dict[str, object]) -> None:
+            if phase == "before-first-root-write":
+                session = facts["session"]
+                identity = session.identity
+                moved = identity.path.with_name(identity.path.name + "-moved")
+                identity.path.rename(moved)
+                identity.path.symlink_to(REPOSITORY_ROOT, target_is_directory=True)
+            elif phase == "after-cleanup":
+                identity = facts["rootIdentity"]
+                moved = identity.path.with_name(identity.path.name + "-moved")
+                state["moved_has_bundle"] = (moved / "bundle-build").is_dir()
+                state["repository_unchanged"] = (
+                    observer.snapshot_tree(REPOSITORY_ROOT) == repository_before
+                )
+                remove_preserved_run_objects(identity)
+
+        result = fake_run(hook=hook, seed=b"\x13" * 32)
+        self.assertTrue(state["moved_has_bundle"])
+        self.assertTrue(state["repository_unchanged"])
+        self.assertEqual(0, result["summary"]["modelCallCount"])
+        self.assertEqual("incomplete", result["overallStatus"])
+        self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+
+    def test_nested_parent_substitution_is_rejected_before_descriptor_write(self):
+        parent = Path(tempfile.mkdtemp(prefix="axiom-parent-binding-"))
+        root = parent / "owned"
+        root.mkdir(mode=0o700)
+        identity = observer.freeze_owned_root(root)
+        session = observer.OwnedRootSession(identity)
+        repository_before = observer.snapshot_tree(REPOSITORY_ROOT)
+        moved = root / "moved-safe"
+        try:
+            session.mkdir("safe/child", parents=True, phase="parent-binding-test")
+            (root / "safe").rename(moved)
+            (root / "safe").symlink_to(REPOSITORY_ROOT, target_is_directory=True)
+            with self.assertRaisesRegex(observer.ObservationError, "parent"):
+                session.create_file(
+                    "safe/child/forbidden",
+                    b"must-not-write",
+                    phase="parent-binding-test",
+                )
+            self.assertEqual(
+                repository_before, observer.snapshot_tree(REPOSITORY_ROOT)
+            )
+            self.assertFalse((REPOSITORY_ROOT / "child" / "forbidden").exists())
+        finally:
+            session.close()
+            remove_test_tree(root / "safe")
+            remove_test_tree(moved)
+            remove_test_tree(root)
+            parent.rmdir()
+
+    def test_installed_object_replacement_and_tree_drift_hard_stop_before_launch(self):
+        scenarios = (
+            ("installed-after-receipt", "after-plugin-receipt"),
+            ("installed-symlink-after-receipt", "after-plugin-receipt"),
+            ("installed-after-snapshot", "after-protected-snapshot"),
+            ("codex-home-after-receipt", "after-plugin-receipt"),
+        )
+        for scenario, phase_to_mutate in scenarios:
+            state = {"mutated": False, "preserved": False}
+
+            def hook(phase: str, facts: dict[str, object]) -> None:
+                if phase == phase_to_mutate and not state["mutated"]:
+                    installed = facts["installed"]
+                    root = Path(f"/proc/self/fd/{installed.root_descriptor}")
+                    path = root / installed.relative_path
+                    if scenario == "codex-home-after-receipt":
+                        path = root.joinpath(*Path(installed.relative_path).parts[:2])
+                        moved = path.with_name("codex-home-owned-moved")
+                        path.rename(moved)
+                        path.mkdir(mode=0o700)
+                        (path / "unknown").write_bytes(b"preserve")
+                    elif phase_to_mutate == "after-plugin-receipt":
+                        moved = path.with_name("axiom-owned-moved")
+                        path.rename(moved)
+                        if scenario == "installed-symlink-after-receipt":
+                            path.symlink_to(moved.name, target_is_directory=True)
+                        else:
+                            path.mkdir(mode=0o700)
+                            (path / "unknown").write_bytes(b"preserve")
+                    else:
+                        target = path / ".codex-plugin" / "plugin.json"
+                        target.chmod(0o600)
+                        target.write_bytes(b"{}\n")
+                    state["mutated"] = True
+                elif phase == "after-cleanup" and state["mutated"]:
+                    identity = facts["rootIdentity"]
+                    quarantines = list(identity.path.parent.glob(".axiom-owned-cleanup-*"))
+                    self.assertEqual(1, len(quarantines))
+                    if scenario == "installed-symlink-after-receipt":
+                        state["preserved"] = any(
+                            path.is_symlink()
+                            for path in quarantines[0].rglob("axiom")
+                        )
+                    elif phase_to_mutate == "after-plugin-receipt":
+                        state["preserved"] = any(
+                            path.read_bytes() == b"preserve"
+                            for path in quarantines[0].rglob("unknown")
+                        )
+                    else:
+                        state["preserved"] = any(
+                            path.read_bytes() == b"{}\n"
+                            for path in quarantines[0].rglob("plugin.json")
+                        )
+                    remove_preserved_run_objects(identity)
+
+            with self.subTest(scenario=scenario):
+                result = fake_run(hook=hook, seed=b"\x14" * 32)
+                self.assertTrue(state["mutated"])
+                self.assertTrue(state["preserved"])
+                self.assertEqual(0, result["summary"]["modelCallCount"])
+                self.assertEqual("incomplete", result["overallStatus"])
+                self.assertTrue(result["cleanup"]["manualCleanupRequired"])
 
 
 class ResultIntegrityAndEndToEndTests(unittest.TestCase):
@@ -1469,6 +2024,17 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         prompts = {item["casePromptSha256"] for item in result["cases"]}
         schemas = {item["modelResponseSchemaSha256"] for item in result["cases"]}
         self.assertEqual((16, 16, 16), (len(opaque), len(prompts), len(schemas)))
+        commitments = [
+            item["materializationCommitmentSha256"] for item in result["cases"]
+        ]
+        self.assertEqual(16, len(set(commitments)))
+        self.assertEqual(
+            observer._materialization_commitment_root(commitments),
+            result["materialization"]["materializationCommitmentRootSha256"],
+        )
+        self.assertTrue(result["objectBindingFacts"]["schemaObjectConsumptionVerified"])
+        self.assertTrue(result["objectBindingFacts"]["runRootWritesDescriptorAnchored"])
+        self.assertTrue(result["objectBindingFacts"]["installedDirectoryIdentityVerified"])
 
     def test_result_pass_is_observer_derived_not_status_or_summary_owned(self):
         fields = (
@@ -1526,6 +2092,11 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("installationFacts", "installedCaseCount", 14),
             ("installationFacts", "noPluginControlCaseCount", 0),
             ("installationFacts", "persistentUserStateChanged", True),
+            ("installationFacts", "installedDirectoryIdentityVerified", False),
+            ("objectBindingFacts", "schemaObjectConsumptionVerified", False),
+            ("objectBindingFacts", "runRootWritesDescriptorAnchored", False),
+            ("objectBindingFacts", "installedDirectoryIdentityVerified", False),
+            ("objectBindingFacts", "externalOutputObjectBinding", "pending"),
             ("noHookProof", "packageHookSurfaceAbsent", False),
             ("noHookProof", "installedHookSurfaceAbsent", False),
             ("noHookProof", "temporaryConfigHookRegistrationAbsent", False),
@@ -1589,6 +2160,119 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ):
                 observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
 
+    def test_materialization_commitments_are_recomputed_not_format_checked(self):
+        protocol = load_json(PROTOCOL)
+        golden = observer.load_golden_cases(REPOSITORY_ROOT)
+
+        def reset_root(candidate: dict[str, object]) -> None:
+            candidate["materialization"]["materializationCommitmentRootSha256"] = (
+                observer._materialization_commitment_root(
+                    [item["materializationCommitmentSha256"] for item in candidate["cases"]]
+                )
+            )
+
+        candidates: list[tuple[str, dict[str, object]]] = []
+
+        candidate = copy.deepcopy(self.fake_result)
+        case = candidate["cases"][0]
+        case["opaqueBindingSha256"] = "1" * 64
+        case["modelResponseSchemaSha256"] = "2" * 64
+        case["casePromptSha256"] = "3" * 64
+        case["materializationCommitmentSha256"] = "4" * 64
+        reset_root(candidate)
+        candidates.append(("arbitrary-unique-digests", candidate))
+
+        candidate = copy.deepcopy(self.fake_result)
+        candidate["materialization"]["materializationSeed"] = "5" * 64
+        candidates.append(("seed-with-stale-case-digests", candidate))
+
+        candidate = copy.deepcopy(self.fake_result)
+        candidate["cases"][0]["materializationCommitmentSha256"] = "6" * 64
+        reset_root(candidate)
+        candidates.append(("forged-case-and-root", candidate))
+
+        candidate = copy.deepcopy(self.fake_result)
+        fields = (
+            "opaqueBindingSha256",
+            "modelResponseSchemaSha256",
+            "casePromptSha256",
+            "materializationCommitmentSha256",
+        )
+        for field in fields:
+            candidate["cases"][0][field], candidate["cases"][1][field] = (
+                candidate["cases"][1][field],
+                candidate["cases"][0][field],
+            )
+        reset_root(candidate)
+        candidates.append(("ordinal-exchange", candidate))
+
+        candidate = copy.deepcopy(self.fake_result)
+        candidate["cases"][0]["caseId"] = observer.EXPECTED_CASE_IDS[1]
+        candidate["cases"][0]["contractVersion"] = "future"
+        candidates.append(("case-identity-substitution", candidate))
+
+        for label, replacement in (
+            ("request", {"request": "different request bytes"}),
+            ("fixture", {"realizedFixtureDigest": "7" * 64}),
+            ("schema", {"modelResponseSchemaSha256": "8" * 64}),
+            ("prompt", {"casePromptSha256": "9" * 64}),
+        ):
+            candidate = copy.deepcopy(self.fake_result)
+            retained = candidate["cases"][0]
+            case_contract = dict(golden[0])
+            case_contract.update(replacement if label == "request" else {})
+            for field, value in replacement.items():
+                if field != "request":
+                    retained[field] = value
+            seed = bytes.fromhex(candidate["materialization"]["materializationSeed"])
+            retained["materializationCommitmentSha256"] = (
+                observer._case_materialization_commitment(
+                    protocol_digest=protocol["protocolDigest"],
+                    materialization_seed=seed,
+                    ordinal=1,
+                    case=case_contract,
+                    realized_fixture_digest=retained["realizedFixtureDigest"],
+                    realized_file_set_digest=retained["realizedFileSetDigest"],
+                    opaque_binding_sha256=retained["opaqueBindingSha256"],
+                    model_response_schema_sha256=retained["modelResponseSchemaSha256"],
+                    case_prompt_sha256=retained["casePromptSha256"],
+                )
+            )
+            reset_root(candidate)
+            candidates.append((label + "-substitution", candidate))
+
+        for label, candidate in candidates:
+            with self.subTest(label=label), self.assertRaises(
+                observer.ObservationError
+            ):
+                observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
+
+    def test_materialization_root_and_raw_token_fail_closed(self):
+        candidate = copy.deepcopy(self.fake_result)
+        del candidate["materialization"]["materializationCommitmentRootSha256"]
+        with self.assertRaises(observer.ObservationError):
+            observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
+
+        candidate = copy.deepcopy(self.fake_result)
+        candidate["recordedAt"] = observer.derive_opaque_case_binding(
+            bytes.fromhex(candidate["materialization"]["materializationSeed"]),
+            1,
+            candidate["observationProtocol"]["digest"],
+        )
+        with self.assertRaises(observer.ObservationError):
+            observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
+
+        with tempfile.TemporaryDirectory(prefix="axiom-duplicate-root-") as directory:
+            path = Path(directory) / "result.json"
+            path.write_text(
+                '{"materializationCommitmentRootSha256":"%s",'
+                '"materializationCommitmentRootSha256":"%s"}\n'
+                % ("a" * 64, "b" * 64),
+                encoding="ascii",
+            )
+            with self.assertRaisesRegex(observer.ObservationError, "duplicate"):
+                observer._load_json(Path(directory), Path("result.json"))
+
     def test_free_form_or_sensitive_retention_is_rejected(self):
         payloads = (
             "credential=secret-fragment",
@@ -1626,6 +2310,16 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
     def test_incomplete_prompt_never_claims_complete_prompt_digest(self):
         fixtures = load_json(FIXTURES)
         cases = observer.load_golden_cases(REPOSITORY_ROOT)
+        protocol = load_json(PROTOCOL)
+        seed = b"\x03" * 32
+        materialization = observer.materialize_case_contract(
+            materialization_seed=seed,
+            ordinal=1,
+            protocol_digest=protocol["protocolDigest"],
+            model_schema=load_json(MODEL_SCHEMA),
+            prompt_envelope=load_json(PROMPT),
+            request=cases[0]["request"],
+        )
         error = observer.ProcessBoundaryError(
             "partial prompt",
             model_call_authorized=True,
@@ -1636,9 +2330,9 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             cases[0],
             fixtures,
             None,
-            "a" * 64,
-            "b" * 64,
-            "c" * 32,
+            materialization,
+            seed,
+            protocol["protocolDigest"],
             error,
         )
         self.assertEqual("0" * 64, record["casePromptSha256"])
@@ -1647,46 +2341,36 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         self.assertFalse(record["promptFullyDelivered"])
 
     def test_installed_copy_must_match_bundle_again_at_launch_boundary(self):
-        with tempfile.TemporaryDirectory(prefix="axiom-install-boundary-") as directory:
-            root = Path(directory)
-            for name in ("workspace", "bundle", "installed", "codex-home"):
-                (root / name).mkdir()
-            (root / "bundle" / "content").write_bytes(b"expected")
-            (root / "installed" / "content").write_bytes(b"replacement")
-            fixture = observer.FixtureMaterialization(
-                definition_digest="a" * 64,
-                file_set_digest="b" * 64,
-                realized_digest="c" * 64,
-                git_repository=False,
-                git_head_state="absent",
-                git_clean=False,
-                git_remote_count=0,
-            )
-            with mock.patch.object(observer, "_launch_bounded_process") as launch:
-                with self.assertRaisesRegex(observer.ObservationError, "installed plugin tree"):
-                    observer._observe_case_process(
-                        capability=object(),
-                        executable=object(),
-                        output_schema=root / "schema",
-                        prompt=b"prompt",
-                        cwd=root / "workspace",
-                        env={},
-                        taxonomy={},
-                        case={"id": observer.EXPECTED_CASE_IDS[0]},
-                        case_prompt_sha256="d" * 64,
-                        model_response_schema_sha256="e" * 64,
-                        model_response_schema={},
-                        opaque_binding="f" * 32,
-                        fixture=fixture,
-                        plugin_state="installed-derived-profile",
-                        workspace=root / "workspace",
-                        bundle=root / "bundle",
-                        installed_copy=root / "installed",
-                        temporary_user_state=root / "codex-home",
-                        marketplace_process_started=True,
-                        plugin_install_process_started=True,
-                    )
-            launch.assert_not_called()
+        mutated = False
+        preserved = False
+
+        def hook(phase: str, facts: dict[str, object]) -> None:
+            nonlocal mutated, preserved
+            if phase == "after-plugin-receipt" and not mutated:
+                installed = facts["installed"]
+                root = Path(f"/proc/self/fd/{installed.root_descriptor}")
+                path = root / installed.relative_path
+                moved = path.with_name("axiom-owned-moved")
+                path.rename(moved)
+                path.mkdir(mode=0o700)
+                (path / "unknown").write_bytes(b"preserve")
+                mutated = True
+            elif phase == "after-cleanup" and mutated:
+                identity = facts["rootIdentity"]
+                quarantines = list(
+                    identity.path.parent.glob(".axiom-owned-cleanup-*")
+                )
+                self.assertEqual(1, len(quarantines))
+                unknown = next(quarantines[0].rglob("unknown"))
+                preserved = unknown.read_bytes() == b"preserve"
+                remove_preserved_run_objects(identity)
+
+        result = fake_run(hook=hook)
+        self.assertTrue(mutated)
+        self.assertTrue(preserved)
+        self.assertEqual("incomplete", result["overallStatus"])
+        self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+        self.assertEqual(0, result["summary"]["modelCallCount"])
 
     def test_hard_stop_records_every_remaining_case_not_run_and_stops_launches(self):
         first = observer.EXPECTED_CASE_IDS[0]
@@ -1733,6 +2417,76 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                 b"argv",
             ):
                 self.assertNotIn(forbidden, lowered)
+
+    def test_external_output_parent_and_name_replacements_fail_closed(self):
+        scenarios = ("parent-replacement", "parent-symlink", "name-replacement")
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario):
+                top = Path(tempfile.mkdtemp(prefix="axiom-output-race-"))
+                parent = top / "output-parent"
+                parent.mkdir(mode=0o700)
+                moved = top / "moved-parent"
+                candidate = copy.deepcopy(self.fake_result)
+                repository_before = observer.snapshot_tree(REPOSITORY_ROOT)
+
+                def hook(phase: str, facts: dict[str, object]) -> None:
+                    frozen = facts["parent"]
+                    if scenario in {"parent-replacement", "parent-symlink"} and phase == "after-output-create":
+                        parent.rename(moved)
+                        if scenario == "parent-symlink":
+                            parent.symlink_to(REPOSITORY_ROOT, target_is_directory=True)
+                        else:
+                            parent.mkdir(mode=0o700)
+                            (parent / "preserve").write_bytes(b"unknown-parent")
+                    elif scenario == "name-replacement" and phase == "after-output-create":
+                        os.rename(
+                            frozen.basename,
+                            "moved-result.json",
+                            src_dir_fd=frozen.descriptor,
+                            dst_dir_fd=frozen.descriptor,
+                        )
+                        replacement = os.open(
+                            frozen.basename,
+                            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                            0o600,
+                            dir_fd=frozen.descriptor,
+                        )
+                        os.write(replacement, b"preserve")
+                        os.close(replacement)
+
+                try:
+                    with self.assertRaises(observer.ObservationError):
+                        observer.write_normalized_result(
+                            candidate,
+                            parent / "result.json",
+                            REPOSITORY_ROOT,
+                            _test_hook=hook,
+                        )
+                    self.assertEqual("incomplete", candidate["overallStatus"])
+                    self.assertTrue(candidate["cleanup"]["manualCleanupRequired"])
+                    self.assertEqual(
+                        "failed",
+                        candidate["objectBindingFacts"]["externalOutputObjectBinding"],
+                    )
+                    self.assertEqual(
+                        observer.snapshot_tree(REPOSITORY_ROOT), repository_before
+                    )
+                    if scenario == "parent-symlink":
+                        self.assertFalse((REPOSITORY_ROOT / "result.json").exists())
+                    elif scenario == "parent-replacement":
+                        self.assertEqual(
+                            b"unknown-parent", (parent / "preserve").read_bytes()
+                        )
+                        self.assertFalse((parent / "result.json").exists())
+                    else:
+                        self.assertEqual(
+                            b"preserve", (parent / "result.json").read_bytes()
+                        )
+                        self.assertTrue((parent / "moved-result.json").exists())
+                finally:
+                    remove_test_tree(parent)
+                    remove_test_tree(moved)
+                    top.rmdir()
 
 
 if __name__ == "__main__":

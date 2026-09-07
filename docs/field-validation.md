@@ -36,7 +36,11 @@ stdin with the `-` sentinel, not a positional argv prompt. The model never
 receives expected routes, discovery outcomes, case classes, clarification
 counts, descriptive case IDs, contract versions, or acceptance labels. Each
 case instead receives a random opaque binding and a separately materialized
-closed model-response schema; only binding digests enter normalized evidence.
+closed model-response schema. A public 256-bit materialization seed lets the
+validator reconstruct every token, schema, prompt, per-case commitment, and
+the ordered 16-case commitment root; raw opaque tokens never enter normalized
+evidence.
+
 A dedicated execution credential, exact protocol, runner, module, binary,
 source, host, model, and run-root identities, and authorization for exactly 16
 ordered calls are separate preconditions. The sole internal launcher consumes
@@ -62,7 +66,16 @@ JSONL still closes the source-required payload and lifecycle grammar and
 fail-closes every visible tool or action item. Source-suppressed action surfaces,
 including collaboration, are explicitly disabled in the canonical invocation.
 Linux execution uses descriptor-anchored, identity-preserving cleanup and
-refuses Windows rather than falling back to unsafe path deletion.
+refuses Windows rather than falling back to unsafe path deletion. The run root,
+case homes, workspaces, schemas, receipts, and ledgers are created relative to
+the frozen root descriptor. Each model reads its exact held schema through an
+inherited `/proc/self/fd` alias, and the installed copy remains bound to the
+same held directory object before, during, and after launch. Cleanup owns only
+objects recorded at creation or after closed child-output acceptance; unknown
+or replaced objects are preserved and force an incomplete result. A requested
+normalized result is likewise created relative to a pre-opened external parent
+descriptor, and any parent or result-name substitution prevents publication
+and host PASS.
 
 ## Before Testing
 

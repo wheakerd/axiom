@@ -6,13 +6,16 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
+import stat
 import sys
 import time
 from pathlib import Path
 
 
 MAX_FAKE_PROMPT_BYTES = 512 * 1024
+MAX_FAKE_SCHEMA_BYTES = 64 * 1024
 THREAD_ID = "01890f32-7abc-7def-8abc-0123456789ab"
 FEATURE_OVERRIDES = {
     "features.shell_tool=false", "features.unified_exec=false",
@@ -122,10 +125,130 @@ def response(prompt: bytes) -> dict[str, object]:
     }
 
 
+def validate_fd_backed_schema(arguments: list[str], prompt: bytes) -> None:
+    try:
+        schema_path = arguments[arguments.index("--output-schema") + 1]
+    except (ValueError, IndexError) as error:
+        raise ValueError("output schema argument missing") from error
+    if re.fullmatch(r"/proc/self/fd/[0-9]+", schema_path) is None:
+        raise ValueError("output schema is not an inherited fd alias")
+    descriptor = os.open(schema_path, os.O_RDONLY | getattr(os, "O_CLOEXEC", 0))
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_FAKE_SCHEMA_BYTES:
+            raise ValueError("output schema object is invalid")
+        chunks = bytearray()
+        while len(chunks) <= MAX_FAKE_SCHEMA_BYTES:
+            chunk = os.read(
+                descriptor,
+                min(8192, MAX_FAKE_SCHEMA_BYTES + 1 - len(chunks)),
+            )
+            if not chunk:
+                break
+            chunks.extend(chunk)
+        if len(chunks) > MAX_FAKE_SCHEMA_BYTES or len(chunks) != metadata.st_size:
+            raise ValueError("output schema exceeds its byte bound")
+    finally:
+        os.close(descriptor)
+
+    def reject_duplicates(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate schema key")
+            result[key] = value
+        return result
+
+    schema = json.loads(bytes(chunks), object_pairs_hook=reject_duplicates)
+    binding_lines = [
+        line for line in prompt.decode("utf-8").splitlines()
+        if line.startswith("opaqueCaseBinding: ")
+    ]
+    if len(binding_lines) != 1:
+        raise ValueError("prompt binding missing or repeated")
+    binding = binding_lines[0].split(": ", 1)[1]
+    # This independent fixture owns its expected source contract.  It does not
+    # import parser constants or derive acceptance from production code.
+    expected = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://github.com/wheakerd/axiom/blob/main/evals/no-hook-observation/codex-model-response-schema-v1.json",
+        "title": "Axiom Codex blinded route-assessment response v1",
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "profileId", "opaqueCaseBinding", "contractBindings",
+            "discoveryOutcome", "selectedRoutes", "clarificationCount",
+            "usingAxiomFrontDoorObserved", "sessionStartObserved",
+            "mutationAttempted", "mutationObserved",
+        ],
+        "properties": {
+            "profileId": {"const": "openai-hook-independent-v1"},
+            "opaqueCaseBinding": {"type": "string", "const": binding},
+            "contractBindings": {
+                "type": "object", "additionalProperties": False,
+                "required": [
+                    "profileContractSha256", "goldenSetSha256",
+                    "hostCaseSetSha256",
+                ],
+                "properties": {
+                    "profileContractSha256": {"const": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"},
+                    "goldenSetSha256": {"const": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"},
+                    "hostCaseSetSha256": {"const": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"},
+                },
+            },
+            "discoveryOutcome": {
+                "enum": ["selected", "clarification", "no-route", "unavailable"]
+            },
+            "selectedRoutes": {
+                "type": "array", "minItems": 0, "maxItems": 2,
+                "uniqueItems": True,
+                "items": {"enum": [
+                    "using-axiom", "agents-architect", "agent-plugin-architect",
+                    "confirm-external-action", "optimize-codex-usage",
+                    "reversible-system-change", "review-axiom-task",
+                    "traceable-git-submit",
+                ]},
+            },
+            "clarificationCount": {"type": "integer", "minimum": 0, "maximum": 1},
+            "usingAxiomFrontDoorObserved": {"type": "boolean"},
+            "sessionStartObserved": {"type": "boolean"},
+            "mutationAttempted": {"type": "boolean"},
+            "mutationObserved": {"type": "boolean"},
+        },
+    }
+    if schema != expected:
+        raise ValueError("output schema bytes do not materialize the exact source contract")
+
+
+def validate_installed_object_visibility() -> None:
+    """Independently require CODEX_HOME lookup to reach the frozen installed object."""
+    codex_home = Path(os.environ["CODEX_HOME"])
+    installed_alias = os.environ.get("AXIOM_FAKE_INSTALLED_OBJECT")
+    no_plugin = os.environ.get("AXIOM_FAKE_NO_PLUGIN_CONTROL")
+    if (installed_alias is None) == (no_plugin is None):
+        raise ValueError("fake model launch lacks one closed plugin-state proof")
+    if no_plugin is not None:
+        if no_plugin != "true" or (codex_home / "plugins").exists():
+            raise ValueError("fake no-plugin control is not empty")
+        return
+    installed = Path(installed_alias)
+    visible = codex_home / "plugins" / "axiom"
+    installed_stat = installed.stat()
+    visible_stat = visible.stat()
+    if (
+        not stat.S_ISDIR(installed_stat.st_mode)
+        or not stat.S_ISDIR(visible_stat.st_mode)
+        or (installed_stat.st_dev, installed_stat.st_ino)
+        != (visible_stat.st_dev, visible_stat.st_ino)
+    ):
+        raise ValueError("fake child does not see the frozen installed object")
+
+
 def main() -> int:
     arguments = sys.argv[1:]
     if "CODEX_API_KEY" in os.environ:
         return 41
+    scenario = os.environ.get("AXIOM_FAKE_SCENARIO", "happy")
     isolated_plugin_arguments = (
         arguments[2:]
         if arguments[:2] == ["-c", 'cli_auth_credentials_store="file"']
@@ -134,11 +257,14 @@ def main() -> int:
     if isolated_plugin_arguments is not None and isolated_plugin_arguments[:3] == [
         "plugin", "marketplace", "add"
     ]:
+        Path(os.environ["AXIOM_FAKE_MARKETPLACE_ROOT"]).mkdir(
+            parents=True, exist_ok=False
+        )
         append_call_fact("marketplace", arguments)
         emit_receipt({
             "marketplaceName": "axiom-no-hook-observer",
             "installedRoot": os.environ["AXIOM_FAKE_MARKETPLACE_ROOT"],
-            "alreadyAdded": False,
+            "alreadyAdded": scenario == "invalid-marketplace-receipt",
         })
         return 0
     if isolated_plugin_arguments is not None and isolated_plugin_arguments[:2] == [
@@ -151,7 +277,12 @@ def main() -> int:
         emit_receipt({
             "pluginId": "axiom@axiom-no-hook-observer", "name": "axiom",
             "marketplaceName": "axiom-no-hook-observer", "version": "0.10.0",
-            "installedPath": str(destination), "authPolicy": "ON_INSTALL",
+            "installedPath": str(destination),
+            "authPolicy": (
+                "on-install"
+                if scenario == "invalid-plugin-receipt"
+                else "ON_INSTALL"
+            ),
         })
         return 0
     if not arguments or arguments[0] != "exec" or arguments[-1] != "-":
@@ -159,12 +290,16 @@ def main() -> int:
     supplied = {arguments[index + 1] for index, value in enumerate(arguments[:-1]) if value == "-c"}
     if not FEATURE_OVERRIDES <= supplied or "mcp_servers={}" not in supplied:
         return 42
-    scenario = os.environ.get("AXIOM_FAKE_SCENARIO", "happy")
     if scenario == "early-exit":
         return 0
     prompt = sys.stdin.buffer.read(MAX_FAKE_PROMPT_BYTES + 1)
     if len(prompt) > MAX_FAKE_PROMPT_BYTES or not prompt:
         return 4
+    try:
+        validate_fd_backed_schema(arguments, prompt)
+        validate_installed_object_visibility()
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+        return 43
     append_call_fact("model-case", arguments, prompt)
     if scenario == "timeout":
         time.sleep(30)

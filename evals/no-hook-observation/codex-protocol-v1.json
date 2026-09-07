@@ -28,7 +28,7 @@
     "observerTaxonomy": {"path":"evals/codex-exec-jsonl-observer-v3.json","sha256":"85ca15edd3b48d18f707c59a6ae702dc9424a17215107ba91510889e2677f585"},
     "promptEnvelope": {"path":"evals/no-hook-observation/codex-prompt-envelope-v1.json","digest":"sha256:418371038eb0c88380860b5b0b37c2c92ebe1c2ed469ff5eed15b74192f3e40d"},
     "fixtureMatrix": {"path":"evals/no-hook-observation/codex-fixtures-v1.json","sha256":"7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"},
-    "resultSchema": {"path":"evals/no-hook-observation/codex-result-schema-v1.json","sha256":"333e92e114c1a070bc384015116d306357db9818068f1baf27b7d43d5e8006db"}
+    "resultSchema": {"path":"evals/no-hook-observation/codex-result-schema-v1.json","sha256":"cb16654753a61166f51e0ee32e55b88da859c6fef80118654adb196966d60bc0"}
   },
   "host": {
     "name": "codex",
@@ -60,6 +60,8 @@
     "targetOperatingSystem": "linux",
     "targetArchitecture": "x86_64",
     "sourceSuppressedActionPolicy": "explicitly-disabled",
+    "criticalPathTransport": "linux-proc-fd-inherited",
+    "childDescriptorAllowlist": "minimum-required-pass-fds",
     "featureOverrides": [
       "features.shell_tool=false",
       "features.unified_exec=false",
@@ -171,7 +173,8 @@
     "fullProfileWrapperAllowed": false,
     "credentialStoreOverride": "file-within-temporary-codex-home",
     "cleanupAfterBatch": true,
-    "persistentUserStateChangeAllowed": false
+    "persistentUserStateChangeAllowed": false,
+    "installedObjectBinding": "descriptor-pinned-within-frozen-codex-home"
   },
   "noHookProof": {
     "staticPackageFacts": ["manifest-hooks-field-absent", "hooks-path-absent"],
@@ -231,7 +234,54 @@
     "sessionThreadItemIdentifiers": "forbidden",
     "credentialsAndConfiguration": "forbidden",
     "absolutePathsAndTemporaryNames": "forbidden",
-    "environmentDump": "forbidden"
+    "environmentDump": "forbidden",
+    "opaqueCaseToken": "forbidden",
+    "descriptorDeviceInode": "forbidden",
+    "procfsAliases": "forbidden",
+    "materializationSeed": "public-verifier-input"
+  },
+  "materialization": {
+    "scheme": "axiom-codex-case-materialization-v1",
+    "schemaVersion": "1",
+    "seedBytes": 32,
+    "seedEncoding": "64-lowercase-hex",
+    "seedGeneration": "observer-cryptographic-random",
+    "seedRetention": "public-verifier-input",
+    "seedModelDisclosure": "forbidden",
+    "opaqueTokenDerivation": "sha256-domain-seed-ordinal-protocol",
+    "opaqueTokenDomain": "axiom-codex-opaque-case-binding-v1\u0000",
+    "ordinalEncoding": "unsigned-2-byte-big-endian",
+    "protocolDigestEncoding": "32-raw-bytes-without-sha256-prefix",
+    "opaqueTokenEncoding": "ocb1-lowercase-hex",
+    "opaqueTokenRetention": "forbidden",
+    "caseCommitment": "canonical-json-sha256",
+    "caseCommitmentCanonicalFields": ["schemaVersion", "scheme", "protocolDigest", "materializationSeedSha256", "caseOrdinal", "caseId", "contractVersion", "requestSha256", "realizedFixtureDigest", "realizedFileSetDigest", "opaqueBindingSha256", "modelResponseSchemaSha256", "casePromptSha256"],
+    "caseCommitmentSeedIdentity": "sha256-of-32-raw-seed-bytes",
+    "caseCommitmentRequestIdentity": "sha256-of-exact-utf8-request-bytes",
+    "undeliveredPromptDigest": "64-zero-sentinel",
+    "rootCommitment": "ordered-16-case-canonical-json-sha256",
+    "rootCommitmentCanonicalFields": ["schemaVersion", "scheme", "commitments"],
+    "rootCommitmentOrder": "canonical-host-case-set-ordinal",
+    "validatorRecomputation": "required"
+  },
+  "objectBinding": {
+    "runRootWrites": "frozen-root-fd-relative-only",
+    "runRootReplacement": "write-original-object-then-incomplete-manual-cleanup",
+    "schemaObject": "open-nofollow-regular-single-link-fd-inherited",
+    "schemaArgument": "linux-proc-self-fd-alias-no-path-fallback",
+    "schemaLifetime": "open-through-child-terminal",
+    "childDescriptorAllowlist": "exact-required-pass-fds",
+    "installedDirectory": "componentwise-nofollow-from-frozen-codex-home-held-pre-launch-post-launch",
+    "codexHomeTransport": "linux-proc-self-fd-alias",
+    "externalOutput": "prefrozen-parent-fd-exclusive-single-basename",
+    "externalOutputParentFreeze": "before-observation-orchestration",
+    "externalOutputFailure": "incomplete-manual-cleanup-no-host-pass",
+    "cleanupOwnership": "creation-immediate-or-validated-child-acceptance-ledger",
+    "childObjectAcceptance": "closed-receipt-object-and-tree-before-ledger",
+    "unknownObjectPolicy": "preserve-never-delete",
+    "identityFailure": "incomplete-manual-cleanup",
+    "portableEvidence": "closed-normalized-facts-and-commitments-only",
+    "retainedDescriptorNumbers": false
   },
   "cases": [
     {"caseId":"no-hook-positive-explicit-using-axiom-001","contractVersion":2},
@@ -255,8 +305,8 @@
     "version": "1",
     "behaviorDependencies": [
       {"path":"scripts/run-no-hook-codex-observation.py","role":"entrypoint","sha256":"9b1e477889acfeab347d3236a782acdaadaad346b0c24c99cff79b2ec0fe800b"},
-      {"path":"axiom_validation/no_hook_observation.py","role":"implementation-validator","sha256":"82410fd8272078e22ed1881612369123c0f62261c3baabca7e2e128ee7c31a9b"},
-      {"path":"tests/fixtures/no_hook_observation.py","role":"fake-process-fixture","sha256":"0338d8b574260f08776135f4a4b350c6b721602b01ad6252ba1a3797e36e2e24"}
+      {"path":"axiom_validation/no_hook_observation.py","role":"implementation-validator","sha256":"2a1613cfb2b1b2026207e430585a55b56c222b9225a494351abda7058e574ff7"},
+      {"path":"tests/fixtures/no_hook_observation.py","role":"fake-process-fixture","sha256":"b7ad441d807991850eed7a8e6bf887204e9d223e8e56addc967f09c23f4f4357"}
     ],
     "defaultMode": "protocol-validation-only",
     "executionGuards": ["execute-flag", "exact-protocol-digest", "exact-runner-and-module-digests", "exact-binary-digest", "exact-cli-version", "exact-source-main-and-tree", "exact-model-and-reasoning-effort", "exact-linux-x86-64-host", "exact-run-root-identity", "exact-call-count-authorization", "dedicated-credential-presence", "single-use-run-nonce", "irreversible-call-counter", "single-launcher-purpose-argv-env-binding", "executable-fd-pinning", "pidfd-termination", "install-sequence-authorization"],
@@ -265,7 +315,9 @@
   "cleanup": {
     "order": ["terminate-and-reap-child", "seal-terminal-ledger", "remove-raw-streams", "remove-case-workspace", "remove-installed-copy", "remove-case-codex-home", "remove-local-marketplace", "remove-runtime-root", "verify-user-state-unchanged"],
     "identitySubstitution": "stop-and-preserve-for-manual-cleanup",
-    "successRequirement": "all-observer-owned-temporary-state-absent"
+    "successRequirement": "all-observer-owned-temporary-state-absent",
+    "ownershipLedger": "creation-or-accepted-child-identity-only",
+    "deletionMethod": "descriptor-relative-quarantine-then-delete"
   },
   "nonClaims": [
     "codex-no-hook-host-observed",
@@ -276,5 +328,5 @@
     "installation",
     "publication"
   ],
-  "protocolDigest": "sha256:855402d9faeaa32d403161ea0ebf6f37c707e13511a1df28b9690695889f18d6"
+  "protocolDigest": "sha256:14360fdaa5bab42a3dc028be13948ae34548c5d5926369941429a6b9c5ab1514"
 }

@@ -4,7 +4,7 @@
   "title": "Axiom Codex no-Hook normalized observation result v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "installationFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes"],
+  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "materialization", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes"],
   "properties": {
     "schemaVersion": {"const": "1"},
     "kind": {"const": "axiom-codex-no-hook-observation-result"},
@@ -12,6 +12,16 @@
     "runId": {"type": "string", "pattern": "^codex-no-hook-[0-9a-f]{32}$"},
     "recordedAt": {"type": "string", "format": "date-time"},
     "overallStatus": {"enum": ["pass", "fail", "incomplete"]},
+    "materialization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scheme", "schemaVersion", "materializationSeed", "materializationCommitmentRootSha256"],
+      "properties": {
+        "scheme": {"const": "axiom-codex-case-materialization-v1"},
+        "schemaVersion": {"const": "1"},
+        "materializationSeed": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "materializationCommitmentRootSha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
     "observationProtocol": {
       "type": "object", "additionalProperties": false,
       "required": ["id", "schemaVersion", "digest"],
@@ -96,7 +106,7 @@
     },
     "installationFacts": {
       "type": "object", "additionalProperties": false,
-      "required": ["scope", "installedPathWithinTemporaryHome", "installedTreeVerified", "installedCaseCount", "noPluginControlCaseCount", "persistentUserStateChanged", "cleanupVerified"],
+      "required": ["scope", "installedPathWithinTemporaryHome", "installedTreeVerified", "installedCaseCount", "noPluginControlCaseCount", "persistentUserStateChanged", "cleanupVerified", "installedDirectoryIdentityVerified"],
       "properties": {
         "scope": {"const": "isolated-ephemeral-test-only"},
         "installedPathWithinTemporaryHome": {"type": "boolean"},
@@ -104,7 +114,18 @@
         "installedCaseCount": {"type": "integer", "minimum": 0, "maximum": 15},
         "noPluginControlCaseCount": {"type": "integer", "minimum": 0, "maximum": 1},
         "persistentUserStateChanged": {"const": false},
-        "cleanupVerified": {"type": "boolean"}
+        "cleanupVerified": {"type": "boolean"},
+        "installedDirectoryIdentityVerified": {"type": "boolean"}
+      }
+    },
+    "objectBindingFacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaObjectConsumptionVerified", "runRootWritesDescriptorAnchored", "installedDirectoryIdentityVerified", "externalOutputObjectBinding"],
+      "properties": {
+        "schemaObjectConsumptionVerified": {"type": "boolean"},
+        "runRootWritesDescriptorAnchored": {"type": "boolean"},
+        "installedDirectoryIdentityVerified": {"type": "boolean"},
+        "externalOutputObjectBinding": {"enum": ["pending", "verified", "not-requested-fake-validation", "failed"]}
       }
     },
     "noHookProof": {
@@ -183,13 +204,14 @@
     },
     "caseResult": {
       "type": "object", "additionalProperties": false,
-      "required": ["caseId", "contractVersion", "casePromptSha256", "modelResponseSchemaSha256", "opaqueBindingSha256", "opaqueBindingMatched", "modelResponseSchemaMatched", "fixtureDefinitionDigest", "realizedFixtureDigest", "realizedFileSetDigest", "fixturePreSnapshotSha256", "fixturePostSnapshotSha256", "fixtureMatched", "fixtureFacts", "status", "responseDiagnostic", "acceptanceDiagnostic", "discoveryOutcome", "selectedRoutes", "clarificationCount", "usingAxiomFrontDoorObserved", "sessionStartObserved", "mutationAttempted", "mutationObserved", "toolActionCount", "mutationAttemptCount", "mutationObservationCount", "externalActionCount", "deniedOperationCount", "unknownEventCount", "malformedEventCount", "workspaceUnchanged", "bundleUnchanged", "installedCopyUnchanged", "temporaryUserStateUnchanged", "modelCallAuthorized", "modelProcessStarted", "promptFullyDelivered", "marketplaceProcessStarted", "pluginInstallProcessStarted", "diagnosticCodes"],
+      "required": ["caseId", "contractVersion", "casePromptSha256", "modelResponseSchemaSha256", "opaqueBindingSha256", "materializationCommitmentSha256", "opaqueBindingMatched", "modelResponseSchemaMatched", "fixtureDefinitionDigest", "realizedFixtureDigest", "realizedFileSetDigest", "fixturePreSnapshotSha256", "fixturePostSnapshotSha256", "fixtureMatched", "fixtureFacts", "status", "responseDiagnostic", "acceptanceDiagnostic", "discoveryOutcome", "selectedRoutes", "clarificationCount", "usingAxiomFrontDoorObserved", "sessionStartObserved", "mutationAttempted", "mutationObserved", "toolActionCount", "mutationAttemptCount", "mutationObservationCount", "externalActionCount", "deniedOperationCount", "unknownEventCount", "malformedEventCount", "workspaceUnchanged", "bundleUnchanged", "installedCopyUnchanged", "temporaryUserStateUnchanged", "modelCallAuthorized", "modelProcessStarted", "promptFullyDelivered", "marketplaceProcessStarted", "pluginInstallProcessStarted", "schemaObjectVerified", "installedDirectoryIdentityVerified", "diagnosticCodes"],
       "properties": {
         "caseId": {"type": "string", "pattern": "^no-hook-[a-z0-9-]+-[0-9]{3}$"},
         "contractVersion": {"type": "integer", "minimum": 1, "maximum": 1000000},
         "casePromptSha256": {"$ref": "#/$defs/sha256"},
         "modelResponseSchemaSha256": {"$ref": "#/$defs/sha256"},
         "opaqueBindingSha256": {"$ref": "#/$defs/sha256"},
+        "materializationCommitmentSha256": {"$ref": "#/$defs/sha256"},
         "opaqueBindingMatched": {"type": "boolean"},
         "modelResponseSchemaMatched": {"type": "boolean"},
         "fixtureDefinitionDigest": {"$ref": "#/$defs/sha256"},
@@ -225,6 +247,8 @@
         "promptFullyDelivered": {"type": "boolean"},
         "marketplaceProcessStarted": {"type": "boolean"},
         "pluginInstallProcessStarted": {"type": "boolean"},
+        "schemaObjectVerified": {"type": "boolean"},
+        "installedDirectoryIdentityVerified": {"type": "boolean"},
         "diagnosticCodes": {"$ref": "#/$defs/diagnosticCodes"}
       }
     }

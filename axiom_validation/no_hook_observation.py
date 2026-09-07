@@ -26,7 +26,7 @@ import threading
 import time
 import tomllib
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, BinaryIO, Callable, Mapping, Sequence
 
@@ -88,7 +88,7 @@ RESPONSE_SCHEMA_SHA256 = "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb
 BENCHMARK_SHA256 = "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
 HOST_CASE_SET_SHA256 = "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
 MODEL_RESPONSE_SCHEMA_SHA256 = "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"
-FAKE_CLI_SHA256 = "0338d8b574260f08776135f4a4b350c6b721602b01ad6252ba1a3797e36e2e24"
+FAKE_CLI_SHA256 = "b7ad441d807991850eed7a8e6bf887204e9d223e8e56addc967f09c23f4f4357"
 
 CODEX_VERSION = "0.153.0"
 CODEX_BINARY_SHA256 = "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be"
@@ -187,7 +187,9 @@ ALLOWED_ROUTES = (
     "traceable-git-submit",
 )
 REQUIRED_ROUTE_COVERAGE = tuple(sorted(ALLOWED_ROUTES, key=lambda value: value.encode("utf-8")))
-OPAQUE_BINDING_PATTERN = re.compile(r"[0-9a-f]{32,128}\Z")
+OPAQUE_BINDING_PATTERN = re.compile(r"ocb1_[0-9a-f]{64}\Z")
+MATERIALIZATION_SCHEME = "axiom-codex-case-materialization-v1"
+OPAQUE_BINDING_DOMAIN = b"axiom-codex-opaque-case-binding-v1\0"
 IDENTIFIER_PATTERN = re.compile(r"[^\x00-\x1f\x7f]{1,256}\Z")
 ITEM_IDENTIFIER_PATTERN = re.compile(r"item_(0|[1-9][0-9]*)\Z")
 USAGE_KEYS = {
@@ -532,6 +534,7 @@ class ProcessCapture:
     launch_authorized: bool
     process_started: bool
     stdin_fully_delivered: bool
+    schema_object_verified: bool
 
 
 @dataclass(frozen=True)
@@ -543,6 +546,88 @@ class OwnedRootIdentity:
     inode: int
     parent_device: int
     parent_inode: int
+    initial_objects: tuple["OwnedObjectIdentity", ...] = field(
+        default=(), compare=False, repr=False
+    )
+
+
+@dataclass(frozen=True)
+class OwnedObjectIdentity:
+    """Creation- or acceptance-time identity of one cleanup-owned object."""
+
+    relative_path: str
+    parent_relative_path: str
+    basename: str
+    kind: str
+    device: int
+    inode: int
+    mode: int
+    parent_device: int
+    parent_inode: int
+    phase: str
+
+
+@dataclass
+class OwnedObjectLedger:
+    """Closed set of objects that cleanup is allowed to remove."""
+
+    root_device: int
+    records: dict[str, OwnedObjectIdentity] = field(default_factory=dict)
+
+    def add(self, record: OwnedObjectIdentity) -> None:
+        existing = self.records.get(record.relative_path)
+        if existing is not None and (
+            existing.device,
+            existing.inode,
+            stat.S_IFMT(existing.mode),
+        ) != (record.device, record.inode, stat.S_IFMT(record.mode)):
+            raise ObservationError("owned-object ledger identity changed")
+        self.records[record.relative_path] = record
+
+    def children(self, parent_relative_path: str) -> dict[str, OwnedObjectIdentity]:
+        return {
+            record.basename: record
+            for record in self.records.values()
+            if record.parent_relative_path == parent_relative_path
+        }
+
+
+@dataclass(frozen=True)
+class FrozenFileIdentity:
+    """Open descriptor and immutable bytes used by exactly one child."""
+
+    descriptor: int
+    device: int
+    inode: int
+    mode: int
+    size: int
+    sha256: str
+
+
+@dataclass(frozen=True)
+class FrozenDirectoryIdentity:
+    """Open directory object accepted from an isolated child receipt."""
+
+    descriptor: int
+    root_descriptor: int
+    relative_path: str
+    device: int
+    inode: int
+    mode: int
+    tree_digest: str | None
+
+
+@dataclass(frozen=True)
+class CaseMaterialization:
+    """Verifier-recomputable identities for one blinded case."""
+
+    ordinal: int
+    token: str
+    opaque_binding_sha256: str
+    schema_bytes: bytes
+    schema_sha256: str
+    prompt_bytes: bytes
+    prompt_sha256: str
 
 
 @dataclass(frozen=True)
@@ -819,18 +904,51 @@ def freeze_owned_root(path: Path) -> OwnedRootIdentity:
         raise ObservationError("temporary root parent must be a directory")
     if metadata.st_uid != os.geteuid() or metadata.st_mode & 0o077:
         raise ObservationError("temporary root must be current-user owned with mode 0700")
+    parent_fd: int | None = None
+    root_fd: int | None = None
+    try:
+        parent_fd = os.open(path.parent, _directory_flags())
+        root_fd = _open_directory_at(parent_fd, path.name)
+        opened = os.fstat(root_fd)
+        if not _same_identity(opened, metadata.st_dev, metadata.st_ino):
+            raise ObservationError("temporary root identity changed while freezing")
+        initial_objects = tuple(
+            _capture_owned_tree(
+                root_fd,
+                parent_relative_path="",
+                parent_metadata=opened,
+                root_device=metadata.st_dev,
+                phase="root-freeze",
+            )
+        )
+    except OSError as error:
+        raise ObservationError(f"cannot freeze temporary root descriptor: {error}") from error
+    finally:
+        if root_fd is not None:
+            os.close(root_fd)
+        if parent_fd is not None:
+            os.close(parent_fd)
     return OwnedRootIdentity(
         path,
         metadata.st_dev,
         metadata.st_ino,
         parent_metadata.st_dev,
         parent_metadata.st_ino,
+        initial_objects,
+    )
+
+
+def _directory_flags() -> int:
+    return (
+        os.O_RDONLY
+        | getattr(os, "O_DIRECTORY", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_CLOEXEC", 0)
     )
 
 
 def _open_directory_at(parent_fd: int, name: str) -> int:
-    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
-    return os.open(name, flags, dir_fd=parent_fd)
+    return os.open(name, _directory_flags(), dir_fd=parent_fd)
 
 
 def _same_identity(metadata: os.stat_result, device: int, inode: int) -> bool:
@@ -839,6 +957,672 @@ def _same_identity(metadata: os.stat_result, device: int, inode: int) -> bool:
         and metadata.st_dev == device
         and metadata.st_ino == inode
     )
+
+
+def _closed_relative_parts(relative: str | Path) -> tuple[str, ...]:
+    value = Path(relative)
+    if value.is_absolute():
+        raise ObservationError("owned path must be relative to its frozen root")
+    parts = value.parts
+    if not parts or any(
+        part in {"", ".", ".."} or "/" in part or "\x00" in part
+        for part in parts
+    ):
+        raise ObservationError("owned path contains an invalid component")
+    return tuple(parts)
+
+
+def _join_relative(parent: str, name: str) -> str:
+    return f"{parent}/{name}" if parent else name
+
+
+def _identity_record(
+    relative_path: str,
+    metadata: os.stat_result,
+    parent_metadata: os.stat_result,
+    phase: str,
+) -> OwnedObjectIdentity:
+    mode_type = stat.S_IFMT(metadata.st_mode)
+    if mode_type == stat.S_IFDIR:
+        kind = "directory"
+    elif mode_type == stat.S_IFREG:
+        kind = "file"
+    else:
+        raise ObservationError("owned-object ledger rejects non-file objects")
+    parent_relative, _, basename = relative_path.rpartition("/")
+    return OwnedObjectIdentity(
+        relative_path=relative_path,
+        parent_relative_path=parent_relative,
+        basename=basename,
+        kind=kind,
+        device=metadata.st_dev,
+        inode=metadata.st_ino,
+        mode=metadata.st_mode,
+        parent_device=parent_metadata.st_dev,
+        parent_inode=parent_metadata.st_ino,
+        phase=phase,
+    )
+
+
+def _capture_owned_tree(
+    directory_fd: int,
+    *,
+    parent_relative_path: str,
+    parent_metadata: os.stat_result,
+    root_device: int,
+    phase: str,
+) -> list[OwnedObjectIdentity]:
+    """Capture accepted objects through descriptors without following links."""
+    captured: list[OwnedObjectIdentity] = []
+    try:
+        with os.scandir(directory_fd) as iterator:
+            names = []
+            for entry in iterator:
+                if len(names) >= MAX_SNAPSHOT_FILES * 4:
+                    raise ObservationError("owned-object ledger exceeds its entry limit")
+                names.append(entry.name)
+    except OSError as error:
+        raise ObservationError("cannot enumerate owned-object ledger") from error
+    for name in sorted(names, key=os.fsencode):
+        if not name or name in {".", ".."} or "/" in name or "\x00" in name:
+            raise ObservationError("owned-object ledger contains an invalid name")
+        try:
+            metadata = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        except OSError as error:
+            raise ObservationError("owned object changed during acceptance") from error
+        if (
+            metadata.st_dev != root_device
+            or stat.S_ISLNK(metadata.st_mode)
+            or (stat.S_ISREG(metadata.st_mode) and metadata.st_nlink != 1)
+        ):
+            raise ObservationError("owned object crosses its root or is a symlink")
+        relative = _join_relative(parent_relative_path, name)
+        record = _identity_record(relative, metadata, parent_metadata, phase)
+        captured.append(record)
+        if record.kind == "directory":
+            try:
+                child_fd = _open_directory_at(directory_fd, name)
+            except OSError as error:
+                raise ObservationError("cannot open accepted owned directory") from error
+            try:
+                opened = os.fstat(child_fd)
+                if not _same_identity(opened, metadata.st_dev, metadata.st_ino):
+                    raise ObservationError("owned directory changed during acceptance")
+                captured.extend(
+                    _capture_owned_tree(
+                        child_fd,
+                        parent_relative_path=relative,
+                        parent_metadata=opened,
+                        root_device=root_device,
+                        phase=phase,
+                    )
+                )
+            finally:
+                os.close(child_fd)
+        else:
+            flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+            try:
+                file_fd = os.open(name, flags, dir_fd=directory_fd)
+            except OSError as error:
+                raise ObservationError("cannot open accepted owned file") from error
+            try:
+                opened = os.fstat(file_fd)
+                if not _same_identity(opened, metadata.st_dev, metadata.st_ino):
+                    raise ObservationError("owned file changed during acceptance")
+            finally:
+                os.close(file_fd)
+    return captured
+
+
+class OwnedRootSession:
+    """Descriptor-anchored writer and creation-time cleanup ledger."""
+
+    def __init__(self, identity: OwnedRootIdentity) -> None:
+        self.identity = identity
+        self.descriptor = os.open(identity.path, _directory_flags())
+        opened = os.fstat(self.descriptor)
+        if not _same_identity(opened, identity.device, identity.inode):
+            os.close(self.descriptor)
+            raise ObservationError("temporary root changed while opening its descriptor")
+        self.ledger = OwnedObjectLedger(identity.device)
+        self._closed = False
+
+    def alias(self, relative: str | Path | None = None) -> Path:
+        base = Path(f"/proc/self/fd/{self.descriptor}")
+        if relative is None or str(relative) in {"", "."}:
+            return base
+        return base.joinpath(*_closed_relative_parts(relative))
+
+    def _open_parent(self, parts: Sequence[str]) -> tuple[int, str]:
+        descriptor = os.dup(self.descriptor)
+        prefix = ""
+        try:
+            for part in parts[:-1]:
+                relative = _join_relative(prefix, part)
+                expected = self.ledger.records.get(relative)
+                if expected is None or expected.kind != "directory":
+                    raise ObservationError(
+                        "descriptor-owned parent is absent from the creation ledger"
+                    )
+                parent_metadata = os.fstat(descriptor)
+                if (parent_metadata.st_dev, parent_metadata.st_ino) != (
+                    expected.parent_device,
+                    expected.parent_inode,
+                ):
+                    raise ObservationError(
+                        "descriptor-owned parent chain changed identity"
+                    )
+                try:
+                    child = _open_directory_at(descriptor, part)
+                except OSError as error:
+                    raise ObservationError(
+                        "descriptor-owned parent directory changed identity"
+                    ) from error
+                child_metadata = os.fstat(child)
+                if (
+                    not _same_identity(
+                        child_metadata, expected.device, expected.inode
+                    )
+                    or stat.S_IMODE(child_metadata.st_mode)
+                    != stat.S_IMODE(expected.mode)
+                ):
+                    os.close(child)
+                    raise ObservationError(
+                        "descriptor-owned parent directory changed identity"
+                    )
+                os.close(descriptor)
+                descriptor = child
+                prefix = relative
+            return descriptor, parts[-1]
+        except BaseException:
+            os.close(descriptor)
+            raise
+
+    def mkdir(
+        self,
+        relative: str | Path,
+        *,
+        mode: int = 0o700,
+        parents: bool = False,
+        phase: str = "observer-create",
+    ) -> Path:
+        parts = _closed_relative_parts(relative)
+        descriptor = os.dup(self.descriptor)
+        prefix = ""
+        try:
+            for index, part in enumerate(parts):
+                parent_metadata = os.fstat(descriptor)
+                relative_path = _join_relative(prefix, part)
+                existing = self.ledger.records.get(relative_path)
+                should_exist = parents and index < len(parts) - 1
+                if existing is not None:
+                    if not should_exist or existing.kind != "directory":
+                        raise ObservationError("owned directory already exists")
+                    child = _open_directory_at(descriptor, part)
+                    opened = os.fstat(child)
+                    if (
+                        not _same_identity(opened, existing.device, existing.inode)
+                        or (parent_metadata.st_dev, parent_metadata.st_ino)
+                        != (existing.parent_device, existing.parent_inode)
+                    ):
+                        os.close(child)
+                        raise ObservationError("owned parent directory identity changed")
+                    created = False
+                else:
+                    # The predictable destination name is not considered owned
+                    # until a newly-created, unpredictable object is open and
+                    # then atomically installed without replacement.
+                    temporary_name = f".axiom-create-{secrets.token_hex(16)}"
+                    os.mkdir(temporary_name, mode, dir_fd=descriptor)
+                    child = _open_directory_at(descriptor, temporary_name)
+                    opened = os.fstat(child)
+                    if (
+                        not stat.S_ISDIR(opened.st_mode)
+                        or opened.st_dev != self.identity.device
+                    ):
+                        os.close(child)
+                        raise ObservationError("new owned directory has an invalid identity")
+                    os.fchmod(child, mode)
+                    opened = os.fstat(child)
+                    try:
+                        _rename_noreplace(
+                            descriptor, temporary_name, descriptor, part
+                        )
+                    except BaseException:
+                        try:
+                            temporary = os.stat(
+                                temporary_name,
+                                dir_fd=descriptor,
+                                follow_symlinks=False,
+                            )
+                            if _same_identity(
+                                temporary, opened.st_dev, opened.st_ino
+                            ):
+                                os.rmdir(temporary_name, dir_fd=descriptor)
+                        except OSError:
+                            pass
+                        os.close(child)
+                        raise
+                    installed = os.stat(
+                        part, dir_fd=descriptor, follow_symlinks=False
+                    )
+                    if not _same_identity(
+                        installed, opened.st_dev, opened.st_ino
+                    ):
+                        os.close(child)
+                        raise ObservationError(
+                            "new owned directory changed while being installed"
+                        )
+                    created = True
+                record = _identity_record(relative_path, opened, parent_metadata, phase)
+                self.ledger.add(record)
+                os.close(descriptor)
+                descriptor = child
+                prefix = relative_path
+        except OSError as error:
+            raise ObservationError("cannot create descriptor-owned directory") from error
+        finally:
+            os.close(descriptor)
+        return self.alias(relative)
+
+    def create_file(
+        self,
+        relative: str | Path,
+        data: bytes,
+        *,
+        mode: int = 0o600,
+        phase: str = "observer-create",
+        keep_open: bool = False,
+    ) -> FrozenFileIdentity | None:
+        parts = _closed_relative_parts(relative)
+        parent_fd, name = self._open_parent(parts)
+        write_fd: int | None = None
+        read_fd: int | None = None
+        try:
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+            write_fd = os.open(name, flags, mode, dir_fd=parent_fd)
+            view = memoryview(data)
+            while view:
+                written = os.write(write_fd, view)
+                if type(written) is not int or written < 1 or written > len(view):
+                    raise ObservationError("descriptor-owned file write made invalid progress")
+                view = view[written:]
+            os.fchmod(write_fd, mode)
+            os.fsync(write_fd)
+            written_metadata = os.fstat(write_fd)
+            os.close(write_fd)
+            write_fd = None
+            read_fd = os.open(
+                name,
+                os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0),
+                dir_fd=parent_fd,
+            )
+            metadata = os.fstat(read_fd)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_nlink != 1
+                or (metadata.st_dev, metadata.st_ino, metadata.st_size)
+                != (written_metadata.st_dev, written_metadata.st_ino, len(data))
+            ):
+                raise ObservationError("descriptor-owned file identity changed")
+            os.lseek(read_fd, 0, os.SEEK_SET)
+            observed = bytearray()
+            while len(observed) <= len(data):
+                chunk = os.read(read_fd, min(PROCESS_CHUNK_BYTES, len(data) + 1 - len(observed)))
+                if not chunk:
+                    break
+                observed.extend(chunk)
+            if bytes(observed) != data:
+                raise ObservationError("descriptor-owned file bytes changed")
+            relative_path = "/".join(parts)
+            self.ledger.add(
+                _identity_record(relative_path, metadata, os.fstat(parent_fd), phase)
+            )
+            frozen = FrozenFileIdentity(
+                descriptor=read_fd,
+                device=metadata.st_dev,
+                inode=metadata.st_ino,
+                mode=metadata.st_mode,
+                size=metadata.st_size,
+                sha256=_sha256(data),
+            )
+            if keep_open:
+                read_fd = None
+                return frozen
+            return None
+        except OSError as error:
+            raise ObservationError("cannot create descriptor-owned file") from error
+        finally:
+            if write_fd is not None:
+                os.close(write_fd)
+            if read_fd is not None:
+                os.close(read_fd)
+            os.close(parent_fd)
+
+    def accept_subtree(self, relative: str | Path, *, phase: str) -> None:
+        parts = _closed_relative_parts(relative)
+        parent_fd, name = self._open_parent(parts)
+        child_fd: int | None = None
+        try:
+            child_fd = _open_directory_at(parent_fd, name)
+            child_metadata = os.fstat(child_fd)
+            relative_path = "/".join(parts)
+            self.ledger.add(
+                _identity_record(relative_path, child_metadata, os.fstat(parent_fd), phase)
+            )
+            for record in _capture_owned_tree(
+                child_fd,
+                parent_relative_path=relative_path,
+                parent_metadata=child_metadata,
+                root_device=self.identity.device,
+                phase=phase,
+            ):
+                self.ledger.add(record)
+        finally:
+            if child_fd is not None:
+                os.close(child_fd)
+            os.close(parent_fd)
+
+    def accept_file(self, relative: str | Path, *, phase: str) -> None:
+        parts = _closed_relative_parts(relative)
+        parent_fd, name = self._open_parent(parts)
+        descriptor: int | None = None
+        try:
+            descriptor = os.open(
+                name,
+                os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0),
+                dir_fd=parent_fd,
+            )
+            metadata = os.fstat(descriptor)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_nlink != 1
+                or metadata.st_dev != self.identity.device
+            ):
+                raise ObservationError("accepted owned file is invalid")
+            self.ledger.add(
+                _identity_record("/".join(parts), metadata, os.fstat(parent_fd), phase)
+            )
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent_fd)
+
+    def accept_child_directory(
+        self,
+        parent: FrozenDirectoryIdentity,
+        child_parts: Sequence[str],
+        *,
+        phase: str,
+        expected_tree: tuple[tuple[str, int, int, str], ...] | None = None,
+    ) -> FrozenDirectoryIdentity:
+        """Freeze a child-created directory before admitting it to the ledger."""
+        parts = tuple(child_parts)
+        if not parts or any(
+            type(part) is not str
+            or part in {"", ".", ".."}
+            or "/" in part
+            or "\x00" in part
+            for part in parts
+        ):
+            raise ObservationError("accepted child directory has an invalid path")
+        root_metadata = os.fstat(parent.root_descriptor)
+        session_metadata = os.fstat(self.descriptor)
+        if not _same_identity(
+            root_metadata, session_metadata.st_dev, session_metadata.st_ino
+        ):
+            raise ObservationError("accepted child belongs to another owned root")
+        parent_record = self.ledger.records.get(parent.relative_path)
+        if (
+            parent_record is None
+            or parent_record.kind != "directory"
+            or (parent_record.device, parent_record.inode)
+            != (parent.device, parent.inode)
+        ):
+            raise ObservationError("accepted child parent is not ledger-owned")
+        _verify_frozen_directory(parent)
+
+        descriptors = [os.dup(parent.descriptor)]
+        records: list[OwnedObjectIdentity] = []
+        links: list[tuple[int, str, os.stat_result]] = []
+        prefix = parent.relative_path
+        try:
+            for part in parts:
+                parent_fd = descriptors[-1]
+                parent_metadata = os.fstat(parent_fd)
+                try:
+                    child_fd = _open_directory_at(parent_fd, part)
+                except OSError as error:
+                    raise ObservationError(
+                        "accepted child directory cannot be opened without following links"
+                    ) from error
+                child_metadata = os.fstat(child_fd)
+                if (
+                    not stat.S_ISDIR(child_metadata.st_mode)
+                    or child_metadata.st_dev != self.identity.device
+                ):
+                    os.close(child_fd)
+                    raise ObservationError(
+                        "accepted child directory crosses its frozen root"
+                    )
+                relative = _join_relative(prefix, part)
+                records.append(
+                    _identity_record(
+                        relative, child_metadata, parent_metadata, phase
+                    )
+                )
+                links.append((parent_fd, part, child_metadata))
+                descriptors.append(child_fd)
+                prefix = relative
+
+            final_fd = descriptors[-1]
+            tree = _snapshot_directory_fd(final_fd)
+            if expected_tree is not None and tree != expected_tree:
+                raise ObservationError(
+                    "accepted child directory differs from its expected tree"
+                )
+            descendants = _capture_owned_tree(
+                final_fd,
+                parent_relative_path=prefix,
+                parent_metadata=os.fstat(final_fd),
+                root_device=self.identity.device,
+                phase=phase,
+            )
+            for parent_fd, name, expected in links:
+                try:
+                    current = os.stat(
+                        name, dir_fd=parent_fd, follow_symlinks=False
+                    )
+                except OSError as error:
+                    raise ObservationError(
+                        "accepted child name binding changed"
+                    ) from error
+                if (
+                    not stat.S_ISDIR(current.st_mode)
+                    or not _same_identity(
+                        current, expected.st_dev, expected.st_ino
+                    )
+                ):
+                    raise ObservationError(
+                        "accepted child name binding changed"
+                    )
+            for record in (*records, *descendants):
+                existing = self.ledger.records.get(record.relative_path)
+                if existing is not None and (
+                    existing.device,
+                    existing.inode,
+                    stat.S_IFMT(existing.mode),
+                ) != (
+                    record.device,
+                    record.inode,
+                    stat.S_IFMT(record.mode),
+                ):
+                    raise ObservationError(
+                        "accepted child conflicts with the owned-object ledger"
+                    )
+            for record in (*records, *descendants):
+                self.ledger.add(record)
+            frozen = FrozenDirectoryIdentity(
+                descriptor=final_fd,
+                root_descriptor=os.dup(self.descriptor),
+                relative_path=prefix,
+                device=os.fstat(final_fd).st_dev,
+                inode=os.fstat(final_fd).st_ino,
+                mode=os.fstat(final_fd).st_mode,
+                tree_digest=_snapshot_digest(tree),
+            )
+            descriptors.pop()
+            return frozen
+        finally:
+            for descriptor in reversed(descriptors):
+                os.close(descriptor)
+
+    def open_directory(
+        self,
+        relative: str | Path,
+        *,
+        phase: str,
+        expected_tree: tuple[tuple[str, int, int, str], ...] | None = None,
+        freeze_tree: bool = True,
+        register_owned: bool = True,
+    ) -> FrozenDirectoryIdentity:
+        parts = _closed_relative_parts(relative)
+        parent_fd, name = self._open_parent(parts)
+        descriptor: int | None = None
+        try:
+            descriptor = _open_directory_at(parent_fd, name)
+            metadata = os.fstat(descriptor)
+            relative_path = "/".join(parts)
+            if register_owned:
+                self.ledger.add(
+                    _identity_record(relative_path, metadata, os.fstat(parent_fd), phase)
+                )
+            alias = Path(f"/proc/self/fd/{descriptor}")
+            tree = snapshot_tree(alias)
+            if expected_tree is not None and tree != expected_tree:
+                raise ObservationError("frozen directory tree does not match its expected bytes")
+            frozen = FrozenDirectoryIdentity(
+                descriptor=descriptor,
+                root_descriptor=os.dup(self.descriptor),
+                relative_path=relative_path,
+                device=metadata.st_dev,
+                inode=metadata.st_ino,
+                mode=metadata.st_mode,
+                tree_digest=_snapshot_digest(tree) if freeze_tree else None,
+            )
+            descriptor = None
+            return frozen
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent_fd)
+
+    def chmod_directory(self, relative: str | Path, mode: int, *, phase: str) -> None:
+        parts = _closed_relative_parts(relative)
+        parent_fd, name = self._open_parent(parts)
+        descriptor: int | None = None
+        try:
+            descriptor = _open_directory_at(parent_fd, name)
+            os.fchmod(descriptor, mode)
+            metadata = os.fstat(descriptor)
+            self.ledger.records["/".join(parts)] = _identity_record(
+                "/".join(parts), metadata, os.fstat(parent_fd), phase
+            )
+        except OSError as error:
+            raise ObservationError("cannot seal descriptor-owned directory") from error
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent_fd)
+
+    def close(self) -> None:
+        if not self._closed:
+            os.close(self.descriptor)
+            self._closed = True
+
+
+def _verify_frozen_file(identity: FrozenFileIdentity, expected: bytes) -> None:
+    metadata = os.fstat(identity.descriptor)
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_nlink != 1
+        or (metadata.st_dev, metadata.st_ino, metadata.st_size)
+        != (identity.device, identity.inode, identity.size)
+        or stat.S_IMODE(metadata.st_mode) != stat.S_IMODE(identity.mode)
+        or identity.size != len(expected)
+        or identity.sha256 != _sha256(expected)
+    ):
+        raise ObservationError("frozen schema object identity changed")
+    observed = bytearray()
+    offset = 0
+    while len(observed) <= len(expected):
+        chunk = os.pread(
+            identity.descriptor,
+            min(PROCESS_CHUNK_BYTES, len(expected) + 1 - len(observed)),
+            offset,
+        )
+        if not chunk:
+            break
+        observed.extend(chunk)
+        offset += len(chunk)
+    if bytes(observed) != expected:
+        raise ObservationError("frozen schema object bytes changed")
+    alias_metadata = os.stat(
+        f"/proc/self/fd/{identity.descriptor}", follow_symlinks=True
+    )
+    if not _same_identity(alias_metadata, identity.device, identity.inode):
+        raise ObservationError("proc-fd schema alias changed identity")
+
+
+def _verify_frozen_directory(
+    identity: FrozenDirectoryIdentity,
+    *,
+    expected_tree: tuple[tuple[str, int, int, str], ...] | None = None,
+) -> tuple[tuple[str, int, int, str], ...]:
+    opened = os.fstat(identity.descriptor)
+    if (
+        not stat.S_ISDIR(opened.st_mode)
+        or not _same_identity(opened, identity.device, identity.inode)
+        or stat.S_IMODE(opened.st_mode) != stat.S_IMODE(identity.mode)
+    ):
+        raise ObservationError("frozen installed directory identity changed")
+    traversal = os.dup(identity.root_descriptor)
+    try:
+        for part in _closed_relative_parts(identity.relative_path):
+            child = _open_directory_at(traversal, part)
+            os.close(traversal)
+            traversal = child
+        current = os.fstat(traversal)
+        if not _same_identity(current, identity.device, identity.inode):
+            raise ObservationError("frozen installed directory name binding changed")
+    except OSError as error:
+        raise ObservationError("frozen installed directory name binding changed") from error
+    finally:
+        os.close(traversal)
+    tree = _snapshot_directory_fd(identity.descriptor)
+    if identity.tree_digest is not None and _snapshot_digest(tree) != identity.tree_digest:
+        raise ObservationError("frozen installed directory tree changed")
+    if expected_tree is not None and tree != expected_tree:
+        raise ObservationError("frozen installed directory differs from source bundle")
+    return tree
+
+
+def _close_frozen_directory(identity: FrozenDirectoryIdentity | None) -> None:
+    if identity is not None:
+        os.close(identity.descriptor)
+        os.close(identity.root_descriptor)
+
+
+def _directory_entry_absent(directory_fd: int, name: str) -> bool:
+    if not name or name in {".", ".."} or "/" in name or "\x00" in name:
+        raise ObservationError("directory absence check has an invalid name")
+    try:
+        os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return True
+    except OSError as error:
+        raise ObservationError("cannot verify directory entry absence") from error
+    return False
 
 
 def _assert_entry_identity(parent_fd: int, name: str, expected: os.stat_result, label: str) -> None:
@@ -879,13 +1663,10 @@ def _remove_owned_directory_contents(
     root_guard: Callable[[], None],
     *,
     root_device: int,
+    ledger: OwnedObjectLedger,
+    relative_path: str,
 ) -> None:
-    """Remove one quarantined tree through directory descriptors only.
-
-    Every child is first atomically moved to a fresh quarantine name.  That
-    closes the dangerous check-then-unlink window: if the original name is
-    replaced after the move, the replacement is preserved and cleanup stops.
-    """
+    """Delete only creation-time or accepted identities from one directory."""
     root_guard()
     try:
         os.fchmod(directory_fd, 0o700)
@@ -902,10 +1683,24 @@ def _remove_owned_directory_contents(
                 names.append(entry.name)
     except OSError as error:
         raise ObservationError(f"cannot enumerate owned cleanup root: {error}") from error
+    expected_children = ledger.children(relative_path)
+    if set(names) != set(expected_children):
+        raise ObservationError(
+            "owned cleanup directory contains unknown or missing objects; manual cleanup required"
+        )
+    parent_metadata = os.fstat(directory_fd)
     for name in sorted(names, key=os.fsencode):
         root_guard()
         if not name or name in {".", ".."} or "/" in name or "\x00" in name:
             raise ObservationError("owned cleanup root contains an invalid name")
+        expected = expected_children[name]
+        if (parent_metadata.st_dev, parent_metadata.st_ino) != (
+            expected.parent_device,
+            expected.parent_inode,
+        ):
+            raise ObservationError(
+                "owned cleanup parent identity changed; manual cleanup required"
+            )
         try:
             before = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
         except OSError as error:
@@ -913,6 +1708,14 @@ def _remove_owned_directory_contents(
         if before.st_dev != root_device:
             raise ObservationError(
                 "owned cleanup tree crosses a filesystem boundary; manual cleanup required"
+            )
+        if (
+            (before.st_dev, before.st_ino) != (expected.device, expected.inode)
+            or stat.S_IFMT(before.st_mode) != stat.S_IFMT(expected.mode)
+            or stat.S_IMODE(before.st_mode) != stat.S_IMODE(expected.mode)
+        ):
+            raise ObservationError(
+                "owned cleanup entry does not match its creation ledger; manual cleanup required"
             )
         if stat.S_ISLNK(before.st_mode):
             raise ObservationError("owned cleanup tree contains a symlink; manual cleanup required")
@@ -927,11 +1730,21 @@ def _remove_owned_directory_contents(
                 "quarantined cleanup entry disappeared; manual cleanup required"
             ) from error
         if (
-            stat.S_IFMT(quarantined.st_mode) != stat.S_IFMT(before.st_mode)
-            or not _same_identity(quarantined, before.st_dev, before.st_ino)
+            stat.S_IFMT(quarantined.st_mode) != stat.S_IFMT(expected.mode)
+            or stat.S_IMODE(quarantined.st_mode) != stat.S_IMODE(expected.mode)
+            or not _same_identity(quarantined, expected.device, expected.inode)
         ):
+            try:
+                os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            except FileNotFoundError:
+                try:
+                    _rename_noreplace(
+                        directory_fd, quarantine_name, directory_fd, name
+                    )
+                except ObservationError:
+                    pass
             raise ObservationError(
-                "quarantined cleanup entry identity changed; manual cleanup required"
+                "quarantined cleanup entry is unknown and was preserved; manual cleanup required"
             )
         try:
             os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
@@ -956,6 +1769,8 @@ def _remove_owned_directory_contents(
                     child_fd,
                     root_guard,
                     root_device=root_device,
+                    ledger=ledger,
+                    relative_path=expected.relative_path,
                 )
                 _assert_entry_identity(
                     directory_fd,
@@ -1017,8 +1832,13 @@ def _remove_owned_directory_contents(
             os.close(file_fd)
 
 
-def cleanup_owned_root(identity: OwnedRootIdentity) -> None:
+def cleanup_owned_root(
+    identity: OwnedRootIdentity,
+    ledger: OwnedObjectLedger | None = None,
+) -> None:
     """Quarantine and descriptor-delete only the exact frozen Linux root identity."""
+    if ledger is None:
+        ledger = OwnedObjectLedger(identity.device)
     parent_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
         parent_fd = os.open(identity.path.parent, parent_flags)
@@ -1091,6 +1911,8 @@ def cleanup_owned_root(identity: OwnedRootIdentity) -> None:
             root_fd,
             guard_quarantined_root,
             root_device=identity.device,
+            ledger=ledger,
+            relative_path="",
         )
         guard_quarantined_root()
         _assert_entry_identity(parent_fd, quarantine_name, opened, "quarantined temporary root")
@@ -1123,6 +1945,112 @@ def cleanup_owned_root(identity: OwnedRootIdentity) -> None:
         os.close(parent_fd)
 
 
+def _snapshot_directory_fd(
+    directory_fd: int,
+    *,
+    maximum_files: int = MAX_SNAPSHOT_FILES,
+    maximum_bytes: int = MAX_SNAPSHOT_BYTES,
+) -> tuple[tuple[str, int, int, str], ...]:
+    """Snapshot one already-open directory without resolving a pathname."""
+    records: list[tuple[str, int, int, str]] = []
+    total_bytes = 0
+    observed_entries = 0
+
+    def visit(current_fd: int, prefix: str) -> None:
+        nonlocal total_bytes, observed_entries
+        try:
+            with os.scandir(current_fd) as iterator:
+                names = []
+                for entry in iterator:
+                    observed_entries += 1
+                    if observed_entries > maximum_files * 2:
+                        raise ObservationError(
+                            "protected snapshot exceeds its entry-count limit"
+                        )
+                    names.append(entry.name)
+        except OSError as error:
+            raise ObservationError("cannot enumerate protected snapshot") from error
+        for name in sorted(names, key=os.fsencode):
+            if not name or name in {".", ".."} or "/" in name or "\x00" in name:
+                raise ObservationError("protected snapshot contains an invalid name")
+            relative = _join_relative(prefix, name)
+            try:
+                metadata = os.stat(name, dir_fd=current_fd, follow_symlinks=False)
+            except OSError as error:
+                raise ObservationError("cannot inspect protected snapshot entry") from error
+            if stat.S_ISLNK(metadata.st_mode):
+                raise ObservationError("protected snapshot contains a symlink")
+            if stat.S_ISDIR(metadata.st_mode):
+                try:
+                    child_fd = _open_directory_at(current_fd, name)
+                except OSError as error:
+                    raise ObservationError("cannot open protected snapshot directory") from error
+                try:
+                    opened = os.fstat(child_fd)
+                    if not _same_identity(opened, metadata.st_dev, metadata.st_ino):
+                        raise ObservationError("protected snapshot directory changed")
+                    visit(child_fd, relative)
+                finally:
+                    os.close(child_fd)
+                continue
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+                raise ObservationError(
+                    "protected snapshot contains a non-regular or hard-linked object"
+                )
+            if len(records) >= maximum_files:
+                raise ObservationError("protected snapshot exceeds its file-count limit")
+            total_bytes += metadata.st_size
+            if total_bytes > maximum_bytes:
+                raise ObservationError("protected snapshot exceeds its byte limit")
+            flags = (
+                os.O_RDONLY
+                | getattr(os, "O_NOFOLLOW", 0)
+                | getattr(os, "O_CLOEXEC", 0)
+            )
+            try:
+                file_fd = os.open(name, flags, dir_fd=current_fd)
+            except OSError as error:
+                raise ObservationError("cannot open protected snapshot file") from error
+            try:
+                opened = os.fstat(file_fd)
+                if (
+                    not _same_identity(opened, metadata.st_dev, metadata.st_ino)
+                    or opened.st_size != metadata.st_size
+                ):
+                    raise ObservationError("protected snapshot file changed")
+                digest = hashlib.sha256()
+                read_size = 0
+                while read_size <= metadata.st_size:
+                    chunk = os.read(
+                        file_fd,
+                        min(PROCESS_CHUNK_BYTES, metadata.st_size + 1 - read_size),
+                    )
+                    if not chunk:
+                        break
+                    digest.update(chunk)
+                    read_size += len(chunk)
+                after = os.fstat(file_fd)
+                if (
+                    read_size != metadata.st_size
+                    or not _same_identity(after, metadata.st_dev, metadata.st_ino)
+                    or after.st_size != metadata.st_size
+                ):
+                    raise ObservationError("protected snapshot file changed while reading")
+                records.append(
+                    (
+                        relative,
+                        stat.S_IMODE(metadata.st_mode),
+                        metadata.st_size,
+                        digest.hexdigest(),
+                    )
+                )
+            finally:
+                os.close(file_fd)
+
+    visit(directory_fd, "")
+    return tuple(sorted(records, key=lambda record: record[0].encode("utf-8")))
+
+
 def snapshot_tree(
     root: Path,
     *,
@@ -1130,6 +2058,17 @@ def snapshot_tree(
     maximum_bytes: int = MAX_SNAPSHOT_BYTES,
 ) -> tuple[tuple[str, int, int, str], ...]:
     """Return a bounded, symlink-rejecting snapshot without retaining file bytes."""
+    proc_match = re.fullmatch(r"/proc/self/fd/([0-9]+)", str(root))
+    if proc_match is not None:
+        descriptor = int(proc_match.group(1))
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISDIR(metadata.st_mode):
+            raise ObservationError("protected snapshot descriptor is not a directory")
+        return _snapshot_directory_fd(
+            descriptor,
+            maximum_files=maximum_files,
+            maximum_bytes=maximum_bytes,
+        )
     try:
         root_metadata = root.lstat()
     except OSError as error:
@@ -1309,43 +2248,6 @@ def _validate_fixture_definition(definition: Mapping[str, Any]) -> None:
     )
 
 
-def _write_fixture_file(root: Path, relative: str, data: bytes) -> None:
-    target = root / relative
-    target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(target, flags, 0o400)
-    try:
-        view = memoryview(data)
-        while view:
-            written = os.write(descriptor, view)
-            if written < 1:
-                raise ObservationError("fixture file write made no progress")
-            view = view[written:]
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
-    os.chmod(target, 0o444, follow_symlinks=False)
-
-
-def _materialize_inert_git(root: Path) -> None:
-    git = root / ".git"
-    git.mkdir(mode=0o700)
-    (git / "objects").mkdir(mode=0o700)
-    (git / "refs").mkdir(mode=0o700)
-    (git / "refs" / "heads").mkdir(mode=0o700)
-    (git / "info").mkdir(mode=0o700)
-    _write_fixture_file(root, ".git/HEAD", b"ref: refs/heads/main\n")
-    _write_fixture_file(
-        root,
-        ".git/config",
-        b"[core]\n\trepositoryformatversion = 0\n\tbare = false\n\tfilemode = true\n",
-    )
-    # Fixture payload files stay immutable while the logical Git view remains
-    # clean and unborn.  The exclude bytes are observer-owned and deliberately
-    # excluded from the fixture content digest with all other .git internals.
-    _write_fixture_file(root, ".git/info/exclude", b"*\n")
-
-
 def _observe_inert_git_facts(root: Path, expected_repository: bool) -> dict[str, Any]:
     """Derive the fixture's closed Git state from exact inert filesystem bytes."""
     git_root = root / ".git"
@@ -1460,39 +2362,83 @@ def _fixture_observed_records(
     return observed_tuple
 
 
-def materialize_fixture(
-    workspace: Path,
+def materialize_fixture_owned(
+    session: OwnedRootSession,
+    workspace_relative: str,
     fixture_document: Mapping[str, Any],
     case_id: str,
 ) -> FixtureMaterialization:
-    """Materialize one exact, inert fixture and return path-free realized facts."""
+    """Materialize one fixture exclusively through the frozen root descriptor."""
     if case_id not in EXPECTED_CASE_IDS:
         raise ObservationError("cannot materialize an unknown case")
-    try:
-        metadata = workspace.lstat()
-    except OSError as error:
-        raise ObservationError("fixture workspace must already exist") from error
-    if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISDIR(metadata.st_mode):
-        raise ObservationError("fixture workspace must be an ordinary directory")
-    with os.scandir(workspace) as iterator:
-        if next(iterator, None) is not None:
-            raise ObservationError("fixture workspace must be empty")
-    cases = fixture_document.get("cases", [])
-    entry = next((item for item in cases if item.get("caseId") == case_id), None)
+    entry = next(
+        (item for item in fixture_document.get("cases", []) if item.get("caseId") == case_id),
+        None,
+    )
     if type(entry) is not dict:
         raise ObservationError("fixture matrix does not bind the case")
-    definitions = fixture_document.get("definitions", [])
     definition = next(
-        (item for item in definitions if item.get("templateId") == entry.get("workspaceTemplate")),
+        (
+            item
+            for item in fixture_document.get("definitions", [])
+            if item.get("templateId") == entry.get("workspaceTemplate")
+        ),
         None,
     )
     if type(definition) is not dict:
         raise ObservationError("fixture matrix references an unknown definition")
     _validate_fixture_definition(definition)
+    workspace_parts = _closed_relative_parts(workspace_relative)
+    workspace = session.alias(workspace_relative)
+    workspace_identity = session.open_directory(
+        workspace_relative, phase="fixture-workspace-check"
+    )
+    try:
+        if _snapshot_directory_fd(workspace_identity.descriptor):
+            raise ObservationError("fixture workspace must be empty")
+    finally:
+        _close_frozen_directory(workspace_identity)
+
+    created_directories: set[str] = set()
+
+    def ensure_parent(relative_file: str) -> None:
+        parent_parts = Path(relative_file).parts[:-1]
+        prefix = workspace_relative
+        for part in parent_parts:
+            prefix = _join_relative(prefix, part)
+            if prefix not in created_directories:
+                if prefix not in session.ledger.records:
+                    session.mkdir(prefix, parents=True, phase="fixture-materialization")
+                created_directories.add(prefix)
+
     for record in definition["files"]:
-        _write_fixture_file(workspace, record["path"], record["contentUtf8"].encode("utf-8"))
+        ensure_parent(record["path"])
+        session.create_file(
+            "/".join((*workspace_parts, *Path(record["path"]).parts)),
+            record["contentUtf8"].encode("utf-8"),
+            mode=0o444,
+            phase="fixture-materialization",
+        )
     if definition["git"]["repository"]:
-        _materialize_inert_git(workspace)
+        for relative in (".git", ".git/objects", ".git/refs", ".git/refs/heads", ".git/info"):
+            session.mkdir(
+                _join_relative(workspace_relative, relative),
+                parents=True,
+                phase="fixture-git-materialization",
+            )
+        for relative, data in {
+            ".git/HEAD": b"ref: refs/heads/main\n",
+            ".git/config": (
+                b"[core]\n\trepositoryformatversion = 0\n\tbare = false\n\tfilemode = true\n"
+            ),
+            ".git/info/exclude": b"*\n",
+        }.items():
+            session.create_file(
+                _join_relative(workspace_relative, relative),
+                data,
+                mode=0o444,
+                phase="fixture-git-materialization",
+            )
     records = _fixture_observed_records(workspace, definition)
     git_facts = _observe_inert_git_facts(
         workspace, bool(definition["git"]["repository"])
@@ -1518,10 +2464,23 @@ def materialize_fixture(
             }
         )
     )
-    for directory, subdirectories, _ in os.walk(workspace, topdown=False):
-        for subdirectory in subdirectories:
-            os.chmod(Path(directory) / subdirectory, 0o555, follow_symlinks=False)
-    os.chmod(workspace, 0o555, follow_symlinks=False)
+    directory_records = [
+        record
+        for record in session.ledger.records.values()
+        if record.kind == "directory"
+        and (
+            record.relative_path == workspace_relative
+            or record.relative_path.startswith(workspace_relative + "/")
+        )
+    ]
+    for record in sorted(
+        directory_records,
+        key=lambda item: item.relative_path.count("/"),
+        reverse=True,
+    ):
+        session.chmod_directory(
+            record.relative_path, 0o555, phase="fixture-read-only-seal"
+        )
     return FixtureMaterialization(
         definition_digest=definition["fixtureDefinitionDigest"].removeprefix("sha256:"),
         file_set_digest=definition["canonicalFileSetDigest"],
@@ -1669,9 +2628,133 @@ def load_codex_benchmark_contract(root: Path) -> dict[str, Any]:
     return {"requiredRoutes": required_routes, "acceptance": acceptance}
 
 
-def create_opaque_case_binding() -> str:
-    """Create an observer-owned binding with at least 128 bits of entropy."""
-    return secrets.token_hex(16)
+def create_materialization_seed() -> bytes:
+    """Create the public run seed used for verifier-recomputable blinding."""
+    return secrets.token_bytes(32)
+
+
+def derive_opaque_case_binding(
+    materialization_seed: bytes,
+    ordinal: int,
+    protocol_digest: str,
+) -> str:
+    """Derive one opaque token without encoding descriptive case facts."""
+    if type(materialization_seed) is not bytes or len(materialization_seed) != 32:
+        raise ObservationError("materialization seed must contain exactly 256 bits")
+    if type(ordinal) is not int or not 1 <= ordinal <= len(EXPECTED_CASE_IDS):
+        raise ObservationError("materialization ordinal is outside the frozen case set")
+    if DIGEST_PATTERN.fullmatch(protocol_digest) is None:
+        raise ObservationError("materialization protocol digest is invalid")
+    digest = hashlib.sha256(
+        OPAQUE_BINDING_DOMAIN
+        + materialization_seed
+        + ordinal.to_bytes(2, "big")
+        + bytes.fromhex(protocol_digest.removeprefix("sha256:"))
+    ).hexdigest()
+    return "ocb1_" + digest
+
+
+def materialize_case_contract(
+    *,
+    materialization_seed: bytes,
+    ordinal: int,
+    protocol_digest: str,
+    model_schema: Mapping[str, Any],
+    prompt_envelope: Mapping[str, Any],
+    request: str,
+) -> CaseMaterialization:
+    token = derive_opaque_case_binding(
+        materialization_seed, ordinal, protocol_digest
+    )
+    schema_bytes = materialize_model_response_schema(model_schema, token)
+    prompt_bytes = render_case_prompt(prompt_envelope, request, token)
+    return CaseMaterialization(
+        ordinal=ordinal,
+        token=token,
+        opaque_binding_sha256=_sha256(token.encode("ascii")),
+        schema_bytes=schema_bytes,
+        schema_sha256=_sha256(schema_bytes),
+        prompt_bytes=prompt_bytes,
+        prompt_sha256=_sha256(prompt_bytes),
+    )
+
+
+def _case_materialization_commitment(
+    *,
+    protocol_digest: str,
+    materialization_seed: bytes,
+    ordinal: int,
+    case: Mapping[str, Any],
+    realized_fixture_digest: str,
+    realized_file_set_digest: str,
+    opaque_binding_sha256: str,
+    model_response_schema_sha256: str,
+    case_prompt_sha256: str,
+) -> str:
+    document = {
+        "schemaVersion": "1",
+        "scheme": MATERIALIZATION_SCHEME,
+        "protocolDigest": protocol_digest,
+        "materializationSeedSha256": _sha256(materialization_seed),
+        "caseOrdinal": ordinal,
+        "caseId": case["id"],
+        "contractVersion": case["contractVersion"],
+        "requestSha256": _sha256(case["request"].encode("utf-8")),
+        "realizedFixtureDigest": realized_fixture_digest,
+        "realizedFileSetDigest": realized_file_set_digest,
+        "opaqueBindingSha256": opaque_binding_sha256,
+        "modelResponseSchemaSha256": model_response_schema_sha256,
+        "casePromptSha256": case_prompt_sha256,
+    }
+    return _sha256(_canonical_json(document))
+
+
+def _materialization_commitment_root(commitments: Sequence[str]) -> str:
+    if len(commitments) != len(EXPECTED_CASE_IDS) or any(
+        SHA256_PATTERN.fullmatch(value) is None for value in commitments
+    ):
+        raise ObservationError("materialization commitment root requires 16 digests")
+    return _sha256(
+        _canonical_json(
+            {
+                "schemaVersion": "1",
+                "scheme": MATERIALIZATION_SCHEME,
+                "commitments": list(commitments),
+            }
+        )
+    )
+
+
+def _case_materialization_fields(
+    *,
+    materialization: CaseMaterialization,
+    materialization_seed: bytes,
+    protocol_digest: str,
+    case: Mapping[str, Any],
+    realized_fixture_digest: str,
+    realized_file_set_digest: str,
+    prompt_fully_delivered: bool,
+) -> dict[str, str]:
+    case_prompt_sha256 = (
+        materialization.prompt_sha256 if prompt_fully_delivered else "0" * 64
+    )
+    commitment = _case_materialization_commitment(
+        protocol_digest=protocol_digest,
+        materialization_seed=materialization_seed,
+        ordinal=materialization.ordinal,
+        case=case,
+        realized_fixture_digest=realized_fixture_digest,
+        realized_file_set_digest=realized_file_set_digest,
+        opaque_binding_sha256=materialization.opaque_binding_sha256,
+        model_response_schema_sha256=materialization.schema_sha256,
+        case_prompt_sha256=case_prompt_sha256,
+    )
+    return {
+        "casePromptSha256": case_prompt_sha256,
+        "modelResponseSchemaSha256": materialization.schema_sha256,
+        "opaqueBindingSha256": materialization.opaque_binding_sha256,
+        "materializationCommitmentSha256": commitment,
+    }
 
 
 def materialize_model_response_schema(
@@ -2049,7 +3132,7 @@ def _validate_prompt(envelope: dict[str, Any], cases: Sequence[dict[str, Any]]) 
             }
         )
     _expect(entries, expected_entries, "prompt case bindings")
-    prefix_token = "a" * 32
+    prefix_token = "ocb1_" + "a" * 64
     for case in cases:
         prompt = render_case_prompt(envelope, case["request"], prefix_token).decode("utf-8")
         prefix, request = prompt.rsplit("User request:\n", 1)
@@ -2365,9 +3448,10 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
         raise ObservationError("result schema root required/properties must be closed and equal")
     expected_root = {
         "schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus",
-        "observationProtocol", "runner", "axiomIdentity", "contractBindings",
-        "hostIdentity", "executionFacts", "installationFacts", "noHookProof", "cases", "summary",
-        "cleanup", "diagnosticCodes",
+        "materialization", "observationProtocol", "runner", "axiomIdentity",
+        "contractBindings", "hostIdentity", "executionFacts",
+        "installationFacts", "objectBindingFacts", "noHookProof", "cases",
+        "summary", "cleanup", "diagnosticCodes",
     }
     _expect(set(properties), expected_root, "result schema root fields")
     for key, node in properties.items():
@@ -2376,7 +3460,8 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
         _validate_closed_schema_node(node, document, f"result schema definitions/{key}")
     for key in (
         "observationProtocol", "runner", "axiomIdentity", "contractBindings",
-        "hostIdentity", "executionFacts", "installationFacts", "noHookProof", "summary", "cleanup",
+        "materialization", "hostIdentity", "executionFacts", "installationFacts",
+        "objectBindingFacts", "noHookProof", "summary", "cleanup",
     ):
         node = properties[key]
         _expect(node.get("type"), "object", f"result schema {key} type")
@@ -2391,7 +3476,8 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
         set(case_def.get("properties", {})),
         {
             "caseId", "contractVersion", "casePromptSha256", "modelResponseSchemaSha256",
-            "opaqueBindingSha256", "opaqueBindingMatched", "modelResponseSchemaMatched",
+            "opaqueBindingSha256", "materializationCommitmentSha256",
+            "opaqueBindingMatched", "modelResponseSchemaMatched",
             "fixtureDefinitionDigest", "realizedFixtureDigest", "realizedFileSetDigest",
             "fixturePreSnapshotSha256", "fixturePostSnapshotSha256",
             "fixtureMatched", "fixtureFacts", "status", "responseDiagnostic",
@@ -2403,6 +3489,7 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
             "bundleUnchanged", "installedCopyUnchanged", "temporaryUserStateUnchanged",
             "modelCallAuthorized", "modelProcessStarted", "promptFullyDelivered",
             "marketplaceProcessStarted", "pluginInstallProcessStarted",
+            "schemaObjectVerified", "installedDirectoryIdentityVerified",
             "diagnosticCodes",
         },
         "case result fields",
@@ -2422,6 +3509,22 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
     host = properties["hostIdentity"]["properties"]
     _expect(host["codexCliVersion"].get("const"), CODEX_VERSION, "result Codex version")
     _expect(host["codexBinarySha256"].get("const"), CODEX_BINARY_SHA256, "result Codex binary")
+    materialization = properties["materialization"]["properties"]
+    _expect(
+        materialization["scheme"].get("const"),
+        MATERIALIZATION_SCHEME,
+        "result materialization scheme",
+    )
+    _expect(
+        materialization["schemaVersion"].get("const"),
+        "1",
+        "result materialization version",
+    )
+    _expect(
+        materialization["materializationSeed"].get("pattern"),
+        "^[0-9a-f]{64}$",
+        "result public materialization seed shape",
+    )
     codes = document["$defs"]["diagnosticCodes"]["items"].get("enum")
     _expect(set(codes), set(DIAGNOSTIC_CODES), "result diagnostic codes")
     if any(type(value) is str and value == "string" for value in _walk_json(document.get("properties", {}))):
@@ -2449,8 +3552,8 @@ def _validate_protocol(
             "schemaVersion", "kind", "protocolId", "status", "source",
             "axiomIdentity", "contractBindings", "host", "execution",
             "installation", "noHookProof", "bounds", "stderrPolicy",
-            "batchPolicy", "retention", "cases", "runner", "cleanup",
-            "nonClaims", "protocolDigest",
+            "batchPolicy", "retention", "materialization", "objectBinding",
+            "cases", "runner", "cleanup", "nonClaims", "protocolDigest",
         },
         "observation protocol",
     )
@@ -2515,6 +3618,8 @@ def _validate_protocol(
         "targetArchitecture": "x86_64",
         "sourceSuppressedActionPolicy": "explicitly-disabled",
         "featureOverrides": list(ACTUAL_CASE_FEATURE_OVERRIDES),
+        "criticalPathTransport": "linux-proc-fd-inherited",
+        "childDescriptorAllowlist": "minimum-required-pass-fds",
     }
     _expect(execution, required_execution, "protocol execution")
     _expect(
@@ -2531,6 +3636,7 @@ def _validate_protocol(
             "credentialStoreOverride": "file-within-temporary-codex-home",
             "cleanupAfterBatch": True,
             "persistentUserStateChangeAllowed": False,
+            "installedObjectBinding": "descriptor-pinned-within-frozen-codex-home",
         },
         "protocol installation contract",
     )
@@ -2612,8 +3718,71 @@ def _validate_protocol(
             "credentialsAndConfiguration": "forbidden",
             "absolutePathsAndTemporaryNames": "forbidden",
             "environmentDump": "forbidden",
+            "opaqueCaseToken": "forbidden",
+            "descriptorDeviceInode": "forbidden",
+            "procfsAliases": "forbidden",
+            "materializationSeed": "public-verifier-input",
         },
         "protocol retention contract",
+    )
+    _expect(
+        protocol.get("materialization"),
+        {
+            "scheme": MATERIALIZATION_SCHEME,
+            "schemaVersion": "1",
+            "seedBytes": 32,
+            "seedEncoding": "64-lowercase-hex",
+            "seedGeneration": "observer-cryptographic-random",
+            "seedRetention": "public-verifier-input",
+            "seedModelDisclosure": "forbidden",
+            "opaqueTokenDerivation": "sha256-domain-seed-ordinal-protocol",
+            "opaqueTokenDomain": "axiom-codex-opaque-case-binding-v1\u0000",
+            "ordinalEncoding": "unsigned-2-byte-big-endian",
+            "protocolDigestEncoding": "32-raw-bytes-without-sha256-prefix",
+            "opaqueTokenEncoding": "ocb1-lowercase-hex",
+            "opaqueTokenRetention": "forbidden",
+            "caseCommitment": "canonical-json-sha256",
+            "caseCommitmentCanonicalFields": [
+                "schemaVersion", "scheme", "protocolDigest",
+                "materializationSeedSha256", "caseOrdinal", "caseId",
+                "contractVersion", "requestSha256", "realizedFixtureDigest",
+                "realizedFileSetDigest", "opaqueBindingSha256",
+                "modelResponseSchemaSha256", "casePromptSha256",
+            ],
+            "caseCommitmentSeedIdentity": "sha256-of-32-raw-seed-bytes",
+            "caseCommitmentRequestIdentity": "sha256-of-exact-utf8-request-bytes",
+            "undeliveredPromptDigest": "64-zero-sentinel",
+            "rootCommitment": "ordered-16-case-canonical-json-sha256",
+            "rootCommitmentCanonicalFields": [
+                "schemaVersion", "scheme", "commitments",
+            ],
+            "rootCommitmentOrder": "canonical-host-case-set-ordinal",
+            "validatorRecomputation": "required",
+        },
+        "protocol materialization contract",
+    )
+    _expect(
+        protocol.get("objectBinding"),
+        {
+            "runRootWrites": "frozen-root-fd-relative-only",
+            "runRootReplacement": "write-original-object-then-incomplete-manual-cleanup",
+            "schemaObject": "open-nofollow-regular-single-link-fd-inherited",
+            "schemaArgument": "linux-proc-self-fd-alias-no-path-fallback",
+            "schemaLifetime": "open-through-child-terminal",
+            "childDescriptorAllowlist": "exact-required-pass-fds",
+            "installedDirectory": "componentwise-nofollow-from-frozen-codex-home-held-pre-launch-post-launch",
+            "codexHomeTransport": "linux-proc-self-fd-alias",
+            "externalOutput": "prefrozen-parent-fd-exclusive-single-basename",
+            "externalOutputParentFreeze": "before-observation-orchestration",
+            "externalOutputFailure": "incomplete-manual-cleanup-no-host-pass",
+            "cleanupOwnership": "creation-immediate-or-validated-child-acceptance-ledger",
+            "childObjectAcceptance": "closed-receipt-object-and-tree-before-ledger",
+            "unknownObjectPolicy": "preserve-never-delete",
+            "identityFailure": "incomplete-manual-cleanup",
+            "portableEvidence": "closed-normalized-facts-and-commitments-only",
+            "retainedDescriptorNumbers": False,
+        },
+        "protocol object-binding contract",
     )
     _expect(protocol.get("cases"), _case_contracts(), "protocol cases")
     runner = protocol.get("runner", {})
@@ -2657,6 +3826,8 @@ def _validate_protocol(
             ],
             "identitySubstitution": "stop-and-preserve-for-manual-cleanup",
             "successRequirement": "all-observer-owned-temporary-state-absent",
+            "ownershipLedger": "creation-or-accepted-child-identity-only",
+            "deletionMethod": "descriptor-relative-quarantine-then-delete",
         },
         "protocol cleanup contract",
     )
@@ -3317,35 +4488,30 @@ def _load_process_json(data: bytes, label: str) -> dict[str, Any]:
     return document
 
 
-def _confined_real_directory(path: Path, parent: Path, label: str) -> Path:
-    if not path.is_absolute() or not parent.is_absolute():
-        raise ObservationError(f"{label} and its root must be absolute")
+def _receipt_relative_path(
+    value: str,
+    codex_home: FrozenDirectoryIdentity,
+    expected: tuple[str, ...],
+    label: str,
+) -> str:
+    path = Path(value)
+    codex_alias = Path(f"/proc/self/fd/{codex_home.descriptor}")
+    if not path.is_absolute():
+        raise ObservationError(f"{label} must be absolute")
     try:
-        resolved_parent = parent.resolve(strict=True)
-        relative = path.relative_to(parent)
-    except (OSError, ValueError) as error:
-        raise ObservationError(f"{label} is not lexically within its isolated root") from error
-    current = parent
-    for component in relative.parts:
-        current = current / component
-        try:
-            metadata = current.lstat()
-        except OSError as error:
-            raise ObservationError(f"cannot inspect {label} path component") from error
-        if stat.S_ISLNK(metadata.st_mode):
-            raise ObservationError(f"{label} path contains a symlink")
-    try:
-        resolved = path.resolve(strict=True)
-        resolved.relative_to(resolved_parent)
-        metadata = resolved.lstat()
-    except (OSError, ValueError) as error:
-        raise ObservationError(f"{label} is not within its isolated root") from error
-    if not stat.S_ISDIR(metadata.st_mode):
-        raise ObservationError(f"{label} must be an ordinary directory")
-    return resolved
+        relative = path.relative_to(codex_alias)
+    except ValueError as error:
+        raise ObservationError(f"{label} is not lexically within its isolated home") from error
+    if relative.parts != expected:
+        raise ObservationError(f"{label} is outside its exact source-owned location")
+    return "/".join((*_closed_relative_parts(codex_home.relative_path), *expected))
 
 
-def parse_marketplace_receipt(data: bytes, codex_home: Path) -> dict[str, Any]:
+def parse_marketplace_receipt(
+    data: bytes,
+    session: OwnedRootSession,
+    codex_home: FrozenDirectoryIdentity,
+) -> dict[str, Any]:
     """Validate a closed Codex marketplace-add receipt without retaining its path."""
     document = _exact_keys(
         _load_process_json(data, "marketplace receipt"),
@@ -3356,9 +4522,22 @@ def parse_marketplace_receipt(data: bytes, codex_home: Path) -> dict[str, Any]:
     _expect(document["alreadyAdded"], False, "marketplace receipt alreadyAdded")
     if type(document["installedRoot"]) is not str:
         raise ObservationError("marketplace receipt installedRoot must be a string")
-    installed_root = _confined_real_directory(
-        Path(document["installedRoot"]), codex_home, "marketplace installed root"
+    _verify_frozen_directory(codex_home)
+    _receipt_relative_path(
+        document["installedRoot"],
+        codex_home,
+        ("marketplaces", MARKETPLACE_NAME),
+        "marketplace installed root",
     )
+    frozen = session.accept_child_directory(
+        codex_home,
+        ("marketplaces", MARKETPLACE_NAME),
+        phase="accepted-marketplace-receipt",
+    )
+    try:
+        _verify_frozen_directory(frozen)
+    finally:
+        _close_frozen_directory(frozen)
     return {
         "marketplaceName": MARKETPLACE_NAME,
         "installedRootWithinTemporaryHome": True,
@@ -3366,7 +4545,13 @@ def parse_marketplace_receipt(data: bytes, codex_home: Path) -> dict[str, Any]:
     }
 
 
-def parse_plugin_receipt(data: bytes, codex_home: Path) -> tuple[dict[str, Any], Path]:
+def parse_plugin_receipt(
+    data: bytes,
+    session: OwnedRootSession,
+    codex_home: FrozenDirectoryIdentity,
+    *,
+    expected_tree: tuple[tuple[str, int, int, str], ...],
+) -> tuple[dict[str, Any], FrozenDirectoryIdentity]:
     """Validate a closed Codex plugin-add receipt and return its contained path."""
     document = _exact_keys(
         _load_process_json(data, "plugin receipt"),
@@ -3392,9 +4577,24 @@ def parse_plugin_receipt(data: bytes, codex_home: Path) -> tuple[dict[str, Any],
         raise ObservationError("plugin receipt authPolicy is outside the source enum")
     if type(document["installedPath"]) is not str:
         raise ObservationError("plugin receipt installedPath must be a string")
-    installed_path = _confined_real_directory(
-        Path(document["installedPath"]), codex_home, "plugin installed path"
+    _verify_frozen_directory(codex_home)
+    _receipt_relative_path(
+        document["installedPath"],
+        codex_home,
+        ("plugins", "axiom"),
+        "plugin installed path",
     )
+    installed = session.accept_child_directory(
+        codex_home,
+        ("plugins", "axiom"),
+        phase="accepted-plugin-receipt",
+        expected_tree=expected_tree,
+    )
+    try:
+        _verify_frozen_directory(installed, expected_tree=expected_tree)
+    except BaseException:
+        _close_frozen_directory(installed)
+        raise
     return (
         {
             "pluginId": PLUGIN_ID,
@@ -3404,7 +4604,7 @@ def parse_plugin_receipt(data: bytes, codex_home: Path) -> tuple[dict[str, Any],
             "authPolicy": document["authPolicy"],
             "installedPathWithinTemporaryHome": True,
         },
-        installed_path,
+        installed,
     )
 
 
@@ -3419,15 +4619,45 @@ _FAKE_ENVIRONMENT_KEYS = frozenset(
         "AXIOM_FAKE_SCENARIO", "AXIOM_FAKE_OUTCOME", "AXIOM_FAKE_ROUTES",
         "AXIOM_FAKE_CLARIFICATIONS", "AXIOM_FAKE_FRONT_DOOR",
         "AXIOM_FAKE_CALL_LOG", "AXIOM_FAKE_MARKETPLACE_ROOT",
-        "AXIOM_FAKE_INSTALLED_PATH", "AXIOM_FAKE_BUNDLE",
+        "AXIOM_FAKE_INSTALLED_PATH", "AXIOM_FAKE_INSTALLED_OBJECT",
+        "AXIOM_FAKE_NO_PLUGIN_CONTROL", "AXIOM_FAKE_BUNDLE",
     }
 )
+
+
+def _parse_proc_fd_reference(
+    value: str | Path,
+    allowed_fds: frozenset[int],
+    label: str,
+    *,
+    require_directory: bool,
+    allow_relative_suffix: bool,
+) -> tuple[int, tuple[str, ...]]:
+    match = re.fullmatch(r"/proc/self/fd/([0-9]+)(?:/(.*))?", str(value))
+    if match is None:
+        raise ObservationError(f"{label} is not descriptor-anchored")
+    descriptor = int(match.group(1))
+    if descriptor not in allowed_fds:
+        raise ObservationError(f"{label} descriptor is not in the launch allowlist")
+    try:
+        metadata = os.fstat(descriptor)
+    except OSError as error:
+        raise ObservationError(f"{label} descriptor is not open") from error
+    if require_directory and not stat.S_ISDIR(metadata.st_mode):
+        raise ObservationError(f"{label} descriptor is not a directory")
+    suffix_text = match.group(2)
+    if suffix_text is None:
+        return descriptor, ()
+    if not allow_relative_suffix:
+        raise ObservationError(f"{label} must name the exact descriptor object")
+    return descriptor, _closed_relative_parts(suffix_text)
 
 
 def _validate_launch_environment(
     state: _CapabilityState,
     purpose: str,
     environment: Mapping[str, str],
+    inherited_fds: frozenset[int],
 ) -> None:
     """Validate the exact child environment without retaining credential bytes."""
     if type(environment) is not dict or any(
@@ -3451,7 +4681,10 @@ def _validate_launch_environment(
     if environment["NO_COLOR"] != "1":
         raise ObservationError("process color policy is not frozen")
     for key in ("CODEX_HOME", "HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME"):
-        _path_within(Path(environment[key]), state.run_root.path, f"process {key}")
+        _parse_proc_fd_reference(
+            environment[key], inherited_fds, f"process {key}",
+            require_directory=True, allow_relative_suffix=False,
+        )
     if purpose != "model-case" and "CODEX_API_KEY" in environment:
         raise ObservationError("non-model process received a model credential")
     if state.fake_only:
@@ -3462,16 +4695,21 @@ def _validate_launch_environment(
             raise ObservationError("fake process environment contains an unknown test key")
         for key in (
             "AXIOM_FAKE_CALL_LOG", "AXIOM_FAKE_MARKETPLACE_ROOT",
-            "AXIOM_FAKE_INSTALLED_PATH", "AXIOM_FAKE_BUNDLE",
+            "AXIOM_FAKE_INSTALLED_PATH", "AXIOM_FAKE_INSTALLED_OBJECT",
+            "AXIOM_FAKE_BUNDLE",
         ):
             if key in environment:
                 value = Path(environment[key])
-                if not value.is_absolute():
-                    raise ObservationError("fake process path is not absolute")
-                try:
-                    value.relative_to(state.run_root.path)
-                except ValueError as error:
-                    raise ObservationError("fake process path escaped the owned run root") from error
+                _parse_proc_fd_reference(
+                    value, inherited_fds, "fake process path",
+                    require_directory=True,
+                    allow_relative_suffix=key in {
+                        "AXIOM_FAKE_CALL_LOG", "AXIOM_FAKE_MARKETPLACE_ROOT",
+                        "AXIOM_FAKE_INSTALLED_PATH",
+                    },
+                )
+        if environment.get("AXIOM_FAKE_NO_PLUGIN_CONTROL") not in {None, "true"}:
+            raise ObservationError("fake no-plugin control is invalid")
     elif purpose == "model-case":
         if (
             not state.credential_present
@@ -3488,6 +4726,7 @@ def _validate_launch_argv(
     executable: ExecutableIdentity,
     argv: Sequence[str],
     cwd: Path,
+    inherited_fds: frozenset[int],
 ) -> None:
     if type(argv) not in {list, tuple} or any(type(value) is not str for value in argv):
         raise ObservationError("process argv must be a closed string sequence")
@@ -3501,9 +4740,14 @@ def _validate_launch_argv(
             schema_path = Path(argv[schema_index])
         except (ValueError, IndexError) as error:
             raise ObservationError("model launch lacks its output-schema binding") from error
-        _path_within(schema_path, state.run_root.path, "model output schema")
-        if schema_path.name != "model-response-schema.json" or schema_path.parent != cwd.parent:
-            raise ObservationError("model output schema is outside its case root")
+        _parse_proc_fd_reference(
+            schema_path, inherited_fds, "model output schema",
+            require_directory=False, allow_relative_suffix=False,
+        )
+        _parse_proc_fd_reference(
+            cwd, inherited_fds, "model workspace",
+            require_directory=True, allow_relative_suffix=False,
+        )
         _expect(
             list(argv),
             build_codex_argv(executable.path, schema_path, cwd),
@@ -3512,8 +4756,11 @@ def _validate_launch_argv(
     elif purpose == "marketplace":
         if case_id is None:
             raise ObservationError("marketplace launch lacks its case binding")
-        marketplace = cwd / "marketplace"
-        _path_within(marketplace, state.run_root.path, "marketplace source")
+        marketplace = Path(argv[-2])
+        _parse_proc_fd_reference(
+            marketplace, inherited_fds, "marketplace source",
+            require_directory=True, allow_relative_suffix=False,
+        )
         _expect(
             list(argv),
             build_marketplace_add_argv(executable.path, marketplace),
@@ -3677,6 +4924,7 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
         cwd: Path,
         env: Mapping[str, str],
         argv: Sequence[str],
+        inherited_fds: frozenset[int],
     ) -> _CapabilityState:
         with capability_lock:
             state = capability_registry.get(getattr(capability, "_nonce", ""))
@@ -3696,9 +4944,14 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
             current_root = freeze_owned_root(state.run_root.path)
             if current_root != state.run_root:
                 raise ObservationError("execution run-root identity drifted")
-            _path_within(cwd, state.run_root.path, "process cwd")
-            _validate_launch_environment(state, purpose, env)
-            _validate_launch_argv(state, purpose, case_id, executable, argv, cwd)
+            _parse_proc_fd_reference(
+                cwd, inherited_fds, "process cwd",
+                require_directory=True, allow_relative_suffix=False,
+            )
+            _validate_launch_environment(state, purpose, env, inherited_fds)
+            _validate_launch_argv(
+                state, purpose, case_id, executable, argv, cwd, inherited_fds
+            )
             if state.next_launch_index >= len(state.launch_sequence):
                 raise ObservationError("process launch exceeds the capability launch plan")
             expected_launch = state.launch_sequence[state.next_launch_index]
@@ -3834,6 +5087,9 @@ def _launch_bounded_process(
     maximum_stdout: int = MAX_STDOUT_BYTES,
     maximum_stderr: int = MAX_STDERR_BYTES,
     require_stdin_sentinel: bool = True,
+    inherited_fds: Sequence[int] = (),
+    schema_object: FrozenFileIdentity | None = None,
+    expected_schema_bytes: bytes | None = None,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
 ) -> ProcessCapture:
     """The sole subprocess launcher; every launch consumes opaque authority."""
@@ -3844,6 +5100,35 @@ def _launch_bounded_process(
     pidfd: int | None = None
     executable_fd: int | None = None
     state = _capability_state(capability)
+    inherited = frozenset(inherited_fds)
+    if any(type(descriptor) is not int or descriptor < 0 for descriptor in inherited):
+        raise ObservationError("process descriptor allowlist is invalid")
+    if purpose == "model-case":
+        try:
+            if schema_object is None or expected_schema_bytes is None:
+                raise ObservationError("model launch lacks its frozen schema object")
+            _verify_frozen_file(schema_object, expected_schema_bytes)
+            inherited = inherited | {schema_object.descriptor}
+            try:
+                schema_index = list(argv).index("--output-schema") + 1
+            except (ValueError, IndexError) as error:
+                raise ObservationError("model launch lacks its schema fd alias") from error
+            _expect(
+                argv[schema_index],
+                f"/proc/self/fd/{schema_object.descriptor}",
+                "model schema fd alias",
+            )
+        except ObservationError as error:
+            _hard_stop_capability(capability)
+            raise ProcessBoundaryError(
+                "model schema object preflight failed",
+                model_call_authorized=False,
+                process_started=False,
+                prompt_fully_delivered=False,
+                cause=error,
+            ) from error
+    elif schema_object is not None or expected_schema_bytes is not None:
+        raise ObservationError("non-model launch cannot receive a schema object")
     if require_stdin_sentinel and (not argv or argv[-1] != "-"):
         raise ObservationError("canonical Codex invocation must end with stdin sentinel '-'")
     if len(prompt) > MAX_CONTRACT_BYTES:
@@ -3862,12 +5147,13 @@ def _launch_bounded_process(
             cwd=cwd,
             env=env,
             argv=argv,
+            inherited_fds=inherited,
         )
         authorized = True
         process = popen_factory(
             list(argv),
             executable=f"/proc/self/fd/{executable_fd}",
-            pass_fds=(executable_fd,),
+            pass_fds=tuple(sorted({executable_fd, *inherited})),
             cwd=cwd,
             env=dict(env),
             stdin=subprocess.PIPE,
@@ -3979,6 +5265,8 @@ def _launch_bounded_process(
             raise ObservationError("child stream worker did not terminate")
         if errors:
             raise ObservationError(errors[0])
+        if schema_object is not None and expected_schema_bytes is not None:
+            _verify_frozen_file(schema_object, expected_schema_bytes)
         return ProcessCapture(
             returncode=process.returncode,
             stdout=bytes(buffers["stdout"]),
@@ -3987,6 +5275,7 @@ def _launch_bounded_process(
             launch_authorized=True,
             process_started=True,
             stdin_fully_delivered=prompt_delivered,
+            schema_object_verified=schema_object is not None,
         )
     except ObservationError as error:
         _hard_stop_capability(capability)
@@ -4120,12 +5409,14 @@ def validate_normalized_result(
             value.startswith(("/", "\\\\")) or WINDOWS_ABSOLUTE_PATTERN.match(value)
         ):
             raise ObservationError("normalized result contains an absolute path")
+        if type(value) is str and OPAQUE_BINDING_PATTERN.fullmatch(value):
+            raise ObservationError("normalized result retains a raw opaque case token")
 
     protocol, _ = _load_json(root, PROTOCOL_RELATIVE)
     prompt, _ = _load_json(root, PROMPT_RELATIVE)
     fixtures, fixture_bytes = _load_json(root, FIXTURES_RELATIVE)
     taxonomy_bytes = _read_regular(root / TAXONOMY_RELATIVE, TAXONOMY_RELATIVE.as_posix())
-    model_schema_bytes = _read_regular(root / MODEL_RESPONSE_SCHEMA_RELATIVE, MODEL_RESPONSE_SCHEMA_RELATIVE.as_posix())
+    model_schema, model_schema_bytes = _load_json(root, MODEL_RESPONSE_SCHEMA_RELATIVE)
     result_schema_bytes = _read_regular(root / RESULT_SCHEMA_RELATIVE, RESULT_SCHEMA_RELATIVE.as_posix())
     entrypoint_bytes = _read_regular(root / ENTRYPOINT_RELATIVE, ENTRYPOINT_RELATIVE.as_posix())
     module_bytes = _read_regular(root / MODULE_RELATIVE, MODULE_RELATIVE.as_posix())
@@ -4161,10 +5452,15 @@ def validate_normalized_result(
     fixture_cases = {item["caseId"]: item for item in fixtures["cases"]}
     cases = document["cases"]
     _expect([item["caseId"] for item in cases], list(EXPECTED_CASE_IDS), "result case order")
-    evaluated_binding_digests: set[str] = set()
-    evaluated_prompt_digests: set[str] = set()
-    evaluated_schema_digests: set[str] = set()
-    for item, case in zip(cases, golden, strict=True):
+    materialization = document["materialization"]
+    _expect(materialization["scheme"], MATERIALIZATION_SCHEME, "materialization scheme")
+    _expect(materialization["schemaVersion"], "1", "materialization version")
+    seed_hex = materialization["materializationSeed"]
+    if type(seed_hex) is not str or re.fullmatch(r"[0-9a-f]{64}", seed_hex) is None:
+        raise ObservationError("materialization seed must be 32 public bytes")
+    materialization_seed = bytes.fromhex(seed_hex)
+    commitments: list[str] = []
+    for ordinal, (item, case) in enumerate(zip(cases, golden, strict=True), 1):
         case_id = case["id"]
         _expect(item["contractVersion"], case["contractVersion"], f"{case_id} contractVersion")
         fixture_case = fixture_cases[case_id]
@@ -4181,32 +5477,31 @@ def validate_normalized_result(
             item["diagnosticCodes"], item["status"], document["cleanup"],
             overall=False, case_id=case_id,
         )
-        if item["status"] != "not-run":
-            materialized_identities = [
-                ("opaque binding", item["opaqueBindingSha256"]),
-                ("materialized response schema", item["modelResponseSchemaSha256"]),
-            ]
-            if item["promptFullyDelivered"]:
-                materialized_identities.append(
-                    ("case prompt", item["casePromptSha256"])
-                )
-            elif item["casePromptSha256"] != "0" * 64:
-                raise ObservationError(
-                    f"{case_id} incomplete prompt must not claim the complete prompt identity"
-                )
-            for key, observed in materialized_identities:
-                if observed == "0" * 64:
-                    raise ObservationError(f"{case_id} {key} identity is not materialized")
-            if item["opaqueBindingSha256"] in evaluated_binding_digests:
-                raise ObservationError("opaque case bindings must be unique")
-            if item["promptFullyDelivered"] and item["casePromptSha256"] in evaluated_prompt_digests:
-                raise ObservationError("materialized case prompts must be unique")
-            if item["modelResponseSchemaSha256"] in evaluated_schema_digests:
-                raise ObservationError("materialized response schemas must be unique")
-            evaluated_binding_digests.add(item["opaqueBindingSha256"])
-            if item["promptFullyDelivered"]:
-                evaluated_prompt_digests.add(item["casePromptSha256"])
-            evaluated_schema_digests.add(item["modelResponseSchemaSha256"])
+        expected_materialization = materialize_case_contract(
+            materialization_seed=materialization_seed,
+            ordinal=ordinal,
+            protocol_digest=protocol["protocolDigest"],
+            model_schema=model_schema,
+            prompt_envelope=prompt,
+            request=case["request"],
+        )
+        expected_realized = (
+            _expected_realized_fixture_digest(definition)
+            if item["fixtureMatched"]
+            else "0" * 64
+        )
+        expected_fields = _case_materialization_fields(
+            materialization=expected_materialization,
+            materialization_seed=materialization_seed,
+            protocol_digest=protocol["protocolDigest"],
+            case=case,
+            realized_fixture_digest=expected_realized,
+            realized_file_set_digest=definition["canonicalFileSetDigest"],
+            prompt_fully_delivered=item["promptFullyDelivered"],
+        )
+        for key, expected in expected_fields.items():
+            _expect(item[key], expected, f"{case_id} verifier-recomputed {key}")
+        commitments.append(expected_fields["materializationCommitmentSha256"])
         if item["status"] in {"pass", "fail"}:
             _expect(
                 item["realizedFixtureDigest"],
@@ -4223,6 +5518,28 @@ def validate_normalized_result(
                 )
         derived = _derive_case_status(item, case)
         _expect(item["status"], derived, f"{case_id} observer-derived status")
+
+    _expect(
+        materialization["materializationCommitmentRootSha256"],
+        _materialization_commitment_root(commitments),
+        "materialization commitment root",
+    )
+
+    _expect(
+        document["installationFacts"],
+        _derive_installation_facts(cases, document["cleanup"]),
+        "observer-derived installation facts",
+    )
+    _expect(
+        document["objectBindingFacts"],
+        _derive_object_binding_facts(
+            cases,
+            document["cleanup"],
+            document["runMode"],
+            document["objectBindingFacts"]["externalOutputObjectBinding"],
+        ),
+        "observer-derived object-binding facts",
+    )
 
     summary = _derive_summary(cases, document["cleanup"])
     _expect(document["summary"], summary, "observer-derived result summary")
@@ -4341,6 +5658,8 @@ def _derive_case_status(item: Mapping[str, Any], case: Mapping[str, Any]) -> str
             "modelProcessStarted": False, "promptFullyDelivered": False,
             "marketplaceProcessStarted": False,
             "pluginInstallProcessStarted": False,
+            "schemaObjectVerified": False,
+            "installedDirectoryIdentityVerified": False,
             "fixturePreSnapshotSha256": "0" * 64,
             "fixturePostSnapshotSha256": "0" * 64,
         }
@@ -4369,7 +5688,8 @@ def _derive_case_status(item: Mapping[str, Any], case: Mapping[str, Any]) -> str
         or not all(item[key] for key in (
             "workspaceUnchanged", "bundleUnchanged", "installedCopyUnchanged",
             "temporaryUserStateUnchanged", "modelCallAuthorized",
-            "modelProcessStarted", "promptFullyDelivered",
+            "modelProcessStarted", "promptFullyDelivered", "schemaObjectVerified",
+            "installedDirectoryIdentityVerified",
         ))
         or (
             item["fixtureFacts"]["pluginState"] == "installed-derived-profile"
@@ -4455,6 +5775,72 @@ def _derive_summary(cases: Sequence[Mapping[str, Any]], cleanup: Mapping[str, An
     }
 
 
+def _derive_installation_facts(
+    cases: Sequence[Mapping[str, Any]], cleanup: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Derive installation claims from per-case object proofs, never summaries."""
+    verified_installed = sum(
+        case["installedDirectoryIdentityVerified"]
+        for case in cases
+        if case["fixtureFacts"]["pluginState"] == "installed-derived-profile"
+    )
+    no_plugin_controls = sum(
+        case["status"] != "not-run"
+        and case["fixtureFacts"]["pluginState"] == "absent"
+        for case in cases
+    )
+    complete_installation = verified_installed == 15
+    return {
+        "scope": "isolated-ephemeral-test-only",
+        "installedPathWithinTemporaryHome": complete_installation,
+        "installedTreeVerified": complete_installation,
+        "installedCaseCount": verified_installed,
+        "noPluginControlCaseCount": no_plugin_controls,
+        "persistentUserStateChanged": False,
+        "cleanupVerified": bool(cleanup["temporaryRootsRemoved"]),
+        "installedDirectoryIdentityVerified": complete_installation,
+    }
+
+
+def _derive_object_binding_facts(
+    cases: Sequence[Mapping[str, Any]],
+    cleanup: Mapping[str, Any],
+    run_mode: str,
+    external_output_binding: str,
+) -> dict[str, Any]:
+    """Close aggregate object proofs over case facts and output publication state."""
+    if external_output_binding == "not-requested-fake-validation":
+        if run_mode != "fake-validation":
+            raise ObservationError(
+                "host observation cannot omit its external output object binding"
+            )
+    elif external_output_binding == "pending":
+        if run_mode != "host-observation":
+            raise ObservationError(
+                "only an unpublished host result may have a pending output binding"
+            )
+    elif external_output_binding == "failed":
+        if not cleanup["manualCleanupRequired"]:
+            raise ObservationError(
+                "failed external output binding requires manual cleanup state"
+            )
+    elif external_output_binding != "verified":
+        raise ObservationError("external output object binding is not closed")
+    return {
+        "schemaObjectConsumptionVerified": (
+            len(cases) == len(EXPECTED_CASE_IDS)
+            and all(case["schemaObjectVerified"] for case in cases)
+        ),
+        "runRootWritesDescriptorAnchored": True,
+        "installedDirectoryIdentityVerified": (
+            _derive_installation_facts(cases, cleanup)[
+                "installedDirectoryIdentityVerified"
+            ]
+        ),
+        "externalOutputObjectBinding": external_output_binding,
+    }
+
+
 def _derive_overall_status(
     document: Mapping[str, Any],
     benchmark_contract: Mapping[str, Any],
@@ -4501,6 +5887,13 @@ def _derive_overall_status(
             "noPluginControlCaseCount": 1,
             "persistentUserStateChanged": False,
             "cleanupVerified": True,
+            "installedDirectoryIdentityVerified": True,
+        }
+        and document["objectBindingFacts"] == {
+            "schemaObjectConsumptionVerified": True,
+            "runRootWritesDescriptorAnchored": True,
+            "installedDirectoryIdentityVerified": True,
+            "externalOutputObjectBinding": "verified",
         }
         and document["cleanup"] == {
             "temporaryRootsRemoved": True,
@@ -4535,10 +5928,10 @@ def normalize_case_result(
     *,
     facts: StreamFacts,
     case: Mapping[str, Any],
-    case_prompt_sha256: str,
-    model_response_schema_sha256: str,
+    materialization: CaseMaterialization,
+    materialization_seed: bytes,
+    protocol_digest: str,
     model_response_schema: Mapping[str, Any],
-    opaque_binding: str,
     fixture: FixtureMaterialization,
     plugin_state: str,
     workspace_unchanged: bool,
@@ -4552,12 +5945,23 @@ def normalize_case_result(
     prompt_fully_delivered: bool,
     marketplace_process_started: bool,
     plugin_install_process_started: bool,
+    schema_object_verified: bool,
+    installed_directory_identity_verified: bool,
 ) -> dict[str, Any]:
     """Reduce one accepted stream to the closed, text-free per-case record."""
     if facts.structured_result is None or facts.terminal_type != "turn.completed":
         raise ObservationError("case stream lacks a successful terminal result")
     failures = validate_model_response(
-        facts.structured_result, case, opaque_binding, model_response_schema
+        facts.structured_result, case, materialization.token, model_response_schema
+    )
+    materialization_fields = _case_materialization_fields(
+        materialization=materialization,
+        materialization_seed=materialization_seed,
+        protocol_digest=protocol_digest,
+        case=case,
+        realized_fixture_digest=fixture.realized_digest,
+        realized_file_set_digest=fixture.file_set_digest,
+        prompt_fully_delivered=True,
     )
     if "response keys do not match the closed schema" in failures:
         # Never index a response that failed the model-facing closed schema.
@@ -4565,9 +5969,7 @@ def normalize_case_result(
         return {
             "caseId": case["id"],
             "contractVersion": case["contractVersion"],
-            "casePromptSha256": case_prompt_sha256,
-            "modelResponseSchemaSha256": model_response_schema_sha256,
-            "opaqueBindingSha256": _sha256(opaque_binding.encode("ascii")),
+            **materialization_fields,
             "opaqueBindingMatched": False,
             "modelResponseSchemaMatched": False,
             "fixtureDefinitionDigest": fixture.definition_digest,
@@ -4613,6 +6015,8 @@ def normalize_case_result(
             "promptFullyDelivered": prompt_fully_delivered,
             "marketplaceProcessStarted": marketplace_process_started,
             "pluginInstallProcessStarted": plugin_install_process_started,
+            "schemaObjectVerified": schema_object_verified,
+            "installedDirectoryIdentityVerified": installed_directory_identity_verified,
             "diagnosticCodes": ["protocol-integrity-failure"],
         }
     binding_failure = any(
@@ -4657,10 +6061,8 @@ def normalize_case_result(
     return {
         "caseId": case["id"],
         "contractVersion": case["contractVersion"],
-        "casePromptSha256": case_prompt_sha256,
-        "modelResponseSchemaSha256": model_response_schema_sha256,
-        "opaqueBindingSha256": _sha256(opaque_binding.encode("ascii")),
-        "opaqueBindingMatched": facts.structured_result.get("opaqueCaseBinding") == opaque_binding,
+        **materialization_fields,
+        "opaqueBindingMatched": facts.structured_result.get("opaqueCaseBinding") == materialization.token,
         "modelResponseSchemaMatched": not any(failure == "response keys do not match the closed schema" for failure in failures),
         "fixtureDefinitionDigest": fixture.definition_digest,
         "realizedFixtureDigest": fixture.realized_digest,
@@ -4699,6 +6101,8 @@ def normalize_case_result(
         "promptFullyDelivered": prompt_fully_delivered,
         "marketplaceProcessStarted": marketplace_process_started,
         "pluginInstallProcessStarted": plugin_install_process_started,
+        "schemaObjectVerified": schema_object_verified,
+        "installedDirectoryIdentityVerified": installed_directory_identity_verified,
         "diagnosticCodes": (
             ["protocol-integrity-failure"]
             if status == "incomplete"
@@ -4713,57 +6117,97 @@ def _observe_case_process(
     *,
     capability: _ExecutionCapability,
     executable: ExecutableIdentity,
-    output_schema: Path,
-    prompt: bytes,
-    cwd: Path,
+    output_schema: FrozenFileIdentity,
+    materialization: CaseMaterialization,
+    materialization_seed: bytes,
+    protocol_digest: str,
+    cwd: FrozenDirectoryIdentity,
     env: Mapping[str, str],
     taxonomy: Mapping[str, Any],
     case: Mapping[str, Any],
-    case_prompt_sha256: str,
-    model_response_schema_sha256: str,
     model_response_schema: Mapping[str, Any],
-    opaque_binding: str,
     fixture: FixtureMaterialization,
     plugin_state: str,
-    workspace: Path,
-    bundle: Path,
-    installed_copy: Path,
-    temporary_user_state: Path,
+    workspace: FrozenDirectoryIdentity,
+    bundle: FrozenDirectoryIdentity,
+    installed_copy: FrozenDirectoryIdentity | None,
+    temporary_user_state: FrozenDirectoryIdentity,
+    inherited_fds: Sequence[int],
     marketplace_process_started: bool,
     plugin_install_process_started: bool,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
+    _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Observe one process and return only its normalized, payload-free case facts."""
+    workspace_before = _verify_frozen_directory(workspace)
+    bundle_before = _verify_frozen_directory(bundle)
+    temporary_before = _verify_frozen_directory(temporary_user_state)
+    if installed_copy is None:
+        if not _directory_entry_absent(temporary_user_state.descriptor, "plugins"):
+            raise ObservationError("no-plugin control unexpectedly exposes a plugin tree")
+        installed_before: tuple[tuple[str, int, int, str], ...] = ()
+    else:
+        installed_before = _verify_frozen_directory(
+            installed_copy, expected_tree=bundle_before
+        )
     protected = {
-        "workspace": (workspace, snapshot_tree(workspace)),
-        "bundle": (bundle, snapshot_tree(bundle)),
-        "installed-copy": (installed_copy, snapshot_tree(installed_copy)),
-        "temporary-user-state": (temporary_user_state, snapshot_tree(temporary_user_state)),
+        "workspace": workspace_before,
+        "bundle": bundle_before,
+        "installed-copy": installed_before,
+        "temporary-user-state": temporary_before,
     }
     if plugin_state == "installed-derived-profile":
         _expect(
-            protected["installed-copy"][1],
-            protected["bundle"][1],
+            protected["installed-copy"],
+            protected["bundle"],
             "installed plugin tree at model-launch boundary",
         )
     else:
         _expect(
-            protected["installed-copy"][1],
+            protected["installed-copy"],
             (),
             "no-plugin control tree at model-launch boundary",
         )
-    _verify_temporary_config_has_no_hook_registration(temporary_user_state)
-    fixture_pre_snapshot_sha256 = _snapshot_digest(protected["workspace"][1])
-    argv = build_codex_argv(executable.path, output_schema, workspace)
+    _verify_temporary_config_has_no_hook_registration(
+        Path(f"/proc/self/fd/{temporary_user_state.descriptor}")
+    )
+    if _test_hook is not None:
+        _test_hook(
+            "after-protected-snapshot",
+            {
+                "caseId": case["id"],
+                "workspace": workspace,
+                "codexHome": temporary_user_state,
+                "installed": installed_copy,
+                "schema": output_schema,
+            },
+        )
+    _verify_frozen_directory(workspace)
+    _verify_frozen_directory(bundle)
+    _verify_frozen_directory(temporary_user_state)
+    if installed_copy is None:
+        if not _directory_entry_absent(temporary_user_state.descriptor, "plugins"):
+            raise ObservationError(
+                "no-plugin control changed before its model-launch boundary"
+            )
+    else:
+        _verify_frozen_directory(installed_copy, expected_tree=bundle_before)
+    fixture_pre_snapshot_sha256 = _snapshot_digest(protected["workspace"])
+    schema_alias = Path(f"/proc/self/fd/{output_schema.descriptor}")
+    workspace_alias = Path(f"/proc/self/fd/{workspace.descriptor}")
+    argv = build_codex_argv(executable.path, schema_alias, workspace_alias)
     capture = _launch_bounded_process(
         capability,
         executable,
         argv,
         purpose="model-case",
         case_id=str(case["id"]),
-        prompt=prompt,
-        cwd=cwd,
+        prompt=materialization.prompt_bytes,
+        cwd=Path(f"/proc/self/fd/{cwd.descriptor}"),
         env=env,
+        inherited_fds=inherited_fds,
+        schema_object=output_schema,
+        expected_schema_bytes=materialization.schema_bytes,
         popen_factory=popen_factory,
     )
     try:
@@ -4774,18 +6218,33 @@ def _observe_case_process(
         if classify_stderr(capture.stderr, prompt_transport="stdin-sentinel") != "empty":
             raise ObservationError("case process emitted unexpected stderr")
         facts = parse_jsonl(capture.stdout, taxonomy)
+        workspace_after = _verify_frozen_directory(workspace)
+        bundle_after = _verify_frozen_directory(bundle)
+        temporary_after = _verify_frozen_directory(temporary_user_state)
+        if installed_copy is None:
+            installed_after = ()
+            installed_binding = _directory_entry_absent(
+                temporary_user_state.descriptor, "plugins"
+            )
+        else:
+            installed_after = _verify_frozen_directory(
+                installed_copy, expected_tree=bundle_before
+            )
+            installed_binding = True
         unchanged = {
-            name: snapshot_tree(path) == before
-            for name, (path, before) in protected.items()
+            "workspace": workspace_after == workspace_before,
+            "bundle": bundle_after == bundle_before,
+            "installed-copy": installed_after == installed_before,
+            "temporary-user-state": temporary_after == temporary_before,
         }
-        fixture_post_snapshot_sha256 = _snapshot_digest(snapshot_tree(workspace))
+        fixture_post_snapshot_sha256 = _snapshot_digest(workspace_after)
         return normalize_case_result(
             facts=facts,
             case=case,
-            case_prompt_sha256=case_prompt_sha256,
-            model_response_schema_sha256=model_response_schema_sha256,
+            materialization=materialization,
+            materialization_seed=materialization_seed,
+            protocol_digest=protocol_digest,
             model_response_schema=model_response_schema,
-            opaque_binding=opaque_binding,
             fixture=fixture,
             plugin_state=plugin_state,
             workspace_unchanged=unchanged["workspace"],
@@ -4799,6 +6258,8 @@ def _observe_case_process(
             prompt_fully_delivered=capture.stdin_fully_delivered,
             marketplace_process_started=marketplace_process_started,
             plugin_install_process_started=plugin_install_process_started,
+            schema_object_verified=capture.schema_object_verified,
+            installed_directory_identity_verified=installed_binding,
         )
     except ObservationError as error:
         _hard_stop_capability(capability)
@@ -4811,38 +6272,37 @@ def _observe_case_process(
         ) from error
 
 
-def _write_new_file(path: Path, data: bytes, mode: int = 0o600) -> None:
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(path, flags, mode)
-    try:
-        view = memoryview(data)
-        while view:
-            written = os.write(descriptor, view)
-            if type(written) is not int or written < 1 or written > len(view):
-                raise ObservationError("bounded file write made invalid progress")
-            view = view[written:]
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
-
-
-def _prepare_local_marketplace(path: Path, source_bundle: Path) -> None:
-    descriptor_root = path / ".agents" / "plugins"
-    descriptor_root.mkdir(parents=True, mode=0o700)
+def _prepare_local_marketplace(
+    session: OwnedRootSession,
+    relative: str,
+    source_bundle: FrozenDirectoryIdentity,
+) -> FrozenDirectoryIdentity:
+    session.mkdir(
+        _join_relative(relative, ".agents/plugins"),
+        parents=True,
+        mode=0o700,
+        phase="marketplace-materialization",
+    )
     document = {
         "name": MARKETPLACE_NAME,
         "interface": {"displayName": "Axiom no-Hook observer"},
         "plugins": [{
             "name": "axiom",
-            "source": {"source": "local", "path": str(source_bundle)},
+            "source": {
+                "source": "local",
+                "path": f"/proc/self/fd/{source_bundle.descriptor}",
+            },
             "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
             "category": "Productivity",
         }],
     }
-    _write_new_file(
-        descriptor_root / "marketplace.json",
+    session.create_file(
+        _join_relative(relative, ".agents/plugins/marketplace.json"),
         json.dumps(document, ensure_ascii=True, sort_keys=True, indent=2).encode("ascii") + b"\n",
+        mode=0o600,
+        phase="marketplace-materialization",
     )
+    return session.open_directory(relative, phase="marketplace-launch-source")
 
 
 def _verify_bundle_surface(bundle: Path, *, fake_only: bool) -> tuple[tuple[str, int, int, str], ...]:
@@ -4926,39 +6386,57 @@ def _verify_temporary_config_has_no_hook_registration(codex_home: Path) -> None:
     inspect(document)
 
 
-def _materialize_fake_bundle(path: Path) -> None:
-    (path / ".codex-plugin").mkdir(parents=True, mode=0o755)
-    (path / "skills" / "using-axiom").mkdir(parents=True, mode=0o755)
+def _materialize_fake_bundle(session: OwnedRootSession, relative: str) -> None:
+    session.mkdir(
+        _join_relative(relative, ".codex-plugin"),
+        parents=True,
+        mode=0o755,
+        phase="fake-bundle-materialization",
+    )
+    session.mkdir(
+        _join_relative(relative, "skills/using-axiom"),
+        parents=True,
+        mode=0o755,
+        phase="fake-bundle-materialization",
+    )
     plugin = {
         "name": "axiom", "version": PLUGIN_VERSION,
         "description": "Think before AI thinks.", "skills": "./skills/",
     }
-    _write_new_file(
-        path / ".codex-plugin" / "plugin.json",
+    session.create_file(
+        _join_relative(relative, ".codex-plugin/plugin.json"),
         json.dumps(plugin, sort_keys=False, indent=2).encode("ascii") + b"\n",
-        0o644,
+        mode=0o644,
+        phase="fake-bundle-materialization",
     )
-    _write_new_file(
-        path / "skills" / "using-axiom" / "SKILL.md",
+    session.create_file(
+        _join_relative(relative, "skills/using-axiom/SKILL.md"),
         b"---\nname: using-axiom\ndescription: Inert observer fixture.\n---\n",
-        0o644,
+        mode=0o644,
+        phase="fake-bundle-materialization",
     )
 
 
 def _prepare_disposable_bundle(
-    *, run_root: Path, fake_only: bool, source_repository: Path | None,
+    *, session: OwnedRootSession, fake_only: bool, source_repository: Path | None,
     git_executable: Path | None,
-) -> Path:
+) -> FrozenDirectoryIdentity:
     """Create the disposable bundle input inside the exact owned run root."""
-    destination = run_root / "bundle-build"
-    destination.mkdir(mode=0o700)
+    session.mkdir("bundle-build", mode=0o700, phase="bundle-build-root")
     if fake_only:
-        plugin = destination / "plugin"
-        plugin.mkdir(mode=0o755)
-        _materialize_fake_bundle(plugin)
-        return plugin
+        session.mkdir(
+            "bundle-build/plugin", parents=True, mode=0o755,
+            phase="fake-bundle-materialization",
+        )
+        _materialize_fake_bundle(session, "bundle-build/plugin")
+        return session.open_directory(
+            "bundle-build/plugin", phase="accepted-fake-bundle"
+        )
     if source_repository is None or git_executable is None:
         raise ObservationError("actual execution requires exact source repository and Git executable")
+    destination = session.open_directory(
+        "bundle-build", phase="bundle-build-destination"
+    )
     try:
         from .no_hook_bundle import BundleContractError, build_bundle
 
@@ -4966,15 +6444,20 @@ def _prepare_disposable_bundle(
             source_repository,
             BUNDLE_RUNTIME_SOURCE_COMMIT,
             BUNDLE_RUNTIME_SOURCE_TREE,
-            destination,
+            Path(f"/proc/self/fd/{destination.descriptor}"),
             git_executable=git_executable,
         )
     except (OSError, BundleContractError) as error:
         raise ObservationError(f"disposable bundle build failed: {error}") from error
+    finally:
+        _close_frozen_directory(destination)
     _expect(result.profile_runtime_digest, PROFILE_RUNTIME_DIGEST, "built profile runtime identity")
     _expect(result.bundle_manifest_digest, BUNDLE_MANIFEST_DIGEST, "built bundle manifest identity")
     _expect(result.archive_sha256, ARCHIVE_SHA256, "built archive identity")
-    return destination / "plugin"
+    session.accept_subtree("bundle-build", phase="accepted-bundle-build-output")
+    return session.open_directory(
+        "bundle-build/plugin", phase="accepted-source-bundle"
+    )
 
 
 def _case_fixture_record(
@@ -4999,13 +6482,30 @@ def _case_fixture_record(
     }
 
 
-def _not_run_case_record(case: Mapping[str, Any], fixture_document: Mapping[str, Any]) -> dict[str, Any]:
+def _not_run_case_record(
+    case: Mapping[str, Any],
+    fixture_document: Mapping[str, Any],
+    case_materialization: CaseMaterialization,
+    materialization_seed: bytes,
+    protocol_digest: str,
+) -> dict[str, Any]:
+    fixture_record = _case_fixture_record(
+        case, fixture_document, materialization=None
+    )
     return {
         "caseId": case["id"], "contractVersion": case["contractVersion"],
-        "casePromptSha256": "0" * 64, "modelResponseSchemaSha256": "0" * 64,
-        "opaqueBindingSha256": "0" * 64, "opaqueBindingMatched": False,
+        **_case_materialization_fields(
+            materialization=case_materialization,
+            materialization_seed=materialization_seed,
+            protocol_digest=protocol_digest,
+            case=case,
+            realized_fixture_digest=fixture_record["realizedFixtureDigest"],
+            realized_file_set_digest=fixture_record["realizedFileSetDigest"],
+            prompt_fully_delivered=False,
+        ),
+        "opaqueBindingMatched": False,
         "modelResponseSchemaMatched": False,
-        **_case_fixture_record(case, fixture_document, materialization=None),
+        **fixture_record,
         "fixturePreSnapshotSha256": "0" * 64,
         "fixturePostSnapshotSha256": "0" * 64,
         "status": "not-run", "responseDiagnostic": "not-run",
@@ -5021,14 +6521,19 @@ def _not_run_case_record(case: Mapping[str, Any], fixture_document: Mapping[str,
         "modelCallAuthorized": False, "modelProcessStarted": False,
         "promptFullyDelivered": False,
         "marketplaceProcessStarted": False, "pluginInstallProcessStarted": False,
+        "schemaObjectVerified": False,
+        "installedDirectoryIdentityVerified": False,
         "diagnosticCodes": ["case-not-run-after-hard-stop"],
     }
 
 
 def _incomplete_case_record(
     case: Mapping[str, Any], fixture_document: Mapping[str, Any],
-    materialization: FixtureMaterialization | None, prompt_sha256: str,
-    schema_sha256: str, binding: str, error: ObservationError,
+    fixture_materialization: FixtureMaterialization | None,
+    case_materialization: CaseMaterialization,
+    materialization_seed: bytes,
+    protocol_digest: str,
+    error: ObservationError,
     *, marketplace_process_started: bool = False,
     plugin_install_process_started: bool = False,
 ) -> dict[str, Any]:
@@ -5046,19 +6551,25 @@ def _incomplete_case_record(
             or boundary.malformed_event_count
         )
     )
+    fixture_record = _case_fixture_record(
+        case, fixture_document, materialization=fixture_materialization
+    )
+    prompt_fully_delivered = bool(
+        process_boundary and process_boundary.prompt_fully_delivered
+    )
     return {
         "caseId": case["id"], "contractVersion": case["contractVersion"],
-        # A partially delivered prompt never receives the identity of the
-        # complete canonical prompt.  Zero is the closed not-established value.
-        "casePromptSha256": (
-            prompt_sha256
-            if process_boundary and process_boundary.prompt_fully_delivered
-            else "0" * 64
+        **_case_materialization_fields(
+            materialization=case_materialization,
+            materialization_seed=materialization_seed,
+            protocol_digest=protocol_digest,
+            case=case,
+            realized_fixture_digest=fixture_record["realizedFixtureDigest"],
+            realized_file_set_digest=fixture_record["realizedFileSetDigest"],
+            prompt_fully_delivered=prompt_fully_delivered,
         ),
-        "modelResponseSchemaSha256": schema_sha256,
-        "opaqueBindingSha256": _sha256(binding.encode("ascii")),
         "opaqueBindingMatched": False, "modelResponseSchemaMatched": False,
-        **_case_fixture_record(case, fixture_document, materialization=materialization),
+        **fixture_record,
         "fixturePreSnapshotSha256": "0" * 64,
         "fixturePostSnapshotSha256": "0" * 64,
         "status": "incomplete", "responseDiagnostic": "missing",
@@ -5082,11 +6593,11 @@ def _incomplete_case_record(
         "modelProcessStarted": bool(
             process_boundary and process_boundary.process_started
         ),
-        "promptFullyDelivered": bool(
-            process_boundary and process_boundary.prompt_fully_delivered
-        ),
+        "promptFullyDelivered": prompt_fully_delivered,
         "marketplaceProcessStarted": marketplace_process_started,
         "pluginInstallProcessStarted": plugin_install_process_started,
+        "schemaObjectVerified": False,
+        "installedDirectoryIdentityVerified": False,
         "diagnosticCodes": ["protocol-integrity-failure"],
     }
 
@@ -5096,12 +6607,12 @@ def _result_document(
     root: Path,
     run_mode: str,
     cases: list[dict[str, Any]],
-    installed_case_count: int,
     config_verified_count: int,
     executable: ExecutableIdentity,
     marketplace_process_count: int,
     plugin_install_process_count: int,
     cleanup: Mapping[str, Any],
+    materialization_seed: bytes,
 ) -> dict[str, Any]:
     protocol, _ = _load_json(root, PROTOCOL_RELATIVE)
     prompt, _ = _load_json(root, PROMPT_RELATIVE)
@@ -5115,6 +6626,14 @@ def _result_document(
         "runMode": run_mode, "runId": "codex-no-hook-" + secrets.token_hex(16),
         "recordedAt": datetime_module.datetime.now(datetime_module.timezone.utc).isoformat().replace("+00:00", "Z"),
         "overallStatus": "incomplete",
+        "materialization": {
+            "scheme": MATERIALIZATION_SCHEME,
+            "schemaVersion": "1",
+            "materializationSeed": materialization_seed.hex(),
+            "materializationCommitmentRootSha256": _materialization_commitment_root(
+                [case["materializationCommitmentSha256"] for case in cases]
+            ),
+        },
         "observationProtocol": {"id": PROTOCOL_ID, "schemaVersion": "1", "digest": protocol["protocolDigest"]},
         "runner": {
             "version": "1", "entrypointSha256": _sha256(_read_regular(root / ENTRYPOINT_RELATIVE, "runner entrypoint")),
@@ -5158,19 +6677,23 @@ def _result_document(
             "marketplaceProcessCount": marketplace_process_count,
             "pluginInstallProcessCount": plugin_install_process_count,
         },
-        "installationFacts": {
-            "scope": "isolated-ephemeral-test-only", "installedPathWithinTemporaryHome": installed_case_count == 15,
-            "installedTreeVerified": installed_case_count == 15, "installedCaseCount": installed_case_count,
-            "noPluginControlCaseCount": sum(
-                case["status"] != "not-run" and case["fixtureFacts"]["pluginState"] == "absent"
-                for case in cases
-            ),
-            "persistentUserStateChanged": False, "cleanupVerified": bool(cleanup["temporaryRootsRemoved"]),
-        },
+        "installationFacts": {},
+        "objectBindingFacts": {},
         "noHookProof": {
-            "packageHookSurfaceAbsent": True, "installedHookSurfaceAbsent": installed_case_count == 15,
+            "packageHookSurfaceAbsent": True,
+            "installedHookSurfaceAbsent": sum(
+                case["installedDirectoryIdentityVerified"]
+                for case in cases
+                if case["fixtureFacts"]["pluginState"]
+                == "installed-derived-profile"
+            ) == 15,
             "temporaryConfigHookRegistrationAbsent": config_verified_count == 16,
-            "fullProfileWrapperAbsent": installed_case_count == 15,
+            "fullProfileWrapperAbsent": sum(
+                case["installedDirectoryIdentityVerified"]
+                for case in cases
+                if case["fixtureFacts"]["pluginState"]
+                == "installed-derived-profile"
+            ) == 15,
             "publicJsonlHookTelemetry": "not-exposed-by-codex-0.153.0",
             "modelReportedSessionStartObservedCount": sum(case["sessionStartObserved"] for case in cases),
         },
@@ -5189,6 +6712,17 @@ def _result_document(
             else ["host-telemetry-not-exposed"]
         ),
     }
+    result["installationFacts"] = _derive_installation_facts(cases, cleanup)
+    result["objectBindingFacts"] = _derive_object_binding_facts(
+        cases,
+        cleanup,
+        run_mode,
+        (
+            "not-requested-fake-validation"
+            if run_mode == "fake-validation"
+            else "pending"
+        ),
+    )
     result["summary"] = _derive_summary(cases, result["cleanup"])
     result["overallStatus"] = _derive_overall_status(
         result,
@@ -5209,62 +6743,169 @@ def run_observation_orchestration(
     git_executable: Path | None = None,
     scenarios: Mapping[str, str] | None = None,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
+    _test_materialization_seed: bytes | None = None,
+    _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Run the production 16-case orchestration; tests authorize only a fake executable."""
     root_identity = freeze_owned_root(run_root)
-    # Use the frozen absolute spelling for every later path derivation.  The
-    # capability and cleanup owner then bind the same path, device, and inode.
-    run_root = root_identity.path
+    if not fake_only and (_test_materialization_seed is not None or _test_hook is not None):
+        raise ObservationError("actual execution rejects test-only dependency injection")
+    if _test_materialization_seed is not None and (
+        type(_test_materialization_seed) is not bytes
+        or len(_test_materialization_seed) != 32
+    ):
+        raise ObservationError("test materialization seed must contain 32 bytes")
+    session = OwnedRootSession(root_identity)
+    try:
+        if fake_only:
+            try:
+                executable_relative = executable.path.absolute().relative_to(
+                    root_identity.path
+                )
+            except ValueError as error:
+                raise ObservationError(
+                    "fake executable is not within the frozen run root"
+                ) from error
+            parts = _closed_relative_parts(executable_relative)
+            if len(parts) != 1 or len(root_identity.initial_objects) != 1:
+                raise ObservationError(
+                    "fake run root must initially contain only its exact executable"
+                )
+            initial = root_identity.initial_objects[0]
+            if (
+                initial.relative_path != parts[0]
+                or initial.kind != "file"
+                or (initial.device, initial.inode)
+                != (executable.device, executable.inode)
+            ):
+                raise ObservationError(
+                    "fake run root initial object is not the frozen executable"
+                )
+            session.accept_file(parts[0], phase="accepted-fake-executable")
+        elif root_identity.initial_objects:
+            raise ObservationError(
+                "actual observation run root must initially be empty"
+            )
+    except BaseException:
+        session.close()
+        _retire_capability(capability)
+        raise
     ledger = BatchLedger()
     case_results: list[dict[str, Any]] = []
-    installed_count = 0
     config_verified_count = 0
     marketplace_process_count = 0
     plugin_install_process_count = 0
-    source_bundle: Path | None = None
+    source_bundle: FrozenDirectoryIdentity | None = None
     bundle_before: tuple[tuple[str, int, int, str], ...] = ()
+    golden: list[dict[str, Any]] = []
+    case_materializations: list[CaseMaterialization] = []
+    fixture_document: dict[str, Any] = {}
+    materialization_seed = (
+        _test_materialization_seed
+        if _test_materialization_seed is not None
+        else create_materialization_seed()
+    )
     cleanup = {
         "temporaryRootsRemoved": False, "userCodexStateUnchanged": True,
         "sourceBundleUnchanged": False, "manualCleanupRequired": False,
     }
+
+    def invoke_test_hook(phase: str, **facts: Any) -> None:
+        if _test_hook is not None:
+            _test_hook(phase, facts)
+
     try:
-        validate_protocol_documents(repository_root)
+        identities = validate_protocol_documents(repository_root)
         state = _capability_state(capability)
         if state.fake_only != fake_only or state.run_root != root_identity:
             raise ObservationError("orchestration mode or root is not capability-bound")
+        invoke_test_hook("after-root-freeze", session=session)
+        invoke_test_hook("before-first-root-write", session=session)
         source_bundle = _prepare_disposable_bundle(
-            run_root=run_root, fake_only=fake_only,
+            session=session, fake_only=fake_only,
             source_repository=source_repository, git_executable=git_executable,
         )
-        bundle_before = _verify_bundle_surface(source_bundle, fake_only=fake_only)
+        bundle_before = _verify_bundle_surface(
+            Path(f"/proc/self/fd/{source_bundle.descriptor}"), fake_only=fake_only
+        )
         taxonomy, _ = _load_json(repository_root, TAXONOMY_RELATIVE)
         envelope, _ = _load_json(repository_root, PROMPT_RELATIVE)
         fixture_document, _ = _load_json(repository_root, FIXTURES_RELATIVE)
         model_schema, _ = _load_json(repository_root, MODEL_RESPONSE_SCHEMA_RELATIVE)
         golden = load_golden_cases(repository_root)
+        case_materializations = [
+            materialize_case_contract(
+                materialization_seed=materialization_seed,
+                ordinal=index,
+                protocol_digest=identities["protocolDigest"],
+                model_schema=model_schema,
+                prompt_envelope=envelope,
+                request=case["request"],
+            )
+            for index, case in enumerate(golden, 1)
+        ]
         for index, case in enumerate(golden):
             fixture_case = fixture_document["cases"][index]
             plugin_state = fixture_case["pluginState"]
-            token = create_opaque_case_binding()
-            materialized_schema = materialize_model_response_schema(model_schema, token)
-            prompt = render_case_prompt(envelope, case["request"], token)
+            case_materialization = case_materializations[index]
             fixture: FixtureMaterialization | None = None
             marketplace_started = False
             plugin_started = False
+            installed: FrozenDirectoryIdentity | None = None
+            marketplace: FrozenDirectoryIdentity | None = None
+            schema_object: FrozenFileIdentity | None = None
+            open_directories: list[FrozenDirectoryIdentity] = []
             try:
-                case_root = run_root / f"case-{index + 1:02d}"
-                case_root.mkdir(mode=0o700)
-                workspace = case_root / "workspace"
-                codex_home = case_root / "codex-home"
-                home = case_root / "home"
-                xdg_config = case_root / "xdg-config"
-                xdg_cache = case_root / "xdg-cache"
-                xdg_data = case_root / "xdg-data"
-                for path in (workspace, codex_home, home, xdg_config, xdg_cache, xdg_data):
-                    path.mkdir(mode=0o700)
-                fixture = materialize_fixture(workspace, fixture_document, case["id"])
-                installed = codex_home / "no-plugin-control"
-                installed.mkdir(mode=0o700)
+                case_relative = f"case-{index + 1:02d}"
+                session.mkdir(case_relative, phase="case-root-create")
+                for name in (
+                    "workspace", "codex-home", "home", "xdg-config",
+                    "xdg-cache", "xdg-data",
+                ):
+                    session.mkdir(
+                        _join_relative(case_relative, name),
+                        parents=True,
+                        phase="case-isolation-create",
+                    )
+                workspace_relative = _join_relative(case_relative, "workspace")
+                codex_home_relative = _join_relative(case_relative, "codex-home")
+                fixture = materialize_fixture_owned(
+                    session, workspace_relative, fixture_document, case["id"]
+                )
+                case_root = session.open_directory(
+                    case_relative, phase="case-root-launch", freeze_tree=False
+                )
+                workspace = session.open_directory(
+                    workspace_relative, phase="workspace-launch"
+                )
+                codex_home = session.open_directory(
+                    codex_home_relative,
+                    phase="codex-home-launch",
+                    freeze_tree=False,
+                )
+                home = session.open_directory(
+                    _join_relative(case_relative, "home"),
+                    phase="home-launch",
+                    freeze_tree=False,
+                )
+                xdg_config = session.open_directory(
+                    _join_relative(case_relative, "xdg-config"),
+                    phase="xdg-launch",
+                    freeze_tree=False,
+                )
+                xdg_cache = session.open_directory(
+                    _join_relative(case_relative, "xdg-cache"),
+                    phase="xdg-launch",
+                    freeze_tree=False,
+                )
+                xdg_data = session.open_directory(
+                    _join_relative(case_relative, "xdg-data"),
+                    phase="xdg-launch",
+                    freeze_tree=False,
+                )
+                open_directories.extend(
+                    [case_root, workspace, codex_home, home, xdg_config, xdg_cache, xdg_data]
+                )
                 environment_additions: dict[str, str] = {
                     "AXIOM_FAKE_SCENARIO": (scenarios or {}).get(case["id"], "happy"),
                     "AXIOM_FAKE_OUTCOME": case["expectedOutcome"],
@@ -5273,36 +6914,66 @@ def run_observation_orchestration(
                     "AXIOM_FAKE_FRONT_DOOR": str(case["expectedUsingAxiomFrontDoorObserved"]).lower(),
                 }
                 if fake_only:
-                    environment_additions["AXIOM_FAKE_CALL_LOG"] = str(run_root / "call-ledger.jsonl")
+                    session.create_file(
+                        _join_relative(case_relative, "call-ledger.jsonl"),
+                        b"",
+                        mode=0o600,
+                        phase="fake-call-ledger-create",
+                    )
+                    environment_additions["AXIOM_FAKE_CALL_LOG"] = str(
+                        Path(f"/proc/self/fd/{case_root.descriptor}")
+                        / "call-ledger.jsonl"
+                    )
                 if plugin_state == "installed-derived-profile":
-                    installed.rmdir()
-                    marketplace = case_root / "marketplace"
-                    marketplace.mkdir(mode=0o700)
-                    _prepare_local_marketplace(marketplace, source_bundle)
-                    marketplace_install = codex_home / "marketplaces" / MARKETPLACE_NAME
-                    installed = codex_home / "plugins" / "axiom"
+                    marketplace_relative = _join_relative(case_relative, "marketplace")
+                    marketplace = _prepare_local_marketplace(
+                        session, marketplace_relative, source_bundle
+                    )
                     if fake_only:
-                        marketplace_install.mkdir(parents=True, mode=0o700)
-                        environment_additions.update({
-                            "AXIOM_FAKE_MARKETPLACE_ROOT": str(marketplace_install),
-                            "AXIOM_FAKE_INSTALLED_PATH": str(installed),
-                            "AXIOM_FAKE_BUNDLE": str(source_bundle),
+                        install_additions = dict(environment_additions)
+                        install_additions.update({
+                            "AXIOM_FAKE_MARKETPLACE_ROOT": (
+                                f"/proc/self/fd/{codex_home.descriptor}/marketplaces/{MARKETPLACE_NAME}"
+                            ),
+                            "AXIOM_FAKE_INSTALLED_PATH": (
+                                f"/proc/self/fd/{codex_home.descriptor}/plugins/axiom"
+                            ),
+                            "AXIOM_FAKE_BUNDLE": f"/proc/self/fd/{source_bundle.descriptor}",
                         })
+                    else:
+                        install_additions = {}
                     install_env = build_isolated_environment(
-                        codex_home=codex_home, home=home, xdg_config_home=xdg_config,
-                        xdg_cache_home=xdg_cache, xdg_data_home=xdg_data,
-                        additions=environment_additions if fake_only else None,
+                        codex_home=Path(f"/proc/self/fd/{codex_home.descriptor}"),
+                        home=Path(f"/proc/self/fd/{home.descriptor}"),
+                        xdg_config_home=Path(f"/proc/self/fd/{xdg_config.descriptor}"),
+                        xdg_cache_home=Path(f"/proc/self/fd/{xdg_cache.descriptor}"),
+                        xdg_data_home=Path(f"/proc/self/fd/{xdg_data.descriptor}"),
+                        additions=install_additions if fake_only else None,
                     )
                     for purpose, argv in (
-                        ("marketplace", build_marketplace_add_argv(executable.path, marketplace)),
+                        (
+                            "marketplace",
+                            build_marketplace_add_argv(
+                                executable.path,
+                                Path(f"/proc/self/fd/{marketplace.descriptor}"),
+                            ),
+                        ),
                         ("plugin-install", build_plugin_add_argv(executable.path)),
                     ):
                         try:
                             capture = _launch_bounded_process(
                                 capability, executable, argv, purpose=purpose,
-                                case_id=str(case["id"]), prompt=b"", cwd=case_root,
+                                case_id=str(case["id"]), prompt=b"",
+                                cwd=Path(f"/proc/self/fd/{case_root.descriptor}"),
                                 env=install_env, maximum_stdout=MAX_RECEIPT_BYTES,
                                 require_stdin_sentinel=False, popen_factory=popen_factory,
+                                inherited_fds=(
+                                    case_root.descriptor,
+                                    codex_home.descriptor, home.descriptor,
+                                    xdg_config.descriptor, xdg_cache.descriptor,
+                                    xdg_data.descriptor, marketplace.descriptor,
+                                    source_bundle.descriptor,
+                                ),
                             )
                         except ProcessBoundaryError as error:
                             if error.process_started:
@@ -5322,57 +6993,146 @@ def run_observation_orchestration(
                         if capture.timed_out or capture.returncode != 0 or capture.stderr:
                             raise ObservationError(f"{purpose} process failed")
                         if purpose == "marketplace":
-                            parse_marketplace_receipt(capture.stdout, codex_home)
+                            parse_marketplace_receipt(capture.stdout, session, codex_home)
                         else:
-                            _, installed_path = parse_plugin_receipt(capture.stdout, codex_home)
-                            if fake_only:
-                                _expect(installed_path, installed.resolve(strict=True), "installed receipt path")
-                            else:
-                                installed = installed_path
-                    _expect(snapshot_tree(installed), bundle_before, "installed plugin tree")
-                    _verify_bundle_surface(installed, fake_only=fake_only)
-                    installed_count += 1
-                _verify_temporary_config_has_no_hook_registration(codex_home)
+                            _, installed = parse_plugin_receipt(
+                                capture.stdout,
+                                session,
+                                codex_home,
+                                expected_tree=bundle_before,
+                            )
+                    if installed is None:
+                        raise ObservationError("plugin receipt did not bind an installed object")
+                    invoke_test_hook(
+                        "after-plugin-receipt",
+                        session=session,
+                        caseId=case["id"],
+                        installed=installed,
+                    )
+                    _verify_frozen_directory(installed, expected_tree=bundle_before)
+                    _verify_bundle_surface(
+                        Path(f"/proc/self/fd/{installed.descriptor}"),
+                        fake_only=fake_only,
+                    )
+                elif not _directory_entry_absent(codex_home.descriptor, "plugins"):
+                    raise ObservationError("case 11 no-plugin control contains a plugin directory")
+                _verify_temporary_config_has_no_hook_registration(
+                    Path(f"/proc/self/fd/{codex_home.descriptor}")
+                )
                 config_verified_count += 1
-                schema_path = case_root / "model-response-schema.json"
-                _write_new_file(schema_path, materialized_schema)
+                schema_relative = _join_relative(
+                    case_relative, "model-response-schema.json"
+                )
+                schema_object = session.create_file(
+                    schema_relative,
+                    case_materialization.schema_bytes,
+                    mode=0o400,
+                    phase="model-schema-materialization",
+                    keep_open=True,
+                )
+                if schema_object is None:
+                    raise ObservationError("schema object was not frozen")
+                _verify_frozen_file(schema_object, case_materialization.schema_bytes)
+                invoke_test_hook(
+                    "after-schema-create",
+                    session=session,
+                    caseId=case["id"],
+                    schemaRelative=schema_relative,
+                    schema=schema_object,
+                )
+                if fake_only:
+                    if installed is None:
+                        environment_additions["AXIOM_FAKE_NO_PLUGIN_CONTROL"] = "true"
+                    else:
+                        environment_additions["AXIOM_FAKE_INSTALLED_OBJECT"] = (
+                            f"/proc/self/fd/{installed.descriptor}"
+                        )
                 model_env = build_isolated_environment(
-                    codex_home=codex_home, home=home, xdg_config_home=xdg_config,
-                    xdg_cache_home=xdg_cache, xdg_data_home=xdg_data,
+                    codex_home=Path(f"/proc/self/fd/{codex_home.descriptor}"),
+                    home=Path(f"/proc/self/fd/{home.descriptor}"),
+                    xdg_config_home=Path(f"/proc/self/fd/{xdg_config.descriptor}"),
+                    xdg_cache_home=Path(f"/proc/self/fd/{xdg_cache.descriptor}"),
+                    xdg_data_home=Path(f"/proc/self/fd/{xdg_data.descriptor}"),
                     credential=None if fake_only else credential,
                     additions=environment_additions if fake_only else None,
                 )
+                invoke_test_hook(
+                    "before-model-launch",
+                    session=session,
+                    caseId=case["id"],
+                    workspace=workspace,
+                    codexHome=codex_home,
+                    installed=installed,
+                    schema=schema_object,
+                )
                 normalized = _observe_case_process(
-                    capability=capability, executable=executable, output_schema=schema_path,
-                    prompt=prompt, cwd=workspace, env=model_env, taxonomy=taxonomy, case=case,
-                    case_prompt_sha256=_sha256(prompt),
-                    model_response_schema_sha256=_sha256(materialized_schema), opaque_binding=token,
+                    capability=capability, executable=executable,
+                    output_schema=schema_object,
+                    materialization=case_materialization,
+                    materialization_seed=materialization_seed,
+                    protocol_digest=identities["protocolDigest"],
+                    cwd=workspace, env=model_env, taxonomy=taxonomy, case=case,
                     model_response_schema=model_schema,
                     fixture=fixture, plugin_state=plugin_state, workspace=workspace,
                     bundle=source_bundle, installed_copy=installed,
                     temporary_user_state=codex_home,
+                    inherited_fds=(
+                        *((case_root.descriptor,) if fake_only else ()),
+                        workspace.descriptor,
+                        codex_home.descriptor, home.descriptor,
+                        xdg_config.descriptor, xdg_cache.descriptor,
+                        xdg_data.descriptor,
+                        *((installed.descriptor,) if fake_only and installed is not None else ()),
+                    ),
                     marketplace_process_started=marketplace_started,
                     plugin_install_process_started=plugin_started,
                     popen_factory=popen_factory,
+                    _test_hook=_test_hook,
                 )
             except ObservationError as error:
                 ledger.hard_stop(case["id"])
                 _hard_stop_capability(capability)
                 case_results.append(_incomplete_case_record(
-                    case, fixture_document, fixture, _sha256(prompt),
-                    _sha256(materialized_schema), token, error,
+                    case, fixture_document, fixture, case_materialization,
+                    materialization_seed, identities["protocolDigest"], error,
                     marketplace_process_started=marketplace_started,
                     plugin_install_process_started=plugin_started,
                 ))
-                case_results.extend(_not_run_case_record(pending, fixture_document) for pending in golden[index + 1:])
+                case_results.extend(
+                    _not_run_case_record(
+                        pending,
+                        fixture_document,
+                        case_materializations[pending_index],
+                        materialization_seed,
+                        identities["protocolDigest"],
+                    )
+                    for pending_index, pending in enumerate(
+                        golden[index + 1 :], index + 1
+                    )
+                )
                 break
+            finally:
+                if schema_object is not None:
+                    os.close(schema_object.descriptor)
+                _close_frozen_directory(installed)
+                _close_frozen_directory(marketplace)
+                for directory in reversed(open_directories):
+                    _close_frozen_directory(directory)
             case_results.append(normalized)
             if normalized["status"] == "incomplete":
                 ledger.hard_stop(case["id"])
                 _hard_stop_capability(capability)
                 case_results.extend(
-                    _not_run_case_record(pending, fixture_document)
-                    for pending in golden[index + 1:]
+                    _not_run_case_record(
+                        pending,
+                        fixture_document,
+                        case_materializations[pending_index],
+                        materialization_seed,
+                        identities["protocolDigest"],
+                    )
+                    for pending_index, pending in enumerate(
+                        golden[index + 1 :], index + 1
+                    )
                 )
                 break
             ledger.seal(case["id"], normalized["status"])
@@ -5385,21 +7145,33 @@ def run_observation_orchestration(
             or state_before_retire.next_launch_index != len(LAUNCH_SEQUENCE)
         ):
             raise ObservationError("orchestration did not consume the exact launch plan")
-        cleanup["sourceBundleUnchanged"] = snapshot_tree(source_bundle) == bundle_before
+        cleanup["sourceBundleUnchanged"] = (
+            _verify_frozen_directory(source_bundle) == bundle_before
+        )
     finally:
         _retire_capability(capability)
+        _close_frozen_directory(source_bundle)
+        invoke_test_hook("before-cleanup", session=session)
+        owned_ledger = session.ledger
+        session.close()
         try:
-            cleanup_owned_root(root_identity)
+            cleanup_owned_root(root_identity, owned_ledger)
         except ObservationError:
             cleanup["manualCleanupRequired"] = True
         else:
-            cleanup["temporaryRootsRemoved"] = not run_root.exists()
+            cleanup["temporaryRootsRemoved"] = not root_identity.path.exists()
+        invoke_test_hook(
+            "after-cleanup",
+            rootIdentity=root_identity,
+            cleanup=dict(cleanup),
+        )
     result = _result_document(
         root=repository_root, run_mode="fake-validation" if fake_only else "host-observation",
-        cases=case_results, installed_case_count=installed_count,
+        cases=case_results,
         config_verified_count=config_verified_count, executable=executable,
         marketplace_process_count=marketplace_process_count,
         plugin_install_process_count=plugin_install_process_count, cleanup=cleanup,
+        materialization_seed=materialization_seed,
     )
     validate_normalized_result(result, repository_root)
     return result
@@ -5412,6 +7184,8 @@ def run_fake_validation(
     fake_executable: Path,
     fake_executable_sha256: str,
     scenarios: Mapping[str, str] | None = None,
+    _test_materialization_seed: bytes | None = None,
+    _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Authorize and run fake-only production orchestration without credentials."""
     identities = validate_protocol_documents(repository_root)
@@ -5433,12 +7207,29 @@ def run_fake_validation(
         repository_root=repository_root, run_root=run_root, executable=executable,
         capability=capability, credential=None,
         fake_only=True, scenarios=scenarios,
+        _test_materialization_seed=_test_materialization_seed,
+        _test_hook=_test_hook,
     )
 
 
-def _validate_external_output(path: Path, repository_root: Path) -> Path:
+@dataclass(frozen=True)
+class FrozenOutputParent:
+    descriptor: int
+    path: Path
+    basename: str
+    device: int
+    inode: int
+
+
+def _freeze_external_output(
+    path: Path,
+    repository_root: Path,
+    run_root: OwnedRootIdentity | None = None,
+) -> FrozenOutputParent:
     if not path.is_absolute():
         raise ObservationError("normalized output path must be absolute")
+    if path.name in {"", ".", ".."} or path.name != str(path).rsplit("/", 1)[-1]:
+        raise ObservationError("normalized output must use one closed basename")
     parent = path.parent
     try:
         parent_metadata = parent.lstat()
@@ -5446,8 +7237,6 @@ def _validate_external_output(path: Path, repository_root: Path) -> Path:
         raise ObservationError(f"cannot inspect normalized output parent: {error}") from error
     if stat.S_ISLNK(parent_metadata.st_mode) or not stat.S_ISDIR(parent_metadata.st_mode):
         raise ObservationError("normalized output parent must be a non-symlink directory")
-    if path.exists() or path.is_symlink():
-        raise ObservationError("normalized output path already exists")
     current = parent
     while True:
         metadata = current.lstat()
@@ -5456,57 +7245,229 @@ def _validate_external_output(path: Path, repository_root: Path) -> Path:
         if current.parent == current:
             break
         current = current.parent
-    resolved_output = parent.resolve(strict=True) / path.name
+    descriptor: int | None = None
     try:
-        resolved_output.relative_to(repository_root.resolve(strict=True))
-    except ValueError:
-        pass
-    else:
-        raise ObservationError("normalized output must be outside the repository")
-    return resolved_output
+        descriptor = os.open(parent, _directory_flags())
+        opened = os.fstat(descriptor)
+        if (
+            not _same_identity(opened, parent_metadata.st_dev, parent_metadata.st_ino)
+            or not stat.S_ISDIR(opened.st_mode)
+        ):
+            raise ObservationError("normalized output parent identity changed while opening")
+        try:
+            os.stat(path.name, dir_fd=descriptor, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise ObservationError("normalized output path already exists")
+        actual_parent = Path(f"/proc/self/fd/{descriptor}").resolve(strict=True)
+        try:
+            actual_parent.relative_to(repository_root.resolve(strict=True))
+        except ValueError:
+            pass
+        else:
+            raise ObservationError("normalized output must be outside the repository")
+        if run_root is not None:
+            try:
+                actual_parent.relative_to(run_root.path.resolve(strict=True))
+            except ValueError:
+                pass
+            else:
+                raise ObservationError(
+                    "normalized output must be outside the observation run root"
+                )
+        frozen = FrozenOutputParent(
+            descriptor=descriptor,
+            path=parent,
+            basename=path.name,
+            device=opened.st_dev,
+            inode=opened.st_ino,
+        )
+        descriptor = None
+        return frozen
+    except OSError as error:
+        raise ObservationError("cannot freeze normalized output parent") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def _verify_output_parent(identity: FrozenOutputParent) -> None:
+    opened = os.fstat(identity.descriptor)
+    try:
+        current = identity.path.lstat()
+    except OSError as error:
+        raise ObservationError("normalized output parent binding disappeared") from error
+    if (
+        not _same_identity(opened, identity.device, identity.inode)
+        or not _same_identity(current, identity.device, identity.inode)
+        or not stat.S_ISDIR(opened.st_mode)
+    ):
+        raise ObservationError("normalized output parent binding changed")
+
+
+def _mark_external_output_failure(document: Mapping[str, Any]) -> None:
+    """Seal a caller-owned result as incomplete after publication confinement fails."""
+    if type(document) is not dict:
+        return
+    cleanup = document.get("cleanup")
+    object_facts = document.get("objectBindingFacts")
+    if type(cleanup) is not dict or type(object_facts) is not dict:
+        return
+    cleanup["manualCleanupRequired"] = True
+    object_facts["externalOutputObjectBinding"] = "failed"
+    document["overallStatus"] = "incomplete"
+    cases = document.get("cases")
+    if type(cases) is list:
+        document["summary"] = _derive_summary(cases, cleanup)
+    codes = document.get("diagnosticCodes")
+    if type(codes) is list:
+        if "cleanup-manual-required" not in codes:
+            codes.append("cleanup-manual-required")
+        if "protocol-integrity-failure" not in codes:
+            codes.append("protocol-integrity-failure")
 
 
 def write_normalized_result(
-    document: Mapping[str, Any], output: Path, root: Path = REPOSITORY_ROOT
+    document: Mapping[str, Any], output: Path, root: Path = REPOSITORY_ROOT,
+    *,
+    _frozen_parent: FrozenOutputParent | None = None,
+    _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> str:
     """Write one validated normalized result to a new repository-external file."""
     validate_normalized_result(document, root)
-    output = _validate_external_output(output, root)
-    data = json.dumps(
-        document, ensure_ascii=True, allow_nan=False, sort_keys=True, indent=2
-    ).encode("ascii") + b"\n"
-    if len(data) > MAX_CONTRACT_BYTES:
-        raise ObservationError("normalized result exceeds the contract byte limit")
+    parent = (
+        _freeze_external_output(output, root)
+        if _frozen_parent is None
+        else _frozen_parent
+    )
+    if parent.path != output.parent or parent.basename != output.name:
+        os.close(parent.descriptor)
+        raise ObservationError("normalized output does not match its frozen parent")
+    try:
+        if _test_hook is not None:
+            _test_hook("after-output-parent-open", {"parent": parent})
+        finalized = copy.deepcopy(dict(document))
+        finalized["objectBindingFacts"]["externalOutputObjectBinding"] = "verified"
+        finalized["overallStatus"] = _derive_overall_status(
+            finalized, load_codex_benchmark_contract(root)
+        )
+        validate_normalized_result(finalized, root)
+        data = json.dumps(
+            finalized, ensure_ascii=True, allow_nan=False, sort_keys=True, indent=2
+        ).encode("ascii") + b"\n"
+        if len(data) > MAX_CONTRACT_BYTES:
+            raise ObservationError("normalized result exceeds the contract byte limit")
+    except BaseException:
+        _mark_external_output_failure(document)
+        os.close(parent.descriptor)
+        raise
     descriptor: int | None = None
     identity: tuple[int, int] | None = None
     try:
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         if hasattr(os, "O_NOFOLLOW"):
             flags |= os.O_NOFOLLOW
-        descriptor = os.open(output, flags, 0o600)
+        _verify_output_parent(parent)
+        descriptor = os.open(
+            parent.basename, flags, 0o600, dir_fd=parent.descriptor
+        )
         metadata = os.fstat(descriptor)
-        if not stat.S_ISREG(metadata.st_mode):
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
             raise ObservationError("normalized output is not a regular file")
         identity = (metadata.st_dev, metadata.st_ino)
+        if _test_hook is not None:
+            _test_hook(
+                "after-output-create",
+                {"parent": parent, "fileIdentity": identity},
+            )
         view = memoryview(data)
         while view:
             written = os.write(descriptor, view)
-            if written < 1:
-                raise ObservationError("normalized output write made no progress")
+            if (
+                type(written) is not int
+                or written < 1
+                or written > len(view)
+            ):
+                raise ObservationError(
+                    "normalized output write made invalid progress"
+                )
             view = view[written:]
         os.fsync(descriptor)
+        written_metadata = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(written_metadata.st_mode)
+            or written_metadata.st_nlink != 1
+            or (written_metadata.st_dev, written_metadata.st_ino) != identity
+            or written_metadata.st_size != len(data)
+        ):
+            raise ObservationError(
+                "normalized output object size or identity changed while writing"
+            )
+        _verify_output_parent(parent)
+        current = os.stat(
+            parent.basename,
+            dir_fd=parent.descriptor,
+            follow_symlinks=False,
+        )
+        if (
+            not stat.S_ISREG(current.st_mode)
+            or current.st_nlink != 1
+            or (current.st_dev, current.st_ino) != identity
+            or current.st_size != len(data)
+        ):
+            raise ObservationError("normalized output name binding changed")
+        if _test_hook is not None:
+            _test_hook(
+                "after-output-write",
+                {"parent": parent, "fileIdentity": identity},
+            )
+        _verify_output_parent(parent)
+        current = os.stat(
+            parent.basename,
+            dir_fd=parent.descriptor,
+            follow_symlinks=False,
+        )
+        if (
+            (current.st_dev, current.st_ino) != identity
+            or current.st_size != len(data)
+        ):
+            raise ObservationError("normalized output object was replaced")
+        completed_descriptor = descriptor
+        descriptor = None
+        os.close(completed_descriptor)
+        _verify_output_parent(parent)
+        current = os.stat(
+            parent.basename,
+            dir_fd=parent.descriptor,
+            follow_symlinks=False,
+        )
+        if (
+            (current.st_dev, current.st_ino) != identity
+            or current.st_size != len(data)
+        ):
+            raise ObservationError("normalized output object changed after close")
     except OSError as error:
+        _mark_external_output_failure(document)
         raise ObservationError(f"cannot write normalized output: {error}") from error
+    except BaseException:
+        _mark_external_output_failure(document)
+        raise
     finally:
         if descriptor is not None:
             os.close(descriptor)
         if sys.exc_info()[0] is not None and identity is not None:
             try:
-                current = output.lstat()
+                current = os.stat(
+                    parent.basename,
+                    dir_fd=parent.descriptor,
+                    follow_symlinks=False,
+                )
                 if (current.st_dev, current.st_ino) == identity:
-                    output.unlink()
+                    os.unlink(parent.basename, dir_fd=parent.descriptor)
             except OSError:
                 pass
+        os.close(parent.descriptor)
     return _sha256(data)
 
 
@@ -5535,6 +7496,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--git-executable", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
+    output_parent: FrozenOutputParent | None = None
     try:
         identities = validate_protocol_documents(REPOSITORY_ROOT)
         if args.execute:
@@ -5547,6 +7509,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             executable = freeze_executable(args.codex_executable, args.expected_binary_digest or "")
             run_root = freeze_owned_root(args.run_root)
+            output_parent = _freeze_external_output(
+                args.output,
+                REPOSITORY_ROOT,
+                run_root,
+            )
             entrypoint_sha256 = _sha256(_read_regular(REPOSITORY_ROOT / ENTRYPOINT_RELATIVE, "entrypoint"))
             module_sha256 = _sha256(_read_regular(REPOSITORY_ROOT / MODULE_RELATIVE, "module"))
             capability = _validate_execution_guard(
@@ -5576,12 +7543,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                 source_repository=args.source_repository,
                 git_executable=args.git_executable,
             )
-            write_normalized_result(result, args.output, REPOSITORY_ROOT)
+            frozen_output_parent = output_parent
+            output_parent = None
+            write_normalized_result(
+                result,
+                args.output,
+                REPOSITORY_ROOT,
+                _frozen_parent=frozen_output_parent,
+            )
             print("Codex no-Hook normalized observation written after verified cleanup.")
             return 0
     except ObservationError as error:
         print(f"Codex no-Hook observation protocol failed: {error}", file=sys.stderr)
         return 1
+    finally:
+        if output_parent is not None:
+            os.close(output_parent.descriptor)
     print(
         "Codex no-Hook protocol validation passed: "
         f"{identities['caseCount']} cases, {identities['sourceBindingCount']} source bindings, "

@@ -58,19 +58,30 @@ UTF-8 encoding, and no insignificant whitespace after excluding exactly their
 own digest field. File bindings for the source-closed taxonomy, blinded model
 response schema, fixture matrix, normalized result schema, runner entry point,
 implementation, and fake process fixture hash their exact tracked bytes. Each
-case additionally binds a random opaque token by digest, the materialized
-model schema, the complete stdin prompt, the deterministic logical fixture,
-and its pre/post snapshots. The empty result history binds the protocol digest
-and reserves one canonical future result path; it is not a placeholder
-observation.
+run additionally retains a public 256-bit materialization seed. From that seed,
+the canonical ordinal, and the protocol digest, a verifier independently
+derives each unretained opaque token and reconstructs the exact materialized
+model schema and stdin prompt. Per-case canonical commitments bind those
+identities to the canonical case, request, realized fixture, and logical file
+set; an ordered commitment root binds all 16 cases. The empty result history
+binds the protocol digest and reserves one canonical future result path; it is
+not a placeholder observation.
 
 The future Linux runner's registry-backed execution capability binds the exact
 protocol, runner/module and Codex binary identities, source commit/tree, model,
 reasoning effort, run-root identity, host, nonce, and irreversible 16-call
 budget. A sole descriptor-pinned launcher consumes the ordered plan. Receipts
-are parsed as bounded complete JSON documents using the Codex 0.153.0 shapes,
-and cleanup is anchored to parent and directory descriptors with device/inode
-rechecks. Public JSONL does not expose Hook lifecycle telemetry; no-Hook proof
+are parsed as bounded complete JSON documents using the Codex 0.153.0 shapes.
+Run-root writes, model schemas, isolated homes, workspaces, accepted installed
+copies, and cleanup stay anchored to held Linux descriptors and creation-time
+object identities. Schema bytes reach the child only through an inherited
+`/proc/self/fd` alias; installed-tree snapshots stay on the same held object.
+Cleanup quarantines and deletes only ledger-owned objects, preserving unknown
+replacements, while normalized output is created through a separately frozen
+external parent descriptor. Any name or object substitution forces incomplete
+status and manual cleanup rather than host PASS. Descriptor numbers, inodes,
+procfs aliases, paths, and temporary names are runtime checks, not portable
+evidence. Public JSONL does not expose Hook lifecycle telemetry; no-Hook proof
 therefore belongs to package, installed-tree, temporary-config, and wrapper
 absence facts rather than an event-count claim. All protocol validation remains
 fake-only, and the Codex observation remains `NOT-RUN`.
