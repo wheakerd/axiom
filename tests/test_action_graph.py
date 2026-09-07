@@ -235,6 +235,9 @@ class ActionGraphTests(unittest.TestCase):
             / "unit-and-integration-tests.yml"
         )
         original = path.read_text(encoding="utf-8")
+        failures = []
+        check_unit_test_workflow_text(original, failures)
+        self.assertEqual([], failures)
         scenarios = (
             (
                 "write permission",
@@ -254,6 +257,35 @@ class ActionGraphTests(unittest.TestCase):
                     1,
                 ),
                 "exact Python 3.14.7",
+            ),
+            (
+                "missing full-history declaration",
+                original.replace("          fetch-depth: 0\n", "", 1),
+                "fetch complete history with fetch-depth: 0",
+            ),
+            (
+                "nonzero shallow depth",
+                original.replace("fetch-depth: 0", "fetch-depth: 1", 1),
+                "fetch complete history with fetch-depth: 0",
+            ),
+            (
+                "checkout credentials persisted",
+                original.replace(
+                    "persist-credentials: false",
+                    "persist-credentials: true",
+                    1,
+                ),
+                "checkout must not persist credentials",
+            ),
+            (
+                "unexpected checkout input",
+                original.replace(
+                    "          fetch-depth: 0\n",
+                    "          fetch-depth: 0\n          clean: false\n",
+                    1,
+                ),
+                "checkout inputs must contain only fetch-depth and "
+                "persist-credentials",
             ),
             (
                 "secret expression",
