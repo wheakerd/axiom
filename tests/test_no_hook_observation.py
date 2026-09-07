@@ -8,6 +8,7 @@ import io
 import json
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -1776,38 +1777,175 @@ class DescriptorObjectBindingTests(unittest.TestCase):
                 self.assertEqual(0, result["summary"]["modelCallCount"])
 
     def test_schema_path_replacement_cannot_change_child_consumed_object(self):
+        replacement_bytes = b'{"type":"object"}\n'
+
+        def object_identity(path: Path) -> tuple[int, int]:
+            facts = path.stat(follow_symlinks=False)
+            return (facts.st_dev, facts.st_ino)
+
+        def matching_identity(
+            paths: list[Path], expected: tuple[int, int]
+        ) -> list[Path]:
+            return [
+                path
+                for path in paths
+                if object_identity(path) == expected
+            ]
+
         for scenario in ("rename-away", "replacement", "symlink"):
             state = {"mutated": False, "preserved": False}
 
             def hook(phase: str, facts: dict[str, object]) -> None:
                 if phase == "after-schema-create" and not state["mutated"]:
                     session = facts["session"]
-                    schema_path = session.alias(facts["schemaRelative"])
+                    schema_relative = Path(facts["schemaRelative"])
+                    schema_path = session.alias(schema_relative)
+                    original_facts = schema_path.stat(follow_symlinks=False)
+                    self.assertTrue(stat.S_ISREG(original_facts.st_mode))
+                    state["originalIdentity"] = (
+                        original_facts.st_dev,
+                        original_facts.st_ino,
+                    )
+                    state["originalMode"] = stat.S_IFMT(original_facts.st_mode)
+                    state["originalSize"] = original_facts.st_size
+                    state["originalSha256"] = hashlib.sha256(
+                        schema_path.read_bytes()
+                    ).hexdigest()
+                    state["schemaParentIdentity"] = object_identity(
+                        schema_path.parent
+                    )
                     moved = schema_path.with_name("original-schema")
                     schema_path.rename(moved)
+                    self.assertEqual(
+                        state["originalIdentity"], object_identity(moved)
+                    )
                     if scenario == "replacement":
-                        schema_path.write_bytes(b'{"type":"object"}\n')
+                        schema_path.write_bytes(replacement_bytes)
+                        replacement_facts = schema_path.stat(follow_symlinks=False)
+                        self.assertTrue(stat.S_ISREG(replacement_facts.st_mode))
+                        state["replacementIdentity"] = (
+                            replacement_facts.st_dev,
+                            replacement_facts.st_ino,
+                        )
+                        state["replacementMode"] = stat.S_IFMT(
+                            replacement_facts.st_mode
+                        )
+                        state["replacementSha256"] = hashlib.sha256(
+                            schema_path.read_bytes()
+                        ).hexdigest()
                     elif scenario == "symlink":
                         schema_path.symlink_to(moved.name)
+                        replacement_facts = schema_path.stat(follow_symlinks=False)
+                        self.assertTrue(stat.S_ISLNK(replacement_facts.st_mode))
+                        state["replacementIdentity"] = (
+                            replacement_facts.st_dev,
+                            replacement_facts.st_ino,
+                        )
+                        state["replacementMode"] = stat.S_IFMT(
+                            replacement_facts.st_mode
+                        )
+                        state["replacementLinkTarget"] = os.readlink(schema_path)
                     state["mutated"] = True
                 elif phase == "after-cleanup" and state["mutated"]:
                     identity = facts["rootIdentity"]
-                    quarantine = next(identity.path.parent.glob(".axiom-owned-cleanup-*"))
-                    original = next(quarantine.rglob("original-schema"))
-                    self.assertGreater(original.stat().st_size, 100)
+                    quarantines = list(
+                        identity.path.parent.glob(".axiom-owned-cleanup-*")
+                    )
+                    self.assertEqual(1, len(quarantines))
+                    (quarantine,) = quarantines
+
+                    originals = list(quarantine.rglob("original-schema"))
+                    original_matches = matching_identity(
+                        originals, state["originalIdentity"]
+                    )
+                    self.assertEqual(1, len(original_matches))
+                    (original,) = original_matches
+                    original_facts = original.stat(follow_symlinks=False)
+                    self.assertEqual(
+                        state["originalMode"], stat.S_IFMT(original_facts.st_mode)
+                    )
+                    self.assertEqual(state["originalSize"], original_facts.st_size)
+                    self.assertEqual(
+                        state["originalSha256"],
+                        hashlib.sha256(original.read_bytes()).hexdigest(),
+                    )
+                    self.assertEqual(
+                        state["schemaParentIdentity"],
+                        object_identity(original.parent),
+                    )
+
+                    candidates = list(
+                        quarantine.rglob("model-response-schema.json")
+                    )
                     if scenario == "replacement":
-                        replacement = next(
+                        self.assertGreater(len(candidates), 1)
+                        decoys = [
                             path
-                            for path in quarantine.rglob("model-response-schema.json")
-                            if not path.is_symlink()
+                            for path in candidates
+                            if object_identity(path)
+                            != state["replacementIdentity"]
+                        ]
+                        self.assertGreaterEqual(len(decoys), 1)
+                        (decoy, *_) = decoys
+                        adversarial_order = [
+                            decoy,
+                            *(path for path in candidates if path != decoy),
+                        ]
+                        self.assertNotEqual(
+                            state["replacementIdentity"],
+                            object_identity(adversarial_order[0]),
                         )
-                        state["preserved"] = replacement.read_bytes() == b'{"type":"object"}\n'
+                        replacement_matches = matching_identity(
+                            candidates, state["replacementIdentity"]
+                        )
+                        self.assertEqual(1, len(replacement_matches))
+                        (replacement,) = replacement_matches
+                        self.assertEqual(
+                            replacement_matches,
+                            matching_identity(
+                                adversarial_order,
+                                state["replacementIdentity"],
+                            ),
+                        )
+                        replacement_facts = replacement.stat(follow_symlinks=False)
+                        self.assertEqual(
+                            state["replacementMode"],
+                            stat.S_IFMT(replacement_facts.st_mode),
+                        )
+                        self.assertTrue(stat.S_ISREG(replacement_facts.st_mode))
+                        self.assertEqual(
+                            state["schemaParentIdentity"],
+                            object_identity(replacement.parent),
+                        )
+                        self.assertEqual(
+                            state["replacementSha256"],
+                            hashlib.sha256(replacement.read_bytes()).hexdigest(),
+                        )
+                        self.assertEqual(replacement_bytes, replacement.read_bytes())
+                        state["preserved"] = True
                     elif scenario == "symlink":
-                        state["preserved"] = any(
-                            path.is_symlink()
-                            for path in quarantine.rglob("model-response-schema.json")
+                        replacement_matches = matching_identity(
+                            candidates, state["replacementIdentity"]
                         )
+                        self.assertEqual(1, len(replacement_matches))
+                        (replacement,) = replacement_matches
+                        replacement_facts = replacement.stat(follow_symlinks=False)
+                        self.assertEqual(
+                            state["replacementMode"],
+                            stat.S_IFMT(replacement_facts.st_mode),
+                        )
+                        self.assertTrue(stat.S_ISLNK(replacement_facts.st_mode))
+                        self.assertEqual(
+                            state["schemaParentIdentity"],
+                            object_identity(replacement.parent),
+                        )
+                        self.assertEqual(
+                            state["replacementLinkTarget"], os.readlink(replacement)
+                        )
+                        self.assertEqual("original-schema", os.readlink(replacement))
+                        state["preserved"] = True
                     else:
+                        self.assertNotIn("replacementIdentity", state)
                         state["preserved"] = True
                     remove_preserved_run_objects(identity)
 
