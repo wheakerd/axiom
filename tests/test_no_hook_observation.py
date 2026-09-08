@@ -39,6 +39,7 @@ GIT_EXECUTABLE = Path(shutil.which("git") or "/nonexistent/git").resolve()
 BUILDER_SOURCE_REPOSITORY = Path(
     os.environ.get("AXIOM_TEST_BUNDLE_SOURCE_REPOSITORY", REPOSITORY_ROOT)
 ).resolve()
+PROTECTED_REPOSITORY_SENTINEL = b"axiom protected repository sentinel v1\n"
 
 
 def load_json(path: Path) -> dict[str, object]:
@@ -264,6 +265,76 @@ def remove_test_tree(path: Path) -> None:
                 child.rmdir()
     path.chmod(0o700)
     path.rmdir()
+
+
+def create_test_protected_repository(
+    parent: Path,
+) -> tuple[Path, tuple[tuple[str, int, int, str], ...]]:
+    """Create one bounded test-owned target for descriptor-confinement races."""
+    parent_metadata = parent.lstat()
+    if stat.S_ISLNK(parent_metadata.st_mode) or not stat.S_ISDIR(
+        parent_metadata.st_mode
+    ):
+        raise AssertionError("protected repository parent is not an ordinary directory")
+    target = parent / "protected-repository"
+    directory_descriptor: int | None = None
+    sentinel_descriptor: int | None = None
+    try:
+        target.mkdir(mode=0o700)
+        target.chmod(0o700)
+        target_metadata = target.lstat()
+        if stat.S_ISLNK(target_metadata.st_mode) or not stat.S_ISDIR(
+            target_metadata.st_mode
+        ):
+            raise AssertionError("protected repository is not an ordinary directory")
+        if stat.S_IMODE(target_metadata.st_mode) != 0o700:
+            raise AssertionError("protected repository mode is not fixed at 0700")
+        directory_descriptor = os.open(
+            target,
+            os.O_RDONLY
+            | os.O_DIRECTORY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_CLOEXEC", 0),
+        )
+        sentinel_descriptor = os.open(
+            "sentinel.txt",
+            os.O_WRONLY
+            | os.O_CREAT
+            | os.O_EXCL
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_CLOEXEC", 0),
+            0o600,
+            dir_fd=directory_descriptor,
+        )
+        os.fchmod(sentinel_descriptor, 0o600)
+        remaining = memoryview(PROTECTED_REPOSITORY_SENTINEL)
+        while remaining:
+            written = os.write(sentinel_descriptor, remaining)
+            if written < 1 or written > len(remaining):
+                raise AssertionError("protected repository sentinel write did not progress")
+            remaining = remaining[written:]
+        os.close(sentinel_descriptor)
+        sentinel_descriptor = None
+        snapshot = observer.snapshot_tree(target)
+        expected = (
+            (
+                "sentinel.txt",
+                0o600,
+                len(PROTECTED_REPOSITORY_SENTINEL),
+                hashlib.sha256(PROTECTED_REPOSITORY_SENTINEL).hexdigest(),
+            ),
+        )
+        if snapshot != expected:
+            raise AssertionError("protected repository snapshot is not the fixed sentinel")
+        return target, snapshot
+    except BaseException:
+        remove_test_tree(target)
+        raise
+    finally:
+        if sentinel_descriptor is not None:
+            os.close(sentinel_descriptor)
+        if directory_descriptor is not None:
+            os.close(directory_descriptor)
 
 
 def remove_preserved_run_objects(identity: observer.OwnedRootIdentity) -> None:
@@ -2154,59 +2225,120 @@ class DescriptorObjectBindingTests(unittest.TestCase):
         self.assertEqual("incomplete", result["overallStatus"])
 
     def test_run_root_rename_and_repository_symlink_receive_no_writes(self):
-        repository_before = observer.snapshot_tree(REPOSITORY_ROOT)
-        state = {"moved_has_bundle": False, "repository_unchanged": False}
+        protected_parent = Path(tempfile.mkdtemp(prefix="axiom-protected-parent-"))
+        protected_repository, repository_before = create_test_protected_repository(
+            protected_parent
+        )
+        self.assertEqual(1, len(repository_before))
+        self.assertEqual("sentinel.txt", repository_before[0][0])
+        self.assertFalse((protected_repository / "bundle-build").exists())
+        state = {
+            "hook_reached": False,
+            "moved_has_bundle": False,
+            "replacement_preserved": False,
+            "repository_unchanged": False,
+        }
 
         def hook(phase: str, facts: dict[str, object]) -> None:
             if phase == "before-first-root-write":
                 session = facts["session"]
                 identity = session.identity
+                protected_metadata = protected_repository.stat()
+                self.assertNotEqual(
+                    (identity.device, identity.inode),
+                    (protected_metadata.st_dev, protected_metadata.st_ino),
+                )
+                self.assertFalse(
+                    protected_repository.resolve().is_relative_to(
+                        identity.path.resolve()
+                    )
+                )
+                self.assertFalse(
+                    identity.path.resolve().is_relative_to(
+                        protected_repository.resolve()
+                    )
+                )
                 moved = identity.path.with_name(identity.path.name + "-moved")
                 identity.path.rename(moved)
-                identity.path.symlink_to(REPOSITORY_ROOT, target_is_directory=True)
+                identity.path.symlink_to(
+                    protected_repository, target_is_directory=True
+                )
+                state["hook_reached"] = True
             elif phase == "after-cleanup":
                 identity = facts["rootIdentity"]
                 moved = identity.path.with_name(identity.path.name + "-moved")
                 state["moved_has_bundle"] = (moved / "bundle-build").is_dir()
+                state["replacement_preserved"] = (
+                    identity.path.is_symlink()
+                    and Path(os.readlink(identity.path)) == protected_repository
+                )
                 state["repository_unchanged"] = (
-                    observer.snapshot_tree(REPOSITORY_ROOT) == repository_before
+                    observer.snapshot_tree(protected_repository) == repository_before
                 )
                 remove_preserved_run_objects(identity)
 
-        result = fake_run(hook=hook, seed=b"\x13" * 32)
-        self.assertTrue(state["moved_has_bundle"])
-        self.assertTrue(state["repository_unchanged"])
-        self.assertEqual(0, result["summary"]["modelCallCount"])
-        self.assertEqual("incomplete", result["overallStatus"])
-        self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+        try:
+            result = fake_run(hook=hook, seed=b"\x13" * 32)
+            self.assertTrue(state["hook_reached"])
+            self.assertTrue(state["moved_has_bundle"])
+            self.assertTrue(state["replacement_preserved"])
+            self.assertTrue(state["repository_unchanged"])
+            self.assertFalse((protected_repository / "bundle-build").exists())
+            self.assertEqual(0, result["summary"]["modelCallCount"])
+            self.assertEqual("incomplete", result["overallStatus"])
+            self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+        finally:
+            remove_test_tree(protected_repository)
+            protected_parent.rmdir()
 
     def test_nested_parent_substitution_is_rejected_before_descriptor_write(self):
         parent = Path(tempfile.mkdtemp(prefix="axiom-parent-binding-"))
         root = parent / "owned"
         root.mkdir(mode=0o700)
+        protected_repository, repository_before = create_test_protected_repository(
+            parent
+        )
+        self.assertEqual(1, len(repository_before))
+        self.assertEqual("sentinel.txt", repository_before[0][0])
+        self.assertFalse((protected_repository / "child" / "forbidden").exists())
+        root_metadata = root.stat()
+        protected_metadata = protected_repository.stat()
+        self.assertNotEqual(
+            (root_metadata.st_dev, root_metadata.st_ino),
+            (protected_metadata.st_dev, protected_metadata.st_ino),
+        )
+        self.assertFalse(protected_repository.resolve().is_relative_to(root.resolve()))
+        self.assertFalse(root.resolve().is_relative_to(protected_repository.resolve()))
         identity = observer.freeze_owned_root(root)
         session = observer.OwnedRootSession(identity)
-        repository_before = observer.snapshot_tree(REPOSITORY_ROOT)
         moved = root / "moved-safe"
+        substitution_performed = False
         try:
             session.mkdir("safe/child", parents=True, phase="parent-binding-test")
             (root / "safe").rename(moved)
-            (root / "safe").symlink_to(REPOSITORY_ROOT, target_is_directory=True)
+            (root / "safe").symlink_to(
+                protected_repository, target_is_directory=True
+            )
+            substitution_performed = True
             with self.assertRaisesRegex(observer.ObservationError, "parent"):
                 session.create_file(
                     "safe/child/forbidden",
                     b"must-not-write",
                     phase="parent-binding-test",
                 )
+            self.assertTrue(substitution_performed)
             self.assertEqual(
-                repository_before, observer.snapshot_tree(REPOSITORY_ROOT)
+                repository_before, observer.snapshot_tree(protected_repository)
             )
-            self.assertFalse((REPOSITORY_ROOT / "child" / "forbidden").exists())
+            self.assertFalse(
+                (protected_repository / "child" / "forbidden").exists()
+            )
         finally:
             session.close()
             remove_test_tree(root / "safe")
             remove_test_tree(moved)
             remove_test_tree(root)
+            remove_test_tree(protected_repository)
             parent.rmdir()
 
     def test_installed_object_replacement_and_tree_drift_hard_stop_before_launch(self):
@@ -2904,19 +3036,64 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                 top = Path(tempfile.mkdtemp(prefix="axiom-output-race-"))
                 parent = top / "output-parent"
                 parent.mkdir(mode=0o700)
+                protected_repository, repository_before = (
+                    create_test_protected_repository(top)
+                )
+                self.assertEqual(1, len(repository_before))
+                self.assertEqual("sentinel.txt", repository_before[0][0])
+                self.assertFalse((protected_repository / "result.json").exists())
+                parent_metadata = parent.stat()
+                protected_metadata = protected_repository.stat()
+                self.assertNotEqual(
+                    (parent_metadata.st_dev, parent_metadata.st_ino),
+                    (protected_metadata.st_dev, protected_metadata.st_ino),
+                )
+                self.assertFalse(
+                    protected_repository.resolve().is_relative_to(parent.resolve())
+                )
+                self.assertFalse(
+                    parent.resolve().is_relative_to(protected_repository.resolve())
+                )
                 moved = top / "moved-parent"
                 candidate = copy.deepcopy(self.fake_result)
-                repository_before = observer.snapshot_tree(REPOSITORY_ROOT)
+                hook_reached = False
+                protected_contract_root_used = False
+                validate_normalized_result = observer.validate_normalized_result
+                load_codex_benchmark_contract = (
+                    observer.load_codex_benchmark_contract
+                )
+
+                def validate_against_protocol_root(
+                    document: dict[str, object], root: Path = REPOSITORY_ROOT
+                ) -> None:
+                    self.assertEqual(protected_repository, root)
+                    validate_normalized_result(document, REPOSITORY_ROOT)
+
+                def load_contract_from_protocol_root(
+                    root: Path,
+                ) -> dict[str, object]:
+                    nonlocal protected_contract_root_used
+                    self.assertIn(root, {protected_repository, REPOSITORY_ROOT})
+                    if root == protected_repository:
+                        protected_contract_root_used = True
+                    return load_codex_benchmark_contract(REPOSITORY_ROOT)
 
                 def hook(phase: str, facts: dict[str, object]) -> None:
+                    nonlocal hook_reached
                     frozen = facts["parent"]
-                    if scenario in {"parent-replacement", "parent-symlink"} and phase == "after-output-create":
+                    if (
+                        scenario in {"parent-replacement", "parent-symlink"}
+                        and phase == "after-output-create"
+                    ):
                         parent.rename(moved)
                         if scenario == "parent-symlink":
-                            parent.symlink_to(REPOSITORY_ROOT, target_is_directory=True)
+                            parent.symlink_to(
+                                protected_repository, target_is_directory=True
+                            )
                         else:
                             parent.mkdir(mode=0o700)
                             (parent / "preserve").write_bytes(b"unknown-parent")
+                        hook_reached = True
                     elif scenario == "name-replacement" and phase == "after-output-create":
                         os.rename(
                             frozen.basename,
@@ -2932,15 +3109,30 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                         )
                         os.write(replacement, b"preserve")
                         os.close(replacement)
+                        hook_reached = True
 
                 try:
-                    with self.assertRaises(observer.ObservationError):
-                        observer.write_normalized_result(
-                            candidate,
-                            parent / "result.json",
-                            REPOSITORY_ROOT,
-                            _test_hook=hook,
-                        )
+                    with (
+                        mock.patch.object(
+                            observer,
+                            "validate_normalized_result",
+                            side_effect=validate_against_protocol_root,
+                        ),
+                        mock.patch.object(
+                            observer,
+                            "load_codex_benchmark_contract",
+                            side_effect=load_contract_from_protocol_root,
+                        ),
+                    ):
+                        with self.assertRaises(observer.ObservationError):
+                            observer.write_normalized_result(
+                                candidate,
+                                parent / "result.json",
+                                protected_repository,
+                                _test_hook=hook,
+                            )
+                    self.assertTrue(hook_reached)
+                    self.assertTrue(protected_contract_root_used)
                     self.assertEqual("incomplete", candidate["overallStatus"])
                     self.assertTrue(candidate["cleanup"]["manualCleanupRequired"])
                     self.assertEqual(
@@ -2948,10 +3140,12 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                         candidate["objectBindingFacts"]["externalOutputObjectBinding"],
                     )
                     self.assertEqual(
-                        observer.snapshot_tree(REPOSITORY_ROOT), repository_before
+                        observer.snapshot_tree(protected_repository),
+                        repository_before,
                     )
+                    self.assertFalse((protected_repository / "result.json").exists())
                     if scenario == "parent-symlink":
-                        self.assertFalse((REPOSITORY_ROOT / "result.json").exists())
+                        self.assertTrue(parent.is_symlink())
                     elif scenario == "parent-replacement":
                         self.assertEqual(
                             b"unknown-parent", (parent / "preserve").read_bytes()
@@ -2965,6 +3159,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                 finally:
                     remove_test_tree(parent)
                     remove_test_tree(moved)
+                    remove_test_tree(protected_repository)
                     top.rmdir()
 
 
