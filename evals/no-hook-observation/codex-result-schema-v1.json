@@ -4,7 +4,7 @@
   "title": "Axiom Codex no-Hook normalized observation result v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "materialization", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes"],
+  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "materialization", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "processDomainFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes"],
   "properties": {
     "schemaVersion": {"const": "1"},
     "kind": {"const": "axiom-codex-no-hook-observation-result"},
@@ -33,11 +33,12 @@
     },
     "runner": {
       "type": "object", "additionalProperties": false,
-      "required": ["version", "entrypointSha256", "moduleSha256", "taxonomySha256", "modelResponseSchemaSha256", "resultSchemaSha256", "fakeCliSha256"],
+      "required": ["version", "entrypointSha256", "moduleSha256", "linuxIsolationSha256", "taxonomySha256", "modelResponseSchemaSha256", "resultSchemaSha256", "fakeCliSha256"],
       "properties": {
         "version": {"const": "1"},
         "entrypointSha256": {"$ref": "#/$defs/sha256"},
         "moduleSha256": {"$ref": "#/$defs/sha256"},
+        "linuxIsolationSha256": {"$ref": "#/$defs/sha256"},
         "taxonomySha256": {"$ref": "#/$defs/sha256"},
         "modelResponseSchemaSha256": {"$ref": "#/$defs/sha256"},
         "resultSchemaSha256": {"$ref": "#/$defs/sha256"},
@@ -92,7 +93,7 @@
     },
     "executionFacts": {
       "type": "object", "additionalProperties": false,
-      "required": ["executableKind", "executedBinarySha256", "credentialBoundary", "authorizedModelCallCount", "modelProcessStartedCount", "promptFullyDeliveredCount", "marketplaceProcessCount", "pluginInstallProcessCount"],
+      "required": ["executableKind", "executedBinarySha256", "credentialBoundary", "authorizedModelCallCount", "modelProcessStartedCount", "promptFullyDeliveredCount", "builderProcessCount", "marketplaceProcessCount", "pluginInstallProcessCount"],
       "properties": {
         "executableKind": {"enum": ["codex-cli", "repository-fake-cli"]},
         "executedBinarySha256": {"$ref": "#/$defs/sha256"},
@@ -100,8 +101,31 @@
         "authorizedModelCallCount": {"type": "integer", "minimum": 0, "maximum": 16},
         "modelProcessStartedCount": {"type": "integer", "minimum": 0, "maximum": 16},
         "promptFullyDeliveredCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "builderProcessCount": {"type": "integer", "minimum": 0, "maximum": 1},
         "marketplaceProcessCount": {"type": "integer", "minimum": 0, "maximum": 15},
         "pluginInstallProcessCount": {"type": "integer", "minimum": 0, "maximum": 15}
+      }
+    },
+    "processDomainFacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mechanism", "availability", "domainCount", "builderDomainCount", "marketplaceDomainCount", "pluginInstallDomainCount", "modelDomainCount", "atomicEnrollmentVerifiedCount", "directChildPidfdVerifiedCount", "terminationRequiredCount", "completeDomainTerminationVerifiedCount", "domainEmptyVerifiedCount", "descendantReapingVerifiedCount", "domainRemovalVerifiedCount", "residualDomainCount", "manualCleanupRequired"],
+      "properties": {
+        "mechanism": {"enum": ["linux-cgroup-v2-clone3-pidfd-v1", "deterministic-process-domain-test-backend-v1", "unavailable"]},
+        "availability": {"enum": ["available", "simulated-fake-validation", "unavailable"]},
+        "domainCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "builderDomainCount": {"type": "integer", "minimum": 0, "maximum": 1},
+        "marketplaceDomainCount": {"type": "integer", "minimum": 0, "maximum": 15},
+        "pluginInstallDomainCount": {"type": "integer", "minimum": 0, "maximum": 15},
+        "modelDomainCount": {"type": "integer", "minimum": 0, "maximum": 16},
+        "atomicEnrollmentVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "directChildPidfdVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "terminationRequiredCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "completeDomainTerminationVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "domainEmptyVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "descendantReapingVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "domainRemovalVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "residualDomainCount": {"type": "integer", "minimum": 0, "maximum": 47},
+        "manualCleanupRequired": {"type": "boolean"}
       }
     },
     "installationFacts": {

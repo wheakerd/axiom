@@ -81,6 +81,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "scripts/render-release-facts.py",
     "axiom_validation/route-boundaries-v1.json",
     "axiom_validation/no_hook_bundle.py",
+    "axiom_validation/no_hook_linux_isolation.py",
     "axiom_validation/no_hook_observation.py",
     "axiom_validation/runtime-contract-inputs-v1.json",
     "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",

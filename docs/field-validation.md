@@ -87,6 +87,20 @@ resolve through the real `plugins/cache/<marketplace>/<plugin>/<version>`
 layout below the frozen temporary Codex home. None of these checks establishes
 a host observation before the separately authorized real run.
 
+Every observation-owned external process also requires its own delegated
+cgroup v2 child domain. The Linux/x86_64 launcher uses
+`clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)` so enrollment precedes every
+arbitrary bootstrap or executable instruction. The observer waits for the
+direct leader through its pidfd, terminates the complete domain with
+`cgroup.kill` when any descendant survives or a failure occurs, reaps adopted
+descendants as a child subreaper, requires `cgroup.events` to report
+`populated=0`, and removes the exact owned domain. Leader-only, process-group,
+session, subreaper-only, and post-spawn enrollment fallbacks are prohibited.
+An unavailable capability or any incomplete empty/removal proof blocks the
+next process, filesystem teardown, and normalized publication. Group 1
+filesystem consumption and Group 3 model-tool credential proof remain open,
+so this correction does not enable actual execution or establish host support.
+
 ## Before Testing
 
 1. Use a repository that contains no sensitive material or select a public

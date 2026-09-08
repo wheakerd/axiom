@@ -54,7 +54,7 @@
       "recordedOn": "2026-09-03",
       "baselineCommit": "c7a3b5988cf0d922762bb4498e0a833c7412ea8d",
       "sourceIssue": 117,
-      "summary": "Define Codex no-Hook protocol; preserve revision 6 bundle evidence; add fd-relative output, creation-time ownership, source-bound receipts, and credential-free Git without runtime or host claims.",
+      "summary": "Define Codex no-Hook protocol; preserve revision 6 bundle evidence; add fd-relative controls, source-bound receipts, credential-free Git, and delegated-cgroup process containment without host claims.",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
     }
   ]

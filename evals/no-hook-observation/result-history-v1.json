@@ -4,7 +4,7 @@
   "profileId": "openai-hook-independent-v1",
   "protocol": {
     "path": "evals/no-hook-observation/codex-protocol-v1.json",
-    "digest": "sha256:2f007e2e1c599e018a5b5ddd00fbbb671492fa54d84f30fa0bc10bc6f0692f98",
+    "digest": "sha256:e665b545eb4a6ca26bbfa66c53e732ac79f4c1fabdac9a846a3b216249f72d82",
     "status": "defined"
   },
   "canonicalResultPath": "evals/no-hook-observation/results/codex-linux-v1.json",

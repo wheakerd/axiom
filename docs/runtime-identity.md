@@ -90,6 +90,19 @@ therefore belongs to package, installed-tree, temporary-config, and wrapper
 absence facts rather than an event-count claim. All protocol validation remains
 fake-only, and the Codex observation remains `NOT-RUN`.
 
+Revision 7 also binds a separate Linux process-domain helper. Each builder,
+marketplace, install, and model process receives a new delegated cgroup v2
+domain and is atomically enrolled with
+`clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)` before the fixed bootstrap. Direct
+leaders are pidfd-waited; surviving descendants are terminated with
+`cgroup.kill`, adopted descendants are reaped under child-subreaper ownership,
+and `cgroup.events` must prove `populated=0` before the exact domain is removed.
+Only closed mechanism, count, empty, reap, removal, and cleanup facts can enter
+the normalized result; never a PID, cgroup name, path, raw event, or descriptor.
+Unsupported hosts and incomplete cleanup have no weaker fallback. Actual
+execution remains disabled until the distinct Group 1 filesystem-consumption
+and Group 3 credential-exclusion boundaries are also complete.
+
 Construction binds one caller-supplied absolute Git executable, requires its
 `--no-lazy-fetch` capability, and rechecks its physical identity around every
 read-only invocation. Git receives a fixed environment allowlist rather than

@@ -10,11 +10,12 @@ from pathlib import Path
 from unittest import mock
 
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
+from axiom_validation.no_hook_linux_isolation import check_no_hook_linux_isolation
 from axiom_validation.no_hook_observation import check_no_hook_observation
 
 
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 116 required files, 6 JSON files, "
+    "Publication validation passed: 117 required files, 6 JSON files, "
     "117 Markdown files, 17 documentation negative fixtures, "
     "78 offline route contract fixtures, "
     "95 black-box routing cases, 30 fixed host benchmark cases, "
@@ -37,10 +38,15 @@ EXPECTED_SUCCESS_SUMMARY = (
 class ValidatorIsolationTests(unittest.TestCase):
     def test_protocol_validator_never_starts_codex_or_another_process(self):
         failures: list[str] = []
-        with mock.patch("axiom_validation.no_hook_observation.subprocess.Popen") as launch:
+        with (
+            mock.patch("axiom_validation.no_hook_observation.subprocess.Popen") as launch,
+            mock.patch("axiom_validation.no_hook_linux_isolation.subprocess.Popen") as domain_launch,
+        ):
             self.assertEqual((16, 14), check_no_hook_observation(failures))
+            self.assertEqual(1, check_no_hook_linux_isolation(failures))
         self.assertEqual([], failures)
         launch.assert_not_called()
+        domain_launch.assert_not_called()
 
     def test_production_validation_modules_do_not_import_tests(self):
         validation_root = REPOSITORY_ROOT / "axiom_validation"

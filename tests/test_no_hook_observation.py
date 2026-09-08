@@ -17,6 +17,11 @@ from unittest import mock
 
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation import no_hook_observation as observer
+from axiom_validation.no_hook_linux_isolation import (
+    DeterministicProcessDomainSupervisor,
+    REAL_MECHANISM as REAL_PROCESS_DOMAIN_MECHANISM,
+    TEST_MECHANISM as TEST_PROCESS_DOMAIN_MECHANISM,
+)
 
 
 FIXTURE = REPOSITORY_ROOT / "tests/fixtures/no_hook_observation.py"
@@ -117,6 +122,8 @@ def fake_run(
     hook: object | None = None,
     seed: bytes | None = None,
     real_builder: bool = False,
+    process_domains: DeterministicProcessDomainSupervisor | None = None,
+    builder_failure_relative: str | None = None,
 ) -> dict[str, object]:
     test_parent = Path(tempfile.mkdtemp(prefix="axiom-observer-fake-parent-"))
     source_repository: Path | None = None
@@ -168,10 +175,12 @@ def fake_run(
             _test_git_executable=GIT_EXECUTABLE if real_builder else None,
             _test_materialization_seed=seed,
             _test_hook=hook,
+            _test_process_domain_supervisor=process_domains,
+            _test_builder_failure_relative=builder_failure_relative,
         )
     finally:
         if test_parent.exists():
-            shutil.rmtree(test_parent)
+            remove_test_tree(test_parent)
 
 
 def host_pass_from_fake(document: dict[str, object]) -> dict[str, object]:
@@ -186,8 +195,30 @@ def host_pass_from_fake(document: dict[str, object]) -> dict[str, object]:
         "authorizedModelCallCount": 16,
         "modelProcessStartedCount": 16,
         "promptFullyDeliveredCount": 16,
+        "builderProcessCount": 1,
         "marketplaceProcessCount": 15,
         "pluginInstallProcessCount": 15,
+    }
+    termination_required = candidate["processDomainFacts"][
+        "terminationRequiredCount"
+    ]
+    candidate["processDomainFacts"] = {
+        "mechanism": REAL_PROCESS_DOMAIN_MECHANISM,
+        "availability": "available",
+        "domainCount": 47,
+        "builderDomainCount": 1,
+        "marketplaceDomainCount": 15,
+        "pluginInstallDomainCount": 15,
+        "modelDomainCount": 16,
+        "atomicEnrollmentVerifiedCount": 47,
+        "directChildPidfdVerifiedCount": 47,
+        "terminationRequiredCount": termination_required,
+        "completeDomainTerminationVerifiedCount": termination_required,
+        "domainEmptyVerifiedCount": 47,
+        "descendantReapingVerifiedCount": 47,
+        "domainRemovalVerifiedCount": 47,
+        "residualDomainCount": 0,
+        "manualCleanupRequired": False,
     }
     candidate["objectBindingFacts"].update({
         "externalOutputObjectBinding": "verified",
@@ -2264,7 +2295,22 @@ class DescriptorObjectBindingTests(unittest.TestCase):
 class ResultIntegrityAndEndToEndTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.fake_result = fake_run()
+        cls.fake_call_facts: list[dict[str, object]] = []
+
+        def capture_call_facts(phase: str, facts: dict[str, object]) -> None:
+            if phase != "before-cleanup":
+                return
+            session = facts["session"]
+            for index in range(1, 17):
+                ledger = session.alias(f"case-{index:02d}/call-ledger.jsonl")
+                for line in ledger.read_text(encoding="ascii").splitlines():
+                    cls.fake_call_facts.append(json.loads(line))
+
+        cls.fake_domains = DeterministicProcessDomainSupervisor()
+        cls.fake_result = fake_run(
+            hook=capture_call_facts,
+            process_domains=cls.fake_domains,
+        )
         cls.host_pass = host_pass_from_fake(cls.fake_result)
         observer.validate_normalized_result(cls.fake_result, REPOSITORY_ROOT)
         observer.validate_normalized_result(cls.host_pass, REPOSITORY_ROOT)
@@ -2292,6 +2338,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                 "authorizedModelCallCount": 16,
                 "modelProcessStartedCount": 16,
                 "promptFullyDeliveredCount": 16,
+                "builderProcessCount": 0,
                 "marketplaceProcessCount": 15,
                 "pluginInstallProcessCount": 15,
             },
@@ -2301,6 +2348,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                     "authorizedModelCallCount",
                     "modelProcessStartedCount",
                     "promptFullyDeliveredCount",
+                    "builderProcessCount",
                     "marketplaceProcessCount",
                     "pluginInstallProcessCount",
                 )
@@ -2333,8 +2381,28 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         self.assertTrue(result["objectBindingFacts"]["schemaObjectConsumptionVerified"])
         self.assertTrue(result["objectBindingFacts"]["runRootWritesDescriptorAnchored"])
         self.assertTrue(result["objectBindingFacts"]["installedDirectoryIdentityVerified"])
+        self.assertEqual(TEST_PROCESS_DOMAIN_MECHANISM, result["processDomainFacts"]["mechanism"])
+        self.assertEqual(46, result["processDomainFacts"]["domainCount"])
+        self.assertEqual(46, result["processDomainFacts"]["domainEmptyVerifiedCount"])
+        self.assertEqual(0, result["processDomainFacts"]["residualDomainCount"])
+        self.assertFalse(result["processDomainFacts"]["manualCleanupRequired"])
+        self.assertEqual(46, len(self.fake_call_facts))
+        self.assertTrue(all(item["processDomainBound"] for item in self.fake_call_facts))
+        expected_purposes = [purpose for purpose, _ in observer.LAUNCH_SEQUENCE]
+        self.assertEqual(
+            [
+                f"domain-create:{index}:{purpose}"
+                for index, purpose in enumerate(expected_purposes, 1)
+            ],
+            [
+                item
+                for item in self.fake_domains.events
+                if item.startswith("domain-create:")
+            ],
+        )
 
     def test_real_builder_fake_orchestration_uses_source_compatible_receipts(self):
+        process_domains = DeterministicProcessDomainSupervisor()
         synthetic_environment = {
             "CODEX_API_KEY": "sentinel-not-a-real-secret",
             "OPENAI_API_KEY": "second-synthetic-value",
@@ -2342,13 +2410,20 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             "AXIOM_TEST_SECRET": "fourth-synthetic-value",
         }
         with mock.patch.object(observer.os, "environ", synthetic_environment):
-            result = fake_run(real_builder=True, seed=b"\x31" * 32)
+            result = fake_run(
+                real_builder=True,
+                seed=b"\x31" * 32,
+                process_domains=process_domains,
+            )
         self.assertEqual("fake-validation", result["runMode"])
         self.assertEqual("incomplete", result["overallStatus"])
         self.assertEqual(16, result["summary"]["passCount"])
         self.assertEqual(16, result["summary"]["modelCallCount"])
         self.assertEqual(15, result["executionFacts"]["marketplaceProcessCount"])
         self.assertEqual(15, result["executionFacts"]["pluginInstallProcessCount"])
+        self.assertEqual(1, result["executionFacts"]["builderProcessCount"])
+        self.assertEqual(47, result["processDomainFacts"]["domainCount"])
+        self.assertEqual(1, result["processDomainFacts"]["builderDomainCount"])
         self.assertEqual(1, result["installationFacts"]["noPluginControlCaseCount"])
         for key in (
             "bundleDestinationDescriptorBound",
@@ -2362,22 +2437,26 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         self.assertTrue(result["cleanup"]["temporaryRootsRemoved"])
         self.assertTrue(result["cleanup"]["sourceBundleUnchanged"])
         self.assertFalse(result["cleanup"]["manualCleanupRequired"])
+        creates = [
+            item for item in process_domains.events if item.startswith("domain-create:")
+        ]
+        self.assertEqual(47, len(creates))
+        self.assertEqual("domain-create:1:bundle-builder", creates[0])
+        self.assertEqual(
+            "domain-removed:1:bundle-builder",
+            next(
+                item
+                for item in process_domains.events
+                if item == "domain-removed:1:bundle-builder"
+            ),
+        )
 
     def test_real_builder_failure_hard_stops_before_any_model_case(self):
-        injected = False
-
-        def hook(phase: str, facts: dict[str, object]) -> None:
-            nonlocal injected
-            if (
-                not injected
-                and phase == "builder-after-create-before-ledger"
-                and facts["relativePath"] == ".axiom-no-hook-bundle-staging"
-            ):
-                injected = True
-                raise OSError("injected builder preflight failure")
-
-        result = fake_run(real_builder=True, hook=hook, seed=b"\x32" * 32)
-        self.assertTrue(injected)
+        result = fake_run(
+            real_builder=True,
+            seed=b"\x32" * 32,
+            builder_failure_relative=".axiom-no-hook-bundle-staging",
+        )
         self.assertEqual("incomplete", result["overallStatus"])
         self.assertEqual(0, result["summary"]["modelCallCount"])
         self.assertEqual("incomplete", result["cases"][0]["status"])
@@ -2485,6 +2564,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("authorizedModelCallCount", 15),
             ("modelProcessStartedCount", 15),
             ("promptFullyDeliveredCount", 15),
+            ("builderProcessCount", 0),
             ("marketplaceProcessCount", 14),
             ("pluginInstallProcessCount", 14),
         )
@@ -2495,6 +2575,47 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
                 observer.ObservationError
             ):
                 observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
+
+    def test_process_domain_facts_cannot_be_rewritten_into_host_pass(self):
+        mutations = (
+            ("mechanism", TEST_PROCESS_DOMAIN_MECHANISM),
+            ("availability", "unavailable"),
+            ("domainCount", 46),
+            ("builderDomainCount", 0),
+            ("marketplaceDomainCount", 14),
+            ("pluginInstallDomainCount", 14),
+            ("modelDomainCount", 15),
+            ("atomicEnrollmentVerifiedCount", 46),
+            ("directChildPidfdVerifiedCount", 46),
+            ("terminationRequiredCount", 1),
+            ("completeDomainTerminationVerifiedCount", 1),
+            ("domainEmptyVerifiedCount", 46),
+            ("descendantReapingVerifiedCount", 46),
+            ("domainRemovalVerifiedCount", 46),
+            ("residualDomainCount", 1),
+            ("manualCleanupRequired", True),
+        )
+        for field, value in mutations:
+            candidate = copy.deepcopy(self.host_pass)
+            candidate["processDomainFacts"][field] = value
+            candidate["overallStatus"] = "pass"
+            with self.subTest(field=field), self.assertRaises(
+                observer.ObservationError
+            ):
+                observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
+
+    def test_process_domain_removal_failure_blocks_result_publication(self):
+        process_domains = DeterministicProcessDomainSupervisor(
+            failure_phase="domain-remove"
+        )
+        with self.assertRaisesRegex(
+            observer.ObservationError,
+            "normalized result publication requires an empty removed process domain",
+        ):
+            fake_run(process_domains=process_domains, seed=b"\x37" * 32)
+        self.assertTrue(
+            process_domains.normalized_summary()["manualCleanupRequired"]
+        )
 
     def test_identity_binding_mutations_fail(self):
         mutations = (
@@ -2679,6 +2800,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         )
         error = observer.ProcessBoundaryError(
             "partial prompt",
+            process_purpose="model-case",
             model_call_authorized=True,
             process_started=True,
             prompt_fully_delivered=False,

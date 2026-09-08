@@ -96,6 +96,10 @@ def append_call_fact(kind: str, argv: list[str], prompt: bytes = b"") -> None:
         "kind": kind,
         "stdinSentinel": bool(argv and argv[-1] == "-"),
         "promptSha256": hashlib.sha256(prompt).hexdigest() if prompt else None,
+        "processDomainBound": (
+            os.environ.get("AXIOM_FAKE_PROCESS_DOMAIN")
+            == "deterministic-enrolled"
+        ),
     }
     with open(target, "a", encoding="ascii", newline="\n") as stream:
         stream.write(json.dumps(fact, sort_keys=True, separators=(",", ":")) + "\n")

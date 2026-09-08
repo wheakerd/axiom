@@ -28,7 +28,7 @@
     "observerTaxonomy": {"path":"evals/codex-exec-jsonl-observer-v3.json","sha256":"f74f844fe477673229c7e7a3bc3a34181cd5e6727305eed9d9450b312edb6d1e"},
     "promptEnvelope": {"path":"evals/no-hook-observation/codex-prompt-envelope-v1.json","digest":"sha256:418371038eb0c88380860b5b0b37c2c92ebe1c2ed469ff5eed15b74192f3e40d"},
     "fixtureMatrix": {"path":"evals/no-hook-observation/codex-fixtures-v1.json","sha256":"7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"},
-    "resultSchema": {"path":"evals/no-hook-observation/codex-result-schema-v1.json","sha256":"60ee67766995cbc8c9eca095da9c5ae475ee939fb2acd62670766f7dbae305e4"}
+    "resultSchema": {"path":"evals/no-hook-observation/codex-result-schema-v1.json","sha256":"6432830a9893561f5f6de9706bddb6c46cfb215b6a58fb51151ba4a9159752d5"}
   },
   "host": {
     "name": "codex",
@@ -162,6 +162,24 @@
       "features.workspace_dependencies=false"
     ]
   },
+  "processDomain": {
+    "platform": "linux-x86_64-only",
+    "mechanism": "delegated-cgroup-v2-clone3-pidfd",
+    "domainPerLaunch": ["bundle-builder", "marketplace", "plugin-install", "model-case"],
+    "enrollment": "clone3-atomic-before-bootstrap-or-exec",
+    "directChildIdentity": "pidfd",
+    "descendantOwnership": "cgroup-v2-authoritative",
+    "adoptedDescendantReaping": "child-subreaper-required",
+    "termination": "cgroup-kill-complete-domain",
+    "emptyProof": "cgroup-events-populated-zero",
+    "advanceBarrier": ["next-process", "next-case", "filesystem-cleanup", "result-publication"],
+    "domainRemoval": "exact-owned-child-verified-absent",
+    "unsupportedHost": "actual-execution-unavailable",
+    "fallbacksForbidden": ["leader-only", "process-group-only", "session-only", "subreaper-only", "post-spawn-cgroup-procs"],
+    "group1Status": "open",
+    "group3Status": "open-pending-actual-binary-canary",
+    "actualExecutionAvailability": "disabled-pending-group1-and-group3"
+  },
   "installation": {
     "scope": "isolated-ephemeral-test-only",
     "marketplace": "observer-owned-local",
@@ -221,6 +239,7 @@
       "unexpected-stderr",
       "stdin-write-integrity-failure",
       "source-suppressed-action-surface-enabled",
+      "process-domain-unavailable-or-incomplete",
       "cleanup-incomplete"
     ],
     "remainingCasesAfterHardStop": "not-run",
@@ -313,15 +332,16 @@
     "version": "1",
     "behaviorDependencies": [
       {"path":"scripts/run-no-hook-codex-observation.py","role":"entrypoint","sha256":"9b1e477889acfeab347d3236a782acdaadaad346b0c24c99cff79b2ec0fe800b"},
-      {"path":"axiom_validation/no_hook_observation.py","role":"implementation-validator","sha256":"abe80355dfec099fc2b692f6435d2b6f150c986b0405817c7e86290cbb2f9ebd"},
-      {"path":"tests/fixtures/no_hook_observation.py","role":"fake-process-fixture","sha256":"595ad0a7710cbbd407ff93fcc8923e4e83ce29c8fe39ccf7a7e4a57cd279d89e"}
+      {"path":"axiom_validation/no_hook_observation.py","role":"implementation-validator","sha256":"363e62730a8c838db95e638be9a2103fedc68548526467e73186270bd630e396"},
+      {"path":"axiom_validation/no_hook_linux_isolation.py","role":"linux-process-domain","sha256":"6e036fdc5ec2a11197c9623e90bcaf2c7ba552bb4b46845fdf3cffd8270d422c"},
+      {"path":"tests/fixtures/no_hook_observation.py","role":"fake-process-fixture","sha256":"ffe9b284ece055b08aa85f0b6fa1b046f1fef3f0de59b91783a90104dfeb5a9c"}
     ],
     "defaultMode": "protocol-validation-only",
-    "executionGuards": ["execute-flag", "exact-protocol-digest", "exact-runner-and-module-digests", "exact-binary-digest", "exact-cli-version", "exact-source-main-and-tree", "exact-model-and-reasoning-effort", "exact-linux-x86-64-host", "exact-run-root-identity", "exact-call-count-authorization", "dedicated-credential-presence", "single-use-run-nonce", "irreversible-call-counter", "single-launcher-purpose-argv-env-binding", "executable-fd-pinning", "pidfd-termination", "install-sequence-authorization"],
+    "executionGuards": ["execute-flag", "exact-protocol-digest", "exact-runner-and-module-digests", "exact-binary-digest", "exact-cli-version", "exact-source-main-and-tree", "exact-model-and-reasoning-effort", "exact-linux-x86-64-host", "exact-run-root-identity", "exact-call-count-authorization", "dedicated-credential-presence", "single-use-run-nonce", "irreversible-call-counter", "single-launcher-purpose-argv-env-binding", "executable-fd-pinning", "delegated-cgroup-v2", "clone3-into-cgroup-pidfd", "cgroup-kill-complete-domain", "cgroup-events-empty-barrier", "child-subreaper-descendant-reaping", "exact-process-domain-removal", "install-sequence-authorization"],
     "output": "caller-supplied-path-outside-repository"
   },
   "cleanup": {
-    "order": ["terminate-and-reap-child", "seal-terminal-ledger", "remove-raw-streams", "remove-case-workspace", "remove-installed-copy", "remove-case-codex-home", "remove-local-marketplace", "remove-runtime-root", "verify-user-state-unchanged"],
+    "order": ["terminate-complete-process-domain", "verify-cgroup-events-populated-zero", "reap-direct-and-adopted-descendants", "remove-exact-process-domain", "seal-terminal-ledger", "remove-raw-streams", "remove-case-workspace", "remove-installed-copy", "remove-case-codex-home", "remove-local-marketplace", "remove-runtime-root", "verify-user-state-unchanged"],
     "identitySubstitution": "stop-and-preserve-for-manual-cleanup",
     "successRequirement": "all-observer-owned-temporary-state-absent",
     "ownershipLedger": "creation-or-accepted-child-identity-only",
@@ -336,5 +356,5 @@
     "installation",
     "publication"
   ],
-  "protocolDigest": "sha256:2f007e2e1c599e018a5b5ddd00fbbb671492fa54d84f30fa0bc10bc6f0692f98"
+  "protocolDigest": "sha256:e665b545eb4a6ca26bbfa66c53e732ac79f4c1fabdac9a846a3b216249f72d82"
 }

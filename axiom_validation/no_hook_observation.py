@@ -17,7 +17,6 @@ import json
 import os
 import platform
 import re
-import signal
 import secrets
 import stat
 import subprocess
@@ -31,6 +30,15 @@ from pathlib import Path
 from typing import Any, BinaryIO, Callable, Mapping, Sequence
 
 from .context import REPOSITORY_ROOT
+from .no_hook_linux_isolation import (
+    BaseProcessDomainSupervisor,
+    DeterministicProcessDomainSupervisor,
+    DomainProcess,
+    LinuxProcessDomainSupervisor,
+    ProcessDomainError,
+    REAL_MECHANISM as REAL_PROCESS_DOMAIN_MECHANISM,
+    TEST_MECHANISM as TEST_PROCESS_DOMAIN_MECHANISM,
+)
 from .no_hook_profile import EXPECTED_CASE_IDS, EXPECTED_CASE_VERSIONS
 
 
@@ -44,6 +52,7 @@ RESULT_SCHEMA_RELATIVE = PROTOCOL_ROOT / "codex-result-schema-v1.json"
 RESULT_HISTORY_RELATIVE = PROTOCOL_ROOT / "result-history-v1.json"
 ENTRYPOINT_RELATIVE = Path("scripts/run-no-hook-codex-observation.py")
 MODULE_RELATIVE = Path("axiom_validation/no_hook_observation.py")
+LINUX_ISOLATION_RELATIVE = Path("axiom_validation/no_hook_linux_isolation.py")
 FAKE_CLI_RELATIVE = Path("tests/fixtures/no_hook_observation.py")
 
 PROFILE_RELATIVE = Path("evals/no-hook/profile-v1.json")
@@ -89,7 +98,7 @@ RESPONSE_SCHEMA_SHA256 = "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb
 BENCHMARK_SHA256 = "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
 HOST_CASE_SET_SHA256 = "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
 MODEL_RESPONSE_SCHEMA_SHA256 = "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"
-FAKE_CLI_SHA256 = "595ad0a7710cbbd407ff93fcc8923e4e83ce29c8fe39ccf7a7e4a57cd279d89e"
+FAKE_CLI_SHA256 = "ffe9b284ece055b08aa85f0b6fa1b046f1fef3f0de59b91783a90104dfeb5a9c"
 
 CODEX_VERSION = "0.153.0"
 CODEX_BINARY_SHA256 = "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be"
@@ -110,9 +119,11 @@ MAX_SNAPSHOT_FILES = 1024
 MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024
 MAX_RECEIPT_BYTES = 64 * 1024
 MAX_EXECUTABLE_BYTES = 256 * 1024 * 1024
+MAX_BUNDLE_WORKER_RESULT_BYTES = 512 * 1024
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
 DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
 WINDOWS_ABSOLUTE_PATTERN = re.compile(r"[A-Za-z]:[\\/]")
+ACTUAL_EXECUTION_GROUPS_COMPLETE = False
 
 SOURCE_FILES = (
     (
@@ -485,6 +496,7 @@ class ProcessBoundaryError(StreamBoundaryError):
         self,
         message: str,
         *,
+        process_purpose: str,
         model_call_authorized: bool,
         process_started: bool,
         prompt_fully_delivered: bool,
@@ -505,6 +517,11 @@ class ProcessBoundaryError(StreamBoundaryError):
                 for key in counters
             }
         super().__init__(message, **counters)
+        if process_purpose not in {
+            "bundle-builder", "marketplace", "plugin-install", "model-case"
+        }:
+            raise ValueError("process boundary purpose is not closed")
+        self.process_purpose = process_purpose
         self.model_call_authorized = model_call_authorized
         self.process_started = process_started
         self.prompt_fully_delivered = prompt_fully_delivered
@@ -3552,7 +3569,7 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
         "schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus",
         "materialization", "observationProtocol", "runner", "axiomIdentity",
         "contractBindings", "hostIdentity", "executionFacts",
-        "installationFacts", "objectBindingFacts", "noHookProof", "cases",
+        "processDomainFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases",
         "summary", "cleanup", "diagnosticCodes",
     }
     _expect(set(properties), expected_root, "result schema root fields")
@@ -3563,7 +3580,7 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
     for key in (
         "observationProtocol", "runner", "axiomIdentity", "contractBindings",
         "materialization", "hostIdentity", "executionFacts", "installationFacts",
-        "objectBindingFacts", "noHookProof", "summary", "cleanup",
+        "processDomainFacts", "objectBindingFacts", "noHookProof", "summary", "cleanup",
     ):
         node = properties[key]
         _expect(node.get("type"), "object", f"result schema {key} type")
@@ -3653,7 +3670,7 @@ def _validate_protocol(
         {
             "schemaVersion", "kind", "protocolId", "status", "source",
             "axiomIdentity", "contractBindings", "host", "execution",
-            "installation", "noHookProof", "bounds", "stderrPolicy",
+            "processDomain", "installation", "noHookProof", "bounds", "stderrPolicy",
             "batchPolicy", "retention", "materialization", "objectBinding",
             "cases", "runner", "cleanup", "nonClaims", "protocolDigest",
         },
@@ -3724,6 +3741,35 @@ def _validate_protocol(
         "childDescriptorAllowlist": "minimum-required-pass-fds",
     }
     _expect(execution, required_execution, "protocol execution")
+    _expect(
+        protocol.get("processDomain"),
+        {
+            "platform": "linux-x86_64-only",
+            "mechanism": "delegated-cgroup-v2-clone3-pidfd",
+            "domainPerLaunch": [
+                "bundle-builder", "marketplace", "plugin-install", "model-case"
+            ],
+            "enrollment": "clone3-atomic-before-bootstrap-or-exec",
+            "directChildIdentity": "pidfd",
+            "descendantOwnership": "cgroup-v2-authoritative",
+            "adoptedDescendantReaping": "child-subreaper-required",
+            "termination": "cgroup-kill-complete-domain",
+            "emptyProof": "cgroup-events-populated-zero",
+            "advanceBarrier": [
+                "next-process", "next-case", "filesystem-cleanup", "result-publication"
+            ],
+            "domainRemoval": "exact-owned-child-verified-absent",
+            "unsupportedHost": "actual-execution-unavailable",
+            "fallbacksForbidden": [
+                "leader-only", "process-group-only", "session-only",
+                "subreaper-only", "post-spawn-cgroup-procs"
+            ],
+            "group1Status": "open",
+            "group3Status": "open-pending-actual-binary-canary",
+            "actualExecutionAvailability": "disabled-pending-group1-and-group3",
+        },
+        "protocol process-domain contract",
+    )
     _expect(
         protocol.get("installation"),
         {
@@ -3802,6 +3848,7 @@ def _validate_protocol(
                 "event-after-terminal", "unexpected-stderr",
                 "stdin-write-integrity-failure",
                 "source-suppressed-action-surface-enabled",
+                "process-domain-unavailable-or-incomplete",
                 "cleanup-incomplete",
             ],
             "remainingCasesAfterHardStop": "not-run",
@@ -3904,6 +3951,7 @@ def _validate_protocol(
     expected_dependencies = [
         {"path": ENTRYPOINT_RELATIVE.as_posix(), "role": "entrypoint", "sha256": _sha256(file_bytes[ENTRYPOINT_RELATIVE])},
         {"path": MODULE_RELATIVE.as_posix(), "role": "implementation-validator", "sha256": _sha256(file_bytes[MODULE_RELATIVE])},
+        {"path": LINUX_ISOLATION_RELATIVE.as_posix(), "role": "linux-process-domain", "sha256": _sha256(file_bytes[LINUX_ISOLATION_RELATIVE])},
         {"path": FAKE_CLI_RELATIVE.as_posix(), "role": "fake-process-fixture", "sha256": _sha256(file_bytes[FAKE_CLI_RELATIVE])},
     ]
     _expect(runner.get("behaviorDependencies"), expected_dependencies, "runner behavior dependencies")
@@ -3919,7 +3967,10 @@ def _validate_protocol(
             "exact-run-root-identity", "exact-call-count-authorization",
             "dedicated-credential-presence", "single-use-run-nonce",
             "irreversible-call-counter", "single-launcher-purpose-argv-env-binding",
-            "executable-fd-pinning", "pidfd-termination",
+            "executable-fd-pinning", "delegated-cgroup-v2",
+            "clone3-into-cgroup-pidfd", "cgroup-kill-complete-domain",
+            "cgroup-events-empty-barrier", "child-subreaper-descendant-reaping",
+            "exact-process-domain-removal",
             "install-sequence-authorization",
         },
         "runner execution guards",
@@ -3928,7 +3979,10 @@ def _validate_protocol(
         protocol.get("cleanup"),
         {
             "order": [
-                "terminate-and-reap-child", "seal-terminal-ledger",
+                "terminate-complete-process-domain",
+                "verify-cgroup-events-populated-zero",
+                "reap-direct-and-adopted-descendants",
+                "remove-exact-process-domain", "seal-terminal-ledger",
                 "remove-raw-streams", "remove-case-workspace",
                 "remove-installed-copy", "remove-case-codex-home",
                 "remove-local-marketplace", "remove-runtime-root",
@@ -4035,6 +4089,7 @@ def validate_protocol_documents(root: Path = REPOSITORY_ROOT) -> dict[str, Any]:
         POLICY_REVISIONS_RELATIVE,
         ENTRYPOINT_RELATIVE,
         MODULE_RELATIVE,
+        LINUX_ISOLATION_RELATIVE,
         FAKE_CLI_RELATIVE,
     )
     documents: dict[Path, dict[str, Any]] = {}
@@ -4581,9 +4636,16 @@ def build_plugin_add_argv(executable: Path) -> list[str]:
     ]
 
 
-def _load_process_json(data: bytes, label: str) -> dict[str, Any]:
-    if len(data) > MAX_RECEIPT_BYTES:
-        raise ObservationError(f"{label} exceeds the receipt byte limit")
+def _load_process_json(
+    data: bytes,
+    label: str,
+    *,
+    maximum_bytes: int = MAX_RECEIPT_BYTES,
+) -> dict[str, Any]:
+    if type(maximum_bytes) is not int or maximum_bytes < 1:
+        raise ObservationError(f"{label} has an invalid byte limit")
+    if len(data) > maximum_bytes:
+        raise ObservationError(f"{label} exceeds its byte limit")
     try:
         text = data.decode("utf-8")
         decoder = json.JSONDecoder(object_pairs_hook=_reject_duplicate_pairs)
@@ -4990,12 +5052,12 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
         if (
             platform.system() != "Linux"
             or platform.machine() != "x86_64"
-            or not hasattr(os, "pidfd_open")
-            or not hasattr(signal, "pidfd_send_signal")
+            or not hasattr(os, "P_PIDFD")
+            or not hasattr(os, "waitid")
             or not Path("/proc/self/fd").is_dir()
         ):
             raise ObservationError(
-                "execution requires Linux/x86_64 pidfd and proc-fd process primitives"
+                "execution requires Linux/x86_64 pidfd-wait and proc-fd primitives"
             )
 
     def register(
@@ -5066,6 +5128,10 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
         if not credential_present:
             raise ObservationError("dedicated execution credential is absent")
         require_process_primitives()
+        if not ACTUAL_EXECUTION_GROUPS_COMPLETE:
+            raise ObservationError(
+                "actual execution is unavailable pending FCR Group 1 and Group 3"
+            )
         return register(
             protocol_digest=actual_protocol_digest,
             entrypoint_sha256=actual_entrypoint_sha256,
@@ -5201,24 +5267,6 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
 del _build_capability_boundary
 
 
-def _terminate_and_reap(process: subprocess.Popen[bytes], pidfd: int) -> None:
-    """Terminate only the pidfd-pinned child and wait for its terminal state."""
-    if process.poll() is not None:
-        process.wait()
-        return
-    try:
-        signal.pidfd_send_signal(pidfd, signal.SIGTERM)
-        process.wait(timeout=2)
-    except (OSError, subprocess.TimeoutExpired):
-        try:
-            try:
-                signal.pidfd_send_signal(pidfd, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        finally:
-            process.wait()
-
-
 def _open_frozen_executable(identity: ExecutableIdentity) -> int:
     """Open, hash, and pin the exact executable used by the next execve."""
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
@@ -5296,15 +5344,23 @@ def _launch_bounded_process(
     schema_object: FrozenFileIdentity | None = None,
     expected_schema_bytes: bytes | None = None,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
+    process_domains: BaseProcessDomainSupervisor | None = None,
 ) -> ProcessCapture:
-    """The sole subprocess launcher; every launch consumes opaque authority."""
+    """The sole Codex/fake launcher, with one authoritative process domain."""
     authorized = False
     started = False
     prompt_delivered = False
-    process: subprocess.Popen[bytes] | None = None
-    pidfd: int | None = None
+    process: DomainProcess | None = None
+    domain_completed = False
     executable_fd: int | None = None
     state = _capability_state(capability)
+    one_shot_domains = process_domains is None
+    if process_domains is None:
+        if not state.fake_only:
+            raise ObservationError(
+                "actual execution requires the canonical Linux process-domain supervisor"
+            )
+        process_domains = DeterministicProcessDomainSupervisor()
     inherited = frozenset(inherited_fds)
     if any(type(descriptor) is not int or descriptor < 0 for descriptor in inherited):
         raise ObservationError("process descriptor allowlist is invalid")
@@ -5327,6 +5383,7 @@ def _launch_bounded_process(
             _hard_stop_capability(capability)
             raise ProcessBoundaryError(
                 "model schema object preflight failed",
+                process_purpose=purpose,
                 model_call_authorized=False,
                 process_started=False,
                 prompt_fully_delivered=False,
@@ -5355,23 +5412,36 @@ def _launch_bounded_process(
             inherited_fds=inherited,
         )
         authorized = True
-        process = popen_factory(
-            list(argv),
-            executable=f"/proc/self/fd/{executable_fd}",
-            pass_fds=tuple(sorted({executable_fd, *inherited})),
-            cwd=cwd,
-            env=dict(env),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=False,
-            start_new_session=True,
+        cwd_fd, suffix = _parse_proc_fd_reference(
+            cwd,
+            inherited,
+            "process cwd",
+            require_directory=True,
+            allow_relative_suffix=False,
+        )
+        if suffix:
+            raise ObservationError("process cwd must identify one frozen directory")
+        process_domains.require_advance_barrier()
+        process = process_domains.launch(
+            purpose=purpose,
+            executable_fd=executable_fd,
+            argv=argv,
+            cwd_fd=cwd_fd,
+            env=env,
+            pass_fds=tuple(sorted(inherited)),
+            popen_factory=popen_factory,
         )
         started = True
-    except (OSError, subprocess.SubprocessError, ObservationError) as error:
+    except (OSError, subprocess.SubprocessError, ObservationError, ProcessDomainError) as error:
         _hard_stop_capability(capability)
+        if one_shot_domains:
+            try:
+                process_domains.close()
+            except ProcessDomainError:
+                pass
         raise ProcessBoundaryError(
             "cannot start authorized child",
+            process_purpose=purpose,
             model_call_authorized=authorized and purpose == "model-case",
             process_started=False,
             prompt_fully_delivered=False,
@@ -5379,28 +5449,6 @@ def _launch_bounded_process(
     finally:
         if executable_fd is not None:
             os.close(executable_fd)
-    try:
-        pidfd = os.pidfd_open(process.pid, 0)
-    except OSError as error:
-        process.kill()
-        process.wait()
-        _hard_stop_capability(capability)
-        raise ProcessBoundaryError(
-            "cannot pin authorized child identity",
-            model_call_authorized=purpose == "model-case",
-            process_started=True,
-            prompt_fully_delivered=False,
-        ) from error
-    if process.stdin is None or process.stdout is None or process.stderr is None:
-        _terminate_and_reap(process, pidfd)
-        os.close(pidfd)
-        _hard_stop_capability(capability)
-        raise ProcessBoundaryError(
-            "child pipes were not created",
-            model_call_authorized=purpose == "model-case",
-            process_started=True,
-            prompt_fully_delivered=False,
-        )
     buffers = {"stdout": bytearray(), "stderr": bytearray()}
     errors: list[str] = []
     stop = threading.Event()
@@ -5458,21 +5506,22 @@ def _launch_bounded_process(
             break
         time.sleep(0.01)
     try:
-        if stop.is_set() and process.poll() is None:
-            _terminate_and_reap(process, pidfd)
-        else:
+        terminate_domain = stop.is_set() or timed_out
+        if not terminate_domain:
             process.wait()
+        process.complete(terminate=terminate_domain)
+        domain_completed = True
+        process_domains.require_advance_barrier()
         input_thread.join(timeout=2)
         for thread in reader_threads:
             thread.join(timeout=2)
         if input_thread.is_alive() or any(thread.is_alive() for thread in reader_threads):
-            _terminate_and_reap(process, pidfd)
             raise ObservationError("child stream worker did not terminate")
         if errors:
             raise ObservationError(errors[0])
         if schema_object is not None and expected_schema_bytes is not None:
             _verify_frozen_file(schema_object, expected_schema_bytes)
-        return ProcessCapture(
+        capture = ProcessCapture(
             returncode=process.returncode,
             stdout=bytes(buffers["stdout"]),
             stderr=bytes(buffers["stderr"]),
@@ -5482,21 +5531,46 @@ def _launch_bounded_process(
             stdin_fully_delivered=prompt_delivered,
             schema_object_verified=schema_object is not None,
         )
-    except ObservationError as error:
+        if one_shot_domains:
+            process_domains.close()
+        return capture
+    except (ObservationError, ProcessDomainError, OSError, TimeoutError) as error:
         _hard_stop_capability(capability)
-        if process.poll() is None:
-            _terminate_and_reap(process, pidfd)
+        stop.set()
+        if not domain_completed:
+            try:
+                process.complete(terminate=True)
+                domain_completed = True
+                process_domains.require_advance_barrier()
+            except (ProcessDomainError, OSError, TimeoutError):
+                pass
+        for stream in (process.stdin, process.stdout, process.stderr):
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                pass
+        input_thread.join(timeout=2)
+        for thread in reader_threads:
+            thread.join(timeout=2)
+        if one_shot_domains:
+            try:
+                process_domains.close()
+            except ProcessDomainError:
+                pass
         raise ProcessBoundaryError(
             "authorized child failed its bounded process contract",
+            process_purpose=purpose,
             model_call_authorized=purpose == "model-case",
             process_started=started,
             prompt_fully_delivered=prompt_delivered,
             cause=error,
         ) from error
     finally:
-        process.stdout.close()
-        process.stderr.close()
-        os.close(pidfd)
+        for stream in (process.stdin, process.stdout, process.stderr):
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                pass
 
 
 def _json_equal(left: Any, right: Any) -> bool:
@@ -5625,11 +5699,16 @@ def validate_normalized_result(
     result_schema_bytes = _read_regular(root / RESULT_SCHEMA_RELATIVE, RESULT_SCHEMA_RELATIVE.as_posix())
     entrypoint_bytes = _read_regular(root / ENTRYPOINT_RELATIVE, ENTRYPOINT_RELATIVE.as_posix())
     module_bytes = _read_regular(root / MODULE_RELATIVE, MODULE_RELATIVE.as_posix())
+    isolation_bytes = _read_regular(
+        root / LINUX_ISOLATION_RELATIVE,
+        LINUX_ISOLATION_RELATIVE.as_posix(),
+    )
     fake_cli_bytes = _read_regular(root / FAKE_CLI_RELATIVE, FAKE_CLI_RELATIVE.as_posix())
     _expect(document["observationProtocol"], {"id": PROTOCOL_ID, "schemaVersion": "1", "digest": protocol["protocolDigest"]}, "result protocol binding")
     _expect(document["runner"], {
         "version": "1", "entrypointSha256": _sha256(entrypoint_bytes),
         "moduleSha256": _sha256(module_bytes), "taxonomySha256": _sha256(taxonomy_bytes),
+        "linuxIsolationSha256": _sha256(isolation_bytes),
         "modelResponseSchemaSha256": _sha256(model_schema_bytes),
         "resultSchemaSha256": _sha256(result_schema_bytes),
         "fakeCliSha256": _sha256(fake_cli_bytes),
@@ -5787,6 +5866,7 @@ def validate_normalized_result(
         "authorizedModelCallCount": sum(case["modelCallAuthorized"] for case in cases),
         "modelProcessStartedCount": sum(case["modelProcessStarted"] for case in cases),
         "promptFullyDeliveredCount": sum(case["promptFullyDelivered"] for case in cases),
+        "builderProcessCount": document["processDomainFacts"]["builderDomainCount"],
         "marketplaceProcessCount": sum(
             case["marketplaceProcessStarted"] for case in cases
         ),
@@ -5795,6 +5875,7 @@ def validate_normalized_result(
         ),
     }
     _expect(document["executionFacts"], expected_execution, "result execution facts")
+    _validate_process_domain_facts(document)
     derived_overall = _derive_overall_status(document, benchmark_contract)
     _expect(document["overallStatus"], derived_overall, "observer-derived overall status")
     if identities["protocolDigest"] != protocol["protocolDigest"]:
@@ -6077,6 +6158,70 @@ def _derive_object_binding_facts(
     }
 
 
+def _validate_process_domain_facts(document: Mapping[str, Any]) -> None:
+    """Cross-check closed process-domain facts against launched process inventory."""
+
+    facts = document["processDomainFacts"]
+    execution = document["executionFacts"]
+    expected_purpose_counts = {
+        "builderDomainCount": execution["builderProcessCount"],
+        "marketplaceDomainCount": execution["marketplaceProcessCount"],
+        "pluginInstallDomainCount": execution["pluginInstallProcessCount"],
+        "modelDomainCount": execution["modelProcessStartedCount"],
+    }
+    for key, expected in expected_purpose_counts.items():
+        _expect(facts[key], expected, f"process-domain {key}")
+    total = sum(expected_purpose_counts.values())
+    _expect(facts["domainCount"], total, "process-domain launched inventory")
+
+    run_mode = document["runMode"]
+    if run_mode == "fake-validation":
+        _expect(
+            (facts["mechanism"], facts["availability"]),
+            (TEST_PROCESS_DOMAIN_MECHANISM, "simulated-fake-validation"),
+            "fake process-domain classification",
+        )
+    elif facts["availability"] == "unavailable":
+        _expect(
+            (facts["mechanism"], total),
+            ("unavailable", 0),
+            "unavailable process-domain classification",
+        )
+    else:
+        _expect(
+            (facts["mechanism"], facts["availability"]),
+            (REAL_PROCESS_DOMAIN_MECHANISM, "available"),
+            "host process-domain classification",
+        )
+
+    proof_keys = (
+        "atomicEnrollmentVerifiedCount",
+        "directChildPidfdVerifiedCount",
+        "domainEmptyVerifiedCount",
+        "descendantReapingVerifiedCount",
+        "domainRemovalVerifiedCount",
+    )
+    if any(facts[key] > total for key in proof_keys):
+        raise ObservationError("process-domain proof count exceeds launched inventory")
+    if facts["terminationRequiredCount"] > total or (
+        facts["completeDomainTerminationVerifiedCount"]
+        > facts["terminationRequiredCount"]
+    ):
+        raise ObservationError("process-domain termination counts are inconsistent")
+
+    domain_safe = (
+        all(facts[key] == total for key in proof_keys)
+        and facts["completeDomainTerminationVerifiedCount"]
+        == facts["terminationRequiredCount"]
+        and facts["residualDomainCount"] == 0
+        and facts["manualCleanupRequired"] is False
+    )
+    if not domain_safe and not facts["manualCleanupRequired"]:
+        raise ObservationError("unsafe process-domain facts omit manual cleanup")
+    if facts["manualCleanupRequired"] and not document["cleanup"]["manualCleanupRequired"]:
+        raise ObservationError("process-domain manual cleanup is not reflected by cleanup")
+
+
 def _derive_overall_status(
     document: Mapping[str, Any],
     benchmark_contract: Mapping[str, Any],
@@ -6150,8 +6295,31 @@ def _derive_overall_status(
             "authorizedModelCallCount": 16,
             "modelProcessStartedCount": 16,
             "promptFullyDeliveredCount": 16,
+            "builderProcessCount": 1,
             "marketplaceProcessCount": 15,
             "pluginInstallProcessCount": 15,
+        }
+        and document["processDomainFacts"] == {
+            "mechanism": REAL_PROCESS_DOMAIN_MECHANISM,
+            "availability": "available",
+            "domainCount": 47,
+            "builderDomainCount": 1,
+            "marketplaceDomainCount": 15,
+            "pluginInstallDomainCount": 15,
+            "modelDomainCount": 16,
+            "atomicEnrollmentVerifiedCount": 47,
+            "directChildPidfdVerifiedCount": 47,
+            "terminationRequiredCount": document["processDomainFacts"][
+                "terminationRequiredCount"
+            ],
+            "completeDomainTerminationVerifiedCount": document[
+                "processDomainFacts"
+            ]["terminationRequiredCount"],
+            "domainEmptyVerifiedCount": 47,
+            "descendantReapingVerifiedCount": 47,
+            "domainRemovalVerifiedCount": 47,
+            "residualDomainCount": 0,
+            "manualCleanupRequired": False,
         }
     )
     if safe_pass:
@@ -6377,6 +6545,7 @@ def _observe_case_process(
     inherited_fds: Sequence[int],
     marketplace_process_started: bool,
     plugin_install_process_started: bool,
+    process_domains: BaseProcessDomainSupervisor,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
     _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
@@ -6451,6 +6620,7 @@ def _observe_case_process(
         schema_object=output_schema,
         expected_schema_bytes=materialization.schema_bytes,
         popen_factory=popen_factory,
+        process_domains=process_domains,
     )
     try:
         if capture.timed_out:
@@ -6507,6 +6677,7 @@ def _observe_case_process(
         _hard_stop_capability(capability)
         raise ProcessBoundaryError(
             "case process failed its observation contract",
+            process_purpose="model-case",
             model_call_authorized=capture.launch_authorized,
             process_started=capture.process_started,
             prompt_fully_delivered=capture.stdin_fully_delivered,
@@ -6659,11 +6830,262 @@ def _materialize_fake_bundle(session: OwnedRootSession, relative: str) -> None:
     )
 
 
+def _read_bundle_worker_result(data: bytes) -> tuple[Any, ...]:
+    """Parse the bounded internal builder result into creation records."""
+
+    document = _exact_keys(
+        _load_process_json(
+            data,
+            "bundle worker result",
+            maximum_bytes=MAX_BUNDLE_WORKER_RESULT_BYTES,
+        ),
+        {
+            "schemaVersion",
+            "profileRuntimeDigest",
+            "bundleManifestDigest",
+            "archiveSha256",
+            "creationRecords",
+        },
+        "bundle worker result",
+    )
+    _expect(document["schemaVersion"], "1", "bundle worker result version")
+    _expect(
+        document["profileRuntimeDigest"],
+        PROFILE_RUNTIME_DIGEST,
+        "built profile runtime identity",
+    )
+    _expect(
+        document["bundleManifestDigest"],
+        BUNDLE_MANIFEST_DIGEST,
+        "built bundle manifest identity",
+    )
+    _expect(document["archiveSha256"], ARCHIVE_SHA256, "built archive identity")
+    records = document["creationRecords"]
+    if type(records) is not list or not records or len(records) > 256:
+        raise ObservationError("bundle worker creation records are not bounded")
+    from .no_hook_bundle import BuilderCreatedObject
+
+    parsed: list[BuilderCreatedObject] = []
+    for index, item in enumerate(records):
+        item = _exact_keys(
+            item,
+            {
+                "relativePath",
+                "parentRelativePath",
+                "basename",
+                "kind",
+                "device",
+                "inode",
+                "mode",
+                "creationPhase",
+            },
+            f"bundle worker creation record {index}",
+        )
+        if (
+            type(item["relativePath"]) is not str
+            or type(item["parentRelativePath"]) is not str
+            or type(item["basename"]) is not str
+            or item["kind"] not in {"directory", "file"}
+            or any(type(item[key]) is not int or item[key] < 0 for key in ("device", "inode", "mode"))
+            or type(item["creationPhase"]) is not str
+            or not item["creationPhase"]
+        ):
+            raise ObservationError("bundle worker creation record is not closed")
+        parts = _closed_relative_parts(item["relativePath"])
+        if "/".join(parts[:-1]) != item["parentRelativePath"] or parts[-1] != item["basename"]:
+            raise ObservationError("bundle worker creation record path fields disagree")
+        parsed.append(
+            BuilderCreatedObject(
+                relative_path=item["relativePath"],
+                parent_relative_path=item["parentRelativePath"],
+                basename=item["basename"],
+                kind=item["kind"],
+                device=item["device"],
+                inode=item["inode"],
+                mode=item["mode"],
+                creation_phase=item["creationPhase"],
+            )
+        )
+    if len({item.relative_path for item in parsed}) != len(parsed):
+        raise ObservationError("bundle worker creation records contain duplicates")
+    return tuple(parsed)
+
+
+def _run_bundle_builder_worker(
+    *,
+    repository_root: Path,
+    destination: FrozenDirectoryIdentity,
+    source_repository: Path,
+    git_executable: Path,
+    process_domains: BaseProcessDomainSupervisor,
+    popen_factory: Callable[..., subprocess.Popen[bytes]],
+    test_failure_relative: str | None,
+) -> tuple[Any, ...]:
+    """Run the real builder and all of its Git children in one fresh domain."""
+
+    python_path = Path(sys.executable).resolve(strict=True)
+    python_identity = freeze_executable(
+        python_path,
+        _sha256(_read_regular(python_path, "Python builder executable", MAX_EXECUTABLE_BYTES)),
+    )
+    helper_path = repository_root / LINUX_ISOLATION_RELATIVE
+    helper_bytes = _read_regular(helper_path, "Linux process-domain helper")
+    repository_fd: int | None = None
+    helper_fd: int | None = None
+    executable_fd: int | None = None
+    process: DomainProcess | None = None
+    domain_completed = False
+    workers: tuple[threading.Thread, ...] = ()
+    buffers = {"stdout": bytearray(), "stderr": bytearray()}
+    errors: list[str] = []
+    stop = threading.Event()
+    try:
+        repository_fd = os.open(repository_root, _directory_flags())
+        helper_fd = os.open(
+            LINUX_ISOLATION_RELATIVE.as_posix(),
+            os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            dir_fd=repository_fd,
+        )
+        helper_metadata = os.fstat(helper_fd)
+        if (
+            not stat.S_ISREG(helper_metadata.st_mode)
+            or helper_metadata.st_size != len(helper_bytes)
+            or _sha256(os.pread(helper_fd, len(helper_bytes) + 1, 0))
+            != _sha256(helper_bytes)
+        ):
+            raise ObservationError("Linux process-domain helper identity drifted")
+        executable_fd = _open_frozen_executable(python_identity)
+        process_domains.require_advance_barrier()
+        argv = (
+            str(python_path),
+            "-I",
+            "-B",
+            f"/proc/self/fd/{helper_fd}",
+            "__bundle_worker_v1__",
+            str(repository_fd),
+            str(destination.descriptor),
+            str(source_repository),
+            BUNDLE_RUNTIME_SOURCE_COMMIT,
+            BUNDLE_RUNTIME_SOURCE_TREE,
+            str(git_executable),
+            test_failure_relative or "-",
+        )
+        process = process_domains.launch(
+            purpose="bundle-builder",
+            executable_fd=executable_fd,
+            argv=argv,
+            cwd_fd=repository_fd,
+            env={
+                "LANG": "C.UTF-8",
+                "LC_ALL": "C.UTF-8",
+                "NO_COLOR": "1",
+                "PYTHONDONTWRITEBYTECODE": "1",
+            },
+            pass_fds=(repository_fd, helper_fd, destination.descriptor),
+            popen_factory=popen_factory,
+        )
+        process.stdin.close()
+
+        def reader(name: str, maximum: int) -> None:
+            stream = getattr(process, name)
+            try:
+                while not stop.is_set():
+                    remaining = maximum - len(buffers[name])
+                    chunk = stream.read(min(PROCESS_CHUNK_BYTES, remaining + 1))
+                    if not chunk:
+                        return
+                    if type(chunk) is not bytes or len(buffers[name]) + len(chunk) > maximum:
+                        errors.append(f"bundle worker {name} exceeded its closed bound")
+                        stop.set()
+                        return
+                    buffers[name].extend(chunk)
+            except Exception as error:
+                errors.append(f"bundle worker {name} read failed: {type(error).__name__}")
+                stop.set()
+
+        workers = (
+            threading.Thread(
+                target=reader,
+                args=("stdout", MAX_BUNDLE_WORKER_RESULT_BYTES),
+                daemon=True,
+            ),
+            threading.Thread(
+                target=reader,
+                args=("stderr", MAX_STDERR_BYTES),
+                daemon=True,
+            ),
+        )
+        for worker in workers:
+            worker.start()
+        deadline = time.monotonic() + CASE_TIMEOUT_SECONDS
+        timed_out = False
+        while process.poll() is None and not stop.is_set():
+            if time.monotonic() >= deadline:
+                timed_out = True
+                stop.set()
+                break
+            time.sleep(0.01)
+        if not (timed_out or stop.is_set()):
+            process.wait()
+        process.complete(terminate=timed_out or stop.is_set())
+        domain_completed = True
+        process_domains.require_advance_barrier()
+        for worker in workers:
+            worker.join(timeout=2)
+        if any(worker.is_alive() for worker in workers):
+            raise ObservationError("bundle worker stream reader did not terminate")
+        if errors:
+            raise ObservationError(errors[0])
+        if timed_out or process.returncode != 0 or buffers["stderr"]:
+            raise ObservationError("disposable bundle worker failed")
+        return _read_bundle_worker_result(bytes(buffers["stdout"]))
+    except (OSError, ProcessDomainError, ObservationError) as error:
+        stop.set()
+        if process is not None and not domain_completed:
+            try:
+                process.complete(terminate=True)
+                domain_completed = True
+                process_domains.require_advance_barrier()
+            except (OSError, ProcessDomainError, TimeoutError):
+                pass
+        if process is not None:
+            for stream in (process.stdin, process.stdout, process.stderr):
+                try:
+                    stream.close()
+                except (OSError, ValueError):
+                    pass
+        for worker in workers:
+            worker.join(timeout=2)
+        raise ProcessBoundaryError(
+            "disposable bundle worker failed its process-domain contract",
+            process_purpose="bundle-builder",
+            model_call_authorized=False,
+            process_started=process is not None,
+            prompt_fully_delivered=True,
+            cause=error,
+        ) from error
+    finally:
+        if process is not None:
+            for stream in (process.stdin, process.stdout, process.stderr):
+                try:
+                    stream.close()
+                except (OSError, ValueError):
+                    pass
+        for descriptor in (executable_fd, helper_fd, repository_fd):
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+
+
 def _prepare_disposable_bundle(
-    *, session: OwnedRootSession, fake_only: bool, source_repository: Path | None,
-    git_executable: Path | None,
-    builder_test_hook: Callable[[str, dict[str, Any]], None] | None = None,
-) -> tuple[FrozenDirectoryIdentity, dict[str, bool], bool]:
+    *, session: OwnedRootSession, repository_root: Path, fake_only: bool,
+    source_repository: Path | None, git_executable: Path | None,
+    process_domains: BaseProcessDomainSupervisor,
+    popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
+    test_failure_relative: str | None = None,
+) -> tuple[FrozenDirectoryIdentity, dict[str, bool], bool, int]:
     """Create the disposable bundle input inside the exact owned run root."""
     session.mkdir("bundle-build", mode=0o700, phase="bundle-build-root")
     real_builder = not fake_only or source_repository is not None
@@ -6684,6 +7106,7 @@ def _prepare_disposable_bundle(
                 "bundleGitCredentialExcluded": False,
             },
             False,
+            0,
         )
     if source_repository is None or git_executable is None:
         raise ObservationError("actual execution requires exact source repository and Git executable")
@@ -6691,29 +7114,18 @@ def _prepare_disposable_bundle(
         "bundle-build", phase="bundle-build-destination", freeze_tree=False
     )
     try:
-        from .no_hook_bundle import (
-            BundleContractError,
-            build_bundle_to_directory_fd,
-        )
-
-        result = build_bundle_to_directory_fd(
-            source_repository,
-            BUNDLE_RUNTIME_SOURCE_COMMIT,
-            BUNDLE_RUNTIME_SOURCE_TREE,
-            destination.descriptor,
+        records = _run_bundle_builder_worker(
+            repository_root=repository_root,
+            destination=destination,
+            source_repository=source_repository,
             git_executable=git_executable,
-            expected_destination_identity=(destination.device, destination.inode),
-            _test_hook=builder_test_hook,
+            process_domains=process_domains,
+            popen_factory=popen_factory,
+            test_failure_relative=test_failure_relative,
         )
-    except (OSError, BundleContractError) as error:
-        raise ObservationError(f"disposable bundle build failed: {error}") from error
-    try:
-        _expect(result.profile_runtime_digest, PROFILE_RUNTIME_DIGEST, "built profile runtime identity")
-        _expect(result.bundle_manifest_digest, BUNDLE_MANIFEST_DIGEST, "built bundle manifest identity")
-        _expect(result.archive_sha256, ARCHIVE_SHA256, "built archive identity")
         session.import_builder_creation_records(
             destination,
-            result.creation_records,
+            records,
             phase="accepted-builder-creation-ledger",
         )
     finally:
@@ -6729,6 +7141,7 @@ def _prepare_disposable_bundle(
             "bundleGitCredentialExcluded": True,
         },
         True,
+        1,
     )
 
 
@@ -6827,7 +7240,9 @@ def _incomplete_case_record(
         case, fixture_document, materialization=fixture_materialization
     )
     prompt_fully_delivered = bool(
-        process_boundary and process_boundary.prompt_fully_delivered
+        process_boundary
+        and process_boundary.process_purpose == "model-case"
+        and process_boundary.prompt_fully_delivered
     )
     return {
         "caseId": case["id"], "contractVersion": case["contractVersion"],
@@ -6860,10 +7275,14 @@ def _incomplete_case_record(
         "workspaceUnchanged": False, "bundleUnchanged": False,
         "installedCopyUnchanged": False, "temporaryUserStateUnchanged": False,
         "modelCallAuthorized": bool(
-            process_boundary and process_boundary.model_call_authorized
+            process_boundary
+            and process_boundary.process_purpose == "model-case"
+            and process_boundary.model_call_authorized
         ),
         "modelProcessStarted": bool(
-            process_boundary and process_boundary.process_started
+            process_boundary
+            and process_boundary.process_purpose == "model-case"
+            and process_boundary.process_started
         ),
         "promptFullyDelivered": prompt_fully_delivered,
         "marketplaceProcessStarted": marketplace_process_started,
@@ -6881,6 +7300,7 @@ def _result_document(
     cases: list[dict[str, Any]],
     config_verified_count: int,
     executable: ExecutableIdentity,
+    builder_process_count: int,
     marketplace_process_count: int,
     plugin_install_process_count: int,
     cleanup: Mapping[str, Any],
@@ -6888,6 +7308,7 @@ def _result_document(
     bundle_object_facts: Mapping[str, Any],
     marketplace_source_verified_count: int,
     installed_cache_layout_verified_count: int,
+    process_domain_facts: Mapping[str, Any],
 ) -> dict[str, Any]:
     protocol, _ = _load_json(root, PROTOCOL_RELATIVE)
     prompt, _ = _load_json(root, PROMPT_RELATIVE)
@@ -6895,6 +7316,10 @@ def _result_document(
     model_schema = _read_regular(root / MODEL_RESPONSE_SCHEMA_RELATIVE, MODEL_RESPONSE_SCHEMA_RELATIVE.as_posix())
     result_schema = _read_regular(root / RESULT_SCHEMA_RELATIVE, RESULT_SCHEMA_RELATIVE.as_posix())
     fixtures = _read_regular(root / FIXTURES_RELATIVE, FIXTURES_RELATIVE.as_posix())
+    linux_isolation = _read_regular(
+        root / LINUX_ISOLATION_RELATIVE,
+        LINUX_ISOLATION_RELATIVE.as_posix(),
+    )
     fake_cli = _read_regular(root / FAKE_CLI_RELATIVE, FAKE_CLI_RELATIVE.as_posix())
     result: dict[str, Any] = {
         "schemaVersion": "1", "kind": "axiom-codex-no-hook-observation-result",
@@ -6913,6 +7338,7 @@ def _result_document(
         "runner": {
             "version": "1", "entrypointSha256": _sha256(_read_regular(root / ENTRYPOINT_RELATIVE, "runner entrypoint")),
             "moduleSha256": _sha256(_read_regular(root / MODULE_RELATIVE, "observer module")),
+            "linuxIsolationSha256": _sha256(linux_isolation),
             "taxonomySha256": _sha256(taxonomy), "modelResponseSchemaSha256": _sha256(model_schema),
             "resultSchemaSha256": _sha256(result_schema), "fakeCliSha256": _sha256(fake_cli),
         },
@@ -6949,9 +7375,11 @@ def _result_document(
             "authorizedModelCallCount": sum(case["modelCallAuthorized"] for case in cases),
             "modelProcessStartedCount": sum(case["modelProcessStarted"] for case in cases),
             "promptFullyDeliveredCount": sum(case["promptFullyDelivered"] for case in cases),
+            "builderProcessCount": builder_process_count,
             "marketplaceProcessCount": marketplace_process_count,
             "pluginInstallProcessCount": plugin_install_process_count,
         },
+        "processDomainFacts": dict(process_domain_facts),
         "installationFacts": {},
         "objectBindingFacts": {},
         "noHookProof": {
@@ -7023,17 +7451,46 @@ def run_observation_orchestration(
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
     _test_materialization_seed: bytes | None = None,
     _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
+    _test_process_domain_supervisor: BaseProcessDomainSupervisor | None = None,
+    _test_builder_failure_relative: str | None = None,
 ) -> dict[str, Any]:
     """Run the production 16-case orchestration; tests authorize only a fake executable."""
     root_identity = freeze_owned_root(run_root)
-    if not fake_only and (_test_materialization_seed is not None or _test_hook is not None):
+    if not fake_only and (
+        _test_materialization_seed is not None
+        or _test_hook is not None
+        or _test_process_domain_supervisor is not None
+        or _test_builder_failure_relative is not None
+    ):
         raise ObservationError("actual execution rejects test-only dependency injection")
+    if not fake_only and not ACTUAL_EXECUTION_GROUPS_COMPLETE:
+        raise ObservationError(
+            "actual execution is unavailable pending FCR Group 1 and Group 3"
+        )
     if _test_materialization_seed is not None and (
         type(_test_materialization_seed) is not bytes
         or len(_test_materialization_seed) != 32
     ):
         raise ObservationError("test materialization seed must contain 32 bytes")
-    session = OwnedRootSession(root_identity)
+    if _test_process_domain_supervisor is not None:
+        if not fake_only or not _test_process_domain_supervisor.test_only:
+            raise ObservationError(
+                "only fake validation may inject a test process-domain supervisor"
+            )
+        process_domains = _test_process_domain_supervisor
+    elif fake_only:
+        process_domains = DeterministicProcessDomainSupervisor()
+    else:
+        process_domains = LinuxProcessDomainSupervisor.open()
+    try:
+        session = OwnedRootSession(root_identity)
+    except BaseException:
+        try:
+            process_domains.close()
+        except ProcessDomainError:
+            pass
+        _retire_capability(capability)
+        raise
     try:
         if fake_only:
             try:
@@ -7066,11 +7523,16 @@ def run_observation_orchestration(
             )
     except BaseException:
         session.close()
+        try:
+            process_domains.close()
+        except ProcessDomainError:
+            pass
         _retire_capability(capability)
         raise
     ledger = BatchLedger()
     case_results: list[dict[str, Any]] = []
     config_verified_count = 0
+    builder_process_count = 0
     marketplace_process_count = 0
     plugin_install_process_count = 0
     source_bundle: FrozenDirectoryIdentity | None = None
@@ -7096,6 +7558,7 @@ def run_observation_orchestration(
         "temporaryRootsRemoved": False, "userCodexStateUnchanged": True,
         "sourceBundleUnchanged": False, "manualCleanupRequired": False,
     }
+    process_domain_facts: Mapping[str, Any] = process_domains.normalized_summary()
 
     def invoke_test_hook(phase: str, **facts: Any) -> None:
         if _test_hook is not None:
@@ -7125,12 +7588,17 @@ def run_observation_orchestration(
         invoke_test_hook("after-root-freeze", session=session)
         invoke_test_hook("before-first-root-write", session=session)
         try:
-            source_bundle, bundle_object_facts, real_bundle_built = _prepare_disposable_bundle(
-                session=session, fake_only=fake_only,
+            source_bundle, bundle_object_facts, real_bundle_built, builder_started = _prepare_disposable_bundle(
+                session=session, repository_root=repository_root, fake_only=fake_only,
                 source_repository=source_repository, git_executable=git_executable,
-                builder_test_hook=_test_hook if fake_only else None,
+                process_domains=process_domains,
+                popen_factory=popen_factory,
+                test_failure_relative=_test_builder_failure_relative,
             )
+            builder_process_count += builder_started
         except ObservationError as error:
+            if isinstance(error, ProcessBoundaryError) and error.process_started:
+                builder_process_count += 1
             first = golden[0]
             ledger.hard_stop(first["id"])
             _hard_stop_capability(capability)
@@ -7284,6 +7752,7 @@ def run_observation_orchestration(
                                 cwd=Path(f"/proc/self/fd/{case_root.descriptor}"),
                                 env=install_env, maximum_stdout=MAX_RECEIPT_BYTES,
                                 require_stdin_sentinel=False, popen_factory=popen_factory,
+                                process_domains=process_domains,
                                 inherited_fds=(
                                     case_root.descriptor,
                                     codex_home.descriptor, home.descriptor,
@@ -7412,6 +7881,7 @@ def run_observation_orchestration(
                     ),
                     marketplace_process_started=marketplace_started,
                     plugin_install_process_started=plugin_started,
+                    process_domains=process_domains,
                     popen_factory=popen_factory,
                     _test_hook=_test_hook,
                 )
@@ -7462,6 +7932,12 @@ def run_observation_orchestration(
                 )
                 break
             ledger.seal(case["id"], normalized["status"])
+            try:
+                process_domains.require_advance_barrier()
+            except ProcessDomainError as error:
+                raise ObservationError(
+                    "next case requires an empty verified process domain"
+                ) from error
         if len(case_results) != 16:
             raise ObservationError("orchestration failed to close all 16 ledger states")
         state_before_retire = _capability_state(capability)
@@ -7477,31 +7953,49 @@ def run_observation_orchestration(
             )
     finally:
         _retire_capability(capability)
-        _close_frozen_directory(source_bundle)
-        invoke_test_hook("before-cleanup", session=session)
-        owned_ledger = session.ledger
-        session.close()
+        process_domains_safe = False
         try:
-            cleanup_owned_root(root_identity, owned_ledger)
-        except ObservationError:
+            process_domains.require_advance_barrier()
+            process_domains.close()
+            process_domains_safe = True
+        except ProcessDomainError:
             cleanup["manualCleanupRequired"] = True
-        else:
-            cleanup["temporaryRootsRemoved"] = not root_identity.path.exists()
+        process_domain_facts = process_domains.normalized_summary()
+        if process_domain_facts["manualCleanupRequired"]:
+            cleanup["manualCleanupRequired"] = True
+        _close_frozen_directory(source_bundle)
+        owned_ledger = session.ledger
+        if process_domains_safe:
+            invoke_test_hook("before-cleanup", session=session)
+        session.close()
+        if process_domains_safe:
+            try:
+                cleanup_owned_root(root_identity, owned_ledger)
+            except ObservationError:
+                cleanup["manualCleanupRequired"] = True
+            else:
+                cleanup["temporaryRootsRemoved"] = not root_identity.path.exists()
         invoke_test_hook(
             "after-cleanup",
             rootIdentity=root_identity,
             cleanup=dict(cleanup),
         )
+    if not process_domains_safe:
+        raise ObservationError(
+            "normalized result publication requires an empty removed process domain"
+        )
     result = _result_document(
         root=repository_root, run_mode="fake-validation" if fake_only else "host-observation",
         cases=case_results,
         config_verified_count=config_verified_count, executable=executable,
+        builder_process_count=builder_process_count,
         marketplace_process_count=marketplace_process_count,
         plugin_install_process_count=plugin_install_process_count, cleanup=cleanup,
         materialization_seed=materialization_seed,
         bundle_object_facts=bundle_object_facts,
         marketplace_source_verified_count=marketplace_source_verified_count,
         installed_cache_layout_verified_count=installed_cache_layout_verified_count,
+        process_domain_facts=process_domain_facts,
     )
     validate_normalized_result(result, repository_root)
     return result
@@ -7518,6 +8012,8 @@ def run_fake_validation(
     _test_git_executable: Path | None = None,
     _test_materialization_seed: bytes | None = None,
     _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
+    _test_process_domain_supervisor: BaseProcessDomainSupervisor | None = None,
+    _test_builder_failure_relative: str | None = None,
 ) -> dict[str, Any]:
     """Authorize and run fake-only production orchestration without credentials."""
     if (_test_source_repository is None) != (_test_git_executable is None):
@@ -7547,6 +8043,8 @@ def run_fake_validation(
         git_executable=_test_git_executable,
         _test_materialization_seed=_test_materialization_seed,
         _test_hook=_test_hook,
+        _test_process_domain_supervisor=_test_process_domain_supervisor,
+        _test_builder_failure_relative=_test_builder_failure_relative,
     )
 
 

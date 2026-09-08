@@ -215,6 +215,19 @@ and irreversible 16-call budget. Each case then requires a fresh isolated
 process, Codex home, workspace, and ephemeral session; Case 11 alone has no
 installed plugin.
 
+A second, independent authority owns complete process containment. On
+Linux/x86_64, every bundle-builder, marketplace, plugin-install, and model
+launch receives a fresh delegated cgroup v2 domain. The launcher atomically
+combines `CLONE_INTO_CGROUP` and `CLONE_PIDFD`; no post-spawn `cgroup.procs`,
+leader-only, process-group, session, or subreaper-only fallback exists. A
+pidfd wait owns the direct leader, `cgroup.kill` owns complete-domain
+termination, child-subreaper waits own adopted descendants, and
+`cgroup.events` must prove `populated=0` before exact domain removal. Until
+that barrier passes, the runner cannot start another process or case, tear
+down filesystems, or publish a normalized result. Hosts without the complete
+capability are unavailable. Group 1 and Group 3 remain open, so actual
+execution is still disabled and the observation remains `NOT-RUN`.
+
 All sixteen deterministic fixtures are materialized by the production runner
 from closed logical file records and observer-owned Git facts. The local
 marketplace receipt is bound to the already-held source object; it is not
