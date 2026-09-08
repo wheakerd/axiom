@@ -147,6 +147,7 @@ def fake_run(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             env=clone_environment,
+            cwd=test_parent,
         )
         subprocess.run(
             [
@@ -158,6 +159,7 @@ def fake_run(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             env=clone_environment,
+            cwd=source_repository,
         )
     run_root = test_parent / "run"
     run_root.mkdir(mode=0o700)
@@ -615,6 +617,216 @@ class ProtocolContractTests(unittest.TestCase):
         candidate["properties"]["contractBindings"]["required"].pop()
         with self.assertRaisesRegex(observer.ObservationError, "close"):
             observer._validate_model_response_schema(candidate)
+
+
+class CombinedInventoryTests(unittest.TestCase):
+    """Normalized contract records only; no child or runtime backend."""
+
+    @staticmethod
+    def scope_record(ordinal, *, builder=False):
+        # Independent finite role table; do not use the production summary.
+        installed = ordinal not in (0, 11)
+        roles = (["destination", "builder-handles"] if builder else []) if ordinal == 0 else [
+            "case-root", "workspace", "model-home", "home", "xdg-config", "xdg-cache", "xdg-data",
+            "schema", "model-streams",
+            *(["marketplace-view", "installed-view", "marketplace-streams", "plugin-install-streams"] if installed else []),
+        ]
+        return {
+            "kind": "bundle" if ordinal == 0 else "no-plugin-case" if ordinal == 11 else "installed-case",
+            "phase": "complete", "progress": "complete", "viewState": "sealed",
+            "writers": {"bundle-builder": "closed" if ordinal == 0 and builder else "not-required",
+                        "marketplace": "closed" if installed else "not-required",
+                        "plugin-install": "closed" if installed else "not-required"},
+            "consumer": "not-required" if ordinal == 0 else "closed",
+            "controls": [{"role": role, "state": "closed"} for role in roles],
+        }
+
+    @staticmethod
+    def document(scopes, *, complete=False, run_controls_closed=True, source_bundle=True):
+        # Only fixed non-runtime facts come from the empty producer. The test's
+        # component table supplies counts, separately checked against literal totals.
+        facts = observer._CombinedLifecycleRun(simulated=True).normalized_summary()
+        run_controls = [{"role": role, "state": "closed" if run_controls_closed else "open"}
+                        for role in ("process-controller", "root-session", "owned-root", *(("source-bundle",) if source_bundle else ()))] if scopes else []
+        writers = [state for scope in scopes for state in scope["writers"].values() if state in {"active", "closed"}]
+        consumers = [scope["consumer"] for scope in scopes if scope["consumer"] in {"active", "closed"}]
+        controls = [*run_controls, *(item for scope in scopes for item in scope["controls"])]
+        unresolved = writers.count("active") + consumers.count("active") + sum(item["state"] == "open" for item in controls)
+        facts.update(
+            runState="complete" if complete else "incomplete", scopes=scopes, runControls=run_controls,
+            contractStatus="complete" if complete else "incomplete", simulationStatus="complete" if complete else "incomplete",
+            startedScopeCount=len(scopes), completedScopeCount=sum(s["phase"] == "complete" for s in scopes),
+            writerStartedCount=len(writers), writerClosedCount=writers.count("closed"),
+            consumerStartedCount=len(consumers), consumerClosedCount=consumers.count("closed"),
+            controlRegisteredCount=len(controls), controlClosedCount=sum(item["state"] == "closed" for item in controls),
+            unresolvedCreatedResourceCount=unresolved,
+        )
+        return {
+            "runMode": "fake-validation", "combinedLifecycleFacts": facts,
+            "executionFacts": {
+                "builderProcessCount": sum(s["writers"]["bundle-builder"] in {"active", "closed"} for s in scopes),
+                "marketplaceProcessCount": sum(s["writers"]["marketplace"] in {"active", "closed"} for s in scopes),
+                "pluginInstallProcessCount": sum(s["writers"]["plugin-install"] in {"active", "closed"} for s in scopes),
+                "modelProcessStartedCount": len(consumers),
+            },
+            "cases": [{key: (index < len(scopes) and
+                              (scopes[index]["consumer"] if role == "consumer" else scopes[index]["writers"][role]) in {"active", "closed"})
+                       for key, role in (("marketplaceProcessStarted", "marketplace"),
+                                         ("pluginInstallProcessStarted", "plugin-install"), ("modelProcessStarted", "consumer"))}
+                      for index in range(1, 17)],
+            "cleanup": {"temporaryRootsRemoved": not unresolved, "manualCleanupRequired": bool(unresolved)},
+        }
+
+    def check(self, document):
+        observer._validate_combined_lifecycle_facts(document)
+
+    def test_zero_scope_cannot_claim_started_workloads(self):
+        from axiom_validation.no_hook_linux_isolation import _CombinedLifecycleRun
+
+        facts = _CombinedLifecycleRun(simulated=True).normalized_summary()
+        facts.update(writerStartedCount=30, writerClosedCount=30,
+                     consumerStartedCount=16, consumerClosedCount=16)
+        document = {
+            "runMode": "fake-validation", "combinedLifecycleFacts": facts,
+            "executionFacts": {"builderProcessCount": 0, "marketplaceProcessCount": 15,
+                               "pluginInstallProcessCount": 15, "modelProcessStartedCount": 16},
+            "cleanup": {"temporaryRootsRemoved": True, "manualCleanupRequired": False},
+        }
+        with self.assertRaisesRegex(observer.ObservationError, "scope"):
+            observer._validate_combined_lifecycle_facts(document)
+
+    def test_complete_and_incomplete_reject_count_and_prefix_contradictions(self):
+        for complete in (False, True):
+            baseline = self.document([self.scope_record(i) for i in range(17)], complete=complete)
+            mutations = (
+                ("scope-count", lambda d: d["combinedLifecycleFacts"].update(startedScopeCount=16)),
+                ("excess-writer-closure", lambda d: d["combinedLifecycleFacts"].update(writerClosedCount=31)),
+                ("excess-consumer-closure", lambda d: d["combinedLifecycleFacts"].update(consumerStartedCount=15)),
+                ("excess-control-closure", lambda d: d["combinedLifecycleFacts"].update(controlClosedCount=209)),
+                ("wrong-prefix-kind", lambda d: d["combinedLifecycleFacts"]["scopes"][1].update(kind="no-plugin-case")),
+                ("future-complete-scope", lambda d: d["combinedLifecycleFacts"]["scopes"][1].update(phase="incomplete")),
+                ("case-eleven-writer", lambda d: d["combinedLifecycleFacts"]["scopes"][11]["writers"].update(marketplace="closed")),
+                ("case-eleven-control", lambda d: d["combinedLifecycleFacts"]["scopes"][11]["controls"].append({"role": "marketplace-view", "state": "closed"})),
+                ("duplicate-control", lambda d: d["combinedLifecycleFacts"]["scopes"][11]["controls"].append({"role": "model-home", "state": "closed"})),
+                ("different-builder-mode", lambda d: d["executionFacts"].update(builderProcessCount=1)),
+                ("case-record-disagrees", lambda d: d["cases"][11].update(modelProcessStarted=False)),
+            )
+            for label, mutate in mutations:
+                with self.subTest(complete=complete, contradiction=label):
+                    document = copy.deepcopy(baseline)
+                    mutate(document)
+                    with self.assertRaises(observer.ObservationError):
+                        self.check(document)
+
+    def test_zero_scope_controls_and_future_case_counts_are_rejected(self):
+        for mutation in (lambda d: d["combinedLifecycleFacts"]["runControls"].append({"role": "owned-root", "state": "open"}),
+                         lambda d: d["combinedLifecycleFacts"].update(completedScopeCount=1),
+                         lambda d: d["cases"][0].update(modelProcessStarted=True)):
+            document = self.document([])
+            mutation(document)
+            with self.assertRaises(observer.ObservationError):
+                self.check(document)
+        document = self.document([self.scope_record(0)])
+        document["executionFacts"].update(marketplaceProcessCount=1)
+        document["combinedLifecycleFacts"].update(writerStartedCount=1, writerClosedCount=1)
+        with self.assertRaises(observer.ObservationError):
+            self.check(document)
+
+    def test_finite_completed_prefixes_and_both_builder_modes(self):
+        # (prefix length, writers, consumers, controls), excluding the builder.
+        for length, writers, consumers, controls in (
+            (0, 0, 0, 0), (1, 0, 0, 4), (2, 2, 1, 17),
+            (11, 20, 10, 134), (12, 20, 11, 143), (13, 22, 12, 156), (17, 30, 16, 208),
+        ):
+            document = self.document([self.scope_record(i) for i in range(length)])
+            with self.subTest(prefix=length):
+                self.assertEqual((writers, consumers, controls), tuple(document["combinedLifecycleFacts"][key] for key in (
+                    "writerStartedCount", "consumerStartedCount", "controlRegisteredCount")))
+                self.check(document)
+        for builder, writers, controls in ((False, 30, 208), (True, 31, 210)):
+            document = self.document([self.scope_record(i, builder=builder and i == 0) for i in range(17)], complete=True)
+            self.assertEqual((writers, 16, controls), tuple(document["combinedLifecycleFacts"][key] for key in (
+                "writerStartedCount", "consumerStartedCount", "controlRegisteredCount")))
+            self.check(document)
+            self.assertEqual("incomplete", observer._derive_overall_status(document, {}))
+            document["combinedLifecycleFacts"]["actualExecutionEligible"] = True
+            with self.assertRaises(observer.ObservationError):
+                self.check(document)
+
+    def test_legal_partial_stages_preserve_actual_component_inventory(self):
+        bundle = self.scope_record(0, builder=True)
+        bundle.update(phase="incomplete", progress="writing", viewState="not-accepted")
+        bundle["writers"]["bundle-builder"] = "active"
+        for control in bundle["controls"]:
+            control["state"] = "open"
+        writer = self.scope_record(1)
+        writer.update(phase="incomplete", progress="writing", viewState="not-accepted", consumer="not-started")
+        writer["writers"].update(marketplace="active", **{"plugin-install": "not-started"})
+        writer["controls"] = [{"role": item["role"], "state": "open"} for item in writer["controls"]
+                              if item["role"] not in {"schema", "model-streams", "installed-view", "plugin-install-streams"}]
+        pending = self.scope_record(1)
+        pending.update(phase="incomplete", progress="contract-preconditions-complete", consumer="not-started")
+        pending["controls"] = [{"role": item["role"], "state": "closed" if item["role"].endswith("-streams") else "open"}
+                               for item in pending["controls"] if item["role"] != "model-streams"]
+        consumed = self.scope_record(1)
+        consumed.update(phase="incomplete", progress="consuming")
+        for control in consumed["controls"]:
+            control["state"] = "closed" if control["role"].endswith("-streams") else "open"
+        for scopes, expected in (([bundle], (1, 0, 5)),
+                                 ([self.scope_record(0), writer], (1, 0, 13)),
+                                 ([self.scope_record(0), pending], (2, 0, 16)),
+                                 ([self.scope_record(0), consumed], (2, 1, 17))):
+            with self.subTest(progress=scopes[-1]["progress"], consumer=scopes[-1]["consumer"]):
+                document = self.document(scopes, run_controls_closed=False, source_bundle=len(scopes) > 1)
+                self.assertEqual(expected, tuple(document["combinedLifecycleFacts"][key] for key in (
+                    "writerStartedCount", "consumerStartedCount", "controlRegisteredCount")))
+                self.check(document)
+        # Failure before consumption may close resources without inventing a consumer.
+        for control in pending["controls"]:
+            control["state"] = "closed"
+        document = self.document([self.scope_record(0), pending])
+        self.check(document)
+        self.assertFalse(document["cleanup"]["manualCleanupRequired"])
+        before_writing = self.scope_record(0, builder=True)
+        before_writing.update(phase="incomplete", progress="prepare", viewState="not-accepted", controls=[])
+        before_writing["writers"]["bundle-builder"] = "not-started"
+        self.check(self.document([before_writing], source_bundle=False))
+
+    def test_partial_phase_and_control_contradictions_are_rejected(self):
+        for change in ("early-consumer", "unsealed-view", "missing-view", "closed-view", "future-schema"):
+            scope = self.scope_record(1)
+            scope.update(phase="incomplete", progress="writers-closed", viewState="accepted", consumer="not-started")
+            scope["controls"] = [{"role": item["role"], "state": "closed" if item["role"].endswith("-streams") else "open"}
+                                 for item in scope["controls"] if item["role"] not in {"schema", "model-streams"}]
+            if change == "early-consumer":
+                scope["consumer"] = "closed"
+            elif change == "unsealed-view":
+                scope["progress"] = "consuming"
+            elif change == "missing-view":
+                scope["controls"] = [item for item in scope["controls"] if item["role"] != "installed-view"]
+            elif change == "closed-view":
+                scope["phase"] = "writers-closed"
+                for item in scope["controls"]:
+                    item["state"] = "closed"
+            else:
+                scope["controls"].append({"role": "schema", "state": "open"})
+            with self.subTest(change=change), self.assertRaises(observer.ObservationError):
+                self.check(self.document([self.scope_record(0), scope], run_controls_closed=False))
+
+    def test_actual_memory_producer_records_match_independent_prefix_validation(self):
+        from tests.test_no_hook_linux_isolation import CombinedLifecycleTests
+
+        events = CombinedLifecycleTests()
+        for builder in (False, True):
+            run = events.complete_run(builder=builder)
+            document = self.document([self.scope_record(i, builder=builder and i == 0) for i in range(17)], complete=True)
+            expected = document["combinedLifecycleFacts"]
+            actual = run.normalized_summary()
+            for key in ("startedScopeCount", "completedScopeCount", "writerStartedCount", "writerClosedCount",
+                        "consumerStartedCount", "consumerClosedCount", "controlRegisteredCount", "controlClosedCount"):
+                self.assertEqual(expected[key], actual[key])
+            document["combinedLifecycleFacts"] = actual
+            self.check(document)
 
 
 class JsonlClosureTests(unittest.TestCase):
@@ -2445,7 +2657,43 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         )
         cls.host_pass = host_pass_from_fake(cls.fake_result)
         observer.validate_normalized_result(cls.fake_result, REPOSITORY_ROOT)
-        observer.validate_normalized_result(cls.host_pass, REPOSITORY_ROOT)
+
+    def test_simulation_contract_completion_never_authorizes_host_pass(self):
+        facts = self.fake_result["combinedLifecycleFacts"]
+        self.assertEqual("deterministic-contract-backend-v1", facts["source"])
+        self.assertEqual("complete", facts["contractStatus"])
+        self.assertEqual("complete", facts["simulationStatus"])
+        self.assertEqual(208, facts["controlRegisteredCount"])
+        self.assertEqual(208, facts["controlClosedCount"])
+        self.assertEqual(0, facts["unresolvedCreatedResourceCount"])
+        self.assertEqual(0, facts["supervisorProcess"]["startedCount"])
+        self.assertFalse(facts["actualExecutionEligible"])
+        self.assertFalse(self.fake_result["cleanup"]["manualCleanupRequired"])
+        with self.assertRaises(observer.ObservationError):
+            observer.validate_normalized_result(self.host_pass, REPOSITORY_ROOT)
+        for source in ("contract-only", "deterministic-contract-backend-v1"):
+            candidate = copy.deepcopy(self.host_pass)
+            candidate["combinedLifecycleFacts"]["source"] = source
+            candidate["combinedLifecycleFacts"]["actualExecutionEligible"] = True
+            with self.subTest(source=source), self.assertRaises(observer.ObservationError):
+                observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
+
+    def test_combined_inventory_and_component_completion_are_recomputed(self):
+        omitted_controls = copy.deepcopy(self.fake_result)
+        omitted_controls["combinedLifecycleFacts"]["controlRegisteredCount"] = 4
+        omitted_controls["combinedLifecycleFacts"]["controlClosedCount"] = 4
+        with self.assertRaises(observer.ObservationError):
+            observer.validate_normalized_result(omitted_controls, REPOSITORY_ROOT)
+        for field, value in (
+            ("writerClosedCount", 0), ("consumerClosedCount", 15),
+            ("completedScopeCount", 16), ("controlClosedCount", 207),
+            ("controlRegisteredCount", 0), ("unresolvedCreatedResourceCount", 1),
+            ("simulationStatus", "not-run"), ("source", "contract-only"),
+        ):
+            candidate = copy.deepcopy(self.fake_result)
+            candidate["combinedLifecycleFacts"][field] = value
+            with self.subTest(field=field), self.assertRaises(observer.ObservationError):
+                observer.validate_normalized_result(candidate, REPOSITORY_ROOT)
 
     def test_full_fake_orchestration_runs_all_cases_through_production_path(self):
         result = self.fake_result
@@ -2629,7 +2877,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("pluginInstallProcessStarted", False),
         )
         for field, value in fields:
-            candidate = copy.deepcopy(self.host_pass)
+            candidate = copy.deepcopy(self.fake_result)
             candidate["cases"][0][field] = value
             # Simulate an attacker synchronizing claimed status and summary arithmetic.
             candidate["cases"][0]["status"] = "pass"
@@ -2672,7 +2920,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("noHookProof", "modelReportedSessionStartObservedCount", 1),
         )
         for owner, field, value in mutations:
-            candidate = copy.deepcopy(self.host_pass)
+            candidate = copy.deepcopy(self.fake_result)
             candidate[owner][field] = value
             candidate["summary"] = observer._derive_summary(
                 candidate["cases"], candidate["cleanup"]
@@ -2760,7 +3008,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("contractBindings", "fixtureMatrixSha256"),
         )
         for owner, field in mutations:
-            candidate = copy.deepcopy(self.host_pass)
+            candidate = copy.deepcopy(self.fake_result)
             current = candidate[owner][field]
             candidate[owner][field] = (
                 "sha256:" + "0" * 64 if str(current).startswith("sha256:") else "0" * 64
@@ -2908,7 +3156,7 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ("host-observation", "pass", ["cleanup-manual-required"]),
         )
         for run_mode, status, codes in diagnostic_mutations:
-            candidate = copy.deepcopy(self.host_pass)
+            candidate = copy.deepcopy(self.fake_result)
             candidate["runMode"] = run_mode
             candidate["overallStatus"] = status
             candidate["diagnosticCodes"] = codes

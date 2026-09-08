@@ -786,6 +786,7 @@ class GitObjectSource:
         try:
             process = subprocess.Popen(
                 command,
+                cwd=self.repository,
                 stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

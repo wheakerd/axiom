@@ -4,7 +4,7 @@
   "title": "Axiom Codex no-Hook normalized observation result v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "materialization", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "processDomainFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes"],
+  "required": ["schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus", "materialization", "observationProtocol", "runner", "axiomIdentity", "contractBindings", "hostIdentity", "executionFacts", "processDomainFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases", "summary", "cleanup", "diagnosticCodes", "combinedLifecycleFacts"],
   "properties": {
     "schemaVersion": {"const": "1"},
     "kind": {"const": "axiom-codex-no-hook-observation-result"},
@@ -56,8 +56,8 @@
         "fullProfileInputCount": {"const": 61},
         "fullProfileRuntimeContractDigest": {"const": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"},
         "profileRuntimeDigest": {"const": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"},
-        "bundleManifestDigest": {"const": "sha256:d04afb4a794bfb241941b0a6a0d6057863e3b38a5e6c2ad5983128f670c783ed"},
-        "archiveSha256": {"const": "01906537705abc4d4ee60c81d1ac458dd8eabbe3883cd8bfbe4089583c117750"}
+        "bundleManifestDigest": {"const": "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7"},
+        "archiveSha256": {"const": "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf"}
       }
     },
     "contractBindings": {
@@ -126,6 +126,352 @@
         "domainRemovalVerifiedCount": {"type": "integer", "minimum": 0, "maximum": 47},
         "residualDomainCount": {"type": "integer", "minimum": 0, "maximum": 47},
         "manualCleanupRequired": {"type": "boolean"}
+      }
+    },
+    "combinedLifecycleFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "contractStatus",
+        "simulationStatus",
+        "runtimeBackend",
+        "runtimeFacts",
+        "actualExecutionEligible",
+        "startedScopeCount",
+        "completedScopeCount",
+        "writerStartedCount",
+        "writerClosedCount",
+        "consumerStartedCount",
+        "consumerClosedCount",
+        "controlRegisteredCount",
+        "controlClosedCount",
+        "unresolvedCreatedResourceCount",
+        "supervisorProcess",
+        "runState",
+        "runControls",
+        "scopes"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "contract-only",
+            "deterministic-contract-backend-v1"
+          ]
+        },
+        "contractStatus": {
+          "enum": [
+            "complete",
+            "incomplete"
+          ]
+        },
+        "simulationStatus": {
+          "enum": [
+            "complete",
+            "incomplete",
+            "not-run"
+          ]
+        },
+        "runtimeBackend": {
+          "const": "not-implemented"
+        },
+        "runtimeFacts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kernelSupport",
+            "preExecutionIsolation",
+            "lifetimeMembership",
+            "descendantCoverage",
+            "privateViewConsumption",
+            "runtimeTeardown",
+            "fixedIdentityTransition",
+            "descriptorInheritance",
+            "capabilityReduction",
+            "writerDomainClosure",
+            "controlResourceTeardown"
+          ],
+          "properties": {
+            "kernelSupport": {
+              "const": "not-verified"
+            },
+            "preExecutionIsolation": {
+              "const": "not-verified"
+            },
+            "lifetimeMembership": {
+              "const": "not-verified"
+            },
+            "descendantCoverage": {
+              "const": "not-verified"
+            },
+            "privateViewConsumption": {
+              "const": "not-verified"
+            },
+            "runtimeTeardown": {
+              "const": "not-verified"
+            },
+            "fixedIdentityTransition": {
+              "const": "not-verified"
+            },
+            "descriptorInheritance": {
+              "const": "not-verified"
+            },
+            "capabilityReduction": {
+              "const": "not-verified"
+            },
+            "writerDomainClosure": {
+              "const": "not-verified"
+            },
+            "controlResourceTeardown": {
+              "const": "not-verified"
+            }
+          }
+        },
+        "actualExecutionEligible": {
+          "const": false
+        },
+        "startedScopeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 17
+        },
+        "completedScopeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 17
+        },
+        "writerStartedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "writerClosedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "consumerStartedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "consumerClosedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "controlRegisteredCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 256
+        },
+        "controlClosedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 256
+        },
+        "unresolvedCreatedResourceCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 303
+        },
+        "supervisorProcess": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "implementation",
+            "startedCount",
+            "closedCount"
+          ],
+          "properties": {
+            "implementation": {
+              "const": "not-implemented"
+            },
+            "startedCount": {
+              "const": 0
+            },
+            "closedCount": {
+              "const": 0
+            }
+          }
+        },
+        "runState": {
+          "enum": [
+            "active",
+            "incomplete",
+            "complete"
+          ]
+        },
+        "runControls": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "state"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "process-controller",
+                  "root-session",
+                  "owned-root",
+                  "source-bundle"
+                ]
+              },
+              "state": {
+                "enum": [
+                  "open",
+                  "closed"
+                ]
+              }
+            }
+          }
+        },
+        "scopes": {
+          "type": "array",
+          "maxItems": 17,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "phase",
+              "progress",
+              "viewState",
+              "writers",
+              "consumer",
+              "controls"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "bundle",
+                  "installed-case",
+                  "no-plugin-case"
+                ]
+              },
+              "phase": {
+                "enum": [
+                  "prepare",
+                  "writing",
+                  "writers-closed",
+                  "view-sealed",
+                  "contract-preconditions-complete",
+                  "consuming",
+                  "consumers-closed",
+                  "resources-closed",
+                  "complete",
+                  "incomplete"
+                ]
+              },
+              "progress": {
+                "enum": [
+                  "prepare",
+                  "writing",
+                  "writers-closed",
+                  "view-sealed",
+                  "contract-preconditions-complete",
+                  "consuming",
+                  "consumers-closed",
+                  "resources-closed",
+                  "complete"
+                ]
+              },
+              "viewState": {
+                "enum": [
+                  "not-accepted",
+                  "accepted",
+                  "sealed"
+                ]
+              },
+              "writers": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bundle-builder",
+                  "marketplace",
+                  "plugin-install"
+                ],
+                "properties": {
+                  "bundle-builder": {
+                    "enum": [
+                      "not-required",
+                      "not-started",
+                      "active",
+                      "closed"
+                    ]
+                  },
+                  "marketplace": {
+                    "enum": [
+                      "not-required",
+                      "not-started",
+                      "active",
+                      "closed"
+                    ]
+                  },
+                  "plugin-install": {
+                    "enum": [
+                      "not-required",
+                      "not-started",
+                      "active",
+                      "closed"
+                    ]
+                  }
+                }
+              },
+              "consumer": {
+                "enum": [
+                  "not-required",
+                  "not-started",
+                  "active",
+                  "closed"
+                ]
+              },
+              "controls": {
+                "type": "array",
+                "maxItems": 13,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "role",
+                    "state"
+                  ],
+                  "properties": {
+                    "role": {
+                      "enum": [
+                        "case-root",
+                        "workspace",
+                        "model-home",
+                        "home",
+                        "xdg-config",
+                        "xdg-cache",
+                        "xdg-data",
+                        "schema",
+                        "model-streams",
+                        "marketplace-view",
+                        "installed-view",
+                        "marketplace-streams",
+                        "plugin-install-streams",
+                        "destination",
+                        "builder-handles"
+                      ]
+                    },
+                    "state": {
+                      "enum": [
+                        "open",
+                        "closed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "installationFacts": {

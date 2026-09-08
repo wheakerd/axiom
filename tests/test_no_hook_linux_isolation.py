@@ -14,6 +14,345 @@ from axiom_validation import no_hook_linux_isolation as isolation
 from axiom_validation.context import REPOSITORY_ROOT
 
 
+class CombinedLifecycleTests(unittest.TestCase):
+    """Pure event contracts: no subprocess, detector, or kernel backend."""
+
+    def test_pending_consumer_view_cannot_close_or_resume(self):
+        scope = isolation._CombinedLifecycle("installed-case")
+        self.ready_scope(scope)
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.control_closed("installed-view")
+        self.assertEqual("incomplete", scope.phase)
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.consume()
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.complete()
+
+    def test_scope_construction_failure_irreversibly_stops_run(self):
+        run = isolation._CombinedLifecycleRun(simulated=True)
+        completed = run.begin("bundle")
+        self.complete_scope(completed)
+        for name in ("process-controller", "root-session", "owned-root", "source-bundle"):
+            run.register_control(name)
+        previous = completed.normalized_record()
+        with self.assertRaisesRegex(isolation.ProcessDomainError, "combined-scope-writers-invalid"):
+            run.begin("installed-case", bundle_writer=True)
+        self.assertEqual([completed], run.scopes)
+        self.assertEqual("complete", completed.phase)
+        self.assertEqual(1, run.normalized_summary()["startedScopeCount"])
+        self.assertEqual("incomplete", run.normalized_summary()["runState"])
+        self.assertEqual(previous, completed.normalized_record())
+        with self.assertRaises(isolation.ProcessDomainError):
+            run.begin("installed-case")
+        for name in tuple(run._controls):
+            run.control_closed(name)
+        run.finish()
+        self.assertEqual("incomplete", run.normalized_summary()["contractStatus"])
+        self.assertEqual(0, run.normalized_summary()["unresolvedCreatedResourceCount"])
+        self.assertEqual("complete", self.complete_run().normalized_summary()["contractStatus"])
+
+    def prepare_scope(self, scope):
+        # Finite adapter events, independent of the producer's inventory totals.
+        scope.prepared()
+        if scope.kind != "bundle":
+            for role in ("case-root", "workspace", "model-home", "home", "xdg-config", "xdg-cache", "xdg-data"):
+                scope.register_control(role, role=role)
+        if scope.kind == "installed-case":
+            scope.register_control("marketplace-view", role="marketplace-view")
+            writers = ("marketplace", "plugin-install")
+        elif scope.kind == "bundle" and scope.expected_writers:
+            for role in ("destination", "builder-handles"):
+                scope.register_control(role, role=role)
+            writers = ("bundle-builder",)
+        else:
+            writers = ()
+        for purpose in writers:
+            scope.workload_started(purpose, purpose)
+            if purpose != "bundle-builder":
+                scope.register_control(f"{purpose}-streams", role=f"{purpose}-streams")
+            scope.workload_closed(purpose)
+            scope.require_writer_closed(purpose)
+            if purpose != "bundle-builder":
+                scope.control_closed(f"{purpose}-streams")
+        if scope.kind == "installed-case":
+            scope.register_control("installed-view", role="installed-view", binding=("accepted-object", 1))
+
+    def seal_scope(self, scope):
+        self.prepare_scope(scope)
+        scope.writers_closed()
+        binding = None if scope.kind == "no-plugin-case" else ("accepted-object", 1)
+        control = "installed-view" if scope.kind == "installed-case" else "model-home" if scope.kind == "no-plugin-case" else None
+        scope.accept_view(binding, binding, control=control)
+        scope.seal_view()
+        if scope.kind != "bundle":
+            scope.register_control("schema", role="schema")
+        return binding
+
+    def ready_scope(self, scope):
+        binding = self.seal_scope(scope)
+        scope.contract_preconditions(
+            view_binding=binding, descriptor_policy="exact-required-pass-fds"
+        )
+
+    def complete_scope(self, scope):
+        self.ready_scope(scope)
+        scope.consume()
+        if scope.kind != "bundle":
+            scope.workload_started("model-case", "consumer")
+            scope.register_control("model-streams", role="model-streams")
+            scope.workload_closed("consumer")
+        scope.consumers_closed()
+        for token, closed in tuple(scope._controls.items()):
+            if not closed:
+                scope.control_closed(token)
+        scope.resources_closed()
+        scope.complete()
+
+    def complete_run(self, *, builder=False):
+        run = isolation._CombinedLifecycleRun(simulated=True)
+        bundle = run.begin("bundle", bundle_writer=builder)
+        self.complete_scope(bundle)
+        for name in ("process-controller", "root-session", "owned-root", "source-bundle"):
+            run.register_control(name)
+        for index in range(1, 17):
+            self.complete_scope(run.begin("no-plugin-case" if index == 11 else "installed-case"))
+        for name in tuple(run._controls):
+            run.control_closed(name)
+        run.finish()
+        return run
+
+    def test_supervisor_lifecycle_ordering_and_bounded_control_inventory(self):
+        run = self.complete_run(builder=True)
+        facts = run.normalized_summary()
+        self.assertEqual("complete", facts["contractStatus"])
+        self.assertEqual("complete", facts["simulationStatus"])
+        self.assertEqual(31, facts["writerClosedCount"])
+        self.assertEqual(16, facts["consumerClosedCount"])
+        self.assertEqual(210, facts["controlClosedCount"])
+        self.assertEqual(0, facts["unresolvedCreatedResourceCount"])
+        self.assertEqual(0, facts["supervisorProcess"]["startedCount"])
+        self.assertFalse(facts["actualExecutionEligible"])
+        self.assertEqual({"not-verified"}, set(facts["runtimeFacts"].values()))
+
+    def test_missing_phase_preconditions_are_irreversible(self):
+        transitions = (
+            lambda s: s.writers_closed(), lambda s: s.accept_view((1,), (1,)),
+            lambda s: s.seal_view(),
+            lambda s: s.contract_preconditions(view_binding=(1,), descriptor_policy="exact-required-pass-fds"),
+            lambda s: s.consume(), lambda s: s.consumers_closed(),
+            lambda s: s.resources_closed(), lambda s: s.complete(),
+        )
+        for transition in transitions:
+            scope = isolation._CombinedLifecycle("installed-case")
+            with self.subTest(transition=transition), self.assertRaises(isolation.ProcessDomainError):
+                transition(scope)
+            with self.assertRaises(isolation.ProcessDomainError):
+                scope.prepared()
+            self.assertEqual("incomplete", scope.phase)
+
+    def test_writer_closure_precedes_acceptance_sealing_and_cleanup(self):
+        for action in (
+            lambda s: s.writers_closed(), lambda s: s.accept_view((1,), (1,)),
+            lambda s: s.seal_view(), lambda s: s.control_closed("product"),
+        ):
+            scope = isolation._CombinedLifecycle("installed-case")
+            scope.prepared()
+            scope.register_control("product", role="marketplace-view")
+            for role in ("case-root", "workspace", "model-home", "home", "xdg-config", "xdg-cache", "xdg-data"):
+                scope.register_control(role, role=role)
+            scope.workload_started("marketplace", "writer")
+            with self.assertRaises(isolation.ProcessDomainError):
+                action(scope)
+            scope.workload_closed("writer")
+            self.assertEqual("incomplete", scope.phase)
+
+    def test_installed_view_binding_and_case_eleven_are_independent(self):
+        scope = isolation._CombinedLifecycle("bundle")
+        scope.prepared(); scope.writers_closed()
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.accept_view(("accepted",), ("different",))
+        control = isolation._CombinedLifecycle("no-plugin-case")
+        control.prepared()
+        with self.assertRaises(isolation.ProcessDomainError):
+            control.require_launch("plugin-install")
+        control = isolation._CombinedLifecycle("no-plugin-case")
+        control.prepared(); control.writers_closed()
+        with self.assertRaises(isolation.ProcessDomainError):
+            control.accept_view(("installed",), ("installed",))
+
+    def test_consumer_closure_precedes_view_release(self):
+        scope = isolation._CombinedLifecycle("no-plugin-case")
+        self.ready_scope(scope)
+        scope.consume()
+        scope.workload_started("model-case", "consumer")
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.require_control_close("model-home")
+        scope.workload_closed("consumer"); scope.control_closed("model-home")
+        self.assertEqual("incomplete", scope.phase)
+
+    def test_local_success_unknown_completion_and_uncreated_resources(self):
+        run = isolation._CombinedLifecycleRun()
+        bundle = run.begin("bundle")
+        self.complete_scope(bundle)
+        for name in ("process-controller", "root-session", "owned-root", "source-bundle"):
+            run.register_control(name)
+        run.abort()
+        for name in tuple(run._controls):
+            run.control_closed(name)
+        run.finish()
+        self.assertEqual("incomplete", run.normalized_summary()["contractStatus"])
+        self.assertEqual(0, run.normalized_summary()["unresolvedCreatedResourceCount"])
+        self.assertEqual("not-run", run.normalized_summary()["simulationStatus"])
+        with self.assertRaises(isolation.ProcessDomainError):
+            run.control_closed("unknown")
+        run.finish()
+        self.assertEqual("incomplete", run.normalized_summary()["contractStatus"])
+
+    def test_missing_control_inventory_cannot_complete_a_scope(self):
+        scope = isolation._CombinedLifecycle("no-plugin-case")
+        self.ready_scope(scope)
+        scope.consume(); scope.workload_started("model-case", "consumer")
+        scope.workload_closed("consumer"); scope.consumers_closed()
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.resources_closed()
+
+    def test_contradictory_preconditions_and_duplicate_completions_stay_incomplete(self):
+        for binding, policy in ((("wrong",), "exact-required-pass-fds"), (None, "unknown")):
+            scope = isolation._CombinedLifecycle("no-plugin-case")
+            self.seal_scope(scope)
+            with self.assertRaises(isolation.ProcessDomainError):
+                scope.contract_preconditions(view_binding=binding, descriptor_policy=policy)
+            with self.assertRaises(isolation.ProcessDomainError):
+                scope.contract_preconditions(view_binding=None, descriptor_policy="exact-required-pass-fds")
+        scope = isolation._CombinedLifecycle("installed-case")
+        scope.prepared()
+        for role in ("case-root", "workspace", "model-home", "home", "xdg-config", "xdg-cache", "xdg-data", "marketplace-view"):
+            scope.register_control(role, role=role)
+        scope.workload_started("marketplace", "writer")
+        scope.workload_closed("writer")
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.workload_closed("writer")
+        self.assertEqual("incomplete", scope.phase)
+
+    def test_simulation_has_no_launch_authority_and_enforces_finite_inventory(self):
+        scope = isolation._CombinedLifecycle("bundle", bundle_writer=True)
+        for role in ("destination", "builder-handles"):
+            scope.register_control(role, role=role)
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.register_control(object(), role="unowned-extra-control")
+        run = isolation._CombinedLifecycleRun(simulated=True)
+        with self.assertRaises(isolation.ProcessDomainError):
+            run.begin("installed-case")
+        self.assertFalse(run.normalized_summary()["actualExecutionEligible"])
+        self.assertEqual(0, run.normalized_summary()["supervisorProcess"]["startedCount"])
+
+    def test_view_control_is_checked_at_acceptance_sealing_and_consumption(self):
+        for stage in ("accept", "seal", "consume"):
+            for inconsistency in ("missing", "closed", "foreign-binding"):
+                with self.subTest(stage=stage, inconsistency=inconsistency):
+                    scope = isolation._CombinedLifecycle("installed-case")
+                    self.prepare_scope(scope)
+                    scope.writers_closed()
+                    if stage != "accept":
+                        scope.accept_view(("accepted-object", 1), ("accepted-object", 1), control="installed-view")
+                    if stage == "consume":
+                        scope.seal_view()
+                        scope.register_control("schema", role="schema")
+                        scope.contract_preconditions(view_binding=("accepted-object", 1), descriptor_policy="exact-required-pass-fds")
+                    # A contradictory owner record must fail even at a valid phase.
+                    if inconsistency == "missing":
+                        scope._controls.pop("installed-view")
+                    elif inconsistency == "closed":
+                        scope._controls["installed-view"] = True
+                    else:
+                        scope._control_bindings["installed-view"] = ("another-scope",)
+                    with self.assertRaisesRegex(isolation.ProcessDomainError, "combined-consumption-control-invalid"):
+                        if stage == "accept":
+                            scope.accept_view(("accepted-object", 1), ("accepted-object", 1), control="installed-view")
+                        elif stage == "seal":
+                            scope.seal_view()
+                        else:
+                            scope.consume()
+                    self.assertEqual("incomplete", scope.phase)
+
+    def test_case_eleven_pending_consumer_and_failure_cleanup_are_independent(self):
+        run = isolation._CombinedLifecycleRun(simulated=True)
+        bundle = run.begin("bundle")
+        self.complete_scope(bundle)
+        for role in ("process-controller", "root-session", "owned-root", "source-bundle"):
+            run.register_control(role)
+        for _ in range(10):
+            self.complete_scope(run.begin("installed-case"))
+        scope = run.begin("no-plugin-case")
+        self.ready_scope(scope)
+        self.assertEqual("not-started", scope.normalized_record()["consumer"])
+        self.assertEqual({"not-required"}, set(scope.normalized_record()["writers"].values()))
+        with self.assertRaisesRegex(isolation.ProcessDomainError, "pending"):
+            scope.control_closed("model-home")
+        run.abort()
+        for token, closed in tuple(scope._controls.items()):
+            if not closed:
+                scope.control_closed(token)
+        for role in tuple(run._controls):
+            run.control_closed(role)
+        with self.assertRaises(isolation.ProcessDomainError):
+            scope.consume()
+        run.finish()
+        facts = run.normalized_summary()
+        self.assertEqual((12, 11, 20, 10, 0), tuple(facts[key] for key in (
+            "startedScopeCount", "completedScopeCount", "writerStartedCount", "consumerStartedCount", "unresolvedCreatedResourceCount"
+        )))
+        self.assertEqual("incomplete", facts["contractStatus"])
+
+    def test_normal_consumer_closure_and_consumerless_bundle_scopes_complete(self):
+        for kind, builder, controls in (("bundle", False, 0), ("bundle", True, 2),
+                                        ("installed-case", False, 13), ("no-plugin-case", False, 9)):
+            with self.subTest(kind=kind, builder=builder):
+                scope = isolation._CombinedLifecycle(kind, bundle_writer=builder)
+                self.complete_scope(scope)
+                record = scope.normalized_record()
+                self.assertEqual("complete", record["phase"])
+                self.assertEqual(controls, len(record["controls"]))
+                self.assertTrue(all(item["state"] == "closed" for item in record["controls"]))
+                self.assertEqual("not-required" if kind == "bundle" else "closed", record["consumer"])
+
+    def test_scope_registration_failure_preserves_exception_and_completed_records(self):
+        class FailedRegistration(list):
+            def append(self, value):
+                raise failure
+
+        failure = MemoryError("registration unavailable")
+        run = isolation._CombinedLifecycleRun(simulated=True)
+        completed = run.begin("bundle")
+        self.complete_scope(completed)
+        for role in ("process-controller", "root-session", "owned-root", "source-bundle"):
+            run.register_control(role)
+        previous = completed.normalized_record()
+        run.scopes = FailedRegistration(run.scopes)
+        with self.assertRaises(MemoryError) as caught:
+            run.begin("installed-case")
+        self.assertIs(failure, caught.exception)
+        self.assertEqual([previous], [s.normalized_record() for s in run.scopes])
+        self.assertEqual((1, 1, "incomplete"), tuple(run.normalized_summary()[key] for key in (
+            "startedScopeCount", "completedScopeCount", "runState"
+        )))
+        with self.assertRaises(isolation.ProcessDomainError):
+            run.begin("installed-case")
+
+    def test_first_scope_construction_failure_creates_no_resources(self):
+        run = isolation._CombinedLifecycleRun(simulated=True)
+        with self.assertRaisesRegex(isolation.ProcessDomainError, "combined-scope-writers-invalid"):
+            run.begin("bundle", bundle_writer="true")
+        run.finish()
+        facts = run.normalized_summary()
+        self.assertEqual("incomplete", facts["runState"])
+        self.assertEqual([], facts["scopes"])
+        self.assertEqual([], facts["runControls"])
+        self.assertEqual(0, facts["unresolvedCreatedResourceCount"])
+        with self.assertRaises(isolation.ProcessDomainError):
+            run.begin("bundle")
+
+
 class ProcessDomainContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.executable = Path(sys.executable).resolve(strict=True)

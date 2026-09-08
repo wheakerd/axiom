@@ -25,7 +25,7 @@
       "pluginVersion": "0.10.0",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
       "status": "not-run",
-      "reason": "Codex no-Hook protocol defines delegated-cgroup containment, validated only with fake fixtures and a credential-free synthetic probe. Actual execution stays disabled pending filesystem and model-tool credential proofs; no real Codex, credential, installation, Golden Set, or host claim occurred."
+      "reason": "Codex no-Hook protocol includes the Combined Group 1 + Group 2 offline lifecycle contract; complete runtime backend and runtime validation remain pending. Default checks do not detect system capabilities. Historical partial process-domain checks do not establish complete Group 2 acceptance. FCR-001/003/004 OPEN; FCR-002 STILL OPEN. Actual execution is hard-disabled; no current Codex no-Hook host observation or readiness."
     },
     {
       "host": "claude-code",

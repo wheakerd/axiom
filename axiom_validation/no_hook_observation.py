@@ -31,6 +31,10 @@ from typing import Any, BinaryIO, Callable, Mapping, Sequence
 
 from .context import REPOSITORY_ROOT
 from .no_hook_linux_isolation import (
+    _CombinedLifecycle,
+    _CombinedLifecycleRun,
+    _combined_lifecycle_contract,
+    _combined_lifecycle_result_schema,
     BaseProcessDomainSupervisor,
     DeterministicProcessDomainSupervisor,
     DomainProcess,
@@ -84,9 +88,9 @@ PROFILE_RUNTIME_DIGEST = (
     "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"
 )
 BUNDLE_MANIFEST_DIGEST = (
-    "sha256:d04afb4a794bfb241941b0a6a0d6057863e3b38a5e6c2ad5983128f670c783ed"
+    "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7"
 )
-ARCHIVE_SHA256 = "01906537705abc4d4ee60c81d1ac458dd8eabbe3883cd8bfbe4089583c117750"
+ARCHIVE_SHA256 = "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf"
 
 MARKETPLACE_NAME = "axiom-no-hook-observer"
 PLUGIN_NAME = "axiom"
@@ -3569,10 +3573,12 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
         "schemaVersion", "kind", "runMode", "runId", "recordedAt", "overallStatus",
         "materialization", "observationProtocol", "runner", "axiomIdentity",
         "contractBindings", "hostIdentity", "executionFacts",
-        "processDomainFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases",
+        "processDomainFacts", "combinedLifecycleFacts", "installationFacts", "objectBindingFacts", "noHookProof", "cases",
         "summary", "cleanup", "diagnosticCodes",
     }
     _expect(set(properties), expected_root, "result schema root fields")
+    _expect(properties["combinedLifecycleFacts"], _combined_lifecycle_result_schema(),
+            "result combined lifecycle schema")
     for key, node in properties.items():
         _validate_closed_schema_node(node, document, f"result schema properties/{key}")
     for key, node in document["$defs"].items():
@@ -3580,7 +3586,7 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
     for key in (
         "observationProtocol", "runner", "axiomIdentity", "contractBindings",
         "materialization", "hostIdentity", "executionFacts", "installationFacts",
-        "processDomainFacts", "objectBindingFacts", "noHookProof", "summary", "cleanup",
+        "processDomainFacts", "combinedLifecycleFacts", "objectBindingFacts", "noHookProof", "summary", "cleanup",
     ):
         node = properties[key]
         _expect(node.get("type"), "object", f"result schema {key} type")
@@ -3625,6 +3631,10 @@ def _validate_result_schema(document: dict[str, Any]) -> None:
     _expect(axiom["sourceTree"].get("const"), SOURCE_TREE, "result source tree")
     _expect(axiom["repositoryPolicyRevision"].get("const"), 7, "result policy revision")
     _expect(axiom["profileRuntimeDigest"].get("const"), PROFILE_RUNTIME_DIGEST, "result profile runtime digest")
+    _expect(axiom["bundleManifestDigest"].get("const"), BUNDLE_MANIFEST_DIGEST,
+            "result bundle manifest digest")
+    _expect(axiom["archiveSha256"].get("const"), ARCHIVE_SHA256,
+            "result bundle archive digest")
     host = properties["hostIdentity"]["properties"]
     _expect(host["codexCliVersion"].get("const"), CODEX_VERSION, "result Codex version")
     _expect(host["codexBinarySha256"].get("const"), CODEX_BINARY_SHA256, "result Codex binary")
@@ -3670,7 +3680,7 @@ def _validate_protocol(
         {
             "schemaVersion", "kind", "protocolId", "status", "source",
             "axiomIdentity", "contractBindings", "host", "execution",
-            "processDomain", "installation", "noHookProof", "bounds", "stderrPolicy",
+            "processDomain", "combinedLifecycle", "installation", "noHookProof", "bounds", "stderrPolicy",
             "batchPolicy", "retention", "materialization", "objectBinding",
             "cases", "runner", "cleanup", "nonClaims", "protocolDigest",
         },
@@ -3680,6 +3690,8 @@ def _validate_protocol(
     _expect(protocol.get("kind"), "axiom-codex-no-hook-observation-protocol", "protocol kind")
     _expect(protocol.get("protocolId"), PROTOCOL_ID, "protocol id")
     _expect(protocol.get("status"), "protocol-defined-observation-not-run", "protocol status")
+    _expect(protocol.get("combinedLifecycle"), _combined_lifecycle_contract(),
+            "protocol combined lifecycle contract")
     _expect(protocol.get("source"), {"repository": "wheakerd/axiom", "commit": SOURCE_COMMIT, "tree": SOURCE_TREE, "repositoryPolicyRevision": 6, "candidateRepositoryPolicyRevision": 7}, "protocol source")
     _expect(
         protocol.get("axiomIdentity"),
@@ -5068,7 +5080,10 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
         fake_only: bool,
         launch_sequence: tuple[tuple[str, str], ...] = LAUNCH_SEQUENCE,
     ) -> _ExecutionCapability:
-        require_process_primitives()
+        if not fake_only:
+            if not ACTUAL_EXECUTION_GROUPS_COMPLETE:
+                raise ObservationError("actual execution remains hard-disabled")
+            require_process_primitives()
         nonce = secrets.token_hex(32)
         capability = object.__new__(_ExecutionCapability)
         capability._nonce = nonce
@@ -5127,11 +5142,11 @@ def _build_capability_boundary() -> tuple[Callable[..., Any], ...]:
             raise ObservationError("execution call-count authorization must equal 16")
         if not credential_present:
             raise ObservationError("dedicated execution credential is absent")
-        require_process_primitives()
         if not ACTUAL_EXECUTION_GROUPS_COMPLETE:
             raise ObservationError(
                 "actual execution is unavailable pending FCR Group 1 and Group 3"
             )
+        require_process_primitives()
         return register(
             protocol_digest=actual_protocol_digest,
             entrypoint_sha256=actual_entrypoint_sha256,
@@ -5345,6 +5360,7 @@ def _launch_bounded_process(
     expected_schema_bytes: bytes | None = None,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
     process_domains: BaseProcessDomainSupervisor | None = None,
+    lifecycle: _CombinedLifecycle | None = None,
 ) -> ProcessCapture:
     """The sole Codex/fake launcher, with one authoritative process domain."""
     authorized = False
@@ -5352,6 +5368,9 @@ def _launch_bounded_process(
     prompt_delivered = False
     process: DomainProcess | None = None
     domain_completed = False
+    lifecycle_closed = False
+    stream_token = object()
+    workload_token = object()
     executable_fd: int | None = None
     state = _capability_state(capability)
     one_shot_domains = process_domains is None
@@ -5400,6 +5419,8 @@ def _launch_bounded_process(
     if popen_factory is not subprocess.Popen and not state.fake_only:
         raise ObservationError("actual execution cannot substitute the process launcher")
     try:
+        if lifecycle is not None:
+            lifecycle.require_launch(purpose)
         executable_fd = _open_frozen_executable(executable)
         state = _consume_launch_authority(
             capability,
@@ -5432,7 +5453,14 @@ def _launch_bounded_process(
             popen_factory=popen_factory,
         )
         started = True
+        if lifecycle is not None:
+            lifecycle.workload_started(purpose, workload_token)
+            lifecycle.register_control(
+                stream_token, role="model-streams" if purpose == "model-case" else f"{purpose}-streams"
+            )
     except (OSError, subprocess.SubprocessError, ObservationError, ProcessDomainError) as error:
+        if lifecycle is not None:
+            lifecycle.abort()
         _hard_stop_capability(capability)
         if one_shot_domains:
             try:
@@ -5512,6 +5540,9 @@ def _launch_bounded_process(
         process.complete(terminate=terminate_domain)
         domain_completed = True
         process_domains.require_advance_barrier()
+        if lifecycle is not None:
+            lifecycle.workload_closed(workload_token)
+            lifecycle_closed = True
         input_thread.join(timeout=2)
         for thread in reader_threads:
             thread.join(timeout=2)
@@ -5535,6 +5566,8 @@ def _launch_bounded_process(
             process_domains.close()
         return capture
     except (ObservationError, ProcessDomainError, OSError, TimeoutError) as error:
+        if lifecycle is not None:
+            lifecycle.abort()
         _hard_stop_capability(capability)
         stop.set()
         if not domain_completed:
@@ -5571,6 +5604,13 @@ def _launch_bounded_process(
                 stream.close()
             except (OSError, ValueError):
                 pass
+        if lifecycle is not None:
+            if domain_completed and not lifecycle_closed:
+                lifecycle.workload_closed(workload_token)
+            if (domain_completed and not input_thread.is_alive()
+                    and not any(thread.is_alive() for thread in reader_threads)
+                    and all(stream.closed for stream in (process.stdin, process.stdout, process.stderr))):
+                lifecycle.control_closed(stream_token)
 
 
 def _json_equal(left: Any, right: Any) -> bool:
@@ -5876,6 +5916,7 @@ def validate_normalized_result(
     }
     _expect(document["executionFacts"], expected_execution, "result execution facts")
     _validate_process_domain_facts(document)
+    _validate_combined_lifecycle_facts(document)
     derived_overall = _derive_overall_status(document, benchmark_contract)
     _expect(document["overallStatus"], derived_overall, "observer-derived overall status")
     if identities["protocolDigest"] != protocol["protocolDigest"]:
@@ -6158,6 +6199,174 @@ def _derive_object_binding_facts(
     }
 
 
+def _validate_combined_lifecycle_facts(document: Mapping[str, Any]) -> None:
+    """Check a canonical scope prefix, then derive inventory from closed records.
+
+    These are contract snapshots, not an event log or runtime evidence. The
+    producer enforces transitions; this validator independently rejects snapshots
+    whose phase, component roles, case records, and aggregate counts disagree.
+    """
+    facts = document["combinedLifecycleFacts"]
+    schema = _combined_lifecycle_result_schema()
+    _validate_schema_value(facts, schema, schema, "combined lifecycle scopes")
+    execution = document["executionFacts"]
+    expected_source = (
+        "deterministic-contract-backend-v1"
+        if document["runMode"] == "fake-validation" else "contract-only"
+    )
+    _expect(facts["source"], expected_source, "combined lifecycle source")
+    _expect(facts["simulationStatus"],
+            facts["contractStatus"] if document["runMode"] == "fake-validation" else "not-run",
+            "combined lifecycle simulation status")
+    scopes = facts["scopes"]
+    _expect(facts["startedScopeCount"], len(scopes), "combined scope registration count")
+    _expect(facts["completedScopeCount"], sum(s["phase"] == "complete" for s in scopes),
+            "combined scope completion count")
+
+    def controls_by_role(records: list[dict[str, str]]) -> dict[str, str]:
+        controls = {item["role"]: item["state"] for item in records}
+        if len(controls) != len(records):
+            raise ObservationError("combined scope control roles are not unique")
+        return controls
+
+    run_controls = controls_by_role(facts["runControls"])
+    if (not scopes and run_controls) or (len(scopes) > 1 and len(run_controls) != 4):
+        raise ObservationError("combined scope prefix lacks its run control inventory")
+    if "source-bundle" in run_controls and (
+        scopes[0]["progress"] == "prepare"
+        or scopes[0]["writers"]["bundle-builder"] in {"not-started", "active"}
+    ):
+        raise ObservationError("combined scope source control precedes bundle writer closure")
+    phases = {name: index for index, name in enumerate(_combined_lifecycle_contract()["phases"])}
+    directories = {"case-root", "workspace", "model-home", "home", "xdg-config", "xdg-cache", "xdg-data"}
+    case_controls = directories | {"schema", "model-streams"}
+    install_controls = {"marketplace-view", "installed-view", "marketplace-streams", "plugin-install-streams"}
+    workload_counts = {"bundle-builder": 0, "marketplace": 0, "plugin-install": 0, "model-case": 0}
+    writer_states: list[str] = []
+    consumer_states: list[str] = []
+    control_states = list(run_controls.values())
+    for ordinal, scope in enumerate(scopes):
+        expected_kind = "bundle" if ordinal == 0 else "no-plugin-case" if ordinal == 11 else "installed-case"
+        _expect(scope["kind"], expected_kind, "combined canonical scope kind")
+        phase, progress = scope["phase"], scope["progress"]
+        if ((ordinal < len(scopes) - 1 and phase != "complete")
+                or (phase != "incomplete" and phase != progress)
+                or (phase == "incomplete" and facts["runState"] != "incomplete")):
+            raise ObservationError("combined scope prefix or failure progress is inconsistent")
+        position = phases[progress]
+        failed = phase == "incomplete"
+        writers = scope["writers"]
+        expected_writers = ({"marketplace", "plugin-install"} if ordinal and ordinal != 11 else
+                            {"bundle-builder"} if ordinal == 0 and writers["bundle-builder"] != "not-required" else set())
+        for purpose, state in writers.items():
+            _expect(state == "not-required", purpose not in expected_writers,
+                    "combined scope writer role")
+            if state in {"active", "closed"}:
+                if position < phases["writing"]:
+                    raise ObservationError("combined scope writer precedes writing")
+                workload_counts[purpose] += 1
+                writer_states.append(state)
+            if (position >= phases["writers-closed"] and purpose in expected_writers
+                    and state != "closed"):
+                raise ObservationError("combined scope advanced before writer closure")
+        if writers["plugin-install"] in {"active", "closed"} and writers["marketplace"] != "closed":
+            raise ObservationError("combined scope installation writer order is inconsistent")
+        consumer = scope["consumer"]
+        _expect(consumer == "not-required", ordinal == 0, "combined scope consumer role")
+        if consumer in {"active", "closed"}:
+            if position < phases["consuming"]:
+                raise ObservationError("combined scope consumer precedes consumption")
+            workload_counts["model-case"] += 1
+            consumer_states.append(consumer)
+        if ordinal and position >= phases["consumers-closed"] and consumer != "closed":
+            raise ObservationError("combined scope advanced before consumer closure")
+        view = scope["viewState"]
+        if ((position < phases["writers-closed"] and view != "not-accepted")
+                or (position == phases["writers-closed"] and view == "sealed")
+                or (position >= phases["view-sealed"] and view != "sealed")):
+            raise ObservationError("combined scope view and phase disagree")
+        controls = controls_by_role(scope["controls"])
+        expected_controls = (({"destination", "builder-handles"} if expected_writers else set())
+                             if ordinal == 0 else case_controls | (install_controls if ordinal != 11 else set()))
+        if not set(controls) <= expected_controls:
+            raise ObservationError("combined scope contains an unowned control role")
+        if ((ordinal and any(state in {"active", "closed"} for state in writers.values())
+                and not directories | {"marketplace-view"} <= set(controls))
+                or (ordinal == 0 and writers["bundle-builder"] in {"active", "closed"}
+                    and set(controls) != expected_controls)):
+            raise ObservationError("combined scope workload lacks its launch control inventory")
+        for purpose, role in (("marketplace", "marketplace-streams"),
+                              ("plugin-install", "plugin-install-streams"),
+                              ("model-case", "model-streams")):
+            state = consumer if purpose == "model-case" else writers[purpose]
+            if role in controls and state not in {"active", "closed"}:
+                raise ObservationError("combined scope stream control precedes its workload")
+        if "installed-view" in controls and writers["plugin-install"] != "closed":
+            raise ObservationError("combined scope installed view precedes writer closure")
+        if "schema" in controls and position < phases["view-sealed"]:
+            raise ObservationError("combined scope schema precedes its sealed view")
+        if ordinal and view != "not-accepted":
+            role = "model-home" if ordinal == 11 else "installed-view"
+            if role not in controls or (controls[role] == "closed" and not failed and consumer != "closed"):
+                raise ObservationError("combined scope consumption view lacks a live control")
+        if (ordinal and position >= phases["contract-preconditions-complete"]
+                and not expected_controls - {"model-streams"} <= set(controls)):
+            raise ObservationError("combined scope preconditions lack control inventory")
+        active = "active" in (*writers.values(), consumer)
+        if "closed" in controls.values() and active:
+            # Earlier writer stream sets may close before the next writer starts.
+            for role, state in controls.items():
+                if state == "closed" and (not role.endswith("-streams")
+                        or (consumer if role == "model-streams" else writers[role.removesuffix("-streams")]) != "closed"):
+                    raise ObservationError("combined scope control closed with an active workload")
+        if not failed and ordinal and consumer != "closed" and any(
+            state == "closed" and not role.endswith("-streams") for role, state in controls.items()
+        ):
+            raise ObservationError("combined scope control closed before its pending consumer")
+        if position >= phases["resources-closed"] and (
+            set(controls) != expected_controls or any(state != "closed" for state in controls.values())
+        ):
+            raise ObservationError("combined scope resource closure lacks its exact inventory")
+        control_states.extend(controls.values())
+        if ordinal and "cases" in document:
+            case = document["cases"][ordinal - 1]
+            for key, state in (("marketplaceProcessStarted", writers["marketplace"]),
+                               ("pluginInstallProcessStarted", writers["plugin-install"]),
+                               ("modelProcessStarted", consumer)):
+                _expect(case[key], state in {"active", "closed"}, "combined scope case workload binding")
+    if "cases" in document:
+        for case in document["cases"][max(0, len(scopes) - 1):]:
+            if any(case[key] for key in ("marketplaceProcessStarted", "pluginInstallProcessStarted", "modelProcessStarted")):
+                raise ObservationError("combined scope prefix includes a future case workload")
+    for purpose, key in (("bundle-builder", "builderProcessCount"),
+                         ("marketplace", "marketplaceProcessCount"),
+                         ("plugin-install", "pluginInstallProcessCount"),
+                         ("model-case", "modelProcessStartedCount")):
+        _expect(execution[key], workload_counts[purpose], "combined scope execution inventory")
+    derived = {
+        "writerStartedCount": len(writer_states), "writerClosedCount": writer_states.count("closed"),
+        "consumerStartedCount": len(consumer_states), "consumerClosedCount": consumer_states.count("closed"),
+        "controlRegisteredCount": len(control_states), "controlClosedCount": control_states.count("closed"),
+        "unresolvedCreatedResourceCount": writer_states.count("active") + consumer_states.count("active") + control_states.count("open"),
+    }
+    for key, count in derived.items():
+        _expect(facts[key], count, f"combined scope-derived {key}")
+    unresolved = derived["unresolvedCreatedResourceCount"]
+    all_scopes_closed = len(scopes) == 17 and all(s["phase"] == "complete" for s in scopes)
+    if "closed" in run_controls.values() and (
+        "active" in (*writer_states, *consumer_states)
+        or (facts["runState"] != "incomplete" and not all_scopes_closed)
+    ):
+        raise ObservationError("combined run control closes before scope closure")
+    complete = facts["runState"] == "complete"
+    _expect(facts["contractStatus"] == "complete", complete, "combined run terminal status")
+    if complete and (not all_scopes_closed or len(run_controls) != 4 or unresolved
+                     or document["cleanup"]["temporaryRootsRemoved"] is not True):
+        raise ObservationError("combined lifecycle complete claim lacks overall closure")
+    if unresolved and not document["cleanup"]["manualCleanupRequired"]:
+        raise ObservationError("combined unresolved resources omit manual cleanup")
+
+
 def _validate_process_domain_facts(document: Mapping[str, Any]) -> None:
     """Cross-check closed process-domain facts against launched process inventory."""
 
@@ -6227,6 +6436,11 @@ def _derive_overall_status(
     benchmark_contract: Mapping[str, Any],
 ) -> str:
     """Derive the claim solely from closed observer facts and frozen acceptance."""
+    lifecycle = document["combinedLifecycleFacts"]
+    if (lifecycle["source"] != "contract-only"
+            or lifecycle["actualExecutionEligible"] is not True
+            or any(value != "verified" for value in lifecycle["runtimeFacts"].values())):
+        return "incomplete"
     cases = document["cases"]
     summary = _derive_summary(cases, document["cleanup"])
     status_counts = {
@@ -6547,6 +6761,7 @@ def _observe_case_process(
     plugin_install_process_started: bool,
     process_domains: BaseProcessDomainSupervisor,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
+    lifecycle: _CombinedLifecycle | None = None,
     _test_hook: Callable[[str, Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Observe one process and return only its normalized, payload-free case facts."""
@@ -6621,6 +6836,7 @@ def _observe_case_process(
         expected_schema_bytes=materialization.schema_bytes,
         popen_factory=popen_factory,
         process_domains=process_domains,
+        lifecycle=lifecycle,
     )
     try:
         if capture.timed_out:
@@ -6920,6 +7136,7 @@ def _run_bundle_builder_worker(
     process_domains: BaseProcessDomainSupervisor,
     popen_factory: Callable[..., subprocess.Popen[bytes]],
     test_failure_relative: str | None,
+    lifecycle: _CombinedLifecycle,
 ) -> tuple[Any, ...]:
     """Run the real builder and all of its Git children in one fresh domain."""
 
@@ -6935,11 +7152,18 @@ def _run_bundle_builder_worker(
     executable_fd: int | None = None
     process: DomainProcess | None = None
     domain_completed = False
+    workload_token = object()
+    control_token = object()
+    lifecycle_closed = False
+    control_registered = False
     workers: tuple[threading.Thread, ...] = ()
     buffers = {"stdout": bytearray(), "stderr": bytearray()}
     errors: list[str] = []
     stop = threading.Event()
     try:
+        lifecycle.require_launch("bundle-builder")
+        lifecycle.register_control(control_token, role="builder-handles")
+        control_registered = True
         repository_fd = os.open(repository_root, _directory_flags())
         helper_fd = os.open(
             LINUX_ISOLATION_RELATIVE.as_posix(),
@@ -6984,6 +7208,7 @@ def _run_bundle_builder_worker(
             pass_fds=(repository_fd, helper_fd, destination.descriptor),
             popen_factory=popen_factory,
         )
+        lifecycle.workload_started("bundle-builder", workload_token)
         process.stdin.close()
 
         def reader(name: str, maximum: int) -> None:
@@ -7030,6 +7255,8 @@ def _run_bundle_builder_worker(
         process.complete(terminate=timed_out or stop.is_set())
         domain_completed = True
         process_domains.require_advance_barrier()
+        lifecycle.workload_closed(workload_token)
+        lifecycle_closed = True
         for worker in workers:
             worker.join(timeout=2)
         if any(worker.is_alive() for worker in workers):
@@ -7040,6 +7267,7 @@ def _run_bundle_builder_worker(
             raise ObservationError("disposable bundle worker failed")
         return _read_bundle_worker_result(bytes(buffers["stdout"]))
     except (OSError, ProcessDomainError, ObservationError) as error:
+        lifecycle.abort()
         stop.set()
         if process is not None and not domain_completed:
             try:
@@ -7065,24 +7293,35 @@ def _run_bundle_builder_worker(
             cause=error,
         ) from error
     finally:
+        handles_closed = True
         if process is not None:
             for stream in (process.stdin, process.stdout, process.stderr):
                 try:
                     stream.close()
                 except (OSError, ValueError):
                     pass
+            handles_closed = all(
+                stream.closed for stream in (process.stdin, process.stdout, process.stderr)
+            )
         for descriptor in (executable_fd, helper_fd, repository_fd):
             if descriptor is not None:
                 try:
                     os.close(descriptor)
                 except OSError:
-                    pass
+                    handles_closed = False
+        if domain_completed and not lifecycle_closed:
+            lifecycle.workload_closed(workload_token)
+        if (control_registered and handles_closed
+                and (process is None or domain_completed)
+                and not any(worker.is_alive() for worker in workers)):
+            lifecycle.control_closed(control_token)
 
 
 def _prepare_disposable_bundle(
     *, session: OwnedRootSession, repository_root: Path, fake_only: bool,
     source_repository: Path | None, git_executable: Path | None,
     process_domains: BaseProcessDomainSupervisor,
+    lifecycle: _CombinedLifecycle,
     popen_factory: Callable[..., subprocess.Popen[bytes]] = subprocess.Popen,
     test_failure_relative: str | None = None,
 ) -> tuple[FrozenDirectoryIdentity, dict[str, bool], bool, int]:
@@ -7113,6 +7352,7 @@ def _prepare_disposable_bundle(
     destination = session.open_directory(
         "bundle-build", phase="bundle-build-destination", freeze_tree=False
     )
+    lifecycle.register_control(destination.descriptor, role="destination")
     try:
         records = _run_bundle_builder_worker(
             repository_root=repository_root,
@@ -7122,14 +7362,18 @@ def _prepare_disposable_bundle(
             process_domains=process_domains,
             popen_factory=popen_factory,
             test_failure_relative=test_failure_relative,
+            lifecycle=lifecycle,
         )
+        lifecycle.require_writer_closed("bundle-builder")
         session.import_builder_creation_records(
             destination,
             records,
             phase="accepted-builder-creation-ledger",
         )
     finally:
+        lifecycle.require_control_close(destination.descriptor)
         _close_frozen_directory(destination)
+        lifecycle.control_closed(destination.descriptor)
     return (
         session.open_directory(
             "bundle-build/plugin", phase="accepted-source-bundle"
@@ -7309,6 +7553,7 @@ def _result_document(
     marketplace_source_verified_count: int,
     installed_cache_layout_verified_count: int,
     process_domain_facts: Mapping[str, Any],
+    combined_lifecycle_facts: Mapping[str, Any],
 ) -> dict[str, Any]:
     protocol, _ = _load_json(root, PROTOCOL_RELATIVE)
     prompt, _ = _load_json(root, PROMPT_RELATIVE)
@@ -7380,6 +7625,7 @@ def _result_document(
             "pluginInstallProcessCount": plugin_install_process_count,
         },
         "processDomainFacts": dict(process_domain_facts),
+        "combinedLifecycleFacts": dict(combined_lifecycle_facts),
         "installationFacts": {},
         "objectBindingFacts": {},
         "noHookProof": {
@@ -7529,6 +7775,12 @@ def run_observation_orchestration(
             pass
         _retire_capability(capability)
         raise
+    lifecycle_run = _CombinedLifecycleRun(simulated=fake_only)
+    bundle_lifecycle = lifecycle_run.begin(
+        "bundle", bundle_writer=not fake_only or source_repository is not None
+    )
+    for control in ("process-controller", "root-session", "owned-root"):
+        lifecycle_run.register_control(control)
     ledger = BatchLedger()
     case_results: list[dict[str, Any]] = []
     config_verified_count = 0
@@ -7587,6 +7839,7 @@ def run_observation_orchestration(
         ]
         invoke_test_hook("after-root-freeze", session=session)
         invoke_test_hook("before-first-root-write", session=session)
+        bundle_lifecycle.prepared()
         try:
             source_bundle, bundle_object_facts, real_bundle_built, builder_started = _prepare_disposable_bundle(
                 session=session, repository_root=repository_root, fake_only=fake_only,
@@ -7594,9 +7847,11 @@ def run_observation_orchestration(
                 process_domains=process_domains,
                 popen_factory=popen_factory,
                 test_failure_relative=_test_builder_failure_relative,
+                lifecycle=bundle_lifecycle,
             )
             builder_process_count += builder_started
-        except ObservationError as error:
+        except (ObservationError, ProcessDomainError) as error:
+            lifecycle_run.abort()
             if isinstance(error, ProcessBoundaryError) and error.process_started:
                 builder_process_count += 1
             first = golden[0]
@@ -7624,10 +7879,22 @@ def run_observation_orchestration(
                 for pending_index, pending in enumerate(golden[1:], 1)
             )
         else:
+            lifecycle_run.register_control("source-bundle")
             bundle_before = _verify_bundle_surface(
                 Path(f"/proc/self/fd/{source_bundle.descriptor}"),
                 fake_only=not real_bundle_built,
             )
+            bundle_lifecycle.writers_closed()
+            bundle_binding = (source_bundle.device, source_bundle.inode, bundle_before)
+            bundle_lifecycle.accept_view(bundle_binding, bundle_binding)
+            bundle_lifecycle.seal_view()
+            bundle_lifecycle.contract_preconditions(
+                view_binding=bundle_binding, descriptor_policy="exact-required-pass-fds"
+            )
+            bundle_lifecycle.consume()
+            bundle_lifecycle.consumers_closed()
+            bundle_lifecycle.resources_closed()
+            bundle_lifecycle.complete()
         for index, case in enumerate(golden if source_bundle is not None else ()):
             fixture_case = fixture_document["cases"][index]
             plugin_state = fixture_case["pluginState"]
@@ -7639,6 +7906,17 @@ def run_observation_orchestration(
             marketplace: FrozenDirectoryIdentity | None = None
             schema_object: FrozenFileIdentity | None = None
             open_directories: list[FrozenDirectoryIdentity] = []
+            lifecycle = lifecycle_run.begin(
+                "no-plugin-case" if index == 10 else "installed-case"
+            )
+            lifecycle.prepared()
+
+            def open_case_directory(*args: Any, role: str, **kwargs: Any) -> FrozenDirectoryIdentity:
+                directory = session.open_directory(*args, **kwargs)
+                open_directories.append(directory)
+                lifecycle.register_control(directory.descriptor, role=role)
+                return directory
+
             try:
                 case_relative = f"case-{index + 1:02d}"
                 session.mkdir(case_relative, phase="case-root-create")
@@ -7656,39 +7934,41 @@ def run_observation_orchestration(
                 fixture = materialize_fixture_owned(
                     session, workspace_relative, fixture_document, case["id"]
                 )
-                case_root = session.open_directory(
-                    case_relative, phase="case-root-launch", freeze_tree=False
+                case_root = open_case_directory(
+                    case_relative, role="case-root", phase="case-root-launch", freeze_tree=False
                 )
-                workspace = session.open_directory(
-                    workspace_relative, phase="workspace-launch"
+                workspace = open_case_directory(
+                    workspace_relative, role="workspace", phase="workspace-launch"
                 )
-                codex_home = session.open_directory(
+                codex_home = open_case_directory(
                     codex_home_relative,
+                    role="model-home",
                     phase="codex-home-launch",
                     freeze_tree=False,
                 )
-                home = session.open_directory(
+                home = open_case_directory(
                     _join_relative(case_relative, "home"),
+                    role="home",
                     phase="home-launch",
                     freeze_tree=False,
                 )
-                xdg_config = session.open_directory(
+                xdg_config = open_case_directory(
                     _join_relative(case_relative, "xdg-config"),
+                    role="xdg-config",
                     phase="xdg-launch",
                     freeze_tree=False,
                 )
-                xdg_cache = session.open_directory(
+                xdg_cache = open_case_directory(
                     _join_relative(case_relative, "xdg-cache"),
+                    role="xdg-cache",
                     phase="xdg-launch",
                     freeze_tree=False,
                 )
-                xdg_data = session.open_directory(
+                xdg_data = open_case_directory(
                     _join_relative(case_relative, "xdg-data"),
+                    role="xdg-data",
                     phase="xdg-launch",
                     freeze_tree=False,
-                )
-                open_directories.extend(
-                    [case_root, workspace, codex_home, home, xdg_config, xdg_cache, xdg_data]
                 )
                 environment_additions: dict[str, str] = {
                     "AXIOM_FAKE_SCENARIO": (scenarios or {}).get(case["id"], "happy"),
@@ -7713,6 +7993,7 @@ def run_observation_orchestration(
                     marketplace = _prepare_local_marketplace(
                         session, marketplace_relative, source_bundle
                     )
+                    lifecycle.register_control(marketplace.descriptor, role="marketplace-view")
                     if fake_only:
                         install_additions = dict(environment_additions)
                         install_additions.update({
@@ -7753,6 +8034,7 @@ def run_observation_orchestration(
                                 env=install_env, maximum_stdout=MAX_RECEIPT_BYTES,
                                 require_stdin_sentinel=False, popen_factory=popen_factory,
                                 process_domains=process_domains,
+                                lifecycle=lifecycle,
                                 inherited_fds=(
                                     case_root.descriptor,
                                     codex_home.descriptor, home.descriptor,
@@ -7776,6 +8058,7 @@ def run_observation_orchestration(
                         else:
                             plugin_started = True
                             plugin_install_process_count += 1
+                        lifecycle.require_writer_closed(purpose)
                         if capture.timed_out or capture.returncode != 0 or capture.stderr:
                             raise ObservationError(f"{purpose} process failed")
                         if purpose == "marketplace":
@@ -7794,6 +8077,10 @@ def run_observation_orchestration(
                                 codex_home,
                                 expected_tree=bundle_before,
                             )
+                            lifecycle.register_control(
+                                installed.descriptor, role="installed-view",
+                                binding=(installed.device, installed.inode, bundle_before),
+                            )
                             if receipt["installedCacheLayoutVerified"]:
                                 installed_cache_layout_verified_count += 1
                     if installed is None:
@@ -7811,6 +8098,20 @@ def run_observation_orchestration(
                     )
                 elif not _directory_entry_absent(codex_home.descriptor, "plugins"):
                     raise ObservationError("case 11 no-plugin control contains a plugin directory")
+                lifecycle.writers_closed()
+                view_binding = (
+                    (installed.device, installed.inode, bundle_before)
+                    if installed is not None else None
+                )
+                observed_binding = (
+                    (installed.device, installed.inode, _verify_frozen_directory(installed))
+                    if installed is not None else None
+                )
+                lifecycle.accept_view(
+                    view_binding, observed_binding,
+                    control=installed.descriptor if installed is not None else codex_home.descriptor,
+                )
+                lifecycle.seal_view()
                 _verify_temporary_config_has_no_hook_registration(
                     Path(f"/proc/self/fd/{codex_home.descriptor}")
                 )
@@ -7827,6 +8128,7 @@ def run_observation_orchestration(
                 )
                 if schema_object is None:
                     raise ObservationError("schema object was not frozen")
+                lifecycle.register_control(schema_object.descriptor, role="schema")
                 _verify_frozen_file(schema_object, case_materialization.schema_bytes)
                 invoke_test_hook(
                     "after-schema-create",
@@ -7860,6 +8162,10 @@ def run_observation_orchestration(
                     installed=installed,
                     schema=schema_object,
                 )
+                lifecycle.contract_preconditions(
+                    view_binding=view_binding, descriptor_policy="exact-required-pass-fds"
+                )
+                lifecycle.consume()
                 normalized = _observe_case_process(
                     capability=capability, executable=executable,
                     output_schema=schema_object,
@@ -7882,10 +8188,12 @@ def run_observation_orchestration(
                     marketplace_process_started=marketplace_started,
                     plugin_install_process_started=plugin_started,
                     process_domains=process_domains,
+                    lifecycle=lifecycle,
                     popen_factory=popen_factory,
                     _test_hook=_test_hook,
                 )
-            except ObservationError as error:
+            except (ObservationError, ProcessDomainError) as error:
+                lifecycle_run.abort()
                 ledger.hard_stop(case["id"])
                 _hard_stop_capability(capability)
                 case_results.append(_incomplete_case_record(
@@ -7908,14 +8216,24 @@ def run_observation_orchestration(
                 )
                 break
             finally:
-                if schema_object is not None:
-                    os.close(schema_object.descriptor)
-                _close_frozen_directory(installed)
-                _close_frozen_directory(marketplace)
-                for directory in reversed(open_directories):
-                    _close_frozen_directory(directory)
+                if not lifecycle.workloads_closed:
+                    lifecycle_run.abort()
+                else:
+                    if schema_object is not None:
+                        lifecycle.require_control_close(schema_object.descriptor)
+                        os.close(schema_object.descriptor)
+                        lifecycle.control_closed(schema_object.descriptor)
+                    for directory in (installed, marketplace, *reversed(open_directories)):
+                        if directory is not None:
+                            lifecycle.require_control_close(directory.descriptor)
+                            _close_frozen_directory(directory)
+                            lifecycle.control_closed(directory.descriptor)
+            lifecycle.consumers_closed()
+            lifecycle.resources_closed()
+            lifecycle.complete()
             case_results.append(normalized)
             if normalized["status"] == "incomplete":
+                lifecycle_run.abort()
                 ledger.hard_stop(case["id"])
                 _hard_stop_capability(capability)
                 case_results.extend(
@@ -7951,6 +8269,9 @@ def run_observation_orchestration(
             cleanup["sourceBundleUnchanged"] = (
                 _verify_frozen_directory(source_bundle) == bundle_before
             )
+    except BaseException:
+        lifecycle_run.abort()
+        raise
     finally:
         _retire_capability(capability)
         process_domains_safe = False
@@ -7958,16 +8279,26 @@ def run_observation_orchestration(
             process_domains.require_advance_barrier()
             process_domains.close()
             process_domains_safe = True
+            lifecycle_run.control_closed("process-controller")
         except ProcessDomainError:
             cleanup["manualCleanupRequired"] = True
         process_domain_facts = process_domains.normalized_summary()
         if process_domain_facts["manualCleanupRequired"]:
             cleanup["manualCleanupRequired"] = True
-        _close_frozen_directory(source_bundle)
+        if not lifecycle_run.safe_for_cleanup:
+            lifecycle_run.abort()
+            process_domains_safe = False
+        if source_bundle is not None and process_domains_safe:
+            _close_frozen_directory(source_bundle)
+            lifecycle_run.control_closed("source-bundle")
         owned_ledger = session.ledger
         if process_domains_safe:
             invoke_test_hook("before-cleanup", session=session)
-        session.close()
+        if all(scope.workloads_closed for scope in lifecycle_run.scopes):
+            session.close()
+            lifecycle_run.control_closed("root-session")
+        else:
+            cleanup["manualCleanupRequired"] = True
         if process_domains_safe:
             try:
                 cleanup_owned_root(root_identity, owned_ledger)
@@ -7975,6 +8306,8 @@ def run_observation_orchestration(
                 cleanup["manualCleanupRequired"] = True
             else:
                 cleanup["temporaryRootsRemoved"] = not root_identity.path.exists()
+                if cleanup["temporaryRootsRemoved"]:
+                    lifecycle_run.control_closed("owned-root")
         invoke_test_hook(
             "after-cleanup",
             rootIdentity=root_identity,
@@ -7984,6 +8317,7 @@ def run_observation_orchestration(
         raise ObservationError(
             "normalized result publication requires an empty removed process domain"
         )
+    lifecycle_run.finish()
     result = _result_document(
         root=repository_root, run_mode="fake-validation" if fake_only else "host-observation",
         cases=case_results,
@@ -7996,6 +8330,7 @@ def run_observation_orchestration(
         marketplace_source_verified_count=marketplace_source_verified_count,
         installed_cache_layout_verified_count=installed_cache_layout_verified_count,
         process_domain_facts=process_domain_facts,
+        combined_lifecycle_facts=lifecycle_run.normalized_summary(),
     )
     validate_normalized_result(result, repository_root)
     return result

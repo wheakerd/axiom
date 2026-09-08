@@ -267,6 +267,35 @@ class ScriptedProcess:
 
 
 class NoHookBundleTests(unittest.TestCase):
+    def test_frozen_local_objects_build_identical_archive_without_runtime_backend(self):
+        """Read existing history only; no fixture commit or isolation backend."""
+        from axiom_validation import no_hook_observation as observer
+        from axiom_validation import no_hook_linux_isolation as isolation
+
+        with tempfile.TemporaryDirectory() as directory, (
+            mock.patch.object(isolation, "detect_process_domain_capabilities", side_effect=AssertionError("runtime detector called"))
+        ), mock.patch.object(isolation.LinuxProcessDomainSupervisor, "open", side_effect=AssertionError("runtime backend called")):
+            parent = Path(directory)
+            outputs = []
+            for name in ("first", "second"):
+                destination = parent / name
+                destination.mkdir()
+                result = build_bundle(
+                    REPOSITORY_ROOT,
+                    observer.BUNDLE_RUNTIME_SOURCE_COMMIT,
+                    observer.BUNDLE_RUNTIME_SOURCE_TREE,
+                    destination,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                    entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                    module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                )
+                self.assertEqual(observer.BUNDLE_MANIFEST_DIGEST, result.bundle_manifest_digest)
+                self.assertEqual(observer.ARCHIVE_SHA256, result.archive_sha256)
+                self.assertEqual(observer.PROFILE_RUNTIME_DIGEST, result.profile_runtime_digest)
+                outputs.append(_directory_files(destination))
+            self.assertEqual(outputs[0], outputs[1])
+
     def test_checked_in_static_evidence_reproduces_without_output(self):
         failures: list[str] = []
         self.assertEqual((50, 2), check_no_hook_bundle(failures))

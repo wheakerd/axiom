@@ -90,18 +90,34 @@ therefore belongs to package, installed-tree, temporary-config, and wrapper
 absence facts rather than an event-count claim. All protocol validation remains
 fake-only, and the Codex observation remains `NOT-RUN`.
 
-Revision 7 also binds a separate Linux process-domain helper. Each builder,
-marketplace, install, and model process receives a new delegated cgroup v2
-domain and is atomically enrolled with
-`clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)` before the fixed bootstrap. Direct
-leaders are pidfd-waited; surviving descendants are terminated with
-`cgroup.kill`, adopted descendants are reaped under child-subreaper ownership,
-and `cgroup.events` must prove `populated=0` before the exact domain is removed.
-Only closed mechanism, count, empty, reap, removal, and cleanup facts can enter
-the normalized result; never a PID, cgroup name, path, raw event, or descriptor.
-Unsupported hosts and incomplete cleanup have no weaker fallback. Actual
-execution remains disabled until the distinct Group 1 filesystem-consumption
-and Group 3 credential-exclusion boundaries are also complete.
+Revision 7 binds the Linux helper and observer implementing the Combined
+Group 1 + Group 2 offline lifecycle contract. Helper, observer, result schema,
+and protocol bytes propagate through the runner bindings, result-schema hash,
+protocolDigest, and empty result-history reference. Protocol-derived schema,
+prompt, opaque bindings, and commitments are recomputed from that digest;
+their frozen definition files remain unchanged. Revision 7 retains its revision
+6 baseline and Issue 117 ownership; revisions 1 through 6 remain unchanged.
+The revision 5 runtime source, revision 6 bundle-artifact owner, frozen bundle
+format, and runtime payload remain unchanged. Explicit Git-reader working
+directories change the builder dependency identity, bundleManifestDigest, and
+archiveSha256; two local frozen-object builds must reproduce the new bytes.
+
+Contract completion, deterministic simulation, and runtime observation are
+separate facts. The closed result carries workload and control-resource counts,
+a canonical scope prefix with closed component roles and phase records, a fixed
+simulation source, and explicit not-verified runtime facts. Both complete and
+incomplete counts are recomputed from those records and checked against case
+and execution facts. Scope registration failures cannot reset the run or add
+an unregistered scope. The 47
+maximum workload domains are not the complete control inventory. A separate
+supervisor process remains unimplemented and has zero recorded starts.
+The existing Linux process-domain code is not a completed Combined backend.
+Unified private filesystem and identity lifecycles, descendant coverage, and
+runtime teardown still require separate implementation and validation. Earlier
+partial process-domain checks do not establish complete Group 2 acceptance.
+Default validation performs no capability detection. Actual execution remains
+hard-disabled; FCR-001/003/004 are OPEN and FCR-002 is STILL OPEN. No current
+host observation, release readiness, revision 8, or publication is created.
 
 Construction binds one caller-supplied absolute Git executable, requires its
 `--no-lazy-fetch` capability, and rechecks its physical identity around every

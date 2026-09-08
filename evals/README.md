@@ -215,18 +215,35 @@ and irreversible 16-call budget. Each case then requires a fresh isolated
 process, Codex home, workspace, and ephemeral session; Case 11 alone has no
 installed plugin.
 
-A second, independent authority owns complete process containment. On
-Linux/x86_64, every bundle-builder, marketplace, plugin-install, and model
-launch receives a fresh delegated cgroup v2 domain. The launcher atomically
-combines `CLONE_INTO_CGROUP` and `CLONE_PIDFD`; no post-spawn `cgroup.procs`,
-leader-only, process-group, session, or subreaper-only fallback exists. A
-pidfd wait owns the direct leader, `cgroup.kill` owns complete-domain
-termination, child-subreaper waits own adopted descendants, and
-`cgroup.events` must prove `populated=0` before exact domain removal. Until
-that barrier passes, the runner cannot start another process or case, tear
-down filesystems, or publish a normalized result. Hosts without the complete
-capability are unavailable. Group 1 and Group 3 remain open, so actual
-execution is still disabled and the observation remains `NOT-RUN`.
+The Combined Group 1 + Group 2 offline contract uses one lifecycle across
+writer handoff, logical view sealing, contract preconditions, consumption,
+consumer closure, control-resource closure, and result derivation. The
+observer alone retains invocation authorization, canonical case order, and
+the irreversible 16-call budget. Writer closure precedes receipt acceptance;
+consumer closure precedes view release. Missing or contradictory completion
+records are irreversible and cannot be repaired by submitting success booleans.
+Pending consumption keeps the scope's matching view control open, including
+Case 11. A failed run can close inactive resources without resuming consumption.
+Failed scope construction stops the run without incrementing its scope count.
+Closed scope and component records constrain incomplete prefixes as well as
+complete runs; aggregate totals alone do not establish their order or ownership.
+
+The helper distinguishes contract-only facts from
+`deterministic-contract-backend-v1` simulation. Runtime facts stay not-verified
+and actual execution is hard-disabled. Workload and control resources have
+separate bounded counts; there is no fabricated supervisor-process record.
+Unknown objects remain untouched. Only unresolved resources that were actually
+created can require manual cleanup. Ordinary validators do not call capability
+detectors or the runtime backend, and ordinary fake results remain incomplete.
+
+The existing delegated-cgroup code is retained but does not implement the full
+Combined backend. Private filesystem lifecycle, detached model-home view,
+identity transition, descriptor inheritance, capability reduction, descendant
+coverage, and teardown need separate implementation and runtime validation.
+Historical local process-domain results remain historical partial evidence,
+not complete Group 2 acceptance. FCR-001/003/004 remain OPEN, FCR-002 remains
+STILL OPEN, and Group 3 credential-exclusion proof remains pending. The Codex
+observation stays NOT-RUN with an empty history and no execution readiness.
 
 All sixteen deterministic fixtures are materialized by the production runner
 from closed logical file records and observer-owned Git facts. The local

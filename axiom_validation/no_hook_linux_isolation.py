@@ -1,4 +1,8 @@
-"""Linux process-domain containment for the Codex no-Hook observer.
+"""Offline Combined lifecycle contract and retained Linux process-domain code.
+
+The Combined runtime backend is unfinished. Import and repository validation
+perform no capability detection; contract/simulation facts never prove host
+support, identity isolation, descendant coverage, or runtime cleanup.
 
 The real backend is deliberately narrow: Linux/x86_64, delegated cgroup v2,
 ``clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)``, pidfd-bound direct-child waits,
@@ -61,6 +65,472 @@ class ProcessDomainError(RuntimeError):
     def __init__(self, code: str) -> None:
         super().__init__(code)
         self.code = code
+
+
+_COMBINED_PHASES = (
+    "prepare", "writing", "writers-closed", "view-sealed",
+    "contract-preconditions-complete", "consuming", "consumers-closed",
+    "resources-closed", "complete",
+)
+_COMBINED_RUNTIME_FACTS = (
+    "kernelSupport", "preExecutionIsolation", "lifetimeMembership",
+    "descendantCoverage", "privateViewConsumption", "runtimeTeardown",
+    "fixedIdentityTransition", "descriptorInheritance", "capabilityReduction",
+    "writerDomainClosure", "controlResourceTeardown",
+)
+_COMBINED_WRITERS = ("bundle-builder", "marketplace", "plugin-install")
+_COMBINED_RUN_CONTROLS = ("process-controller", "root-session", "owned-root", "source-bundle")
+_COMBINED_DIRECTORIES = (
+    "case-root", "workspace", "model-home", "home", "xdg-config", "xdg-cache", "xdg-data",
+)
+_COMBINED_CASE_CONTROLS = (*_COMBINED_DIRECTORIES, "schema", "model-streams")
+_COMBINED_INSTALL_CONTROLS = ("marketplace-view", "installed-view", "marketplace-streams", "plugin-install-streams")
+_COMBINED_BUNDLE_CONTROLS = ("destination", "builder-handles")
+_COMBINED_CONTROLS = (*_COMBINED_CASE_CONTROLS, *_COMBINED_INSTALL_CONTROLS, *_COMBINED_BUNDLE_CONTROLS)
+
+
+def _combined_lifecycle_contract() -> dict[str, object]:
+    """The offline contract has no capability detector or execution authority."""
+    return {
+        "implementation": "offline-contract-only",
+        "scope": "one-bundle-and-sixteen-case-scopes",
+        "phases": list(_COMBINED_PHASES),
+        "failureState": "incomplete-irreversible",
+        "owners": {
+            "prepare": "observer-object-owner",
+            "writing": "workload-writer",
+            "writers-closed": "process-domain-owner",
+            "view-sealed": "observer-object-owner",
+            "contract-preconditions-complete": "lifecycle-contract-owner",
+            "consuming": "separately-authorized-launcher",
+            "consumers-closed": "process-domain-owner",
+            "resources-closed": "resource-owner",
+            "complete": "observer-result-owner",
+        },
+        "requiredFacts": {
+            "prepare": "owned-scope-and-canonical-position",
+            "writing": "canonical-writer-order-with-separate-launch-authority",
+            "writers-closed": "every-registered-writer-closed",
+            "view-sealed": "closed-writers-and-matching-accepted-object",
+            "contract-preconditions-complete": "sealed-logical-view-and-exact-descriptor-policy",
+            "consuming": "contract-preconditions-and-separate-model-authority",
+            "consumers-closed": "every-registered-consumer-closed",
+            "resources-closed": "consumers-closed-and-no-unresolved-owned-control",
+            "complete": "all-scopes-complete-and-run-controls-closed",
+        },
+        "inventoryBounds": {
+            "scopes": 17, "writerWorkloads": 31,
+            "consumerWorkloads": 16, "controlResources": 256,
+        },
+        "controlInventory": {
+            "run": ["process-controller", "root-session", "owned-root", "source-bundle"],
+            "bundle": "destination-and-worker-handles-if-builder-started",
+            "installedCase": "seven-directories-two-product-views-schema-three-stream-worker-sets",
+            "noPluginCase": "seven-directories-schema-one-stream-worker-set",
+            "streamWorkerSet": "stdin-stdout-stderr-handles-and-joined-workers",
+        },
+        "simulationSource": "deterministic-contract-backend-v1",
+        "runtimeBackend": "not-implemented",
+        "runtimeFacts": {key: "not-verified" for key in _COMBINED_RUNTIME_FACTS},
+        "actualExecutionEligible": False,
+        "supervisorProcess": "not-implemented-zero-started",
+        "viewBinding": "live-scope-control-and-accepted-logical-binding-required",
+        "scopeAccounting": "successful-registration-only-canonical-prefix",
+        "componentAccounting": "closed-role-records-before-aggregate-counts-for-every-status",
+        "failureCleanup": "irreversible-incomplete-with-no-active-workloads",
+        "writerHandoff": "closed-writer-before-product-acceptance",
+        "publication": "all-scopes-and-owned-controls-closed-for-selected-mode",
+        "unknownObjects": "preserve-incomplete-no-invented-residual",
+        "modelCallAuthority": "external-unchanged-sixteen-call-capability",
+    }
+
+
+def _combined_lifecycle_result_schema() -> dict[str, object]:
+    """Closed normalized contract facts, with no retained object identifiers."""
+    def closed(properties: dict[str, object]) -> dict[str, object]:
+        return {"type": "object", "additionalProperties": False,
+                "required": list(properties), "properties": properties}
+
+    properties: dict[str, object] = {
+        "source": {"enum": ["contract-only", "deterministic-contract-backend-v1"]},
+        "contractStatus": {"enum": ["complete", "incomplete"]},
+        "simulationStatus": {"enum": ["complete", "incomplete", "not-run"]},
+        "runtimeBackend": {"const": "not-implemented"},
+        "runtimeFacts": closed({key: {"const": "not-verified"}
+                                for key in _COMBINED_RUNTIME_FACTS}),
+        "actualExecutionEligible": {"const": False},
+    }
+    for name, maximum in (
+        ("startedScopeCount", 17), ("completedScopeCount", 17),
+        ("writerStartedCount", 31), ("writerClosedCount", 31),
+        ("consumerStartedCount", 16), ("consumerClosedCount", 16),
+        ("controlRegisteredCount", 256), ("controlClosedCount", 256),
+        ("unresolvedCreatedResourceCount", 303),
+    ):
+        properties[name] = {"type": "integer", "minimum": 0, "maximum": maximum}
+    properties["supervisorProcess"] = closed({
+        "implementation": {"const": "not-implemented"},
+        "startedCount": {"const": 0}, "closedCount": {"const": 0},
+    })
+    properties["runState"] = {"enum": ["active", "incomplete", "complete"]}
+    properties["runControls"] = {
+        "type": "array", "maxItems": 4,
+        "items": closed({"role": {"enum": list(_COMBINED_RUN_CONTROLS)},
+                         "state": {"enum": ["open", "closed"]}}),
+    }
+    properties["scopes"] = {
+        "type": "array", "maxItems": 17,
+        "items": closed({
+            "kind": {"enum": ["bundle", "installed-case", "no-plugin-case"]},
+            "phase": {"enum": [*_COMBINED_PHASES, "incomplete"]},
+            "progress": {"enum": list(_COMBINED_PHASES)},
+            "viewState": {"enum": ["not-accepted", "accepted", "sealed"]},
+            "writers": closed({purpose: {"enum": ["not-required", "not-started", "active", "closed"]}
+                               for purpose in _COMBINED_WRITERS}),
+            "consumer": {"enum": ["not-required", "not-started", "active", "closed"]},
+            "controls": {"type": "array", "maxItems": 13,
+                         "items": closed({"role": {"enum": list(_COMBINED_CONTROLS)},
+                                          "state": {"enum": ["open", "closed"]}})},
+        }),
+    }
+    return closed(properties)
+
+
+class _CombinedLifecycle:
+    """One in-memory scope. Completion proves contract order, never isolation.
+
+    Tokens identify components/resources registered by their owning adapter.
+    There is deliberately no boolean API for asserting runtime success. Known
+    resources may still be closed after failure, but failure cannot be undone.
+    """
+
+    def __init__(self, kind: str, *, bundle_writer: bool = False) -> None:
+        if type(kind) is not str or kind not in {"bundle", "installed-case", "no-plugin-case"}:
+            raise ProcessDomainError("combined-scope-kind-invalid")
+        if type(bundle_writer) is not bool or (bundle_writer and kind != "bundle"):
+            raise ProcessDomainError("combined-scope-writers-invalid")
+        self.kind = kind
+        self.phase = "prepare"
+        self._failure_phase = "prepare"
+        self.expected_writers = (
+            ("bundle-builder",) if bundle_writer else
+            ("marketplace", "plugin-install") if kind == "installed-case" else ()
+        )
+        self.expected_consumers = 0 if kind == "bundle" else 1
+        self._writers: dict[object, tuple[str, bool]] = {}
+        self._consumers: dict[object, bool] = {}
+        self._controls: dict[object, bool] = {}
+        self._control_roles: dict[object, str] = {}
+        self._control_bindings: dict[object, tuple[object, ...] | None] = {}
+        self._accepted = False
+        self._sealed = False
+        self._binding: tuple[object, ...] | None = None
+        self._view_control: object | None = None
+
+    def abort(self) -> None:
+        if self.phase != "incomplete":
+            self._failure_phase = self.phase
+        self.phase = "incomplete"
+
+    @property
+    def expected_controls(self) -> tuple[str, ...]:
+        if self.kind == "bundle":
+            return _COMBINED_BUNDLE_CONTROLS if self.expected_writers else ()
+        return (*_COMBINED_CASE_CONTROLS,
+                *(_COMBINED_INSTALL_CONTROLS if self.kind == "installed-case" else ()))
+
+    @property
+    def view_role(self) -> str | None:
+        return ("installed-view" if self.kind == "installed-case" else
+                "model-home" if self.kind == "no-plugin-case" else None)
+
+    def _require_live_view(self) -> None:
+        if self.expected_consumers and (
+            self._controls.get(self._view_control) is not False
+            or self._control_roles.get(self._view_control) != self.view_role
+            or self._control_bindings.get(self._view_control) != self._binding
+        ):
+            self._reject("combined-consumption-control-invalid")
+
+    def _reject(self, code: str) -> None:
+        self.abort()
+        raise ProcessDomainError(code)
+
+    def _require(self, phase: str) -> None:
+        if self.phase != phase:
+            self._reject("combined-phase-order-invalid")
+
+    def prepared(self) -> None:
+        self._require("prepare")
+        self.phase = "writing"
+
+    def _require_controls_open(self, roles: set[str]) -> None:
+        live = {self._control_roles[token] for token, closed in self._controls.items() if not closed}
+        if not roles <= live:
+            self._reject("combined-launch-controls-incomplete")
+
+    def require_launch(self, purpose: str) -> None:
+        if purpose == "model-case":
+            self._require("consuming")
+            self._require_live_view()
+            if len(self._consumers) >= self.expected_consumers:
+                self._reject("combined-consumer-count-invalid")
+        else:
+            self._require("writing")
+            if self.kind == "installed-case":
+                self._require_controls_open(set(_COMBINED_DIRECTORIES) | {"marketplace-view"})
+            index = len(self._writers)
+            if (index >= len(self.expected_writers)
+                    or self.expected_writers[index] != purpose
+                    or any(not closed for _, closed in self._writers.values())):
+                self._reject("combined-writer-order-invalid")
+
+    def workload_started(self, purpose: str, token: object) -> None:
+        self.require_launch(purpose)
+        if purpose == "bundle-builder":
+            self._require_controls_open(set(_COMBINED_BUNDLE_CONTROLS))
+        if token in self._writers or token in self._consumers:
+            self._reject("combined-workload-identity-invalid")
+        if purpose == "model-case":
+            self._consumers[token] = False
+        else:
+            self._writers[token] = (purpose, False)
+
+    def workload_closed(self, token: object) -> None:
+        if token in self._writers and self._writers[token][1] is False:
+            self._writers[token] = (self._writers[token][0], True)
+        elif token in self._consumers and self._consumers[token] is False:
+            self._consumers[token] = True
+        else:
+            self._reject("combined-workload-completion-invalid")
+
+    def require_writer_closed(self, purpose: str) -> None:
+        self._require("writing")
+        if (purpose, True) not in self._writers.values():
+            self._reject("combined-writer-handoff-incomplete")
+
+    def writers_closed(self) -> None:
+        self._require("writing")
+        if (len(self._writers) != len(self.expected_writers)
+                or any(not closed for _, closed in self._writers.values())):
+            self._reject("combined-writer-closure-incomplete")
+        self.phase = "writers-closed"
+
+    def accept_view(
+        self, expected: tuple[object, ...] | None, observed: tuple[object, ...] | None,
+        *, control: object | None = None,
+    ) -> None:
+        self._require("writers-closed")
+        absent = self.kind == "no-plugin-case"
+        if (self._accepted or expected != observed
+                or (absent and expected is not None)
+                or (not absent and (type(expected) is not tuple or not expected))):
+            self._reject("combined-consumption-binding-invalid")
+        self._binding = expected
+        self._view_control = control
+        self._require_live_view()
+        self._accepted = True
+
+    def seal_view(self) -> None:
+        self._require("writers-closed")
+        if not self._accepted:
+            self._reject("combined-view-acceptance-missing")
+        self._require_live_view()
+        self._sealed = True
+        self.phase = "view-sealed"
+
+    def contract_preconditions(
+        self, *, view_binding: tuple[object, ...] | None, descriptor_policy: str
+    ) -> None:
+        self._require("view-sealed")
+        self._require_live_view()
+        if (view_binding != self._binding
+                or descriptor_policy != "exact-required-pass-fds"
+                or not set(self.expected_controls) - {"model-streams"} <= set(self._control_roles.values())):
+            self._reject("combined-contract-preconditions-incomplete")
+        self.phase = "contract-preconditions-complete"
+
+    def consume(self) -> None:
+        self._require("contract-preconditions-complete")
+        self._require_live_view()
+        self.phase = "consuming"
+
+    def consumers_closed(self) -> None:
+        self._require("consuming")
+        if (len(self._consumers) != self.expected_consumers
+                or not all(self._consumers.values())):
+            self._reject("combined-consumer-closure-incomplete")
+        self.phase = "consumers-closed"
+
+    def register_control(
+        self, token: object, *, role: str, binding: tuple[object, ...] | None = None
+    ) -> None:
+        if (self.phase in {"incomplete", "resources-closed", "complete"}
+                or token in self._controls or role not in self.expected_controls
+                or role in self._control_roles.values()):
+            self._reject("combined-control-registration-invalid")
+        if (role == "schema" and self.phase != "view-sealed"
+                or role == "installed-view" and ("plugin-install", True) not in self._writers.values()
+                or role == "model-streams" and not self._consumers
+                or role in {"marketplace-streams", "plugin-install-streams"}
+                and not any(purpose == role.removesuffix("-streams") for purpose, _ in self._writers.values())):
+            self._reject("combined-control-phase-invalid")
+        self._controls[token] = False
+        self._control_roles[token] = role
+        self._control_bindings[token] = binding
+
+    def require_control_close(self, token: object) -> None:
+        if token not in self._controls or self._controls[token]:
+            self._reject("combined-control-completion-invalid")
+        # Closing a view while a consumer is live is never a valid transition.
+        if not self.workloads_closed:
+            self._reject("combined-view-consumer-still-active")
+        if (self.phase != "incomplete" and self.expected_consumers
+                and not self._control_roles[token].endswith("-streams")
+                and len(self._consumers) != self.expected_consumers):
+            self._reject("combined-view-consumer-still-pending")
+
+    def control_closed(self, token: object) -> None:
+        self.require_control_close(token)
+        self._controls[token] = True
+
+    @property
+    def workloads_closed(self) -> bool:
+        return (all(self._consumers.values())
+                and all(closed for _, closed in self._writers.values()))
+
+    @property
+    def unresolved_resources(self) -> int:
+        return (sum(not closed for _, closed in self._writers.values())
+                + sum(not closed for closed in self._consumers.values())
+                + sum(not closed for closed in self._controls.values()))
+
+    def resources_closed(self) -> None:
+        self._require("consumers-closed")
+        if (self.unresolved_resources
+                or set(self._control_roles.values()) != set(self.expected_controls)):
+            self._reject("combined-resource-closure-incomplete")
+        self.phase = "resources-closed"
+
+    def complete(self) -> None:
+        self._require("resources-closed")
+        self.phase = "complete"
+
+    def normalized_record(self) -> dict[str, object]:
+        writers = {purpose: "not-started" if purpose in self.expected_writers else "not-required"
+                   for purpose in _COMBINED_WRITERS}
+        for purpose, closed in self._writers.values():
+            writers[purpose] = "closed" if closed else "active"
+        return {
+            "kind": self.kind, "phase": self.phase,
+            "progress": self._failure_phase if self.phase == "incomplete" else self.phase,
+            "viewState": "sealed" if self._sealed else "accepted" if self._accepted else "not-accepted",
+            "writers": writers,
+            "consumer": ("not-required" if not self.expected_consumers else
+                         "not-started" if not self._consumers else
+                         "closed" if all(self._consumers.values()) else "active"),
+            "controls": [{"role": self._control_roles[token], "state": "closed" if closed else "open"}
+                         for token, closed in self._controls.items()],
+        }
+
+
+class _CombinedLifecycleRun:
+    """Bounded contract/simulation accounting, separate from model authority."""
+
+    def __init__(self, *, simulated: bool = False) -> None:
+        if type(simulated) is not bool:
+            raise ProcessDomainError("combined-source-invalid")
+        self.simulated = simulated
+        self.scopes: list[_CombinedLifecycle] = []
+        self._controls: dict[object, bool] = {}
+        self._failed = False
+        self._finished = False
+
+    def begin(self, kind: str, *, bundle_writer: bool = False) -> _CombinedLifecycle:
+        try:
+            ordinal = len(self.scopes)
+            expected = "bundle" if ordinal == 0 else "no-plugin-case" if ordinal == 11 else "installed-case"
+            if (self._failed or self._finished or ordinal >= 17 or kind != expected
+                    or (ordinal and any(self._controls.get(name) is not False for name in _COMBINED_RUN_CONTROLS))
+                    or (self.scopes and self.scopes[-1].phase != "complete")):
+                raise ProcessDomainError("combined-scope-order-invalid")
+            scope = _CombinedLifecycle(kind, bundle_writer=bundle_writer)
+            # The count advances only after successful construction and append.
+            self.scopes.append(scope)
+        except (ProcessDomainError, MemoryError):
+            self.abort()
+            raise
+        return scope
+
+    def abort(self) -> None:
+        self._failed = True
+        if self.scopes and self.scopes[-1].phase != "complete":
+            self.scopes[-1].abort()
+
+    def register_control(self, token: object) -> None:
+        if (self._failed or self._finished or not self.scopes or token in self._controls
+                or token not in _COMBINED_RUN_CONTROLS):
+            self.abort()
+            raise ProcessDomainError("combined-run-control-invalid")
+        if token == "source-bundle" and (
+            self.scopes[0].phase == "prepare"
+            or len(self.scopes[0]._writers) != len(self.scopes[0].expected_writers)
+            or not self.scopes[0].workloads_closed
+        ):
+            self.abort()
+            raise ProcessDomainError("combined-run-source-writer-incomplete")
+        self._controls[token] = False
+
+    def control_closed(self, token: object) -> None:
+        if (token not in self._controls or self._controls[token]
+                or any(not scope.workloads_closed for scope in self.scopes)
+                or (not self._failed and (len(self.scopes) != 17
+                    or any(scope.phase != "complete" for scope in self.scopes)))):
+            self.abort()
+            raise ProcessDomainError("combined-run-control-completion-invalid")
+        self._controls[token] = True
+
+    @property
+    def safe_for_cleanup(self) -> bool:
+        # Run-level filesystem/session handles remain open until cleanup.
+        return all(scope.unresolved_resources == 0 for scope in self.scopes)
+
+    def finish(self) -> None:
+        if (len(self.scopes) != 17
+                or any(scope.phase != "complete" for scope in self.scopes)
+                or len(self._controls) != 4
+                or not all(self._controls.values())):
+            self.abort()
+        self._finished = True
+
+    def normalized_summary(self) -> dict[str, object]:
+        writers = [closed for scope in self.scopes for _, closed in scope._writers.values()]
+        consumers = [closed for scope in self.scopes for closed in scope._consumers.values()]
+        controls = [*self._controls.values(), *(closed for scope in self.scopes for closed in scope._controls.values())]
+        complete = (self._finished and not self._failed
+                    and len(self.scopes) == 17
+                    and all(scope.phase == "complete" for scope in self.scopes)
+                    and all(controls))
+        return {
+            "source": "deterministic-contract-backend-v1" if self.simulated else "contract-only",
+            "contractStatus": "complete" if complete else "incomplete",
+            "simulationStatus": ("complete" if complete else "incomplete") if self.simulated else "not-run",
+            "runtimeBackend": "not-implemented",
+            "runtimeFacts": {key: "not-verified" for key in _COMBINED_RUNTIME_FACTS},
+            "actualExecutionEligible": False,
+            "runState": ("incomplete" if self._failed or any(scope.phase == "incomplete" for scope in self.scopes)
+                         else "complete" if complete else "active"),
+            "runControls": [{"role": token, "state": "closed" if closed else "open"}
+                            for token, closed in self._controls.items()],
+            "scopes": [scope.normalized_record() for scope in self.scopes],
+            "startedScopeCount": len(self.scopes),
+            "completedScopeCount": sum(scope.phase == "complete" for scope in self.scopes),
+            "writerStartedCount": len(writers), "writerClosedCount": sum(writers),
+            "consumerStartedCount": len(consumers), "consumerClosedCount": sum(consumers),
+            "controlRegisteredCount": len(controls), "controlClosedCount": sum(controls),
+            "unresolvedCreatedResourceCount": sum(not closed for closed in (*writers, *consumers, *controls)),
+            "supervisorProcess": {"implementation": "not-implemented", "startedCount": 0, "closedCount": 0},
+        }
 
 
 @dataclass(frozen=True)
@@ -137,7 +607,11 @@ class _CloneArgs(ctypes.Structure):
     ]
 
 
-_LIBC = ctypes.CDLL(None, use_errno=True)
+def _libc() -> ctypes.CDLL:
+    """Load libc only on an explicitly entered legacy runtime path."""
+    return ctypes.CDLL(None, use_errno=True)
+
+
 _REAL_SUPERVISOR_LOCK = threading.Lock()
 
 
@@ -214,7 +688,7 @@ def detect_process_domain_capabilities() -> ProcessDomainCapabilities:
                 os.close(descriptor)
         current = ctypes.c_int()
         subreaper = (
-            _LIBC.prctl(PR_GET_CHILD_SUBREAPER, ctypes.byref(current), 0, 0, 0) == 0
+            _libc().prctl(PR_GET_CHILD_SUBREAPER, ctypes.byref(current), 0, 0, 0) == 0
         )
     return ProcessDomainCapabilities(
         platform_supported=supported,
@@ -547,9 +1021,9 @@ class LinuxProcessDomainSupervisor(BaseProcessDomainSupervisor):
                 or metadata.st_uid != os.geteuid()
             ):
                 raise ProcessDomainError("process-domain-delegation-invalid")
-            if _LIBC.prctl(PR_GET_CHILD_SUBREAPER, ctypes.byref(old), 0, 0, 0) != 0:
+            if _libc().prctl(PR_GET_CHILD_SUBREAPER, ctypes.byref(old), 0, 0, 0) != 0:
                 raise ProcessDomainError("child-subreaper-unavailable")
-            if _LIBC.prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) != 0:
+            if _libc().prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) != 0:
                 raise ProcessDomainError("child-subreaper-unavailable")
             result = cls(
                 parent_fd=parent_fd,
@@ -562,7 +1036,7 @@ class LinuxProcessDomainSupervisor(BaseProcessDomainSupervisor):
         except BaseException:
             if parent_fd is not None:
                 os.close(parent_fd)
-            _LIBC.prctl(PR_SET_CHILD_SUBREAPER, int(old.value), 0, 0, 0)
+            _libc().prctl(PR_SET_CHILD_SUBREAPER, int(old.value), 0, 0, 0)
             _REAL_SUPERVISOR_LOCK.release()
             raise
 
@@ -595,7 +1069,7 @@ class LinuxProcessDomainSupervisor(BaseProcessDomainSupervisor):
 
     @staticmethod
     def _close_range_cloexec() -> None:
-        result = _LIBC.syscall(
+        result = _libc().syscall(
             SYS_CLOSE_RANGE_X86_64,
             ctypes.c_uint(3),
             ctypes.c_uint(0xFFFFFFFF),
@@ -750,7 +1224,7 @@ class LinuxProcessDomainSupervisor(BaseProcessDomainSupervisor):
             arguments.pidfd = ctypes.addressof(pidfd_out)
             arguments.exit_signal = signal.SIGCHLD
             arguments.cgroup = group_fd
-            result = _LIBC.syscall(
+            result = _libc().syscall(
                 SYS_CLONE3_X86_64,
                 ctypes.byref(arguments),
                 ctypes.sizeof(arguments),
@@ -1040,7 +1514,7 @@ class LinuxProcessDomainSupervisor(BaseProcessDomainSupervisor):
         if not self.safe_for_filesystem_cleanup:
             self._unsafe = True
             raise ProcessDomainError("process-domain-close-before-empty")
-        if _LIBC.prctl(
+        if _libc().prctl(
             PR_SET_CHILD_SUBREAPER, self.old_subreaper, 0, 0, 0
         ) != 0:
             self._unsafe = True
@@ -1427,24 +1901,16 @@ if __name__ == "__main__":
 
 
 def check_no_hook_linux_isolation(failures: list[str]) -> int:
-    """Read-only repository aggregate hook; absence is a runtime classification."""
+    """Validate only the closed offline contract; never inspect host support."""
 
     try:
-        facts = detect_process_domain_capabilities()
-        normalized = facts.normalized()
-        if set(normalized) != {
-            "platformSupported",
-            "cgroupV2Available",
-            "delegatedSubtreeWritable",
-            "cloneIntoCgroupAvailable",
-            "clonePidfdAvailable",
-            "cgroupKillAvailable",
-            "cgroupEventsAvailable",
-            "childSubreaperAvailable",
-            "pidfdWaitAvailable",
-        } or any(type(value) is not bool for value in normalized.values()):
-            raise ProcessDomainError("process-domain-capability-facts-not-closed")
-    except (OSError, ProcessDomainError) as error:
+        contract = _combined_lifecycle_contract()
+        if (set(contract["owners"]) != set(_COMBINED_PHASES)
+                or set(contract["requiredFacts"]) != set(_COMBINED_PHASES)
+                or contract["actualExecutionEligible"] is not False
+                or set(contract["runtimeFacts"].values()) != {"not-verified"}):
+            raise ProcessDomainError("combined-static-contract-invalid")
+    except ProcessDomainError as error:
         failures.append(f"no-Hook Linux isolation validation failed: {error}")
         return 0
     return 1

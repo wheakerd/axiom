@@ -15,20 +15,50 @@
     "fullProfileInputCount": 61,
     "fullProfileRuntimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
     "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
-    "bundleManifestDigest": "sha256:d04afb4a794bfb241941b0a6a0d6057863e3b38a5e6c2ad5983128f670c783ed",
-    "archiveSha256": "01906537705abc4d4ee60c81d1ac458dd8eabbe3883cd8bfbe4089583c117750"
+    "bundleManifestDigest": "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7",
+    "archiveSha256": "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf"
   },
   "contractBindings": {
-    "profileContract": {"path":"evals/no-hook/profile-v1.json","sha256":"b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"},
-    "goldenSet": {"path":"evals/no-hook/golden-set-v1.jsonl","sha256":"05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"},
-    "responseSchema": {"path":"evals/no-hook/host-response-schema-v1.json","sha256":"e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb670dcd2db4"},
-    "modelResponseSchema": {"path":"evals/no-hook-observation/codex-model-response-schema-v1.json","sha256":"74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"},
-    "benchmark": {"path":"evals/no-hook/benchmark-v1.json","sha256":"7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"},
-    "hostCaseSet": {"id":"openai-hook-independent-codex-cases-v1","sha256":"cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"},
-    "observerTaxonomy": {"path":"evals/codex-exec-jsonl-observer-v3.json","sha256":"f74f844fe477673229c7e7a3bc3a34181cd5e6727305eed9d9450b312edb6d1e"},
-    "promptEnvelope": {"path":"evals/no-hook-observation/codex-prompt-envelope-v1.json","digest":"sha256:418371038eb0c88380860b5b0b37c2c92ebe1c2ed469ff5eed15b74192f3e40d"},
-    "fixtureMatrix": {"path":"evals/no-hook-observation/codex-fixtures-v1.json","sha256":"7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"},
-    "resultSchema": {"path":"evals/no-hook-observation/codex-result-schema-v1.json","sha256":"6432830a9893561f5f6de9706bddb6c46cfb215b6a58fb51151ba4a9159752d5"}
+    "profileContract": {
+      "path": "evals/no-hook/profile-v1.json",
+      "sha256": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+    },
+    "goldenSet": {
+      "path": "evals/no-hook/golden-set-v1.jsonl",
+      "sha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+    },
+    "responseSchema": {
+      "path": "evals/no-hook/host-response-schema-v1.json",
+      "sha256": "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb670dcd2db4"
+    },
+    "modelResponseSchema": {
+      "path": "evals/no-hook-observation/codex-model-response-schema-v1.json",
+      "sha256": "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"
+    },
+    "benchmark": {
+      "path": "evals/no-hook/benchmark-v1.json",
+      "sha256": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
+    },
+    "hostCaseSet": {
+      "id": "openai-hook-independent-codex-cases-v1",
+      "sha256": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
+    },
+    "observerTaxonomy": {
+      "path": "evals/codex-exec-jsonl-observer-v3.json",
+      "sha256": "f74f844fe477673229c7e7a3bc3a34181cd5e6727305eed9d9450b312edb6d1e"
+    },
+    "promptEnvelope": {
+      "path": "evals/no-hook-observation/codex-prompt-envelope-v1.json",
+      "digest": "sha256:418371038eb0c88380860b5b0b37c2c92ebe1c2ed469ff5eed15b74192f3e40d"
+    },
+    "fixtureMatrix": {
+      "path": "evals/no-hook-observation/codex-fixtures-v1.json",
+      "sha256": "7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"
+    },
+    "resultSchema": {
+      "path": "evals/no-hook-observation/codex-result-schema-v1.json",
+      "sha256": "56139c96dad0b0e550bb14e90f90199a44b1292516dd5228230c071aac901273"
+    }
   },
   "host": {
     "name": "codex",
@@ -165,17 +195,33 @@
   "processDomain": {
     "platform": "linux-x86_64-only",
     "mechanism": "delegated-cgroup-v2-clone3-pidfd",
-    "domainPerLaunch": ["bundle-builder", "marketplace", "plugin-install", "model-case"],
+    "domainPerLaunch": [
+      "bundle-builder",
+      "marketplace",
+      "plugin-install",
+      "model-case"
+    ],
     "enrollment": "clone3-atomic-before-bootstrap-or-exec",
     "directChildIdentity": "pidfd",
     "descendantOwnership": "cgroup-v2-authoritative",
     "adoptedDescendantReaping": "child-subreaper-required",
     "termination": "cgroup-kill-complete-domain",
     "emptyProof": "cgroup-events-populated-zero",
-    "advanceBarrier": ["next-process", "next-case", "filesystem-cleanup", "result-publication"],
+    "advanceBarrier": [
+      "next-process",
+      "next-case",
+      "filesystem-cleanup",
+      "result-publication"
+    ],
     "domainRemoval": "exact-owned-child-verified-absent",
     "unsupportedHost": "actual-execution-unavailable",
-    "fallbacksForbidden": ["leader-only", "process-group-only", "session-only", "subreaper-only", "post-spawn-cgroup-procs"],
+    "fallbacksForbidden": [
+      "leader-only",
+      "process-group-only",
+      "session-only",
+      "subreaper-only",
+      "post-spawn-cgroup-procs"
+    ],
     "group1Status": "open",
     "group3Status": "open-pending-actual-binary-canary",
     "actualExecutionAvailability": "disabled-pending-group1-and-group3"
@@ -197,10 +243,20 @@
     "installedCacheLayout": "plugins/cache/marketplace/plugin/version"
   },
   "noHookProof": {
-    "staticPackageFacts": ["manifest-hooks-field-absent", "hooks-path-absent"],
-    "isolatedInstallationFacts": ["installed-manifest-hooks-field-absent", "installed-hooks-path-absent", "temporary-config-hook-registration-absent", "full-profile-wrapper-absent"],
+    "staticPackageFacts": [
+      "manifest-hooks-field-absent",
+      "hooks-path-absent"
+    ],
+    "isolatedInstallationFacts": [
+      "installed-manifest-hooks-field-absent",
+      "installed-hooks-path-absent",
+      "temporary-config-hook-registration-absent",
+      "full-profile-wrapper-absent"
+    ],
     "publicJsonlHookTelemetry": "not-exposed-by-codex-0.153.0",
-    "modelResponseFacts": ["sessionStartObserved-false"],
+    "modelResponseFacts": [
+      "sessionStartObserved-false"
+    ],
     "proofOwner": "verified-package-installed-tree-and-temporary-config",
     "publicJsonlAbsenceIsRuntimeProof": false,
     "fullProfileHookCiReusable": false
@@ -276,12 +332,30 @@
     "opaqueTokenEncoding": "ocb1-lowercase-hex",
     "opaqueTokenRetention": "forbidden",
     "caseCommitment": "canonical-json-sha256",
-    "caseCommitmentCanonicalFields": ["schemaVersion", "scheme", "protocolDigest", "materializationSeedSha256", "caseOrdinal", "caseId", "contractVersion", "requestSha256", "realizedFixtureDigest", "realizedFileSetDigest", "opaqueBindingSha256", "modelResponseSchemaSha256", "casePromptSha256"],
+    "caseCommitmentCanonicalFields": [
+      "schemaVersion",
+      "scheme",
+      "protocolDigest",
+      "materializationSeedSha256",
+      "caseOrdinal",
+      "caseId",
+      "contractVersion",
+      "requestSha256",
+      "realizedFixtureDigest",
+      "realizedFileSetDigest",
+      "opaqueBindingSha256",
+      "modelResponseSchemaSha256",
+      "casePromptSha256"
+    ],
     "caseCommitmentSeedIdentity": "sha256-of-32-raw-seed-bytes",
     "caseCommitmentRequestIdentity": "sha256-of-exact-utf8-request-bytes",
     "undeliveredPromptDigest": "64-zero-sentinel",
     "rootCommitment": "ordered-16-case-canonical-json-sha256",
-    "rootCommitmentCanonicalFields": ["schemaVersion", "scheme", "commitments"],
+    "rootCommitmentCanonicalFields": [
+      "schemaVersion",
+      "scheme",
+      "commitments"
+    ],
     "rootCommitmentOrder": "canonical-host-case-set-ordinal",
     "validatorRecomputation": "required"
   },
@@ -311,37 +385,137 @@
     "retainedDescriptorNumbers": false
   },
   "cases": [
-    {"caseId":"no-hook-positive-explicit-using-axiom-001","contractVersion":2},
-    {"caseId":"no-hook-positive-direct-agents-architect-001","contractVersion":2},
-    {"caseId":"no-hook-positive-native-agent-plugin-architect-001","contractVersion":2},
-    {"caseId":"no-hook-positive-indirect-optimize-usage-001","contractVersion":2},
-    {"caseId":"no-hook-positive-retrospective-review-001","contractVersion":2},
-    {"caseId":"no-hook-positive-direct-traceable-git-001","contractVersion":2},
-    {"caseId":"no-hook-positive-cross-route-external-system-001","contractVersion":2},
-    {"caseId":"no-hook-positive-confirm-external-action-001","contractVersion":1},
-    {"caseId":"no-hook-negative-plan-only-system-change-001","contractVersion":2},
-    {"caseId":"no-hook-negative-untrusted-credential-action-001","contractVersion":2},
-    {"caseId":"no-hook-negative-unavailable-discovery-001","contractVersion":2},
-    {"caseId":"no-hook-ambiguous-plugin-design-or-install-001","contractVersion":2},
-    {"caseId":"no-hook-ambiguous-ordinary-or-traceable-git-001","contractVersion":2},
-    {"caseId":"no-hook-ambiguous-review-or-external-action-001","contractVersion":1},
-    {"caseId":"no-hook-no-route-summary-001","contractVersion":2},
-    {"caseId":"no-hook-no-route-coding-001","contractVersion":2}
+    {
+      "caseId": "no-hook-positive-explicit-using-axiom-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-direct-agents-architect-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-native-agent-plugin-architect-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-indirect-optimize-usage-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-retrospective-review-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-direct-traceable-git-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-cross-route-external-system-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-positive-confirm-external-action-001",
+      "contractVersion": 1
+    },
+    {
+      "caseId": "no-hook-negative-plan-only-system-change-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-negative-untrusted-credential-action-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-negative-unavailable-discovery-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-ambiguous-plugin-design-or-install-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-ambiguous-ordinary-or-traceable-git-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-ambiguous-review-or-external-action-001",
+      "contractVersion": 1
+    },
+    {
+      "caseId": "no-hook-no-route-summary-001",
+      "contractVersion": 2
+    },
+    {
+      "caseId": "no-hook-no-route-coding-001",
+      "contractVersion": 2
+    }
   ],
   "runner": {
     "version": "1",
     "behaviorDependencies": [
-      {"path":"scripts/run-no-hook-codex-observation.py","role":"entrypoint","sha256":"9b1e477889acfeab347d3236a782acdaadaad346b0c24c99cff79b2ec0fe800b"},
-      {"path":"axiom_validation/no_hook_observation.py","role":"implementation-validator","sha256":"363e62730a8c838db95e638be9a2103fedc68548526467e73186270bd630e396"},
-      {"path":"axiom_validation/no_hook_linux_isolation.py","role":"linux-process-domain","sha256":"6e036fdc5ec2a11197c9623e90bcaf2c7ba552bb4b46845fdf3cffd8270d422c"},
-      {"path":"tests/fixtures/no_hook_observation.py","role":"fake-process-fixture","sha256":"ffe9b284ece055b08aa85f0b6fa1b046f1fef3f0de59b91783a90104dfeb5a9c"}
+      {
+        "path": "scripts/run-no-hook-codex-observation.py",
+        "role": "entrypoint",
+        "sha256": "9b1e477889acfeab347d3236a782acdaadaad346b0c24c99cff79b2ec0fe800b"
+      },
+      {
+        "path": "axiom_validation/no_hook_observation.py",
+        "role": "implementation-validator",
+        "sha256": "424c062da8ad1631113c179ae0e954714a3de1df5cc027d6e68ece9bd7e4ca2c"
+      },
+      {
+        "path": "axiom_validation/no_hook_linux_isolation.py",
+        "role": "linux-process-domain",
+        "sha256": "838b598f68366cf39bbd38a280902de585fba80622428649cad8aa9bdc1c68ea"
+      },
+      {
+        "path": "tests/fixtures/no_hook_observation.py",
+        "role": "fake-process-fixture",
+        "sha256": "ffe9b284ece055b08aa85f0b6fa1b046f1fef3f0de59b91783a90104dfeb5a9c"
+      }
     ],
     "defaultMode": "protocol-validation-only",
-    "executionGuards": ["execute-flag", "exact-protocol-digest", "exact-runner-and-module-digests", "exact-binary-digest", "exact-cli-version", "exact-source-main-and-tree", "exact-model-and-reasoning-effort", "exact-linux-x86-64-host", "exact-run-root-identity", "exact-call-count-authorization", "dedicated-credential-presence", "single-use-run-nonce", "irreversible-call-counter", "single-launcher-purpose-argv-env-binding", "executable-fd-pinning", "delegated-cgroup-v2", "clone3-into-cgroup-pidfd", "cgroup-kill-complete-domain", "cgroup-events-empty-barrier", "child-subreaper-descendant-reaping", "exact-process-domain-removal", "install-sequence-authorization"],
+    "executionGuards": [
+      "execute-flag",
+      "exact-protocol-digest",
+      "exact-runner-and-module-digests",
+      "exact-binary-digest",
+      "exact-cli-version",
+      "exact-source-main-and-tree",
+      "exact-model-and-reasoning-effort",
+      "exact-linux-x86-64-host",
+      "exact-run-root-identity",
+      "exact-call-count-authorization",
+      "dedicated-credential-presence",
+      "single-use-run-nonce",
+      "irreversible-call-counter",
+      "single-launcher-purpose-argv-env-binding",
+      "executable-fd-pinning",
+      "delegated-cgroup-v2",
+      "clone3-into-cgroup-pidfd",
+      "cgroup-kill-complete-domain",
+      "cgroup-events-empty-barrier",
+      "child-subreaper-descendant-reaping",
+      "exact-process-domain-removal",
+      "install-sequence-authorization"
+    ],
     "output": "caller-supplied-path-outside-repository"
   },
   "cleanup": {
-    "order": ["terminate-complete-process-domain", "verify-cgroup-events-populated-zero", "reap-direct-and-adopted-descendants", "remove-exact-process-domain", "seal-terminal-ledger", "remove-raw-streams", "remove-case-workspace", "remove-installed-copy", "remove-case-codex-home", "remove-local-marketplace", "remove-runtime-root", "verify-user-state-unchanged"],
+    "order": [
+      "terminate-complete-process-domain",
+      "verify-cgroup-events-populated-zero",
+      "reap-direct-and-adopted-descendants",
+      "remove-exact-process-domain",
+      "seal-terminal-ledger",
+      "remove-raw-streams",
+      "remove-case-workspace",
+      "remove-installed-copy",
+      "remove-case-codex-home",
+      "remove-local-marketplace",
+      "remove-runtime-root",
+      "verify-user-state-unchanged"
+    ],
     "identitySubstitution": "stop-and-preserve-for-manual-cleanup",
     "successRequirement": "all-observer-owned-temporary-state-absent",
     "ownershipLedger": "creation-or-accepted-child-identity-only",
@@ -356,5 +530,86 @@
     "installation",
     "publication"
   ],
-  "protocolDigest": "sha256:e665b545eb4a6ca26bbfa66c53e732ac79f4c1fabdac9a846a3b216249f72d82"
+  "protocolDigest": "sha256:b3b42d7a6cd23d8eed71d9e8daa5725b7480246265058d9cf71c7ac6ee01a87a",
+  "combinedLifecycle": {
+    "implementation": "offline-contract-only",
+    "scope": "one-bundle-and-sixteen-case-scopes",
+    "phases": [
+      "prepare",
+      "writing",
+      "writers-closed",
+      "view-sealed",
+      "contract-preconditions-complete",
+      "consuming",
+      "consumers-closed",
+      "resources-closed",
+      "complete"
+    ],
+    "failureState": "incomplete-irreversible",
+    "owners": {
+      "prepare": "observer-object-owner",
+      "writing": "workload-writer",
+      "writers-closed": "process-domain-owner",
+      "view-sealed": "observer-object-owner",
+      "contract-preconditions-complete": "lifecycle-contract-owner",
+      "consuming": "separately-authorized-launcher",
+      "consumers-closed": "process-domain-owner",
+      "resources-closed": "resource-owner",
+      "complete": "observer-result-owner"
+    },
+    "requiredFacts": {
+      "prepare": "owned-scope-and-canonical-position",
+      "writing": "canonical-writer-order-with-separate-launch-authority",
+      "writers-closed": "every-registered-writer-closed",
+      "view-sealed": "closed-writers-and-matching-accepted-object",
+      "contract-preconditions-complete": "sealed-logical-view-and-exact-descriptor-policy",
+      "consuming": "contract-preconditions-and-separate-model-authority",
+      "consumers-closed": "every-registered-consumer-closed",
+      "resources-closed": "consumers-closed-and-no-unresolved-owned-control",
+      "complete": "all-scopes-complete-and-run-controls-closed"
+    },
+    "inventoryBounds": {
+      "scopes": 17,
+      "writerWorkloads": 31,
+      "consumerWorkloads": 16,
+      "controlResources": 256
+    },
+    "controlInventory": {
+      "run": [
+        "process-controller",
+        "root-session",
+        "owned-root",
+        "source-bundle"
+      ],
+      "bundle": "destination-and-worker-handles-if-builder-started",
+      "installedCase": "seven-directories-two-product-views-schema-three-stream-worker-sets",
+      "noPluginCase": "seven-directories-schema-one-stream-worker-set",
+      "streamWorkerSet": "stdin-stdout-stderr-handles-and-joined-workers"
+    },
+    "simulationSource": "deterministic-contract-backend-v1",
+    "runtimeBackend": "not-implemented",
+    "runtimeFacts": {
+      "kernelSupport": "not-verified",
+      "preExecutionIsolation": "not-verified",
+      "lifetimeMembership": "not-verified",
+      "descendantCoverage": "not-verified",
+      "privateViewConsumption": "not-verified",
+      "runtimeTeardown": "not-verified",
+      "fixedIdentityTransition": "not-verified",
+      "descriptorInheritance": "not-verified",
+      "capabilityReduction": "not-verified",
+      "writerDomainClosure": "not-verified",
+      "controlResourceTeardown": "not-verified"
+    },
+    "actualExecutionEligible": false,
+    "supervisorProcess": "not-implemented-zero-started",
+    "viewBinding": "live-scope-control-and-accepted-logical-binding-required",
+    "scopeAccounting": "successful-registration-only-canonical-prefix",
+    "componentAccounting": "closed-role-records-before-aggregate-counts-for-every-status",
+    "failureCleanup": "irreversible-incomplete-with-no-active-workloads",
+    "writerHandoff": "closed-writer-before-product-acceptance",
+    "publication": "all-scopes-and-owned-controls-closed-for-selected-mode",
+    "unknownObjects": "preserve-incomplete-no-invented-residual",
+    "modelCallAuthority": "external-unchanged-sixteen-call-capability"
+  }
 }

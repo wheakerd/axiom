@@ -87,19 +87,45 @@ resolve through the real `plugins/cache/<marketplace>/<plugin>/<version>`
 layout below the frozen temporary Codex home. None of these checks establishes
 a host observation before the separately authorized real run.
 
-Every observation-owned external process also requires its own delegated
-cgroup v2 child domain. The Linux/x86_64 launcher uses
-`clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)` so enrollment precedes every
-arbitrary bootstrap or executable instruction. The observer waits for the
-direct leader through its pidfd, terminates the complete domain with
-`cgroup.kill` when any descendant survives or a failure occurs, reaps adopted
-descendants as a child subreaper, requires `cgroup.events` to report
-`populated=0`, and removes the exact owned domain. Leader-only, process-group,
-session, subreaper-only, and post-spawn enrollment fallbacks are prohibited.
-An unavailable capability or any incomplete empty/removal proof blocks the
-next process, filesystem teardown, and normalized publication. Group 1
-filesystem consumption and Group 3 model-tool credential proof remain open,
-so this correction does not enable actual execution or establish host support.
+The Combined Group 1 + Group 2 correction currently implements an offline
+contract only. One lifecycle owns preparation, writing, writer closure,
+acceptance and sealing of the logical consumption view, contract preconditions,
+consumption, consumer closure, resource closure, and completion. Missing or
+contradictory facts end the scope irreversibly as incomplete. Writers must
+close before product acceptance or cleanup; consumers must close before view
+release. The observer retains separate launch authority and the exact 16-call
+budget. Case 11 remains an independent control without installation.
+
+A pending consumer still owns its consumption view. Acceptance, sealing, and
+consumption require the same live scope control and logical object binding;
+an empty consumer list does not authorize view release. Failed scope creation
+irreversibly stops the run and counts only successfully registered scopes.
+After failure, created resources may close when no workload is active, without
+inventing a consumer or restoring completion.
+
+Workload records and control resources have separate bounded inventories.
+Controls include the process-controller object, owned root, root session,
+source bundle, case views, schema handles, and stream workers. No separate
+supervisor process has been implemented or recorded. Deterministic simulation
+has an explicit source and cannot produce host PASS. Missing runtime facts
+remain not-verified; missing validation alone does not invent residual resources.
+Unknown objects are preserved and incomplete closure cannot be reported complete.
+Closed per-scope component records bind both complete and incomplete summaries
+to the canonical prefix: bundle, Cases 1-10, the no-install Case 11, then Cases
+12-16. Phase and role constraints are checked before totals are derived. These
+snapshots establish internal contract consistency, not an event log or runtime
+proof.
+
+The existing delegated-cgroup implementation is retained as unfinished runtime
+work. A unified trusted supervisor must still establish the private filesystem,
+detached model-home view, fixed identity transition, descriptor policy,
+capability reduction, writer ownership, and teardown ordering before execution.
+Default imports and validators do not detect capabilities or create resources.
+Earlier local process-domain results retain their historical scope; they do
+not establish complete Group 2 acceptance or the Combined contract. FCR-001,
+FCR-003, and FCR-004 remain OPEN; FCR-002 remains STILL OPEN. Actual execution
+is hard-disabled, including pending Group 3 credential-exclusion proof.
+Codex no-Hook observation remains NOT-RUN, with no actual-execution readiness.
 
 ## Before Testing
 
