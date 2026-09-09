@@ -66,6 +66,9 @@ CODE_MODE_FAIL_CLOSED_NOTICE = (
 FIFTH_RESULT_SHA256 = "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018"
 FIFTH_PROTOCOL_DIGEST = "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d"
 MODEL_PRIOR_RESULTS = [*PRIOR_RESULTS, FIFTH_RESULT_SHA256]
+SIXTH_RESULT_SHA256 = "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a"
+SIXTH_PROTOCOL_DIGEST = "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99"
+STDERR_PRIOR_RESULTS = [*MODEL_PRIOR_RESULTS, SIXTH_RESULT_SHA256]
 STREAM_ASSERTIONS = (
     "none", "framing-or-size", "event-count", "event-after-terminal", "event-shape",
     "thread-start-order", "turn-start-order", "terminal-active-items", "error-before-thread",
@@ -210,6 +213,11 @@ def _private_capture() -> dict[str, Any]:
     return {"status": "not-requested", "bytes": 0, "truncated": False}
 
 
+def _stderr_capture() -> dict[str, Any]:
+    return {"status": "not-requested", "bytes": 0, "truncated": False,
+            "encoding": "not-observed"}
+
+
 class OperatorDiagnostics:
     """Explicit human-only exception for three host message fields.
 
@@ -227,6 +235,76 @@ class OperatorDiagnostics:
         self.category_used = {"item.completed": 0, "error": 0, "turn.failed": 0}
         self.pending: list[bytes] = []
         self.truncated = False
+        self.stderr_used = 0
+        self.stderr_pending: bytes | None = None
+        self.stderr_facts = _stderr_capture()
+
+    def stderr(self, raw: bytes) -> None:
+        """Retain only this canonical invocation's stderr, never return text.
+
+        JSON escaping preserves controls as data. Invalid UTF-8 bytes become
+        escaped surrogate code points and are explicitly reported; no claim of
+        clean text is made. The serialized batch budget is separate from events.
+        """
+        facts = {"status": "empty", "bytes": 0, "truncated": False, "encoding": "utf-8"}
+        self.stderr_facts = facts
+        if not raw:
+            return
+        try:
+            message = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            message = raw.decode("utf-8", errors="surrogateescape")
+            facts["encoding"] = "invalid-utf-8"
+        def encode(text: str) -> bytes:
+            return (json.dumps({"stderr": text}, ensure_ascii=True,
+                               separators=(",", ":")) + "\n").encode("ascii")
+        remaining = PRIVATE_DIAGNOSTIC_LIMIT - self.stderr_used
+        data = encode(message)
+        if len(data) > remaining:
+            facts["truncated"] = True
+            if len(encode("")) > remaining:
+                facts["status"] = "omitted"
+                return
+            low, high = 0, len(message)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if len(encode(message[:middle])) <= remaining:
+                    low = middle
+                else:
+                    high = middle - 1
+            data = encode(message[:low])
+        self.stderr_pending = data
+
+    def save_stderr(self, ordinal: int) -> dict[str, Any]:
+        _require(type(ordinal) is int and 1 <= ordinal <= CASE_COUNT, "invalid diagnostic ordinal")
+        facts = self.stderr_facts
+        descriptor = None
+        try:
+            if self.stderr_pending is not None:
+                descriptor = os.open(self.directory / f"case-{ordinal:02d}-stderr.json",
+                                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                os.fchmod(descriptor, 0o600)
+                view = memoryview(self.stderr_pending)
+                while view:
+                    count = os.write(descriptor, view)
+                    if count <= 0:
+                        raise OSError("short private stderr write")
+                    facts["bytes"] += count
+                    view = view[count:]
+                os.fsync(descriptor)
+                facts["status"] = "saved"
+        except OSError:
+            facts["status"] = "write-failed"
+        finally:
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    facts["status"] = "write-failed"
+            self.stderr_used += facts["bytes"]
+            self.stderr_pending = None
+            self.stderr_facts = _stderr_capture()
+        return facts
 
     def event(self, raw: bytes) -> None:
         if len(raw) > legacy.MAX_JSONL_LINE_BYTES:
@@ -413,9 +491,9 @@ def _protocol(root: Path) -> dict[str, Any]:
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
-    _require(document.get("diagnosticRevision") == 7 and document.get("followup") == {
-        "priorResultSha256s": MODEL_PRIOR_RESULTS, "priorAttempts": 5,
-        "maximumCumulativeAttempts": 21, "maximumCaseOneAttempts": 6,
+    _require(document.get("diagnosticRevision") == 8 and document.get("followup") == {
+        "priorResultSha256s": STDERR_PRIOR_RESULTS, "priorAttempts": 6,
+        "maximumCumulativeAttempts": 22, "maximumCaseOneAttempts": 7,
         "remainingCaseAttempts": 1,
     }, "native diagnostic migration or retry budget mismatch")
     _require(document.get("responseTransport") == {
@@ -517,7 +595,12 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             "implementationCommit": "c3ce63d789394f60e93687ec34db05be199fbc19",
             "implementationTree": "be21ad749edb25e4fb832bce7debe9e0fa75175b",
             "resultCommit": "cf7c58eeef159a7899fb2a6a2421cd3446bc0c07", "attemptCount": 1}
-        _require(historical == [expected_historical, expected_retry, expected_third, expected_fourth, expected_fifth],
+        expected_sixth = {"path": "evals/no-hook-observation/results/codex-native-" + SIXTH_RESULT_SHA256 + ".json",
+            "sha256": SIXTH_RESULT_SHA256, "protocolDigest": SIXTH_PROTOCOL_DIGEST,
+            "implementationCommit": "a469930ac2c7a0598f44ed7aee62bcf532220c6a",
+            "implementationTree": "8538c2f63771569046540f91dcff7a9f73732fe6",
+            "resultCommit": "5fe04cbe7d742096023868150795e2e3580ea67b", "attemptCount": 1}
+        _require(historical == [expected_historical, expected_retry, expected_third, expected_fourth, expected_fifth, expected_sixth],
                  "historical native evidence migration changed")
         for binding in historical:
             _require(hashlib.sha256(_read(root / binding["path"])).hexdigest() == binding["sha256"],
@@ -543,7 +626,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "native history result bytes changed")
             result = _json(data)
             _require(not validate_native_result(result, root), "native history result is invalid")
-            _require(result["priorResultSha256s"] == MODEL_PRIOR_RESULTS,
+            _require(result["priorResultSha256s"] == STDERR_PRIOR_RESULTS,
                      "result does not continue the historical budget")
             _require(result["runMode"] == "actual", "simulated result is not a host-history observation")
             current = {"codexObservation": result["status"].lower(), "hostClaim": result["hostClaim"],
@@ -1019,11 +1102,11 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     return state
 
 
-def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
-    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup) / "preparation.json"
-                        if followup or continuation or operator_diagnostics or schema_followup or model_followup else run_root / STATE_NAME))
+    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup) / "preparation.json"
+                        if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup else run_root / STATE_NAME))
     _require(set(state) == {"schemaVersion", "protocolDigest", "runMode", "executable", "materializationSeed", "cases"},
              "native preparation record is not closed")
     _require(state["schemaVersion"] == "2" and state["protocolDigest"] == protocol["protocolDigest"],
@@ -1051,8 +1134,10 @@ def _verify_prior_attempt(run_root: Path) -> None:
         _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
 
 
-def _ledger(run_root: Path, followup: bool, continuation: bool, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False) -> Path:
-    _require(sum((followup, continuation, operator_diagnostics, schema_followup, model_followup)) <= 1, "select exactly one continuation ledger")
+def _ledger(run_root: Path, followup: bool, continuation: bool, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False) -> Path:
+    _require(sum((followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup)) <= 1, "select exactly one continuation ledger")
+    if stderr_followup:
+        return run_root / "stderr-diagnostic-continuation"
     if model_followup:
         return run_root / "model-migration-continuation"
     if schema_followup:
@@ -1119,11 +1204,26 @@ def _verify_five_prior_attempts(run_root: Path) -> None:
         _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
 
 
+def _verify_six_prior_attempts(run_root: Path) -> None:
+    _verify_five_prior_attempts(run_root)
+    prior = run_root / "model-migration-continuation"
+    _require(hashlib.sha256(_read(prior / "normalized-result.json")).hexdigest() ==
+             SIXTH_RESULT_SHA256, "stderr followup requires the sixth immutable result")
+    _require(_json(_read(prior / "batch-started.json")) == {"protocolDigest": SIXTH_PROTOCOL_DIGEST} and
+             _json(_read(prior / "attempt-01.json")) == {
+                 "ordinal": 1, "caseId": legacy.EXPECTED_CASE_IDS[0], "protocolDigest": SIXTH_PROTOCOL_DIGEST},
+             "sixth historical attempt markers changed")
+    for ordinal in range(2, 17):
+        path = prior / f"attempt-{ordinal:02d}.json"
+        _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
+
+
 def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: bool = False,
-                                operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False) -> None:
+                                operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False) -> None:
     """Add one explicit ledger; preserve all prior preparation, auth and events."""
     _ordinary_directory(run_root)
-    (_verify_five_prior_attempts if model_followup else
+    (_verify_six_prior_attempts if stderr_followup else
+     _verify_five_prior_attempts if model_followup else
      _verify_four_prior_attempts if schema_followup else
      _verify_three_prior_attempts if operator_diagnostics else
      _verify_two_prior_attempts if continuation else _verify_prior_attempt)(run_root)
@@ -1157,7 +1257,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
         prepared.append(materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
-    if continuation or operator_diagnostics or schema_followup or model_followup:
+    if continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup:
         previous_state = _json(_read(run_root / "diagnostic-followup/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": RETRY_PROTOCOL_DIGEST},
                  "second preparation no longer matches the original installed inputs")
@@ -1167,7 +1267,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"diagnostic-followup/response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                      "second historical materialization changed")
-    if operator_diagnostics or schema_followup or model_followup:
+    if operator_diagnostics or schema_followup or model_followup or stderr_followup:
         previous_state = _json(_read(run_root / "diagnostic-continuation/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": THIRD_PROTOCOL_DIGEST},
                  "third preparation no longer matches the original installed inputs")
@@ -1177,7 +1277,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"diagnostic-continuation/response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                      "third historical materialization changed")
-    if schema_followup or model_followup:
+    if schema_followup or model_followup or stderr_followup:
         previous_state = _json(_read(run_root / "operator-diagnostic-continuation/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": FOURTH_PROTOCOL_DIGEST},
                  "fourth preparation no longer matches the installed inputs")
@@ -1187,7 +1287,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"operator-diagnostic-continuation/response-schema-{ordinal:02d}.json") ==
                      previous.schema_bytes, "fourth historical materialization changed")
-    if model_followup:
+    if model_followup or stderr_followup:
         previous_state = _json(_read(run_root / "schema-correction-continuation/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": FIFTH_PROTOCOL_DIGEST},
                  "fifth preparation no longer matches the installed inputs")
@@ -1198,13 +1298,23 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
             _require(_read(run_root / f"schema-correction-continuation/response-schema-{ordinal:02d}.json") ==
                      previous.schema_bytes, "fifth historical materialization changed")
             _model_metadata(_case_paths(run_root, ordinal))
-    ledger = _ledger(run_root, not (continuation or operator_diagnostics or schema_followup or model_followup),
-                     continuation, operator_diagnostics, schema_followup, model_followup)
-    prior_count = 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else 1
+    if stderr_followup:
+        previous_state = _json(_read(run_root / "model-migration-continuation/preparation.json"))
+        _require(previous_state == {**old, "protocolDigest": SIXTH_PROTOCOL_DIGEST},
+                 "sixth preparation no longer matches the installed inputs")
+        for ordinal, case in enumerate(cases, 1):
+            previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=SIXTH_PROTOCOL_DIGEST, model_schema=schema,
+                prompt_envelope=envelope, request=case["request"])
+            _require(_read(run_root / f"model-migration-continuation/response-schema-{ordinal:02d}.json") ==
+                     previous.schema_bytes, "sixth historical materialization changed")
+    ledger = _ledger(run_root, not (continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup),
+                     continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup)
+    prior_count = 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else 1
     ledger.mkdir(mode=0o700)  # exclusive; a partial migration is retained, not retried
     _exclusive(ledger / "migration.json", _bytes({"priorResultSha256": HISTORICAL_RESULT_SHA256,
         "priorProtocolDigest": HISTORICAL_PROTOCOL_DIGEST, "protocolDigest": protocol["protocolDigest"],
-        "priorResultSha256s": MODEL_PRIOR_RESULTS[:prior_count],
+        "priorResultSha256s": STDERR_PRIOR_RESULTS[:prior_count],
         "priorAttempts": prior_count, "maximumCumulativeAttempts": 16 + prior_count}))
     for ordinal, material in enumerate(prepared, 1):
         _exclusive(ledger / f"response-schema-{ordinal:02d}.json", material.schema_bytes)
@@ -1658,7 +1768,7 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
         realized_file_set_digest=definition["canonicalFileSetDigest"], prompt_fully_delivered=True)
     return {"ordinal": materialized.ordinal, "caseId": case["id"], "status": "NOT-RUN",
             "diagnostic": "not-run", "cliLaunchCount": 0, "attemptCount": 0, "modelRequestCount": None,
-            "privateCapture": _private_capture(),
+            "privateCapture": _private_capture(), "operatorStderrCapture": _stderr_capture(),
             "executionDiagnostics": _diagnostics(),
             "evidenceExtraction": {"stream": "not-checked", "response": "not-checked", "postcheck": "not-checked"},
             "installation": "not-checked", "authentication": "not-checked",
@@ -1671,15 +1781,17 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
 
 def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls: bool = False,
                            reuse_test_auth: bool = False, followup: bool = False,
-                           continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False,
+                           continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
-    _require(not ((operator_diagnostics or schema_followup or model_followup) and private_diagnostics), "select one private capture format")
-    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup)
-    ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup)
-    prior_count = 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
-    if model_followup:
+    _require(not ((operator_diagnostics or schema_followup or model_followup or stderr_followup) and private_diagnostics), "select one private capture format")
+    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup, stderr_followup=stderr_followup)
+    ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup)
+    prior_count = 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
+    if stderr_followup:
+        _verify_six_prior_attempts(run_root)
+    elif model_followup:
         _verify_five_prior_attempts(run_root)
     elif schema_followup:
         _verify_four_prior_attempts(run_root)
@@ -1689,12 +1801,12 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         _verify_two_prior_attempts(run_root)
     elif followup:
         _verify_prior_attempt(run_root)
-    summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
-    operator = OperatorDiagnostics(ledger) if operator_diagnostics or schema_followup or model_followup else None
     executable = Path(state["executable"])
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
-    _require(not actual or model_followup, "actual execution requires the authorized model-migration ledger")
+    _require(not actual or stderr_followup, "actual execution requires the authorized stderr-diagnostic ledger")
+    summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
+    operator = OperatorDiagnostics(ledger) if operator_diagnostics or schema_followup or model_followup or stderr_followup else None
     invoke = bounded_process if process_runner is None else process_runner
     cases = legacy.load_golden_cases(root)
     fixtures = _input(root, protocol, "fixtureMatrix")
@@ -1708,7 +1820,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
     if reuse_test_auth:
-        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup else protocol)
+        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup else protocol)
     _exclusive(ledger / "batch-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
         paths = _case_paths(run_root, ordinal)
@@ -1733,7 +1845,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                          protocol["bundle"]["packageSha256"], "prepared plugin changed")
             record["installation"] = "verified" if installed else "absent"
             record["modelMetadataBefore"] = _model_metadata(paths)
-            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup or continuation or operator_diagnostics or schema_followup or model_followup else
+            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup else
                            paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
             diagnostic = "authentication-unavailable"
@@ -1768,7 +1880,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             phase = "launch"
             argv = build_native_argv(executable, run_root, ordinal, response_schema=(
                 ledger / f"response-schema-{ordinal:02d}.json" if
-                followup or continuation or operator_diagnostics or schema_followup or model_followup else None),
+                followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup else None),
                 final_output=final_output)
             def receive(raw: bytes) -> None:
                 if operator is not None:
@@ -1785,6 +1897,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                 if error.capture is None:
                     raise
                 capture = error.capture
+            if operator is not None and stderr_followup:
+                # Only the canonical client's captured stderr enters this path.
+                # Login and every other process remain outside this exception.
+                operator.stderr(capture["stderr"])
             if summaries is not None:
                 summaries.stderr(ordinal, capture["stderr"])
             _require(record["cliLaunchCount"] == 1, "client runner did not report a created process")
@@ -1879,7 +1995,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                     record.update(status="INCOMPLETE", diagnostic=facts["category"])
             if operator is not None:
                 record["privateCapture"] = operator.save(ordinal)
-                if record["privateCapture"]["status"] == "write-failed":
+                if stderr_followup:
+                    record["operatorStderrCapture"] = operator.save_stderr(ordinal)
+                if (record["privateCapture"]["status"] == "write-failed" or
+                        record["operatorStderrCapture"]["status"] == "write-failed"):
                     facts = record["executionDiagnostics"]
                     facts["cleanupFailed"] = True
                     _first_failure(facts, "cleanup", "cleanup-failed")
@@ -1913,9 +2032,9 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "diagnosticRevision": 7, "protocolId": PROTOCOL_ID,
+    result = {"schemaVersion": "2", "diagnosticRevision": 8, "protocolId": PROTOCOL_ID,
               "executionModel": {"model": MODEL, "reasoningEffort": REASONING_EFFORT, "requiredToolMode": "direct"},
-              "priorResultSha256s": MODEL_PRIOR_RESULTS[:prior_count],
+              "priorResultSha256s": STDERR_PRIOR_RESULTS[:prior_count],
               "attemptCount": sum(item["attemptCount"] for item in results),
               "cumulativeAttemptCount": prior_count + sum(item["attemptCount"] for item in results),
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
@@ -1969,7 +2088,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
         prior_results = document["priorResultSha256s"]
-        _require(prior_results in [MODEL_PRIOR_RESULTS[:i] for i in range(6)], "invalid historical prefix")
+        _require(prior_results in [STDERR_PRIOR_RESULTS[:i] for i in range(7)], "invalid historical prefix")
         prior_count = len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
@@ -1977,6 +2096,8 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                  "native cumulative attempt budget mismatch")
         _require(sum(item["privateCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
                  "private capture batch limit exceeded")
+        _require(sum(item["operatorStderrCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
+                 "operator stderr batch limit exceeded")
         cases = legacy.load_golden_cases(root)
         fixtures = _input(root, protocol, "fixtureMatrix")
         model_schema = _input(root, protocol, "modelResponseSchema")
@@ -2008,9 +2129,28 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(private["status"] != "write-failed" or
                      (status == "INCOMPLETE" and record["executionDiagnostics"]["cleanupFailed"]),
                      "failed private capture was accepted")
-            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS],
+            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS, STDERR_PRIOR_RESULTS],
                      "operator capture lacks linked history authorization")
             facts = record["executionDiagnostics"]
+            stderr = record["operatorStderrCapture"]
+            _require(stderr == _stderr_capture() or prior_results == STDERR_PRIOR_RESULTS,
+                     "operator stderr capture lacks the six-history authorization")
+            if prior_results == STDERR_PRIOR_RESULTS and record["cliLaunchCount"]:
+                _require(stderr["status"] != "not-requested", "captured client stderr was not retained")
+            if stderr["status"] == "not-requested":
+                _require(stderr == _stderr_capture(), "unrequested stderr capture has facts")
+            elif stderr["status"] == "empty":
+                _require(stderr["bytes"] == 0 and not stderr["truncated"] and
+                         stderr["encoding"] == "utf-8" and facts["stderrBytes"] == 0,
+                         "empty stderr capture disagrees with process")
+            else:
+                _require(stderr["encoding"] != "not-observed" and facts["stderrBytes"] > 0,
+                         "stderr capture lacks captured input")
+                _require(stderr["status"] != "saved" or stderr["bytes"] > 0, "saved stderr is empty")
+                _require(stderr["status"] != "omitted" or (stderr["bytes"] == 0 and stderr["truncated"]),
+                         "omitted stderr lacks truncation")
+                _require(stderr["status"] != "write-failed" or (status == "INCOMPLETE" and facts["cleanupFailed"]),
+                         "failed stderr retention was accepted")
             _require(facts["streamAssertion"] in STREAM_ASSERTIONS and
                      (facts["streamAssertion"] != "none" or facts["streamEventOrdinal"] is None),
                      "native stream assertion location is invalid")
@@ -2145,6 +2285,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--prepare-operator-diagnostics", action="store_true")
     group.add_argument("--prepare-schema-followup", action="store_true")
     group.add_argument("--prepare-model-followup", action="store_true")
+    group.add_argument("--prepare-stderr-followup", action="store_true")
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--codex", type=Path)
@@ -2158,13 +2299,14 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     parser.add_argument("--operator-diagnostics", action="store_true")
     parser.add_argument("--schema-followup", action="store_true")
     parser.add_argument("--model-followup", action="store_true")
+    parser.add_argument("--stderr-followup", action="store_true")
     parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
-        if args.prepare_diagnostic_followup or args.prepare_diagnostic_continuation or args.prepare_operator_diagnostics or args.prepare_schema_followup or args.prepare_model_followup:
+        if args.prepare_diagnostic_followup or args.prepare_diagnostic_continuation or args.prepare_operator_diagnostics or args.prepare_schema_followup or args.prepare_model_followup or args.prepare_stderr_followup:
             _require(args.run_root is not None, "followup requires the existing test root")
             prepare_diagnostic_followup(root, args.run_root, continuation=args.prepare_diagnostic_continuation,
-                                        operator_diagnostics=args.prepare_operator_diagnostics, schema_followup=args.prepare_schema_followup, model_followup=args.prepare_model_followup)
+                                        operator_diagnostics=args.prepare_operator_diagnostics, schema_followup=args.prepare_schema_followup, model_followup=args.prepare_model_followup, stderr_followup=args.prepare_stderr_followup)
             print("Diagnostic followup prepared; historical state preserved; no client started.")
         elif args.prepare:
             _require(all(value is not None for value in (args.run_root, args.bundle_root, args.codex)),
@@ -2185,7 +2327,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
                                             reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup,
                                             continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics,
-                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup)
+                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup)
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "PASS" else 1
         else:

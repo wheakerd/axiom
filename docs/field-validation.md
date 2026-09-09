@@ -1,5 +1,55 @@
 # Field Validation
 
+## Native stderr retention and same-attempt review
+
+Diagnostic revision 8 retains six immutable INCOMPLETE attempts (five Sol and
+one gpt-5.5). It authorizes one further gpt-5.5 / medium Case 1 attempt and the
+unstarted Cases 2-16: at most 22 lifetime attempts, seven for Case 1. Codex
+0.153.0, Direct tools, disabled Code Mode host, and all frozen case semantics
+remain unchanged. Earlier diagnostic revisions below are historical contracts.
+
+`--prepare-stderr-followup` checks all six results, attempt markers, preparations
+and derived schemas before adding `stderr-diagnostic-continuation` to the
+existing test root. `--run --stderr-followup --authorize-model-calls
+--reuse-test-auth` uses that ledger once. It does not remove or reset old state.
+
+Only the canonical client's captured stderr may enter the new human-only file,
+`operator-only-diagnostics/case-NN-stderr.json`. The independent batch limit is
+16 KiB including JSON framing; JSONL diagnostic messages retain their separate
+16 KiB limit. Files are exclusive, mode 0600, under a mode 0700 directory.
+Controls are escaped as JSON data. Public results report written size,
+truncation, UTF-8 faults and write status, never content or a content hash.
+The executor and both models must not read, parse, print, hash or upload these
+files. This operational boundary is not isolation from the same user. Login,
+build and test process output is outside the actual capture exception.
+
+Unknown stderr still stops the batch as INCOMPLETE, even with exit zero and a
+valid final response. Valid normalized response, terminal, command count and
+postchecks remain available. A diagnostic-only pause may receive a separate,
+append-only review bound to this same result, protocol and execution commit,
+using human-provided sanitized stderr and frozen source evidence. The original
+result and all six historical results remain unchanged. No missing observation
+may be supplied by classification, and capture metadata alone cannot approve it.
+
+Review is eligible only for the new attempt's sole unknown-stderr cause with
+complete UTF-8 retention, exit zero, complete input, turn.completed, valid stream,
+response, matching official final output and postcheck, and no timeout, observer
+termination, cleanup failure, rejected action or condition-changing diagnostic.
+Every retained diagnostic must be accounted for without weakening a required
+premise. Only after that review and fresh non-model checks of the unchanged
+inputs, configuration, model metadata, authentication ownership and attempt
+ledger may previously NOT-RUN cases continue. Case 1 cannot restart; no budget
+is refunded. Uncertain or unsafe diagnostics continue to block execution.
+
+Routing-field agreement, discovery-source verification and observed Skill-body
+reads are separate evidence. Zero command items neither proves body consumption
+nor establishes the absence of invisible actions; positive command counts also
+include fixture reads. Frozen per-case response semantics remain the case gate;
+there is no universal minimum read count. Installation and pre/post checks bind
+the available source, not unobserved model consumption. Open FCRs and Issue-wide
+host acceptance retain their separate evidence requirements. No Hook or plugin
+runtime acceptance follows from a correct routing response.
+
 ## Native model migration
 
 Native diagnostic revision 7 explicitly selects Codex 0.153.0 with `gpt-5.5`

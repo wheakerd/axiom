@@ -99,7 +99,8 @@
           "evidenceExtraction",
           "privateCapture",
           "modelMetadataBefore",
-          "modelMetadataAfter"
+          "modelMetadataAfter",
+          "operatorStderrCapture"
         ],
         "properties": {
           "ordinal": {
@@ -755,6 +756,42 @@
                 }
               }
             ]
+          },
+          "operatorStderrCapture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "bytes",
+              "truncated",
+              "encoding"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "not-requested",
+                  "empty",
+                  "saved",
+                  "omitted",
+                  "write-failed"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16384
+              },
+              "truncated": {
+                "type": "boolean"
+              },
+              "encoding": {
+                "enum": [
+                  "not-observed",
+                  "utf-8",
+                  "invalid-utf-8"
+                ]
+              }
+            }
           }
         }
       }
@@ -783,7 +820,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 7
+      "const": 8
     },
     "attemptCount": {
       "type": "integer",
@@ -793,12 +830,12 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 21
+      "maximum": 22
     },
     "priorResultSha256s": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 5,
+      "maxItems": 6,
       "items": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"

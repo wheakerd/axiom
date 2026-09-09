@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "d4d161120ce1fc01e129bde0a2ca82ac98ca0303ba1a331e069c9be61dcc91f9"
+      "sha256": "1cb3d7df03d9acdfb1670622827e78ea5ac020b9292cedc69dd48236c5c7bcbc"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "3797859b862cefb2138dfdbd80b37be117774fdb3fb9aacb4c1f6ce9d0e46130"
+    "sha256": "41c84e4281d4e2fd960165a40dc4074e438d60e68b2bf598fe86ac535ceb1bb9"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,18 +134,19 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 7,
+  "diagnosticRevision": 8,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
       "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df",
       "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79",
       "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b",
-      "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018"
+      "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
+      "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a"
     ],
-    "priorAttempts": 5,
-    "maximumCumulativeAttempts": 21,
-    "maximumCaseOneAttempts": 6,
+    "priorAttempts": 6,
+    "maximumCumulativeAttempts": 22,
+    "maximumCaseOneAttempts": 7,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
@@ -153,8 +154,8 @@
     "errorEvent": "not-terminal; will_retry unavailable",
     "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
-    "retention": "closed public first-cause facts; cleanup failure is separate; operator-only exception contains only three host diagnostic message fields",
-    "historicalFailure": "five immutable Sol INCOMPLETE results retain original bytes and protocols; revision 7 permits one fresh gpt-5.5 attempt per canonical case after the five historical attempts",
+    "retention": "Closed public first-cause and partial evidence; independent human-only JSONL diagnostic and canonical-client stderr exceptions; no executor/model readback.",
+    "historicalFailure": "Six immutable INCOMPLETE results retain original bytes and protocols: five Sol, one gpt-5.5. Revision 8 permits one further gpt-5.5 Case 1 attempt and the unstarted cases; no refund or automatic retry.",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
     "assessment": "observer-inferred finite template classes; CodeModeOnly with unavailable host fails closed; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
     "privateSummary": {
@@ -180,7 +181,29 @@
       "failure": "report truncation and write failure; preserve first cause; never upgrades acceptance",
       "isolation": "operational no-read boundary for the executor; not a same-UID isolation claim"
     },
-    "finalResponse": "bounded last emitted agent message; cross-check JSON value with private exclusive --output-last-message artifact; remove artifact after extraction; missing or different final output is INCOMPLETE"
+    "finalResponse": "bounded last emitted agent message; cross-check JSON value with private exclusive --output-last-message artifact; remove artifact after extraction; missing or different final output is INCOMPLETE",
+    "operatorOnlyStderr": {
+      "source": "captured canonical exec stderr only; never login or other process output",
+      "maximumBatchBytes": 16384,
+      "budget": "independent from JSONL message capture",
+      "directoryMode": "0700",
+      "fileMode": "0600",
+      "filePattern": "operator-only-diagnostics/case-NN-stderr.json",
+      "format": "exclusive JSON string; controls escaped; UTF-8 decoding faults explicitly recorded",
+      "access": "human operator only; no executor/model read, print, hash, parse, upload or attachment",
+      "exclusion": "Git, validation copies, fixtures, CI and archives",
+      "failure": "record actual written bytes, truncation, encoding and write status; never upgrades acceptance",
+      "isolation": "operational no-read boundary, not same-UID isolation"
+    },
+    "sameAttemptReview": {
+      "scope": "new six-history continuation only; six historical results are immutable and ineligible",
+      "record": "append-only supplement bound to original result SHA, protocol and execution implementation; never replace original INCOMPLETE",
+      "source": "human-provided sanitized contents from this attempt operator-only stderr; freeze public source/code basis separately; no executor raw-file access",
+      "eligibility": "only unknown-stderr; exit 0; complete input; turn.completed; valid stream, response, official final output and postcheck; no timeout, observer termination, cleanup failure, policy rejection or condition-changing diagnostic; complete UTF-8 stderr capture",
+      "decision": "no automatic approval from metadata; assess every diagnostic against frozen upstream and required conditions; unresolved or unsafe content remains INCOMPLETE",
+      "resume": "only previously NOT-RUN cases after supplement confirms no effect on required premises and non-model input/config/model/auth/ledger checks still pass; preserve batch and attempts; no Case 1 restart or budget refund",
+      "limits": "route agreement does not prove Skill-body consumption or invisible actions; missing observations cannot be supplied by human classification"
+    }
   },
   "responseTransport": {
     "revision": 1,
@@ -208,5 +231,11 @@
     "checks": "before launch and after exit; inferred Direct under bound feature settings",
     "scope": "new observation combination; not equivalent to historical Sol context"
   },
-  "protocolDigest": "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99"
+  "evidenceLayers": {
+    "caseSemantics": "unchanged Golden Set and benchmark route/clarification/front-door and authority fields",
+    "discoverySource": "bound installed package, standard user Skill directory and pre/post configuration; Case 11 absent",
+    "bodyConsumption": "only corresponding verified read-command evidence; command count alone also includes fixture reads; zero is not proof of consumption or absence of invisible actions",
+    "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings"
+  },
+  "protocolDigest": "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2"
 }
