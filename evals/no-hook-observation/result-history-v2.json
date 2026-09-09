@@ -5,14 +5,21 @@
     "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
     "digest": "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99"
   },
-  "results": [],
+  "results": [
+    {
+      "path": "evals/no-hook-observation/results/codex-native-b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a.json",
+      "sha256": "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a",
+      "implementationCommit": "a469930ac2c7a0598f44ed7aee62bcf532220c6a",
+      "implementationTree": "8538c2f63771569046540f91dcff7a9f73732fe6"
+    }
+  ],
   "current": {
-    "codexObservation": "not-run",
+    "codexObservation": "incomplete",
     "hostClaim": false,
-    "credentialUsed": false,
-    "cliLaunchCount": 0,
+    "credentialUsed": true,
+    "cliLaunchCount": 1,
     "modelRequestCount": null,
-    "pluginInstalled": false
+    "pluginInstalled": true
   },
   "historicalResults": [
     {

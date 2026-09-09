@@ -14,9 +14,49 @@ Metadata sources are recorded separately from source-derived effective mode;
 local preflight cannot prove service acceptance. Case 11 remains the zero-Axiom
 control. Contexts and state stay separate, authentication uses the approved serial
 test-only handoff, and Code Mode host/plugin runtime remain disabled.
-No new host result exists at this implementation stage. See the
+The implementation was saved before the actual attempt below. See the
 [model migration and execution limits](field-validation.md#native-model-migration).
 The sections below describe their original historical revisions and budgets.
+
+### Actual gpt-5.5 attempt and retained partial evidence
+
+Signed execution implementation `a469930ac2c7a0598f44ed7aee62bcf532220c6a`
+(tree `8538c2f63771569046540f91dcff7a9f73732fe6`) checked all 16 actual derived
+schema files, then launched Case 1 once with Codex 0.153.0 / `gpt-5.5 / medium`.
+This was Case 1's sixth lifetime attempt and the first under the new combination.
+It ended **INCOMPLETE**; Cases 2-16 were not started. Total canonical attempts
+and CLI launches are **6**, comprising five historical Sol attempts plus one
+new attempt. Internal model-request count remains unknown, not one per CLI.
+
+The client exited 0 and the strict stream closed with `turn.completed`.
+Structured response validation and JSON-value agreement with official final
+output passed, as did post-execution fixture, package, configuration and
+discovery checks. Pre/post official cache facts both normalized optional tool
+mode to null, supported medium, and derived Direct under the bound feature flags.
+There was no error item, top-level error or failed-turn event, no timeout,
+observer termination or recorded cleanup failure. The stream contained one
+agent message and zero command-execution items. This is not proof of invisible
+actions or Skill-body consumption. The validated response selected `using-axiom`
+and matched the frozen Case 1 semantics, but its declarations remain model
+response fields, not independently observed action or routing facts.
+
+The first cause is **unknown-stderr**, 429 bytes. Its content was not retained
+under the existing policy; byte count cannot identify its cause or establish
+harmlessness. No new benign template, raw-log recovery or further case probe
+was used. Operator-only capture reports `no-diagnostics`, zero bytes, no
+truncation: no new original-message file exists. The operator-only mechanism
+captures only the three authorized host message fields, not stderr.
+A valid response and exit code do not override unknown diagnostics, so this
+attempt is not host PASS. No retry is authorized for this combination.
+
+The normalized result SHA-256 is
+`b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a`.
+It binds the actual execution implementation, not the later result commit.
+All five historical files and ledgers remain unchanged. The new result preserves
+partial evidence without reclassifying older failures. FCR-001/003/004 remain
+OPEN and FCR-002 STILL_OPEN; none is closed by model migration or this partial
+observation. Legacy Combined execution remains disabled. PR stays Draft and
+Issue #117 open; required no-Hook host acceptance is incomplete.
 
 ## Native diagnostic revision 6
 
