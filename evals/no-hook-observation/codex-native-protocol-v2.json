@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "569b7892699965425b88c9e7000d6fb2d7678788f8c4882381be9fd6c62a6fa8"
+      "sha256": "d5a07100e3ce8e9b516ac35ed62d00e6707d8aad11c79b8b6f2b8f0c770e6a3b"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "160dc3e7be526b77f48feaac93248495b926d906c052aa9fb25b5c0f5a531572"
+    "sha256": "8da439eb9c75f103548fb17b0e31c7b168663d792bbd2ec816ee0cb19bc62f69"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -124,5 +124,15 @@
     "target": "installed-package/skills",
     "noPluginControlOrdinal": 11
   },
-  "protocolDigest": "sha256:1cb5cdd6db8439c622c9b4a71b9d2d9f7a162e0e1daf8a5d5f9fdaea56ee13e5"
+  "authentication": {
+    "modes": [
+      "independent-official-login",
+      "serial-test-auth-copy"
+    ],
+    "fileName": "auth.json",
+    "sourceOrdinal": 1,
+    "refreshHandoff": "after-successful-client-exit",
+    "contentRecorded": false
+  },
+  "protocolDigest": "sha256:735ad73170d6d1f3b4b6a21a4dfdc4dc280100a07e47bead22b2af9562a577dc"
 }

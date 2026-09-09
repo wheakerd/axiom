@@ -2,7 +2,8 @@
 
 The operator owns a dedicated, non-concurrently-modified test root. Authentication
 is performed only by the official client in each case's separate CODEX_HOME.
-This module never enumerates those homes or reads authentication storage. Its
+Only explicitly authorized test-auth reuse copies the official file as opaque
+bytes between registered homes; it never parses, hashes or exposes it. Its
 ordinary process timeout is not a claim of adversarial descendant containment.
 """
 
@@ -35,6 +36,8 @@ PROTOCOL_ID = "axiom-codex-native-observation-v2"
 DISCOVERY_MECHANISM = "host-user-skills-from-installed-package"
 STATE_NAME = "native-preparation.json"
 CASE_COUNT = 16
+AUTH_FILE_NAME = "auth.json"
+AUTH_COPY_STATE = "test-auth-copy-state.json"
 NativeObservationError = legacy.ObservationError
 IMPLEMENTATION_PATHS = (
     "axiom_validation/context.py", "axiom_validation/no_hook_bundle.py",
@@ -110,6 +113,11 @@ def _protocol(root: Path) -> dict[str, Any]:
         "root": "HOME/.agents/skills", "target": "installed-package/skills",
         "noPluginControlOrdinal": 11,
     }, "native discovery contract mismatch")
+    _require(document.get("authentication") == {
+        "modes": ["independent-official-login", "serial-test-auth-copy"],
+        "fileName": AUTH_FILE_NAME, "sourceOrdinal": 1,
+        "refreshHandoff": "after-successful-client-exit", "contentRecorded": False,
+    }, "native authentication contract mismatch")
     _require(document.get("cli") == {
         "version": legacy.CODEX_VERSION, "sha256": legacy.CODEX_BINARY_SHA256,
         "model": legacy.MODEL, "reasoningEffort": legacy.REASONING_EFFORT,
@@ -514,6 +522,126 @@ def _state(root: Path, run_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     return protocol, state
 
 
+
+def _auth_metadata(descriptor: int) -> dict[str, int]:
+    metadata = os.fstat(descriptor)
+    _require(stat.S_ISREG(metadata.st_mode) and metadata.st_uid == os.getuid() and
+             stat.S_IMODE(metadata.st_mode) == 0o600 and metadata.st_nlink == 1,
+             "test authentication must be a single-link private regular file")
+    return {"device": metadata.st_dev, "inode": metadata.st_ino}
+
+
+def _auth_owner(run_root: Path, ordinal: int) -> Path:
+    return run_root / f"test-auth-owner-{ordinal:02d}.json"
+
+
+def _open_test_auth(run_root: Path, ordinal: int, flags: int) -> int:
+    _require(type(ordinal) is int and 1 <= ordinal <= CASE_COUNT, "invalid test-auth case")
+    home = _ordinary_directory(_case_paths(run_root, ordinal)["home"])
+    descriptor = os.open(home / AUTH_FILE_NAME, flags | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+    try:
+        identity = _auth_metadata(descriptor)
+        owner = _json(_read(_auth_owner(run_root, ordinal)))
+        _require(owner == {"ordinal": ordinal, **identity}, "test-auth object ownership changed")
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def _copy_test_auth(run_root: Path, source_ordinal: int, target_ordinal: int, *, create: bool) -> None:
+    """Copy only the official credential file; bytes never enter any report/hash/parser.
+
+    Supported only without concurrent operators/clients. The frozen client writes
+    this file in place. After abnormal client termination the batch stops, so no
+    subsequent case receives a possibly partial refresh.
+    """
+    _require(source_ordinal != target_ordinal and 2 <= target_ordinal <= CASE_COUNT,
+             "invalid test-auth handoff")
+    source = _open_test_auth(run_root, source_ordinal, os.O_RDONLY)
+    target = None
+    try:
+        if create:
+            home = _ordinary_directory(_case_paths(run_root, target_ordinal)["home"])
+            target = os.open(home / AUTH_FILE_NAME, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+            # Registration failure preserves the newly created file; it is never
+            # silently retried or mistaken for a caller-owned object.
+            _exclusive(_auth_owner(run_root, target_ordinal),
+                       _bytes({"ordinal": target_ordinal, **_auth_metadata(target)}))
+        else:
+            target = _open_test_auth(run_root, target_ordinal, os.O_WRONLY)
+            os.ftruncate(target, 0)
+        with os.fdopen(os.dup(source), "rb") as reader, os.fdopen(os.dup(target), "wb") as writer:
+            shutil.copyfileobj(reader, writer, length=64 * 1024)
+            writer.flush()
+        os.fsync(target)
+    finally:
+        os.close(source)
+        if target is not None:
+            os.close(target)
+
+
+def share_test_authentication(root: Path, run_root: Path, *, authorize_copy: bool = False,
+                              preserve_existing: Sequence[int] = ()) -> None:
+    """An explicit one-time copy from the registered Case 1 test login only."""
+    _require(authorize_copy is True, "explicit test-auth copy authorization is required")
+    protocol, _ = _state(root, run_root)
+    _require(not (run_root / AUTH_COPY_STATE).exists(), "test-auth copy state already exists")
+    _require(not (run_root / "batch-started.json").exists() and all(
+        not (run_root / f"attempt-{i:02d}.json").exists() for i in range(1, 17)),
+        "test-auth preparation cannot reset an attempted batch")
+    _require(len(set(preserve_existing)) == len(preserve_existing) and all(
+        type(i) is int and 2 <= i <= CASE_COUNT for i in preserve_existing),
+        "invalid explicitly retained test-auth set")
+    retained = {}
+    for ordinal in range(1, 17):
+        paths = _case_paths(run_root, ordinal)
+        home = _ordinary_directory(paths["home"])
+        _require(not _auth_owner(run_root, ordinal).exists(), "test-auth ownership already registered")
+        if ordinal != 1:
+            destination = home / AUTH_FILE_NAME
+            if ordinal in preserve_existing:
+                backup = paths["case"] / "retained-auth-before-reuse"
+                _require(not backup.exists() and not backup.is_symlink(), "test-auth retention destination exists")
+                descriptor = os.open(destination, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                try:
+                    retained[ordinal] = _auth_metadata(descriptor)
+                finally:
+                    os.close(descriptor)
+            else:
+                _require(not destination.exists() and not destination.is_symlink(),
+                         "refusing to overwrite an unowned test-auth destination")
+    # Only explicitly identified test logins are moved, without reading their
+    # contents. They remain private and are never used as a refresh source.
+    for ordinal, identity in retained.items():
+        paths = _case_paths(run_root, ordinal)
+        backup = paths["case"] / "retained-auth-before-reuse"
+        backup.mkdir(mode=0o700)
+        os.rename(paths["home"] / AUTH_FILE_NAME, backup / AUTH_FILE_NAME)
+        descriptor = os.open(backup / AUTH_FILE_NAME, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            _require(_auth_metadata(descriptor) == identity, "retained test-auth object changed")
+        finally:
+            os.close(descriptor)
+        _exclusive(backup / "ownership.json", _bytes({"ordinal": ordinal, **identity}))
+    source = os.open(_case_paths(run_root, 1)["home"] / AUTH_FILE_NAME, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        _exclusive(_auth_owner(run_root, 1), _bytes({"ordinal": 1, **_auth_metadata(source)}))
+    finally:
+        os.close(source)
+    for ordinal in range(2, 17):
+        _copy_test_auth(run_root, 1, ordinal, create=True)
+    _exclusive(run_root / AUTH_COPY_STATE, _bytes({
+        "protocolDigest": protocol["protocolDigest"], "sourceOrdinal": 1, "copiedOrdinals": list(range(2, 17)),
+    }))
+
+
+def _require_test_auth_copy_state(run_root: Path, protocol: Mapping[str, Any]) -> None:
+    _require(_json(_read(run_root / AUTH_COPY_STATE)) == {
+        "protocolDigest": protocol["protocolDigest"], "sourceOrdinal": 1, "copiedOrdinals": list(range(2, 17)),
+    }, "test-auth copy preparation is incomplete or stale")
+
+
 def login_commands(root: Path, run_root: Path) -> list[dict[str, Any]]:
     """Return commands for an attended terminal; never start or inspect login."""
     _, state = _state(root, run_root)
@@ -646,6 +774,7 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
 
 
 def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls: bool = False,
+                           reuse_test_auth: bool = False,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
@@ -665,6 +794,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         prompt_envelope=envelope, request=case["request"]) for i, case in enumerate(cases, 1)]
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
+    if reuse_test_auth:
+        _require_test_auth_copy_state(run_root, protocol)
     _exclusive(run_root / "batch-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
         paths = _case_paths(run_root, ordinal)
@@ -687,6 +818,15 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             _require(_read(paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
             diagnostic = "authentication-unavailable"
+            if reuse_test_auth and ordinal > 1:
+                # The prior iteration only advances after normal exit and closed
+                # output/input validation. Never refill from the initial stale copy.
+                _copy_test_auth(run_root, ordinal - 1, ordinal, create=False)
+            if reuse_test_auth:
+                # Validate Case 1 as well as copied destinations before handing
+                # the path to the official client; never inspect credential bytes.
+                descriptor = _open_test_auth(run_root, ordinal, os.O_RDONLY)
+                os.close(descriptor)
             login = invoke([str(executable), "-c", 'cli_auth_credentials_store="file"', "login", "status"],
                            cwd=paths["workspace"], env=case_environment(paths))
             combined = login["stdout"] + login["stderr"]
@@ -739,6 +879,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         "FAIL" if "FAIL" in statuses else "PASS")
     result = {"schemaVersion": "2", "protocolId": PROTOCOL_ID,
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
+              "authenticationMode": "serial-test-auth-copy" if reuse_test_auth else "independent-official-login",
               "protocolDigest": protocol["protocolDigest"], "runMode": "actual" if actual else "simulated",
               "hostClaim": actual and status == "PASS", "status": status,
               "materializationSeed": seed.hex(), "cliLaunchCount": sum(item["cliLaunchCount"] for item in results),
@@ -868,12 +1009,16 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--check", action="store_true")
     group.add_argument("--prepare", action="store_true")
     group.add_argument("--login-commands", action="store_true")
+    group.add_argument("--share-test-auth", action="store_true")
     group.add_argument("--run", action="store_true")
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--codex", type=Path)
     parser.add_argument("--authorize-local-install", action="store_true")
     parser.add_argument("--authorize-model-calls", action="store_true")
+    parser.add_argument("--authorize-test-auth-copy", action="store_true")
+    parser.add_argument("--reuse-test-auth", action="store_true")
+    parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
         if args.prepare:
@@ -882,12 +1027,18 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             prepare_native_run(root, args.run_root, args.bundle_root, args.codex,
                                authorize_install=args.authorize_local_install)
             print("Native preparation complete; no login or model request performed.")
+        elif args.share_test_auth:
+            _require(args.run_root is not None, "test-auth copy requires a prepared run root")
+            share_test_authentication(root, args.run_root, authorize_copy=args.authorize_test_auth_copy,
+                                      preserve_existing=args.preserve_existing_test_auth)
+            print("Test authentication copied to registered homes; no content reported; no model started.")
         elif args.login_commands:
             _require(args.run_root is not None, "login commands require a prepared run root")
             print(json.dumps(login_commands(root, args.run_root), indent=2))
         elif args.run:
             _require(args.run_root is not None, "run requires a prepared run root")
-            result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls)
+            result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
+                                            reuse_test_auth=args.reuse_test_auth)
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "PASS" else 1
         else:

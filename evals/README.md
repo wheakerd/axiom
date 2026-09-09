@@ -199,9 +199,14 @@ until actual observations are available; v1 history is preserved separately.
 `scripts/run-no-hook-native-observation.py --check` is a no-call static entry and
 is also checked by the publication aggregate. Explicit `--prepare` performs
 only the authorized temporary local installation. `--login-commands` returns
-foreground official-client commands for human authentication in each independent
-case home. Only the separately authorized `--run` can consume the ordered case
-budget. Preparation and login are not model observations. Case 11 has no plugin.
+foreground official-client commands for human authentication. Explicit
+`--share-test-auth --authorize-test-auth-copy` permits opaque copying of Case 1's
+dedicated test credentials into the other registered homes, without copying
+configuration or session state. `--run --reuse-test-auth` serially hands off the
+latest official-client file after each successful exit. Each case retains its
+own home, workspace and fresh session. Only separately authorized `--run` can
+consume the ordered case budget. Preparation and login are not model
+observations. Case 11 has no plugin or Axiom discovery root.
 
 The former parent-deny/child-read configuration failed its real pre-login read.
 After correction, native discovery reported the eight bound Axiom user Skills in
@@ -210,7 +215,9 @@ excluded-root checks passed. All cases disable plugin runtime and bundled system
 Skills and use the standard user Skill root linked to the verified installed
 package. This avoids account plugin startup synchronization without injecting
 Skill bodies. These are no-model prerequisites, not canonical observations.
-Independent attended login and actual case acceptance remain NOT-RUN.
+Case 1 has an attended test login; actual case acceptance remains NOT-RUN.
+Authentication reuse requires its own explicit authorization and official status
+checks; these are not model requests.
 
 See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
 for the supported environment, authentication and model-tool separation,

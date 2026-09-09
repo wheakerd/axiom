@@ -212,6 +212,7 @@ class NativeObservationTests(unittest.TestCase):
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
         return {"schemaVersion": "2", "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
+                "authenticationMode": "independent-official-login",
                 "protocolDigest": self.protocol["protocolDigest"], "runMode": "simulated", "hostClaim": False,
                 "status": "INCOMPLETE", "materializationSeed": seed.hex(), "cliLaunchCount": 0,
                 "modelRequestCount": None, "caseResults": records,
@@ -456,6 +457,170 @@ class NativeObservationTests(unittest.TestCase):
                 "import sys; sys.stdout.buffer.write(b'x' * (2 * 1024 * 1024))"],
                 cwd=self.parent, env={"PATH": "/usr/bin:/bin"})
         self.assertEqual(list(self.parent.iterdir()), [])
+
+    def _seed_test_auth(self, run):
+        source = native._case_paths(run, 1)["home"] / native.AUTH_FILE_NAME
+        source.write_bytes(b"public non-secret auth fixture, deliberately not JSON")
+        source.chmod(0o600)
+        return source
+
+    def test_test_auth_copy_requires_authorization_without_opening_files(self):
+        with patch.object(native.os, "open", side_effect=AssertionError("unexpected file access")):
+            with self.assertRaisesRegex(native.NativeObservationError, "copy authorization"):
+                native.share_test_authentication(ROOT, self.parent / "absent")
+
+    def test_test_auth_copy_is_opaque_private_and_preserves_case_eleven(self):
+        run, _, _ = self._prepared_runner()
+        source = self._seed_test_auth(run)
+        native.share_test_authentication(ROOT, run, authorize_copy=True)
+        for ordinal in range(2, 17):
+            path = native._case_paths(run, ordinal)["home"] / native.AUTH_FILE_NAME
+            self.assertEqual(path.read_bytes(), source.read_bytes())
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            owner = json.loads(native._auth_owner(run, ordinal).read_bytes())
+            self.assertEqual(set(owner), {"ordinal", "device", "inode"})
+        native._verify_discovery(native._case_paths(run, 11), False)
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        with self.assertRaises(native.NativeObservationError):
+            native.share_test_authentication(ROOT, run, authorize_copy=True)
+
+    def test_test_auth_copy_refuses_unknown_destination_before_copying(self):
+        run, _, _ = self._prepared_runner()
+        self._seed_test_auth(run)
+        target = native._case_paths(run, 8)["home"] / native.AUTH_FILE_NAME
+        target.write_bytes(b"unowned object")
+        with self.assertRaisesRegex(native.NativeObservationError, "unowned"):
+            native.share_test_authentication(ROOT, run, authorize_copy=True)
+        self.assertEqual(target.read_bytes(), b"unowned object")
+        self.assertFalse(native._auth_owner(run, 1).exists())
+        self.assertFalse((native._case_paths(run, 2)["home"] / native.AUTH_FILE_NAME).exists())
+
+    def test_test_auth_copy_registration_failure_preserves_created_private_file(self):
+        run, _, _ = self._prepared_runner()
+        self._seed_test_auth(run)
+        original = native._exclusive
+        def fail_owner(path, data, mode=0o600):
+            if path == native._auth_owner(run, 2):
+                raise OSError("fixture registration failure")
+            return original(path, data, mode)
+        with patch.object(native, "_exclusive", side_effect=fail_owner):
+            with self.assertRaisesRegex(OSError, "registration failure"):
+                native.share_test_authentication(ROOT, run, authorize_copy=True)
+        target = native._case_paths(run, 2)["home"] / native.AUTH_FILE_NAME
+        self.assertTrue(target.is_file())
+        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+        self.assertFalse((run / native.AUTH_COPY_STATE).exists())
+
+    def test_serial_auth_handoff_uses_latest_exited_case_and_retains_fresh_contexts(self):
+        run, runner, calls = self._prepared_runner()
+        initial = self._seed_test_auth(run).read_bytes()
+        native.share_test_authentication(ROOT, run, authorize_copy=True)
+        def refresh(argv, **kwargs):
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            path = native._case_paths(run, ordinal)["home"] / native.AUTH_FILE_NAME
+            expected = initial if ordinal == 1 else f"public refreshed fixture {ordinal - 1}".encode()
+            self.assertEqual(path.read_bytes(), expected)
+            result = runner(argv, **kwargs)
+            if "exec" in argv:
+                path.write_bytes(f"public refreshed fixture {ordinal}".encode())
+            return result
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               reuse_test_auth=True, process_runner=refresh)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual(result["authenticationMode"], "serial-test-auth-copy")
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_abnormal_case_stops_auth_handoff_and_preserves_later_seed(self):
+        run, runner, calls = self._prepared_runner(failed_case=2)
+        initial = self._seed_test_auth(run).read_bytes()
+        native.share_test_authentication(ROOT, run, authorize_copy=True)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               reuse_test_auth=True, process_runner=runner)
+        self.assertEqual(calls, [1, 2])
+        self.assertEqual(result["caseResults"][2]["status"], "NOT-RUN")
+        self.assertEqual((native._case_paths(run, 3)["home"] / native.AUTH_FILE_NAME).read_bytes(), initial)
+        self.assertFalse((run / "attempt-03.json").exists())
+
+    def test_replaced_owned_auth_destination_is_not_overwritten(self):
+        run, _, _ = self._prepared_runner()
+        self._seed_test_auth(run)
+        native.share_test_authentication(ROOT, run, authorize_copy=True)
+        destination = native._case_paths(run, 2)["home"] / native.AUTH_FILE_NAME
+        replacement = self.parent / "replacement"
+        replacement.write_bytes(b"unknown replacement")
+        replacement.chmod(0o600)
+        replacement.replace(destination)
+        with self.assertRaisesRegex(native.NativeObservationError, "ownership changed"):
+            native._copy_test_auth(run, 1, 2, create=False)
+        self.assertEqual(destination.read_bytes(), b"unknown replacement")
+
+    def test_case_one_replacement_is_rejected_before_any_client_call(self):
+        run, _, _ = self._prepared_runner()
+        self._seed_test_auth(run)
+        native.share_test_authentication(ROOT, run, authorize_copy=True)
+        target = native._case_paths(run, 1)["home"] / native.AUTH_FILE_NAME
+        replacement = self.parent / "case-one-replacement"
+        replacement.write_bytes(b"public unknown replacement")
+        replacement.chmod(0o600)
+        replacement.replace(target)
+        def never_client(*args, **kwargs):
+            self.fail("a client received a replaced authentication path")
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               reuse_test_auth=True, process_runner=never_client)
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertEqual(result["cliLaunchCount"], 0)
+        self.assertEqual(result["caseResults"][0]["diagnostic"], "authentication-unavailable")
+        self.assertFalse((run / "attempt-01.json").exists())
+        self.assertEqual(target.read_bytes(), b"public unknown replacement")
+
+    def test_auth_source_opens_are_nonblocking_before_type_validation(self):
+        run, _, _ = self._prepared_runner()
+        self._seed_test_auth(run)
+        original = native.os.open
+        observed = []
+        def inspect_flags(path, flags, *args, **kwargs):
+            if Path(path).name == native.AUTH_FILE_NAME and not flags & native.os.O_CREAT:
+                self.assertTrue(flags & native.os.O_NONBLOCK)
+                self.assertTrue(flags & native.os.O_NOFOLLOW)
+                observed.append(path)
+            return original(path, flags, *args, **kwargs)
+        with patch.object(native.os, "open", side_effect=inspect_flags):
+            native.share_test_authentication(ROOT, run, authorize_copy=True)
+            native._copy_test_auth(run, 1, 2, create=False)
+        self.assertGreaterEqual(len(observed), 18)
+
+    def test_explicit_other_test_logins_are_retained_but_not_reused(self):
+        run, _, _ = self._prepared_runner()
+        seed = self._seed_test_auth(run).read_bytes()
+        old = {}
+        for i in (2, 3):
+            path = native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME
+            path.write_bytes(f"public other test login {i}".encode())
+            path.chmod(0o600)
+            old[i] = (path.stat().st_ino, path.read_bytes())
+        native.share_test_authentication(ROOT, run, authorize_copy=True, preserve_existing=[2, 3])
+        for i in (2, 3):
+            paths = native._case_paths(run, i)
+            backup = paths["case"] / "retained-auth-before-reuse" / native.AUTH_FILE_NAME
+            self.assertEqual((backup.stat().st_ino, backup.read_bytes()), old[i])
+            self.assertEqual(backup.parent.stat().st_mode & 0o777, 0o700)
+            self.assertEqual((paths["home"] / native.AUTH_FILE_NAME).read_bytes(), seed)
+        self.assertEqual((native._case_paths(run, 4)["home"] / native.AUTH_FILE_NAME).read_bytes(), seed)
+
+    def test_auth_retention_never_overwrites_a_prior_destination(self):
+        run, _, _ = self._prepared_runner()
+        self._seed_test_auth(run)
+        paths = native._case_paths(run, 2)
+        path = paths["home"] / native.AUTH_FILE_NAME
+        path.write_bytes(b"public retained test login")
+        path.chmod(0o600)
+        (paths["case"] / "retained-auth-before-reuse").mkdir()
+        with self.assertRaisesRegex(native.NativeObservationError, "retention destination exists"):
+            native.share_test_authentication(ROOT, run, authorize_copy=True, preserve_existing=[2])
+        self.assertEqual(path.read_bytes(), b"public retained test login")
+        self.assertFalse(native._auth_owner(run, 1).exists())
 
 
 if __name__ == "__main__":

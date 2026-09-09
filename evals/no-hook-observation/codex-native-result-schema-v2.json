@@ -19,7 +19,8 @@
     "cleanup",
     "descendantClosure",
     "discoveryMechanism",
-    "pluginRuntimeEnabled"
+    "pluginRuntimeEnabled",
+    "authenticationMode"
   ],
   "properties": {
     "schemaVersion": {
@@ -337,6 +338,13 @@
     },
     "pluginRuntimeEnabled": {
       "const": false
+    },
+    "authenticationMode": {
+      "type": "string",
+      "enum": [
+        "independent-official-login",
+        "serial-test-auth-copy"
+      ]
     }
   }
 }

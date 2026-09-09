@@ -332,9 +332,12 @@ The [v2 execution contract](field-validation.md#native-codex-no-hook-observation
 replaces the unfinished v1 execution architecture for a bounded native-client
 experiment. It binds standard user Skill discovery to the verified installed
 package while disabling plugin runtime. The initial permission failure remains
-historical; corrected no-model discovery and consumption checks passed. Attended
-login and actual case acceptance are still pending. V1 artifacts and historical
-failures are not reinterpreted. The
+historical; corrected no-model discovery and consumption checks passed. The v2
+authentication contract now permits explicitly authorized opaque reuse of a
+dedicated test login across separate case homes, with serial refresh handoff.
+The protocol and result schema bind this mode; credential bytes are never
+identity inputs. Case 1 login is confirmed, while actual case acceptance remains
+pending. V1 artifacts and historical failures are not reinterpreted. The
 original Golden Set, model-response definition, fixture matrix, profile runtime,
 full-profile runtime, bundle format, and ordinary builder lifecycle are unchanged.
 The in-flight revision 7 owns this observer work; revision 5 still owns the

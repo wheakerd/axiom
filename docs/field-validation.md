@@ -56,13 +56,27 @@ an independent empty user home, fixture workspace, client state, and ephemeral
 session. No case resumes another session. No expected route or class enters the
 model prompt.
 
-Authentication is an attended official-client login in each dedicated case
-home, with command-scoped file credential storage. Preparation returns the exact
-foreground commands; it never starts an unattended login. Do not copy, link, or
-inspect existing authentication files. The observer uses only the official
-`login status` result and never reads authentication storage. One successful
-login is not assumed to authenticate the other 15 case homes, and it is not a
-successful model observation.
+Authentication uses the official client with command-scoped file storage in
+each dedicated case home. Independent attended logins remain supported. With
+explicit authorization, `--share-test-auth --authorize-test-auth-copy` instead
+copies only Case 1's dedicated test `auth.json` as opaque bytes to the other
+registered homes. `--run --reuse-test-auth` then passes the latest file from the
+previous successfully exited client to the next case, serially. It does not
+recopy the initial credentials after refresh. No client runs concurrently and an
+abnormal exit stops the batch before another handoff.
+
+This v2 authentication contract replaces the earlier independent-login-only
+restriction; no prior observation is reinterpreted. Copies are private regular
+files (mode 0600), with non-sensitive ownership records. Unknown destinations
+are not overwritten. Explicitly identified, unwanted test logins can be retained
+with `--preserve-existing-test-auth` ordinals: their files are moved unchanged to
+private per-case retention directories before new Case 1 copies are created.
+Retained files are never used as authentication or refresh sources. No normal user authentication, entire client home, session,
+or cache is copied. Credential bytes are never parsed, hashed, reported, placed
+in model inputs or tool environments, or included in fixtures, archives, Git or
+CI. The official client alone handles authentication and refresh. Official
+`login status` checks local login state; it does not prove server validity or a
+successful model request. Preparation never starts an unattended login.
 
 The supported environment is a dedicated Linux test directory controlled by one
 operator, without concurrent changes to the fixtures, package, or test state.
