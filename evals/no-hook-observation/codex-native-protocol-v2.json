@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "2",
+  "protocolId": "axiom-codex-native-observation-v2",
+  "cli": {
+    "version": "0.153.0",
+    "sha256": "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be",
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium"
+  },
+  "inputs": {
+    "goldenSet": {
+      "path": "evals/no-hook/golden-set-v1.jsonl",
+      "sha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+    },
+    "modelResponseSchema": {
+      "path": "evals/no-hook-observation/codex-model-response-schema-v1.json",
+      "sha256": "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"
+    },
+    "promptEnvelope": {
+      "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
+      "sha256": "744e5249ab936d79b0b4ce8600b07e6ab6f1adf0a0ba8e254d89a6c8c2607a43"
+    },
+    "taxonomy": {
+      "path": "evals/codex-exec-jsonl-observer-v3.json",
+      "sha256": "f74f844fe477673229c7e7a3bc3a34181cd5e6727305eed9d9450b312edb6d1e"
+    },
+    "fixtureMatrix": {
+      "path": "evals/no-hook-observation/codex-fixtures-v1.json",
+      "sha256": "7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"
+    },
+    "profile": {
+      "path": "evals/no-hook/profile-v1.json",
+      "sha256": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+    },
+    "benchmark": {
+      "path": "evals/no-hook/benchmark-v1.json",
+      "sha256": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
+    },
+    "bundleSchema": {
+      "path": "evals/no-hook/bundle-manifest-schema-v1.json",
+      "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
+    },
+    "staticBundleEvidence": {
+      "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
+      "sha256": "10e6cfc950d5190fd22596de744100dba4b8a965621cbd65e7f386a19164e8e9"
+    }
+  },
+  "implementationBindings": [
+    {
+      "path": "axiom_validation/context.py",
+      "sha256": "cef91c5c8a48f9acf66886db6f3beedb8bf01ee46dae4658f8d2392c2e3e0d39"
+    },
+    {
+      "path": "axiom_validation/no_hook_bundle.py",
+      "sha256": "cf4e7ef0d358015c81752878009d2c928d63e24de6f5fff34c988051c06f13d1"
+    },
+    {
+      "path": "axiom_validation/no_hook_linux_isolation.py",
+      "sha256": "6ddae4cd0b7fcd64841b29a0e9386838c0f46adbed7fc81259543d36b0913907"
+    },
+    {
+      "path": "axiom_validation/no_hook_native_observation.py",
+      "sha256": "569b7892699965425b88c9e7000d6fb2d7678788f8c4882381be9fd6c62a6fa8"
+    },
+    {
+      "path": "axiom_validation/no_hook_observation.py",
+      "sha256": "d1874b0ebd148ec25f2d629e3725552af672bb43a15b40447eccf5e69afbf741"
+    },
+    {
+      "path": "axiom_validation/no_hook_profile.py",
+      "sha256": "f9365d09c50d2646bbab3841d614d35e2d91e2d098662bc69eea5683e5a85187"
+    },
+    {
+      "path": "axiom_validation/release_versions.py",
+      "sha256": "4717df83691ac65ace1748978eab4f7927830eda5aa573e33d24430d7e019c24"
+    },
+    {
+      "path": "axiom_validation/routing_evals/jsonio.py",
+      "sha256": "8de0a31bcd0f4827ddc4e4c5abc7d11952b24e4d6cdc3a895084df1333d1b07a"
+    },
+    {
+      "path": "scripts/run-no-hook-native-observation.py",
+      "sha256": "aeace6ff9ea900c2e2ebe8dd08d9165d7cf33194171cce232bcc148abd92b968"
+    }
+  ],
+  "bundle": {
+    "manifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5",
+    "archiveSha256": "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98",
+    "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
+    "packageSha256": "158e234e256c96028f64f31ae52a7c6c3bd1c662e6acc143d7fa989e78920be2"
+  },
+  "caseIds": [
+    "no-hook-positive-explicit-using-axiom-001",
+    "no-hook-positive-direct-agents-architect-001",
+    "no-hook-positive-native-agent-plugin-architect-001",
+    "no-hook-positive-indirect-optimize-usage-001",
+    "no-hook-positive-retrospective-review-001",
+    "no-hook-positive-direct-traceable-git-001",
+    "no-hook-positive-cross-route-external-system-001",
+    "no-hook-positive-confirm-external-action-001",
+    "no-hook-negative-plan-only-system-change-001",
+    "no-hook-negative-untrusted-credential-action-001",
+    "no-hook-negative-unavailable-discovery-001",
+    "no-hook-ambiguous-plugin-design-or-install-001",
+    "no-hook-ambiguous-ordinary-or-traceable-git-001",
+    "no-hook-ambiguous-review-or-external-action-001",
+    "no-hook-no-route-summary-001",
+    "no-hook-no-route-coding-001"
+  ],
+  "limits": {
+    "maxCaseLaunches": 16,
+    "timeoutSeconds": 120,
+    "stdoutBytes": 1048576,
+    "stderrBytes": 262144
+  },
+  "resultSchema": {
+    "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
+    "sha256": "160dc3e7be526b77f48feaac93248495b926d906c052aa9fb25b5c0f5a531572"
+  },
+  "discovery": {
+    "mechanism": "host-user-skills-from-installed-package",
+    "pluginRuntimeEnabled": false,
+    "root": "HOME/.agents/skills",
+    "target": "installed-package/skills",
+    "noPluginControlOrdinal": 11
+  },
+  "protocolDigest": "sha256:1cb5cdd6db8439c622c9b4a71b9d2d9f7a162e0e1daf8a5d5f9fdaea56ee13e5"
+}

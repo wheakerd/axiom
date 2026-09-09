@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2",
+  "kind": "axiom-codex-native-result-history",
+  "protocol": {
+    "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
+    "digest": "sha256:1cb5cdd6db8439c622c9b4a71b9d2d9f7a162e0e1daf8a5d5f9fdaea56ee13e5"
+  },
+  "results": [],
+  "current": {
+    "codexObservation": "not-run",
+    "hostClaim": false,
+    "credentialUsed": false,
+    "cliLaunchCount": 0,
+    "modelRequestCount": null,
+    "pluginInstalled": false
+  }
+}

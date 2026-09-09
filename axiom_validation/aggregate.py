@@ -42,6 +42,7 @@ from .manifests import (
 from .no_hook_bundle import check_no_hook_bundle
 from .no_hook_linux_isolation import check_no_hook_linux_isolation
 from .no_hook_observation import check_no_hook_observation
+from .no_hook_native_observation import validate_native_protocol
 from .no_hook_profile import check_no_hook_profile
 from .release_policy import check_release_signature_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
@@ -209,6 +210,11 @@ def main() -> int:
     run_policy("no-hook-bundle", check_no_hook_bundle, failures)
     run_policy("no-hook-linux-isolation", check_no_hook_linux_isolation, failures)
     run_policy("no-hook-observation", check_no_hook_observation, failures)
+    run_policy(
+        "no-hook-native-observation",
+        lambda domain_failures: domain_failures.extend(validate_native_protocol()),
+        failures,
+    )
     review_sequence_count, review_checkpoint_count = run_policy(
         "review-evals", check_review_sequence_contracts, failures
     )

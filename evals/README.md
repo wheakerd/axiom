@@ -183,7 +183,47 @@ cannot consume lifecycle 2 records as cleanup ownership and now fails closed.
 That removed integration is not a successful host observation or a closure of
 FCR-004. Other deterministic fake orchestration remains test-only.
 
-## Codex no-Hook observation protocol
+## Native Codex no-Hook observation v2
+
+The [native v2 protocol](no-hook-observation/codex-native-protocol-v2.json)
+owns the frozen CLI/model, original case inputs, implementation bindings, and
+bounded execution limits. Its
+[prompt envelope](no-hook-observation/codex-native-prompt-envelope-v2.json)
+permits a finite grammar of read-only Skill/fixture commands; it does not change
+the original requests, expected answers, model-response definition, or case
+coverage. The [closed result schema](no-hook-observation/codex-native-result-schema-v2.json)
+and production semantic validator recompute each outcome and materialization
+commitment. [V2 history](no-hook-observation/result-history-v2.json) remains empty
+until actual observations are available; v1 history is preserved separately.
+
+`scripts/run-no-hook-native-observation.py --check` is a no-call static entry and
+is also checked by the publication aggregate. Explicit `--prepare` performs
+only the authorized temporary local installation. `--login-commands` returns
+foreground official-client commands for human authentication in each independent
+case home. Only the separately authorized `--run` can consume the ordered case
+budget. Preparation and login are not model observations. Case 11 has no plugin.
+
+The former parent-deny/child-read configuration failed its real pre-login read.
+After correction, native discovery reported the eight bound Axiom user Skills in
+all 15 installed states and none in Case 11; native sandbox reads and non-secret
+excluded-root checks passed. All cases disable plugin runtime and bundled system
+Skills and use the standard user Skill root linked to the verified installed
+package. This avoids account plugin startup synchronization without injecting
+Skill bodies. These are no-model prerequisites, not canonical observations.
+Independent attended login and actual case acceptance remain NOT-RUN.
+
+See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
+for the supported environment, authentication and model-tool separation,
+failure handling, retained test state, and limits of the resulting evidence.
+The former Combined path is not enabled by this migration. Native v2 uses the
+official client's existing permissions and ordinary bounded process handling;
+it makes no new system-isolation or adversarial descendant-closure claim.
+
+## Historical Codex no-Hook v1 protocol
+
+The following records the prior unfinished implementation, its requirements,
+and historical checks. Its actual execution remains disabled. Native v2 has a
+separate protocol and result schema; its evidence cannot be relabeled as v1.
 
 Repository policy revision 7 defines, but does not execute, the Codex no-Hook
 host-observation protocol. It also makes revision 6 bundle evidence compatible

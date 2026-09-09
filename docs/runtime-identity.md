@@ -320,6 +320,27 @@ the v1 history remains append-only evidence of the v1 calculation.
 
 ## Host Evidence
 
+The native Codex observation v2 protocol is a repository-policy implementation,
+not an installed-runtime change. It binds its CLI, implementation dependencies,
+unchanged Phase 1 inputs, existing bundle identities, new prompt envelope, and
+closed result schema. Changing those bytes changes its protocol digest and all
+derived prompts, schemas, opaque bindings, and ordered commitments. A later
+observation must identify the actual implementation used; an unmerged source
+must not be described as a merged implementation.
+
+The [v2 execution contract](field-validation.md#native-codex-no-hook-observation-v2)
+replaces the unfinished v1 execution architecture for a bounded native-client
+experiment. It binds standard user Skill discovery to the verified installed
+package while disabling plugin runtime. The initial permission failure remains
+historical; corrected no-model discovery and consumption checks passed. Attended
+login and actual case acceptance are still pending. V1 artifacts and historical
+failures are not reinterpreted. The
+original Golden Set, model-response definition, fixture matrix, profile runtime,
+full-profile runtime, bundle format, and ordinary builder lifecycle are unchanged.
+The in-flight revision 7 owns this observer work; revision 5 still owns the
+profile source and revision 6 still owns the derived bundle. No host claim is
+created by maintaining a protocol or empty result history.
+
 New host observations use `evidence/schema-v2.json` and bind:
 
 - `pluginVersion` and `runtimeContractDigest`;

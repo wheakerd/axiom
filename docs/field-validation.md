@@ -20,7 +20,105 @@ These levels are not interchangeable. A checked-in hook is not a host
 observation. A host observation by the maintainer is not an independent
 reproduction. A missing interface is unavailable, not passed.
 
-## Codex no-Hook protocol-only status
+## Native Codex no-Hook observation v2
+
+The [native v2 protocol](../evals/no-hook-observation/codex-native-protocol-v2.json)
+and `scripts/run-no-hook-native-observation.py` separate ordinary repository
+validation, temporary installation, attended authentication, and model execution.
+The default `--check` validates bound files only. It does not inspect login state,
+start a client, install a plugin, or make a model request. Actual observations
+remain **NOT-RUN** until separately recorded in the
+[v2 history](../evals/no-hook-observation/result-history-v2.json).
+
+Version 2 replaces the unfinished v1 execution path only for this limited
+compatibility experiment. End-to-end host acceptance is still pending. It retains
+the original 16 requests, case semantics, fixture matrix,
+model-response definition, input blinding, and recomputed outcomes. Its new
+prompt envelope permits only bounded reads of the installed Skill and fixture
+files. A recognized command must produce the exact corresponding public bytes;
+unknown commands or events stop the batch. This explicitly replaces v1's blanket
+tool prohibition, which could not support indirect native Skill discovery.
+It does not grant authority to perform the task described by a case.
+
+Preparation uses the frozen official CLI to register a local marketplace and
+install the same verified bundle into 15 independent client homes. The receipt,
+exact package inventory, and file bytes bind each installed copy to that bundle.
+The standard `HOME/.agents/skills` discovery root points to that installed
+package's `skills` directory. The observer verifies this link and the exact
+installed bytes before and after consumption; it does not copy Skill content into
+a prompt. All cases disable the plugin runtime and bundled system Skills. The
+host discovers these as user Skills, with the package's `axiom:` namespace and
+canonical installed paths. This is recorded as
+`host-user-skills-from-installed-package`, not plugin-runtime discovery.
+Case 11 has its own home and workspace with neither an installed plugin nor this
+discovery root. Every case has
+an independent empty user home, fixture workspace, client state, and ephemeral
+session. No case resumes another session. No expected route or class enters the
+model prompt.
+
+Authentication is an attended official-client login in each dedicated case
+home, with command-scoped file credential storage. Preparation returns the exact
+foreground commands; it never starts an unattended login. Do not copy, link, or
+inspect existing authentication files. The observer uses only the official
+`login status` result and never reads authentication storage. One successful
+login is not assumed to authenticate the other 15 case homes, and it is not a
+successful model observation.
+
+The supported environment is a dedicated Linux test directory controlled by one
+operator, without concurrent changes to the fixtures, package, or test state.
+The official client's managed restrictions remain in force. The selected
+filesystem policy denies paths by default and allows only the required runtime,
+fixture, and installed package read roots. It does not deny the whole client home
+and then attempt to override that denial for a child package. Client state and
+authentication storage remain outside the allowed roots, and tool network access
+is disabled. Tool environment inheritance is empty. This uses the client's existing sandbox;
+it is not protection against arbitrary same-user processes outside that client.
+
+The earlier parent-deny/child-read configuration produced a real pre-login
+`Permission denied` failure. The corrected configuration subsequently passed the
+frozen client's native sandbox reads of all eight installed Skill entry files
+and the no-plugin fixture. Four reads of non-secret fixtures outside the allowed
+roots were denied as expected, with managed configuration retained. The native
+`skills/list` interface independently reported eight correctly bound user Skills
+in each of the 15 installed states and none in Case 11. These checks made no model
+request and used no authentication content. They establish these pre-login
+conditions, not routing acceptance or a canonical host result. Attended test login
+and the 16 canonical observations remain NOT-RUN.
+
+In CLI 0.153.0, `remote_plugin=false` does not disable all startup synchronization.
+Curated catalog metadata and account-installed plugin synchronization are separate
+paths; the latter can download and enable account plugins. Native v2 therefore
+uses the supported `features.plugins=false` setting for every case and relies on
+normal user Skill discovery. The frozen source gates plugin startup and loading
+on that setting. Catalog metadata alone is not treated as an installation or a
+failed observation; no claim that this one remote-catalog flag disables all
+synchronization is made. The actual no-model catalog checks above found only the
+bound Axiom Skills, with the empty control preserved. This does not substitute
+for observing the later authenticated case execution.
+
+Each case has a finite deadline and output limit. The observer interrupts and
+reaps its client process, with a bounded fallback for its process group. It does
+not claim complete adversarial descendant containment. Failed or incomplete
+attempts consume their case slot; they are not retried. Unreliable execution
+stops the batch and leaves later cases NOT-RUN. CLI launch counts are recorded
+separately from internal model request counts, which remain unknown.
+
+Only closed normalized fields may be retained. Raw streams, model reasoning,
+tool arguments and output, private paths, session identifiers, and credentials
+are not result fields. Test authentication state remains operator-owned for
+official logout and explicit cleanup; a result does not certify its deletion.
+The no-Hook basis is the verified package and actual discovery configuration,
+not model self-report or absent JSONL events. Simulated runs cannot claim host
+PASS. Native regression evidence does not prove the legacy Combined backend,
+close its findings, or establish ChatGPT, Windows, or full-profile observations.
+
+## Historical Codex no-Hook v1 design
+
+The following section records the prior, uncompleted v1 design and its evidence
+limits. Its actual execution remains hard-disabled. These descriptor, supervisor,
+and credential requirements are not prerequisites or guarantees of native v2;
+v2's explicit supported environment and evidence limits apply instead. Historical
+v1 protocol, result schema, and empty history retain their original meaning.
 
 The Codex no-Hook protocol under
 [`evals/no-hook-observation/`](../evals/no-hook-observation/) is currently
