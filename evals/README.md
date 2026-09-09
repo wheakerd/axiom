@@ -193,8 +193,8 @@ permits a finite grammar of read-only Skill/fixture commands; it does not change
 the original requests, expected answers, model-response definition, or case
 coverage. The [closed result schema](no-hook-observation/codex-native-result-schema-v2.json)
 and production semantic validator recompute each outcome and materialization
-commitment. [V2 history](no-hook-observation/result-history-v2.json) remains empty
-until actual observations are available; v1 history is preserved separately.
+commitment. [V2 history](no-hook-observation/result-history-v2.json) records the
+actual incomplete first attempt; v1 history is preserved separately.
 
 `scripts/run-no-hook-native-observation.py --check` is a no-call static entry and
 is also checked by the publication aggregate. Explicit `--prepare` performs
@@ -215,9 +215,13 @@ excluded-root checks passed. All cases disable plugin runtime and bundled system
 Skills and use the standard user Skill root linked to the verified installed
 package. This avoids account plugin startup synchronization without injecting
 Skill bodies. These are no-model prerequisites, not canonical observations.
-Case 1 has an attended test login; actual case acceptance remains NOT-RUN.
-Authentication reuse requires its own explicit authorization and official status
-checks; these are not model requests.
+Authorized reuse of the dedicated Case 1 test login passed official status in
+all 16 independent homes; these checks were not model requests. The actual batch
+then launched Case 1 once and stopped with `execution-failed` / INCOMPLETE before
+a valid terminal response. Cases 2-16 remain NOT-RUN. The normalized evidence
+binds implementation `f7a590ad58e2a1200f64009e48556fa7448f2f86`; it does not
+identify a narrower failure cause, prove internal request counts, or claim host
+PASS. No retry or model fallback occurred.
 
 See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
 for the supported environment, authentication and model-tool separation,

@@ -26,9 +26,9 @@ The [native v2 protocol](../evals/no-hook-observation/codex-native-protocol-v2.j
 and `scripts/run-no-hook-native-observation.py` separate ordinary repository
 validation, temporary installation, attended authentication, and model execution.
 The default `--check` validates bound files only. It does not inspect login state,
-start a client, install a plugin, or make a model request. Actual observations
-remain **NOT-RUN** until separately recorded in the
-[v2 history](../evals/no-hook-observation/result-history-v2.json).
+start a client, install a plugin, or make a model request. The
+[v2 history](../evals/no-hook-observation/result-history-v2.json) records one actual
+attempt: Case 1 is **INCOMPLETE**, and Cases 2-16 are **NOT-RUN**.
 
 Version 2 replaces the unfinished v1 execution path only for this limited
 compatibility experiment. End-to-end host acceptance is still pending. It retains
@@ -96,8 +96,24 @@ roots were denied as expected, with managed configuration retained. The native
 `skills/list` interface independently reported eight correctly bound user Skills
 in each of the 15 installed states and none in Case 11. These checks made no model
 request and used no authentication content. They establish these pre-login
-conditions, not routing acceptance or a canonical host result. Attended test login
-and the 16 canonical observations remain NOT-RUN.
+conditions, not routing acceptance or a canonical host result. After authorized
+opaque authentication reuse, official login status passed in all 16 dedicated
+homes. The existing Case 2 and Case 3 logins were retained privately and not used.
+These status checks do not prove model availability.
+
+The actual batch used implementation commit
+`f7a590ad58e2a1200f64009e48556fa7448f2f86`, Codex 0.153.0 and
+`gpt-5.6-sol` with medium reasoning. Case 1 consumed one launch and returned
+`execution-failed` before the observer obtained a valid terminal response. The
+batch stopped; Cases 2-16 were not launched and no case was retried. The
+normalized record cannot distinguish a client, authentication, model, stream or
+transport failure within that execution stage: raw output was discarded and no
+more specific closed diagnostic was retained. This is an evidence limitation,
+not evidence that any one of those causes occurred. No accepted model response
+or verified completed read is recorded; unobserved actions and internal model
+request counts remain unknown. The record is INCOMPLETE, not host PASS.
+Dedicated test state and private authentication remain retained; no cleanup,
+plugin-runtime, cross-host or full-profile observation is claimed.
 
 In CLI 0.153.0, `remote_plugin=false` does not disable all startup synchronization.
 Curated catalog metadata and account-installed plugin synchronization are separate

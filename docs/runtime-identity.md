@@ -336,8 +336,13 @@ historical; corrected no-model discovery and consumption checks passed. The v2
 authentication contract now permits explicitly authorized opaque reuse of a
 dedicated test login across separate case homes, with serial refresh handoff.
 The protocol and result schema bind this mode; credential bytes are never
-identity inputs. Case 1 login is confirmed, while actual case acceptance remains
-pending. V1 artifacts and historical failures are not reinterpreted. The
+identity inputs. Official login status passed in all 16 dedicated homes after
+authorized reuse. Implementation `f7a590ad58e2a1200f64009e48556fa7448f2f86`
+then launched Case 1 once; its normalized result is INCOMPLETE with
+`execution-failed` and no valid terminal response. Cases 2-16 remain NOT-RUN.
+The v2 history binds that result to its unchanged execution protocol and inputs;
+it does not establish a host PASS or a more specific failure cause. V1 artifacts
+and historical failures are not reinterpreted. The
 original Golden Set, model-response definition, fixture matrix, profile runtime,
 full-profile runtime, bundle format, and ordinary builder lifecycle are unchanged.
 The in-flight revision 7 owns this observer work; revision 5 still owns the
