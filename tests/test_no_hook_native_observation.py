@@ -61,6 +61,7 @@ class NativeObservationTests(unittest.TestCase):
         self.protocol = native._protocol(ROOT)
         self.cases = legacy.load_golden_cases(ROOT)
         self.taxonomy = native._input(ROOT, self.protocol, "taxonomy")
+        self.synthetic_final_outputs = []
 
     def test_default_check_does_not_start_client_or_read_authentication(self):
         with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
@@ -121,6 +122,18 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(args[-1], "-")
         self.assertNotIn(self.cases[0]["request"], " ".join(args))
 
+    def test_native_argv_binds_explicit_final_output_without_exposing_it_to_tools(self):
+        target = self.parent / "private-ledger" / "final-message-01.json"
+        args = native.build_native_argv(Path("/approved/codex"), self.parent, 1, final_output=target)
+        self.assertEqual(args.count("--output-last-message"), 1)
+        self.assertEqual(args[args.index("--output-last-message") + 1], str(target))
+        filesystem = next(tomllib.loads(args[index + 1])["permissions"]["native-case"]["filesystem"]
+                          for index, value in enumerate(args) if value == "-c" and
+                          args[index + 1].startswith("permissions="))
+        self.assertNotIn(str(target), filesystem)
+        self.assertNotIn(str(target.parent), filesystem)
+        self.assertEqual(args[-1], "-")
+
     def test_permissions_allow_only_runtime_fixture_and_installed_package_roots(self):
         executable = Path("/approved/codex")
         for ordinal in range(1, 17):
@@ -172,6 +185,99 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(count, 1)
         self.assertEqual(parsed.terminal_type, "turn.completed")
 
+    def test_commentary_before_final_json_is_a_valid_native_stream(self):
+        document = response(self.cases[0], "ocb1_" + "0" * 64)
+        lines = [json.loads(line) for line in stream(document).splitlines()]
+        lines[2]["item"]["id"] = "item_1"
+        lines.insert(2, {"type": "item.completed", "item": {
+            "id": "item_0", "type": "agent_message", "text": "I will inspect the supplied public fixture."}})
+        parsed, count = native.parse_native_jsonl(b"".join(event(line) for line in lines),
+                                                self.taxonomy, {}, self.parent)
+        self.assertEqual(parsed.structured_result, document)
+        self.assertEqual(parsed.item_types, ("agent_message", "agent_message"))
+        self.assertEqual(parsed.structured_result_count, 1)
+        self.assertEqual(parsed.terminal_type, "turn.completed")
+        self.assertEqual(count, 0)
+
+    def test_multiple_json_messages_select_only_the_last_emitted_candidate(self):
+        first = response(self.cases[0], "ocb1_" + "0" * 64)
+        last = copy.deepcopy(first)
+        last["selectedRoutes"] = ["agents-architect"]
+        lines = [json.loads(line) for line in stream(first).splitlines()]
+        lines.insert(-1, {"type": "item.completed", "item": {
+            "id": "item_1", "type": "agent_message", "text": json.dumps(last)}})
+        parsed, _ = native.parse_native_jsonl(b"".join(event(line) for line in lines),
+                                             self.taxonomy, {}, self.parent)
+        self.assertEqual(parsed.structured_result, last)
+        self.assertNotEqual(parsed.structured_result, first)
+        self.assertEqual(parsed.structured_result_count, 1)
+
+    def test_invalid_last_message_reports_a_safe_response_assertion(self):
+        document = response(self.cases[0], "ocb1_" + "0" * 64)
+        private_text = "PUBLIC-FIXTURE-only: final commentary is not JSON"
+        lines = [json.loads(line) for line in stream(document).splitlines()]
+        lines.insert(-1, {"type": "item.completed", "item": {
+            "id": "item_1", "type": "agent_message", "text": private_text}})
+        with self.assertRaises(native.NativeStreamError) as caught:
+            native.parse_native_jsonl(b"".join(event(line) for line in lines),
+                                      self.taxonomy, {}, self.parent)
+        self.assertEqual(caught.exception.code, "final-message-invalid-json")
+        self.assertEqual(caught.exception.phase, "response")
+        self.assertEqual(caught.exception.event_ordinal, 4)
+        self.assertNotIn(private_text, str(caught.exception))
+
+    def test_nonobject_last_json_is_not_replaced_by_an_earlier_object(self):
+        document = response(self.cases[0], "ocb1_" + "0" * 64)
+        for text in ("null", "[]", "true", '"public scalar fixture"'):
+            with self.subTest(text=text):
+                lines = [json.loads(line) for line in stream(document).splitlines()]
+                lines.insert(-1, {"type": "item.completed", "item": {
+                    "id": "item_1", "type": "agent_message", "text": text}})
+                with self.assertRaises(native.NativeStreamError) as caught:
+                    native.parse_native_jsonl(b"".join(event(line) for line in lines),
+                                              self.taxonomy, {}, self.parent)
+                self.assertEqual((caught.exception.code, caught.exception.phase,
+                                  caught.exception.event_ordinal), ("final-message-not-object", "response", 4))
+
+    def test_final_output_reservation_is_private_and_never_overwrites_existing_content(self):
+        path = self.parent / "final-output-fixture.json"
+        identity = native._reserve_final_output(path)
+        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(identity, (path.stat().st_dev, path.stat().st_ino))
+        path.write_bytes(b'{"public": "fixture"}\n')
+        with self.assertRaises(FileExistsError):
+            native._reserve_final_output(path)
+        self.assertEqual(path.read_bytes(), b'{"public": "fixture"}\n')
+        native._check_final_output(path, identity, {"public": "fixture"})
+
+    def test_multimessage_warning_and_command_share_ids_and_require_closure(self):
+        document = response(self.cases[0], "ocb1_" + "0" * 64)
+        lines = [json.loads(line) for line in stream(document, "cat SKILL.md", "public fixture\n").splitlines()]
+        lines[-2]["item"]["id"] = "item_3"
+        lines.insert(3, {"type": "item.completed", "item": {
+            "id": "item_1", "type": "error", "message": "public warning fixture"}})
+        lines.insert(-2, {"type": "item.completed", "item": {
+            "id": "item_2", "type": "agent_message", "text": "Public commentary fixture."}})
+        readable = {str(self.parent / "SKILL.md"): b"public fixture\n"}
+        parsed, count = native.parse_native_jsonl(b"".join(event(line) for line in lines),
+                                                self.taxonomy, readable, self.parent)
+        self.assertEqual(parsed.structured_result, document)
+        self.assertEqual(count, 1)
+        self.assertEqual(parsed.item_types,
+                         ("command_execution", "error", "command_execution", "agent_message", "agent_message"))
+        changed = copy.deepcopy(lines)
+        changed[3]["item"]["id"] = "item_7"
+        with self.assertRaises(native.NativeStreamError) as caught:
+            native.parse_native_jsonl(b"".join(event(line) for line in changed),
+                                      self.taxonomy, readable, self.parent)
+        self.assertEqual((caught.exception.code, caught.exception.event_ordinal), ("item-id-sequence", 4))
+        changed = [entry for entry in lines if not
+                   (entry["type"] == "item.completed" and entry.get("item", {}).get("type") == "command_execution")]
+        with self.assertRaises(native.NativeStreamError) as caught:
+            native.parse_native_jsonl(b"".join(event(line) for line in changed),
+                                      self.taxonomy, readable, self.parent)
+        self.assertEqual(caught.exception.code, "terminal-active-items")
+
     def test_unknown_command_output_and_unclosed_lifecycle_are_rejected(self):
         document = response(self.cases[0], "ocb1_" + "0" * 64)
         readable = {str(self.parent / "SKILL.md"): b"public\n"}
@@ -218,7 +324,7 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 5, "priorResultSha256s": [],
+        return {"schemaVersion": "2", "diagnosticRevision": 6, "priorResultSha256s": [],
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
                 "authenticationMode": "independent-official-login",
@@ -337,6 +443,13 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertIn(self.cases[ordinal - 1]["request"].encode(), stdin)
                 self.assertNotIn(self.cases[ordinal - 1]["id"].encode(), stdin)
                 document = response(self.cases[ordinal - 1], token)
+                final_output = Path(argv[argv.index("--output-last-message") + 1])
+                self.assertTrue(final_output.is_file())
+                self.assertFalse(final_output.is_symlink())
+                self.assertEqual(final_output.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(final_output.read_bytes(), b"")
+                self.synthetic_final_outputs.append(final_output)
+                final_output.write_bytes(event(document))
                 if failed_case == ordinal:
                     raw = stream(document, "touch unexpected", "")
                 elif ordinal == 1:
@@ -1014,7 +1127,8 @@ class NativeObservationTests(unittest.TestCase):
         result = native.run_native_observation(ROOT, run, authorize_model_calls=True, process_runner=runner)
         for field, value in (("policyReason", "read-contract-rejected"),
                              ("itemTypes", ["unsupported"]), ("itemTypes", ["error"]),
-                             ("inputBytesSent", 0)):
+                             ("inputBytesSent", 0), ("finalOutputVerified", False),
+                             ("streamAssertion", "final-message-invalid-json"), ("streamEventOrdinal", 1)):
             altered = copy.deepcopy(result)
             altered["caseResults"][0]["executionDiagnostics"][field] = value
             self.assertTrue(native.validate_native_result(altered, ROOT), field)
@@ -1022,7 +1136,7 @@ class NativeObservationTests(unittest.TestCase):
         altered["caseResults"][0]["executionDiagnostics"]["eventTypes"] = ["thread.started", "turn.started", "turn.completed"]
         self.assertTrue(native.validate_native_result(altered, ROOT))
 
-    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False, schema_followup=False):
+    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False, schema_followup=False, final_output_mode="match", final_output_transform=None):
         run, runner, calls = (self._fourth_prior_fixture() if schema_followup else
                               self._third_prior_fixture() if operator else self._prepared_runner())
         if operator or schema_followup:
@@ -1045,6 +1159,28 @@ class NativeObservationTests(unittest.TestCase):
                 lines = tail(lines)
             if malformed:
                 malformed(lines)
+            final_output = Path(argv[argv.index("--output-last-message") + 1])
+            last_message = next((entry["item"]["text"] for entry in reversed(lines)
+                                 if entry.get("type") == "item.completed" and
+                                 type(entry.get("item")) is dict and
+                                 entry["item"].get("type") == "agent_message" and
+                                 type(entry["item"].get("text")) is str), None)
+            if final_output_mode == "missing":
+                final_output.unlink()
+            elif final_output_mode == "different":
+                final_output.write_bytes(b'{"different": "public final-output fixture"}\n')
+            elif final_output_mode == "reformatted":
+                document = json.loads(last_message)
+                reordered = dict(reversed(list(document.items())))
+                final_output.write_bytes(b"\n  " + json.dumps(reordered, indent=3).encode("utf-8") + b"\n\t")
+            elif final_output_mode == "match":
+                final_output.write_bytes((last_message + "\n").encode("utf-8")
+                                         if last_message is not None and lines[-1]["type"] == "turn.completed" else b"")
+            else:
+                self.fail("unknown final-output fixture mode")
+            if final_output_transform is not None:
+                document = json.loads(final_output.read_bytes())
+                final_output.write_bytes(event(final_output_transform(document)))
             raw = b"".join(event(entry) for entry in lines)
             # A real ordinary child exercises capture -> receiver -> parser ->
             # result validation; it cannot launch a client or access real auth.
@@ -1347,7 +1483,23 @@ class NativeObservationTests(unittest.TestCase):
             data = (ROOT / current["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), current["sha256"])
             result = json.loads(data)
-            self.assertEqual(native.validate_native_result(result, ROOT), [])
+            if result["diagnosticRevision"] == 5:
+                # The fifth retained attempt was evaluated by its original
+                # parser. New assertions cannot reconstruct its discarded flow.
+                self.assertEqual(current["sha256"],
+                                 "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018")
+                self.assertEqual(result["protocolDigest"],
+                                 "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d")
+                self.assertEqual(current["implementationCommit"], "c3ce63d789394f60e93687ec34db05be199fbc19")
+                self.assertEqual(current["implementationTree"], "be21ad749edb25e4fb832bce7debe9e0fa75175b")
+                self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 5))
+                self.assertEqual([case["status"] for case in result["caseResults"]],
+                                 ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+                self.assertFalse(result["hostClaim"])
+                self.assertNotIn("streamAssertion", result["caseResults"][0]["executionDiagnostics"])
+            else:
+                self.assertEqual(result["diagnosticRevision"], 6)
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
             self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
             self.assertEqual(result["runMode"], "actual")
             self.assertEqual(history["current"], {"codexObservation": result["status"].lower(),
@@ -1387,6 +1539,167 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(result["caseResults"][10]["installation"], "absent")
         self.assertEqual(result["status"], "INCOMPLETE")
         self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_production_commentary_and_final_output_preserve_normal_simulated_cases(self):
+        def add_commentary(lines):
+            index = next(index for index, entry in enumerate(lines)
+                         if entry.get("item", {}).get("type") == "agent_message")
+            identifier = int(lines[index]["item"]["id"].removeprefix("item_"))
+            lines[index]["item"]["id"] = f"item_{identifier + 1}"
+            lines.insert(index, {"type": "item.completed", "item": {
+                "id": f"item_{identifier}", "type": "agent_message",
+                "text": "Public commentary fixture before the final response."}})
+            return lines
+        result = self._diagnostic_stream_runner([], tail=add_commentary)
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual(result["caseResults"][0]["readonlyCommandCount"], 1)
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertEqual(result["runMode"], "simulated")
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(len(self.synthetic_final_outputs), 16)
+        self.assertTrue(all(not path.exists() for path in self.synthetic_final_outputs))
+        self.assertNotIn("Public commentary fixture", json.dumps(result))
+        self.assertNotIn(str(self.parent), json.dumps(result))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_production_uses_last_json_even_when_an_earlier_response_would_pass(self):
+        def append_wrong_final(lines):
+            previous = next(entry["item"] for entry in reversed(lines)
+                            if entry.get("item", {}).get("type") == "agent_message")
+            document = json.loads(previous["text"])
+            document["mutationAttempted"] = True
+            identifier = int(previous["id"].removeprefix("item_")) + 1
+            lines.insert(-1, {"type": "item.completed", "item": {
+                "id": f"item_{identifier}", "type": "agent_message", "text": json.dumps(document)}})
+            return lines
+        result = self._diagnostic_stream_runner([], tail=append_wrong_final)
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["FAIL"] * 16)
+        self.assertEqual(result["caseResults"][0]["diagnostic"], "semantic-mismatch")
+        self.assertTrue(result["caseResults"][0]["observed"]["mutationAttempted"])
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_invalid_final_response_assertion_preserves_unknown_stderr_first_cause(self):
+        parent = self.parent
+        private_text = "PUBLIC-FIXTURE-final-text-must-not-be-retained"
+        def append_invalid_final(lines):
+            previous = next(entry["item"] for entry in reversed(lines)
+                            if entry.get("item", {}).get("type") == "agent_message")
+            identifier = int(previous["id"].removeprefix("item_")) + 1
+            lines.insert(-1, {"type": "item.completed", "item": {
+                "id": f"item_{identifier}", "type": "agent_message", "text": private_text}})
+            return lines
+        for name, stderr, expected in (("response", b"", "response-invalid"),
+                                       ("stderr", b"public unknown stderr fixture\n", "unknown-stderr")):
+            with self.subTest(name=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                output = io.StringIO()
+                with redirect_stdout(output), redirect_stderr(output):
+                    result = self._diagnostic_stream_runner([], tail=append_invalid_final, stderr=stderr)
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertEqual(first["diagnostic"], expected)
+                self.assertEqual(first["executionDiagnostics"]["streamAssertion"], "final-message-invalid-json")
+                self.assertEqual(first["executionDiagnostics"]["streamEventOrdinal"], 6)
+                self.assertEqual(first["executionDiagnostics"]["returnCode"], 0)
+                self.assertFalse(first["executionDiagnostics"]["finalOutputVerified"])
+                self.assertEqual(first["evidenceExtraction"]["stream"], "valid")
+                self.assertEqual(first["terminal"], "turn.completed")
+                self.assertEqual(first["readonlyCommandCount"], 1)
+                self.assertIsNone(first["observed"])
+                self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertEqual(result["attemptCount"], 1)
+                self.assertFalse(result["hostClaim"])
+                self.assertNotIn(private_text, json.dumps(result) + output.getvalue())
+                self.assertNotIn("public unknown stderr fixture", json.dumps(result) + output.getvalue())
+                self.assertTrue(all(not path.exists() for path in self.synthetic_final_outputs))
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_official_final_output_missing_or_different_rejects_valid_stream_candidate(self):
+        parent = self.parent
+        for mode, assertion in (("missing", "final-output-unavailable"),
+                                ("different", "final-output-mismatch")):
+            with self.subTest(mode=mode):
+                self.parent = parent / mode
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner([], final_output_mode=mode)
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertEqual(first["diagnostic"], "response-invalid")
+                self.assertEqual(first["evidenceExtraction"]["stream"], "valid")
+                self.assertEqual(first["readonlyCommandCount"], 1)
+                self.assertIsNone(first["observed"])
+                self.assertEqual(first["executionDiagnostics"]["streamAssertion"], assertion)
+                self.assertIsNone(first["executionDiagnostics"]["streamEventOrdinal"])
+                self.assertFalse(first["executionDiagnostics"]["finalOutputVerified"])
+                self.assertEqual(first["terminal"], "turn.completed")
+                self.assertEqual((result["attemptCount"], result["cliLaunchCount"]), (1, 1))
+                self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertFalse(result["hostClaim"])
+                self.assertNotIn("public final-output fixture", json.dumps(result))
+                self.assertNotIn(str(self.parent), json.dumps(result))
+                self.assertTrue(all(not path.exists() for path in self.synthetic_final_outputs))
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_official_final_output_preserves_json_boolean_and_number_types(self):
+        parent = self.parent
+        examples = [("false-as-zero", "mutationAttempted", False, 0),
+                    ("true-as-one", "usingAxiomFrontDoorObserved", True, 1),
+                    ("integer-as-boolean", "clarificationCount", 0, False)]
+        for name, field, original, replacement in examples:
+            with self.subTest(name=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                def alter_official(document):
+                    self.assertEqual(type(document[field]), type(original))
+                    self.assertEqual(document[field], original)
+                    document[field] = replacement
+                    return document
+                result = self._diagnostic_stream_runner([], final_output_transform=alter_official)
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertEqual(first["diagnostic"], "response-invalid")
+                self.assertEqual(first["executionDiagnostics"]["streamAssertion"], "final-output-mismatch")
+                self.assertFalse(first["executionDiagnostics"]["finalOutputVerified"])
+                self.assertIsNone(first["observed"])
+                self.assertEqual(first["evidenceExtraction"]["stream"], "valid")
+                self.assertEqual(first["terminal"], "turn.completed")
+                self.assertEqual(result["attemptCount"], 1)
+                self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertFalse(result["hostClaim"])
+                self.assertTrue(all(not path.exists() for path in self.synthetic_final_outputs))
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_official_final_output_accepts_key_order_and_whitespace_changes(self):
+        result = self._diagnostic_stream_runner([], final_output_mode="reformatted")
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertTrue(all(case["executionDiagnostics"]["finalOutputVerified"]
+                            for case in result["caseResults"]))
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertEqual(result["runMode"], "simulated")
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertFalse(result["hostClaim"])
+        self.assertTrue(all(not path.exists() for path in self.synthetic_final_outputs))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_failed_turn_cannot_publish_an_earlier_valid_json_response(self):
+        def fail_after_response(lines):
+            lines[-1] = {"type": "turn.failed", "error": {"message": "public failure fixture"}}
+            return lines
+        result = self._diagnostic_stream_runner([], tail=fail_after_response, exit_code=1)
+        first = result["caseResults"][0]
+        self.assertEqual(first["status"], "INCOMPLETE")
+        self.assertEqual(first["diagnostic"], "host-failure")
+        self.assertEqual(first["terminal"], "turn.failed")
+        self.assertFalse(first["executionDiagnostics"]["finalOutputVerified"])
+        self.assertIsNone(first["observed"])
+        self.assertEqual(result["attemptCount"], 1)
+        self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        self.assertFalse(result["hostClaim"])
+        self.assertTrue(all(not path.exists() for path in self.synthetic_final_outputs))
         self.assertEqual(native.validate_native_result(result, ROOT), [])
 
     def test_diagnostic_during_active_read_preserves_command_identity_and_closure(self):
@@ -1794,7 +2107,7 @@ class NativeObservationTests(unittest.TestCase):
         notice = ("Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; "
                   "enable `features.code_mode_host` and install `codex-code-mode-host`.")
         examples = [
-            ([notice.replace("Falling back to direct tools", "Code mode will fail closed")], "diagnostic-unknown"),
+            ([notice.replace("Falling back to direct tools", "Code mode will fail closed")], "tool-mode-unavailable"),
             ([notice.replace("code-mode host is disabled", "public fixture host failure")], "diagnostic-unknown"),
             ([notice + " Additional public fixture text"], "diagnostic-unknown"),
             ([notice, "model rerouted: gpt-5.6-sol -> other-model (HighRisk)"], "model-mismatch"),
@@ -1812,6 +2125,29 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 5))
                 self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
                 self.assertFalse(result["hostClaim"])
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_exact_code_mode_fail_closed_notice_never_becomes_success(self):
+        notice = ("Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; "
+                  "enable `features.code_mode_host` and install `codex-code-mode-host`.")
+        self.assertEqual(native.CODE_MODE_FAIL_CLOSED_NOTICE, notice)
+        parent = self.parent
+        for name, stderr, expected in (("known-notice", b"", "tool-mode-unavailable"),
+                                       ("unknown-stderr", b"public unknown stderr fixture\n", "unknown-stderr")):
+            with self.subTest(name=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner([notice], stderr=stderr)
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertEqual(first["diagnostic"], expected)
+                self.assertEqual(first["executionDiagnostics"]["hostDiagnosticClasses"], ["code-mode-fail-closed"])
+                self.assertEqual(first["executionDiagnostics"]["returnCode"], 0)
+                self.assertEqual(first["terminal"], "turn.completed")
+                self.assertEqual(result["attemptCount"], 1)
+                self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertFalse(result["hostClaim"])
+                self.assertNotIn("public unknown stderr fixture", json.dumps(result))
                 self.assertEqual(native.validate_native_result(result, ROOT), [])
 
 

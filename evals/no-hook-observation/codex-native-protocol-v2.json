@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "81225577069db0422db29210aad9494a036feec03684197fd6a014e149069808"
+      "sha256": "e836d820f2cb3b2cd7dd1cc11b9c8467234950673e8a821e94a4753c73f3a96a"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "3eb7c41cea981cdcdbebad194d0ea44d4520d4de93338350c7fb5964a6be7f9a"
+    "sha256": "fa37dee78f5ee31535120409b5e4e74927a1efb8c4448c7d477ebe40c02cb5e4"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,7 +134,7 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 5,
+  "diagnosticRevision": 6,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
@@ -153,15 +153,15 @@
     "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
     "retention": "closed public first-cause facts; cleanup failure is separate; operator-only exception contains only three host diagnostic message fields",
-    "historicalFailure": "four immutable INCOMPLETE results retain original bytes and protocols; schema correction permits Case 1 attempt five and remaining cases once",
+    "historicalFailure": "five immutable INCOMPLETE results retain original bytes and protocols; Case 1 budget exhausted; revision 6 adds no attempts or host observation",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
-    "assessment": "observer-inferred finite template classes; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
+    "assessment": "observer-inferred finite template classes; CodeModeOnly with unavailable host fails closed; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
     "privateSummary": {
       "maximumBatchBytes": 16384,
       "fileMode": "0600",
       "retention": "private only; frozen template summaries; uncertain dynamic values omitted; no raw output or credential inspection"
     },
-    "partialEvidence": "independently validated stream, response and postcheck facts can accompany INCOMPLETE; missing checks are not-observed, never success",
+    "partialEvidence": "closed stream and last emitted response candidate are separate; official final output must agree before strict response acceptance; parser failures retain closed assertion code and event ordinal, not content",
     "operatorOnlyCapture": {
       "fields": [
         "error.message",
@@ -178,7 +178,8 @@
       "access": "human operator only; no model read, search, hash, upload or attachment; excluded from Git, validation copies and CI",
       "failure": "report truncation and write failure; preserve first cause; never upgrades acceptance",
       "isolation": "operational no-read boundary for the executor; not a same-UID isolation claim"
-    }
+    },
+    "finalResponse": "bounded last emitted agent message; cross-check JSON value with private exclusive --output-last-message artifact; remove artifact after extraction; missing or different final output is INCOMPLETE"
   },
   "responseTransport": {
     "revision": 1,
@@ -190,9 +191,10 @@
   "toolMode": {
     "codeModeHost": false,
     "inProcessFallbackDisabled": false,
-    "effectiveRoute": "official-direct-tools-fallback",
+    "effectiveRoute": "requires-official-direct-mode; no-code-mode-only-fallback",
     "acceptedNotice": "Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; enable `features.code_mode_host` and install `codex-code-mode-host`.",
-    "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation"
+    "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation",
+    "rejectedNotice": "Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`."
   },
-  "protocolDigest": "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d"
+  "protocolDigest": "sha256:e7443834a4ec5734698a58442a363aaa276ffbe106851e7a54432de647d98d11"
 }

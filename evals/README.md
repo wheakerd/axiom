@@ -1,13 +1,36 @@
 # Routing Evaluations
 
-## Native response transport correction
+## Native diagnostic revision 6
+
+Current protocol revision 6 records closed parser assertion codes/ordinals and
+requires the last emitted response candidate to agree with the official private
+final-output artifact before strict acceptance. Commentary is not itself a JSON
+result. Temporary final output is removed after bounded extraction; no raw
+message or diagnostic is added to public result fields.
+
+The fifth user-provided fail-closed notice and frozen model catalog establish a
+separate limitation: `gpt-5.6-sol` requests `CodeModeOnly`, which cannot use the
+ordinary `CodeMode` Direct fallback when its host is disabled. Feature flags do
+not override explicit model metadata. No permitted Direct path was established;
+no host, model, sandbox, authentication or catalog setting was changed.
+See the [source distinctions and parser migration](../docs/field-validation.md#native-tool-mode-diagnosis-and-final-response-correction).
+
+All five historical INCOMPLETE results and their original identities remain
+unchanged. Current history points to the new protocol while the fifth retained
+result is accepted by its immutable historical hash and original binding only.
+No new observation, preparation state or attempt exists. Canonical attempts and
+CLI launches remain 5, all Case 1; internal model-request count is unknown and
+Cases 2-16 are NOT-RUN. This revision's behavior has only no-model regression
+evidence. The fifth exact parser assertion and stderr content remain unknown.
+
+## Historical native response transport correction
 
 Native diagnostic revision 5 preserves four immutable historical attempts and
 allows one linked schema-correction followup (Case 1 at most five times; 20
 cumulative attempts). Its outgoing schema is a typed Structured Outputs
 representation; the frozen source definition remains the strict local result
 validator, including route uniqueness. All 16 final derived files are checked.
-See the [transport migration and user-provided fourth-error evidence](../docs/field-validation.md#native-response-transport-correction).
+See the [transport migration and user-provided fourth-error evidence](../docs/field-validation.md#historical-native-response-transport-correction).
 This local preflight is not server acceptance or a completed host observation.
 
 

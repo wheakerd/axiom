@@ -57,6 +57,32 @@ DIRECT_TOOLS_FALLBACK_NOTICE = (
     "Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; "
     "enable `features.code_mode_host` and install `codex-code-mode-host`."
 )
+CODE_MODE_FAIL_CLOSED_NOTICE = (
+    "Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; "
+    "enable `features.code_mode_host` and install `codex-code-mode-host`."
+)
+FIFTH_RESULT_SHA256 = "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018"
+FIFTH_PROTOCOL_DIGEST = "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d"
+STREAM_ASSERTIONS = (
+    "none", "framing-or-size", "event-count", "event-after-terminal", "event-shape",
+    "thread-start-order", "turn-start-order", "terminal-active-items", "error-before-thread",
+    "item-outside-lifecycle", "item-id-sequence", "item-id-reused", "command-start-duplicate",
+    "command-start-mismatch", "content-id-reused", "agent-message-size", "missing-terminal",
+    "final-message-missing", "final-message-invalid-json", "final-message-not-object",
+    "final-output-unavailable", "final-output-mismatch",
+)
+
+
+class NativeStreamError(NativeObservationError):
+    """A stable assertion location, never an exception message from host data."""
+
+    def __init__(self, code: str, event_ordinal: int | None, phase: str = "stream"):
+        if code not in STREAM_ASSERTIONS[1:] or phase not in {"stream", "response"}:
+            raise ValueError("invalid native assertion identifier")
+        self.code, self.event_ordinal, self.phase = code, event_ordinal, phase
+        self.closed_terminal = None
+        self.completed_commands = None
+        super().__init__("native " + phase + " assertion: " + code)
 
 
 def _diagnostics() -> dict[str, Any]:
@@ -66,7 +92,9 @@ def _diagnostics() -> dict[str, Any]:
             "stderrBytes": 0, "eventCount": 0, "eventTypes": [],
             "stderrClassification": "not-observed", "officialErrorCode": "unknown",
             "itemTypes": [], "policyReason": "none", "diagnosticItemCount": 0,
-            "preTurnDiagnosticCount": 0, "hostDiagnosticClasses": []}
+            "preTurnDiagnosticCount": 0, "hostDiagnosticClasses": [],
+            "streamAssertion": "none", "streamEventOrdinal": None,
+            "finalOutputVerified": False}
 
 
 def _first_failure(facts: dict[str, Any], phase: str, category: str) -> None:
@@ -382,7 +410,7 @@ def _protocol(root: Path) -> dict[str, Any]:
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
-    _require(document.get("diagnosticRevision") == 5 and document.get("followup") == {
+    _require(document.get("diagnosticRevision") == 6 and document.get("followup") == {
         "priorResultSha256s": PRIOR_RESULTS, "priorAttempts": 4,
         "maximumCumulativeAttempts": 20, "maximumCaseOneAttempts": 5,
         "remainingCaseAttempts": 1,
@@ -394,8 +422,9 @@ def _protocol(root: Path) -> dict[str, Any]:
     }, "native response transport contract mismatch")
     _require(document.get("toolMode") == {
         "codeModeHost": False, "inProcessFallbackDisabled": False,
-        "effectiveRoute": "official-direct-tools-fallback",
+        "effectiveRoute": "requires-official-direct-mode; no-code-mode-only-fallback",
         "acceptedNotice": DIRECT_TOOLS_FALLBACK_NOTICE,
+        "rejectedNotice": CODE_MODE_FAIL_CLOSED_NOTICE,
         "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation",
     }, "native direct tool mode contract mismatch")
     bindings = list(document.get("implementationBindings", []))
@@ -496,7 +525,15 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             data = _read(root / relative)
             _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "native history result bytes changed")
             result = _json(data)
-            _require(not validate_native_result(result, root), "native history result is invalid")
+            if binding["sha256"] == FIFTH_RESULT_SHA256:
+                # Exact previously validated bytes, including its schema v5
+                # diagnostics, remain evidence of that implementation only.
+                _require(binding["implementationCommit"] == "c3ce63d789394f60e93687ec34db05be199fbc19" and
+                         binding["implementationTree"] == "be21ad749edb25e4fb832bce7debe9e0fa75175b" and
+                         result["protocolDigest"] == FIFTH_PROTOCOL_DIGEST,
+                         "fifth historical implementation binding changed")
+            else:
+                _require(not validate_native_result(result, root), "native history result is invalid")
             _require(result["priorResultSha256s"] == PRIOR_RESULTS, "result does not continue the historical budget")
             _require(result["runMode"] == "actual", "simulated result is not a host-history observation")
             current = {"codexObservation": result["status"].lower(), "hostClaim": result["hostClaim"],
@@ -642,13 +679,14 @@ def _validate_native_response(value: Any, source_schema: Mapping[str, Any], toke
 
 
 def build_native_argv(executable: Path, run_root: Path, ordinal: int, *,
-                      response_schema: Path | None = None) -> list[str]:
+                      response_schema: Path | None = None, final_output: Path | None = None) -> list[str]:
     _require(type(ordinal) is int and 1 <= ordinal <= CASE_COUNT, "unknown native case ordinal")
     paths = _case_paths(run_root, ordinal)
     return [str(executable), "--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--model", legacy.MODEL,
             "--skip-git-repo-check", "--ignore-user-config",
             "--ignore-rules", "--cd", str(paths["workspace"]),
             "--output-schema", str(response_schema if response_schema is not None else paths["case"] / "response-schema.json"),
+            *(["--output-last-message", str(final_output)] if final_output is not None else []),
             *_config_args(paths, executable, run_root / "marketplace", ordinal != 11), "-"]
 
 
@@ -1283,6 +1321,8 @@ def _classify_host_diagnostic(message: str) -> str:
         # this protocol. This is not a model reroute or permission fallback;
         # actual command paths/output still undergo ordinary bound-read checks.
         return "code-mode-direct-fallback"
+    if message == CODE_MODE_FAIL_CLOSED_NOTICE:
+        return "code-mode-fail-closed"
     if re.fullmatch(r"model rerouted: [^\r\n]+ -> [^\r\n]+ \([^\r\n]+\)", message):
         return "model-rerouted"
     if re.fullmatch(r"in-process app-server event stream lagged; dropped [0-9]+ events", message):
@@ -1301,6 +1341,8 @@ def _classify_host_diagnostic(message: str) -> str:
 def _diagnostic_outcome(facts: Mapping[str, Any]) -> str | None:
     classes = facts["hostDiagnosticClasses"]
     for category in classes:
+        if category == "code-mode-fail-closed":
+            return "tool-mode-unavailable"
         if category == "model-rerouted":
             return "model-mismatch"
         if category == "configuration-unverified":
@@ -1405,11 +1447,23 @@ def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: d
 
 def parse_native_jsonl(data: bytes, taxonomy: Mapping[str, Any], readable: Mapping[str, bytes],
                        cwd: Path) -> tuple[legacy.StreamFacts, int]:
-    """Validate the original native stream without dropping or translating items."""
-    _require(len(data) <= legacy.MAX_STDOUT_BYTES and data.endswith(b"\n") and b"\r" not in data,
-             "native JSONL framing or size mismatch")
+    """Validate all events, then parse only the last emitted response candidate.
+
+    Frozen exec drops AgentMessage phase and may subsequently replace its final
+    output from TurnCompleted.items. The run entrypoint therefore also checks
+    the official --output-last-message artifact before accepting this candidate.
+    """
+    ordinal = None
+    def require(condition: bool, code: str, phase: str = "stream") -> None:
+        if not condition:
+            error = NativeStreamError(code, ordinal, phase)
+            if phase == "response":
+                error.closed_terminal, error.completed_commands = terminal, completed_commands
+            raise error
+    require(len(data) <= legacy.MAX_STDOUT_BYTES and data.endswith(b"\n") and b"\r" not in data,
+            "framing-or-size")
     lines = data.splitlines()
-    _require(len(lines) <= legacy.MAX_EVENT_COUNT, "native event count exceeds limit")
+    require(len(lines) <= legacy.MAX_EVENT_COUNT, "event-count")
     ordered, item_types, statuses, journal = [], [], [], []
     states: dict[str, tuple[str, str]] = {}
     commands: dict[str, str] = {}
@@ -1417,66 +1471,105 @@ def parse_native_jsonl(data: bytes, taxonomy: Mapping[str, Any], readable: Mappi
     thread_seen = turn_seen = False
     terminal = None
     result = None
+    last_message = None
+    last_message_ordinal = None
     for ordinal, raw in enumerate(lines, 1):
-        _require(terminal is None, "native event appeared after terminal")
-        inspect_native_event(raw, readable, cwd)
-        event = legacy._parse_json_line(raw)
+        require(terminal is None, "event-after-terminal")
+        try:
+            inspect_native_event(raw, readable, cwd)
+            event = legacy._parse_json_line(raw)
+        except (ValueError, KeyError, TypeError, NativeObservationError):
+            raise NativeStreamError("event-shape", ordinal) from None
         kind = event["type"]
         ordered.append(kind)
         definition = taxonomy["topLevelTypes"][kind]
         entry = {"ordinal": ordinal, "eventType": kind,
                  "category": definition["category"], "role": definition["role"]}
         if kind == "thread.started":
-            _require(ordinal == 1 and not thread_seen, "native thread start out of order")
+            require(ordinal == 1 and not thread_seen, "thread-start-order")
             thread_seen = True
         elif kind == "turn.started":
-            _require(thread_seen and not turn_seen, "native turn start out of order")
+            require(thread_seen and not turn_seen, "turn-start-order")
             turn_seen = True
         elif kind in {"turn.completed", "turn.failed"}:
-            _require(turn_seen and all(state == "completed" for _, state in states.values()),
-                     "native terminal lacks start or leaves active items")
+            require(turn_seen and all(state == "completed" for _, state in states.values()),
+                    "terminal-active-items")
             terminal = kind
         elif kind == "error":
-            _require(thread_seen, "native error preceded thread")
+            require(thread_seen, "error-before-thread")
         else:
             item = event["item"]
             item_type, identifier = item["type"], item["id"]
-            _require(thread_seen and (turn_seen or item_type == "error"), "native item outside lifecycle")
+            require(thread_seen and (turn_seen or item_type == "error"), "item-outside-lifecycle")
             previous = states.get(identifier)
             if previous is None:
-                _require(identifier == f"item_{len(states)}", "native item id outside emission sequence")
+                require(identifier == f"item_{len(states)}", "item-id-sequence")
             else:
-                _require(previous[0] == item_type and previous[1] != "completed", "native item id reused")
+                require(previous[0] == item_type and previous[1] != "completed", "item-id-reused")
             if item_type == "command_execution":
                 if kind == "item.started":
-                    _require(previous is None, "duplicate native command start")
+                    require(previous is None, "command-start-duplicate")
                     commands[identifier] = item["command"]
                 else:
-                    _require(previous is not None and commands.get(identifier) == item["command"],
-                             "native command lacks matching start")
+                    require(previous is not None and commands.get(identifier) == item["command"],
+                            "command-start-mismatch")
                     completed_commands += int(kind == "item.completed")
                 statuses.append(item["status"])
                 entry["status"] = item["status"]
             else:
-                _require(previous is None, "native content or diagnostic id reused")
+                require(previous is None, "content-id-reused")
             states[identifier] = (item_type, "completed" if kind == "item.completed" else "active")
             item_types.append(item_type)
             entry.update(itemType=item_type, category=taxonomy["itemTypes"][item_type]["category"])
             if item_type == "agent_message":
-                _require(result is None, "multiple native structured results")
-                _require(len(item["text"].encode("utf-8")) <= legacy.MAX_RESULT_BYTES,
-                         "native structured result exceeds limit")
-                result = _json(item["text"].encode("utf-8"))
-                _require(type(result) is dict, "native structured result must be an object")
+                require(len(item["text"].encode("utf-8")) <= legacy.MAX_RESULT_BYTES, "agent-message-size")
+                last_message = item["text"].encode("utf-8")
+                last_message_ordinal = ordinal
         journal.append(entry)
-    _require(terminal is not None, "native stream lacks terminal")
-    _require(result is not None or terminal == "turn.failed", "native stream lacks structured result")
+    require(terminal is not None, "missing-terminal")
+    if terminal == "turn.completed":
+        require(last_message is not None, "final-message-missing", "response")
+    if last_message is not None:
+        ordinal = last_message_ordinal
+        try:
+            result = _json(last_message)
+        except (ValueError, NativeObservationError):
+            # A failed turn's commentary is not a structured success response.
+            if terminal == "turn.completed":
+                error = NativeStreamError("final-message-invalid-json", ordinal, "response")
+                error.closed_terminal, error.completed_commands = terminal, completed_commands
+                raise error from None
+        else:
+            require(type(result) is dict, "final-message-not-object", "response")
     return legacy.StreamFacts(ordered_event_types=tuple(ordered), item_types=tuple(item_types),
         item_statuses=tuple(statuses), journal=tuple(journal), terminal_type=terminal,
         terminal_count=1, events_after_terminal=0, structured_result_count=int(result is not None),
         tool_capable_event_count=sum(item == "command_execution" for item in item_types),
         unknown_event_count=0, unknown_item_count=0, unknown_status_count=0, malformed_line_count=0,
         structured_result=result), completed_commands
+
+
+def _reserve_final_output(path: Path) -> tuple[int, int]:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        metadata = os.fstat(descriptor)
+        return metadata.st_dev, metadata.st_ino
+    finally:
+        os.close(descriptor)
+
+
+def _check_final_output(path: Path, identity: tuple[int, int], candidate: Any) -> None:
+    """Bounded private official output; only a validated response may be retained."""
+    try:
+        metadata = path.lstat()
+        _require(stat.S_ISREG(metadata.st_mode) and (metadata.st_dev, metadata.st_ino) == identity,
+                 "final output identity changed")
+        data = _read(path, maximum=legacy.MAX_RESULT_BYTES)
+        value = _json(data)
+    except (OSError, ValueError, NativeObservationError):
+        raise NativeStreamError("final-output-unavailable", None, "response") from None
+    if type(value) is not dict or _bytes(value) != _bytes(candidate):
+        raise NativeStreamError("final-output-mismatch", None, "response")
 
 
 def _readable(paths: Mapping[str, Path], definition: Mapping[str, Any], installed: bool) -> dict[str, bytes]:
@@ -1552,6 +1645,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         diagnostic = "input-changed"
         phase = "precheck"
         events = _diagnostics()
+        final_output = ledger / f"final-message-{ordinal:02d}.json"
+        final_output_identity = None
         try:
             legacy.recheck_executable(frozen)
             _ordinary_directory(paths["workspace"])
@@ -1586,6 +1681,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                      "official client did not confirm test ChatGPT login")
             record["authentication"] = "chatgpt"
             readable = _readable(paths, definition, installed)
+            # The official client owns writing this reserved ordinary file.
+            # Model tools cannot read the ledger under the existing profile.
+            diagnostic, phase = "execution-failed", "precheck"
+            final_output_identity = _reserve_final_output(final_output)
             diagnostic = "already-attempted"
             _exclusive(ledger / f"attempt-{ordinal:02d}.json", _bytes({
                 "ordinal": ordinal, "caseId": case["id"], "protocolDigest": protocol["protocolDigest"]}))
@@ -1596,7 +1695,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             phase = "launch"
             argv = build_native_argv(executable, run_root, ordinal, response_schema=(
                 ledger / f"response-schema-{ordinal:02d}.json" if
-                followup or continuation or operator_diagnostics or schema_followup else None))
+                followup or continuation or operator_diagnostics or schema_followup else None),
+                final_output=final_output)
             def receive(raw: bytes) -> None:
                 if operator is not None:
                     operator.event(raw)
@@ -1639,6 +1739,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             phase = "response"
             record["evidenceExtraction"]["response"] = "invalid"
             _require(type(stream.structured_result) is dict, "closed stream has no structured response")
+            _check_final_output(final_output, final_output_identity, stream.structured_result)
+            facts["finalOutputVerified"] = True
             observed = dict(stream.structured_result)
             _validate_native_response(observed, schema, material.token)
             record["evidenceExtraction"]["response"] = "valid"
@@ -1662,6 +1764,14 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         except (OSError, ValueError, KeyError, NativeObservationError, subprocess.SubprocessError) as error:
             record["status"] = "INCOMPLETE"
             facts = dict(error.facts) if isinstance(error, NativeDiagnosticError) else dict(record["executionDiagnostics"])
+            if isinstance(error, NativeStreamError):
+                facts.update(streamAssertion=error.code, streamEventOrdinal=error.event_ordinal)
+                if error.phase == "response":
+                    phase, diagnostic = "response", "response-invalid"
+                    record["evidenceExtraction"].update(stream="valid", response="invalid")
+                    if error.closed_terminal is not None:
+                        record["terminal"] = error.closed_terminal
+                        record["readonlyCommandCount"] = error.completed_commands
             facts.update(eventCount=events["eventCount"], eventTypes=events["eventTypes"],
                          itemTypes=events["itemTypes"], policyReason=events["policyReason"],
                          diagnosticItemCount=events["diagnosticItemCount"],
@@ -1681,6 +1791,18 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             del error
             break
         finally:
+            if final_output_identity is not None:
+                try:
+                    metadata = final_output.lstat()
+                    _require(stat.S_ISREG(metadata.st_mode) and
+                             (metadata.st_dev, metadata.st_ino) == final_output_identity,
+                             "private final output ownership changed")
+                    final_output.unlink()
+                except (OSError, NativeObservationError):
+                    facts = record["executionDiagnostics"]
+                    facts["cleanupFailed"] = True
+                    _first_failure(facts, "cleanup", "cleanup-failed")
+                    record.update(status="INCOMPLETE", diagnostic=facts["category"])
             if operator is not None:
                 record["privateCapture"] = operator.save(ordinal)
                 if record["privateCapture"]["status"] == "write-failed":
@@ -1716,7 +1838,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "diagnosticRevision": 5, "protocolId": PROTOCOL_ID,
+    result = {"schemaVersion": "2", "diagnosticRevision": 6, "protocolId": PROTOCOL_ID,
               "priorResultSha256s": PRIOR_RESULTS[:prior_count],
               "attemptCount": sum(item["attemptCount"] for item in results),
               "cumulativeAttemptCount": prior_count + sum(item["attemptCount"] for item in results),
@@ -1813,6 +1935,15 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS],
                      "operator capture lacks linked history authorization")
             facts = record["executionDiagnostics"]
+            _require(facts["streamAssertion"] in STREAM_ASSERTIONS and
+                     (facts["streamAssertion"] != "none" or facts["streamEventOrdinal"] is None),
+                     "native stream assertion location is invalid")
+            _require(facts["streamEventOrdinal"] is None or
+                     1 <= facts["streamEventOrdinal"] <= facts["eventCount"],
+                     "native stream assertion exceeds observed events")
+            _require(facts["streamAssertion"] == "none" or
+                     (status == "INCOMPLETE" and facts["category"] != "none"),
+                     "native parser assertion cannot complete")
             _require(record["cliLaunchCount"] <= record["attemptCount"], "launch lacks consumed attempt")
             _require(facts["eventCount"] >= len(facts["eventTypes"]), "event summary count mismatch")
             _require(not facts["itemTypes"] or (any(kind.startswith("item.") for kind in facts["eventTypes"]) and
@@ -1872,7 +2003,8 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 _require(record["readonlyCommandCount"] == 0 and record["observed"] is None,
                          "unvalidated stream carries accepted evidence")
             if extraction["response"] == "valid":
-                _require(extraction["stream"] == "valid", "response lacks closed stream")
+                _require(extraction["stream"] == "valid" and facts["finalOutputVerified"],
+                         "response lacks closed stream or official final output")
                 response = {**record["observed"], "opaqueCaseBinding": material.token}
                 _validate_native_response(response, model_schema, material.token)
             if extraction["postcheck"] == "valid":
@@ -1883,6 +2015,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             if status in {"PASS", "FAIL"}:
                 _require(all(value == "valid" for value in extraction.values()), "complete case lacks evidence checks")
                 _require(facts["category"] == "none" and facts["returnCode"] == 0 and
+                         facts["finalOutputVerified"] and facts["streamAssertion"] == "none" and
                          facts["policyReason"] == "none" and
                          set(facts["itemTypes"]) <= {"reasoning", "agent_message", "command_execution", "error"} and
                          _diagnostic_outcome(facts) is None and

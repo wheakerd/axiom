@@ -157,7 +157,8 @@
               "diagnostic-unknown",
               "model-mismatch",
               "configuration-unverified",
-              "evidence-incomplete"
+              "evidence-incomplete",
+              "tool-mode-unavailable"
             ]
           },
           "cliLaunchCount": {
@@ -372,7 +373,10 @@
               "policyReason",
               "diagnosticItemCount",
               "preTurnDiagnosticCount",
-              "hostDiagnosticClasses"
+              "hostDiagnosticClasses",
+              "streamAssertion",
+              "streamEventOrdinal",
+              "finalOutputVerified"
             ],
             "properties": {
               "phase": {
@@ -413,7 +417,8 @@
                   "diagnostic-unknown",
                   "model-mismatch",
                   "configuration-unverified",
-                  "evidence-incomplete"
+                  "evidence-incomplete",
+                  "tool-mode-unavailable"
                 ]
               },
               "returnCode": {
@@ -543,7 +548,7 @@
               },
               "hostDiagnosticClasses": {
                 "type": "array",
-                "maxItems": 6,
+                "maxItems": 7,
                 "uniqueItems": true,
                 "items": {
                   "enum": [
@@ -552,9 +557,51 @@
                     "evidence-incomplete",
                     "unknown",
                     "upstream-error",
-                    "code-mode-direct-fallback"
+                    "code-mode-direct-fallback",
+                    "code-mode-fail-closed"
                   ]
                 }
+              },
+              "streamAssertion": {
+                "enum": [
+                  "none",
+                  "framing-or-size",
+                  "event-count",
+                  "event-after-terminal",
+                  "event-shape",
+                  "thread-start-order",
+                  "turn-start-order",
+                  "terminal-active-items",
+                  "error-before-thread",
+                  "item-outside-lifecycle",
+                  "item-id-sequence",
+                  "item-id-reused",
+                  "command-start-duplicate",
+                  "command-start-mismatch",
+                  "content-id-reused",
+                  "agent-message-size",
+                  "missing-terminal",
+                  "final-message-missing",
+                  "final-message-invalid-json",
+                  "final-message-not-object",
+                  "final-output-unavailable",
+                  "final-output-mismatch"
+                ]
+              },
+              "streamEventOrdinal": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4097
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "finalOutputVerified": {
+                "type": "boolean"
               }
             }
           },
@@ -645,7 +692,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 5
+      "const": 6
     },
     "attemptCount": {
       "type": "integer",

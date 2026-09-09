@@ -1,6 +1,84 @@
 # Field Validation
 
-## Native response transport correction
+## Native tool-mode diagnosis and final-response correction
+
+Diagnostic revision 6 introduces no execution or budget extension. All five
+Case 1 INCOMPLETE records retain their exact bytes and original bindings;
+Cases 2-16 remain NOT-RUN. No sixth Case 1 attempt is authorized. The new
+parser and result fields have no real-host observation.
+
+### Fifth failure: subsequent user-provided tool-mode evidence
+
+The human operator supplied the fifth message: Code Mode was unavailable
+because its host was disabled and would fail closed. The executor did not read
+the operator-only file. This separately attributed evidence does not modify
+the fifth result's original unknown diagnostic or explain its unknown stderr.
+
+The registered Case 1 official model cache was read only for nonsecret catalog
+fields. Its client version was 0.153.0; its fetch timestamp falls between the
+fifth attempt marker and normalized result. Both this catalog and the frozen
+built-in catalog give `gpt-5.6-sol` the metadata `tool_mode=code_mode_only` and
+`shell_type=unified_exec`. Registered configuration contains no model-catalog or
+tool-mode override. The execution arguments set `features.code_mode=false`,
+`features.code_mode_only=false` and `features.code_mode_host=false`. The frozen
+resolver gives the absent `code_mode.disable_in_process_fallback` its default
+`false`; this is a source-derived effective value, not a captured in-memory dump.
+
+Frozen `requested_tool_mode` gives model metadata precedence over those feature
+flags. `effective_tool_mode` can fall back from `CodeMode` to `Direct` when the
+host is unavailable and fallback is permitted; it cannot fall back from
+`CodeModeOnly`. `turn_context` passes that effective mode to
+`take_unavailable_warning`, whose non-Direct branch emits the supplied
+fail-closed notice. The catalog/configuration/source derivation and the observed
+message agree. There is no supported Direct route for these fixed inputs under
+the current prohibition on changing model metadata/model or enabling the host.
+No settings, sandbox, official CLI or model metadata were changed to evade this.
+The exact notice now yields `code-mode-fail-closed` / `tool-mode-unavailable`,
+never PASS. Existing first cause, such as unknown stderr, remains first cause.
+
+Frozen sources: [mode selection](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/tools/mod.rs),
+[turn-context call](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/session/turn_context.rs),
+[warning branch](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/tools/code_mode/mod.rs),
+[configuration defaults](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/config/mod.rs),
+and [built-in model catalog](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/models-manager/models.json).
+
+### Strict stream and final response are separate checks
+
+The fifth failed parser's exact assertion and stderr content were not retained
+and are not recoverable from the permitted evidence. No database search, raw
+file read, log recovery, login or client invocation was repeated. Synthetic
+regressions establish two separate source-backed defects: natural-language
+commentary was parsed as JSON, and multiple agent messages were rejected.
+Neither fixture reconstructs the fifth stream.
+
+Frozen exec emits each completed AgentMessage without its phase. The parser now
+keeps all event/order/item-ID/command/terminal checks, then parses only the last
+emitted message as a response candidate. Earlier commentary and JSON messages do
+not substitute for an invalid final candidate. TurnCompleted can replace the
+official final message without emitting another JSONL message, so actual
+acceptance also compares the candidate's JSON value with `--output-last-message`.
+That official-client output uses an exclusively reserved 0600 file in the
+private ledger, outside model read roots; it is bounded when read and removed
+after extraction. It is not retained in results, Git, validation archives or CI.
+Missing, non-object or different final output remains INCOMPLETE. This is a
+normal dedicated-state assumption, not same-UID adversarial isolation.
+
+Revision 6 records only a closed `streamAssertion`, one-based
+`streamEventOrdinal` when known, and `finalOutputVerified`. No message text,
+reasoning, private path or raw event enters those fields. Closed terminal and
+command counts may survive a response-level failure; malformed streams do not
+claim closure. A response still needs the unchanged strict schema, bindings,
+unique legal routes, authority checks and postchecks. Top-level/turn failure,
+unknown stderr, model rerouting and fail-closed tools cannot become PASS.
+The schema and semantic result validator enforce the new facts together.
+
+Frozen exec sources: [event processor](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/event_processor_with_jsonl_output.rs)
+and [final-output regressions](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/tests/event_processor_with_json_output.rs).
+The current protocol/history identity is recomputed from revision 6 bytes. The
+fifth historical document is admitted only by its frozen file hash and original
+implementation/protocol binding, not reinterpreted as a revision 6 result.
+
+## Historical native response transport correction
 
 Diagnostic revision 5 continues four immutable Case 1 INCOMPLETE results. It
 permits one fifth Case 1 attempt, then Cases 2-16 once after a complete valid
@@ -45,17 +123,11 @@ removed; top-level `web_search="disabled"`, sandbox permissions and tool limits
 remain. These configuration notices are distinct from the fatal schema error.
 
 
-The frozen CLI may request Code Mode from model metadata even with Code Mode
-feature flags off. With the host disabled and its ordinary fallback available,
-`tools/mod.rs` selects Direct mode. The exact upstream notice stating
-"Code Mode is unavailable because code-mode host is disabled. Falling back to
-direct tools" therefore identifies the explicitly supported shell route here;
-it does not change the requested model, sandbox permissions or discovery roots.
-Only the complete fixed upstream template receives the
-`code-mode-direct-fallback` observer classification. Fail-closed Code Mode,
-other unavailable causes, model rerouting and unknown warnings still cannot
-pass. Shell availability and each executed read remain separately checked.
-No Code Mode host is enabled or installed, and this is not Code Mode evidence.
+The earlier Direct-fallback expectation was conditional and did not establish
+this fixed model's actual mode. The fifth attempt is diagnosed separately below;
+its fail-closed message is a different source branch, not an accepted fallback.
+The exact Direct notice remains conditional evidence only; no Code Mode host is
+enabled or installed, and shell reads still require their own bound evidence.
 
 Frozen source: [tool-mode selection](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/tools/mod.rs),
 [diagnostic construction](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/tools/code_mode/mod.rs),
