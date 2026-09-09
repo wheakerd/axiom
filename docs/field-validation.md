@@ -146,6 +146,27 @@ no login or authentication copying occurs during preparation. Any unreliable
 follow-up case stops the batch. Attempt markers and actual CLI starts are
 separate counters; internal model request counts remain unknown.
 
+The explicitly authorized follow-up used implementation
+`039faf3cc46bebae6823dd21c01bf023d1e2d0e0` and diagnostic revision 1. Case 1
+started once more and remained **INCOMPLETE**. The observer saw `thread.started`
+and then `item.completed` with item type `error`; its unchanged item policy
+rejected that item and initiated termination. The retained first cause is
+`policy-rejected / unsupported-item`, phase `event`. Input delivery completed
+(1,380 bytes); the client exit code was 1, timeout was false, and cleanup did
+not report failure. Two events, 986 stdout bytes and 143 stderr bytes were
+captured; stderr was unclassified. Those counts do not retain output content.
+The frozen item can represent multiple upstream conditions: its specific origin,
+any official error code and internal request count remain unknown. This is an
+observer rejection, not proof of an authentication, model or transport failure.
+
+Cases 2-16 were not started. The task has consumed two starts, both Case 1;
+its authorized Case 1 limit is exhausted. The first incomplete result and its
+unknown root cause remain unchanged. The new [normalized result](../evals/no-hook-observation/results/codex-native-8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df.json)
+is distinct evidence under the corrected implementation, not a replacement or
+a combined successful run. No accepted model routing result, complete native
+host PASS, plugin-runtime observation or cross-host observation is claimed.
+Dedicated test state and credentials remain retained and are not committed.
+
 In CLI 0.153.0, `remote_plugin=false` does not disable all startup synchronization.
 Curated catalog metadata and account-installed plugin synchronization are separate
 paths; the latter can download and enable account plugins. Native v2 therefore

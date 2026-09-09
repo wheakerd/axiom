@@ -347,7 +347,12 @@ new protocol inputs derive new schemas, prompts and commitments. Historical
 bytes are checked against their frozen content identity rather than interpreted
 under the new result schema. They do not establish a host PASS or a narrower
 failure cause. The follow-up explicitly includes the earlier consumed attempt
-in its cumulative budget; its result is separate evidence. V1 artifacts
+in its cumulative budget; its result is separate evidence. The actual follow-up
+against `039faf3cc46bebae6823dd21c01bf023d1e2d0e0` recorded a second Case 1
+INCOMPLETE: an `error` item was rejected by observer policy. Its closed facts
+retain the first cause and successful input delivery without raw messages.
+Cumulative starts are two, Cases 2-16 remain NOT-RUN, and Case 1 has no remaining
+authorized attempt. Both records keep their distinct implementation bindings. V1 artifacts
 and historical failures are not reinterpreted. The
 original Golden Set, model-response definition, fixture matrix, profile runtime,
 full-profile runtime, bundle format, and ordinary builder lifecycle are unchanged.

@@ -227,6 +227,12 @@ that immutable record. Its explicitly authorized follow-up has one additional
 Case 1 slot and the original unused slots for Cases 2-16, at most 17 total starts.
 The new protocol rematerializes all inputs; it does not fill historical unknowns
 or convert a nonfatal stderr classification into host evidence.
+The authorized follow-up used `039faf3cc46bebae6823dd21c01bf023d1e2d0e0`:
+Case 1 again INCOMPLETE, now with `policy-rejected / unsupported-item` diagnostics
+for an observed `error` item. Input delivery completed; no timeout or cleanup
+failure was recorded. The specific upstream message was not retained. Total
+starts are two, both Case 1, and Cases 2-16 remain NOT-RUN. Neither incomplete
+record is host PASS; no further Case 1 retry occurred.
 
 See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
 for the supported environment, authentication and model-tool separation,
