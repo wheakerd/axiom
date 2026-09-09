@@ -64,6 +64,42 @@ The transport uses the documented [Structured Outputs subset](https://developers
 These source and interface checks do not retroactively explain lost historical
 messages or establish that the service accepted a newly generated request.
 
+### Fifth actual attempt after the transport correction
+
+Signed implementation `c3ce63d789394f60e93687ec34db05be199fbc19` (tree
+`be21ad749edb25e4fb832bce7debe9e0fa75175b`) generated and checked all 16 actual
+schema files before launching Case 1 once, its fifth attempt. The configured
+client remained Codex 0.153.0, `gpt-5.6-sol / medium`, with fresh context and
+standard user-Skill discovery from the bound package. The plugin runtime stayed
+disabled. No model probe, fallback model, re-login or further case was started.
+
+The client exited 0 and the receiver observed `turn.completed`, but the
+normalized result is **INCOMPLETE**. First cause is `unknown-stderr` (94 bytes);
+one pre-turn error item remained unclassified. Input delivery was complete,
+with no timeout, observer termination or cleanup failure. Complete stream
+validation failed, so no structured response or read-command facts were
+accepted. The receiver's observed terminal event is distinct from the
+`terminal=not-observed` field of the unsuccessful closed-stream parse.
+Post-execution package, fixture, configuration and discovery checks passed.
+These facts do not establish route acceptance or identify the new diagnostic
+message, and are not relabeled as another `invalid_json_schema` failure.
+
+Operator-only capture saved 197 bytes without truncation. Its original content
+was not read, searched, hashed or uploaded by the executor. It remains available
+only to the human operator in the dedicated continuation state. No stderr was
+retained in that file. The four historical results retain their exact bytes and
+original implementation/protocol bindings; the user-provided fourth diagnosis
+is not applied to earlier or later attempts.
+
+Result SHA-256:
+`7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018`.
+Protocol digest:
+`sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d`.
+Cumulative attempts and canonical CLI launches are **5**, all Case 1;
+Cases 2-16 remain **NOT-RUN**. Observable internal model-request count remains
+unknown. No sixth Case 1 attempt is authorized. PR remains Draft and Issue #117
+open; this result is not complete host acceptance or Combined validation.
+
 ## Historical operator-only diagnostic continuation
 
 Native diagnostic revision 4 preserves all three historical Case 1 INCOMPLETE
