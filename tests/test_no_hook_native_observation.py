@@ -210,7 +210,8 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "protocolId": native.PROTOCOL_ID,
+        return {"schemaVersion": "2", "diagnosticRevision": 1, "priorResultSha256": None,
+                "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
                 "authenticationMode": "independent-official-login",
                 "protocolDigest": self.protocol["protocolDigest"], "runMode": "simulated", "hostClaim": False,
@@ -315,11 +316,12 @@ class NativeObservationTests(unittest.TestCase):
                 return {"returncode": 0, "stdout": b"", "stderr": b"Logged in using ChatGPT\n"}
             else:
                 self.assertIn("exec", argv)
-                self.assertTrue((run_root / f"attempt-{ordinal:02d}.json").is_file())
+                self.assertTrue(((run_root / f"attempt-{ordinal:02d}.json").is_file() or
+                                 (run_root / "diagnostic-followup" / f"attempt-{ordinal:02d}.json").is_file()))
                 calls.append(ordinal)
                 if started_callback:
                     started_callback()
-                material_schema = json.loads((paths["case"] / "response-schema.json").read_bytes())
+                material_schema = json.loads(Path(argv[argv.index("--output-schema") + 1]).read_bytes())
                 token = material_schema["properties"]["opaqueCaseBinding"]["const"]
                 self.assertIn(self.cases[ordinal - 1]["request"].encode(), stdin)
                 self.assertNotIn(self.cases[ordinal - 1]["id"].encode(), stdin)
@@ -334,7 +336,9 @@ class NativeObservationTests(unittest.TestCase):
                 if line_callback:
                     for line in raw.splitlines():
                         line_callback(line)
-                return {"returncode": 0, "stdout": raw, "stderr": b""}
+                return {"returncode": 0, "stdout": raw, "stderr": b"",
+                        "diagnostics": {**native._diagnostics(), "inputBytesSent": len(stdin),
+                                        "inputFullyDelivered": True}}
             return {"returncode": 0, "stdout": event(receipt), "stderr": b""}
 
         state = native.prepare_native_run(ROOT, run_root, bundle, executable,
@@ -441,18 +445,20 @@ class NativeObservationTests(unittest.TestCase):
             [sys.executable, "-I", "-B", "-c", "import sys; sys.stdout.buffer.write(sys.stdin.buffer.read())"],
             cwd=self.parent, env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
             stdin=b"ordinary fixture\n", started_callback=lambda: starts.append(True), line_callback=lines.append)
-        self.assertEqual(capture, {"returncode": 0, "stdout": b"ordinary fixture\n", "stderr": b""})
+        self.assertEqual({k: capture[k] for k in ("returncode", "stdout", "stderr")},
+                         {"returncode": 0, "stdout": b"ordinary fixture\n", "stderr": b""})
+        self.assertTrue(capture["diagnostics"]["inputFullyDelivered"])
         self.assertEqual(starts, [True])
         self.assertEqual(lines, [b"ordinary fixture"])
 
     def test_bounded_process_deadline_reaps_child_even_when_output_pipes_are_closed(self):
         for script in ("import time; time.sleep(5)", "import os,time; os.close(1); os.close(2); time.sleep(5)"):
-            with self.subTest(script=script), self.assertRaises((TimeoutError, subprocess.TimeoutExpired)):
+            with self.subTest(script=script), self.assertRaisesRegex(native.NativeDiagnosticError, "timeout"):
                 native.bounded_process([sys.executable, "-I", "-B", "-c", script], cwd=self.parent,
                                        env={"PATH": "/usr/bin:/bin"}, timeout=0.1)
 
     def test_bounded_process_refuses_output_overflow_and_does_not_retain_raw_file(self):
-        with self.assertRaisesRegex(native.NativeObservationError, "output limit"):
+        with self.assertRaisesRegex(native.NativeDiagnosticError, "output-limit"):
             native.bounded_process([sys.executable, "-I", "-B", "-c",
                 "import sys; sys.stdout.buffer.write(b'x' * (2 * 1024 * 1024))"],
                 cwd=self.parent, env={"PATH": "/usr/bin:/bin"})
@@ -621,6 +627,251 @@ class NativeObservationTests(unittest.TestCase):
             native.share_test_authentication(ROOT, run, authorize_copy=True, preserve_existing=[2])
         self.assertEqual(path.read_bytes(), b"public retained test login")
         self.assertFalse(native._auth_owner(run, 1).exists())
+
+
+    def _process(self, code, **kwargs):
+        return native.bounded_process([sys.executable, "-I", "-B", "-c", code],
+            cwd=self.parent, env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}, **kwargs)
+
+    def test_process_exit_and_stderr_have_distinct_safe_diagnostics(self):
+        cases = [("import sys; sys.exit(7)", "process-exit", "empty", 7),
+                 ("import sys; sys.stderr.write('Reading prompt from stdin...\\n')", "none", "known-nonfatal", 0),
+                 ("import sys; sys.stderr.write('private fixture\\n')", "unknown-stderr", "unknown", 0)]
+        for code, category, stderr, exit_code in cases:
+            with self.subTest(category=category):
+                if category == "process-exit":
+                    with self.assertRaises(native.NativeDiagnosticError) as caught:
+                        self._process(code, stdin=b"")
+                    facts = caught.exception.facts
+                    self.assertEqual((facts["category"], facts["returnCode"]), (category, exit_code))
+                    self.assertEqual(facts["stderrClassification"], stderr)
+                    continue
+                capture = self._process(code, stdin=b"")
+                facts = native._capture_facts(capture)
+                self.assertEqual((facts["category"], facts["stderrClassification"], facts["returnCode"]),
+                                 (category, stderr, exit_code))
+                self.assertNotIn("private fixture", json.dumps(facts))
+                if category == "none":
+                    self.assertEqual(native._successful(capture, "fixture"), b"")
+                else:
+                    with self.assertRaises(native.NativeDiagnosticError):
+                        native._successful(capture, "fixture")
+
+    def test_frozen_stderr_whitelist_does_not_allow_unknown_continuations(self):
+        for data in (b"Reading additional input from stdin...\n",
+                     b"Could not create otel exporter: public fixture\n",
+                     b"WARNING: proceeding, even though we could not create PATH aliases: fixture\n",
+                     b"WARNING: failed to clean up stale arg0 temp dirs: fixture\n"):
+            self.assertEqual(native._stderr_classification(data), "known-nonfatal")
+            self.assertEqual(native._stderr_classification(data + b"unknown continuation\n"), "unknown")
+        self.assertEqual(native._stderr_classification(b"WARNING: arbitrary\n"), "unknown")
+
+    def test_host_error_is_observed_without_becoming_success_or_automatic_failure(self):
+        document = response(self.cases[0], "ocb1_" + "0" * 64)
+        lines = stream(document).splitlines(keepends=True)
+        recoverable = event({"type": "error", "message": "private fixture"})
+        raw = b"".join(lines[:2] + [recoverable] + lines[2:])
+        facts = native._diagnostics()
+        for line in raw.splitlines():
+            native._observe_line(line, {}, self.parent, facts)
+        self.assertIn("error", facts["eventTypes"])
+        self.assertEqual(facts["category"], "none")
+        self.assertEqual(native.parse_native_jsonl(raw, self.taxonomy, {}, self.parent)[0].terminal_type,
+                         "turn.completed")
+        failed = event({"type": "turn.failed", "error": {"message": "private fixture"}})
+        native._observe_line(failed.rstrip(b"\n"), {}, self.parent, facts)
+        self.assertEqual(facts["category"], "host-failure")
+        self.assertEqual(facts["officialErrorCode"], "unknown")
+        self.assertNotIn("private fixture", json.dumps(facts))
+        with self.assertRaises(native.NativeObservationError):
+            native.parse_native_jsonl(raw + recoverable, self.taxonomy, {}, self.parent)
+
+    def test_callback_rejection_keeps_capture_counts_exit_and_first_cause(self):
+        facts = native._diagnostics()
+        raw = event({"type": "unknown-sensitive-fixture"})
+        with self.assertRaises(native.NativeDiagnosticError) as caught:
+            self._process("import sys,time; sys.stdout.buffer.write(" + repr(raw) +
+                          "); sys.stdout.flush(); time.sleep(5)",
+                stdin=b"public input", line_callback=lambda line: native._observe_line(line, {}, self.parent, facts))
+        captured = caught.exception.facts
+        self.assertEqual(captured["category"], "policy-rejected")
+        self.assertGreater(captured["stdoutBytes"], 0)
+        self.assertTrue(captured["observerTerminated"])
+        self.assertIsNotNone(captured["returnCode"])
+        self.assertEqual(facts["eventTypes"], ["unknown"])
+        self.assertNotIn("sensitive", str(caught.exception))
+
+    def test_timeout_and_cleanup_failure_preserve_first_cause(self):
+        original = native._close_process
+        def cleanup(process, **kwargs):
+            original(process, **kwargs)
+            raise OSError("private cleanup fixture")
+        with patch.object(native, "_close_process", side_effect=cleanup):
+            with self.assertRaises(native.NativeDiagnosticError) as caught:
+                self._process("import time; time.sleep(5)", timeout=0.05)
+        self.assertEqual(caught.exception.facts["category"], "timeout")
+        self.assertTrue(caught.exception.facts["timedOut"])
+        self.assertTrue(caught.exception.facts["cleanupFailed"])
+        self.assertNotIn("private", str(caught.exception))
+        with patch.object(native, "_close_process", side_effect=cleanup):
+            with self.assertRaises(native.NativeDiagnosticError) as caught:
+                self._process("pass")
+        self.assertEqual(caught.exception.facts["category"], "cleanup-failed")
+
+    def test_production_runner_preserves_host_failure_and_stops_later_cases(self):
+        run, runner, calls = self._prepared_runner()
+        def fail(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            code = "import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(" + repr(
+                event({"type": "thread.started", "thread_id": "019784a7-ec72-7000-8000-000000000001"}) +
+                event({"type": "turn.started"}) + event({"type": "error", "message": "not retained"}) +
+                event({"type": "turn.failed", "error": {"message": "not retained"}})) + "); sys.exit(1)"
+            return native.bounded_process([sys.executable, "-I", "-B", "-c", code], **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True, process_runner=fail)
+        first = result["caseResults"][0]
+        self.assertEqual(first["diagnostic"], "host-failure")
+        self.assertEqual(first["terminal"], "turn.failed")
+        self.assertEqual(first["executionDiagnostics"]["returnCode"], 1)
+        self.assertTrue(first["executionDiagnostics"]["inputFullyDelivered"])
+        self.assertEqual(result["attemptCount"], 1)
+        self.assertEqual([r["status"] for r in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_production_runner_retains_truncated_and_missing_terminal_diagnostics(self):
+        parent = self.parent
+        for mode in ("truncated", "missing-terminal"):
+            with self.subTest(mode=mode):
+                self.parent = parent / mode
+                self.parent.mkdir()
+                run, runner, _ = self._prepared_runner()
+                def truncate(argv, **kwargs):
+                    capture = runner(argv, **kwargs)
+                    if "exec" in argv:
+                        capture["stdout"] = (capture["stdout"][:-1] if mode == "truncated" else
+                                             b"\n".join(capture["stdout"].splitlines()[:-1]) + b"\n")
+                    return capture
+                result = native.run_native_observation(ROOT, run, authorize_model_calls=True, process_runner=truncate)
+                self.assertEqual(result["caseResults"][0]["diagnostic"], "stream-invalid")
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+                # Each subcase owns an independent secret-free preparation.
+                shutil.rmtree(run)
+
+    def test_historical_result_is_immutable_and_not_revalidated_as_new_diagnostics(self):
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        old = history["historicalResults"][0]
+        data = (ROOT / old["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(), native.HISTORICAL_RESULT_SHA256)
+        document = json.loads(data)
+        self.assertNotIn("executionDiagnostics", document["caseResults"][0])
+        self.assertEqual(document["caseResults"][0]["diagnostic"], "execution-failed")
+        self.assertTrue(native.validate_native_result(document, ROOT))
+
+    def _historical_preparation(self):
+        run, runner, calls = self._prepared_runner()
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        old_bytes = (ROOT / history["historicalResults"][0]["path"]).read_bytes()
+        old_result = json.loads(old_bytes)
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        state.update(runMode="actual", protocolDigest=native.HISTORICAL_PROTOCOL_DIGEST,
+                     materializationSeed=old_result["materializationSeed"])
+        (run / native.STATE_NAME).write_bytes(native._bytes(state))
+        for ordinal, case in enumerate(self.cases, 1):
+            material = legacy.materialize_case_contract(materialization_seed=bytes.fromhex(state["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=native.HISTORICAL_PROTOCOL_DIGEST,
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            (native._case_paths(run, ordinal)["case"] / "response-schema.json").write_bytes(material.schema_bytes)
+        native._exclusive(run / "normalized-result.json", old_bytes)
+        native._exclusive(run / "batch-started.json", native._bytes({"protocolDigest": native.HISTORICAL_PROTOCOL_DIGEST}))
+        native._exclusive(run / "attempt-01.json", native._bytes({"ordinal": 1, "caseId": self.cases[0]["id"],
+                                                               "protocolDigest": native.HISTORICAL_PROTOCOL_DIGEST}))
+        return run, runner, calls
+
+    def test_followup_preserves_history_binds_new_inputs_and_counts_seventeen(self):
+        run, runner, calls = self._historical_preparation()
+        names = ["normalized-result.json", "batch-started.json", "attempt-01.json", native.STATE_NAME]
+        original = {name: (run / name).read_bytes() for name in names}
+        old_schema = (native._case_paths(run, 1)["case"] / "response-schema.json").read_bytes()
+        native.prepare_diagnostic_followup(ROOT, run)
+        self.assertNotEqual(old_schema, (run / "diagnostic-followup/response-schema-01.json").read_bytes())
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               followup=True, process_runner=runner)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual(result["attemptCount"], 16)
+        self.assertEqual(result["cumulativeAttemptCount"], 17)
+        self.assertEqual(result["priorResultSha256"], native.HISTORICAL_RESULT_SHA256)
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for name in names:
+            self.assertEqual((run / name).read_bytes(), original[name])
+        with self.assertRaises(FileExistsError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                          followup=True, process_runner=runner)
+        with self.assertRaises(FileExistsError):
+            native.prepare_diagnostic_followup(ROOT, run)
+        self.assertEqual(len(calls), 16)
+
+    def test_followup_refuses_consumed_later_case_and_changed_prior_record(self):
+        run, _, _ = self._historical_preparation()
+        native._exclusive(run / "attempt-02.json", b"{}")
+        with self.assertRaisesRegex(native.NativeObservationError, "already consumed"):
+            native.prepare_diagnostic_followup(ROOT, run)
+        self.assertFalse((run / "diagnostic-followup").exists())
+        (run / "normalized-result.json").write_bytes(b"{}")
+        with self.assertRaisesRegex(native.NativeObservationError, "original incomplete"):
+            native.prepare_diagnostic_followup(ROOT, run)
+
+    def test_callback_parse_failure_and_process_start_failure_are_distinct(self):
+        facts = native._diagnostics()
+        with self.assertRaises(native.NativeDiagnosticError) as caught:
+            self._process("print('not-json')", line_callback=lambda line: native._observe_line(line, {}, self.parent, facts))
+        self.assertEqual(caught.exception.facts["category"], "event-invalid")
+        with self.assertRaises(native.NativeDiagnosticError) as caught:
+            native.bounded_process([str(self.parent / "absent")], cwd=self.parent, env={})
+        self.assertEqual(caught.exception.facts["category"], "process-start")
+        self.assertIsNone(caught.exception.facts["returnCode"])
+
+    def test_nonzero_exit_is_not_overwritten_by_cleanup_failure(self):
+        original = native._close_process
+        def cleanup(process, **kwargs):
+            original(process, **kwargs)
+            raise OSError("secret-free fixture")
+        with patch.object(native, "_close_process", side_effect=cleanup):
+            with self.assertRaises(native.NativeDiagnosticError) as caught:
+                self._process("import sys; sys.exit(7)")
+        self.assertEqual(caught.exception.facts["category"], "process-exit")
+        self.assertEqual(caught.exception.facts["returnCode"], 7)
+        self.assertTrue(caught.exception.facts["cleanupFailed"])
+
+    def test_selector_setup_failure_counts_and_reaps_created_process(self):
+        starts, children = [], []
+        original = native._close_process
+        def close(process, **kwargs):
+            children.append(process)
+            return original(process, **kwargs)
+        with patch.object(native.selectors, "DefaultSelector", side_effect=OSError("public fixture")), \
+                patch.object(native, "_close_process", side_effect=close):
+            with self.assertRaises(native.NativeDiagnosticError) as caught:
+                self._process("import time; time.sleep(5)", started_callback=lambda: starts.append(1))
+        self.assertEqual(starts, [1])
+        self.assertEqual(len(children), 1)
+        self.assertIsNotNone(children[0].poll())
+        self.assertEqual(caught.exception.facts["category"], "io-failed")
+        self.assertTrue(caught.exception.facts["observerTerminated"])
+
+    def test_completed_result_rejects_policy_and_item_diagnostic_contradictions(self):
+        run, runner, _ = self._prepared_runner()
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True, process_runner=runner)
+        for field, value in (("policyReason", "read-contract-rejected"),
+                             ("itemTypes", ["unsupported"]), ("itemTypes", ["error"]),
+                             ("inputBytesSent", 0)):
+            altered = copy.deepcopy(result)
+            altered["caseResults"][0]["executionDiagnostics"][field] = value
+            self.assertTrue(native.validate_native_result(altered, ROOT), field)
+        altered = copy.deepcopy(result)
+        altered["caseResults"][0]["executionDiagnostics"]["eventTypes"] = ["thread.started", "turn.started", "turn.completed"]
+        self.assertTrue(native.validate_native_result(altered, ROOT))
 
 
 if __name__ == "__main__":

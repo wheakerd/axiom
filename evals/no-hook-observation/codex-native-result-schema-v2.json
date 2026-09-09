@@ -20,7 +20,11 @@
     "descendantClosure",
     "discoveryMechanism",
     "pluginRuntimeEnabled",
-    "authenticationMode"
+    "authenticationMode",
+    "diagnosticRevision",
+    "priorResultSha256",
+    "attemptCount",
+    "cumulativeAttemptCount"
   ],
   "properties": {
     "schemaVersion": {
@@ -88,7 +92,9 @@
           "materializationCommitmentSha256",
           "readonlyCommandCount",
           "observed",
-          "terminal"
+          "terminal",
+          "attemptCount",
+          "executionDiagnostics"
         ],
         "properties": {
           "ordinal": {
@@ -133,7 +139,19 @@
               "stream-invalid",
               "semantic-mismatch",
               "input-changed",
-              "already-attempted"
+              "already-attempted",
+              "process-start",
+              "process-exit",
+              "host-failure",
+              "policy-rejected",
+              "event-invalid",
+              "timeout",
+              "output-limit",
+              "input-incomplete",
+              "io-failed",
+              "response-invalid",
+              "cleanup-failed",
+              "unknown-stderr"
             ]
           },
           "cliLaunchCount": {
@@ -319,6 +337,188 @@
               "turn.failed",
               "not-observed"
             ]
+          },
+          "attemptCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "executionDiagnostics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "phase",
+              "category",
+              "returnCode",
+              "signal",
+              "timedOut",
+              "observerTerminated",
+              "cleanupFailed",
+              "inputBytesSent",
+              "inputFullyDelivered",
+              "stdoutBytes",
+              "stderrBytes",
+              "eventCount",
+              "eventTypes",
+              "stderrClassification",
+              "officialErrorCode",
+              "itemTypes",
+              "policyReason"
+            ],
+            "properties": {
+              "phase": {
+                "enum": [
+                  "none",
+                  "precheck",
+                  "login",
+                  "launch",
+                  "io",
+                  "event",
+                  "exit",
+                  "stream",
+                  "response",
+                  "postcheck",
+                  "cleanup"
+                ]
+              },
+              "category": {
+                "enum": [
+                  "none",
+                  "process-start",
+                  "process-exit",
+                  "host-failure",
+                  "policy-rejected",
+                  "event-invalid",
+                  "timeout",
+                  "output-limit",
+                  "input-incomplete",
+                  "io-failed",
+                  "stream-invalid",
+                  "response-invalid",
+                  "input-changed",
+                  "authentication-unavailable",
+                  "already-attempted",
+                  "cleanup-failed",
+                  "unknown-stderr",
+                  "execution-failed"
+                ]
+              },
+              "returnCode": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -2147483648,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "signal": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "timedOut": {
+                "type": "boolean"
+              },
+              "observerTerminated": {
+                "type": "boolean"
+              },
+              "cleanupFailed": {
+                "type": "boolean"
+              },
+              "inputBytesSent": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1048576
+              },
+              "inputFullyDelivered": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "stdoutBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1056768
+              },
+              "stderrBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 270336
+              },
+              "eventCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4097
+              },
+              "eventTypes": {
+                "type": "array",
+                "maxItems": 9,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "thread.started",
+                    "turn.started",
+                    "turn.completed",
+                    "turn.failed",
+                    "error",
+                    "item.started",
+                    "item.updated",
+                    "item.completed",
+                    "unknown"
+                  ]
+                }
+              },
+              "stderrClassification": {
+                "enum": [
+                  "not-observed",
+                  "empty",
+                  "known-nonfatal",
+                  "unknown"
+                ]
+              },
+              "officialErrorCode": {
+                "const": "unknown"
+              },
+              "itemTypes": {
+                "type": "array",
+                "maxItems": 5,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "reasoning",
+                    "agent_message",
+                    "command_execution",
+                    "error",
+                    "unsupported"
+                  ]
+                }
+              },
+              "policyReason": {
+                "enum": [
+                  "none",
+                  "unknown-event",
+                  "read-contract-rejected",
+                  "unsupported-item",
+                  "event-shape-rejected"
+                ]
+              }
+            }
           }
         }
       }
@@ -345,6 +545,29 @@
         "independent-official-login",
         "serial-test-auth-copy"
       ]
+    },
+    "diagnosticRevision": {
+      "const": 1
+    },
+    "priorResultSha256": {
+      "anyOf": [
+        {
+          "const": "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attemptCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16
+    },
+    "cumulativeAttemptCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 17
     }
   }
 }

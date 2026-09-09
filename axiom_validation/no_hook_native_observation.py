@@ -39,6 +39,62 @@ CASE_COUNT = 16
 AUTH_FILE_NAME = "auth.json"
 AUTH_COPY_STATE = "test-auth-copy-state.json"
 NativeObservationError = legacy.ObservationError
+HISTORICAL_RESULT_SHA256 = "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef"
+HISTORICAL_PROTOCOL_DIGEST = "sha256:735ad73170d6d1f3b4b6a21a4dfdc4dc280100a07e47bead22b2af9562a577dc"
+EVENT_TYPES = ("thread.started", "turn.started", "turn.completed", "turn.failed", "error",
+               "item.started", "item.updated", "item.completed", "unknown")
+
+
+def _diagnostics() -> dict[str, Any]:
+    return {"phase": "none", "category": "none", "returnCode": None, "signal": None,
+            "timedOut": False, "observerTerminated": False, "cleanupFailed": False,
+            "inputBytesSent": 0, "inputFullyDelivered": None, "stdoutBytes": 0,
+            "stderrBytes": 0, "eventCount": 0, "eventTypes": [],
+            "stderrClassification": "not-observed", "officialErrorCode": "unknown",
+            "itemTypes": [], "policyReason": "none"}
+
+
+def _first_failure(facts: dict[str, Any], phase: str, category: str) -> None:
+    if facts["category"] == "none":
+        facts.update(phase=phase, category=category)
+
+
+class NativeDiagnosticError(NativeObservationError):
+    """Only closed facts cross the capture boundary; never retain raw exceptions."""
+
+    def __init__(self, facts: Mapping[str, Any]):
+        self.facts = dict(facts)
+        super().__init__("native " + self.facts["category"])
+
+
+def _stderr_classification(data: bytes) -> str:
+    if not data:
+        return "empty"
+    # Frozen exec reads '-' from stdin with this informational notice. Unknown
+    # stderr is retained only as a classification and cannot establish success.
+    fixed = {b"Reading prompt from stdin...", b"Reading additional input from stdin...",
+             b"Could not create otel exporter: panicked during initialization"}
+    prefixes = (b"Could not create otel exporter: ",
+                b"WARNING: proceeding, even though we could not create PATH aliases: ",
+                b"WARNING: failed to clean up stale arg0 temp dirs: ")
+    if data.endswith(b"\n") and all(line in fixed or any(
+            line.startswith(prefix) and len(line) > len(prefix) for prefix in prefixes)
+            for line in data.splitlines()):
+        return "known-nonfatal"
+    return "unknown"
+
+
+def _capture_facts(capture: Mapping[str, Any]) -> dict[str, Any]:
+    facts = dict(capture.get("diagnostics", _diagnostics()))
+    code = capture["returncode"]
+    facts.update(returnCode=code, signal=-code if code is not None and code < 0 else None,
+                 stdoutBytes=len(capture["stdout"]), stderrBytes=len(capture["stderr"]),
+                 stderrClassification=_stderr_classification(capture["stderr"]))
+    if code != 0:
+        _first_failure(facts, "exit", "process-exit")
+    if facts["stderrClassification"] == "unknown":
+        _first_failure(facts, "exit", "unknown-stderr")
+    return facts
 IMPLEMENTATION_PATHS = (
     "axiom_validation/context.py", "axiom_validation/no_hook_bundle.py",
     "axiom_validation/no_hook_linux_isolation.py", "axiom_validation/no_hook_native_observation.py",
@@ -126,6 +182,11 @@ def _protocol(root: Path) -> dict[str, Any]:
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
+    _require(document.get("diagnosticRevision") == 1 and document.get("followup") == {
+        "priorResultSha256": HISTORICAL_RESULT_SHA256, "priorAttempts": 1,
+        "maximumCumulativeAttempts": 17, "maximumCaseOneAttempts": 2,
+        "remainingCaseAttempts": 1,
+    }, "native diagnostic migration or retry budget mismatch")
     bindings = list(document.get("implementationBindings", []))
     _require([item.get("path") for item in bindings] == list(IMPLEMENTATION_PATHS),
              "native implementation binding owner set changed")
@@ -170,10 +231,20 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         _require(protocol["inputs"]["fixtureMatrix"]["path"] == legacy.FIXTURES_RELATIVE.as_posix(),
                  "native fixture owner changed")
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
                  history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": protocol["protocolDigest"]},
                  "native history identity is inconsistent")
+        historical = history["historicalResults"]
+        expected_historical = {"path": "evals/no-hook-observation/results/codex-native-" + HISTORICAL_RESULT_SHA256 + ".json",
+            "sha256": HISTORICAL_RESULT_SHA256, "protocolDigest": HISTORICAL_PROTOCOL_DIGEST,
+            "implementationCommit": "f7a590ad58e2a1200f64009e48556fa7448f2f86",
+            "resultCommit": "5ac4c2b197bd4f3a32a9d50ca2de4814aefcf2c3", "attemptCount": 1}
+        _require(historical == [expected_historical], "historical native evidence migration changed")
+        _require(hashlib.sha256(_read(root / expected_historical["path"])).hexdigest() ==
+                 HISTORICAL_RESULT_SHA256, "historical native result bytes changed")
+        # The exact previously validated bytes retain their old contract. They
+        # are not interpreted under the new schema or filled with new facts.
         records = history["results"]
         _require(type(records) is list and len(records) <= 1, "native history exceeds the single-batch budget")
         current = {"codexObservation": "not-run", "hostClaim": False, "credentialUsed": False,
@@ -189,6 +260,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "native history result bytes changed")
             result = _json(data)
             _require(not validate_native_result(result, root), "native history result is invalid")
+            _require(result["priorResultSha256"] == HISTORICAL_RESULT_SHA256, "result does not continue the historical budget")
             _require(result["runMode"] == "actual", "simulated result is not a host-history observation")
             current = {"codexObservation": result["status"].lower(), "hostClaim": result["hostClaim"],
                        "credentialUsed": result["cliLaunchCount"] > 0, "cliLaunchCount": result["cliLaunchCount"],
@@ -269,22 +341,45 @@ def build_native_argv(executable: Path, run_root: Path, ordinal: int) -> list[st
             *_config_args(paths, executable, run_root / "marketplace", ordinal != 11), "-"]
 
 
+def _close_process(process: subprocess.Popen, *, terminate: bool, facts: dict[str, Any]) -> None:
+    """Ordinary process-group cleanup; record failure separately from first cause."""
+    if process.poll() is None or terminate:
+        try:
+            os.killpg(process.pid, signal.SIGINT)
+            facts["observerTerminated"] = True
+        except ProcessLookupError:
+            pass
+        try:
+            process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+                facts["observerTerminated"] = True
+            except ProcessLookupError:
+                pass
+            process.wait(timeout=2)
+
+
 def bounded_process(argv: Sequence[str], *, cwd: Path, env: Mapping[str, str],
                     stdin: bytes = b"", line_callback: Callable[[bytes], None] | None = None,
                     started_callback: Callable[[], None] | None = None,
                     timeout: int = 120) -> dict[str, Any]:
-    """Bound the official client and reap our process; retain no raw files."""
-    output = bytearray()
-    errors = bytearray()
-    pending = bytearray()
-    failure: BaseException | None = None
-    process = subprocess.Popen(list(argv), cwd=cwd, env=dict(env), stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               start_new_session=True, close_fds=True)
-    selector = selectors.DefaultSelector()
+    """Capture bounded facts before discarding buffers, including on failure."""
+    output, errors, pending = bytearray(), bytearray(), bytearray()
+    facts = _diagnostics()
+    sent = 0
+    try:
+        process = subprocess.Popen(list(argv), cwd=cwd, env=dict(env), stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   start_new_session=True, close_fds=True)
+    except OSError:
+        _first_failure(facts, "launch", "process-start")
+        raise NativeDiagnosticError(facts) from None
+    selector = None
     try:
         if started_callback is not None:
             started_callback()
+        selector = selectors.DefaultSelector()
         assert process.stdin is not None and process.stdout is not None and process.stderr is not None
         for stream in (process.stdin, process.stdout, process.stderr):
             os.set_blocking(stream.fileno(), False)
@@ -294,11 +389,10 @@ def bounded_process(argv: Sequence[str], *, cwd: Path, env: Mapping[str, str],
             selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
         else:
             process.stdin.close()
-        sent = 0
         deadline = time.monotonic() + timeout
         while selector.get_map():
             if time.monotonic() >= deadline:
-                raise TimeoutError("native client deadline exceeded")
+                raise TimeoutError()
             for key, _ in selector.select(min(0.1, max(0, deadline - time.monotonic()))):
                 if key.data == "stdin":
                     sent += os.write(key.fd, stdin[sent:sent + 8192])
@@ -313,40 +407,69 @@ def bounded_process(argv: Sequence[str], *, cwd: Path, env: Mapping[str, str],
                     continue
                 target = output if key.data == "stdout" else errors
                 limit = legacy.MAX_STDOUT_BYTES if key.data == "stdout" else legacy.MAX_STDERR_BYTES
-                _require(len(target) + len(chunk) <= limit, "native client output limit exceeded")
                 target.extend(chunk)
+                if len(target) > limit:
+                    _first_failure(facts, "io", "output-limit")
+                    raise NativeDiagnosticError(facts)
                 if key.data == "stdout" and line_callback is not None:
                     pending.extend(chunk)
                     while b"\n" in pending:
                         line, _, rest = pending.partition(b"\n")
                         pending[:] = rest
-                        line_callback(bytes(line))
-                    _require(len(pending) <= legacy.MAX_JSONL_LINE_BYTES, "native JSONL line exceeds limit")
+                        try:
+                            line_callback(bytes(line))
+                        except NativeDiagnosticError as error:
+                            _first_failure(facts, error.facts["phase"], error.facts["category"])
+                            for field in ("eventCount", "eventTypes", "itemTypes", "policyReason"):
+                                facts[field] = error.facts[field]
+                            raise
+                        except Exception:
+                            _first_failure(facts, "event", "policy-rejected")
+                            raise NativeDiagnosticError(facts) from None
+                    if len(pending) > legacy.MAX_JSONL_LINE_BYTES:
+                        _first_failure(facts, "io", "output-limit")
+                        raise NativeDiagnosticError(facts)
         process.wait(timeout=max(0.01, deadline - time.monotonic()))
-        _require(sent == len(stdin), "native prompt was not fully delivered")
-    except BaseException as error:
-        failure = error
+        if sent != len(stdin):
+            _first_failure(facts, "io", "input-incomplete")
+    except (TimeoutError, subprocess.TimeoutExpired):
+        facts["timedOut"] = True
+        _first_failure(facts, "io", "timeout")
+    except NativeDiagnosticError:
+        pass
+    except (OSError, ValueError, NativeObservationError):
+        _first_failure(facts, "io", "io-failed")
     finally:
-        if process.poll() is None or failure is not None:
-            try:
-                os.killpg(process.pid, signal.SIGINT)
-            except ProcessLookupError:
-                pass
-            try:
-                process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                process.wait(timeout=2)
-        selector.close()
+        if process.poll() is not None and process.returncode != 0:
+            _first_failure(facts, "exit", "process-exit")
+        try:
+            _close_process(process, terminate=facts["category"] != "none", facts=facts)
+        except (OSError, subprocess.SubprocessError):
+            facts["cleanupFailed"] = True
+            _first_failure(facts, "cleanup", "cleanup-failed")
+        try:
+            if selector is not None:
+                selector.close()
+        except OSError:
+            facts["cleanupFailed"] = True
+            _first_failure(facts, "cleanup", "cleanup-failed")
         for stream in (process.stdin, process.stdout, process.stderr):
-            if stream is not None:
-                stream.close()
-    if failure is not None:
-        raise failure
-    return {"returncode": process.returncode, "stdout": bytes(output), "stderr": bytes(errors)}
+            try:
+                if stream is not None:
+                    stream.close()
+            except OSError:
+                facts["cleanupFailed"] = True
+                _first_failure(facts, "cleanup", "cleanup-failed")
+    facts.update(inputBytesSent=sent, inputFullyDelivered=sent == len(stdin))
+    capture = {"returncode": process.returncode, "stdout": bytes(output), "stderr": bytes(errors),
+               "diagnostics": facts}
+    closed = _capture_facts(capture)
+    # Nonzero exits and stderr are classified by the caller (login has its own
+    # exact status grammar); capture/cleanup failures cannot lose their facts.
+    if facts["category"] != "none":
+        raise NativeDiagnosticError(closed) from None
+    capture["diagnostics"] = facts
+    return capture
 
 
 def _definition(fixtures: Mapping[str, Any], ordinal: int) -> dict[str, Any]:
@@ -392,8 +515,9 @@ def package_identity(package: Path) -> str:
 
 
 def _successful(capture: Mapping[str, Any], purpose: str) -> bytes:
-    _require(capture["returncode"] == 0 and capture["stderr"] == b"",
-             f"native {purpose} failed (exit={capture['returncode']}, stderrPresent={bool(capture['stderr'])})")
+    facts = _capture_facts(capture)
+    if facts["category"] != "none":
+        raise NativeDiagnosticError(facts)
     return capture["stdout"]
 
 
@@ -505,10 +629,10 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     return state
 
 
-def _state(root: Path, run_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+def _state(root: Path, run_root: Path, *, followup: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
-    state = _json(_read(run_root / STATE_NAME))
+    state = _json(_read(run_root / "diagnostic-followup/preparation.json" if followup else run_root / STATE_NAME))
     _require(set(state) == {"schemaVersion", "protocolDigest", "runMode", "executable", "materializationSeed", "cases"},
              "native preparation record is not closed")
     _require(state["schemaVersion"] == "2" and state["protocolDigest"] == protocol["protocolDigest"],
@@ -520,6 +644,64 @@ def _state(root: Path, run_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                  "prepared case records are not canonical")
     _require(len(bytes.fromhex(state["materializationSeed"])) == 32, "invalid materialization seed")
     return protocol, state
+
+
+def _verify_prior_attempt(run_root: Path) -> None:
+    """Only the explicitly authorized, immutable first failure is retryable."""
+    _require(hashlib.sha256(_read(run_root / "normalized-result.json")).hexdigest() ==
+             HISTORICAL_RESULT_SHA256, "followup requires the original incomplete result")
+    _require(_json(_read(run_root / "batch-started.json")) ==
+             {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST}, "historical batch marker changed")
+    _require(_json(_read(run_root / "attempt-01.json")) == {
+        "ordinal": 1, "caseId": legacy.EXPECTED_CASE_IDS[0],
+        "protocolDigest": HISTORICAL_PROTOCOL_DIGEST}, "historical attempt marker changed")
+    for ordinal in range(2, 17):
+        path = run_root / f"attempt-{ordinal:02d}.json"
+        _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
+
+
+def prepare_diagnostic_followup(root: Path, run_root: Path) -> None:
+    """Add an explicit second ledger; preserve prior preparation, auth and events."""
+    _ordinary_directory(run_root)
+    _verify_prior_attempt(run_root)
+    protocol = _protocol(root)
+    old = _json(_read(run_root / STATE_NAME))
+    _require(old["protocolDigest"] == HISTORICAL_PROTOCOL_DIGEST and old["runMode"] == "actual",
+             "followup preparation does not name the historical execution")
+    prior = _json(_read(run_root / "normalized-result.json"))
+    _require(old["materializationSeed"] == prior["materializationSeed"], "historical seed changed")
+    legacy.freeze_executable(Path(old["executable"]), protocol["cli"]["sha256"])
+    fixtures = _input(root, protocol, "fixtureMatrix")
+    schema = _input(root, protocol, "modelResponseSchema")
+    envelope = _input(root, protocol, "promptEnvelope")
+    cases = legacy.load_golden_cases(root)
+    prepared = []
+    for ordinal, case in enumerate(cases, 1):
+        paths = _case_paths(run_root, ordinal)
+        _verify_config(paths, run_root / "marketplace", ordinal != 11)
+        _verify_discovery(paths, ordinal != 11)
+        fixture = fixture_identity(paths["workspace"], _definition(fixtures, ordinal))
+        package = package_identity(paths["package"]) if ordinal != 11 else None
+        _require(old["cases"][ordinal - 1] == {
+            "ordinal": ordinal, "fixtureSha256": fixture, "packageSha256": package},
+            "historical prepared inputs changed")
+        _require(ordinal == 11 or package == protocol["bundle"]["packageSha256"], "followup package changed")
+        previous = legacy.materialize_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+            ordinal=ordinal, protocol_digest=HISTORICAL_PROTOCOL_DIGEST, model_schema=schema,
+            prompt_envelope=envelope, request=case["request"])
+        _require(_read(paths["case"] / "response-schema.json") == previous.schema_bytes,
+                 "historical materialization changed")
+        prepared.append(legacy.materialize_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+            ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
+            prompt_envelope=envelope, request=case["request"]))
+    ledger = run_root / "diagnostic-followup"
+    ledger.mkdir(mode=0o700)  # exclusive; a partial migration is retained, not retried
+    _exclusive(ledger / "migration.json", _bytes({"priorResultSha256": HISTORICAL_RESULT_SHA256,
+        "priorProtocolDigest": HISTORICAL_PROTOCOL_DIGEST, "protocolDigest": protocol["protocolDigest"],
+        "priorAttempts": 1, "maximumCumulativeAttempts": 17}))
+    for ordinal, material in enumerate(prepared, 1):
+        _exclusive(ledger / f"response-schema-{ordinal:02d}.json", material.schema_bytes)
+    _exclusive(ledger / "preparation.json", _bytes({**old, "protocolDigest": protocol["protocolDigest"]}))
 
 
 
@@ -692,8 +874,16 @@ def _read_command(command: str, readable: Mapping[str, bytes], cwd: Path) -> byt
 def inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -> None:
     event = legacy._parse_json_line(raw)
     kind = event.get("type")
-    _require(kind in {"thread.started", "turn.started", "turn.completed", "item.started", "item.updated", "item.completed"},
-             "unknown or failed native event")
+    _require(kind in EVENT_TYPES[:-1], "unknown native event")
+    if kind == "error":
+        _require(set(event) == {"type", "message"} and type(event["message"]) is str,
+                 "invalid native error event")
+        return
+    if kind == "turn.failed":
+        _require(set(event) == {"type", "error"} and type(event["error"]) is dict and
+                 set(event["error"]) == {"message"} and type(event["error"]["message"]) is str,
+                 "invalid native failed-turn event")
+        return
     if kind.startswith("item."):
         item = event.get("item")
         _require(type(item) is dict, "native item missing")
@@ -714,6 +904,41 @@ def inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -
                          "native partial read output differs from bound source")
 
 
+def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: dict[str, Any]) -> None:
+    facts["eventCount"] += 1
+    try:
+        event = legacy._parse_json_line(raw)
+    except (ValueError, NativeObservationError):
+        _first_failure(facts, "event", "event-invalid")
+        raise NativeDiagnosticError(facts) from None
+    kind = event.get("type")
+    retained = kind if kind in EVENT_TYPES[:-1] else "unknown"
+    if retained not in facts["eventTypes"]:
+        facts["eventTypes"].append(retained)
+    item = event.get("item")
+    item_type = item.get("type") if type(item) is dict else None
+    if type(kind) is str and kind.startswith("item."):
+        retained_item = item_type if type(item_type) is str and item_type in {"reasoning", "agent_message", "command_execution", "error"} else "unsupported"
+        if retained_item not in facts["itemTypes"]:
+            facts["itemTypes"].append(retained_item)
+    if facts["eventCount"] > legacy.MAX_EVENT_COUNT:
+        _first_failure(facts, "event", "output-limit")
+        raise NativeDiagnosticError(facts)
+    try:
+        inspect_native_event(raw, readable, cwd)
+    except (ValueError, KeyError, TypeError, NativeObservationError):
+        if facts["policyReason"] == "none":
+            facts["policyReason"] = ("unknown-event" if retained == "unknown" else
+                "read-contract-rejected" if item_type == "command_execution" else
+                "unsupported-item" if type(kind) is str and kind.startswith("item.") and
+                (type(item_type) is not str or item_type not in {"reasoning", "agent_message"}) else "event-shape-rejected")
+        _first_failure(facts, "event", "policy-rejected")
+        raise NativeDiagnosticError(facts) from None
+    if kind == "turn.failed":
+        _first_failure(facts, "event", "host-failure")
+    # Top-level error loses upstream will_retry; it alone is not terminal.
+
+
 def parse_native_jsonl(data: bytes, taxonomy: Mapping[str, Any], readable: Mapping[str, bytes],
                        cwd: Path) -> tuple[legacy.StreamFacts, int]:
     """Validate native commands, then reuse v1's strict non-tool stream closure."""
@@ -724,9 +949,21 @@ def parse_native_jsonl(data: bytes, taxonomy: Mapping[str, Any], readable: Mappi
     commands: dict[str, str] = {}
     completed: set[str] = set()
     translated: list[bytes] = []
+    turn_started = False
+    terminal_seen = False
     for raw in lines:
+        _require(not terminal_seen, "native event appeared after terminal")
         inspect_native_event(raw, readable, cwd)
         event = legacy._parse_json_line(raw)
+        if event["type"] == "turn.started":
+            turn_started = True
+        if event["type"] in {"turn.completed", "turn.failed"}:
+            terminal_seen = True
+        if event["type"] == "error":
+            _require(turn_started, "native error appeared outside a turn")
+            # Frozen JSONL does not expose retry disposition. Keep its type in
+            # diagnostics while the final exit and complete stream decide status.
+            continue
         item = event.get("item", {})
         if item.get("type") == "command_execution":
             identifier = item["id"]
@@ -765,7 +1002,8 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
         case=case, realized_fixture_digest=legacy._expected_realized_fixture_digest(definition),
         realized_file_set_digest=definition["canonicalFileSetDigest"], prompt_fully_delivered=True)
     return {"ordinal": materialized.ordinal, "caseId": case["id"], "status": "NOT-RUN",
-            "diagnostic": "not-run", "cliLaunchCount": 0, "modelRequestCount": None,
+            "diagnostic": "not-run", "cliLaunchCount": 0, "attemptCount": 0, "modelRequestCount": None,
+            "executionDiagnostics": _diagnostics(),
             "installation": "not-checked", "authentication": "not-checked",
             "fixtureBeforeSha256": None, "fixtureAfterSha256": None,
             "packageBeforeSha256": None, "packageAfterSha256": None,
@@ -774,11 +1012,14 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
 
 
 def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls: bool = False,
-                           reuse_test_auth: bool = False,
+                           reuse_test_auth: bool = False, followup: bool = False,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
-    protocol, state = _state(root, run_root)
+    protocol, state = _state(root, run_root, followup=followup)
+    ledger = run_root / "diagnostic-followup" if followup else run_root
+    if followup:
+        _verify_prior_attempt(run_root)
     executable = Path(state["executable"])
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
@@ -795,13 +1036,15 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
     if reuse_test_auth:
-        _require_test_auth_copy_state(run_root, protocol)
-    _exclusive(run_root / "batch-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
+        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup else protocol)
+    _exclusive(ledger / "batch-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
         paths = _case_paths(run_root, ordinal)
         definition = _definition(fixtures, ordinal)
         installed = ordinal != 11
         diagnostic = "input-changed"
+        phase = "precheck"
+        events = _diagnostics()
         try:
             legacy.recheck_executable(frozen)
             _ordinary_directory(paths["workspace"])
@@ -815,9 +1058,11 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                 _require(record["packageBeforeSha256"] == state["cases"][ordinal - 1]["packageSha256"] ==
                          protocol["bundle"]["packageSha256"], "prepared plugin changed")
             record["installation"] = "verified" if installed else "absent"
-            _require(_read(paths["case"] / "response-schema.json") == material.schema_bytes,
+            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup else
+                           paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
             diagnostic = "authentication-unavailable"
+            phase = "login"
             if reuse_test_auth and ordinal > 1:
                 # The prior iteration only advances after normal exit and closed
                 # output/input validation. Never refill from the initial stale copy.
@@ -835,21 +1080,37 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             record["authentication"] = "chatgpt"
             readable = _readable(paths, definition, installed)
             diagnostic = "already-attempted"
-            _exclusive(run_root / f"attempt-{ordinal:02d}.json", _bytes({
+            _exclusive(ledger / f"attempt-{ordinal:02d}.json", _bytes({
                 "ordinal": ordinal, "caseId": case["id"], "protocolDigest": protocol["protocolDigest"]}))
             # The marker consumes budget even if spawn fails. CLI launch count
             # is separately recorded only once Popen has created the process.
+            record["attemptCount"] = 1
             diagnostic = "execution-failed"
-            capture = invoke(build_native_argv(executable, run_root, ordinal), cwd=paths["workspace"],
+            phase = "launch"
+            argv = build_native_argv(executable, run_root, ordinal)
+            if followup:
+                argv[argv.index("--output-schema") + 1] = str(ledger / f"response-schema-{ordinal:02d}.json")
+            capture = invoke(argv, cwd=paths["workspace"],
                              env=case_environment(paths), stdin=material.prompt_bytes,
                              started_callback=lambda: record.__setitem__("cliLaunchCount", 1),
-                             line_callback=lambda raw: inspect_native_event(raw, readable, paths["workspace"]))
+                             line_callback=lambda raw: _observe_line(raw, readable, paths["workspace"], events))
             _require(record["cliLaunchCount"] == 1, "client runner did not report a created process")
-            _successful(capture, "case execution")
+            facts = _capture_facts(capture)
+            facts.update(eventCount=events["eventCount"], eventTypes=events["eventTypes"],
+                         itemTypes=events["itemTypes"], policyReason=events["policyReason"])
+            if events["category"] != "none":
+                facts.update(phase=events["phase"], category=events["category"])
+            record["executionDiagnostics"] = facts
+            if "turn.failed" in events["eventTypes"]:
+                record["terminal"] = "turn.failed"
+            if facts["category"] != "none":
+                raise NativeDiagnosticError(facts)
             diagnostic = "stream-invalid"
+            phase = "stream"
             stream, count = parse_native_jsonl(capture["stdout"], taxonomy, readable, paths["workspace"])
             record["readonlyCommandCount"] = count
             record["terminal"] = stream.terminal_type
+            phase = "response"
             observed = dict(stream.structured_result)
             materialized_schema = _json(material.schema_bytes)
             legacy._validate_schema_value(observed, materialized_schema, materialized_schema,
@@ -857,6 +1118,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             record["observed"] = {key: value for key, value in observed.items() if key != "opaqueCaseBinding"}
             failures = legacy.validate_model_response(observed, case, material.token, schema)
             diagnostic = "input-changed"
+            phase = "postcheck"
             record["fixtureAfterSha256"] = fixture_identity(paths["workspace"], definition)
             if installed:
                 record["packageAfterSha256"] = package_identity(paths["package"])
@@ -868,16 +1130,29 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             record["diagnostic"] = "semantic-mismatch" if failures else "none"
         except (OSError, ValueError, KeyError, NativeObservationError, subprocess.SubprocessError) as error:
             record["status"] = "INCOMPLETE"
-            record["diagnostic"] = diagnostic
+            facts = dict(error.facts) if isinstance(error, NativeDiagnosticError) else dict(record["executionDiagnostics"])
+            facts.update(eventCount=events["eventCount"], eventTypes=events["eventTypes"],
+                         itemTypes=events["itemTypes"], policyReason=events["policyReason"])
+            if events["category"] != "none":
+                facts.update(phase=events["phase"], category=events["category"])
+            _first_failure(facts, phase, "response-invalid" if phase == "response" else diagnostic)
+            record["executionDiagnostics"] = facts
+            record["diagnostic"] = facts["category"]
+            if "turn.failed" in events["eventTypes"]:
+                record["terminal"] = "turn.failed"
             if diagnostic == "authentication-unavailable":
                 record["authentication"] = "unavailable"
+                facts.update(phase="login", inputBytesSent=0, inputFullyDelivered=None)
             # Raw exceptions may contain private paths or output; do not retain them.
             del error
             break
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "protocolId": PROTOCOL_ID,
+    result = {"schemaVersion": "2", "diagnosticRevision": 1, "protocolId": PROTOCOL_ID,
+              "priorResultSha256": HISTORICAL_RESULT_SHA256 if followup else None,
+              "attemptCount": sum(item["attemptCount"] for item in results),
+              "cumulativeAttemptCount": int(followup) + sum(item["attemptCount"] for item in results),
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
               "authenticationMode": "serial-test-auth-copy" if reuse_test_auth else "independent-official-login",
               "protocolDigest": protocol["protocolDigest"], "runMode": "actual" if actual else "simulated",
@@ -889,7 +1164,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
               "cleanup": "retained-test-state", "descendantClosure": "not-observed"}
     failures = validate_native_result(result, root)
     _require(not failures, "native normalized result failed semantic validation")
-    _exclusive(run_root / "normalized-result.json", _bytes(result))
+    _exclusive(ledger / "normalized-result.json", _bytes(result))
     return result
 
 
@@ -928,6 +1203,11 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         result_schema = _json(_read(root / RESULT_SCHEMA_RELATIVE))
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
+        prior_count = 1 if document["priorResultSha256"] == HISTORICAL_RESULT_SHA256 else 0
+        _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
+                 "native attempt count mismatch")
+        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= 17,
+                 "native cumulative attempt budget mismatch")
         cases = legacy.load_golden_cases(root)
         fixtures = _input(root, protocol, "fixtureMatrix")
         model_schema = _input(root, protocol, "modelResponseSchema")
@@ -950,7 +1230,26 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 _require(record == expected, "unstarted native case carries observed facts")
                 stopped = True
                 continue
+            facts = record["executionDiagnostics"]
+            _require(record["cliLaunchCount"] <= record["attemptCount"], "launch lacks consumed attempt")
+            _require(facts["eventCount"] >= len(facts["eventTypes"]), "event summary count mismatch")
+            _require(not facts["itemTypes"] or (any(kind.startswith("item.") for kind in facts["eventTypes"]) and
+                     len(facts["itemTypes"]) <= facts["eventCount"]), "item summary lacks matching events")
+            _require(facts["inputBytesSent"] <= len(material.prompt_bytes), "input count exceeds prompt")
+            if record["attemptCount"]:
+                if facts["inputFullyDelivered"] is True:
+                    _require(facts["inputBytesSent"] == len(material.prompt_bytes), "complete input count mismatch")
+                elif facts["inputFullyDelivered"] is False:
+                    _require(facts["inputBytesSent"] < len(material.prompt_bytes), "incomplete input count mismatch")
+            _require(facts["signal"] == (-facts["returnCode"] if facts["returnCode"] is not None and
+                     facts["returnCode"] < 0 else None), "signal and return code disagree")
+            if facts["timedOut"]:
+                _require(facts["category"] != "none", "timeout cannot succeed")
+            if facts["cleanupFailed"]:
+                _require(status == "INCOMPLETE" and facts["category"] != "none", "cleanup failure cannot complete")
             if status == "INCOMPLETE":
+                _require(facts["category"] == record["diagnostic"] and facts["category"] != "none",
+                         "incomplete diagnostic differs from first cause")
                 stopped = True
                 _require(record["diagnostic"] not in {"none", "not-run", "semantic-mismatch"}, "incomplete case lacks cause")
             for field in ("fixtureBeforeSha256", "fixtureAfterSha256"):
@@ -972,6 +1271,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                          (ordinal == 11 or record["packageBeforeSha256"] is not None),
                          "native launch lacks verified prerequisites")
             if status in {"PASS", "FAIL"}:
+                _require(facts["category"] == "none" and facts["returnCode"] == 0 and
+                         facts["policyReason"] == "none" and
+                         set(facts["itemTypes"]) <= {"reasoning", "agent_message", "command_execution"} and
+                         facts["inputFullyDelivered"] is True and not facts["observerTerminated"] and
+                         facts["stderrClassification"] in {"empty", "known-nonfatal"} and
+                         "turn.completed" in facts["eventTypes"] and "turn.failed" not in facts["eventTypes"] and
+                         "unknown" not in facts["eventTypes"], "completed case lacks successful execution facts")
                 _require(record["cliLaunchCount"] == 1 and record["authentication"] == "chatgpt" and
                          record["installation"] == ("absent" if ordinal == 11 else "verified") and
                          record["terminal"] == "turn.completed", "completed native case lacks required evidence")
@@ -1011,6 +1317,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--login-commands", action="store_true")
     group.add_argument("--share-test-auth", action="store_true")
     group.add_argument("--run", action="store_true")
+    group.add_argument("--prepare-diagnostic-followup", action="store_true")
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--codex", type=Path)
@@ -1018,10 +1325,15 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     parser.add_argument("--authorize-model-calls", action="store_true")
     parser.add_argument("--authorize-test-auth-copy", action="store_true")
     parser.add_argument("--reuse-test-auth", action="store_true")
+    parser.add_argument("--diagnostic-followup", action="store_true")
     parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
-        if args.prepare:
+        if args.prepare_diagnostic_followup:
+            _require(args.run_root is not None, "followup requires the existing test root")
+            prepare_diagnostic_followup(root, args.run_root)
+            print("Diagnostic followup prepared; historical state preserved; no client started.")
+        elif args.prepare:
             _require(all(value is not None for value in (args.run_root, args.bundle_root, args.codex)),
                      "prepare requires explicit run root, bundle and CLI")
             prepare_native_run(root, args.run_root, args.bundle_root, args.codex,
@@ -1038,7 +1350,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
         elif args.run:
             _require(args.run_root is not None, "run requires a prepared run root")
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
-                                            reuse_test_auth=args.reuse_test_auth)
+                                            reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup)
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "PASS" else 1
         else:

@@ -340,8 +340,14 @@ identity inputs. Official login status passed in all 16 dedicated homes after
 authorized reuse. Implementation `f7a590ad58e2a1200f64009e48556fa7448f2f86`
 then launched Case 1 once; its normalized result is INCOMPLETE with
 `execution-failed` and no valid terminal response. Cases 2-16 remain NOT-RUN.
-The v2 history binds that result to its unchanged execution protocol and inputs;
-it does not establish a host PASS or a more specific failure cause. V1 artifacts
+The v2 history preserves that exact result under `historicalResults`, with its
+original execution protocol, implementation commit and result commit. Diagnostic
+revision 1 adds safe capture facts and a separately authorized follow-up ledger;
+new protocol inputs derive new schemas, prompts and commitments. Historical
+bytes are checked against their frozen content identity rather than interpreted
+under the new result schema. They do not establish a host PASS or a narrower
+failure cause. The follow-up explicitly includes the earlier consumed attempt
+in its cumulative budget; its result is separate evidence. V1 artifacts
 and historical failures are not reinterpreted. The
 original Golden Set, model-response definition, fixture matrix, profile runtime,
 full-profile runtime, bundle format, and ordinary builder lifecycle are unchanged.

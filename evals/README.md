@@ -221,7 +221,12 @@ then launched Case 1 once and stopped with `execution-failed` / INCOMPLETE befor
 a valid terminal response. Cases 2-16 remain NOT-RUN. The normalized evidence
 binds implementation `f7a590ad58e2a1200f64009e48556fa7448f2f86`; it does not
 identify a narrower failure cause, prove internal request counts, or claim host
-PASS. No retry or model fallback occurred.
+PASS. No retry or model fallback occurred in that historical batch.
+Native v2 diagnostic revision 1 adds bounded, closed failure facts and preserves
+that immutable record. Its explicitly authorized follow-up has one additional
+Case 1 slot and the original unused slots for Cases 2-16, at most 17 total starts.
+The new protocol rematerializes all inputs; it does not fill historical unknowns
+or convert a nonfatal stderr classification into host evidence.
 
 See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
 for the supported environment, authentication and model-tool separation,

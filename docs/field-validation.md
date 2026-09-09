@@ -115,6 +115,37 @@ request counts remain unknown. The record is INCOMPLETE, not host PASS.
 Dedicated test state and private authentication remain retained; no cleanup,
 plugin-runtime, cross-host or full-profile observation is claimed.
 
+Diagnostic revision 1 of native v2 preserves that first result byte-for-byte in
+`historicalResults`, bound to its original implementation and result commits.
+It does not backfill the missing root cause. The current schema adds closed
+first-cause diagnostics: phase/category, exit code or signal when available,
+timeout and observer termination, input delivery, bounded byte/event counts,
+known event/item types, and a separate cleanup-failure flag. Raw errors and
+streams are discarded; the frozen JSONL has no stable official error code, so
+that field stays `unknown`. A cleanup failure cannot overwrite an earlier cause.
+
+The frozen CLI's top-level `error` omits upstream retry disposition; it is
+observed but is not alone a terminal failure. `turn.failed` remains incomplete.
+The parser still requires a complete ordered terminal stream and the exact
+bound response. Only fixed stdin notices and the single-line telemetry/PATH
+alias/stale-arg0 warning prefixes from the frozen source are recognized as
+nonfatal stderr. Unknown continuations, other diagnostics, unsupported items,
+and unbound commands remain incomplete. Nonfatal warnings do not prove cleanup
+or tool availability. See the frozen [exec source](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/lib.rs)
+and [JSONL mapping](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/event_processor_with_jsonl_output.rs).
+
+An explicit follow-up authorization permits Case 1 one additional start, then
+Cases 2-16 at most once each if Case 1 yields a valid semantic result. Total
+authorized starts are 17, including the historical incomplete attempt. This is
+not a fresh budget or an automatic retry. `--prepare-diagnostic-followup` checks
+the exact original result and markers, preserves them and every client home,
+and writes new protocol-derived schemas in a separate ledger inside the same
+test root. `--run --diagnostic-followup --authorize-model-calls --reuse-test-auth`
+uses that ledger once. Fresh ephemeral execution never resumes the old session;
+no login or authentication copying occurs during preparation. Any unreliable
+follow-up case stops the batch. Attempt markers and actual CLI starts are
+separate counters; internal model request counts remain unknown.
+
 In CLI 0.153.0, `remote_plugin=false` does not disable all startup synchronization.
 Curated catalog metadata and account-installed plugin synchronization are separate
 paths; the latter can download and enable account plugins. Native v2 therefore
@@ -129,7 +160,7 @@ for observing the later authenticated case execution.
 Each case has a finite deadline and output limit. The observer interrupts and
 reaps its client process, with a bounded fallback for its process group. It does
 not claim complete adversarial descendant containment. Failed or incomplete
-attempts consume their case slot; they are not retried. Unreliable execution
+attempts consume their case slot; they are not automatically retried. Unreliable execution
 stops the batch and leaves later cases NOT-RUN. CLI launch counts are recorded
 separately from internal model request counts, which remain unknown.
 

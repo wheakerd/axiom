@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "d5a07100e3ce8e9b516ac35ed62d00e6707d8aad11c79b8b6f2b8f0c770e6a3b"
+      "sha256": "dda909527465f5609e72df0fa0b65feb3fc4d35deb813a9b2c3dfe7e24afb6e3"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "8da439eb9c75f103548fb17b0e31c7b168663d792bbd2ec816ee0cb19bc62f69"
+    "sha256": "aab51e4327615c6939dcc4052461615b506cc547c04e9ce691bb8feb12defff0"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,5 +134,21 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "protocolDigest": "sha256:735ad73170d6d1f3b4b6a21a4dfdc4dc280100a07e47bead22b2af9562a577dc"
+  "diagnosticRevision": 1,
+  "followup": {
+    "priorResultSha256": "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
+    "priorAttempts": 1,
+    "maximumCumulativeAttempts": 17,
+    "maximumCaseOneAttempts": 2,
+    "remainingCaseAttempts": 1
+  },
+  "diagnostics": {
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "errorEvent": "not-terminal; will_retry unavailable",
+    "turnFailed": "failure terminal; message discarded",
+    "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
+    "retention": "closed first-cause facts; cleanup failure is separate; no raw output",
+    "historicalFailure": "immutable prior record; narrower cause unknown"
+  },
+  "protocolDigest": "sha256:0990cdc1ff099e4cdd06f4a9c5f085b050df4adea3a081d19f47533124e0ae35"
 }
