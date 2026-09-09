@@ -1,5 +1,23 @@
 # Runtime And Repository Identity
 
+## Native model migration
+
+Diagnostic revision 7 selects the explicitly authorized Codex 0.153.0 / gpt-5.5 /
+medium combination. Five historical Sol INCOMPLETE records retain their original
+bytes, implementation and protocol bindings. One new attempt per original case
+has a lifetime ceiling of 21; this is neither a Sol fix nor an automatic fallback.
+The new protocol, all 16 transport schemas, prompts and commitments change;
+canonical cases, scoring, runtime and bundle identities do not.
+
+Pre/post official catalog facts must support Direct under the bound configuration.
+Metadata sources are recorded separately from source-derived effective mode;
+local preflight cannot prove service acceptance. Case 11 remains the zero-Axiom
+control. Contexts and state stay separate, authentication uses the approved serial
+test-only handoff, and Code Mode host/plugin runtime remain disabled.
+No new host result exists at this implementation stage. See the
+[model migration and execution limits](field-validation.md#native-model-migration).
+The sections below describe their original historical revisions and budgets.
+
 ## Native diagnostic revision 6
 
 Current protocol revision 6 records closed parser assertion codes/ordinals and

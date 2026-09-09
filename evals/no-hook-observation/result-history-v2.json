@@ -3,23 +3,16 @@
   "kind": "axiom-codex-native-result-history",
   "protocol": {
     "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-    "digest": "sha256:e7443834a4ec5734698a58442a363aaa276ffbe106851e7a54432de647d98d11"
+    "digest": "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99"
   },
-  "results": [
-    {
-      "path": "evals/no-hook-observation/results/codex-native-7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018.json",
-      "sha256": "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
-      "implementationCommit": "c3ce63d789394f60e93687ec34db05be199fbc19",
-      "implementationTree": "be21ad749edb25e4fb832bce7debe9e0fa75175b"
-    }
-  ],
+  "results": [],
   "current": {
-    "codexObservation": "incomplete",
+    "codexObservation": "not-run",
     "hostClaim": false,
-    "credentialUsed": true,
-    "cliLaunchCount": 1,
+    "credentialUsed": false,
+    "cliLaunchCount": 0,
     "modelRequestCount": null,
-    "pluginInstalled": true
+    "pluginInstalled": false
   },
   "historicalResults": [
     {
@@ -54,6 +47,15 @@
       "implementationTree": "b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b",
       "protocolDigest": "sha256:91e5e56969c25e10477880935fe78af3825cd6f436126adc4e0d179f31855a4b",
       "resultCommit": "5a359ae6e4226fb7ad45935be878bfe871cb0a4f",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018.json",
+      "sha256": "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
+      "implementationCommit": "c3ce63d789394f60e93687ec34db05be199fbc19",
+      "implementationTree": "be21ad749edb25e4fb832bce7debe9e0fa75175b",
+      "protocolDigest": "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d",
+      "resultCommit": "cf7c58eeef159a7899fb2a6a2421cd3446bc0c07",
       "attemptCount": 1
     }
   ]

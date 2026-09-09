@@ -24,7 +24,8 @@
     "diagnosticRevision",
     "priorResultSha256s",
     "attemptCount",
-    "cumulativeAttemptCount"
+    "cumulativeAttemptCount",
+    "executionModel"
   ],
   "properties": {
     "schemaVersion": {
@@ -96,7 +97,9 @@
           "attemptCount",
           "executionDiagnostics",
           "evidenceExtraction",
-          "privateCapture"
+          "privateCapture",
+          "modelMetadataBefore",
+          "modelMetadataAfter"
         ],
         "properties": {
           "ordinal": {
@@ -664,6 +667,94 @@
                 "type": "boolean"
               }
             }
+          },
+          "modelMetadataBefore": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "metadataSource",
+                  "toolMode",
+                  "supportsMedium",
+                  "derivedEffectiveToolMode"
+                ],
+                "properties": {
+                  "model": {
+                    "const": "gpt-5.5",
+                    "type": "string"
+                  },
+                  "metadataSource": {
+                    "enum": [
+                      "official-cache",
+                      "frozen-embedded"
+                    ]
+                  },
+                  "toolMode": {
+                    "enum": [
+                      null,
+                      "direct"
+                    ]
+                  },
+                  "supportsMedium": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "derivedEffectiveToolMode": {
+                    "const": "direct",
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "modelMetadataAfter": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "metadataSource",
+                  "toolMode",
+                  "supportsMedium",
+                  "derivedEffectiveToolMode"
+                ],
+                "properties": {
+                  "model": {
+                    "const": "gpt-5.5",
+                    "type": "string"
+                  },
+                  "metadataSource": {
+                    "enum": [
+                      "official-cache",
+                      "frozen-embedded"
+                    ]
+                  },
+                  "toolMode": {
+                    "enum": [
+                      null,
+                      "direct"
+                    ]
+                  },
+                  "supportsMedium": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "derivedEffectiveToolMode": {
+                    "const": "direct",
+                    "type": "string"
+                  }
+                }
+              }
+            ]
           }
         }
       }
@@ -692,7 +783,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 6
+      "const": 7
     },
     "attemptCount": {
       "type": "integer",
@@ -702,15 +793,38 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 20
+      "maximum": 21
     },
     "priorResultSha256s": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 4,
+      "maxItems": 5,
       "items": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "executionModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "reasoningEffort",
+        "requiredToolMode"
+      ],
+      "properties": {
+        "model": {
+          "const": "gpt-5.5",
+          "type": "string"
+        },
+        "reasoningEffort": {
+          "const": "medium",
+          "type": "string"
+        },
+        "requiredToolMode": {
+          "const": "direct",
+          "type": "string"
+        }
       }
     }
   }

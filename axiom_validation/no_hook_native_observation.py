@@ -38,6 +38,8 @@ PROTOCOL_ID = "axiom-codex-native-observation-v2"
 DISCOVERY_MECHANISM = "host-user-skills-from-installed-package"
 STATE_NAME = "native-preparation.json"
 CASE_COUNT = 16
+MODEL = "gpt-5.5"
+REASONING_EFFORT = "medium"
 AUTH_FILE_NAME = "auth.json"
 AUTH_COPY_STATE = "test-auth-copy-state.json"
 NativeObservationError = legacy.ObservationError
@@ -63,6 +65,7 @@ CODE_MODE_FAIL_CLOSED_NOTICE = (
 )
 FIFTH_RESULT_SHA256 = "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018"
 FIFTH_PROTOCOL_DIGEST = "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d"
+MODEL_PRIOR_RESULTS = [*PRIOR_RESULTS, FIFTH_RESULT_SHA256]
 STREAM_ASSERTIONS = (
     "none", "framing-or-size", "event-count", "event-after-terminal", "event-shape",
     "thread-start-order", "turn-start-order", "terminal-active-items", "error-before-thread",
@@ -133,9 +136,9 @@ class PrivateDiagnostics:
         summary = "unclassified host diagnostic; dynamic content omitted"
         if message == "invalid global instructions":
             summary = "invalid-global-instructions; instruction context not established"
-        elif message == (f"Model metadata for `{legacy.MODEL}` not found. Defaulting to fallback metadata; "
+        elif message == (f"Model metadata for `{MODEL}` not found. Defaulting to fallback metadata; "
                          "this can degrade performance and cause issues."):
-            summary = "model-metadata-fallback; configured model gpt-5.6-sol; context/tool metadata not established"
+            summary = f"model-metadata-fallback; configured model {MODEL}; context/tool metadata not established"
         elif re.fullmatch(r"Model metadata for `[^`\r\n]+` not found\. Defaulting to fallback metadata; "
                           r"this can degrade performance and cause issues\.", message):
             summary = "model-metadata-fallback; unretained model identifier; context/tool metadata not established"
@@ -404,15 +407,15 @@ def _protocol(root: Path) -> dict[str, Any]:
     }, "native authentication contract mismatch")
     _require(document.get("cli") == {
         "version": legacy.CODEX_VERSION, "sha256": legacy.CODEX_BINARY_SHA256,
-        "model": legacy.MODEL, "reasoningEffort": legacy.REASONING_EFFORT,
+        "model": MODEL, "reasoningEffort": REASONING_EFFORT,
     }, "native CLI/model identity mismatch")
     _require(document.get("limits") == {
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
-    _require(document.get("diagnosticRevision") == 6 and document.get("followup") == {
-        "priorResultSha256s": PRIOR_RESULTS, "priorAttempts": 4,
-        "maximumCumulativeAttempts": 20, "maximumCaseOneAttempts": 5,
+    _require(document.get("diagnosticRevision") == 7 and document.get("followup") == {
+        "priorResultSha256s": MODEL_PRIOR_RESULTS, "priorAttempts": 5,
+        "maximumCumulativeAttempts": 21, "maximumCaseOneAttempts": 6,
         "remainingCaseAttempts": 1,
     }, "native diagnostic migration or retry budget mismatch")
     _require(document.get("responseTransport") == {
@@ -427,6 +430,15 @@ def _protocol(root: Path) -> dict[str, Any]:
         "rejectedNotice": CODE_MODE_FAIL_CLOSED_NOTICE,
         "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation",
     }, "native direct tool mode contract mismatch")
+    _require(document.get("modelMetadata") == {
+        "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+        "embeddedPath": "codex-rs/models-manager/models.json", "model": MODEL,
+        "embeddedToolMode": None, "supportsMedium": True,
+        "cache": "registered CODEX_HOME/models_cache.json; read only; no explicit refresh",
+        "selection": "official cache when present; frozen embedded entry otherwise",
+        "checks": "before launch and after exit; inferred Direct under bound feature settings",
+        "scope": "new observation combination; not equivalent to historical Sol context",
+    }, "native model metadata contract mismatch")
     bindings = list(document.get("implementationBindings", []))
     _require([item.get("path") for item in bindings] == list(IMPLEMENTATION_PATHS),
              "native implementation binding owner set changed")
@@ -500,7 +512,12 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             "implementationCommit": "23d2d9d3a2e98bc67e74cbcf865cb53a929202eb",
             "implementationTree": "b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b",
             "resultCommit": "5a359ae6e4226fb7ad45935be878bfe871cb0a4f", "attemptCount": 1}
-        _require(historical == [expected_historical, expected_retry, expected_third, expected_fourth],
+        expected_fifth = {"path": "evals/no-hook-observation/results/codex-native-" + FIFTH_RESULT_SHA256 + ".json",
+            "sha256": FIFTH_RESULT_SHA256, "protocolDigest": FIFTH_PROTOCOL_DIGEST,
+            "implementationCommit": "c3ce63d789394f60e93687ec34db05be199fbc19",
+            "implementationTree": "be21ad749edb25e4fb832bce7debe9e0fa75175b",
+            "resultCommit": "cf7c58eeef159a7899fb2a6a2421cd3446bc0c07", "attemptCount": 1}
+        _require(historical == [expected_historical, expected_retry, expected_third, expected_fourth, expected_fifth],
                  "historical native evidence migration changed")
         for binding in historical:
             _require(hashlib.sha256(_read(root / binding["path"])).hexdigest() == binding["sha256"],
@@ -525,16 +542,9 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             data = _read(root / relative)
             _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "native history result bytes changed")
             result = _json(data)
-            if binding["sha256"] == FIFTH_RESULT_SHA256:
-                # Exact previously validated bytes, including its schema v5
-                # diagnostics, remain evidence of that implementation only.
-                _require(binding["implementationCommit"] == "c3ce63d789394f60e93687ec34db05be199fbc19" and
-                         binding["implementationTree"] == "be21ad749edb25e4fb832bce7debe9e0fa75175b" and
-                         result["protocolDigest"] == FIFTH_PROTOCOL_DIGEST,
-                         "fifth historical implementation binding changed")
-            else:
-                _require(not validate_native_result(result, root), "native history result is invalid")
-            _require(result["priorResultSha256s"] == PRIOR_RESULTS, "result does not continue the historical budget")
+            _require(not validate_native_result(result, root), "native history result is invalid")
+            _require(result["priorResultSha256s"] == MODEL_PRIOR_RESULTS,
+                     "result does not continue the historical budget")
             _require(result["runMode"] == "actual", "simulated result is not a host-history observation")
             current = {"codexObservation": result["status"].lower(), "hostClaim": result["hostClaim"],
                        "credentialUsed": result["cliLaunchCount"] > 0, "cliLaunchCount": result["cliLaunchCount"],
@@ -557,6 +567,36 @@ def _case_paths(run_root: Path, ordinal: int) -> dict[str, Path]:
             "discovery": case / "empty-user/.agents/skills",
             "package": case / "client-home" / "plugins/cache" / legacy.MARKETPLACE_NAME /
             legacy.PLUGIN_NAME / legacy.PLUGIN_VERSION}
+
+
+def _model_metadata(paths: Mapping[str, Path]) -> dict[str, Any]:
+    """Read only the registered public model catalog; never refresh or alter it.
+
+    Frozen models.json supplies gpt-5.5/null/medium when no cache exists. With
+    CodeMode and CodeModeOnly features disabled, requested_tool_mode resolves
+    null to Direct. This is a source-derived mode, not a runtime memory probe.
+    The official client may refresh its catalog during execution; check again
+    after exit and do not accept a conflicting post-execution catalog.
+    """
+    cache = paths["home"] / "models_cache.json"
+    source, tool_mode = "frozen-embedded", None
+    if cache.exists() or cache.is_symlink():
+        document = _json(_read(cache, maximum=4 * 1024 * 1024))
+        _require(type(document) is dict and document.get("client_version") == legacy.CODEX_VERSION and
+                 type(document.get("models")) is list, "official model cache version or shape changed")
+        matches = [item for item in document["models"] if type(item) is dict and item.get("slug") == MODEL]
+        _require(len(matches) == 1, "official cache does not uniquely describe the fixed model")
+        entry = matches[0]
+        # Frozen ModelInfo.tool_mode has serde(default) and omits None on write.
+        _require(entry.get("tool_mode") in (None, "direct"),
+                 "official model metadata does not select Direct")
+        levels = entry.get("supported_reasoning_levels")
+        _require(type(levels) is list and any(type(level) is dict and
+                 level.get("effort") == REASONING_EFFORT for level in levels),
+                 "official model metadata does not support the fixed reasoning effort")
+        source, tool_mode = "official-cache", entry.get("tool_mode")
+    return {"model": MODEL, "metadataSource": source, "toolMode": tool_mode,
+            "supportsMedium": True, "derivedEffectiveToolMode": "direct"}
 
 
 def case_environment(paths: Mapping[str, Path]) -> dict[str, str]:
@@ -682,7 +722,7 @@ def build_native_argv(executable: Path, run_root: Path, ordinal: int, *,
                       response_schema: Path | None = None, final_output: Path | None = None) -> list[str]:
     _require(type(ordinal) is int and 1 <= ordinal <= CASE_COUNT, "unknown native case ordinal")
     paths = _case_paths(run_root, ordinal)
-    return [str(executable), "--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--model", legacy.MODEL,
+    return [str(executable), "--ask-for-approval", "never", "exec", "--ephemeral", "--json", "--model", MODEL,
             "--skip-git-repo-check", "--ignore-user-config",
             "--ignore-rules", "--cd", str(paths["workspace"]),
             "--output-schema", str(response_schema if response_schema is not None else paths["case"] / "response-schema.json"),
@@ -979,11 +1019,11 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     return state
 
 
-def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
-    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup) / "preparation.json"
-                        if followup or continuation or operator_diagnostics or schema_followup else run_root / STATE_NAME))
+    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup) / "preparation.json"
+                        if followup or continuation or operator_diagnostics or schema_followup or model_followup else run_root / STATE_NAME))
     _require(set(state) == {"schemaVersion", "protocolDigest", "runMode", "executable", "materializationSeed", "cases"},
              "native preparation record is not closed")
     _require(state["schemaVersion"] == "2" and state["protocolDigest"] == protocol["protocolDigest"],
@@ -1011,8 +1051,10 @@ def _verify_prior_attempt(run_root: Path) -> None:
         _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
 
 
-def _ledger(run_root: Path, followup: bool, continuation: bool, operator_diagnostics: bool = False, schema_followup: bool = False) -> Path:
-    _require(sum((followup, continuation, operator_diagnostics, schema_followup)) <= 1, "select exactly one continuation ledger")
+def _ledger(run_root: Path, followup: bool, continuation: bool, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False) -> Path:
+    _require(sum((followup, continuation, operator_diagnostics, schema_followup, model_followup)) <= 1, "select exactly one continuation ledger")
+    if model_followup:
+        return run_root / "model-migration-continuation"
     if schema_followup:
         return run_root / "schema-correction-continuation"
     if operator_diagnostics:
@@ -1063,11 +1105,26 @@ def _verify_four_prior_attempts(run_root: Path) -> None:
         _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
 
 
+def _verify_five_prior_attempts(run_root: Path) -> None:
+    _verify_four_prior_attempts(run_root)
+    prior = run_root / "schema-correction-continuation"
+    _require(hashlib.sha256(_read(prior / "normalized-result.json")).hexdigest() ==
+             FIFTH_RESULT_SHA256, "model migration requires the fifth immutable result")
+    _require(_json(_read(prior / "batch-started.json")) == {"protocolDigest": FIFTH_PROTOCOL_DIGEST} and
+             _json(_read(prior / "attempt-01.json")) == {
+                 "ordinal": 1, "caseId": legacy.EXPECTED_CASE_IDS[0], "protocolDigest": FIFTH_PROTOCOL_DIGEST},
+             "fifth historical attempt markers changed")
+    for ordinal in range(2, 17):
+        path = prior / f"attempt-{ordinal:02d}.json"
+        _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
+
+
 def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: bool = False,
-                                operator_diagnostics: bool = False, schema_followup: bool = False) -> None:
+                                operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False) -> None:
     """Add one explicit ledger; preserve all prior preparation, auth and events."""
     _ordinary_directory(run_root)
-    (_verify_four_prior_attempts if schema_followup else
+    (_verify_five_prior_attempts if model_followup else
+     _verify_four_prior_attempts if schema_followup else
      _verify_three_prior_attempts if operator_diagnostics else
      _verify_two_prior_attempts if continuation else _verify_prior_attempt)(run_root)
     protocol = _protocol(root)
@@ -1100,7 +1157,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
         prepared.append(materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
-    if continuation or operator_diagnostics or schema_followup:
+    if continuation or operator_diagnostics or schema_followup or model_followup:
         previous_state = _json(_read(run_root / "diagnostic-followup/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": RETRY_PROTOCOL_DIGEST},
                  "second preparation no longer matches the original installed inputs")
@@ -1110,7 +1167,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"diagnostic-followup/response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                      "second historical materialization changed")
-    if operator_diagnostics or schema_followup:
+    if operator_diagnostics or schema_followup or model_followup:
         previous_state = _json(_read(run_root / "diagnostic-continuation/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": THIRD_PROTOCOL_DIGEST},
                  "third preparation no longer matches the original installed inputs")
@@ -1120,7 +1177,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"diagnostic-continuation/response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                      "third historical materialization changed")
-    if schema_followup:
+    if schema_followup or model_followup:
         previous_state = _json(_read(run_root / "operator-diagnostic-continuation/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": FOURTH_PROTOCOL_DIGEST},
                  "fourth preparation no longer matches the installed inputs")
@@ -1130,13 +1187,24 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"operator-diagnostic-continuation/response-schema-{ordinal:02d}.json") ==
                      previous.schema_bytes, "fourth historical materialization changed")
-    ledger = _ledger(run_root, not (continuation or operator_diagnostics or schema_followup),
-                     continuation, operator_diagnostics, schema_followup)
-    prior_count = 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else 1
+    if model_followup:
+        previous_state = _json(_read(run_root / "schema-correction-continuation/preparation.json"))
+        _require(previous_state == {**old, "protocolDigest": FIFTH_PROTOCOL_DIGEST},
+                 "fifth preparation no longer matches the installed inputs")
+        for ordinal, case in enumerate(cases, 1):
+            previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=FIFTH_PROTOCOL_DIGEST, model_schema=schema,
+                prompt_envelope=envelope, request=case["request"])
+            _require(_read(run_root / f"schema-correction-continuation/response-schema-{ordinal:02d}.json") ==
+                     previous.schema_bytes, "fifth historical materialization changed")
+            _model_metadata(_case_paths(run_root, ordinal))
+    ledger = _ledger(run_root, not (continuation or operator_diagnostics or schema_followup or model_followup),
+                     continuation, operator_diagnostics, schema_followup, model_followup)
+    prior_count = 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else 1
     ledger.mkdir(mode=0o700)  # exclusive; a partial migration is retained, not retried
     _exclusive(ledger / "migration.json", _bytes({"priorResultSha256": HISTORICAL_RESULT_SHA256,
         "priorProtocolDigest": HISTORICAL_PROTOCOL_DIGEST, "protocolDigest": protocol["protocolDigest"],
-        "priorResultSha256s": PRIOR_RESULTS[:prior_count],
+        "priorResultSha256s": MODEL_PRIOR_RESULTS[:prior_count],
         "priorAttempts": prior_count, "maximumCumulativeAttempts": 16 + prior_count}))
     for ordinal, material in enumerate(prepared, 1):
         _exclusive(ledger / f"response-schema-{ordinal:02d}.json", material.schema_bytes)
@@ -1596,21 +1664,24 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
             "installation": "not-checked", "authentication": "not-checked",
             "fixtureBeforeSha256": None, "fixtureAfterSha256": None,
             "packageBeforeSha256": None, "packageAfterSha256": None,
+            "modelMetadataBefore": None, "modelMetadataAfter": None,
             "readonlyCommandCount": 0, "observed": None, "terminal": "not-observed", **fields,
             "opaqueBindingSha256": materialized.opaque_binding_sha256}
 
 
 def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls: bool = False,
                            reuse_test_auth: bool = False, followup: bool = False,
-                           continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False,
+                           continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
-    _require(not ((operator_diagnostics or schema_followup) and private_diagnostics), "select one private capture format")
-    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup)
-    ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup)
-    prior_count = 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
-    if schema_followup:
+    _require(not ((operator_diagnostics or schema_followup or model_followup) and private_diagnostics), "select one private capture format")
+    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup)
+    ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup)
+    prior_count = 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
+    if model_followup:
+        _verify_five_prior_attempts(run_root)
+    elif schema_followup:
         _verify_four_prior_attempts(run_root)
     elif operator_diagnostics:
         _verify_three_prior_attempts(run_root)
@@ -1619,10 +1690,11 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     elif followup:
         _verify_prior_attempt(run_root)
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
-    operator = OperatorDiagnostics(ledger) if operator_diagnostics or schema_followup else None
+    operator = OperatorDiagnostics(ledger) if operator_diagnostics or schema_followup or model_followup else None
     executable = Path(state["executable"])
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
+    _require(not actual or model_followup, "actual execution requires the authorized model-migration ledger")
     invoke = bounded_process if process_runner is None else process_runner
     cases = legacy.load_golden_cases(root)
     fixtures = _input(root, protocol, "fixtureMatrix")
@@ -1636,7 +1708,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
     if reuse_test_auth:
-        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup else protocol)
+        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup else protocol)
     _exclusive(ledger / "batch-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
         paths = _case_paths(run_root, ordinal)
@@ -1660,7 +1732,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                 _require(record["packageBeforeSha256"] == state["cases"][ordinal - 1]["packageSha256"] ==
                          protocol["bundle"]["packageSha256"], "prepared plugin changed")
             record["installation"] = "verified" if installed else "absent"
-            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup or continuation or operator_diagnostics or schema_followup else
+            record["modelMetadataBefore"] = _model_metadata(paths)
+            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup or continuation or operator_diagnostics or schema_followup or model_followup else
                            paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
             diagnostic = "authentication-unavailable"
@@ -1695,7 +1768,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             phase = "launch"
             argv = build_native_argv(executable, run_root, ordinal, response_schema=(
                 ledger / f"response-schema-{ordinal:02d}.json" if
-                followup or continuation or operator_diagnostics or schema_followup else None),
+                followup or continuation or operator_diagnostics or schema_followup or model_followup else None),
                 final_output=final_output)
             def receive(raw: bytes) -> None:
                 if operator is not None:
@@ -1756,6 +1829,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                      record["packageAfterSha256"] == record["packageBeforeSha256"], "consumed inputs changed")
             _verify_config(paths, run_root / "marketplace", installed)
             _verify_discovery(paths, installed)
+            record["modelMetadataAfter"] = _model_metadata(paths)
             record["evidenceExtraction"]["postcheck"] = "valid"
             if facts["category"] != "none":
                 raise NativeDiagnosticError(facts)
@@ -1822,6 +1896,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                              record["packageAfterSha256"] == record["packageBeforeSha256"], "consumed inputs changed")
                     _verify_config(paths, run_root / "marketplace", installed)
                     _verify_discovery(paths, installed)
+                    record["modelMetadataAfter"] = _model_metadata(paths)
                     record["evidenceExtraction"]["postcheck"] = "valid"
                 except (OSError, ValueError, KeyError, NativeObservationError):
                     _first_failure(record["executionDiagnostics"], "postcheck", "input-changed")
@@ -1838,8 +1913,9 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "diagnosticRevision": 6, "protocolId": PROTOCOL_ID,
-              "priorResultSha256s": PRIOR_RESULTS[:prior_count],
+    result = {"schemaVersion": "2", "diagnosticRevision": 7, "protocolId": PROTOCOL_ID,
+              "executionModel": {"model": MODEL, "reasoningEffort": REASONING_EFFORT, "requiredToolMode": "direct"},
+              "priorResultSha256s": MODEL_PRIOR_RESULTS[:prior_count],
               "attemptCount": sum(item["attemptCount"] for item in results),
               "cumulativeAttemptCount": prior_count + sum(item["attemptCount"] for item in results),
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
@@ -1893,7 +1969,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
         prior_results = document["priorResultSha256s"]
-        _require(prior_results in [PRIOR_RESULTS[:i] for i in range(5)], "invalid historical prefix")
+        _require(prior_results in [MODEL_PRIOR_RESULTS[:i] for i in range(6)], "invalid historical prefix")
         prior_count = len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
@@ -1932,7 +2008,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(private["status"] != "write-failed" or
                      (status == "INCOMPLETE" and record["executionDiagnostics"]["cleanupFailed"]),
                      "failed private capture was accepted")
-            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS],
+            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS],
                      "operator capture lacks linked history authorization")
             facts = record["executionDiagnostics"]
             _require(facts["streamAssertion"] in STREAM_ASSERTIONS and
@@ -1991,7 +2067,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                         _require(record[field] == protocol["bundle"]["packageSha256"],
                                  "native package record is not bound to the verified bundle")
             if record["cliLaunchCount"]:
-                _require(record["authentication"] == "chatgpt" and
+                _require(record["modelMetadataBefore"] is not None and record["authentication"] == "chatgpt" and
                          record["installation"] == ("absent" if ordinal == 11 else "verified") and
                          record["fixtureBeforeSha256"] is not None and
                          (ordinal == 11 or record["packageBeforeSha256"] is not None),
@@ -2008,11 +2084,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 response = {**record["observed"], "opaqueCaseBinding": material.token}
                 _validate_native_response(response, model_schema, material.token)
             if extraction["postcheck"] == "valid":
-                _require(record["fixtureAfterSha256"] is not None and
+                _require(record["modelMetadataAfter"] is not None and record["fixtureAfterSha256"] is not None and
                          record["fixtureAfterSha256"] == record["fixtureBeforeSha256"] and
                          record["packageAfterSha256"] == record["packageBeforeSha256"],
                          "postcheck lacks stable inputs")
             if status in {"PASS", "FAIL"}:
+                _require(record["modelMetadataBefore"] is not None and record["modelMetadataAfter"] is not None,
+                         "completed case lacks pre/post official Direct metadata")
                 _require(all(value == "valid" for value in extraction.values()), "complete case lacks evidence checks")
                 _require(facts["category"] == "none" and facts["returnCode"] == 0 and
                          facts["finalOutputVerified"] and facts["streamAssertion"] == "none" and
@@ -2066,6 +2144,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--prepare-diagnostic-continuation", action="store_true")
     group.add_argument("--prepare-operator-diagnostics", action="store_true")
     group.add_argument("--prepare-schema-followup", action="store_true")
+    group.add_argument("--prepare-model-followup", action="store_true")
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--codex", type=Path)
@@ -2078,13 +2157,14 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     parser.add_argument("--private-diagnostics", action="store_true")
     parser.add_argument("--operator-diagnostics", action="store_true")
     parser.add_argument("--schema-followup", action="store_true")
+    parser.add_argument("--model-followup", action="store_true")
     parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
-        if args.prepare_diagnostic_followup or args.prepare_diagnostic_continuation or args.prepare_operator_diagnostics or args.prepare_schema_followup:
+        if args.prepare_diagnostic_followup or args.prepare_diagnostic_continuation or args.prepare_operator_diagnostics or args.prepare_schema_followup or args.prepare_model_followup:
             _require(args.run_root is not None, "followup requires the existing test root")
             prepare_diagnostic_followup(root, args.run_root, continuation=args.prepare_diagnostic_continuation,
-                                        operator_diagnostics=args.prepare_operator_diagnostics, schema_followup=args.prepare_schema_followup)
+                                        operator_diagnostics=args.prepare_operator_diagnostics, schema_followup=args.prepare_schema_followup, model_followup=args.prepare_model_followup)
             print("Diagnostic followup prepared; historical state preserved; no client started.")
         elif args.prepare:
             _require(all(value is not None for value in (args.run_root, args.bundle_root, args.codex)),
@@ -2105,7 +2185,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
                                             reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup,
                                             continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics,
-                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup)
+                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup)
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "PASS" else 1
         else:

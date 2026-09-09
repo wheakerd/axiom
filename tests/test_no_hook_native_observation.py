@@ -117,6 +117,9 @@ class NativeObservationTests(unittest.TestCase):
                      "features.code_mode_host=false", "features.code_mode_prewarm=false"):
             self.assertIn(flag, args)
         self.assertIn('web_search="disabled"', args)
+        self.assertEqual(args[args.index("--model") + 1], "gpt-5.5")
+        self.assertIn('model_reasoning_effort="medium"', overrides)
+        self.assertEqual(legacy.MODEL, "gpt-5.6-sol")
         self.assertFalse(any(value.startswith(("features.web_search_cached=", "features.web_search_request="))
                              for value in overrides))
         self.assertEqual(args[-1], "-")
@@ -324,7 +327,8 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 6, "priorResultSha256s": [],
+        return {"schemaVersion": "2", "diagnosticRevision": 7, "priorResultSha256s": [],
+                "executionModel": {"model": "gpt-5.5", "reasoningEffort": "medium", "requiredToolMode": "direct"},
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
                 "authenticationMode": "independent-official-login",
@@ -434,7 +438,8 @@ class NativeObservationTests(unittest.TestCase):
                                  (run_root / "diagnostic-followup" / f"attempt-{ordinal:02d}.json").is_file() or
                                  (run_root / "diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file() or
                                  (run_root / "operator-diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file() or
-                                 (run_root / "schema-correction-continuation" / f"attempt-{ordinal:02d}.json").is_file()))
+                                 (run_root / "schema-correction-continuation" / f"attempt-{ordinal:02d}.json").is_file() or
+                                 (run_root / "model-migration-continuation" / f"attempt-{ordinal:02d}.json").is_file()))
                 calls.append(ordinal)
                 if started_callback:
                     started_callback()
@@ -1258,6 +1263,30 @@ class NativeObservationTests(unittest.TestCase):
             (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
         return run, runner, calls
 
+    def _fifth_prior_fixture(self):
+        """Recreate the fifth public attempt with its original transport schema."""
+        run, runner, calls = self._fourth_prior_fixture()
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        ledger = run / "schema-correction-continuation"
+        ledger.mkdir()
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        (ledger / "normalized-result.json").write_bytes(
+            (ROOT / history["historicalResults"][4]["path"]).read_bytes())
+        (ledger / "preparation.json").write_bytes(native._bytes({
+            **state, "protocolDigest": native.FIFTH_PROTOCOL_DIGEST}))
+        (ledger / "batch-started.json").write_bytes(native._bytes({
+            "protocolDigest": native.FIFTH_PROTOCOL_DIGEST}))
+        (ledger / "attempt-01.json").write_bytes(native._bytes({
+            "ordinal": 1, "caseId": self.cases[0]["id"], "protocolDigest": native.FIFTH_PROTOCOL_DIGEST}))
+        for ordinal, case in enumerate(self.cases, 1):
+            material = native.materialize_native_case_contract(
+                materialization_seed=bytes.fromhex(state["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=native.FIFTH_PROTOCOL_DIGEST,
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
+        return run, runner, calls
+
     def test_continuation_preserves_two_histories_and_caps_cumulative_eighteen(self):
         run, runner, calls = self._two_historical_preparations()
         names = ["normalized-result.json", "attempt-01.json", "batch-started.json",
@@ -1311,6 +1340,12 @@ class NativeObservationTests(unittest.TestCase):
         changed = copy.deepcopy(result)
         changed["caseResults"][0]["evidenceExtraction"]["response"] = "not-checked"
         self.assertTrue(native.validate_native_result(changed, ROOT))
+        self.assertEqual(case["cliLaunchCount"], 1)
+        for field in ("modelMetadataBefore", "modelMetadataAfter"):
+            self.assertIsNotNone(case[field])
+            changed = copy.deepcopy(result)
+            changed["caseResults"][0][field] = None
+            self.assertTrue(native.validate_native_result(changed, ROOT), field)
 
     def test_private_summaries_are_capped_private_and_never_copy_dynamic_secrets(self):
         collector = native.PrivateDiagnostics(self.parent)
@@ -1318,7 +1353,7 @@ class NativeObservationTests(unittest.TestCase):
         messages = [secret, "Model metadata for `" + secret + "` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.",
                     "Configured value for `permission_profile` is disallowed by requirements; falling back to required value '" + secret + "'. Details: /private/" + secret,
                     "Under-development features enabled: " + secret + ". Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /private/" + secret + ".",
-                    "Model metadata for `gpt-5.6-sol` not found. Defaulting to fallback metadata; this can degrade performance and cause issues."]
+                    "Model metadata for `gpt-5.5` not found. Defaulting to fallback metadata; this can degrade performance and cause issues."]
         for _ in range(100):
             for message in messages:
                 collector.message(1, message)
@@ -1329,7 +1364,7 @@ class NativeObservationTests(unittest.TestCase):
         self.assertLessEqual(len(data), 16384)
         self.assertNotIn(secret.encode(), data)
         self.assertNotIn(b"/private/", data)
-        self.assertIn(b"model-metadata-fallback; configured model gpt-5.6-sol", data)
+        self.assertIn(b"model-metadata-fallback; configured model gpt-5.5", data)
         self.assertEqual(path.stat().st_mode & 0o777, 0o600)
         self.assertEqual(collector.directory.stat().st_mode & 0o777, 0o700)
         with self.assertRaises(FileExistsError):
@@ -1337,7 +1372,7 @@ class NativeObservationTests(unittest.TestCase):
 
     def test_private_diagnostic_production_chain_does_not_turn_unknown_into_pass(self):
         result = self._diagnostic_stream_runner([
-            "Model metadata for `gpt-5.6-sol` not found. Defaulting to fallback metadata; this can degrade performance and cause issues."
+            "Model metadata for `gpt-5.5` not found. Defaulting to fallback metadata; this can degrade performance and cause issues."
         ], private=True)
         first = result["caseResults"][0]
         self.assertEqual(first["diagnostic"], "diagnostic-unknown")
@@ -1448,26 +1483,31 @@ class NativeObservationTests(unittest.TestCase):
         first["executionDiagnostics"].update(category="none", phase="none")
         self.assertTrue(native.validate_native_result(result, ROOT))
 
-    def test_four_historical_attempts_keep_exact_original_bytes_and_protocols(self):
+    def test_five_historical_attempts_keep_exact_original_bytes_and_protocols(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
-        self.assertEqual(len(history["historicalResults"]), 4)
-        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 4)
-        self.assertEqual([record["sha256"] for record in history["historicalResults"]], native.PRIOR_RESULTS)
+        self.assertEqual(len(history["historicalResults"]), 5)
+        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 5)
+        self.assertEqual([record["sha256"] for record in history["historicalResults"]], native.MODEL_PRIOR_RESULTS)
+        self.assertEqual(native.MODEL_PRIOR_RESULTS[:4], native.PRIOR_RESULTS)
         self.assertEqual([record["protocolDigest"] for record in history["historicalResults"]], [
             native.HISTORICAL_PROTOCOL_DIGEST, native.RETRY_PROTOCOL_DIGEST,
-            native.THIRD_PROTOCOL_DIGEST, native.FOURTH_PROTOCOL_DIGEST])
+            native.THIRD_PROTOCOL_DIGEST, native.FOURTH_PROTOCOL_DIGEST, native.FIFTH_PROTOCOL_DIGEST])
         historical = []
-        for record in history["historicalResults"]:
+        for index, record in enumerate(history["historicalResults"]):
             data = (ROOT / record["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), record["sha256"])
             result = json.loads(data)
             self.assertEqual(result["protocolDigest"], record["protocolDigest"])
             self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
             self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
-            self.assertLess(result.get("diagnosticRevision", 0), 5)
+            if index < 4:
+                self.assertLess(result.get("diagnosticRevision", 0), 5)
+            else:
+                self.assertEqual(result["diagnosticRevision"], 5)
+            self.assertNotIn("executionModel", result)
             historical.append(result)
         # Historical bytes retain their old contracts; do not run them through
-        # the current transport adapter or fill in new revision-5 facts.
+        # the current validator or fill in new model/diagnostic facts.
         result = historical[2]
         self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 3))
         self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS[:2])
@@ -1477,30 +1517,27 @@ class NativeObservationTests(unittest.TestCase):
                          "82d09603eaa18acd415e8972729b5e429255781e")
         self.assertEqual((historical[3]["attemptCount"], historical[3]["cumulativeAttemptCount"]), (1, 4))
         self.assertEqual(historical[3]["priorResultSha256s"], native.PRIOR_RESULTS[:3])
+        fifth = history["historicalResults"][4]
+        result = historical[4]
+        self.assertEqual(fifth["sha256"],
+                         "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018")
+        self.assertEqual(result["protocolDigest"],
+                         "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d")
+        self.assertEqual(fifth["implementationCommit"], "c3ce63d789394f60e93687ec34db05be199fbc19")
+        self.assertEqual(fifth["implementationTree"], "be21ad749edb25e4fb832bce7debe9e0fa75175b")
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 5))
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertFalse(result["hostClaim"])
+        self.assertNotIn("streamAssertion", result["caseResults"][0]["executionDiagnostics"])
         if history["results"]:
             self.assertEqual(len(history["results"]), 1)
             current = history["results"][0]
             data = (ROOT / current["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), current["sha256"])
             result = json.loads(data)
-            if result["diagnosticRevision"] == 5:
-                # The fifth retained attempt was evaluated by its original
-                # parser. New assertions cannot reconstruct its discarded flow.
-                self.assertEqual(current["sha256"],
-                                 "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018")
-                self.assertEqual(result["protocolDigest"],
-                                 "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d")
-                self.assertEqual(current["implementationCommit"], "c3ce63d789394f60e93687ec34db05be199fbc19")
-                self.assertEqual(current["implementationTree"], "be21ad749edb25e4fb832bce7debe9e0fa75175b")
-                self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 5))
-                self.assertEqual([case["status"] for case in result["caseResults"]],
-                                 ["INCOMPLETE"] + ["NOT-RUN"] * 15)
-                self.assertFalse(result["hostClaim"])
-                self.assertNotIn("streamAssertion", result["caseResults"][0]["executionDiagnostics"])
-            else:
-                self.assertEqual(result["diagnosticRevision"], 6)
-                self.assertEqual(native.validate_native_result(result, ROOT), [])
-            self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+            self.assertEqual(result["diagnosticRevision"], 7)
+            self.assertEqual(native.validate_native_result(result, ROOT), [])
+            self.assertEqual(result["priorResultSha256s"], native.MODEL_PRIOR_RESULTS)
             self.assertEqual(result["runMode"], "actual")
             self.assertEqual(history["current"], {"codexObservation": result["status"].lower(),
                 "hostClaim": result["hostClaim"], "credentialUsed": result["cliLaunchCount"] > 0,
@@ -2065,6 +2102,283 @@ class NativeObservationTests(unittest.TestCase):
         self.assertFalse((run / "schema-correction-continuation").exists())
         self.assertEqual(path.read_bytes(), data)
         self.assertEqual(calls, [])
+
+    def test_model_followup_preserves_five_histories_and_caps_cumulative_twenty_one(self):
+        run, runner, calls = self._fifth_prior_fixture()
+        before = {str(path.relative_to(run)): path.read_bytes() for path in run.rglob("*.json")}
+        native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        ledger = run / "model-migration-continuation"
+        migration = json.loads((ledger / "migration.json").read_bytes())
+        self.assertEqual(migration["priorResultSha256s"], native.MODEL_PRIOR_RESULTS)
+        self.assertEqual((migration["priorAttempts"], migration["maximumCumulativeAttempts"]), (5, 21))
+        for ordinal in range(1, 17):
+            transmitted = json.loads((ledger / f"response-schema-{ordinal:02d}.json").read_bytes())
+            native.validate_response_transport(transmitted)
+            self.assertNotEqual((ledger / f"response-schema-{ordinal:02d}.json").read_bytes(),
+                                (run / "schema-correction-continuation" / f"response-schema-{ordinal:02d}.json").read_bytes())
+        seen_models = []
+        def model_runner(argv, **kwargs):
+            if "exec" in argv:
+                seen_models.append(argv[argv.index("--model") + 1])
+                self.assertIn('model_reasoning_effort="medium"', argv)
+                self.assertIn("features.code_mode_host=false", argv)
+                self.assertIn("features.shell_tool=true", argv)
+            return runner(argv, **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              model_followup=True, process_runner=model_runner)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 21, 16))
+        self.assertEqual(result["priorResultSha256s"], native.MODEL_PRIOR_RESULTS)
+        self.assertEqual(result["executionModel"], {"model": "gpt-5.5", "reasoningEffort": "medium", "requiredToolMode": "direct"})
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual(seen_models, ["gpt-5.5"] * 16)
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        expected_metadata = {"model": "gpt-5.5", "metadataSource": "frozen-embedded", "toolMode": None,
+                             "supportsMedium": True, "derivedEffectiveToolMode": "direct"}
+        for case in result["caseResults"]:
+            self.assertEqual(case["modelMetadataBefore"], expected_metadata)
+            self.assertEqual(case["modelMetadataAfter"], expected_metadata)
+        control = result["caseResults"][10]
+        self.assertEqual(control["installation"], "absent")
+        self.assertIsNone(control["packageBeforeSha256"])
+        self.assertIsNone(control["packageAfterSha256"])
+        self.assertFalse((native._case_paths(run, 11)["user"] / ".agents/skills").exists())
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertEqual(result["runMode"], "simulated")
+        self.assertIsNone(result["modelRequestCount"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for name, data in before.items():
+            self.assertEqual((run / name).read_bytes(), data, name)
+        saved = (ledger / "normalized-result.json").read_bytes()
+        with self.assertRaises(FileExistsError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                          model_followup=True, process_runner=runner)
+        with self.assertRaises(FileExistsError):
+            native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual((ledger / "normalized-result.json").read_bytes(), saved)
+        for change in (lambda d: d.__setitem__("cumulativeAttemptCount", 20),
+                       lambda d: d.__setitem__("priorResultSha256s", native.PRIOR_RESULTS),
+                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.MODEL_PRIOR_RESULTS))),
+                       lambda d: d.__setitem__("attemptCount", 17),
+                       lambda d: d["executionModel"].__setitem__("model", "gpt-5.6-sol"),
+                       lambda d: d["executionModel"].__setitem__("reasoningEffort", "high"),
+                       lambda d: d["caseResults"][0].__setitem__("modelMetadataBefore", None),
+                       lambda d: d["caseResults"][0]["modelMetadataAfter"].__setitem__("toolMode", "code_mode_only")):
+            altered = copy.deepcopy(result)
+            change(altered)
+            self.assertTrue(native.validate_native_result(altered, ROOT))
+
+    def test_model_followup_rejects_fifth_history_preparation_and_schema_drift(self):
+        parent = self.parent
+        for name in ("normalized-result.json", "preparation.json", "response-schema-01.json",
+                     "batch-started.json", "attempt-01.json"):
+            with self.subTest(name=name):
+                self.parent = parent / name.removesuffix(".json")
+                self.parent.mkdir()
+                run, _, calls = self._fifth_prior_fixture()
+                path = run / "schema-correction-continuation" / name
+                original = path.read_bytes()
+                if name in ("preparation.json", "batch-started.json", "attempt-01.json"):
+                    document = json.loads(original)
+                    document["protocolDigest"] = native.FOURTH_PROTOCOL_DIGEST
+                    altered = native._bytes(document)
+                else:
+                    altered = original + b" "
+                path.write_bytes(altered)
+                with self.assertRaises(native.NativeObservationError):
+                    native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+                self.assertFalse((run / "model-migration-continuation").exists())
+                self.assertEqual(path.read_bytes(), altered)
+                self.assertEqual(calls, [])
+
+    def test_model_followup_rejects_previously_started_case_two(self):
+        run, _, calls = self._fifth_prior_fixture()
+        path = run / "schema-correction-continuation/attempt-02.json"
+        data = native._bytes({"ordinal": 2, "caseId": self.cases[1]["id"],
+                              "protocolDigest": native.FIFTH_PROTOCOL_DIGEST})
+        path.write_bytes(data)
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        self.assertFalse((run / "model-migration-continuation").exists())
+        self.assertEqual(path.read_bytes(), data)
+        self.assertEqual(calls, [])
+
+    def test_model_followup_rejects_changed_derived_schema_before_client_start(self):
+        run, runner, calls = self._fifth_prior_fixture()
+        native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        path = run / "model-migration-continuation/response-schema-01.json"
+        altered = path.read_bytes() + b" "
+        path.write_bytes(altered)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              model_followup=True, process_runner=runner)
+        self.assertEqual(calls, [])
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (0, 5))
+        self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
+        self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(path.read_bytes(), altered)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    @staticmethod
+    def _public_model_cache(*, tool_mode=None):
+        """Minimal ordinary official-cache shape; no session/authentication data."""
+        return {"client_version": "0.153.0", "fetched_at": "2026-09-09T00:00:00Z",
+                "models": [{"slug": "gpt-5.5", "tool_mode": tool_mode, "shell_type": "unified_exec",
+                            "supported_reasoning_levels": [
+                                {"effort": "low", "description": "Public low fixture"},
+                                {"effort": "medium", "description": "Public medium fixture"}]}]}
+
+    def test_model_metadata_missing_cache_uses_frozen_direct_model_only(self):
+        paths = native._case_paths(self.parent, 1)
+        paths["home"].mkdir(parents=True)
+        self.assertEqual(native._model_metadata(paths), {
+            "model": "gpt-5.5", "metadataSource": "frozen-embedded", "toolMode": None,
+            "supportsMedium": True, "derivedEffectiveToolMode": "direct"})
+        self.assertFalse((paths["home"] / "models_cache.json").exists())
+        self.assertEqual(legacy.MODEL, "gpt-5.6-sol")
+
+    def test_model_metadata_accepts_only_bound_official_direct_modes(self):
+        for index, tool_mode in enumerate((None, "direct")):
+            with self.subTest(tool_mode=tool_mode):
+                paths = native._case_paths(self.parent / str(index), 1)
+                paths["home"].mkdir(parents=True)
+                cache = paths["home"] / "models_cache.json"
+                original = native._bytes(self._public_model_cache(tool_mode=tool_mode))
+                cache.write_bytes(original)
+                self.assertEqual(native._model_metadata(paths), {
+                    "model": "gpt-5.5", "metadataSource": "official-cache", "toolMode": tool_mode,
+                    "supportsMedium": True, "derivedEffectiveToolMode": "direct"})
+                self.assertEqual(cache.read_bytes(), original)
+
+    def test_model_metadata_omitted_optional_tool_mode_matches_frozen_deserializer(self):
+        home = self.parent / "optional-tool-mode"
+        home.mkdir()
+        cache = home / "models_cache.json"
+        document = self._public_model_cache()
+        del document["models"][0]["tool_mode"]
+        original = native._bytes(document)
+        cache.write_bytes(original)
+        self.assertEqual(native._model_metadata({"home": home}), {
+            "model": "gpt-5.5", "metadataSource": "official-cache", "toolMode": None,
+            "supportsMedium": True, "derivedEffectiveToolMode": "direct"})
+        self.assertEqual(cache.read_bytes(), original)
+
+    def test_model_metadata_rejects_version_model_mode_and_effort_drift(self):
+        mutations = [
+            ("client-version", lambda d: d.__setitem__("client_version", "0.154.0")),
+            ("missing-model", lambda d: d.__setitem__("models", [])),
+            ("old-model", lambda d: d["models"][0].__setitem__("slug", "gpt-5.6-sol")),
+            ("duplicate-model", lambda d: d["models"].append(copy.deepcopy(d["models"][0]))),
+            ("code-mode-only", lambda d: d["models"][0].__setitem__("tool_mode", "code_mode_only")),
+            ("unknown-mode", lambda d: d["models"][0].__setitem__("tool_mode", "unknown")),
+            ("wrong-mode-type", lambda d: d["models"][0].__setitem__("tool_mode", False)),
+            ("missing-medium", lambda d: d["models"][0].__setitem__("supported_reasoning_levels", [{"effort": "low"}])),
+        ]
+        for name, mutate in mutations:
+            with self.subTest(name=name):
+                paths = native._case_paths(self.parent / name, 1)
+                paths["home"].mkdir(parents=True)
+                document = self._public_model_cache()
+                mutate(document)
+                cache = paths["home"] / "models_cache.json"
+                original = native._bytes(document)
+                cache.write_bytes(original)
+                with self.assertRaises(native.NativeObservationError):
+                    native._model_metadata(paths)
+                self.assertEqual(cache.read_bytes(), original)
+
+    def test_model_metadata_rejects_malformed_cache_without_embedded_fallback(self):
+        paths = native._case_paths(self.parent, 1)
+        paths["home"].mkdir(parents=True)
+        cache = paths["home"] / "models_cache.json"
+        data = b'{"client_version":"0.153.0","models":'
+        cache.write_bytes(data)
+        with self.assertRaises((ValueError, native.NativeObservationError)):
+            native._model_metadata(paths)
+        self.assertEqual(cache.read_bytes(), data)
+
+    def test_model_followup_rejects_incompatible_metadata_before_any_client(self):
+        run, runner, calls = self._fifth_prior_fixture()
+        native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        cache = native._case_paths(run, 1)["home"] / "models_cache.json"
+        cache.write_bytes(native._bytes(self._public_model_cache(tool_mode="code_mode_only")))
+        invocations = []
+        def observed_runner(argv, **kwargs):
+            invocations.append(tuple(argv))
+            return runner(argv, **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              model_followup=True, process_runner=observed_runner)
+        self.assertEqual(invocations, [])
+        self.assertEqual(calls, [])
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (0, 5))
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        self.assertIsNone(result["caseResults"][0]["modelMetadataBefore"])
+        self.assertIsNone(result["caseResults"][0]["modelMetadataAfter"])
+        self.assertFalse((run / "model-migration-continuation/attempt-01.json").exists())
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_model_followup_metadata_change_after_execution_stops_remaining_cases(self):
+        run, runner, calls = self._fifth_prior_fixture()
+        native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        def changed_metadata_runner(argv, **kwargs):
+            capture = runner(argv, **kwargs)
+            if "exec" in argv:
+                cache = native._case_paths(run, 1)["home"] / "models_cache.json"
+                cache.write_bytes(native._bytes(self._public_model_cache(tool_mode="code_mode_only")))
+            return capture
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              model_followup=True, process_runner=changed_metadata_runner)
+        self.assertEqual(calls, [1])
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 6))
+        first = result["caseResults"][0]
+        self.assertEqual(first["status"], "INCOMPLETE")
+        self.assertNotEqual(first["diagnostic"], "none")
+        self.assertEqual(first["modelMetadataBefore"]["derivedEffectiveToolMode"], "direct")
+        self.assertIsNone(first["modelMetadataAfter"])
+        self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_model_followup_accepts_new_valid_official_cache_after_execution(self):
+        run, runner, calls = self._fifth_prior_fixture()
+        native.prepare_diagnostic_followup(ROOT, run, model_followup=True)
+        def refreshed_cache_runner(argv, **kwargs):
+            capture = runner(argv, **kwargs)
+            if "exec" in argv:
+                ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+                cache = native._case_paths(run, ordinal)["home"] / "models_cache.json"
+                cache.write_bytes(native._bytes(self._public_model_cache(tool_mode="direct")))
+            return capture
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              model_followup=True, process_runner=refreshed_cache_runner)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (16, 21))
+        for case in result["caseResults"]:
+            self.assertEqual(case["status"], "PASS")
+            self.assertEqual(case["modelMetadataBefore"], {
+                "model": "gpt-5.5", "metadataSource": "frozen-embedded", "toolMode": None,
+                "supportsMedium": True, "derivedEffectiveToolMode": "direct"})
+            self.assertEqual(case["modelMetadataAfter"], {
+                "model": "gpt-5.5", "metadataSource": "official-cache", "toolMode": "direct",
+                "supportsMedium": True, "derivedEffectiveToolMode": "direct"})
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_actual_execution_cannot_reuse_an_older_batch_authorization(self):
+        run, _, calls = self._prepared_runner()
+        path = run / native.STATE_NAME
+        state = json.loads(path.read_bytes())
+        state["runMode"] = "actual"
+        path.write_bytes(native._bytes(state))
+        with patch.object(native, "bounded_process", side_effect=AssertionError("client must not start")):
+            with self.assertRaises(native.NativeObservationError):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True)
+        self.assertEqual(calls, [])
+        self.assertFalse((run / "batch-started.json").exists())
+        self.assertFalse((run / "attempt-01.json").exists())
 
     def test_schema_followup_keeps_readonly_command_contract(self):
         def unauthorized_command(lines):

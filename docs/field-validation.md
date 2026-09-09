@@ -1,5 +1,45 @@
 # Field Validation
 
+## Native model migration
+
+Native diagnostic revision 7 explicitly selects Codex 0.153.0 with `gpt-5.5`
+and medium reasoning. It is a new observation combination, not a Sol repair or
+an automatic fallback. Model-provided context can differ; the original 16 case
+requests, expected routes, authority semantics and blinded inputs are unchanged.
+The five Sol INCOMPLETE results remain immutable historical evidence.
+
+The frozen upstream model entry and the registered official cache both describe
+`gpt-5.5` with optional tool mode absent/null and support medium. Frozen
+`ModelInfo` uses `serde(default)` and omits `None` when serializing the cache;
+the observer normalizes that omitted field to null without changing the cache. With the bound CodeMode and
+CodeModeOnly feature flags disabled, frozen `requested_tool_mode` selects Direct.
+The host remains disabled; the observer does not edit model metadata, synchronize
+the catalog or probe model availability. Before each launch and after exit it
+reads only the registered public `models_cache.json`, or uses the frozen embedded
+entry if no cache exists. Result facts distinguish these sources and label the
+effective mode as source-derived, not an in-memory runtime observation. A cache
+with a conflicting model, version, reasoning level or tool mode stops acceptance.
+Normal official cache creation during the case is allowed if its facts remain
+compatible. Server availability still requires an actual canonical execution.
+
+`--prepare-model-followup` checks all five historical results, markers, prepared
+inputs and derived schemas before writing `model-migration-continuation` beside
+the existing ledgers. All 16 new transport schemas and prompt/binding commitments
+are derived from the new protocol. `--run --model-followup --authorize-model-calls
+--reuse-test-auth` permits one fresh attempt per case: at most 16 new and 21 total,
+with Case 1 at most six lifetime attempts. No probe, retry or counter reset is
+allowed. Old continuation paths retain regression value but cannot launch a new
+actual batch. Each case keeps separate context/state, serial authorized test-auth
+handoff, unchanged restricted permissions and the bound installed Skill files;
+Case 11 has no Axiom installation or discovery link. Unknown diagnostics and
+invalid final-output agreement still prevent PASS. Operator-only capture remains
+outside Git, ordinary tests and model read roots.
+
+This implementation has no new host result yet. Its signed execution identity
+must be saved before observation; later normalized evidence binds that identity.
+Builder, bundle, runtime and Phase 1 definitions are unchanged. Historical
+sections below retain the permissions and outcomes of their original revisions.
+
 ## Native tool-mode diagnosis and final-response correction
 
 Diagnostic revision 6 introduces no execution or budget extension. All five

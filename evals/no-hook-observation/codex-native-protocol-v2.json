@@ -4,7 +4,7 @@
   "cli": {
     "version": "0.153.0",
     "sha256": "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be",
-    "model": "gpt-5.6-sol",
+    "model": "gpt-5.5",
     "reasoningEffort": "medium"
   },
   "inputs": {
@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "e836d820f2cb3b2cd7dd1cc11b9c8467234950673e8a821e94a4753c73f3a96a"
+      "sha256": "d4d161120ce1fc01e129bde0a2ca82ac98ca0303ba1a331e069c9be61dcc91f9"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "fa37dee78f5ee31535120409b5e4e74927a1efb8c4448c7d477ebe40c02cb5e4"
+    "sha256": "3797859b862cefb2138dfdbd80b37be117774fdb3fb9aacb4c1f6ce9d0e46130"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,17 +134,18 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 6,
+  "diagnosticRevision": 7,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
       "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df",
       "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79",
-      "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b"
+      "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b",
+      "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018"
     ],
-    "priorAttempts": 4,
-    "maximumCumulativeAttempts": 20,
-    "maximumCaseOneAttempts": 5,
+    "priorAttempts": 5,
+    "maximumCumulativeAttempts": 21,
+    "maximumCaseOneAttempts": 6,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
@@ -153,7 +154,7 @@
     "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
     "retention": "closed public first-cause facts; cleanup failure is separate; operator-only exception contains only three host diagnostic message fields",
-    "historicalFailure": "five immutable INCOMPLETE results retain original bytes and protocols; Case 1 budget exhausted; revision 6 adds no attempts or host observation",
+    "historicalFailure": "five immutable Sol INCOMPLETE results retain original bytes and protocols; revision 7 permits one fresh gpt-5.5 attempt per canonical case after the five historical attempts",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
     "assessment": "observer-inferred finite template classes; CodeModeOnly with unavailable host fails closed; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
     "privateSummary": {
@@ -196,5 +197,16 @@
     "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation",
     "rejectedNotice": "Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`."
   },
-  "protocolDigest": "sha256:e7443834a4ec5734698a58442a363aaa276ffbe106851e7a54432de647d98d11"
+  "modelMetadata": {
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "embeddedPath": "codex-rs/models-manager/models.json",
+    "model": "gpt-5.5",
+    "embeddedToolMode": null,
+    "supportsMedium": true,
+    "cache": "registered CODEX_HOME/models_cache.json; read only; no explicit refresh",
+    "selection": "official cache when present; frozen embedded entry otherwise",
+    "checks": "before launch and after exit; inferred Direct under bound feature settings",
+    "scope": "new observation combination; not equivalent to historical Sol context"
+  },
+  "protocolDigest": "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99"
 }
