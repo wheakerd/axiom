@@ -1,6 +1,17 @@
 # Routing Evaluations
 
-## Operator-only diagnostic continuation
+## Native response transport correction
+
+Native diagnostic revision 5 preserves four immutable historical attempts and
+allows one linked schema-correction followup (Case 1 at most five times; 20
+cumulative attempts). Its outgoing schema is a typed Structured Outputs
+representation; the frozen source definition remains the strict local result
+validator, including route uniqueness. All 16 final derived files are checked.
+See the [transport migration and user-provided fourth-error evidence](../docs/field-validation.md#native-response-transport-correction).
+This local preflight is not server acceptance or a completed host observation.
+
+
+## Historical operator-only diagnostic continuation
 
 Native diagnostic revision 4 preserves all three historical Case 1 INCOMPLETE
 results and their original implementation/protocol bindings. The separately
@@ -30,7 +41,7 @@ no-read rule is an explicit operational boundary. No stderr, reasoning, agent
 message, tool output, request body or authentication file is captured. This
 narrow exception does not reinterpret the earlier discarded diagnostics.
 
-### Recorded fourth attempt; human inspection pending
+### Fourth attempt as originally recorded
 
 Implementation `23d2d9d3a2e98bc67e74cbcf865cb53a929202eb` (tree
 `b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b`) produced one new Case 1
@@ -47,7 +58,7 @@ The file is retained for the human operator; its contents are not host PASS
 or a diagnosis available to the executor. Cases 2-16 remain NOT-RUN.
 Cumulative attempts and canonical CLI launches are four, all Case 1; internal
 model request count is unknown. The three previous INCOMPLETE results and
-bindings remain unchanged. No fifth Case 1 attempt is authorized.
+bindings remain unchanged. This historical record did not authorize a fifth attempt.
 
 ## Historical native continuation after two attempts
 

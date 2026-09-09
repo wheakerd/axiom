@@ -1,6 +1,70 @@
 # Field Validation
 
-## Operator-only diagnostic continuation
+## Native response transport correction
+
+Diagnostic revision 5 continues four immutable Case 1 INCOMPLETE results. It
+permits one fifth Case 1 attempt, then Cases 2-16 once after a complete valid
+first result and reliable execution: at most 20 cumulative attempts, without
+automatic retry or model probes. `--prepare-schema-followup` verifies all four
+results, attempt markers, installation/configuration and old derived schemas,
+then writes a separate `schema-correction-continuation` ledger.
+`--run --schema-followup --authorize-model-calls --reuse-test-auth` binds the new
+inputs and retains the existing operator-only capture and authentication limits.
+None of the old ledgers, credentials or normalized results is rewritten.
+
+The frozen model response definition remains the local strict acceptance
+schema. The native transport adapter explicitly types its seven known string
+nodes, represents string constants as singleton enums, and omits schema
+annotations and `selectedRoutes.uniqueItems` from the outgoing representation.
+All values, route enums, required fields, closed objects, array bounds and
+integer bounds remain. Route uniqueness is still enforced by local strict
+response validation before retaining a valid response, and by final result
+recomputation; semantic route and authority checks are unchanged. This does not
+adapt arbitrary dictionaries or alter the Golden Set or blinded prompts.
+Every actual `--output-schema` file must equal its recomputed materialization
+and satisfy the selected Structured Outputs subset before a model launch.
+All 16 derived schemas are checked. Local preflight is not server acceptance.
+
+### Fourth failure: subsequent user-provided diagnosis
+
+The human operator supplied a diagnosis after personally inspecting the fourth
+attempt: HTTP 400, `error.type=invalid_request_error`,
+`error.code=invalid_json_schema`, `param=text.format.schema`, and missing `type`
+at `properties.contractBindings.properties.goldenSetSha256`. This is separately
+attributed user-provided evidence, not a fact recovered by the observer or added
+to the immutable result. The executor did not read the operator-only file.
+The first three attempts' lost host messages remain unknown. Repeated error
+events do not establish an internal model request count.
+
+The outgoing source template also omitted explicit types for `profileId`, the
+other two contract-binding digests, `discoveryOutcome`, and route items. The
+native adapter handles all of them together; the old generic JSON Schema
+representation is never sent by the corrected path. The two deprecated
+`features.web_search_cached` / `features.web_search_request` overrides are
+removed; top-level `web_search="disabled"`, sandbox permissions and tool limits
+remain. These configuration notices are distinct from the fatal schema error.
+
+
+The frozen CLI may request Code Mode from model metadata even with Code Mode
+feature flags off. With the host disabled and its ordinary fallback available,
+`tools/mod.rs` selects Direct mode. The exact upstream notice stating
+"Code Mode is unavailable because code-mode host is disabled. Falling back to
+direct tools" therefore identifies the explicitly supported shell route here;
+it does not change the requested model, sandbox permissions or discovery roots.
+Only the complete fixed upstream template receives the
+`code-mode-direct-fallback` observer classification. Fail-closed Code Mode,
+other unavailable causes, model rerouting and unknown warnings still cannot
+pass. Shell availability and each executed read remain separately checked.
+No Code Mode host is enabled or installed, and this is not Code Mode evidence.
+
+Frozen source: [tool-mode selection](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/tools/mod.rs),
+[diagnostic construction](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/tools/code_mode/mod.rs),
+and [output-schema forwarding](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/lib.rs).
+The transport uses the documented [Structured Outputs subset](https://developers.openai.com/api/docs/guides/structured-outputs).
+These source and interface checks do not retroactively explain lost historical
+messages or establish that the service accepted a newly generated request.
+
+## Historical operator-only diagnostic continuation
 
 Native diagnostic revision 4 preserves all three historical Case 1 INCOMPLETE
 results and their original implementation/protocol bindings. The separately
@@ -30,7 +94,7 @@ no-read rule is an explicit operational boundary. No stderr, reasoning, agent
 message, tool output, request body or authentication file is captured. This
 narrow exception does not reinterpret the earlier discarded diagnostics.
 
-### Recorded fourth attempt; human inspection pending
+### Fourth attempt as originally recorded
 
 Implementation `23d2d9d3a2e98bc67e74cbcf865cb53a929202eb` (tree
 `b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b`) produced one new Case 1
@@ -47,7 +111,7 @@ The file is retained for the human operator; its contents are not host PASS
 or a diagnosis available to the executor. Cases 2-16 remain NOT-RUN.
 Cumulative attempts and canonical CLI launches are four, all Case 1; internal
 model request count is unknown. The three previous INCOMPLETE results and
-bindings remain unchanged. No fifth Case 1 attempt is authorized.
+bindings remain unchanged. This historical record did not authorize a fifth attempt.
 
 ## Historical native continuation after two attempts
 

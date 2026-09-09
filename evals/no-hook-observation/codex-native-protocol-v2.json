@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "41528728b6b93d7ac0e8607062c91b2de523d80974002606900a5d95e2df823e"
+      "sha256": "81225577069db0422db29210aad9494a036feec03684197fd6a014e149069808"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "7fa608ec4ca1544ace03c1207a9bef15c0905dbbc8905b5529b5884ebb6fa491"
+    "sha256": "3eb7c41cea981cdcdbebad194d0ea44d4520d4de93338350c7fb5964a6be7f9a"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,16 +134,17 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 4,
+  "diagnosticRevision": 5,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
       "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df",
-      "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79"
+      "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79",
+      "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b"
     ],
-    "priorAttempts": 3,
-    "maximumCumulativeAttempts": 19,
-    "maximumCaseOneAttempts": 4,
+    "priorAttempts": 4,
+    "maximumCumulativeAttempts": 20,
+    "maximumCaseOneAttempts": 5,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
@@ -152,7 +153,7 @@
     "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
     "retention": "closed public first-cause facts; cleanup failure is separate; operator-only exception contains only three host diagnostic message fields",
-    "historicalFailure": "three immutable INCOMPLETE results retain original bytes and protocols; one new linked operator continuation permits Case 1 attempt four and remaining cases once",
+    "historicalFailure": "four immutable INCOMPLETE results retain original bytes and protocols; schema correction permits Case 1 attempt five and remaining cases once",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
     "assessment": "observer-inferred finite template classes; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
     "privateSummary": {
@@ -179,5 +180,19 @@
       "isolation": "operational no-read boundary for the executor; not a same-UID isolation claim"
     }
   },
-  "protocolDigest": "sha256:91e5e56969c25e10477880935fe78af3825cd6f436126adc4e0d179f31855a4b"
+  "responseTransport": {
+    "revision": 1,
+    "stringConstants": "explicit-type-and-singleton-enum",
+    "uniqueRoutes": "local-strict-validation",
+    "annotations": "not-transmitted",
+    "preflight": "all-16-derived-files; not-server-acceptance"
+  },
+  "toolMode": {
+    "codeModeHost": false,
+    "inProcessFallbackDisabled": false,
+    "effectiveRoute": "official-direct-tools-fallback",
+    "acceptedNotice": "Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; enable `features.code_mode_host` and install `codex-code-mode-host`.",
+    "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation"
+  },
+  "protocolDigest": "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d"
 }

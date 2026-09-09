@@ -112,6 +112,12 @@ class NativeObservationTests(unittest.TestCase):
         self.assertIn("features.hooks=false", args)
         self.assertIn("features.plugin_hooks=false", args)
         self.assertIn("features.skip_host_skill_discovery=false", args)
+        for flag in ("features.code_mode=false", "features.code_mode_only=false",
+                     "features.code_mode_host=false", "features.code_mode_prewarm=false"):
+            self.assertIn(flag, args)
+        self.assertIn('web_search="disabled"', args)
+        self.assertFalse(any(value.startswith(("features.web_search_cached=", "features.web_search_request="))
+                             for value in overrides))
         self.assertEqual(args[-1], "-")
         self.assertNotIn(self.cases[0]["request"], " ".join(args))
 
@@ -208,11 +214,11 @@ class NativeObservationTests(unittest.TestCase):
         records = []
         for ordinal, case in enumerate(self.cases, 1):
             definition = native._definition(fixtures, ordinal)
-            material = legacy.materialize_case_contract(materialization_seed=seed, ordinal=ordinal,
+            material = native.materialize_native_case_contract(materialization_seed=seed, ordinal=ordinal,
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 4, "priorResultSha256s": [],
+        return {"schemaVersion": "2", "diagnosticRevision": 5, "priorResultSha256s": [],
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
                 "authenticationMode": "independent-official-login",
@@ -321,12 +327,13 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertTrue(((run_root / f"attempt-{ordinal:02d}.json").is_file() or
                                  (run_root / "diagnostic-followup" / f"attempt-{ordinal:02d}.json").is_file() or
                                  (run_root / "diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file() or
-                                 (run_root / "operator-diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file()))
+                                 (run_root / "operator-diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file() or
+                                 (run_root / "schema-correction-continuation" / f"attempt-{ordinal:02d}.json").is_file()))
                 calls.append(ordinal)
                 if started_callback:
                     started_callback()
                 material_schema = json.loads(Path(argv[argv.index("--output-schema") + 1]).read_bytes())
-                token = material_schema["properties"]["opaqueCaseBinding"]["const"]
+                token = material_schema["properties"]["opaqueCaseBinding"]["enum"][0]
                 self.assertIn(self.cases[ordinal - 1]["request"].encode(), stdin)
                 self.assertNotIn(self.cases[ordinal - 1]["id"].encode(), stdin)
                 document = response(self.cases[ordinal - 1], token)
@@ -349,6 +356,144 @@ class NativeObservationTests(unittest.TestCase):
                                           authorize_install=True, runner=runner)
         self.assertEqual(state["runMode"], "simulated")
         return run_root, runner, calls
+
+    def test_all_actual_schema_files_match_structured_output_subset(self):
+        run, _, calls = self._prepared_runner()
+        allowed = {"object": {"type", "properties", "required", "additionalProperties"},
+                   "array": {"type", "items", "minItems", "maxItems"},
+                   "string": {"type", "enum"},
+                   "integer": {"type", "minimum", "maximum"}, "boolean": {"type"}}
+        def check(node):
+            self.assertIn(node.get("type"), allowed, "every transmitted node needs an explicit type")
+            self.assertLessEqual(set(node), allowed[node["type"]])
+            if node["type"] == "object":
+                self.assertIs(node["additionalProperties"], False)
+                self.assertCountEqual(node["required"], node["properties"])
+                self.assertEqual(len(node["required"]), len(set(node["required"])))
+                for child in node["properties"].values():
+                    check(child)
+            elif node["type"] == "array":
+                check(node["items"])
+            elif "enum" in node:
+                self.assertTrue(node["enum"])
+                self.assertTrue(all(type(value) is str for value in node["enum"]))
+        for ordinal in range(1, 17):
+            with self.subTest(ordinal=ordinal):
+                argv = native.build_native_argv(Path("/approved/codex"), run, ordinal)
+                path = Path(argv[argv.index("--output-schema") + 1])
+                check(json.loads(path.read_bytes()))
+        self.assertEqual(calls, [])
+
+    def test_native_transport_preserves_all_sixteen_blinded_contracts_and_local_uniqueness(self):
+        source = native._input(ROOT, self.protocol, "modelResponseSchema")
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        before = copy.deepcopy(source)
+        self.assertIs(source["properties"]["selectedRoutes"]["uniqueItems"], True)
+        for ordinal, case in enumerate(self.cases, 1):
+            with self.subTest(ordinal=ordinal):
+                arguments = {"materialization_seed": bytes(range(32)), "ordinal": ordinal,
+                    "protocol_digest": self.protocol["protocolDigest"], "model_schema": source,
+                    "prompt_envelope": envelope, "request": case["request"]}
+                original = legacy.materialize_case_contract(**arguments)
+                material = native.materialize_native_case_contract(**arguments)
+                transported = json.loads(material.schema_bytes)
+                self.assertIsNone(native.validate_response_transport(transported))
+                self.assertEqual(material.prompt_bytes, original.prompt_bytes)
+                self.assertEqual(material.prompt_sha256, original.prompt_sha256)
+                self.assertEqual((material.token, material.opaque_binding_sha256),
+                                 (original.token, original.opaque_binding_sha256))
+                self.assertNotEqual(material.schema_bytes, original.schema_bytes)
+                self.assertEqual(material.schema_sha256, hashlib.sha256(material.schema_bytes).hexdigest())
+                props = transported["properties"]
+                self.assertEqual(props["profileId"], {"type": "string", "enum": [legacy.PROFILE_ID]})
+                self.assertEqual(props["opaqueCaseBinding"], {"type": "string", "enum": [material.token]})
+                self.assertEqual(props["discoveryOutcome"], {"type": "string", "enum": [
+                    "selected", "clarification", "no-route", "unavailable"]})
+                for key, expected in (("profileContractSha256", legacy.PROFILE_SHA256),
+                                      ("goldenSetSha256", legacy.GOLDEN_SET_SHA256),
+                                      ("hostCaseSetSha256", legacy.HOST_CASE_SET_SHA256)):
+                    self.assertEqual(props["contractBindings"]["properties"][key],
+                                     {"type": "string", "enum": [expected]})
+                self.assertEqual(props["selectedRoutes"]["items"]["type"], "string")
+                self.assertEqual(props["selectedRoutes"]["items"]["enum"],
+                                 source["properties"]["selectedRoutes"]["items"]["enum"])
+                self.assertNotIn("uniqueItems", props["selectedRoutes"])
+                expected_response = response(case, material.token)
+                native._validate_native_response(expected_response, source, material.token)
+                duplicate = {**expected_response, "selectedRoutes": ["using-axiom", "using-axiom"]}
+                with self.assertRaisesRegex(native.NativeObservationError, "duplicate"):
+                    native._validate_native_response(duplicate, source, material.token)
+        self.assertEqual(source, before)
+
+    def _transport_fixture(self):
+        arguments = {"materialization_seed": bytes(range(32)), "ordinal": 1,
+            "protocol_digest": self.protocol["protocolDigest"],
+            "model_schema": native._input(ROOT, self.protocol, "modelResponseSchema"),
+            "prompt_envelope": native._input(ROOT, self.protocol, "promptEnvelope"),
+            "request": self.cases[0]["request"]}
+        return (json.loads(legacy.materialize_case_contract(**arguments).schema_bytes),
+                json.loads(native.materialize_native_case_contract(**arguments).schema_bytes))
+
+    def test_legacy_untyped_leaf_is_rejected_without_root_annotation_masking(self):
+        old, current = self._transport_fixture()
+        self.assertNotIn("type", old["properties"]["profileId"])
+        current["properties"]["profileId"] = copy.deepcopy(old["properties"]["profileId"])
+        with self.assertRaisesRegex(native.NativeObservationError, "explicit supported type"):
+            native.validate_response_transport(current)
+        current["properties"]["profileId"]["type"] = "string"
+        with self.assertRaisesRegex(native.NativeObservationError, "unsupported response transport keyword"):
+            native.validate_response_transport(current)
+
+    def test_legacy_unique_items_is_rejected_without_untyped_leaf_masking(self):
+        old, current = self._transport_fixture()
+        self.assertIs(old["properties"]["selectedRoutes"]["uniqueItems"], True)
+        current["properties"]["selectedRoutes"]["uniqueItems"] = old["properties"]["selectedRoutes"]["uniqueItems"]
+        with self.assertRaisesRegex(native.NativeObservationError, "unsupported response transport keyword"):
+            native.validate_response_transport(current)
+
+    def test_native_transport_rejects_unsupported_keywords_and_unclosed_objects(self):
+        _, schema = self._transport_fixture()
+        for key, value in (("$schema", "public-fixture"), ("$ref", "#"), ("anyOf", []),
+                           ("allOf", []), ("if", {}), ("description", "public fixture")):
+            with self.subTest(keyword=key):
+                altered = {**schema, key: value}
+                with self.assertRaisesRegex(native.NativeObservationError, "unsupported response transport keyword"):
+                    native.validate_response_transport(altered)
+        for change in (lambda node: node.__setitem__("additionalProperties", True),
+                       lambda node: node["required"].pop(),
+                       lambda node: node["required"].append(node["required"][0])):
+            altered = copy.deepcopy(schema)
+            change(altered)
+            with self.assertRaisesRegex(native.NativeObservationError, "not closed"):
+                native.validate_response_transport(altered)
+
+    def test_native_response_production_chain_still_rejects_bindings_duplicates_and_mutation(self):
+        parent = self.parent
+        cases = [
+            ("opaque-binding", lambda d: d.__setitem__("opaqueCaseBinding", "0" * 64), "INCOMPLETE", "response-invalid"),
+            ("profile-contract-binding", lambda d: d["contractBindings"].__setitem__("profileContractSha256", "0" * 64), "INCOMPLETE", "response-invalid"),
+            ("golden-set-binding", lambda d: d["contractBindings"].__setitem__("goldenSetSha256", "0" * 64), "INCOMPLETE", "response-invalid"),
+            ("host-case-set-binding", lambda d: d["contractBindings"].__setitem__("hostCaseSetSha256", "0" * 64), "INCOMPLETE", "response-invalid"),
+            ("illegal-route", lambda d: d.__setitem__("selectedRoutes", ["not-a-route"]), "INCOMPLETE", "response-invalid"),
+            ("wrong-route", lambda d: d.__setitem__("selectedRoutes", ["agents-architect"]), "FAIL", "semantic-mismatch"),
+            ("duplicate-route", lambda d: d.__setitem__("selectedRoutes", ["using-axiom", "using-axiom"]), "INCOMPLETE", "response-invalid"),
+            ("mutation-attempted", lambda d: d.__setitem__("mutationAttempted", True), "FAIL", "semantic-mismatch"),
+        ]
+        for name, alter, expected_status, expected_diagnostic in cases:
+            with self.subTest(name=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                def change_response(lines):
+                    item = next(entry["item"] for entry in lines if entry.get("item", {}).get("type") == "agent_message")
+                    document = json.loads(item["text"])
+                    alter(document)
+                    item["text"] = json.dumps(document)
+                    return lines
+                result = self._diagnostic_stream_runner([], tail=change_response)
+                self.assertEqual(result["caseResults"][0]["status"], expected_status)
+                self.assertEqual(result["caseResults"][0]["diagnostic"], expected_diagnostic)
+                self.assertFalse(result["hostClaim"])
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
 
     def test_marketplace_local_source_is_relative_and_copied_package_is_bound(self):
         run_root, _, calls = self._prepared_runner()
@@ -877,10 +1022,11 @@ class NativeObservationTests(unittest.TestCase):
         altered["caseResults"][0]["executionDiagnostics"]["eventTypes"] = ["thread.started", "turn.started", "turn.completed"]
         self.assertTrue(native.validate_native_result(altered, ROOT))
 
-    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False):
-        run, runner, calls = self._third_prior_fixture() if operator else self._prepared_runner()
-        if operator:
-            native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=True)
+    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False, schema_followup=False):
+        run, runner, calls = (self._fourth_prior_fixture() if schema_followup else
+                              self._third_prior_fixture() if operator else self._prepared_runner())
+        if operator or schema_followup:
+            native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=operator, schema_followup=schema_followup)
         def diagnostic_runner(argv, **kwargs):
             if "exec" not in argv:
                 return runner(argv, **kwargs)
@@ -907,7 +1053,7 @@ class NativeObservationTests(unittest.TestCase):
             return native.bounded_process([sys.executable, "-I", "-B", "-c", code], **kwargs)
         return native.run_native_observation(ROOT, run, authorize_model_calls=True,
                                              process_runner=diagnostic_runner, private_diagnostics=private,
-                                             operator_diagnostics=operator)
+                                             operator_diagnostics=operator, schema_followup=schema_followup)
 
     def _two_historical_preparations(self):
         run, runner, calls = self._historical_preparation()
@@ -947,6 +1093,30 @@ class NativeObservationTests(unittest.TestCase):
             material = legacy.materialize_case_contract(
                 materialization_seed=bytes.fromhex(state["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=native.THIRD_PROTOCOL_DIGEST,
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
+        return run, runner, calls
+
+    def _fourth_prior_fixture(self):
+        """Preserve the fourth public result under its original schema contract."""
+        run, runner, calls = self._third_prior_fixture()
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        ledger = run / "operator-diagnostic-continuation"
+        ledger.mkdir()
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        (ledger / "normalized-result.json").write_bytes(
+            (ROOT / history["historicalResults"][3]["path"]).read_bytes())
+        (ledger / "preparation.json").write_bytes(native._bytes({
+            **state, "protocolDigest": native.FOURTH_PROTOCOL_DIGEST}))
+        (ledger / "batch-started.json").write_bytes(native._bytes({
+            "protocolDigest": native.FOURTH_PROTOCOL_DIGEST}))
+        (ledger / "attempt-01.json").write_bytes(native._bytes({
+            "ordinal": 1, "caseId": self.cases[0]["id"], "protocolDigest": native.FOURTH_PROTOCOL_DIGEST}))
+        for ordinal, case in enumerate(self.cases, 1):
+            material = legacy.materialize_case_contract(
+                materialization_seed=bytes.fromhex(state["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=native.FOURTH_PROTOCOL_DIGEST,
                 model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
                 prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
             (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
@@ -1142,13 +1312,15 @@ class NativeObservationTests(unittest.TestCase):
         first["executionDiagnostics"].update(category="none", phase="none")
         self.assertTrue(native.validate_native_result(result, ROOT))
 
-    def test_three_historical_attempts_keep_exact_original_bytes_and_protocols(self):
+    def test_four_historical_attempts_keep_exact_original_bytes_and_protocols(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
-        self.assertEqual(len(history["historicalResults"]), 3)
-        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 3)
+        self.assertEqual(len(history["historicalResults"]), 4)
+        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 4)
         self.assertEqual([record["sha256"] for record in history["historicalResults"]], native.PRIOR_RESULTS)
         self.assertEqual([record["protocolDigest"] for record in history["historicalResults"]], [
-            native.HISTORICAL_PROTOCOL_DIGEST, native.RETRY_PROTOCOL_DIGEST, native.THIRD_PROTOCOL_DIGEST])
+            native.HISTORICAL_PROTOCOL_DIGEST, native.RETRY_PROTOCOL_DIGEST,
+            native.THIRD_PROTOCOL_DIGEST, native.FOURTH_PROTOCOL_DIGEST])
+        historical = []
         for record in history["historicalResults"]:
             data = (ROOT / record["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), record["sha256"])
@@ -1156,15 +1328,19 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(result["protocolDigest"], record["protocolDigest"])
             self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
             self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
-            self.assertTrue(native.validate_native_result(result, ROOT))
-        # The former current record is now the immutable third history; its
-        # original diagnostics and accounting are not reinterpreted as revision 4.
+            self.assertLess(result.get("diagnosticRevision", 0), 5)
+            historical.append(result)
+        # Historical bytes retain their old contracts; do not run them through
+        # the current transport adapter or fill in new revision-5 facts.
+        result = historical[2]
         self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 3))
         self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS[:2])
         self.assertEqual(result["caseResults"][0]["diagnostic"], "host-failure")
         self.assertEqual([c["status"] for c in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
         self.assertEqual(history["historicalResults"][2]["implementationTree"],
                          "82d09603eaa18acd415e8972729b5e429255781e")
+        self.assertEqual((historical[3]["attemptCount"], historical[3]["cumulativeAttemptCount"]), (1, 4))
+        self.assertEqual(historical[3]["priorResultSha256s"], native.PRIOR_RESULTS[:3])
         if history["results"]:
             self.assertEqual(len(history["results"]), 1)
             current = history["results"][0]
@@ -1451,7 +1627,7 @@ class NativeObservationTests(unittest.TestCase):
         result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
                                               operator_diagnostics=True, process_runner=runner)
         self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 19, 16))
-        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS[:3])
         self.assertEqual(calls, list(range(1, 17)))
         self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
         self.assertEqual(result["caseResults"][10]["installation"], "absent")
@@ -1474,7 +1650,7 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual((ledger / "normalized-result.json").read_bytes(), saved)
         for change in (lambda d: d.__setitem__("cumulativeAttemptCount", 18),
                        lambda d: d.__setitem__("priorResultSha256s", native.PRIOR_RESULTS[:2]),
-                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.PRIOR_RESULTS))),
+                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.PRIOR_RESULTS[:3]))),
                        lambda d: d.__setitem__("attemptCount", 17)):
             altered = copy.deepcopy(result)
             change(altered)
@@ -1502,6 +1678,141 @@ class NativeObservationTests(unittest.TestCase):
         self.assertFalse((run / "operator-diagnostic-continuation").exists())
         self.assertEqual(path.read_bytes(), data)
         self.assertEqual(calls, [])
+
+    def test_schema_followup_preserves_four_histories_and_caps_cumulative_twenty(self):
+        run, runner, calls = self._fourth_prior_fixture()
+        before = {str(path.relative_to(run)): path.read_bytes() for path in run.rglob("*.json")}
+        native.prepare_diagnostic_followup(ROOT, run, schema_followup=True)
+        ledger = run / "schema-correction-continuation"
+        migration = json.loads((ledger / "migration.json").read_bytes())
+        self.assertEqual(migration["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual((migration["priorAttempts"], migration["maximumCumulativeAttempts"]), (4, 20))
+        for ordinal in range(1, 17):
+            native.validate_response_transport(json.loads((ledger / f"response-schema-{ordinal:02d}.json").read_bytes()))
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              schema_followup=True, process_runner=runner)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 20, 16))
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertIsNone(result["caseResults"][10]["packageBeforeSha256"])
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertIsNone(result["modelRequestCount"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for name, data in before.items():
+            self.assertEqual((run / name).read_bytes(), data, name)
+        saved = (ledger / "normalized-result.json").read_bytes()
+        with self.assertRaises(FileExistsError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                          schema_followup=True, process_runner=runner)
+        with self.assertRaises(FileExistsError):
+            native.prepare_diagnostic_followup(ROOT, run, schema_followup=True)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual((ledger / "normalized-result.json").read_bytes(), saved)
+        for change in (lambda d: d.__setitem__("cumulativeAttemptCount", 19),
+                       lambda d: d.__setitem__("priorResultSha256s", native.PRIOR_RESULTS[:3]),
+                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.PRIOR_RESULTS))),
+                       lambda d: d.__setitem__("attemptCount", 17)):
+            altered = copy.deepcopy(result)
+            change(altered)
+            self.assertTrue(native.validate_native_result(altered, ROOT))
+
+    def test_schema_followup_rejects_fourth_history_and_preparation_drift(self):
+        parent = self.parent
+        for name in ("normalized-result.json", "preparation.json", "response-schema-01.json"):
+            with self.subTest(name=name):
+                self.parent = parent / name.removesuffix(".json")
+                self.parent.mkdir()
+                run, _, calls = self._fourth_prior_fixture()
+                path = run / "operator-diagnostic-continuation" / name
+                original = path.read_bytes()
+                if name == "preparation.json":
+                    document = json.loads(original)
+                    document["protocolDigest"] = native.HISTORICAL_PROTOCOL_DIGEST
+                    altered = native._bytes(document)
+                else:
+                    altered = original + b" "
+                path.write_bytes(altered)
+                with self.assertRaises(native.NativeObservationError):
+                    native.prepare_diagnostic_followup(ROOT, run, schema_followup=True)
+                self.assertFalse((run / "schema-correction-continuation").exists())
+                self.assertEqual(path.read_bytes(), altered)
+                self.assertEqual(calls, [])
+
+    def test_schema_followup_rejects_previously_started_case_two(self):
+        run, _, calls = self._fourth_prior_fixture()
+        path = run / "operator-diagnostic-continuation/attempt-02.json"
+        data = native._bytes({"ordinal": 2, "caseId": self.cases[1]["id"],
+                              "protocolDigest": native.FOURTH_PROTOCOL_DIGEST})
+        path.write_bytes(data)
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_diagnostic_followup(ROOT, run, schema_followup=True)
+        self.assertFalse((run / "schema-correction-continuation").exists())
+        self.assertEqual(path.read_bytes(), data)
+        self.assertEqual(calls, [])
+
+    def test_schema_followup_keeps_readonly_command_contract(self):
+        def unauthorized_command(lines):
+            for entry in lines:
+                if entry.get("item", {}).get("type") == "command_execution":
+                    entry["item"]["command"] = "touch forbidden-fixture"
+            return lines
+        result = self._diagnostic_stream_runner([], schema_followup=True, tail=unauthorized_command)
+        first = result["caseResults"][0]
+        self.assertEqual(first["status"], "INCOMPLETE")
+        self.assertEqual(first["diagnostic"], "policy-rejected")
+        self.assertEqual(first["executionDiagnostics"]["policyReason"], "read-contract-rejected")
+        self.assertEqual(first["readonlyCommandCount"], 0)
+        self.assertIsNone(first["observed"])
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 5))
+        self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_exact_code_mode_direct_fallback_preserves_normal_simulated_semantics(self):
+        # Independently copied from frozen upstream's public template, not from
+        # the classifier's own return value or a generated expected result.
+        notice = ("Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; "
+                  "enable `features.code_mode_host` and install `codex-code-mode-host`.")
+        self.assertEqual(native.DIRECT_TOOLS_FALLBACK_NOTICE, notice)
+        result = self._diagnostic_stream_runner([notice], schema_followup=True)
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual(result["caseResults"][0]["readonlyCommandCount"], 1)
+        self.assertEqual(result["caseResults"][0]["executionDiagnostics"]["hostDiagnosticClasses"],
+                         ["code-mode-direct-fallback"])
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (16, 20))
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertEqual(result["runMode"], "simulated")
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_direct_fallback_whitelist_does_not_accept_other_failures_or_model_reroute(self):
+        parent = self.parent
+        notice = ("Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; "
+                  "enable `features.code_mode_host` and install `codex-code-mode-host`.")
+        examples = [
+            ([notice.replace("Falling back to direct tools", "Code mode will fail closed")], "diagnostic-unknown"),
+            ([notice.replace("code-mode host is disabled", "public fixture host failure")], "diagnostic-unknown"),
+            ([notice + " Additional public fixture text"], "diagnostic-unknown"),
+            ([notice, "model rerouted: gpt-5.6-sol -> other-model (HighRisk)"], "model-mismatch"),
+        ]
+        for index, (messages, expected) in enumerate(examples):
+            with self.subTest(index=index):
+                self.parent = parent / str(index)
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner(messages, schema_followup=True)
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertEqual(first["diagnostic"], expected)
+                self.assertEqual(first["terminal"], "turn.completed")
+                self.assertEqual(first["executionDiagnostics"]["returnCode"], 0)
+                self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 5))
+                self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertFalse(result["hostClaim"])
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
 
 
 if __name__ == "__main__":

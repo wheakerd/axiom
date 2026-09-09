@@ -543,7 +543,7 @@
               },
               "hostDiagnosticClasses": {
                 "type": "array",
-                "maxItems": 5,
+                "maxItems": 6,
                 "uniqueItems": true,
                 "items": {
                   "enum": [
@@ -551,7 +551,8 @@
                     "configuration-unverified",
                     "evidence-incomplete",
                     "unknown",
-                    "upstream-error"
+                    "upstream-error",
+                    "code-mode-direct-fallback"
                   ]
                 }
               }
@@ -644,7 +645,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 4
+      "const": 5
     },
     "attemptCount": {
       "type": "integer",
@@ -654,12 +655,12 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 19
+      "maximum": 20
     },
     "priorResultSha256s": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 3,
+      "maxItems": 4,
       "items": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"
