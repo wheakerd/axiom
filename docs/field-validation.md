@@ -77,15 +77,27 @@ normalized result is likewise created relative to a pre-opened external parent
 descriptor, and any parent or result-name substitution prevents publication
 and host PASS.
 
-The observation builds its derived bundle through the builder's native Linux
-directory-descriptor API rather than treating a procfs alias as a pathname.
-Builder-created objects enter a physical-identity ledger at creation, and
-failure cleanup quarantines only matching ledger objects. Read-only Git children
-receive a fixed credential-free environment. Codex 0.153.0 local-marketplace
-receipts must name the already-held source object, while plugin receipts must
-resolve through the real `plugins/cache/<marketplace>/<plugin>/<version>`
-layout below the frozen temporary Codex home. None of these checks establishes
-a host observation before the separately authorized real run.
+The ordinary builder uses output lifecycle version 2, documented in
+`runtime-identity.md`: one writer, an empty external destination, direct canonical
+outputs, and an anonymously prepared completion marker. Failure retains partial
+outputs instead of deleting objects by their current names. The package format
+and frozen runtime payload are unchanged. Read-only Git children still receive
+a fixed credential-free environment.
+
+The earlier observer integration attempted to accept builder creation records
+as cleanup ownership. Lifecycle 2 output bindings do not make that claim; its
+version 2 worker receipt is rejected by the legacy ownership admission before
+any model case can run. This incompatibility is explicit, and the actual
+observer remains hard-disabled. FCR-004 is not closed by ordinary builder
+regressions. The preceding descriptor and receipt descriptions document the
+uncompleted observer design, not currently available host execution guarantees.
+
+A real compatibility run additionally needs an official authentication channel
+usable with fresh temporary Codex state and temporary plugin discovery. Existing
+login state must not be copied or reconfigured to manufacture that separation.
+When no such input is available, every canonical case remains NOT-RUN; no model
+request, plugin installation, or canonical host result is produced. Offline
+contracts and ordinary builder tests do not replace this observation.
 
 The Combined Group 1 + Group 2 correction currently implements an offline
 contract only. One lifecycle owns preparation, writing, writer closure,

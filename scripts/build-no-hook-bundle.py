@@ -48,7 +48,10 @@ def parser() -> argparse.ArgumentParser:
         "--destination",
         type=Path,
         required=True,
-        help="existing empty external directory exclusively owned by the caller",
+        help=(
+            "existing empty external directory; caller prevents concurrent writes; "
+            "Linux O_TMPFILE and no-overwrite linking required (output lifecycle 2)"
+        ),
     )
     return argument_parser
 
@@ -63,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             arguments.destination,
             git_executable=arguments.git_executable,
         )
-    except BundleContractError as error:
+    except (BundleContractError, OSError) as error:
         print(f"Hook-independent bundle build failed: {error}", file=sys.stderr)
         return 1
     print(json.dumps(result.summary(), sort_keys=True, separators=(",", ":")))

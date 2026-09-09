@@ -509,14 +509,14 @@
         {
           "path": "scripts/build-no-hook-bundle.py",
           "role": "entrypoint",
-          "size": 2154,
-          "sha256": "6198b516d20529caf53bca0c86a42f8d3509a3317766372bddb8e304582b9c5d"
+          "size": 2279,
+          "sha256": "aa0947173956d33f7ad44a732b5c43faffd9aab0d6b3b4096eefb4a2ed4b6b22"
         },
         {
           "path": "axiom_validation/no_hook_bundle.py",
           "role": "implementation",
-          "size": 175035,
-          "sha256": "6f3c0bf36c0b95b081369542680d950dd34614bc37d9dccaec8ddc33961396f9"
+          "size": 172025,
+          "sha256": "cf4e7ef0d358015c81752878009d2c928d63e24de6f5fff34c988051c06f13d1"
         },
         {
           "path": "evals/no-hook/bundle-manifest-schema-v1.json",
@@ -545,7 +545,7 @@
       "dataDescriptor": false,
       "archiveDigestLocation": "BUNDLE-ENVELOPE.json"
     },
-    "bundleManifestDigest": "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7"
+    "bundleManifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5"
   },
   "builds": {
     "independentBuildCount": 2,
@@ -553,8 +553,8 @@
     "directoryFileSetsEqual": true,
     "directoryBytesEqual": true,
     "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
-    "bundleManifestDigest": "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7",
-    "archiveSha256": "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf",
+    "bundleManifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5",
+    "archiveSha256": "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98",
     "archiveBytesEqual": true,
     "envelopeSemanticFieldsEqual": true
   },

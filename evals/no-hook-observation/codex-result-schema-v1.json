@@ -56,8 +56,8 @@
         "fullProfileInputCount": {"const": 61},
         "fullProfileRuntimeContractDigest": {"const": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"},
         "profileRuntimeDigest": {"const": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"},
-        "bundleManifestDigest": {"const": "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7"},
-        "archiveSha256": {"const": "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf"}
+        "bundleManifestDigest": {"const": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5"},
+        "archiveSha256": {"const": "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98"}
       }
     },
     "contractBindings": {

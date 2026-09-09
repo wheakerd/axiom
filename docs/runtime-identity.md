@@ -130,14 +130,48 @@ fails locally even if repository configuration allows a protocol-specific
 remote helper. Git replacement objects, hooks, generic protocols, filesystem
 monitoring, and ambient repository/object redirection are disabled or rejected.
 
-The pathname bundle API retains its preflight checks and then delegates to the
-same Linux directory-descriptor core used by observation. Every directory,
-file, staging name, deterministic ZIP, and final envelope is created or
-published relative to that held descriptor. A creation-time ledger records
-each object before content write or later publication, and both normal and
-failure cleanup use identity-checked no-replace quarantine. Unknown or replaced
-objects are preserved and require manual cleanup; the envelope remains the last
-published completion marker.
+Ordinary bundle output lifecycle version 2 replaces the revision 7 prototype's
+creation-ledger deletion and quarantine paths. The v1 package, canonicalization,
+manifest schema, frozen runtime source, and transport format are unchanged;
+the builder implementation dependency binds this lifecycle change, so the
+manifest and archive identities must be rebuilt. Existing v1 package bytes and
+historical results are not reinterpreted as evidence of lifecycle 2.
+
+The supported construction environment is Linux with directory-relative file
+operations and a filesystem supporting anonymous `O_TMPFILE` creation and
+no-overwrite linking of the prepared completion envelope. The caller provides
+an existing empty external directory and prevents concurrent writes to that
+directory and its descendants for the build. This is a use prerequisite, not
+an exclusion mechanism enforced by the builder. The builder does not claim
+protection against arbitrary same-identity processes concurrently changing
+that namespace. Unsupported anonymous-file creation fails before visible
+outputs are created; there is no unsafe pathname publication fallback.
+
+The pathname API delegates to the directory-descriptor core. It constructs the
+canonical `plugin/` tree and ZIP directly, without a staging tree. Exclusive
+file creation retains the returned descriptor; successful creation attempts
+are recorded before fallible binding registration. Directory bindings describe
+objects opened under the single-writer prerequisite, not atomic creation proof.
+No caller directory or named output is granted automatic deletion authority.
+Normal completion closes handles and leaves only the intended products.
+Failure preserves visible partial products and the original exception chain,
+including creation progress and incomplete registration; it does not claim
+that retained or unknown objects were removed. Recovery after failure requires
+inspection and a new empty destination, not automatic reuse or deletion.
+
+The completion envelope is fully prepared anonymously. Output validation,
+source verification, record export, and necessary handle closure precede its
+atomic no-overwrite publication; there is no fallible product validation after
+that commit point. An absent envelope means the products are incomplete.
+This is an in-process completion contract, not a power-loss durability claim.
+
+Lifecycle 2 output bindings are explicitly refused by the disabled observer's
+legacy creation-ownership admission. The internal worker receipt is version 2;
+it cannot upgrade ordinary builder records into permission for observer cleanup.
+The ordinary CLI does not require an observer supervisor. FCR-004's ordinary
+name-based deletion path is removed; its earlier universal ownership claims
+are superseded by this versioned support contract, not VERIFIED_FIXED. The
+legacy observer's separate cleanup defect remains OPEN.
 
 Git tree enumeration is a bounded pre-read gate rather than a buffered
 post-read check. NUL-delimited records are consumed incrementally, with fixed

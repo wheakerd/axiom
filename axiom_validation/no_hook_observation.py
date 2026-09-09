@@ -88,9 +88,9 @@ PROFILE_RUNTIME_DIGEST = (
     "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7"
 )
 BUNDLE_MANIFEST_DIGEST = (
-    "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7"
+    "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5"
 )
-ARCHIVE_SHA256 = "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf"
+ARCHIVE_SHA256 = "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98"
 
 MARKETPLACE_NAME = "axiom-no-hook-observer"
 PLUGIN_NAME = "axiom"
@@ -1362,7 +1362,18 @@ class OwnedRootSession:
         *,
         phase: str,
     ) -> None:
-        """Admit only objects bound to the builder's creation-time identities."""
+        """Legacy ownership admission; lifecycle-v2 output bindings are rejected.
+
+        Ordinary construction no longer claims deletion authority. Its records
+        must not enter the disabled observer's creation-ownership ledger.
+        """
+        if any(
+            str(getattr(record, "creation_phase", "")).startswith("builder-output-v2:")
+            for record in records
+        ):
+            raise ObservationError(
+                "builder lifecycle-v2 output bindings do not authorize observer cleanup"
+            )
         _verify_frozen_directory(destination)
         destination_record = self.ledger.records.get(destination.relative_path)
         if (
@@ -3930,8 +3941,8 @@ def _validate_protocol(
             "runRootWrites": "frozen-root-fd-relative-only",
             "runRootReplacement": "write-original-object-then-incomplete-manual-cleanup",
             "bundleDestination": "validated-open-directory-fd-relative-core",
-            "bundleCreationOwnership": "immediate-fstat-creation-ledger",
-            "bundleFailureCleanup": "identity-bound-no-replace-quarantine",
+            "bundleCreationOwnership": "lifecycle-v2-output-bindings-not-deletion-authority",
+            "bundleFailureCleanup": "retain-incomplete-named-outputs",
             "bundleGitEnvironment": "fixed-credential-free-allowlist",
             "schemaObject": "open-nofollow-regular-single-link-fd-inherited",
             "schemaArgument": "linux-proc-self-fd-alias-no-path-fallback",
@@ -7057,6 +7068,7 @@ def _read_bundle_worker_result(data: bytes) -> tuple[Any, ...]:
         ),
         {
             "schemaVersion",
+            "outputLifecycleVersion",
             "profileRuntimeDigest",
             "bundleManifestDigest",
             "archiveSha256",
@@ -7064,7 +7076,8 @@ def _read_bundle_worker_result(data: bytes) -> tuple[Any, ...]:
         },
         "bundle worker result",
     )
-    _expect(document["schemaVersion"], "1", "bundle worker result version")
+    _expect(document["schemaVersion"], "2", "bundle worker result version")
+    _expect(document["outputLifecycleVersion"], "2", "bundle output lifecycle version")
     _expect(
         document["profileRuntimeDigest"],
         PROFILE_RUNTIME_DIGEST,
@@ -7104,7 +7117,8 @@ def _read_bundle_worker_result(data: bytes) -> tuple[Any, ...]:
             or item["kind"] not in {"directory", "file"}
             or any(type(item[key]) is not int or item[key] < 0 for key in ("device", "inode", "mode"))
             or type(item["creationPhase"]) is not str
-            or not item["creationPhase"]
+            or not item["creationPhase"].startswith("builder-output-v2:")
+            or not item["creationPhase"].removeprefix("builder-output-v2:")
         ):
             raise ObservationError("bundle worker creation record is not closed")
         parts = _closed_relative_parts(item["relativePath"])
@@ -7365,11 +7379,20 @@ def _prepare_disposable_bundle(
             lifecycle=lifecycle,
         )
         lifecycle.require_writer_closed("bundle-builder")
-        session.import_builder_creation_records(
-            destination,
-            records,
-            phase="accepted-builder-creation-ledger",
-        )
+        try:
+            session.import_builder_creation_records(
+                destination,
+                records,
+                phase="accepted-builder-creation-ledger",
+            )
+        except ObservationError as error:
+            # The worker really ran even when its output cannot be admitted.
+            # Preserve that completed process fact in the incomplete result.
+            raise ProcessBoundaryError(
+                str(error), process_purpose="bundle-builder",
+                model_call_authorized=False, process_started=True,
+                prompt_fully_delivered=True, cause=error,
+            ) from error
     finally:
         lifecycle.require_control_close(destination.descriptor)
         _close_frozen_directory(destination)

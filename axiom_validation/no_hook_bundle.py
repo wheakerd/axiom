@@ -10,7 +10,6 @@ import ctypes
 import errno
 import platform
 import re
-import secrets
 import shutil
 import stat
 import subprocess
@@ -39,6 +38,11 @@ RUNTIME_CANONICALIZATION_VERSION = "1"
 BUNDLE_SCHEMA_VERSION = "1"
 BUILDER_ID = "axiom-no-hook-bundle-builder"
 BUILDER_VERSION = "1"
+# The frozen manifest/ZIP format remains v1. Lifecycle v2 requires one writer
+# for the destination throughout construction. It retains visible partial
+# output on failure and never removes or relocates a named output object.
+# Directory descriptors bind accesses; they do not prove atomic mkdir ownership.
+BUILDER_LIFECYCLE_VERSION = "2"
 SOURCE_REPOSITORY_SLUG = "wheakerd/axiom"
 FULL_PROFILE_RUNTIME_DIGEST = (
     "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
@@ -312,6 +316,7 @@ class BuildResult:
     bundle_manifest: dict[str, Any]
     envelope: dict[str, Any]
     creation_records: tuple["BuilderCreatedObject", ...] = ()
+    output_lifecycle_version: str = BUILDER_LIFECYCLE_VERSION
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -327,7 +332,12 @@ class BuildResult:
 
 @dataclass(frozen=True)
 class BuilderCreatedObject:
-    """Creation-time identity for one retained descriptor-built object."""
+    """Output binding, not authority to delete a caller-visible named object.
+
+    A regular file is bound through its exclusive-create descriptor. A directory
+    is bound after mkdir under the lifecycle-v2 single-writer prerequisite;
+    opening a directory is not an atomic proof of which process created it.
+    """
 
     relative_path: str
     parent_relative_path: str
@@ -340,7 +350,36 @@ class BuilderCreatedObject:
 
 
 class BuilderCleanupError(BundleContractError):
-    """Raised when builder cleanup cannot prove that only owned objects were removed."""
+    """Raised when output bindings are incomplete; named outputs are retained."""
+
+
+@dataclass
+class BuilderCreationAttempt:
+    """Bounded progress retained even when output binding registration fails."""
+
+    relative_path: str
+    kind: str
+    creation_phase: str
+    created: bool = False
+    device: int | None = None
+    inode: int | None = None
+    registered: bool = False
+
+
+class BuilderBuildIncompleteError(BuilderCleanupError):
+    """A failed build preserves visible output and its original exception chain."""
+
+    def __init__(
+        self, error: BaseException, attempts: tuple[BuilderCreationAttempt, ...],
+        records: tuple[BuilderCreatedObject, ...],
+    ) -> None:
+        super().__init__(
+            f"{error}; bundle build incomplete, partial outputs preserved; "
+            "manual cleanup required"
+        )
+        self.creation_attempts = attempts
+        self.output_records = records
+        self.manual_cleanup_required = any(item.created for item in attempts)
 
 
 def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -2622,43 +2661,102 @@ def _builder_directory_flags() -> int:
     )
 
 
-def _builder_rename_noreplace(
-    source_parent_fd: int,
-    source_name: str,
-    destination_parent_fd: int,
-    destination_name: str,
-) -> None:
-    """Atomically rename on Linux without replacing an existing name."""
-    if platform.system() != "Linux":
-        raise BundleContractError(
-            "descriptor bundle publication requires Linux renameat2"
-        )
-    libc = ctypes.CDLL(None, use_errno=True)
-    renameat2 = getattr(libc, "renameat2", None)
-    if renameat2 is None:
-        raise BundleContractError(
-            "descriptor bundle publication requires Linux renameat2"
-        )
-    renameat2.argtypes = [
-        ctypes.c_int,
-        ctypes.c_char_p,
-        ctypes.c_int,
-        ctypes.c_char_p,
-        ctypes.c_uint,
-    ]
-    renameat2.restype = ctypes.c_int
-    if renameat2(
-        source_parent_fd,
-        os.fsencode(source_name),
-        destination_parent_fd,
-        os.fsencode(destination_name),
-        1,
-    ) != 0:
-        observed_errno = ctypes.get_errno()
-        category = "already exists" if observed_errno == errno.EEXIST else os.strerror(observed_errno)
-        raise BundleContractError(
-            f"descriptor bundle rename failed without replacement: {category}"
-        )
+def _close_builder_access_fd(descriptor: int) -> None:
+    """Release a Linux descriptor without invalidating a committed artifact.
+
+    Linux releases a descriptor before reporting delayed close errors; retrying
+    close can target a reused descriptor. Artifact data is fsynced before the
+    completion link. These remaining handles carry no pending content writes.
+    """
+    try:
+        os.close(descriptor)
+    except OSError:
+        pass
+
+
+class _BuilderCompletionFile:
+    """Prepare an unnamed completion file; linking it is the sole commit point."""
+
+    def __init__(self, root_fd: int, data: bytes) -> None:
+        self.root_fd = root_fd
+        self.descriptor: int | None = None
+        self.record: BuilderCreatedObject | None = None
+        self.linked = False
+        if platform.system() != "Linux" or not hasattr(os, "O_TMPFILE"):
+            raise BundleContractError(
+                "builder lifecycle v2 requires Linux O_TMPFILE completion publication"
+            )
+        libc = ctypes.CDLL(None, use_errno=True)
+        self._linkat = getattr(libc, "linkat", None)
+        if self._linkat is None:
+            raise BundleContractError(
+                "builder lifecycle v2 requires Linux linkat completion publication"
+            )
+        self._linkat.argtypes = [
+            ctypes.c_int, ctypes.c_char_p, ctypes.c_int,
+            ctypes.c_char_p, ctypes.c_int,
+        ]
+        self._linkat.restype = ctypes.c_int
+        try:
+            # This occurs before any visible output is created. An unsupported
+            # destination filesystem therefore fails without partial output.
+            self.descriptor = os.open(
+                ".", os.O_RDWR | os.O_TMPFILE | getattr(os, "O_CLOEXEC", 0),
+                0o644, dir_fd=root_fd,
+            )
+            os.fchmod(self.descriptor, 0o644)
+            _BuilderCreationLedger._write_all(self.descriptor, data)
+            os.fsync(self.descriptor)
+            metadata = os.fstat(self.descriptor)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_nlink != 0
+                or metadata.st_size != len(data)
+                or stat.S_IMODE(metadata.st_mode) != 0o644
+                or os.pread(self.descriptor, len(data) + 1, 0) != data
+            ):
+                raise BundleContractError("unnamed completion file validation failed")
+            # /proc/self/fd here is the documented, unprivileged linkat source
+            # for O_TMPFILE; it does not inspect host capability or process state.
+            self._source = os.fsencode(f"/proc/self/fd/{self.descriptor}")
+            source_metadata = os.stat(self._source)
+            if (source_metadata.st_dev, source_metadata.st_ino) != (
+                metadata.st_dev, metadata.st_ino
+            ):
+                raise BundleContractError("completion descriptor alias is unavailable")
+            self.record = BuilderCreatedObject(
+                BUNDLE_ENVELOPE_NAME, "", BUNDLE_ENVELOPE_NAME, "file",
+                metadata.st_dev, metadata.st_ino, metadata.st_mode,
+                "builder-output-v2:envelope-final-publish",
+            )
+        except BaseException:
+            self.close()
+            raise
+
+    def publish(self) -> None:
+        if self.descriptor is None or self.record is None or self.linked:
+            raise BundleContractError("completion file is not ready for publication")
+        # AT_SYMLINK_FOLLOW resolves only our held descriptor alias. linkat never
+        # replaces an existing destination. No callback, validation, allocation
+        # of result records, or named cleanup follows a successful link.
+        if self._linkat(
+            -100, self._source, self.root_fd,
+            os.fsencode(BUNDLE_ENVELOPE_NAME), 0x400,
+        ) != 0:
+            observed_errno = ctypes.get_errno()
+            category = (
+                "already exists" if observed_errno == errno.EEXIST
+                else os.strerror(observed_errno)
+            )
+            raise BundleContractError(
+                f"completion publication failed without replacement: {category}"
+            )
+        self.linked = True
+
+    def close(self) -> None:
+        if self.descriptor is not None:
+            descriptor, self.descriptor = self.descriptor, None
+            _close_builder_access_fd(descriptor)
 
 
 def _builder_same_object(metadata: os.stat_result, record: BuilderCreatedObject) -> bool:
@@ -2671,7 +2769,11 @@ def _builder_same_object(metadata: os.stat_result, record: BuilderCreatedObject)
 
 
 class _BuilderCreationLedger:
-    """Descriptor-relative creation ledger and identity-bound cleanup owner."""
+    """Bounded output bindings under the explicit single-writer prerequisite.
+
+    These records confer no named-object deletion authority. Lifecycle v2 has
+    no quarantine, rename, unlink, or recursive cleanup path.
+    """
 
     def __init__(
         self,
@@ -2682,7 +2784,19 @@ class _BuilderCreationLedger:
         self.root_fd = root_fd
         self.root_metadata = root_metadata
         self.records: dict[str, BuilderCreatedObject] = {}
+        self.attempts: list[BuilderCreationAttempt] = []
         self.test_hook = test_hook
+
+    def _reserve_creation(
+        self, relative: str, kind: str, phase: str,
+    ) -> BuilderCreationAttempt:
+        if len(self.attempts) >= MAX_RUNTIME_ENTRIES + 4:
+            raise BundleContractError("builder creation inventory exceeds its bound")
+        if any(item.relative_path == relative for item in self.attempts):
+            raise BundleContractError("builder creation attempt path is duplicated")
+        attempt = BuilderCreationAttempt(relative, kind, f"builder-output-v2:{phase}")
+        self.attempts.append(attempt)
+        return attempt
 
     def _hook(self, phase: str, **facts: Any) -> None:
         if self.test_hook is not None:
@@ -2767,7 +2881,7 @@ class _BuilderCreationLedger:
             device=metadata.st_dev,
             inode=metadata.st_ino,
             mode=metadata.st_mode,
-            creation_phase=phase,
+            creation_phase=f"builder-output-v2:{phase}",
         )
         if relative in self.records:
             raise BundleContractError("builder creation ledger path is duplicated")
@@ -2778,11 +2892,29 @@ class _BuilderCreationLedger:
         parent_fd, name = self._open_parent(relative)
         descriptor: int | None = None
         try:
+            attempt = self._reserve_creation(relative, "directory", phase)
+            self._hook(
+                "builder-before-create", relativePath=relative,
+                parentDescriptor=parent_fd, basename=name, kind="directory",
+            )
             os.mkdir(name, mode, dir_fd=parent_fd)
+            # Preserve successful mkdir even if open/fstat/registration fails.
+            # The later descriptor is an access binding under one-writer use,
+            # not proof that an arbitrary concurrent replacement is ours.
+            attempt.created = True
             descriptor = os.open(name, _builder_directory_flags(), dir_fd=parent_fd)
-            os.fchmod(descriptor, mode)
+            metadata = os.fstat(descriptor)
+            attempt.device, attempt.inode = metadata.st_dev, metadata.st_ino
             self._record_created(
                 relative, parent_fd, name, descriptor, "directory", phase
+            )
+            attempt.registered = True
+            os.fchmod(descriptor, mode)
+            # fchmod may change mode after the access binding is recorded.
+            self.records[relative] = BuilderCreatedObject(
+                relative, relative.rpartition("/")[0], name, "directory",
+                metadata.st_dev, metadata.st_ino, os.fstat(descriptor).st_mode,
+                attempt.creation_phase,
             )
             result = descriptor
             descriptor = None
@@ -2846,6 +2978,11 @@ class _BuilderCreationLedger:
         parent_fd, name = self._open_parent(relative)
         descriptor: int | None = None
         try:
+            attempt = self._reserve_creation(relative, "file", phase)
+            self._hook(
+                "builder-before-create", relativePath=relative,
+                parentDescriptor=parent_fd, basename=name, kind="file",
+            )
             descriptor = os.open(
                 name,
                 os.O_WRONLY
@@ -2856,10 +2993,19 @@ class _BuilderCreationLedger:
                 mode,
                 dir_fd=parent_fd,
             )
-            os.fchmod(descriptor, mode)
-            # Ownership starts at successful creation, before any content write
-            # or later phase can expose a replaceable pathname.
+            attempt.created = True
+            metadata = os.fstat(descriptor)
+            attempt.device, attempt.inode = metadata.st_dev, metadata.st_ino
+            # The returned O_EXCL descriptor identifies this created file.
+            # Record it before fallible mode changes or content writes.
             self._record_created(relative, parent_fd, name, descriptor, "file", phase)
+            attempt.registered = True
+            os.fchmod(descriptor, mode)
+            self.records[relative] = BuilderCreatedObject(
+                relative, relative.rpartition("/")[0], name, "file",
+                metadata.st_dev, metadata.st_ino, os.fstat(descriptor).st_mode,
+                attempt.creation_phase,
+            )
             self._write_all(descriptor, data)
             os.fsync(descriptor)
             metadata = os.fstat(descriptor)
@@ -2907,231 +3053,6 @@ class _BuilderCreationLedger:
             return descriptor
         finally:
             os.close(parent_fd)
-
-    def move_tree(self, source: str, destination: str, *, phase: str) -> None:
-        expected = self.verify_name(source)
-        source_parent, source_name = self._open_parent(source)
-        destination_parent, destination_name = self._open_parent(destination)
-        try:
-            try:
-                os.stat(destination_name, dir_fd=destination_parent, follow_symlinks=False)
-            except FileNotFoundError:
-                pass
-            else:
-                raise BundleContractError(f"fixed output already exists: {destination_name}")
-            _builder_rename_noreplace(
-                source_parent, source_name, destination_parent, destination_name
-            )
-            current = os.stat(
-                destination_name,
-                dir_fd=destination_parent,
-                follow_symlinks=False,
-            )
-            if not _builder_same_object(current, expected):
-                raise BuilderCleanupError(
-                    "published builder object changed identity; manual cleanup required"
-                )
-        finally:
-            os.close(source_parent)
-            os.close(destination_parent)
-        updates: dict[str, BuilderCreatedObject] = {}
-        for relative, record in tuple(self.records.items()):
-            if relative == source or relative.startswith(source + "/"):
-                suffix = relative[len(source) :]
-                new_relative = destination + suffix
-                parent_relative, _, basename = new_relative.rpartition("/")
-                updates[new_relative] = BuilderCreatedObject(
-                    relative_path=new_relative,
-                    parent_relative_path=parent_relative,
-                    basename=basename,
-                    kind=record.kind,
-                    device=record.device,
-                    inode=record.inode,
-                    mode=record.mode,
-                    creation_phase=record.creation_phase,
-                )
-                del self.records[relative]
-        self.records.update(updates)
-        self._hook(
-            "builder-after-publish",
-            source=source,
-            destination=destination,
-            publicationPhase=phase,
-            parentDescriptor=self.root_fd,
-        )
-        self.verify_name(destination)
-
-    def _restore_quarantine(
-        self, parent_fd: int, quarantine: str, original: str
-    ) -> None:
-        try:
-            _builder_rename_noreplace(parent_fd, quarantine, parent_fd, original)
-        except BundleContractError:
-            pass
-
-    def _remove_quarantined(
-        self, parent_fd: int, name: str, relative: str, expected: BuilderCreatedObject
-    ) -> bool:
-        try:
-            current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
-        except OSError:
-            return False
-        if not _builder_same_object(current, expected):
-            return False
-        if expected.kind == "file":
-            descriptor: int | None = None
-            try:
-                descriptor = os.open(
-                    name,
-                    os.O_RDONLY
-                    | getattr(os, "O_NOFOLLOW", 0)
-                    | getattr(os, "O_CLOEXEC", 0),
-                    dir_fd=parent_fd,
-                )
-                if not _builder_same_object(os.fstat(descriptor), expected):
-                    return False
-                current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
-                if not _builder_same_object(current, expected):
-                    return False
-                os.unlink(name, dir_fd=parent_fd)
-            except OSError:
-                return False
-            finally:
-                if descriptor is not None:
-                    os.close(descriptor)
-            self.records.pop(relative, None)
-            return True
-        directory_fd = os.open(name, _builder_directory_flags(), dir_fd=parent_fd)
-        complete = True
-        removed = False
-        try:
-            if not _builder_same_object(os.fstat(directory_fd), expected):
-                return False
-            names = sorted(os.listdir(directory_fd), key=os.fsencode)
-            for child_name in names:
-                child_relative = f"{relative}/{child_name}"
-                child = self.records.get(child_relative)
-                if child is None:
-                    complete = False
-                    continue
-                try:
-                    observed = os.stat(
-                        child_name, dir_fd=directory_fd, follow_symlinks=False
-                    )
-                except OSError:
-                    complete = False
-                    continue
-                if not _builder_same_object(observed, child):
-                    complete = False
-                    continue
-                quarantine = f".axiom-builder-remove-{secrets.token_hex(16)}"
-                try:
-                    _builder_rename_noreplace(
-                        directory_fd, child_name, directory_fd, quarantine
-                    )
-                    moved = os.stat(
-                        quarantine, dir_fd=directory_fd, follow_symlinks=False
-                    )
-                    self._hook(
-                        "builder-after-cleanup-quarantine",
-                        relativePath=child_relative,
-                        parentDescriptor=directory_fd,
-                        quarantine=quarantine,
-                        device=moved.st_dev,
-                        inode=moved.st_ino,
-                    )
-                    moved = os.stat(
-                        quarantine, dir_fd=directory_fd, follow_symlinks=False
-                    )
-                    if not _builder_same_object(moved, child):
-                        self._restore_quarantine(directory_fd, quarantine, child_name)
-                        complete = False
-                        continue
-                    # Rewrite the ledger prefix while the same object is isolated.
-                    old_prefix = child_relative
-                    new_prefix = f"{relative}/{quarantine}"
-                    replacements: dict[str, BuilderCreatedObject] = {}
-                    for path, record in tuple(self.records.items()):
-                        if path == old_prefix or path.startswith(old_prefix + "/"):
-                            updated_path = new_prefix + path[len(old_prefix) :]
-                            parent_relative, _, basename = updated_path.rpartition("/")
-                            replacements[updated_path] = BuilderCreatedObject(
-                                updated_path, parent_relative, basename, record.kind,
-                                record.device, record.inode, record.mode,
-                                record.creation_phase,
-                            )
-                            del self.records[path]
-                    self.records.update(replacements)
-                    if not self._remove_quarantined(
-                        directory_fd,
-                        quarantine,
-                        new_prefix,
-                        replacements[new_prefix],
-                    ):
-                        complete = False
-                except OSError:
-                    complete = False
-            if complete:
-                current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
-                if (
-                    not _builder_same_object(current, expected)
-                    or not _builder_same_object(os.fstat(directory_fd), expected)
-                ):
-                    complete = False
-                else:
-                    os.rmdir(name, dir_fd=parent_fd)
-                    removed = True
-        finally:
-            os.close(directory_fd)
-        if not complete or not removed:
-            return False
-        self.records.pop(relative, None)
-        return True
-
-    def cleanup_top_level(self, relative: str) -> bool:
-        expected = self.records.get(relative)
-        if expected is None or "/" in relative:
-            return expected is None
-        try:
-            current = os.stat(relative, dir_fd=self.root_fd, follow_symlinks=False)
-        except FileNotFoundError:
-            return False
-        if not _builder_same_object(current, expected):
-            return False
-        quarantine = f".axiom-builder-quarantine-{secrets.token_hex(16)}"
-        try:
-            _builder_rename_noreplace(
-                self.root_fd, relative, self.root_fd, quarantine
-            )
-            moved = os.stat(quarantine, dir_fd=self.root_fd, follow_symlinks=False)
-            self._hook(
-                "builder-after-cleanup-quarantine",
-                relativePath=relative,
-                parentDescriptor=self.root_fd,
-                quarantine=quarantine,
-                device=moved.st_dev,
-                inode=moved.st_ino,
-            )
-            moved = os.stat(quarantine, dir_fd=self.root_fd, follow_symlinks=False)
-        except OSError:
-            return False
-        if not _builder_same_object(moved, expected):
-            self._restore_quarantine(self.root_fd, quarantine, relative)
-            return False
-        replacements: dict[str, BuilderCreatedObject] = {}
-        for path, record in tuple(self.records.items()):
-            if path == relative or path.startswith(relative + "/"):
-                updated_path = quarantine + path[len(relative) :]
-                parent_relative, _, basename = updated_path.rpartition("/")
-                replacements[updated_path] = BuilderCreatedObject(
-                    updated_path, parent_relative, basename, record.kind,
-                    record.device, record.inode, record.mode, record.creation_phase,
-                )
-                del self.records[path]
-        self.records.update(replacements)
-        return self._remove_quarantined(
-            self.root_fd, quarantine, quarantine, replacements[quarantine]
-        )
 
     def exported_records(self) -> tuple[BuilderCreatedObject, ...]:
         root_current = os.fstat(self.root_fd)
@@ -3286,7 +3207,12 @@ def build_bundle_to_directory_fd(
     expected_destination_identity: tuple[int, int] | None = None,
     _test_hook: Callable[[str, dict[str, Any]], None] | None = None,
 ) -> BuildResult:
-    """Build into an already-open Linux directory without re-resolving its path."""
+    """Construct a bundle with lifecycle v2, preserving partial output on failure.
+
+    The caller must keep the destination and its ancestors exclusively writable
+    by this build until completion. This prerequisite is not an OS isolation
+    guarantee. The caller's destination is never claimed as a created object.
+    """
     if platform.system() != "Linux" or os.name != "posix":
         raise BundleContractError(
             "descriptor bundle destination requires Linux/POSIX semantics"
@@ -3295,10 +3221,10 @@ def build_bundle_to_directory_fd(
         raise BundleContractError("destination descriptor must be an open integer fd")
     try:
         root_fd = os.dup(destination_fd)
-        root_metadata = os.fstat(root_fd)
     except OSError as error:
         raise BundleContractError("cannot duplicate destination descriptor") from error
     try:
+        root_metadata = os.fstat(root_fd)
         if (
             not stat.S_ISDIR(root_metadata.st_mode)
             or root_metadata.st_dev <= 0
@@ -3343,26 +3269,18 @@ def build_bundle_to_directory_fd(
         envelope_bytes = _pretty_json_bytes(envelope)
         archive_filename = manifest["transport"]["archiveFilename"]
 
-        staging_fd: int | None = None
+        completion = _BuilderCompletionFile(root_fd, envelope_bytes)
         try:
-            staging_fd = ledger.create_directory(
-                STAGING_DIRECTORY_NAME,
-                mode=0o700,
-                phase="staging-create",
-            )
-            os.close(staging_fd)
-            staging_fd = None
-            plugin_staging = f"{STAGING_DIRECTORY_NAME}/{PLUGIN_DIRECTORY_NAME}"
             plugin_fd = ledger.create_directory(
-                plugin_staging,
+                PLUGIN_DIRECTORY_NAME,
                 mode=0o755,
                 phase="plugin-root-create",
             )
             os.close(plugin_fd)
-            created_directories = {plugin_staging}
+            created_directories = {PLUGIN_DIRECTORY_NAME}
             for relative_path, data in files.items():
                 parent_parts = PurePosixPath(relative_path).parent.parts
-                prefix = plugin_staging
+                prefix = PLUGIN_DIRECTORY_NAME
                 for part in parent_parts:
                     prefix = f"{prefix}/{part}"
                     if prefix not in created_directories:
@@ -3374,103 +3292,81 @@ def build_bundle_to_directory_fd(
                         os.close(directory_fd)
                         created_directories.add(prefix)
                 ledger.create_file(
-                    f"{plugin_staging}/{relative_path}",
+                    f"{PLUGIN_DIRECTORY_NAME}/{relative_path}",
                     data,
                     mode=0o644,
                     phase="plugin-file-create",
                 )
-            staged_archive = f"{STAGING_DIRECTORY_NAME}/{archive_filename}"
-            staged_envelope = f"{STAGING_DIRECTORY_NAME}/{BUNDLE_ENVELOPE_NAME}"
-            ledger.create_file(
-                staged_archive,
-                archive_bytes,
-                mode=0o644,
-                phase="archive-create",
+            ledger._hook(
+                "builder-after-publish",
+                destination=PLUGIN_DIRECTORY_NAME,
+                publicationPhase="plugin-direct-create",
+                parentDescriptor=root_fd,
             )
             ledger.create_file(
-                staged_envelope,
-                envelope_bytes,
-                mode=0o644,
-                phase="envelope-stage-create",
+                archive_filename, archive_bytes, mode=0o644, phase="archive-create",
             )
-            _validate_published_outputs_fd(
-                ledger, plugin_staging, staged_archive, files, envelope
+            ledger._hook(
+                "builder-after-publish",
+                destination=archive_filename,
+                publicationPhase="archive-direct-create",
+                parentDescriptor=root_fd,
             )
-            inputs.verify_source_unchanged()
-            if set(os.listdir(root_fd)) != {STAGING_DIRECTORY_NAME}:
-                raise BuilderCleanupError(
-                    "destination changed while the bundle was staged; manual cleanup required"
-                )
-            ledger.move_tree(
-                plugin_staging,
-                PLUGIN_DIRECTORY_NAME,
-                phase="plugin-publish",
-            )
-            ledger.move_tree(
-                staged_archive,
-                archive_filename,
-                phase="archive-publish",
+            # Hooks are before all final checks, never after the commit point.
+            ledger._hook(
+                "builder-before-completion-publish",
+                destination=BUNDLE_ENVELOPE_NAME,
+                parentDescriptor=root_fd,
             )
             _validate_published_outputs_fd(
                 ledger, PLUGIN_DIRECTORY_NAME, archive_filename, files, envelope
             )
             inputs.verify_source_unchanged()
-            # The envelope is the final published name and therefore remains
-            # the completion marker for the deterministic transport.
-            ledger.move_tree(
-                staged_envelope,
-                BUNDLE_ENVELOPE_NAME,
-                phase="envelope-final-publish",
+            if set(os.listdir(root_fd)) != {PLUGIN_DIRECTORY_NAME, archive_filename}:
+                raise BuilderCleanupError(
+                    "destination contains an unknown object; manual cleanup required"
+                )
+            records = ledger.exported_records()
+            if any(item.created and not item.registered for item in ledger.attempts):
+                raise BundleContractError("builder creation registration is incomplete")
+            os.fsync(root_fd)
+            if completion.record is None:
+                raise BundleContractError("completion file has no output binding")
+            result = BuildResult(
+                profile_runtime_digest=manifest["profileRuntimeDigest"],
+                bundle_manifest_digest=manifest["bundleManifestDigest"],
+                archive_sha256=_sha256(archive_bytes),
+                archive_size=len(archive_bytes),
+                archive_filename=archive_filename,
+                directory_file_count=len(files),
+                directory_total_bytes=sum(len(data) for data in files.values()),
+                bundle_manifest=manifest,
+                envelope=envelope,
+                creation_records=tuple(sorted(
+                    (*records, completion.record),
+                    key=lambda record: record.relative_path.encode("utf-8"),
+                )),
             )
-            if not ledger.cleanup_top_level(STAGING_DIRECTORY_NAME):
-                raise BuilderCleanupError(
-                    "builder staging cleanup is incomplete; manual cleanup required"
-                )
-            if set(os.listdir(root_fd)) != {
-                PLUGIN_DIRECTORY_NAME,
-                archive_filename,
-                BUNDLE_ENVELOPE_NAME,
-            }:
-                raise BuilderCleanupError(
-                    "published destination contains an unknown object; manual cleanup required"
-                )
-            for relative in (
-                PLUGIN_DIRECTORY_NAME,
-                archive_filename,
-                BUNDLE_ENVELOPE_NAME,
-            ):
-                ledger.verify_name(relative)
+            # All output validation, source checks, result construction and
+            # necessary temporary cleanup precede this no-overwrite link.
+            # No named temporary output exists. This is process-level commit,
+            # not a claim of multi-file crash durability or concurrent exclusion.
+            completion.publish()
+            return result
         except BaseException as error:
-            incomplete = False
-            for relative in (
-                BUNDLE_ENVELOPE_NAME,
-                archive_filename,
-                PLUGIN_DIRECTORY_NAME,
-                STAGING_DIRECTORY_NAME,
-            ):
-                if relative in ledger.records and not ledger.cleanup_top_level(relative):
-                    incomplete = True
-            if incomplete or ledger.records:
-                raise BuilderCleanupError(
-                    "bundle build failed and identity-bound cleanup is incomplete; "
-                    "manual cleanup required"
+            # Preserve unknown names and all visible partial output. The original
+            # error remains the cause, including a successful create followed by
+            # failed descriptor acquisition or registration. No ownership is
+            # reconstructed from the object currently occupying a path.
+            if any(item.created for item in ledger.attempts):
+                raise BuilderBuildIncompleteError(
+                    error, tuple(ledger.attempts), tuple(ledger.records.values()),
                 ) from error
             raise
-
-        return BuildResult(
-            profile_runtime_digest=manifest["profileRuntimeDigest"],
-            bundle_manifest_digest=manifest["bundleManifestDigest"],
-            archive_sha256=_sha256(archive_bytes),
-            archive_size=len(archive_bytes),
-            archive_filename=archive_filename,
-            directory_file_count=len(files),
-            directory_total_bytes=sum(len(data) for data in files.values()),
-            bundle_manifest=manifest,
-            envelope=envelope,
-            creation_records=ledger.exported_records(),
-        )
+        finally:
+            completion.close()
     finally:
-        os.close(root_fd)
+        _close_builder_access_fd(root_fd)
 
 
 def build_bundle(
@@ -3511,7 +3407,7 @@ def build_bundle(
         )
     finally:
         if descriptor is not None:
-            os.close(descriptor)
+            _close_builder_access_fd(descriptor)
 
 
 def _filesystem_runtime(

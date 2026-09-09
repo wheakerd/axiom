@@ -15,8 +15,8 @@
     "fullProfileInputCount": 61,
     "fullProfileRuntimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
     "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
-    "bundleManifestDigest": "sha256:5ac44004686e2f6e8a5bb9ab02817f44625da8aac5a881a3423757477c3093b7",
-    "archiveSha256": "5fd1f89d2035072ee319bfda7380a9749b480a7d59800240702e71787dcdc2bf"
+    "bundleManifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5",
+    "archiveSha256": "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98"
   },
   "contractBindings": {
     "profileContract": {
@@ -57,7 +57,7 @@
     },
     "resultSchema": {
       "path": "evals/no-hook-observation/codex-result-schema-v1.json",
-      "sha256": "56139c96dad0b0e550bb14e90f90199a44b1292516dd5228230c071aac901273"
+      "sha256": "5385377097d267a1a1a620f6501bff5cbfd2c3af1954f07f3e1f5d25d172010b"
     }
   },
   "host": {
@@ -361,8 +361,8 @@
   },
   "objectBinding": {
     "bundleDestination": "validated-open-directory-fd-relative-core",
-    "bundleCreationOwnership": "immediate-fstat-creation-ledger",
-    "bundleFailureCleanup": "identity-bound-no-replace-quarantine",
+    "bundleCreationOwnership": "lifecycle-v2-output-bindings-not-deletion-authority",
+    "bundleFailureCleanup": "retain-incomplete-named-outputs",
     "bundleGitEnvironment": "fixed-credential-free-allowlist",
     "runRootWrites": "frozen-root-fd-relative-only",
     "runRootReplacement": "write-original-object-then-incomplete-manual-cleanup",
@@ -461,12 +461,12 @@
       {
         "path": "axiom_validation/no_hook_observation.py",
         "role": "implementation-validator",
-        "sha256": "424c062da8ad1631113c179ae0e954714a3de1df5cc027d6e68ece9bd7e4ca2c"
+        "sha256": "d1874b0ebd148ec25f2d629e3725552af672bb43a15b40447eccf5e69afbf741"
       },
       {
         "path": "axiom_validation/no_hook_linux_isolation.py",
         "role": "linux-process-domain",
-        "sha256": "838b598f68366cf39bbd38a280902de585fba80622428649cad8aa9bdc1c68ea"
+        "sha256": "6ddae4cd0b7fcd64841b29a0e9386838c0f46adbed7fc81259543d36b0913907"
       },
       {
         "path": "tests/fixtures/no_hook_observation.py",
@@ -530,7 +530,6 @@
     "installation",
     "publication"
   ],
-  "protocolDigest": "sha256:b3b42d7a6cd23d8eed71d9e8daa5725b7480246265058d9cf71c7ac6ee01a87a",
   "combinedLifecycle": {
     "implementation": "offline-contract-only",
     "scope": "one-bundle-and-sixteen-case-scopes",
@@ -611,5 +610,6 @@
     "publication": "all-scopes-and-owned-controls-closed-for-selected-mode",
     "unknownObjects": "preserve-incomplete-no-invented-residual",
     "modelCallAuthority": "external-unchanged-sixteen-call-capability"
-  }
+  },
+  "protocolDigest": "sha256:0e35d5a907c655525ae61050498a4bbf730605e67ca7834d575e122f751defc4"
 }

@@ -164,6 +164,25 @@ records the independent profile runtime, bundle manifest, and archive
 identities after two equal builds. Codex and ChatGPT host observations remain
 `NOT-RUN`, and full-profile evidence remains outside this acceptance boundary.
 
+Ordinary output lifecycle **2** supersedes the prototype's automatic
+creation-ledger cleanup. On supported Linux filesystems, one writer builds into
+an existing empty external destination. The caller maintains that single-writer
+condition; the builder does not establish a same-user security boundary.
+Exclusive file creation never overwrites existing names. Successful creation
+and incomplete registration are retained as progress, and failures preserve
+partial and unknown outputs without automatic unlink, rename, or recursive
+removal. Normal builds leave their intended products without staging residue.
+The fully prepared anonymous envelope is linked without replacement only after
+all required output validation and prepublication closure. See
+`docs/runtime-identity.md` for prerequisites, failure recovery, migration, and
+the distinction between output bindings and deletion authority.
+
+This changes the builder dependency, manifest, and actual archive identities,
+not the frozen runtime payload or v1 package schema. The old observer handoff
+cannot consume lifecycle 2 records as cleanup ownership and now fails closed.
+That removed integration is not a successful host observation or a closure of
+FCR-004. Other deterministic fake orchestration remains test-only.
+
 ## Codex no-Hook observation protocol
 
 Repository policy revision 7 defines, but does not execute, the Codex no-Hook

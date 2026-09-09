@@ -802,8 +802,9 @@ class NoHookBundleTests(unittest.TestCase):
                 publications: list[str] = []
 
                 def hook(phase: str, facts: dict[str, object]) -> None:
-                    if phase == "builder-after-publish":
+                    if phase in {"builder-after-publish", "builder-before-completion-publish"}:
                         publications.append(str(facts["destination"]))
+                        self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
 
                 result = build_bundle_to_directory_fd(
                     fixture.root,
@@ -820,6 +821,11 @@ class NoHookBundleTests(unittest.TestCase):
             finally:
                 os.close(descriptor)
             self.assertGreater(len(result.creation_records), result.directory_file_count)
+            self.assertEqual("2", result.output_lifecycle_version)
+            self.assertTrue(all(
+                record.creation_phase.startswith("builder-output-v2:")
+                for record in result.creation_records
+            ))
             self.assertEqual(
                 ["plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME],
                 publications,
@@ -924,7 +930,9 @@ class NoHookBundleTests(unittest.TestCase):
                     os.close(link_fd)
 
     def test_builder_creation_and_cleanup_races_preserve_unknown_objects(self):
-        for scenario in ("before-ledger", "after-ledger", "quarantine-mismatch"):
+        # Lifecycle v2 removes quarantine deletion. Its successor negative case
+        # checks replacement during failed validation and preserves both objects.
+        for scenario in ("before-ledger", "after-ledger", "failure-retention"):
             with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as directory:
                 fixture = SourceFixture(Path(directory))
                 destination = fixture.destination("race-output")
@@ -938,7 +946,7 @@ class NoHookBundleTests(unittest.TestCase):
                     if (
                         scenario == "before-ledger"
                         and phase == "builder-after-create-before-ledger"
-                        and facts["relativePath"] == bundle_module.STAGING_DIRECTORY_NAME
+                        and facts["relativePath"] == "plugin"
                     ):
                         name = str(facts["basename"])
                         os.rename(name, "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
@@ -952,17 +960,19 @@ class NoHookBundleTests(unittest.TestCase):
                         os.rename("plugin", "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
                         os.mkdir("plugin", 0o755, dir_fd=parent_fd)
                         mutated = True
-                    elif scenario == "quarantine-mismatch" and phase == "builder-after-cleanup-quarantine":
-                        name = str(facts["quarantine"])
-                        os.rename(name, "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
-                        os.mkdir(name, 0o700, dir_fd=parent_fd)
-                        mutated = True
+                def failed_validation(*args, **kwargs):
+                    nonlocal mutated
+                    (destination / "plugin").rename(destination / "moved-original")
+                    (destination / "plugin").mkdir()
+                    (destination / "plugin/caller.txt").write_bytes(b"preserve caller object\n")
+                    mutated = True
+                    raise BundleContractError("injected validation failure")
 
-                if scenario == "quarantine-mismatch":
+                if scenario == "failure-retention":
                     verifier = mock.patch.object(
                         bundle_module,
                         "_validate_published_outputs_fd",
-                        side_effect=BundleContractError("injected failure"),
+                        side_effect=failed_validation,
                     )
                 else:
                     verifier = mock.patch.object(
@@ -986,7 +996,240 @@ class NoHookBundleTests(unittest.TestCase):
                     )
                 self.assertTrue(mutated)
                 self.assertTrue((destination / "moved-original").exists())
-                self.assertTrue(any(path.name in {"plugin", bundle_module.STAGING_DIRECTORY_NAME} for path in destination.iterdir()))
+                self.assertTrue((destination / "plugin").exists())
+                self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+                self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+                if scenario == "failure-retention":
+                    self.assertEqual(
+                        b"preserve caller object\n",
+                        (destination / "plugin/caller.txt").read_bytes(),
+                    )
+
+    def test_lifecycle_v2_registration_failure_retains_created_file_and_cause(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("registration-failure")
+            original_error = BundleContractError("injected registration failure")
+            original = bundle_module._BuilderCreationLedger._record_created
+
+            def reject_file(ledger, relative, parent_fd, name, descriptor, kind, phase):
+                if kind == "file":
+                    raise original_error
+                return original(ledger, relative, parent_fd, name, descriptor, kind, phase)
+
+            with mock.patch.object(
+                bundle_module._BuilderCreationLedger, "_record_created", reject_file,
+            ), self.assertRaises(bundle_module.BuilderBuildIncompleteError) as caught:
+                _build(fixture, destination)
+            failure = caught.exception
+            self.assertIs(original_error, failure.__cause__)
+            unregistered = [
+                item for item in failure.creation_attempts
+                if item.created and not item.registered
+            ]
+            self.assertEqual(1, len(unregistered))
+            attempt = unregistered[0]
+            self.assertEqual("file", attempt.kind)
+            retained = destination / attempt.relative_path
+            self.assertTrue(retained.is_file())
+            self.assertEqual(
+                (attempt.device, attempt.inode),
+                (retained.stat().st_dev, retained.stat().st_ino),
+            )
+            self.assertEqual(b"", retained.read_bytes())
+            self.assertTrue(failure.manual_cleanup_required)
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_lifecycle_v2_mkdir_open_failure_preserves_unbound_creation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("open-failure")
+            original_error = OSError("injected directory open failure")
+            original_open = os.open
+
+            def reject_plugin_open(path, flags, *args, **kwargs):
+                if path == "plugin" and flags & getattr(os, "O_DIRECTORY", 0):
+                    raise original_error
+                return original_open(path, flags, *args, **kwargs)
+
+            with mock.patch.object(bundle_module.os, "open", reject_plugin_open):
+                with self.assertRaises(bundle_module.BuilderBuildIncompleteError) as caught:
+                    _build(fixture, destination)
+            failure = caught.exception
+            self.assertIs(original_error, failure.__cause__)
+            self.assertEqual(1, len(failure.creation_attempts))
+            attempt = failure.creation_attempts[0]
+            self.assertEqual("plugin", attempt.relative_path)
+            self.assertTrue(attempt.created)
+            self.assertFalse(attempt.registered)
+            self.assertIsNone(attempt.device)
+            self.assertIsNone(attempt.inode)
+            self.assertEqual((), failure.output_records)
+            self.assertTrue((destination / "plugin").is_dir())
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_lifecycle_v2_existing_name_is_not_claimed_or_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("preexisting-output")
+            injected = False
+
+            def hook(phase, facts):
+                nonlocal injected
+                if phase == "builder-before-create" and facts["relativePath"] == "plugin":
+                    (destination / "plugin").mkdir()
+                    (destination / "plugin/caller.txt").write_bytes(b"caller\n")
+                    injected = True
+
+            with self.assertRaisesRegex(BundleContractError, "already exists") as caught:
+                build_bundle(
+                    fixture.root, fixture.commit_oid, fixture.tree_oid, destination,
+                    git_executable=GIT_EXECUTABLE, _test_hook=hook,
+                )
+            self.assertTrue(injected)
+            self.assertNotIsInstance(caught.exception, bundle_module.BuilderBuildIncompleteError)
+            self.assertEqual(b"caller\n", (destination / "plugin/caller.txt").read_bytes())
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_lifecycle_v2_fallible_preconditions_precede_completion_marker(self):
+        patches = (
+            (bundle_module, "_validate_published_outputs_fd"),
+            (bundle_module.BundleInputs, "verify_source_unchanged"),
+            (bundle_module._BuilderCreationLedger, "exported_records"),
+        )
+        for owner, name in patches:
+            with self.subTest(check=name), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                destination = fixture.destination("precondition-failure")
+                original_error = BundleContractError(f"injected {name}")
+
+                def reject(*args, **kwargs):
+                    self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+                    raise original_error
+
+                with mock.patch.object(owner, name, side_effect=reject):
+                    with self.assertRaises(bundle_module.BuilderBuildIncompleteError) as caught:
+                        _build(fixture, destination)
+                self.assertIs(original_error, caught.exception.__cause__)
+                self.assertTrue((destination / "plugin").is_dir())
+                self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+                self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+
+    def test_lifecycle_v2_completion_collision_preserves_existing_marker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("completion-collision")
+            original_publish = bundle_module._BuilderCompletionFile.publish
+
+            def collide(completion):
+                (destination / BUNDLE_ENVELOPE_NAME).write_bytes(b"caller marker\n")
+                return original_publish(completion)
+
+            with mock.patch.object(bundle_module._BuilderCompletionFile, "publish", collide):
+                with self.assertRaisesRegex(
+                    bundle_module.BuilderBuildIncompleteError, "already exists",
+                ):
+                    _build(fixture, destination)
+            self.assertEqual(b"caller marker\n", (destination / BUNDLE_ENVELOPE_NAME).read_bytes())
+            self.assertTrue((destination / "plugin").is_dir())
+            self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+
+    def test_lifecycle_v2_unsupported_completion_file_leaves_destination_empty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("unsupported-completion")
+            original_open = os.open
+            original_error = OSError("injected unsupported unnamed completion")
+
+            def reject_tmpfile(path, flags, *args, **kwargs):
+                if flags & os.O_TMPFILE == os.O_TMPFILE:
+                    raise original_error
+                return original_open(path, flags, *args, **kwargs)
+
+            with mock.patch.object(bundle_module.os, "open", reject_tmpfile):
+                with self.assertRaises(OSError) as caught:
+                    _build(fixture, destination)
+            self.assertIs(original_error, caught.exception)
+            self.assertEqual([], list(destination.iterdir()))
+
+    def test_lifecycle_v2_success_never_deletes_or_renames_named_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("no-named-cleanup")
+            with mock.patch.object(bundle_module.os, "unlink", side_effect=AssertionError("unlink")), \
+                 mock.patch.object(bundle_module.os, "rmdir", side_effect=AssertionError("rmdir")), \
+                 mock.patch.object(bundle_module.os, "rename", side_effect=AssertionError("rename")):
+                result = _build(fixture, destination)
+            self.assertEqual(
+                {"plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME},
+                {item.name for item in destination.iterdir()},
+            )
+            marker = json.loads((destination / BUNDLE_ENVELOPE_NAME).read_bytes())
+            self.assertTrue(marker["complete"])
+            self.assertEqual(result.archive_sha256, marker["archive"]["sha256"])
+
+    def test_lifecycle_v2_cli_build_and_repeated_destination_preserve_outputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("cli-output")
+            command = [
+                sys.executable, "-I", "-B", "scripts/build-no-hook-bundle.py",
+                "--git-executable", str(GIT_EXECUTABLE),
+                "--source-repository", str(fixture.root),
+                "--source-commit", fixture.commit_oid,
+                "--expected-source-tree", fixture.tree_oid,
+                "--destination", str(destination),
+            ]
+            completed = subprocess.run(
+                command, cwd=REPOSITORY_ROOT.resolve(),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60,
+                check=False,
+            )
+            self.assertEqual(0, completed.returncode, completed.stderr.decode("utf-8"))
+            self.assertEqual(b"", completed.stderr)
+            summary = json.loads(completed.stdout)
+            envelope = json.loads((destination / BUNDLE_ENVELOPE_NAME).read_bytes())
+            self.assertTrue(envelope["complete"])
+            self.assertEqual(
+                {
+                    "profileRuntimeDigest": envelope["profileRuntimeDigest"],
+                    "bundleManifestDigest": envelope["bundleManifestDigest"],
+                    "archiveSha256": envelope["archive"]["sha256"],
+                    "archiveSize": envelope["archive"]["size"],
+                    "archiveFilename": envelope["archive"]["filename"],
+                    "directoryFileCount": envelope["directory"]["fileCount"],
+                    "directoryTotalBytes": envelope["directory"]["totalBytes"],
+                },
+                summary,
+            )
+            archive = (destination / summary["archiveFilename"]).read_bytes()
+            self.assertEqual(summary["archiveSize"], len(archive))
+            self.assertEqual(summary["archiveSha256"], hashlib.sha256(archive).hexdigest())
+            before = _directory_files(destination)
+            identities = {
+                path.relative_to(destination).as_posix(): (
+                    path.stat().st_dev, path.stat().st_ino, path.stat().st_mode,
+                )
+                for path in destination.rglob("*")
+            }
+            repeated = subprocess.run(
+                command, cwd=REPOSITORY_ROOT.resolve(),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60,
+                check=False,
+            )
+            self.assertEqual(1, repeated.returncode)
+            self.assertEqual(b"", repeated.stdout)
+            self.assertIn(b"destination must be empty", repeated.stderr)
+            self.assertEqual(before, _directory_files(destination))
+            self.assertEqual(
+                identities,
+                {
+                    path.relative_to(destination).as_posix(): (
+                        path.stat().st_dev, path.stat().st_ino, path.stat().st_mode,
+                    )
+                    for path in destination.rglob("*")
+                },
+            )
 
     def test_runtime_path_policy_rejects_unsafe_names_and_collisions(self):
         invalid = (
@@ -2115,7 +2358,10 @@ class NoHookBundleTests(unittest.TestCase):
                 with self.assertRaisesRegex(BundleContractError, "injected"):
                     _build(fixture, destination)
             self.assertEqual("keep\n", (destination / "caller-arrived.txt").read_text(encoding="utf-8"))
-            self.assertFalse((destination / "plugin").exists())
+            # Version 2 intentionally retains partial output on failure. This
+            # does not delegate normal successful cleanup to the caller: no
+            # staging directory or other named temporary artifact is created.
+            self.assertTrue((destination / "plugin").is_dir())
             self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
             self.assertFalse((destination / ".axiom-no-hook-bundle-staging").exists())
 

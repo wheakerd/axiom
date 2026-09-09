@@ -1831,7 +1831,7 @@ def _bundle_worker_main(arguments: Sequence[str]) -> int:
             metadata = os.fstat(descriptor)
             if not stat.S_ISDIR(metadata.st_mode):
                 raise ProcessDomainError("bundle-worker-directory-fd-invalid")
-        if failure_relative not in {None, ".axiom-no-hook-bundle-staging"}:
+        if failure_relative not in {None, "plugin"}:
             raise ProcessDomainError("bundle-worker-test-failure-invalid")
         repository_alias = f"/proc/self/fd/{repository_fd}"
         if repository_alias not in sys.path:
@@ -1864,7 +1864,8 @@ def _bundle_worker_main(arguments: Sequence[str]) -> int:
             _test_hook=test_hook if failure_relative is not None else None,
         )
         document = {
-            "schemaVersion": "1",
+            "schemaVersion": "2",
+            "outputLifecycleVersion": result.output_lifecycle_version,
             "profileRuntimeDigest": result.profile_runtime_digest,
             "bundleManifestDigest": result.bundle_manifest_digest,
             "archiveSha256": result.archive_sha256,

@@ -366,6 +366,30 @@ def find_objects_by_identity(
 
 
 class ProtocolContractTests(unittest.TestCase):
+    def test_v2_builder_receipt_cannot_downgrade_output_binding_to_ownership(self):
+        receipt = {
+            "schemaVersion": "2", "outputLifecycleVersion": "2",
+            "profileRuntimeDigest": observer.PROFILE_RUNTIME_DIGEST,
+            "bundleManifestDigest": observer.BUNDLE_MANIFEST_DIGEST,
+            "archiveSha256": observer.ARCHIVE_SHA256,
+            "creationRecords": [{
+                "relativePath": "plugin", "parentRelativePath": "",
+                "basename": "plugin", "kind": "directory",
+                "device": 1, "inode": 2, "mode": 0o40755,
+                "creationPhase": "plugin-root-create",
+            }],
+        }
+        with self.assertRaisesRegex(observer.ObservationError, "record is not closed"):
+            observer._read_bundle_worker_result(json.dumps(receipt).encode())
+        receipt["creationRecords"][0]["creationPhase"] = "builder-output-v2:plugin-root-create"
+        records = observer._read_bundle_worker_result(json.dumps(receipt).encode())
+        self.assertEqual(1, len(records))
+        # The version rejection precedes any object lookup or ledger mutation.
+        with self.assertRaisesRegex(observer.ObservationError, "do not authorize observer cleanup"):
+            observer.OwnedRootSession.import_builder_creation_records(
+                None, None, records, phase="test-admission",
+            )
+
     def test_protocol_documents_are_closed_and_observation_is_not_run(self):
         identities = observer.validate_protocol_documents(REPOSITORY_ROOT)
         self.assertEqual(16, identities["caseCount"])
@@ -2781,61 +2805,30 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
             ],
         )
 
-    def test_real_builder_fake_orchestration_uses_source_compatible_receipts(self):
+    def test_real_builder_output_bindings_cannot_authorize_observer_cleanup(self):
+        # Lifecycle 2 retains ordinary output on failure. A successful ordinary
+        # build cannot grant the legacy observer authority to remove that tree.
         process_domains = DeterministicProcessDomainSupervisor()
-        synthetic_environment = {
-            "CODEX_API_KEY": "sentinel-not-a-real-secret",
-            "OPENAI_API_KEY": "second-synthetic-value",
-            "AXIOM_TEST_TOKEN": "third-synthetic-value",
-            "AXIOM_TEST_SECRET": "fourth-synthetic-value",
-        }
-        with mock.patch.object(observer.os, "environ", synthetic_environment):
-            result = fake_run(
-                real_builder=True,
-                seed=b"\x31" * 32,
-                process_domains=process_domains,
-            )
+        result = fake_run(
+            real_builder=True,
+            seed=b"\x31" * 32,
+            process_domains=process_domains,
+        )
         self.assertEqual("fake-validation", result["runMode"])
         self.assertEqual("incomplete", result["overallStatus"])
-        self.assertEqual(16, result["summary"]["passCount"])
-        self.assertEqual(16, result["summary"]["modelCallCount"])
-        self.assertEqual(15, result["executionFacts"]["marketplaceProcessCount"])
-        self.assertEqual(15, result["executionFacts"]["pluginInstallProcessCount"])
+        self.assertEqual(0, result["summary"]["modelCallCount"])
         self.assertEqual(1, result["executionFacts"]["builderProcessCount"])
-        self.assertEqual(47, result["processDomainFacts"]["domainCount"])
-        self.assertEqual(1, result["processDomainFacts"]["builderDomainCount"])
-        self.assertEqual(1, result["installationFacts"]["noPluginControlCaseCount"])
-        for key in (
-            "bundleDestinationDescriptorBound",
-            "bundleCreationLedgerVerified",
-            "bundleFailureCleanupIdentityBound",
-            "bundleGitCredentialExcluded",
-            "marketplaceSourceObjectVerified",
-            "installedCacheLayoutVerified",
-        ):
-            self.assertTrue(result["objectBindingFacts"][key], key)
-        self.assertTrue(result["cleanup"]["temporaryRootsRemoved"])
-        self.assertTrue(result["cleanup"]["sourceBundleUnchanged"])
-        self.assertFalse(result["cleanup"]["manualCleanupRequired"])
-        creates = [
-            item for item in process_domains.events if item.startswith("domain-create:")
-        ]
-        self.assertEqual(47, len(creates))
-        self.assertEqual("domain-create:1:bundle-builder", creates[0])
-        self.assertEqual(
-            "domain-removed:1:bundle-builder",
-            next(
-                item
-                for item in process_domains.events
-                if item == "domain-removed:1:bundle-builder"
-            ),
-        )
+        self.assertTrue(result["summary"]["hardStop"])
+        self.assertTrue(result["cleanup"]["manualCleanupRequired"])
+        for key in ("bundleCreationLedgerVerified", "bundleFailureCleanupIdentityBound"):
+            self.assertFalse(result["objectBindingFacts"][key], key)
+        self.assertIn("domain-removed:1:bundle-builder", process_domains.events)
 
     def test_real_builder_failure_hard_stops_before_any_model_case(self):
         result = fake_run(
             real_builder=True,
             seed=b"\x32" * 32,
-            builder_failure_relative=".axiom-no-hook-bundle-staging",
+            builder_failure_relative="plugin",
         )
         self.assertEqual("incomplete", result["overallStatus"])
         self.assertEqual(0, result["summary"]["modelCallCount"])
