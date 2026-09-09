@@ -22,7 +22,7 @@
     "pluginRuntimeEnabled",
     "authenticationMode",
     "diagnosticRevision",
-    "priorResultSha256",
+    "priorResultSha256s",
     "attemptCount",
     "cumulativeAttemptCount"
   ],
@@ -94,7 +94,8 @@
           "observed",
           "terminal",
           "attemptCount",
-          "executionDiagnostics"
+          "executionDiagnostics",
+          "evidenceExtraction"
         ],
         "properties": {
           "ordinal": {
@@ -554,6 +555,38 @@
                 }
               }
             }
+          },
+          "evidenceExtraction": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "stream",
+              "response",
+              "postcheck"
+            ],
+            "properties": {
+              "stream": {
+                "enum": [
+                  "not-checked",
+                  "valid",
+                  "invalid"
+                ]
+              },
+              "response": {
+                "enum": [
+                  "not-checked",
+                  "valid",
+                  "invalid"
+                ]
+              },
+              "postcheck": {
+                "enum": [
+                  "not-checked",
+                  "valid",
+                  "invalid"
+                ]
+              }
+            }
           }
         }
       }
@@ -582,17 +615,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 2
-    },
-    "priorResultSha256": {
-      "anyOf": [
-        {
-          "const": "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "const": 3
     },
     "attemptCount": {
       "type": "integer",
@@ -602,7 +625,16 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 17
+      "maximum": 18
+    },
+    "priorResultSha256s": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
     }
   }
 }

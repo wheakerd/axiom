@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "3697fae8a4a896e3b0fde58ceff2fef79bd71e23d9ff8139f7d0f75b14bde780"
+      "sha256": "ae3b0e230582ccaeedecd131fe527a66a9292ce3329ba2faf0dc457a159ab7ef"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "b78fe5cbb518777a024fde21f484f0a00dcc64741d3a4565cd1456e47b128a0a"
+    "sha256": "2cc3042c3bc0763d1186597f81297a6875b205a44a45f1346dc28aafbd0723ee"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,12 +134,15 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 2,
+  "diagnosticRevision": 3,
   "followup": {
-    "priorResultSha256": "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
-    "priorAttempts": 1,
-    "maximumCumulativeAttempts": 17,
-    "maximumCaseOneAttempts": 2,
+    "priorResultSha256s": [
+      "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
+      "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df"
+    ],
+    "priorAttempts": 2,
+    "maximumCumulativeAttempts": 18,
+    "maximumCaseOneAttempts": 3,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
@@ -148,9 +151,15 @@
     "turnFailed": "failure terminal; message discarded",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
     "retention": "closed first-cause facts; cleanup failure is separate; no raw output",
-    "historicalFailure": "two immutable results retain original protocols; retry message meaning unknown; no current observation or new attempt authorized",
+    "historicalFailure": "two immutable INCOMPLETE results retain original bytes and protocols; one new linked continuation permits Case 1 attempt three and remaining cases once",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
-    "assessment": "observer-inferred finite template classes; unknown or condition-changing diagnostics cannot pass; official error code remains unknown"
+    "assessment": "observer-inferred finite template classes; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
+    "privateSummary": {
+      "maximumBatchBytes": 16384,
+      "fileMode": "0600",
+      "retention": "private only; frozen template summaries; uncertain dynamic values omitted; no raw output or credential inspection"
+    },
+    "partialEvidence": "independently validated stream, response and postcheck facts can accompany INCOMPLETE; missing checks are not-observed, never success"
   },
-  "protocolDigest": "sha256:a6cb4550e9af63855535d5920810971bcec64e079c35fac63230d3ac2f45de08"
+  "protocolDigest": "sha256:f3debf395d3f03e1bd34a7b62a4b07a3be3f23a77109d9449f1e175993c7b640"
 }

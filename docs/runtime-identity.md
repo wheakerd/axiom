@@ -1,5 +1,31 @@
 # Runtime And Repository Identity
 
+## Authorized native continuation after two historical attempts
+
+Native v2 diagnostic revision 3 retains both historical Case 1 INCOMPLETE
+results unchanged. An explicitly authorized `diagnostic-continuation` ledger
+checks both result hashes, both attempt markers and both preparations before
+rebinding derived inputs. It permits one further Case 1 attempt and each of
+Cases 2-16 once: at most 18 cumulative attempts, including the two historical
+attempts. It does not reset attempts or reuse an earlier conversation.
+`--prepare-diagnostic-continuation` performs no client launch;
+`--run --diagnostic-continuation --authorize-model-calls --reuse-test-auth
+--private-diagnostics` uses the registered installations and serial test-auth
+handoff. It never copies authentication into validation or evidence artifacts.
+
+The optional private diagnostic summaries have a 16 KiB batch limit and 0600
+files in a 0700 directory inside that ledger. They contain only frozen template
+summaries and predeclared public fields; uncertain dynamic content is omitted.
+They are not raw logs, public evidence or a claim that arbitrary text can be
+made safe by regex. Unknown or condition-changing diagnostics remain INCOMPLETE.
+Closed-stream, response-schema and post-execution input checks are recorded
+separately so an incomplete attempt can retain independently validated partial
+facts. Unperformed checks and unavailable model-request counts remain unknown.
+These facts do not establish host PASS or validate the retired Combined path.
+
+Earlier budget and retention descriptions below retain their historical scope.
+No new actual observation is claimed by this preparation change.
+
 Axiom gives three different subjects three different identities:
 
 | Identity | Subject | Changes when |
