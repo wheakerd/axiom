@@ -30,6 +30,25 @@ no-read rule is an explicit operational boundary. No stderr, reasoning, agent
 message, tool output, request body or authentication file is captured. This
 narrow exception does not reinterpret the earlier discarded diagnostics.
 
+### Recorded fourth attempt; human inspection pending
+
+Implementation `23d2d9d3a2e98bc67e74cbcf865cb53a929202eb` (tree
+`b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b`) produced one new Case 1
+**INCOMPLETE**: exit 1, top-level error and turn.failed, with complete input
+delivery, a valid event stream and valid post-execution input checks. There was
+no validated structured response, timeout, observer termination or cleanup
+failure. Three pre-turn diagnostic items and unknown stderr were recorded only
+as closed public facts. Their meaning is not inferred from earlier attempts.
+
+The explicitly authorized human-only message file was saved: 1606 bytes,
+not truncated, mode 0600 inside its private 0700 directory. The executor checked
+only metadata and did not read, hash, attach or publish the original messages.
+The file is retained for the human operator; its contents are not host PASS
+or a diagnosis available to the executor. Cases 2-16 remain NOT-RUN.
+Cumulative attempts and canonical CLI launches are four, all Case 1; internal
+model request count is unknown. The three previous INCOMPLETE results and
+bindings remain unchanged. No fifth Case 1 attempt is authorized.
+
 ## Historical native continuation after two attempts
 
 Native v2 diagnostic revision 3 retains both historical Case 1 INCOMPLETE
