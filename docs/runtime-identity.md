@@ -1,5 +1,46 @@
 # Runtime And Repository Identity
 
+## Seventh attempt and subsequent discovery-path correction
+
+Signed execution `795b70d9bed5be841b03c58a3de31a38d708398b`, tree
+`5fc888ee4253b6f7824c298ff2c22ae8742b6eeb`, used protocol
+`sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2`.
+Its exact result is
+`c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0`.
+Case 1 is INCOMPLETE; Cases 2-16 remain NOT-RUN. This was the second gpt-5.5
+attempt, bringing lifetime attempts and CLI launches to seven. Internal model
+request count remains unknown; no eighth Case 1 start is authorized.
+
+The receiver rejected event 5 as `read-contract-rejected` / `policy-rejected`
+and terminated the client (signal 9, return code -9). Input was fully delivered;
+postchecks passed. No complete terminal or response was accepted. The strict
+parser separately recorded `event-shape` at event 5. Command events were seen,
+but the stored zero completed-read count is not an observed absence of actions:
+that count requires a successfully parsed stream. The rejected command and its
+output were not retained, so its narrower failing predicate is unknown.
+
+Captured stderr was empty (zero bytes, UTF-8); no JSONL diagnostic messages were
+observed. Neither operator-only file needed creation. This is a different result
+from the sixth attempt's lost 429-byte stderr, whose contents remain unknown.
+The new attempt is not eligible for the unknown-stderr supplemental-review path:
+policy rejection, observer termination and incomplete stream independently block it.
+
+A subsequent no-model production regression established a separate wiring gap:
+`_readable` registered package paths but omitted the standard discovery alias
+advertised to the host. The corrected implementation checks that exact alias,
+then maps only its public `skills/` subtree to the same bound package bytes.
+It keeps original package paths, rejects other aliases or external paths, and
+keeps Case 11 without a discovery root. This does not prove which command caused
+the actual event-5 rejection. The correction has no host revalidation; the seventh
+result remains bound to the preceding signed implementation, not this correction.
+
+The current protocol closes actual execution for the consumed observation window.
+Synthetic regression remains available. Seven original result files retain their
+original protocols, models and implementation bindings; current corrected-code
+host observation is NOT-RUN. PR remains Draft, Issue #117 open, with no host PASS.
+FCR-001/003/004 remain OPEN and FCR-002 STILL_OPEN. Builder, bundle, runtime,
+Phase 1 cases and the 266-character release-status reason are unchanged.
+
 ## Native stderr retention and same-attempt review
 
 Diagnostic revision 8 retains six immutable INCOMPLETE attempts (five Sol and

@@ -3,7 +3,7 @@
   "kind": "axiom-codex-native-result-history",
   "protocol": {
     "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-    "digest": "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2"
+    "digest": "sha256:76af2d4a1495e985931786a5d81ca5adceffc479927a807d292ee53e82be9a3c"
   },
   "results": [],
   "current": {
@@ -65,6 +65,14 @@
       "implementationTree": "8538c2f63771569046540f91dcff7a9f73732fe6",
       "protocolDigest": "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99",
       "resultCommit": "5fe04cbe7d742096023868150795e2e3580ea67b",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0.json",
+      "sha256": "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
+      "implementationCommit": "795b70d9bed5be841b03c58a3de31a38d708398b",
+      "implementationTree": "5fc888ee4253b6f7824c298ff2c22ae8742b6eeb",
+      "protocolDigest": "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2",
       "attemptCount": 1
     }
   ]

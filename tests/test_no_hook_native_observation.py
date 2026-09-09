@@ -654,6 +654,134 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual((unknown / "keep.txt").read_bytes(), b"preserve")
         self.assertEqual(calls, [])
 
+    def _first_read_runner(self, runner, command, output):
+        """Change only the public first-case read emitted by the fake client."""
+        def substituted(argv, **kwargs):
+            if "exec" not in argv or Path(kwargs["cwd"]).parent.name != "case-01":
+                return runner(argv, **kwargs)
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            final_output = Path(argv[argv.index("--output-last-message") + 1])
+            document = json.loads(final_output.read_bytes())
+            raw = stream(document, command, output)
+            if kwargs.get("line_callback"):
+                for line in raw.splitlines():
+                    kwargs["line_callback"](line)
+            return {**capture, "stdout": raw}
+        return substituted
+
+    def test_discovery_alias_cat_and_sed_accept_exact_bound_skill_bytes(self):
+        parent = self.parent
+        for name in ("cat", "sed"):
+            with self.subTest(command=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                run, runner, calls = self._prepared_runner()
+                paths = native._case_paths(run, 1)
+                canonical = paths["package"] / "skills/using-axiom/SKILL.md"
+                alias = paths["discovery"] / "using-axiom/SKILL.md"
+                source = canonical.read_bytes()
+                if name == "cat":
+                    command, expected = "cat " + str(alias), source
+                else:
+                    command = "sed -n '1,6p' " + str(alias)
+                    expected = b"".join(source.splitlines(keepends=True)[:6])
+                fixtures = native._input(ROOT, self.protocol, "fixtureMatrix")
+                readable = native._readable(paths, native._definition(fixtures, 1), True)
+                # This invocation is also a regression against the old reader:
+                # the valid, installed discovery alias was absent from its map.
+                native.inspect_native_event(event({"type": "item.completed", "item": {
+                    "id": "item_0", "type": "command_execution", "command": command,
+                    "aggregated_output": expected.decode("utf-8"), "exit_code": 0,
+                    "status": "completed"}}).rstrip(b"\n"), readable, paths["workspace"])
+                self.assertEqual(readable[str(alias)], source)
+                self.assertEqual(readable[str(canonical)], source)
+                result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                    process_runner=self._first_read_runner(runner, command, expected.decode("utf-8")))
+                self.assertEqual(calls, list(range(1, 17)))
+                self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+                self.assertEqual(result["caseResults"][0]["readonlyCommandCount"], 1)
+                self.assertEqual(result["caseResults"][10]["installation"], "absent")
+                self.assertEqual(result["status"], "INCOMPLETE")
+                self.assertFalse(result["hostClaim"])
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_case_eleven_readable_inventory_has_no_discovery_alias(self):
+        run, _, calls = self._prepared_runner()
+        paths = native._case_paths(run, 11)
+        definition = native._definition(native._input(ROOT, self.protocol, "fixtureMatrix"), 11)
+        readable = native._readable(paths, definition, False)
+        expected = {str(paths["workspace"] / item["path"]): item["contentUtf8"].encode("utf-8")
+                    for item in definition["files"]}
+        self.assertEqual(readable, expected)
+        self.assertFalse(paths["discovery"].exists())
+        self.assertFalse(paths["discovery"].is_symlink())
+        alias = paths["discovery"] / "using-axiom/SKILL.md"
+        with self.assertRaises(native.NativeObservationError):
+            native.inspect_native_event(event({"type": "item.started", "item": {
+                "id": "item_0", "type": "command_execution", "command": "cat " + str(alias),
+                "aggregated_output": "", "exit_code": None, "status": "in_progress"}}).rstrip(b"\n"),
+                readable, paths["workspace"])
+        self.assertEqual(calls, [])
+
+    def test_readable_alias_registration_rejects_wrong_target_and_nonlink(self):
+        parent = self.parent
+        for name in ("different-case-package", "ordinary-directory"):
+            with self.subTest(replacement=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                run, _, calls = self._prepared_runner()
+                paths = native._case_paths(run, 1)
+                alias = paths["discovery"]
+                alias.unlink()  # This test created and owns the original link.
+                if name == "different-case-package":
+                    foreign = native._case_paths(run, 2)["package"] / "skills"
+                    alias.symlink_to(foreign, target_is_directory=True)
+                    retained = (foreign / "using-axiom/SKILL.md").read_bytes()
+                else:
+                    alias.mkdir()
+                    (alias / "keep.txt").write_bytes(b"public unknown object")
+                    retained = (alias / "keep.txt").read_bytes()
+                definition = native._definition(native._input(ROOT, self.protocol, "fixtureMatrix"), 1)
+                with self.assertRaises(native.NativeObservationError):
+                    native._readable(paths, definition, True)
+                def forbidden(*args, **kwargs):
+                    self.fail("client must not start with a foreign discovery object")
+                result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                                       process_runner=forbidden)
+                self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
+                self.assertEqual(result["cliLaunchCount"], 0)
+                self.assertEqual(calls, [])
+                self.assertEqual((foreign / "using-axiom/SKILL.md").read_bytes() if name == "different-case-package"
+                                 else (alias / "keep.txt").read_bytes(), retained)
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_discovery_alias_mapping_does_not_authorize_other_paths_or_symlinks(self):
+        run, runner, calls = self._prepared_runner()
+        paths = native._case_paths(run, 1)
+        source = (paths["package"] / "skills/using-axiom/SKILL.md").read_bytes()
+        unknown = self.parent / "same-public-bytes.md"
+        unknown.write_bytes(source)
+        other_alias = self.parent / "unregistered-skill-link.md"
+        other_alias.symlink_to(paths["package"] / "skills/using-axiom/SKILL.md")
+        definition = native._definition(native._input(ROOT, self.protocol, "fixtureMatrix"), 1)
+        readable = native._readable(paths, definition, True)
+        for path in (unknown, other_alias, paths["discovery"] / "BUNDLE-MANIFEST.json"):
+            self.assertNotIn(str(path), readable)
+            with self.assertRaises(native.NativeObservationError):
+                native.inspect_native_event(event({"type": "item.started", "item": {
+                    "id": "item_0", "type": "command_execution", "command": "cat " + str(path),
+                    "aggregated_output": "", "exit_code": None, "status": "in_progress"}}).rstrip(b"\n"),
+                    readable, paths["workspace"])
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            process_runner=self._first_read_runner(runner, "cat " + str(other_alias), source.decode("utf-8")))
+        self.assertEqual(calls, [1])
+        self.assertEqual(result["caseResults"][0]["diagnostic"], "policy-rejected")
+        self.assertEqual(result["caseResults"][0]["executionDiagnostics"]["policyReason"], "read-contract-rejected")
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        self.assertEqual(unknown.read_bytes(), source)
+        self.assertTrue(other_alias.is_symlink())
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
     def test_prepare_to_run_uses_real_validators_and_simulation_never_claims_host_pass(self):
         run_root, runner, calls = self._prepared_runner()
         result = native.run_native_observation(ROOT, run_root, authorize_model_calls=True, process_runner=runner)
@@ -1511,17 +1639,17 @@ class NativeObservationTests(unittest.TestCase):
         first["executionDiagnostics"].update(category="none", phase="none")
         self.assertTrue(native.validate_native_result(result, ROOT))
 
-    def test_six_historical_attempts_keep_exact_original_bytes_and_protocols(self):
+    def test_seven_historical_attempts_keep_exact_original_bytes_and_protocols(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
-        self.assertEqual(len(history["historicalResults"]), 6)
-        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 6)
-        self.assertEqual([record["sha256"] for record in history["historicalResults"]], native.STDERR_PRIOR_RESULTS)
+        self.assertEqual(len(history["historicalResults"]), 7)
+        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 7)
+        self.assertEqual([record["sha256"] for record in history["historicalResults"]], [*native.STDERR_PRIOR_RESULTS, native.SEVENTH_RESULT_SHA256])
         self.assertEqual(native.STDERR_PRIOR_RESULTS[:5], native.MODEL_PRIOR_RESULTS)
         self.assertEqual(native.MODEL_PRIOR_RESULTS[:4], native.PRIOR_RESULTS)
         self.assertEqual([record["protocolDigest"] for record in history["historicalResults"]], [
             native.HISTORICAL_PROTOCOL_DIGEST, native.RETRY_PROTOCOL_DIGEST,
             native.THIRD_PROTOCOL_DIGEST, native.FOURTH_PROTOCOL_DIGEST,
-            native.FIFTH_PROTOCOL_DIGEST, native.SIXTH_PROTOCOL_DIGEST])
+            native.FIFTH_PROTOCOL_DIGEST, native.SIXTH_PROTOCOL_DIGEST, native.SEVENTH_PROTOCOL_DIGEST])
         historical = []
         for index, record in enumerate(history["historicalResults"]):
             data = (ROOT / record["path"]).read_bytes()
@@ -1535,12 +1663,13 @@ class NativeObservationTests(unittest.TestCase):
             elif index == 4:
                 self.assertEqual(result["diagnosticRevision"], 5)
             else:
-                self.assertEqual(result["diagnosticRevision"], 7)
+                self.assertEqual(result["diagnosticRevision"], 7 if index == 5 else 8)
                 self.assertEqual(result["executionModel"], {
                     "model": "gpt-5.5", "reasoningEffort": "medium", "requiredToolMode": "direct"})
             if index < 5:
                 self.assertNotIn("executionModel", result)
-            self.assertNotIn("operatorStderrCapture", result["caseResults"][0])
+            if index < 6:
+                self.assertNotIn("operatorStderrCapture", result["caseResults"][0])
             historical.append(result)
         # Historical bytes retain their old contracts; do not run them through
         # the current validator or fill in new model/diagnostic facts.
@@ -2428,6 +2557,19 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(calls, [])
         self.assertFalse((run / "batch-started.json").exists())
         self.assertFalse((run / "attempt-01.json").exists())
+
+    def test_consumed_stderr_window_cannot_start_another_actual_client(self):
+        run, _, _ = self._sixth_prior_fixture()
+        native.prepare_diagnostic_followup(ROOT, run, stderr_followup=True)
+        ledger = run / "stderr-diagnostic-continuation"
+        state = json.loads((ledger / "preparation.json").read_bytes())
+        state["runMode"] = "actual"
+        (ledger / "preparation.json").write_bytes(native._bytes(state))
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "window closed"):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True, stderr_followup=True)
+        self.assertFalse((ledger / "batch-started.json").exists())
+        self.assertFalse((ledger / "operator-only-diagnostics").exists())
 
     def test_operator_stderr_preserves_original_text_controls_and_invalid_encoding(self):
         samples = [b"UNCLASSIFIED PUBLIC STDERR FIXTURE\n",

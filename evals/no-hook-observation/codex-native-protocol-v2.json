@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "1cb3d7df03d9acdfb1670622827e78ea5ac020b9292cedc69dd48236c5c7bcbc"
+      "sha256": "3ebeb1bef20847dc415172b67e761a7f621649523a80e0cc3e93780fd2304e02"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -237,5 +237,10 @@
     "bodyConsumption": "only corresponding verified read-command evidence; command count alone also includes fixture reads; zero is not proof of consumption or absence of invisible actions",
     "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings"
   },
-  "protocolDigest": "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2"
+  "executionWindow": {
+    "state": "closed",
+    "lastResultSha256": "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
+    "reason": "seventh attempt read-contract rejection; alias correction has no host revalidation"
+  },
+  "protocolDigest": "sha256:76af2d4a1495e985931786a5d81ca5adceffc479927a807d292ee53e82be9a3c"
 }

@@ -69,6 +69,8 @@ MODEL_PRIOR_RESULTS = [*PRIOR_RESULTS, FIFTH_RESULT_SHA256]
 SIXTH_RESULT_SHA256 = "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a"
 SIXTH_PROTOCOL_DIGEST = "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99"
 STDERR_PRIOR_RESULTS = [*MODEL_PRIOR_RESULTS, SIXTH_RESULT_SHA256]
+SEVENTH_RESULT_SHA256 = "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0"
+SEVENTH_PROTOCOL_DIGEST = "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2"
 STREAM_ASSERTIONS = (
     "none", "framing-or-size", "event-count", "event-after-terminal", "event-shape",
     "thread-start-order", "turn-start-order", "terminal-active-items", "error-before-thread",
@@ -517,6 +519,10 @@ def _protocol(root: Path) -> dict[str, Any]:
         "checks": "before launch and after exit; inferred Direct under bound feature settings",
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
+    _require(document.get("executionWindow") == {
+        "state": "closed", "lastResultSha256": SEVENTH_RESULT_SHA256,
+        "reason": "seventh attempt read-contract rejection; alias correction has no host revalidation",
+    }, "native execution window differs from consumed attempt evidence")
     bindings = list(document.get("implementationBindings", []))
     _require([item.get("path") for item in bindings] == list(IMPLEMENTATION_PATHS),
              "native implementation binding owner set changed")
@@ -600,7 +606,11 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             "implementationCommit": "a469930ac2c7a0598f44ed7aee62bcf532220c6a",
             "implementationTree": "8538c2f63771569046540f91dcff7a9f73732fe6",
             "resultCommit": "5fe04cbe7d742096023868150795e2e3580ea67b", "attemptCount": 1}
-        _require(historical == [expected_historical, expected_retry, expected_third, expected_fourth, expected_fifth, expected_sixth],
+        expected_seventh = {"path": "evals/no-hook-observation/results/codex-native-" + SEVENTH_RESULT_SHA256 + ".json",
+            "sha256": SEVENTH_RESULT_SHA256, "protocolDigest": SEVENTH_PROTOCOL_DIGEST,
+            "implementationCommit": "795b70d9bed5be841b03c58a3de31a38d708398b",
+            "implementationTree": "5fc888ee4253b6f7824c298ff2c22ae8742b6eeb", "attemptCount": 1}
+        _require(historical == [expected_historical, expected_retry, expected_third, expected_fourth, expected_fifth, expected_sixth, expected_seventh],
                  "historical native evidence migration changed")
         for binding in historical:
             _require(hashlib.sha256(_read(root / binding["path"])).hexdigest() == binding["sha256"],
@@ -608,7 +618,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         # The exact previously validated bytes retain their old contract. They
         # are not interpreted under the new schema or filled with new facts.
         records = history["results"]
-        _require(type(records) is list and len(records) <= 1, "native history exceeds the single-batch budget")
+        _require(records == [], "closed execution window cannot acquire a new current observation")
         current = {"codexObservation": "not-run", "hostClaim": False, "credentialUsed": False,
                    "cliLaunchCount": 0, "modelRequestCount": None, "pluginInstalled": False}
         if records:
@@ -1751,12 +1761,19 @@ def _check_final_output(path: Path, identity: tuple[int, int], candidate: Any) -
 
 
 def _readable(paths: Mapping[str, Path], definition: Mapping[str, Any], installed: bool) -> dict[str, bytes]:
+    _verify_discovery(paths, installed)
     result = {str(paths["workspace"] / item["path"]): item["contentUtf8"].encode("utf-8")
               for item in definition["files"]}
     if installed:
         # Enumerate only the verified immutable public package, not CODEX_HOME.
         for relative, _, _, _ in legacy.snapshot_tree(paths["package"]):
-            result[str(paths["package"] / relative)] = _read(paths["package"] / relative)
+            data = _read(paths["package"] / relative)
+            result[str(paths["package"] / relative)] = data
+            # The host advertises this verified standard discovery path. Bind
+            # only its exact public skills subtree to the same package bytes;
+            # never resolve arbitrary caller paths or admit other symlinks.
+            if Path(relative).parts[0] == "skills":
+                result[str(paths["discovery"] / Path(relative).relative_to("skills"))] = data
     return result
 
 
@@ -1805,6 +1822,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
     _require(not actual or stderr_followup, "actual execution requires the authorized stderr-diagnostic ledger")
+    _require(not actual or protocol["executionWindow"]["state"] != "closed",
+             "actual execution window closed after the recorded seventh attempt")
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
     operator = OperatorDiagnostics(ledger) if operator_diagnostics or schema_followup or model_followup or stderr_followup else None
     invoke = bounded_process if process_runner is None else process_runner
