@@ -1,7 +1,9 @@
 """Ordinary offline regressions for the native observer's actual entrypoints."""
 
 import copy
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -210,7 +212,7 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 3, "priorResultSha256s": [],
+        return {"schemaVersion": "2", "diagnosticRevision": 4, "priorResultSha256s": [],
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
                 "authenticationMode": "independent-official-login",
@@ -318,7 +320,8 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertIn("exec", argv)
                 self.assertTrue(((run_root / f"attempt-{ordinal:02d}.json").is_file() or
                                  (run_root / "diagnostic-followup" / f"attempt-{ordinal:02d}.json").is_file() or
-                                 (run_root / "diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file()))
+                                 (run_root / "diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file() or
+                                 (run_root / "operator-diagnostic-continuation" / f"attempt-{ordinal:02d}.json").is_file()))
                 calls.append(ordinal)
                 if started_callback:
                     started_callback()
@@ -874,8 +877,10 @@ class NativeObservationTests(unittest.TestCase):
         altered["caseResults"][0]["executionDiagnostics"]["eventTypes"] = ["thread.started", "turn.started", "turn.completed"]
         self.assertTrue(native.validate_native_result(altered, ROOT))
 
-    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False):
-        run, runner, calls = self._prepared_runner()
+    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False):
+        run, runner, calls = self._third_prior_fixture() if operator else self._prepared_runner()
+        if operator:
+            native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=True)
         def diagnostic_runner(argv, **kwargs):
             if "exec" not in argv:
                 return runner(argv, **kwargs)
@@ -901,7 +906,8 @@ class NativeObservationTests(unittest.TestCase):
                     "); sys.stderr.buffer.write(" + repr(stderr) + "); sys.exit(" + str(exit_code) + ")")
             return native.bounded_process([sys.executable, "-I", "-B", "-c", code], **kwargs)
         return native.run_native_observation(ROOT, run, authorize_model_calls=True,
-                                             process_runner=diagnostic_runner, private_diagnostics=private)
+                                             process_runner=diagnostic_runner, private_diagnostics=private,
+                                             operator_diagnostics=operator)
 
     def _two_historical_preparations(self):
         run, runner, calls = self._historical_preparation()
@@ -922,6 +928,30 @@ class NativeObservationTests(unittest.TestCase):
             (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
         return run, runner, calls
 
+    def _third_prior_fixture(self):
+        """Recreate only public historical records and secret-free inputs."""
+        run, runner, calls = self._two_historical_preparations()
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        ledger = run / "diagnostic-continuation"
+        ledger.mkdir()
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        (ledger / "normalized-result.json").write_bytes(
+            (ROOT / history["historicalResults"][2]["path"]).read_bytes())
+        (ledger / "preparation.json").write_bytes(native._bytes({
+            **state, "protocolDigest": native.THIRD_PROTOCOL_DIGEST}))
+        (ledger / "batch-started.json").write_bytes(native._bytes({
+            "protocolDigest": native.THIRD_PROTOCOL_DIGEST}))
+        (ledger / "attempt-01.json").write_bytes(native._bytes({
+            "ordinal": 1, "caseId": self.cases[0]["id"], "protocolDigest": native.THIRD_PROTOCOL_DIGEST}))
+        for ordinal, case in enumerate(self.cases, 1):
+            material = legacy.materialize_case_contract(
+                materialization_seed=bytes.fromhex(state["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=native.THIRD_PROTOCOL_DIGEST,
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
+        return run, runner, calls
+
     def test_continuation_preserves_two_histories_and_caps_cumulative_eighteen(self):
         run, runner, calls = self._two_historical_preparations()
         names = ["normalized-result.json", "attempt-01.json", "batch-started.json",
@@ -932,7 +962,7 @@ class NativeObservationTests(unittest.TestCase):
         result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
                                               continuation=True, process_runner=runner)
         self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 18, 16))
-        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS[:2])
         self.assertEqual(calls, list(range(1, 17)))
         self.assertFalse(result["hostClaim"])
         self.assertIsNone(result["modelRequestCount"])
@@ -943,7 +973,7 @@ class NativeObservationTests(unittest.TestCase):
             native.run_native_observation(ROOT, run, authorize_model_calls=True, continuation=True, process_runner=runner)
         self.assertEqual(len(calls), 16)
         for change in (lambda d: d.__setitem__("cumulativeAttemptCount", 17),
-                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.PRIOR_RESULTS)))):
+                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.PRIOR_RESULTS[:2])))):
             altered = copy.deepcopy(result)
             change(altered)
             self.assertTrue(native.validate_native_result(altered, ROOT))
@@ -1112,10 +1142,13 @@ class NativeObservationTests(unittest.TestCase):
         first["executionDiagnostics"].update(category="none", phase="none")
         self.assertTrue(native.validate_native_result(result, ROOT))
 
-    def test_both_historical_attempts_keep_exact_original_bytes_and_protocols(self):
+    def test_three_historical_attempts_keep_exact_original_bytes_and_protocols(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
-        self.assertEqual(len(history["historicalResults"]), 2)
-        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 2)
+        self.assertEqual(len(history["historicalResults"]), 3)
+        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 3)
+        self.assertEqual([record["sha256"] for record in history["historicalResults"]], native.PRIOR_RESULTS)
+        self.assertEqual([record["protocolDigest"] for record in history["historicalResults"]], [
+            native.HISTORICAL_PROTOCOL_DIGEST, native.RETRY_PROTOCOL_DIGEST, native.THIRD_PROTOCOL_DIGEST])
         for record in history["historicalResults"]:
             data = (ROOT / record["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), record["sha256"])
@@ -1124,17 +1157,30 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
             self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
             self.assertTrue(native.validate_native_result(result, ROOT))
-        self.assertEqual(len(history["results"]), 1)
-        current = history["results"][0]
-        data = (ROOT / current["path"]).read_bytes()
-        self.assertEqual(hashlib.sha256(data).hexdigest(), current["sha256"])
-        result = json.loads(data)
-        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        # The former current record is now the immutable third history; its
+        # original diagnostics and accounting are not reinterpreted as revision 4.
         self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 3))
-        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS[:2])
         self.assertEqual(result["caseResults"][0]["diagnostic"], "host-failure")
         self.assertEqual([c["status"] for c in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
-        self.assertEqual(history["current"]["codexObservation"], "incomplete")
+        self.assertEqual(history["historicalResults"][2]["implementationTree"],
+                         "82d09603eaa18acd415e8972729b5e429255781e")
+        if history["results"]:
+            self.assertEqual(len(history["results"]), 1)
+            current = history["results"][0]
+            data = (ROOT / current["path"]).read_bytes()
+            self.assertEqual(hashlib.sha256(data).hexdigest(), current["sha256"])
+            result = json.loads(data)
+            self.assertEqual(native.validate_native_result(result, ROOT), [])
+            self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+            self.assertEqual(result["runMode"], "actual")
+            self.assertEqual(history["current"], {"codexObservation": result["status"].lower(),
+                "hostClaim": result["hostClaim"], "credentialUsed": result["cliLaunchCount"] > 0,
+                "cliLaunchCount": result["cliLaunchCount"], "modelRequestCount": None,
+                "pluginInstalled": any(case["installation"] == "verified" for case in result["caseResults"])})
+        else:
+            self.assertEqual(history["current"], {"codexObservation": "not-run", "hostClaim": False,
+                "credentialUsed": False, "cliLaunchCount": 0, "modelRequestCount": None, "pluginInstalled": False})
 
     def test_frozen_configuration_and_event_loss_templates_block_acceptance(self):
         parent = self.parent
@@ -1198,6 +1244,264 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertTrue(first["executionDiagnostics"]["observerTerminated"])
                 self.assertEqual(native.validate_native_result(result, ROOT), [])
                 self.assertNotIn("discard", json.dumps(result))
+
+    def test_operator_capture_preserves_unknown_messages_only_from_three_fields(self):
+        capture = native.OperatorDiagnostics(self.parent)
+        messages = ["Unrecognized public fixture notice", "Unmatched public fixture error",
+                    "Unmatched public fixture terminal failure"]
+        for document in (
+            {"type": "item.completed", "item": {"id": "item_0", "type": "error", "message": messages[0]}},
+            {"type": "error", "message": messages[1]},
+            {"type": "turn.failed", "error": {"message": messages[2]}},
+            {"type": "item.completed", "item": {"id": "item_1", "type": "reasoning", "text": "reasoning omitted"}},
+            {"type": "item.completed", "item": {"id": "item_2", "type": "agent_message", "text": "response omitted"}},
+            {"type": "item.started", "item": {"id": "item_3", "type": "error", "message": "started omitted"}},
+            {"type": "error", "message": []},
+            {"type": "turn.failed", "error": {"message": None}},
+            {"type": "stderr", "message": "stderr omitted"},
+        ):
+            capture.event(event(document))
+        capture.event(b"not json\n")
+        facts = capture.save(1)
+        path = capture.directory / "case-01.jsonl"
+        raw = path.read_bytes()  # Only this test's constructed, secret-free data.
+        self.assertEqual([json.loads(line) for line in raw.splitlines()], [
+            {"event": kind, "message": message} for kind, message in zip(
+                ("item.completed", "error", "turn.failed"), messages)])
+        self.assertEqual(facts, {"status": "saved", "bytes": len(raw), "truncated": False})
+        self.assertNotIn(b"omitted", raw)
+        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(capture.directory.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(capture.save(2), {"status": "no-diagnostics", "bytes": 0, "truncated": False})
+        self.assertFalse((capture.directory / "case-02.jsonl").exists())
+
+    def test_operator_capture_reserves_terminal_fields_and_caps_batch_bytes(self):
+        capture = native.OperatorDiagnostics(self.parent)
+        capture.event(event({"type": "item.completed", "item": {
+            "id": "item_0", "type": "error", "message": "I" * 20000}}))
+        # Additional item notices cannot consume either terminal field's quota.
+        capture.event(event({"type": "item.completed", "item": {
+            "id": "item_1", "type": "error", "message": "extra item"}}))
+        capture.event(event({"type": "error", "message": "E" * 20000}))
+        capture.event(event({"type": "turn.failed", "error": {"message": "T" * 20000}}))
+        facts = capture.save(1)
+        raw = (capture.directory / "case-01.jsonl").read_bytes()
+        lines = raw.splitlines(keepends=True)
+        self.assertEqual([len(line) for line in lines], [4096, 6144, 6144])
+        self.assertEqual([json.loads(line)["event"] for line in lines], ["item.completed", "error", "turn.failed"])
+        self.assertEqual([set(json.loads(line)["message"]) for line in lines], [{"I"}, {"E"}, {"T"}])
+        self.assertEqual(facts, {"status": "saved", "bytes": 16384, "truncated": True})
+        capture.event(event({"type": "error", "message": "next case fixture"}))
+        self.assertEqual(capture.save(2), {"status": "omitted", "bytes": 0, "truncated": True})
+        self.assertFalse((capture.directory / "case-02.jsonl").exists())
+
+    def test_operator_capture_escapes_control_characters_with_valid_json_framing(self):
+        capture = native.OperatorDiagnostics(self.parent)
+        message = 'Public fixture: \x00\x1b\n\r\t"\\\u2603'
+        capture.event(event({"type": "error", "message": message}))
+        facts = capture.save(1)
+        raw = (capture.directory / "case-01.jsonl").read_bytes()
+        self.assertTrue(raw.isascii())
+        self.assertEqual(raw.count(b"\n"), 1)
+        self.assertTrue(all(byte >= 32 for byte in raw[:-1]))
+        self.assertEqual(json.loads(raw), {"event": "error", "message": message})
+        self.assertEqual(facts, {"status": "saved", "bytes": len(raw), "truncated": False})
+
+    def test_operator_capture_exclusive_creation_preserves_unknown_objects(self):
+        capture = native.OperatorDiagnostics(self.parent)
+        with self.assertRaises(FileExistsError):
+            native.OperatorDiagnostics(self.parent)
+        path = capture.directory / "case-01.jsonl"
+        path.write_bytes(b"unrelated public fixture")
+        capture.event(event({"type": "error", "message": "must not overwrite"}))
+        self.assertEqual(capture.save(1), {"status": "write-failed", "bytes": 0, "truncated": False})
+        self.assertEqual(path.read_bytes(), b"unrelated public fixture")
+        outside = self.parent / "untouched-fixture"
+        outside.write_bytes(b"keep")
+        (capture.directory / "case-02.jsonl").symlink_to(outside)
+        capture.event(event({"type": "error", "message": "must not follow"}))
+        self.assertEqual(capture.save(2)["status"], "write-failed")
+        self.assertTrue((capture.directory / "case-02.jsonl").is_symlink())
+        self.assertEqual(outside.read_bytes(), b"keep")
+
+    def test_operator_capture_partial_write_and_close_failure_are_accounted(self):
+        parent = self.parent
+        write, close = os.write, os.close
+        for mode in ("partial-write", "close"):
+            with self.subTest(mode=mode):
+                ledger = parent / mode
+                ledger.mkdir()
+                capture = native.OperatorDiagnostics(ledger)
+                capture.event(event({"type": "error", "message": "public write fixture"}))
+                writes = []
+                def partial(descriptor, data):
+                    if writes:
+                        raise OSError("public injected write failure")
+                    writes.append(1)
+                    return write(descriptor, data[:7])
+                def failed_close(descriptor):
+                    close(descriptor)
+                    raise OSError("public injected close failure")
+                target = "write" if mode == "partial-write" else "close"
+                with patch.object(native.os, target, side_effect=partial if mode == "partial-write" else failed_close):
+                    facts = capture.save(1)
+                data = (capture.directory / "case-01.jsonl").read_bytes()
+                self.assertEqual(facts, {"status": "write-failed", "bytes": len(data), "truncated": False})
+                self.assertEqual(capture.used, len(data))
+                self.assertEqual(capture.pending, [])
+                self.assertEqual(len(data), 7 if mode == "partial-write" else len(
+                    b'{"event":"error","message":"public write fixture"}\n'))
+                self.assertNotIn("injected", json.dumps(facts))
+
+    def test_operator_capture_unknown_diagnostic_does_not_upgrade_production_result(self):
+        message = "UNMATCHED-PUBLIC-FIXTURE-ONLY: no template inference"
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            result = self._diagnostic_stream_runner([message], operator=True)
+        first = result["caseResults"][0]
+        self.assertEqual(first["diagnostic"], "diagnostic-unknown")
+        self.assertEqual(first["terminal"], "turn.completed")
+        self.assertIsNotNone(first["observed"])
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 4))
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        ledger = self.parent / "run" / "operator-diagnostic-continuation"
+        raw = (ledger / "operator-only-diagnostics/case-01.jsonl").read_bytes()
+        self.assertEqual(json.loads(raw), {"event": "item.completed", "message": message})
+        self.assertEqual(first["privateCapture"], {"status": "saved", "bytes": len(raw), "truncated": False})
+        self.assertNotIn(message, json.dumps(result))
+        self.assertNotIn(message.encode(), (ledger / "normalized-result.json").read_bytes())
+        self.assertEqual((stdout.getvalue(), stderr.getvalue()), ("", ""))
+        for replacement in ({"status": "saved", "bytes": 16385, "truncated": False},
+                            {"status": "saved", "bytes": 0, "truncated": False},
+                            {"status": "no-diagnostics", "bytes": 1, "truncated": False},
+                            {"status": "omitted", "bytes": 0, "truncated": False},
+                            {**first["privateCapture"], "message": message}):
+            altered = copy.deepcopy(result)
+            altered["caseResults"][0]["privateCapture"] = replacement
+            self.assertTrue(native.validate_native_result(altered, ROOT))
+
+    def test_operator_capture_message_is_not_exposed_by_callback_exception(self):
+        capture = native.OperatorDiagnostics(self.parent)
+        message = "PUBLIC-EXCEPTION-FIXTURE-ONLY"
+        raw = event({"type": "item.completed", "item": {
+            "id": "item_0", "type": "error", "message": message, "unexpected": True}})
+        facts = native._diagnostics()
+        def receive(line):
+            capture.event(line)
+            native._observe_line(line, {}, self.parent, facts)
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            with self.assertRaises(native.NativeDiagnosticError) as caught:
+                self._process("import sys,time; sys.stdout.buffer.write(" + repr(raw) +
+                              "); sys.stdout.flush(); time.sleep(5)", line_callback=receive)
+        self.assertNotIn(message, str(caught.exception))
+        self.assertNotIn(message, json.dumps(caught.exception.facts))
+        self.assertEqual((stdout.getvalue(), stderr.getvalue()), ("", ""))
+        self.assertEqual(capture.save(1)["status"], "saved")
+        self.assertEqual(json.loads((capture.directory / "case-01.jsonl").read_bytes()),
+                         {"event": "item.completed", "message": message})
+
+    def test_operator_capture_write_and_close_failures_preserve_first_host_cause(self):
+        parent = self.parent
+        original_save, write, close = native.OperatorDiagnostics.save, os.write, os.close
+        for mode in ("partial-write", "close"):
+            with self.subTest(mode=mode):
+                self.parent = parent / mode
+                self.parent.mkdir()
+                def broken_save(collector, ordinal):
+                    writes = []
+                    def partial(descriptor, data):
+                        if writes:
+                            raise OSError("public capture write failure")
+                        writes.append(1)
+                        return write(descriptor, data[:7])
+                    def failed_close(descriptor):
+                        close(descriptor)
+                        raise OSError("public capture close failure")
+                    target = "write" if mode == "partial-write" else "close"
+                    with patch.object(native.os, target, side_effect=partial if mode == "partial-write" else failed_close):
+                        return original_save(collector, ordinal)
+                def failed_turn(lines):
+                    return lines[:2] + [{"type": "error", "message": "public host error fixture"},
+                        {"type": "turn.failed", "error": {"message": "public terminal error fixture"}}]
+                with patch.object(native.OperatorDiagnostics, "save", autospec=True, side_effect=broken_save):
+                    result = self._diagnostic_stream_runner([], operator=True, tail=failed_turn, exit_code=1)
+                first = result["caseResults"][0]
+                self.assertEqual(first["diagnostic"], "host-failure")
+                self.assertEqual(first["terminal"], "turn.failed")
+                self.assertEqual(first["executionDiagnostics"]["returnCode"], 1)
+                self.assertTrue(first["executionDiagnostics"]["cleanupFailed"])
+                self.assertEqual(first["privateCapture"]["status"], "write-failed")
+                self.assertGreater(first["privateCapture"]["bytes"], 0)
+                if mode == "partial-write":
+                    self.assertEqual(first["privateCapture"]["bytes"], 7)
+                self.assertEqual([case["status"] for case in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+                for message in ("public host error fixture", "public terminal error fixture",
+                                "public capture write failure", "public capture close failure"):
+                    self.assertNotIn(message, json.dumps(result))
+
+    def test_operator_continuation_preserves_three_histories_and_caps_cumulative_nineteen(self):
+        run, runner, calls = self._third_prior_fixture()
+        before = {str(path.relative_to(run)): path.read_bytes() for path in run.rglob("*.json")}
+        native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=True)
+        ledger = run / "operator-diagnostic-continuation"
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                              operator_diagnostics=True, process_runner=runner)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 19, 16))
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertIsNone(result["caseResults"][10]["packageBeforeSha256"])
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertIsNone(result["modelRequestCount"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual([case["privateCapture"] for case in result["caseResults"]], [
+            {"status": "no-diagnostics", "bytes": 0, "truncated": False}] * 16)
+        for name, data in before.items():
+            self.assertEqual((run / name).read_bytes(), data, name)
+        saved = (ledger / "normalized-result.json").read_bytes()
+        with self.assertRaises(FileExistsError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                          operator_diagnostics=True, process_runner=runner)
+        with self.assertRaises(FileExistsError):
+            native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=True)
+        self.assertEqual(len(calls), 16)
+        self.assertEqual((ledger / "normalized-result.json").read_bytes(), saved)
+        for change in (lambda d: d.__setitem__("cumulativeAttemptCount", 18),
+                       lambda d: d.__setitem__("priorResultSha256s", native.PRIOR_RESULTS[:2]),
+                       lambda d: d.__setitem__("priorResultSha256s", list(reversed(native.PRIOR_RESULTS))),
+                       lambda d: d.__setitem__("attemptCount", 17)):
+            altered = copy.deepcopy(result)
+            change(altered)
+            self.assertTrue(native.validate_native_result(altered, ROOT))
+
+    def test_operator_continuation_rejects_changed_third_history_before_new_ledger(self):
+        run, runner, calls = self._third_prior_fixture()
+        path = run / "diagnostic-continuation/normalized-result.json"
+        original = path.read_bytes()
+        path.write_bytes(original + b" ")
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=True)
+        self.assertFalse((run / "operator-diagnostic-continuation").exists())
+        self.assertEqual(path.read_bytes(), original + b" ")
+        self.assertEqual(calls, [])
+
+    def test_operator_continuation_rejects_unapproved_prior_case_attempt(self):
+        run, runner, calls = self._third_prior_fixture()
+        path = run / "diagnostic-continuation/attempt-02.json"
+        data = native._bytes({"ordinal": 2, "caseId": self.cases[1]["id"],
+                              "protocolDigest": native.THIRD_PROTOCOL_DIGEST})
+        path.write_bytes(data)
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_diagnostic_followup(ROOT, run, operator_diagnostics=True)
+        self.assertFalse((run / "operator-diagnostic-continuation").exists())
+        self.assertEqual(path.read_bytes(), data)
+        self.assertEqual(calls, [])
 
 
 if __name__ == "__main__":

@@ -95,7 +95,8 @@
           "terminal",
           "attemptCount",
           "executionDiagnostics",
-          "evidenceExtraction"
+          "evidenceExtraction",
+          "privateCapture"
         ],
         "properties": {
           "ordinal": {
@@ -587,6 +588,34 @@
                 ]
               }
             }
+          },
+          "privateCapture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "bytes",
+              "truncated"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "not-requested",
+                  "no-diagnostics",
+                  "saved",
+                  "omitted",
+                  "write-failed"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16384
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
           }
         }
       }
@@ -615,7 +644,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 3
+      "const": 4
     },
     "attemptCount": {
       "type": "integer",
@@ -625,12 +654,12 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 18
+      "maximum": 19
     },
     "priorResultSha256s": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 2,
+      "maxItems": 3,
       "items": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"

@@ -44,7 +44,9 @@ HISTORICAL_RESULT_SHA256 = "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e0
 HISTORICAL_PROTOCOL_DIGEST = "sha256:735ad73170d6d1f3b4b6a21a4dfdc4dc280100a07e47bead22b2af9562a577dc"
 RETRY_RESULT_SHA256 = "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df"
 RETRY_PROTOCOL_DIGEST = "sha256:0990cdc1ff099e4cdd06f4a9c5f085b050df4adea3a081d19f47533124e0ae35"
-PRIOR_RESULTS = [HISTORICAL_RESULT_SHA256, RETRY_RESULT_SHA256]
+THIRD_RESULT_SHA256 = "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79"
+THIRD_PROTOCOL_DIGEST = "sha256:f3debf395d3f03e1bd34a7b62a4b07a3be3f23a77109d9449f1e175993c7b640"
+PRIOR_RESULTS = [HISTORICAL_RESULT_SHA256, RETRY_RESULT_SHA256, THIRD_RESULT_SHA256]
 PRIVATE_DIAGNOSTIC_LIMIT = 16384
 EVENT_TYPES = ("thread.started", "turn.started", "turn.completed", "turn.failed", "error",
                "item.started", "item.updated", "item.completed", "unknown")
@@ -166,6 +168,98 @@ class PrivateDiagnostics:
             self.pending.clear()
 
 
+def _private_capture() -> dict[str, Any]:
+    return {"status": "not-requested", "bytes": 0, "truncated": False}
+
+
+class OperatorDiagnostics:
+    """Explicit human-only exception for three host message fields.
+
+    Never read these files back in production, hash them, attach them to a
+    result, or expose them to either model. Permissions are ordinary local
+    protection, not isolation from another process running as the same user.
+    Item notices share only 4 KiB of the batch budget, reserving capacity for
+    final error/turn.failed messages. JSON framing counts toward the 16 KiB cap.
+    """
+
+    def __init__(self, ledger: Path):
+        self.directory = ledger / "operator-only-diagnostics"
+        self.directory.mkdir(mode=0o700)
+        self.used = 0
+        self.category_used = {"item.completed": 0, "error": 0, "turn.failed": 0}
+        self.pending: list[bytes] = []
+        self.truncated = False
+
+    def event(self, raw: bytes) -> None:
+        if len(raw) > legacy.MAX_JSONL_LINE_BYTES:
+            return  # The ordinary receiver enforces framing and output limits.
+        try:
+            event = legacy._parse_json_line(raw)
+        except (ValueError, NativeObservationError):
+            return
+        kind = event.get("type")
+        payload = (event if kind == "error" else event.get("error") if kind == "turn.failed" else
+                   event.get("item") if kind == "item.completed" else None)
+        if not (type(payload) is dict and type(payload.get("message")) is str and
+                (kind != "item.completed" or payload.get("type") == "error")):
+            return
+        # Each final message gets up to 6 KiB, so one cannot consume the other's
+        # reservation. Nothing from reasoning, agent messages or stderr enters.
+        remaining = PRIVATE_DIAGNOSTIC_LIMIT - self.used - sum(map(len, self.pending))
+        limit = min(remaining, (4096 if kind == "item.completed" else 6144) - self.category_used[kind])
+        def encode(message: str) -> bytes:
+            return (json.dumps({"event": kind, "message": message}, ensure_ascii=True,
+                               separators=(",", ":")) + "\n").encode("ascii")
+        message = payload["message"]
+        data = encode(message)
+        if len(data) > limit:
+            self.truncated = True
+            if len(encode("")) > limit:
+                return
+            low, high = 0, len(message)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if len(encode(message[:middle])) <= limit:
+                    low = middle
+                else:
+                    high = middle - 1
+            data = encode(message[:low])
+        self.pending.append(data)
+        self.category_used[kind] += len(data)
+
+    def save(self, ordinal: int) -> dict[str, Any]:
+        _require(type(ordinal) is int and 1 <= ordinal <= CASE_COUNT, "invalid diagnostic ordinal")
+        facts = {"status": "omitted" if self.truncated else "no-diagnostics", "bytes": 0, "truncated": self.truncated}
+        descriptor = None
+        try:
+            if self.pending:
+                descriptor = os.open(self.directory / f"case-{ordinal:02d}.jsonl",
+                                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                os.fchmod(descriptor, 0o600)
+                for data in self.pending:
+                    view = memoryview(data)
+                    while view:
+                        count = os.write(descriptor, view)
+                        if count <= 0:
+                            raise OSError("short private diagnostic write")
+                        facts["bytes"] += count
+                        view = view[count:]
+                os.fsync(descriptor)
+                facts["status"] = "saved"
+        except OSError:
+            facts["status"] = "write-failed"
+        finally:
+            if descriptor is not None:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    facts["status"] = "write-failed"
+            self.used += facts["bytes"]
+            self.pending.clear()
+            self.truncated = False
+        return facts
+
+
 def _stderr_classification(data: bytes) -> str:
     if not data:
         return "empty"
@@ -281,9 +375,9 @@ def _protocol(root: Path) -> dict[str, Any]:
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
-    _require(document.get("diagnosticRevision") == 3 and document.get("followup") == {
-        "priorResultSha256s": PRIOR_RESULTS, "priorAttempts": 2,
-        "maximumCumulativeAttempts": 18, "maximumCaseOneAttempts": 3,
+    _require(document.get("diagnosticRevision") == 4 and document.get("followup") == {
+        "priorResultSha256s": PRIOR_RESULTS, "priorAttempts": 3,
+        "maximumCumulativeAttempts": 19, "maximumCaseOneAttempts": 4,
         "remainingCaseAttempts": 1,
     }, "native diagnostic migration or retry budget mismatch")
     bindings = list(document.get("implementationBindings", []))
@@ -345,7 +439,12 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             "protocolDigest": "sha256:0990cdc1ff099e4cdd06f4a9c5f085b050df4adea3a081d19f47533124e0ae35",
             "implementationCommit": "039faf3cc46bebae6823dd21c01bf023d1e2d0e0",
             "resultCommit": "c64b9989bb620807011222f5680e0fd3060406c1", "attemptCount": 1}
-        _require(historical == [expected_historical, expected_retry], "historical native evidence migration changed")
+        expected_third = {"path": "evals/no-hook-observation/results/codex-native-" + THIRD_RESULT_SHA256 + ".json",
+            "sha256": THIRD_RESULT_SHA256, "protocolDigest": THIRD_PROTOCOL_DIGEST,
+            "implementationCommit": "07e92135a85523c774cc3cb32499be6d98eee31f",
+            "implementationTree": "82d09603eaa18acd415e8972729b5e429255781e",
+            "resultCommit": "0e036ed2c34864b85fd6536b2ff5eec9fbcfc813", "attemptCount": 1}
+        _require(historical == [expected_historical, expected_retry, expected_third], "historical native evidence migration changed")
         for binding in historical:
             _require(hashlib.sha256(_read(root / binding["path"])).hexdigest() == binding["sha256"],
                      "historical native result bytes changed")
@@ -740,11 +839,11 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     return state
 
 
-def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
-    state = _json(_read(_ledger(run_root, followup, continuation) / "preparation.json"
-                        if followup or continuation else run_root / STATE_NAME))
+    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics) / "preparation.json"
+                        if followup or continuation or operator_diagnostics else run_root / STATE_NAME))
     _require(set(state) == {"schemaVersion", "protocolDigest", "runMode", "executable", "materializationSeed", "cases"},
              "native preparation record is not closed")
     _require(state["schemaVersion"] == "2" and state["protocolDigest"] == protocol["protocolDigest"],
@@ -772,8 +871,10 @@ def _verify_prior_attempt(run_root: Path) -> None:
         _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
 
 
-def _ledger(run_root: Path, followup: bool, continuation: bool) -> Path:
-    _require(not (followup and continuation), "select exactly one continuation ledger")
+def _ledger(run_root: Path, followup: bool, continuation: bool, operator_diagnostics: bool = False) -> Path:
+    _require(sum((followup, continuation, operator_diagnostics)) <= 1, "select exactly one continuation ledger")
+    if operator_diagnostics:
+        return run_root / "operator-diagnostic-continuation"
     return run_root / "diagnostic-continuation" if continuation else (
         run_root / "diagnostic-followup" if followup else run_root)
 
@@ -792,10 +893,26 @@ def _verify_two_prior_attempts(run_root: Path) -> None:
         _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
 
 
-def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: bool = False) -> None:
-    """Add an explicit second ledger; preserve prior preparation, auth and events."""
+def _verify_three_prior_attempts(run_root: Path) -> None:
+    _verify_two_prior_attempts(run_root)
+    prior = run_root / "diagnostic-continuation"
+    _require(hashlib.sha256(_read(prior / "normalized-result.json")).hexdigest() ==
+             THIRD_RESULT_SHA256, "operator continuation requires the third immutable incomplete result")
+    _require(_json(_read(prior / "batch-started.json")) == {"protocolDigest": THIRD_PROTOCOL_DIGEST} and
+             _json(_read(prior / "attempt-01.json")) == {
+                 "ordinal": 1, "caseId": legacy.EXPECTED_CASE_IDS[0], "protocolDigest": THIRD_PROTOCOL_DIGEST},
+             "third historical attempt markers changed")
+    for ordinal in range(2, 17):
+        path = prior / f"attempt-{ordinal:02d}.json"
+        _require(not path.exists() and not path.is_symlink(), "later case already consumed its attempt")
+
+
+def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: bool = False,
+                                operator_diagnostics: bool = False) -> None:
+    """Add one explicit ledger; preserve all prior preparation, auth and events."""
     _ordinary_directory(run_root)
-    (_verify_two_prior_attempts if continuation else _verify_prior_attempt)(run_root)
+    (_verify_three_prior_attempts if operator_diagnostics else
+     _verify_two_prior_attempts if continuation else _verify_prior_attempt)(run_root)
     protocol = _protocol(root)
     old = _json(_read(run_root / STATE_NAME))
     _require(old["protocolDigest"] == HISTORICAL_PROTOCOL_DIGEST and old["runMode"] == "actual",
@@ -826,7 +943,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
         prepared.append(legacy.materialize_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
-    if continuation:
+    if continuation or operator_diagnostics:
         previous_state = _json(_read(run_root / "diagnostic-followup/preparation.json"))
         _require(previous_state == {**old, "protocolDigest": RETRY_PROTOCOL_DIGEST},
                  "second preparation no longer matches the original installed inputs")
@@ -836,12 +953,23 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"diagnostic-followup/response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                      "second historical materialization changed")
-    ledger = _ledger(run_root, not continuation, continuation)
+    if operator_diagnostics:
+        previous_state = _json(_read(run_root / "diagnostic-continuation/preparation.json"))
+        _require(previous_state == {**old, "protocolDigest": THIRD_PROTOCOL_DIGEST},
+                 "third preparation no longer matches the original installed inputs")
+        for ordinal, case in enumerate(cases, 1):
+            previous = legacy.materialize_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+                ordinal=ordinal, protocol_digest=THIRD_PROTOCOL_DIGEST, model_schema=schema,
+                prompt_envelope=envelope, request=case["request"])
+            _require(_read(run_root / f"diagnostic-continuation/response-schema-{ordinal:02d}.json") == previous.schema_bytes,
+                     "third historical materialization changed")
+    ledger = _ledger(run_root, not (continuation or operator_diagnostics), continuation, operator_diagnostics)
+    prior_count = 3 if operator_diagnostics else 2 if continuation else 1
     ledger.mkdir(mode=0o700)  # exclusive; a partial migration is retained, not retried
     _exclusive(ledger / "migration.json", _bytes({"priorResultSha256": HISTORICAL_RESULT_SHA256,
         "priorProtocolDigest": HISTORICAL_PROTOCOL_DIGEST, "protocolDigest": protocol["protocolDigest"],
-        "priorResultSha256s": PRIOR_RESULTS if continuation else PRIOR_RESULTS[:1],
-        "priorAttempts": 2 if continuation else 1, "maximumCumulativeAttempts": 18 if continuation else 17}))
+        "priorResultSha256s": PRIOR_RESULTS[:prior_count],
+        "priorAttempts": prior_count, "maximumCumulativeAttempts": 16 + prior_count}))
     for ordinal, material in enumerate(prepared, 1):
         _exclusive(ledger / f"response-schema-{ordinal:02d}.json", material.schema_bytes)
     _exclusive(ledger / "preparation.json", _bytes({**old, "protocolDigest": protocol["protocolDigest"]}))
@@ -1234,6 +1362,7 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
         realized_file_set_digest=definition["canonicalFileSetDigest"], prompt_fully_delivered=True)
     return {"ordinal": materialized.ordinal, "caseId": case["id"], "status": "NOT-RUN",
             "diagnostic": "not-run", "cliLaunchCount": 0, "attemptCount": 0, "modelRequestCount": None,
+            "privateCapture": _private_capture(),
             "executionDiagnostics": _diagnostics(),
             "evidenceExtraction": {"stream": "not-checked", "response": "not-checked", "postcheck": "not-checked"},
             "installation": "not-checked", "authentication": "not-checked",
@@ -1245,17 +1374,22 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
 
 def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls: bool = False,
                            reuse_test_auth: bool = False, followup: bool = False,
-                           continuation: bool = False, private_diagnostics: bool = False,
+                           continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
-    protocol, state = _state(root, run_root, followup=followup, continuation=continuation)
-    ledger = _ledger(run_root, followup, continuation)
-    if continuation:
+    _require(not (operator_diagnostics and private_diagnostics), "select one private capture format")
+    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics)
+    ledger = _ledger(run_root, followup, continuation, operator_diagnostics)
+    prior_count = 3 if operator_diagnostics else 2 if continuation else int(followup)
+    if operator_diagnostics:
+        _verify_three_prior_attempts(run_root)
+    elif continuation:
         _verify_two_prior_attempts(run_root)
     elif followup:
         _verify_prior_attempt(run_root)
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
+    operator = OperatorDiagnostics(ledger) if operator_diagnostics else None
     executable = Path(state["executable"])
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
@@ -1272,7 +1406,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
     if reuse_test_auth:
-        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation else protocol)
+        _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics else protocol)
     _exclusive(ledger / "batch-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
         paths = _case_paths(run_root, ordinal)
@@ -1294,7 +1428,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                 _require(record["packageBeforeSha256"] == state["cases"][ordinal - 1]["packageSha256"] ==
                          protocol["bundle"]["packageSha256"], "prepared plugin changed")
             record["installation"] = "verified" if installed else "absent"
-            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup or continuation else
+            _require(_read((ledger / f"response-schema-{ordinal:02d}.json") if followup or continuation or operator_diagnostics else
                            paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
             diagnostic = "authentication-unavailable"
@@ -1324,9 +1458,11 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             diagnostic = "execution-failed"
             phase = "launch"
             argv = build_native_argv(executable, run_root, ordinal)
-            if followup or continuation:
+            if followup or continuation or operator_diagnostics:
                 argv[argv.index("--output-schema") + 1] = str(ledger / f"response-schema-{ordinal:02d}.json")
             def receive(raw: bytes) -> None:
+                if operator is not None:
+                    operator.event(raw)
                 if summaries is not None:
                     summaries.event(ordinal, raw)
                 _observe_line(raw, readable, paths["workspace"], events)
@@ -1410,6 +1546,13 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             del error
             break
         finally:
+            if operator is not None:
+                record["privateCapture"] = operator.save(ordinal)
+                if record["privateCapture"]["status"] == "write-failed":
+                    facts = record["executionDiagnostics"]
+                    facts["cleanupFailed"] = True
+                    _first_failure(facts, "cleanup", "cleanup-failed")
+                    record.update(status="INCOMPLETE", diagnostic=facts["category"])
             # Raw buffers never leave this bounded execution scope.
             if "capture" in locals():
                 del capture
@@ -1438,10 +1581,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "diagnosticRevision": 3, "protocolId": PROTOCOL_ID,
-              "priorResultSha256s": PRIOR_RESULTS if continuation else (PRIOR_RESULTS[:1] if followup else []),
+    result = {"schemaVersion": "2", "diagnosticRevision": 4, "protocolId": PROTOCOL_ID,
+              "priorResultSha256s": PRIOR_RESULTS[:prior_count],
               "attemptCount": sum(item["attemptCount"] for item in results),
-              "cumulativeAttemptCount": (2 if continuation else int(followup)) + sum(item["attemptCount"] for item in results),
+              "cumulativeAttemptCount": prior_count + sum(item["attemptCount"] for item in results),
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
               "authenticationMode": "serial-test-auth-copy" if reuse_test_auth else "independent-official-login",
               "protocolDigest": protocol["protocolDigest"], "runMode": "actual" if actual else "simulated",
@@ -1493,12 +1636,14 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
         prior_results = document["priorResultSha256s"]
-        _require(prior_results in [[], PRIOR_RESULTS[:1], PRIOR_RESULTS], "invalid historical prefix")
+        _require(prior_results in [PRIOR_RESULTS[:i] for i in range(4)], "invalid historical prefix")
         prior_count = len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
         _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= 16 + prior_count,
                  "native cumulative attempt budget mismatch")
+        _require(sum(item["privateCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
+                 "private capture batch limit exceeded")
         cases = legacy.load_golden_cases(root)
         fixtures = _input(root, protocol, "fixtureMatrix")
         model_schema = _input(root, protocol, "modelResponseSchema")
@@ -1521,6 +1666,17 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 _require(record == expected, "unstarted native case carries observed facts")
                 stopped = True
                 continue
+            private = record["privateCapture"]
+            _require(private["status"] not in {"not-requested", "no-diagnostics"} or
+                     (private["bytes"] == 0 and not private["truncated"]), "empty private capture has content")
+            _require(private["status"] != "omitted" or (private["bytes"] == 0 and private["truncated"]),
+                     "omitted private capture lacks truncation")
+            _require(private["status"] != "saved" or private["bytes"] > 0, "saved private capture is empty")
+            _require(private["status"] != "write-failed" or
+                     (status == "INCOMPLETE" and record["executionDiagnostics"]["cleanupFailed"]),
+                     "failed private capture was accepted")
+            _require(private["status"] == "not-requested" or prior_results == PRIOR_RESULTS,
+                     "operator capture lacks three-history authorization")
             facts = record["executionDiagnostics"]
             _require(record["cliLaunchCount"] <= record["attemptCount"], "launch lacks consumed attempt")
             _require(facts["eventCount"] >= len(facts["eventTypes"]), "event summary count mismatch")
@@ -1641,6 +1797,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--run", action="store_true")
     group.add_argument("--prepare-diagnostic-followup", action="store_true")
     group.add_argument("--prepare-diagnostic-continuation", action="store_true")
+    group.add_argument("--prepare-operator-diagnostics", action="store_true")
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--codex", type=Path)
@@ -1651,12 +1808,14 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     parser.add_argument("--diagnostic-followup", action="store_true")
     parser.add_argument("--diagnostic-continuation", action="store_true")
     parser.add_argument("--private-diagnostics", action="store_true")
+    parser.add_argument("--operator-diagnostics", action="store_true")
     parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
-        if args.prepare_diagnostic_followup or args.prepare_diagnostic_continuation:
+        if args.prepare_diagnostic_followup or args.prepare_diagnostic_continuation or args.prepare_operator_diagnostics:
             _require(args.run_root is not None, "followup requires the existing test root")
-            prepare_diagnostic_followup(root, args.run_root, continuation=args.prepare_diagnostic_continuation)
+            prepare_diagnostic_followup(root, args.run_root, continuation=args.prepare_diagnostic_continuation,
+                                        operator_diagnostics=args.prepare_operator_diagnostics)
             print("Diagnostic followup prepared; historical state preserved; no client started.")
         elif args.prepare:
             _require(all(value is not None for value in (args.run_root, args.bundle_root, args.codex)),
@@ -1676,7 +1835,8 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             _require(args.run_root is not None, "run requires a prepared run root")
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
                                             reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup,
-                                            continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics)
+                                            continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics,
+                                            operator_diagnostics=args.operator_diagnostics)
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "PASS" else 1
         else:

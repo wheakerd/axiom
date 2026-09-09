@@ -1,6 +1,36 @@
 # Field Validation
 
-## Authorized native continuation after two historical attempts
+## Operator-only diagnostic continuation
+
+Native diagnostic revision 4 preserves all three historical Case 1 INCOMPLETE
+results and their original implementation/protocol bindings. The separately
+authorized `operator-diagnostic-continuation` ledger verifies those results,
+markers and prepared inputs before deriving new inputs. It permits Case 1
+attempt four, then Cases 2-16 once only after a complete valid first result and
+reliable execution: at most 19 cumulative attempts, no automatic retry.
+`--prepare-operator-diagnostics` starts no client; `--run --operator-diagnostics
+--authorize-model-calls --reuse-test-auth` uses the same frozen model, package,
+permissions and separate fresh case state. Preparation alone is not observation.
+
+The human operator explicitly authorized local retention of only
+`error.message`, `turn.failed.error.message`, and completed error-item messages.
+These original strings are captured before classification in exclusive 0600
+JSON-string files under the new ledger's 0700 `operator-only-diagnostics`
+directory. The batch limit is 16 KiB including JSON framing: item notices use
+at most 4 KiB, with 6 KiB reserved for each of top-level errors and turn failures.
+Truncation and write failure are reported; capture cannot change a failure or
+unknown diagnostic into PASS. Public results contain only closed capture status,
+byte count and truncation metadata, never the original strings or private paths.
+
+Only the human operator may read the actual files. Neither executing agent nor
+subagent may read, search, hash, encode, upload or attach them. The files remain
+outside model-readable sandbox roots, Git, validation copies, archives and CI.
+Mode 0600 is not claimed to isolate another same-UID process; the executor's
+no-read rule is an explicit operational boundary. No stderr, reasoning, agent
+message, tool output, request body or authentication file is captured. This
+narrow exception does not reinterpret the earlier discarded diagnostics.
+
+## Historical native continuation after two attempts
 
 Native v2 diagnostic revision 3 retains both historical Case 1 INCOMPLETE
 results unchanged. An explicitly authorized `diagnostic-continuation` ledger

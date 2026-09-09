@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "ae3b0e230582ccaeedecd131fe527a66a9292ce3329ba2faf0dc457a159ab7ef"
+      "sha256": "41528728b6b93d7ac0e8607062c91b2de523d80974002606900a5d95e2df823e"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "2cc3042c3bc0763d1186597f81297a6875b205a44a45f1346dc28aafbd0723ee"
+    "sha256": "7fa608ec4ca1544ace03c1207a9bef15c0905dbbc8905b5529b5884ebb6fa491"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,24 +134,25 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 3,
+  "diagnosticRevision": 4,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
-      "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df"
+      "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df",
+      "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79"
     ],
-    "priorAttempts": 2,
-    "maximumCumulativeAttempts": 18,
-    "maximumCaseOneAttempts": 3,
+    "priorAttempts": 3,
+    "maximumCumulativeAttempts": 19,
+    "maximumCaseOneAttempts": 4,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
     "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
     "errorEvent": "not-terminal; will_retry unavailable",
-    "turnFailed": "failure terminal; message discarded",
+    "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
-    "retention": "closed first-cause facts; cleanup failure is separate; no raw output",
-    "historicalFailure": "two immutable INCOMPLETE results retain original bytes and protocols; one new linked continuation permits Case 1 attempt three and remaining cases once",
+    "retention": "closed public first-cause facts; cleanup failure is separate; operator-only exception contains only three host diagnostic message fields",
+    "historicalFailure": "three immutable INCOMPLETE results retain original bytes and protocols; one new linked operator continuation permits Case 1 attempt four and remaining cases once",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
     "assessment": "observer-inferred finite template classes; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
     "privateSummary": {
@@ -159,7 +160,24 @@
       "fileMode": "0600",
       "retention": "private only; frozen template summaries; uncertain dynamic values omitted; no raw output or credential inspection"
     },
-    "partialEvidence": "independently validated stream, response and postcheck facts can accompany INCOMPLETE; missing checks are not-observed, never success"
+    "partialEvidence": "independently validated stream, response and postcheck facts can accompany INCOMPLETE; missing checks are not-observed, never success",
+    "operatorOnlyCapture": {
+      "fields": [
+        "error.message",
+        "turn.failed.error.message",
+        "item.completed:error.message"
+      ],
+      "maximumBatchBytes": 16384,
+      "itemBudgetBytes": 4096,
+      "errorBudgetBytes": 6144,
+      "turnFailedBudgetBytes": 6144,
+      "directoryMode": "0700",
+      "fileMode": "0600",
+      "format": "JSON string records; exclusive creation; control characters escaped",
+      "access": "human operator only; no model read, search, hash, upload or attachment; excluded from Git, validation copies and CI",
+      "failure": "report truncation and write failure; preserve first cause; never upgrades acceptance",
+      "isolation": "operational no-read boundary for the executor; not a same-UID isolation claim"
+    }
   },
-  "protocolDigest": "sha256:f3debf395d3f03e1bd34a7b62a4b07a3be3f23a77109d9449f1e175993c7b640"
+  "protocolDigest": "sha256:91e5e56969c25e10477880935fe78af3825cd6f436126adc4e0d179f31855a4b"
 }
