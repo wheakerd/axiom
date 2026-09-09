@@ -1124,8 +1124,17 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
             self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
             self.assertTrue(native.validate_native_result(result, ROOT))
-        self.assertEqual(history["results"], [])
-        self.assertEqual(history["current"]["codexObservation"], "not-run")
+        self.assertEqual(len(history["results"]), 1)
+        current = history["results"][0]
+        data = (ROOT / current["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(), current["sha256"])
+        result = json.loads(data)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 3))
+        self.assertEqual(result["priorResultSha256s"], native.PRIOR_RESULTS)
+        self.assertEqual(result["caseResults"][0]["diagnostic"], "host-failure")
+        self.assertEqual([c["status"] for c in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        self.assertEqual(history["current"]["codexObservation"], "incomplete")
 
     def test_frozen_configuration_and_event_loss_templates_block_acceptance(self):
         parent = self.parent

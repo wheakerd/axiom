@@ -24,7 +24,24 @@ facts. Unperformed checks and unavailable model-request counts remain unknown.
 These facts do not establish host PASS or validate the retired Combined path.
 
 Earlier budget and retention descriptions below retain their historical scope.
-No new actual observation is claimed by this preparation change.
+The continuation executed implementation `07e92135a85523c774cc3cb32499be6d98eee31f`
+(tree `82d09603eaa18acd415e8972729b5e429255781e`). Case 1 attempt three is
+INCOMPLETE: the client reported `turn.failed` and exited 1 after receiving the
+complete input. Stream validation and post-execution input checks passed; no
+structured response was available. The observer neither timed out nor terminated
+the client. Three pre-turn diagnostics and an upstream error were observed,
+but the private finite-template summary could not safely classify their meaning.
+The underlying host cause remains unknown; this is not a claim of unavailable
+authentication, model service or an administrator restriction. Case 2-16 remained
+NOT-RUN. The task has consumed three attempts and three CLI launches; observable
+internal model-request count remains unknown. No fourth Case 1 attempt is allowed.
+
+The normalized result SHA-256 is
+`bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79`.
+Both earlier INCOMPLETE results keep their original bytes and implementation
+bindings. This result does not validate the plugin runtime subsystem, the old
+Combined backend or successful Skill discovery. The raw diagnostic content was
+not retained, and no later inference is backfilled into it.
 
 Axiom is a public beta. Repository checks can validate package structure and
 route contracts, but they cannot stand in for a fresh installed-session
@@ -53,8 +70,9 @@ and `scripts/run-no-hook-native-observation.py` separate ordinary repository
 validation, temporary installation, attended authentication, and model execution.
 The default `--check` validates bound files only. It does not inspect login state,
 start a client, install a plugin, or make a model request. The
-[v2 history](../evals/no-hook-observation/result-history-v2.json) records one actual
-attempt: Case 1 is **INCOMPLETE**, and Cases 2-16 are **NOT-RUN**.
+[v2 history](../evals/no-hook-observation/result-history-v2.json) records three actual
+attempts across three implementations: Case 1 is **INCOMPLETE** each time, and
+Cases 2-16 are **NOT-RUN**.
 
 Version 2 replaces the unfinished v1 execution path only for this limited
 compatibility experiment. End-to-end host acceptance is still pending. It retains
@@ -217,8 +235,8 @@ its current history is empty. The message discarded during the second attempt
 cannot be classified retrospectively. This compatibility correction adds no
 case allowance, creates no new preparation and does not reset either ledger.
 
-Cases 2-16 were not started. The task has consumed two starts, both Case 1;
-its authorized Case 1 limit is exhausted. The first incomplete result and its
+At that historical revision, Cases 2-16 were not started and two starts had
+been consumed, both Case 1; that authorization was exhausted. The first incomplete result and its
 unknown root cause remain unchanged. The new [normalized result](../evals/no-hook-observation/results/codex-native-8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df.json)
 is distinct evidence under the corrected implementation, not a replacement or
 a combined successful run. No accepted model routing result, complete native

@@ -24,7 +24,24 @@ facts. Unperformed checks and unavailable model-request counts remain unknown.
 These facts do not establish host PASS or validate the retired Combined path.
 
 Earlier budget and retention descriptions below retain their historical scope.
-No new actual observation is claimed by this preparation change.
+The continuation executed implementation `07e92135a85523c774cc3cb32499be6d98eee31f`
+(tree `82d09603eaa18acd415e8972729b5e429255781e`). Case 1 attempt three is
+INCOMPLETE: the client reported `turn.failed` and exited 1 after receiving the
+complete input. Stream validation and post-execution input checks passed; no
+structured response was available. The observer neither timed out nor terminated
+the client. Three pre-turn diagnostics and an upstream error were observed,
+but the private finite-template summary could not safely classify their meaning.
+The underlying host cause remains unknown; this is not a claim of unavailable
+authentication, model service or an administrator restriction. Case 2-16 remained
+NOT-RUN. The task has consumed three attempts and three CLI launches; observable
+internal model-request count remains unknown. No fourth Case 1 attempt is allowed.
+
+The normalized result SHA-256 is
+`bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79`.
+Both earlier INCOMPLETE results keep their original bytes and implementation
+bindings. This result does not validate the plugin runtime subsystem, the old
+Combined backend or successful Skill discovery. The raw diagnostic content was
+not retained, and no later inference is backfilled into it.
 
 Axiom gives three different subjects three different identities:
 
