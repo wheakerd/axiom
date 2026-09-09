@@ -210,7 +210,7 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 1, "priorResultSha256": None,
+        return {"schemaVersion": "2", "diagnosticRevision": 2, "priorResultSha256": None,
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
                 "authenticationMode": "independent-official-login",
@@ -872,6 +872,214 @@ class NativeObservationTests(unittest.TestCase):
         altered = copy.deepcopy(result)
         altered["caseResults"][0]["executionDiagnostics"]["eventTypes"] = ["thread.started", "turn.started", "turn.completed"]
         self.assertTrue(native.validate_native_result(altered, ROOT))
+
+    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None):
+        run, runner, calls = self._prepared_runner()
+        def diagnostic_runner(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            lines = [json.loads(line) for line in capture["stdout"].splitlines()]
+            for entry in lines:
+                if "item" in entry:
+                    number = int(entry["item"]["id"].removeprefix("item_"))
+                    entry["item"]["id"] = f"item_{number + len(messages)}"
+            diagnostics = [{"type": "item.completed", "item": {
+                "id": f"item_{i}", "type": "error", "message": message}}
+                for i, message in enumerate(messages)]
+            offset = 1 if before_turn else 2
+            lines[offset:offset] = diagnostics
+            if tail:
+                lines = tail(lines)
+            if malformed:
+                malformed(lines)
+            raw = b"".join(event(entry) for entry in lines)
+            # A real ordinary child exercises capture -> receiver -> parser ->
+            # result validation; it cannot launch a client or access real auth.
+            code = ("import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(" + repr(raw) +
+                    "); sys.stderr.buffer.write(" + repr(stderr) + "); sys.exit(" + str(exit_code) + ")")
+            return native.bounded_process([sys.executable, "-I", "-B", "-c", code], **kwargs)
+        return native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                             process_runner=diagnostic_runner)
+
+    def test_error_item_before_turn_is_received_and_closed_without_unsupported_item(self):
+        raw = stream(response(self.cases[0], "ocb1_" + "0" * 64))
+        lines = [json.loads(line) for line in raw.splitlines()]
+        lines[2]["item"]["id"] = "item_1"
+        lines.insert(1, {"type": "item.completed", "item": {
+            "id": "item_0", "type": "error", "message": "invalid global instructions"}})
+        raw = b"".join(event(line) for line in lines)
+        facts = native._diagnostics()
+        for line in raw.splitlines():
+            native._observe_line(line, {}, self.parent, facts)
+        parsed, count = native.parse_native_jsonl(raw, self.taxonomy, {}, self.parent)
+        self.assertEqual(parsed.item_types, ("error", "agent_message"))
+        self.assertEqual(parsed.terminal_type, "turn.completed")
+        self.assertEqual(count, 0)
+        self.assertEqual(facts["policyReason"], "none")
+
+    def test_unknown_error_item_reaches_production_result_as_incomplete(self):
+        result = self._diagnostic_stream_runner(["invalid global instructions"])
+        first = result["caseResults"][0]
+        self.assertEqual(first["diagnostic"], "diagnostic-unknown")
+        self.assertEqual(first["executionDiagnostics"]["policyReason"], "none")
+        self.assertFalse(first["executionDiagnostics"]["observerTerminated"])
+        self.assertEqual(first["executionDiagnostics"]["returnCode"], 0)
+        self.assertEqual(first["terminal"], "turn.completed")
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual([x["status"] for x in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        self.assertNotIn("invalid global instructions", json.dumps(result))
+
+    def test_model_rerouting_cannot_pass_even_with_completed_turn_and_zero_exit(self):
+        result = self._diagnostic_stream_runner(["model rerouted: gpt-5.6-sol -> other-model (HighRisk)"], before_turn=False)
+        first = result["caseResults"][0]
+        self.assertEqual(first["status"], "INCOMPLETE")
+        self.assertEqual(first["diagnostic"], "model-mismatch")
+        self.assertEqual(first["terminal"], "turn.completed")
+        self.assertEqual(first["executionDiagnostics"]["returnCode"], 0)
+        self.assertEqual(first["executionDiagnostics"]["hostDiagnosticClasses"], ["model-rerouted"])
+        self.assertEqual(first["executionDiagnostics"]["officialErrorCode"], "unknown")
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertNotIn("other-model", json.dumps(result))
+
+    def test_multiple_diagnostic_items_keep_shared_ids_and_finite_safe_summary(self):
+        result = self._diagnostic_stream_runner(["unknown first", "unknown second"], before_turn=False)
+        first = result["caseResults"][0]
+        self.assertEqual(first["terminal"], "turn.completed")
+        self.assertEqual(first["executionDiagnostics"]["diagnosticItemCount"], 2)
+        self.assertEqual(first["executionDiagnostics"]["preTurnDiagnosticCount"], 0)
+        self.assertEqual(first["executionDiagnostics"]["hostDiagnosticClasses"], ["unknown"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_error_item_lifecycle_rejects_duplicate_skipped_and_reused_ids(self):
+        parent = self.parent
+        changes = {
+            "duplicate": lambda lines: lines.insert(2, copy.deepcopy(lines[1])),
+            "gap": lambda lines: lines[1]["item"].__setitem__("id", "item_2"),
+            "reused": lambda lines: lines[3]["item"].__setitem__("id", "item_0"),
+            "started": lambda lines: lines[1].__setitem__("type", "item.started"),
+            "extra-field": lambda lines: lines[1]["item"].__setitem__("raw", "private fixture"),
+            "after-terminal": lambda lines: lines.append(copy.deepcopy(lines[1])),
+            "before-thread": lambda lines: lines.insert(0, lines.pop(1)),
+        }
+        for mode, change in changes.items():
+            with self.subTest(mode=mode):
+                self.parent = parent / mode
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner(["unknown"], malformed=change)
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertIn(first["diagnostic"], {"stream-invalid", "policy-rejected"})
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+                self.assertEqual(result["attemptCount"], 1)
+
+    def test_error_diagnostics_do_not_hide_process_stderr_or_terminal_failure(self):
+        parent = self.parent
+        modes = [("nonzero", 7, b"", None, "process-exit"),
+                 ("stderr", 0, b"unknown fixture\n", None, "unknown-stderr"),
+                 ("failed", 1, b"", lambda lines: lines[:3] + [
+                     {"type": "error", "message": "not retained"},
+                     {"type": "turn.failed", "error": {"message": "not retained"}}], "host-failure"),
+                 ("top-error", 0, b"", lambda lines: lines[:1] + [
+                     {"type": "error", "message": "not retained"}] + lines[1:], "diagnostic-unknown")]
+        for name, code, stderr, tail, expected in modes:
+            with self.subTest(mode=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner([], exit_code=code, stderr=stderr, tail=tail)
+                self.assertEqual(result["caseResults"][0]["diagnostic"], expected)
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+                self.assertNotIn("not retained", json.dumps(result))
+
+    def test_diagnostic_result_counters_and_classes_cannot_be_forged_as_complete(self):
+        result = self._diagnostic_stream_runner(["unknown"])
+        for field, value in (("diagnosticItemCount", 0), ("preTurnDiagnosticCount", 2),
+                             ("hostDiagnosticClasses", []), ("officialErrorCode", "invented")):
+            altered = copy.deepcopy(result)
+            altered["caseResults"][0]["executionDiagnostics"][field] = value
+            self.assertTrue(native.validate_native_result(altered, ROOT), field)
+        first = result["caseResults"][0]
+        first.update(status="PASS", diagnostic="none")
+        first["executionDiagnostics"].update(category="none", phase="none")
+        self.assertTrue(native.validate_native_result(result, ROOT))
+
+    def test_both_historical_attempts_keep_exact_original_bytes_and_protocols(self):
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        self.assertEqual(len(history["historicalResults"]), 2)
+        self.assertEqual(sum(record["attemptCount"] for record in history["historicalResults"]), 2)
+        for record in history["historicalResults"]:
+            data = (ROOT / record["path"]).read_bytes()
+            self.assertEqual(hashlib.sha256(data).hexdigest(), record["sha256"])
+            result = json.loads(data)
+            self.assertEqual(result["protocolDigest"], record["protocolDigest"])
+            self.assertEqual(result["caseResults"][0]["status"], "INCOMPLETE")
+            self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+            self.assertTrue(native.validate_native_result(result, ROOT))
+        self.assertEqual(history["results"], [])
+        self.assertEqual(history["current"]["codexObservation"], "not-run")
+
+    def test_frozen_configuration_and_event_loss_templates_block_acceptance(self):
+        parent = self.parent
+        examples = [
+            ("Configured value for `permission_profile` is disallowed by requirements; falling back to required value ReadOnly. Details: public fixture", "configuration-unverified"),
+            ("Error parsing rules; custom rules not applied. (public fixture)", "configuration-unverified"),
+            ("`--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation.", "configuration-unverified"),
+            ("in-process app-server event stream lagged; dropped 3 events", "evidence-incomplete"),
+            ("thread/rollback is deprecated and will be removed soon", "diagnostic-unknown"),
+        ]
+        for index, (message, expected) in enumerate(examples):
+            with self.subTest(expected=expected, index=index):
+                self.parent = parent / str(index)
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner([message])
+                first = result["caseResults"][0]
+                self.assertEqual(first["status"], "INCOMPLETE")
+                self.assertEqual(first["diagnostic"], expected)
+                self.assertEqual(first["terminal"], "turn.completed")
+                self.assertEqual(first["executionDiagnostics"]["preTurnDiagnosticCount"], 1)
+                self.assertEqual(first["executionDiagnostics"]["officialErrorCode"], "unknown")
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+                self.assertNotIn("public fixture", json.dumps(result))
+
+    def test_complete_normal_stream_and_known_stderr_still_pass_simulated_cases(self):
+        result = self._diagnostic_stream_runner([], stderr=b"Reading prompt from stdin...\n")
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_diagnostic_during_active_read_preserves_command_identity_and_closure(self):
+        def during(lines):
+            self.assertEqual(lines[2]["type"], "item.started")
+            lines[-2]["item"]["id"] = "item_2"
+            lines.insert(3, {"type": "item.completed", "item": {
+                "id": "item_1", "type": "error", "message": "unknown diagnostic"}})
+            return lines
+        result = self._diagnostic_stream_runner([], tail=during)
+        first = result["caseResults"][0]
+        self.assertEqual(first["diagnostic"], "diagnostic-unknown")
+        self.assertEqual(first["readonlyCommandCount"], 1)
+        self.assertEqual(first["terminal"], "turn.completed")
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_malformed_diagnostic_shapes_remain_safe_policy_failures(self):
+        parent = self.parent
+        shapes = [{"type": "error", "message": []},
+                  {"type": "turn.failed", "error": {"message": [], "private": "discard"}},
+                  {"type": "item.completed", "item": {"id": "item_0", "type": "error", "message": []}},
+                  {"type": "item.completed", "item": {"id": "item_0", "type": "file_change",
+                    "changes": [], "status": "completed"}}]
+        for index, shape in enumerate(shapes):
+            with self.subTest(index=index):
+                self.parent = parent / str(index)
+                self.parent.mkdir()
+                result = self._diagnostic_stream_runner([], tail=lambda lines: lines[:1] + [shape] + lines[1:])
+                first = result["caseResults"][0]
+                self.assertEqual(first["diagnostic"], "policy-rejected")
+                self.assertTrue(first["executionDiagnostics"]["observerTerminated"])
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+                self.assertNotIn("discard", json.dumps(result))
 
 
 if __name__ == "__main__":

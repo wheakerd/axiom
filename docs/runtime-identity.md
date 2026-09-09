@@ -353,7 +353,13 @@ INCOMPLETE: an `error` item was rejected by observer policy. Its closed facts
 retain the first cause and successful input delivery without raw messages.
 Cumulative starts are two, Cases 2-16 remain NOT-RUN, and Case 1 has no remaining
 authorized attempt. Both records keep their distinct implementation bindings. V1 artifacts
-and historical failures are not reinterpreted. The
+and historical failures are not reinterpreted. Diagnostic revision 2 preserves
+both actual results as immutable historical bindings and has an empty current
+history. Its error-item receiver, structural parser and result validator share
+the frozen diagnostic shapes; finite classes are observer inferences, not
+upstream codes. Implementation/schema changes update the protocol digest and
+all derived input commitments, without changing attempt limits or rewriting
+historical input identities. No new actual session validates revision 2. The
 original Golden Set, model-response definition, fixture matrix, profile runtime,
 full-profile runtime, bundle format, and ordinary builder lifecycle are unchanged.
 The in-flight revision 7 owns this observer work; revision 5 still owns the

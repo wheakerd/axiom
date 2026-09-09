@@ -234,6 +234,16 @@ failure was recorded. The specific upstream message was not retained. Total
 starts are two, both Case 1, and Cases 2-16 remain NOT-RUN. Neither incomplete
 record is host PASS; no further Case 1 retry occurred.
 
+Diagnostic revision 2 accepts legal error-item shapes and shared item numbering,
+including warnings before the turn starts. Production-chain regressions use
+public, secret-free fixtures and ordinary Python children. They distinguish
+stream closure from acceptance: model rerouting, critical configuration
+fallback, event loss and unclassified diagnostics remain INCOMPLETE even after
+a zero exit and `turn.completed`. Generic nonfatal source mapping does not prove
+a warning harmless. No raw message or official error code is invented. Both
+actual results remain byte-identical historical records; the current protocol
+has no actual result. This repair does not run another canonical case.
+
 See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
 for the supported environment, authentication and model-tool separation,
 failure handling, retained test state, and limits of the resulting evidence.

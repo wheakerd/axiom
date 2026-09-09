@@ -151,7 +151,11 @@
               "io-failed",
               "response-invalid",
               "cleanup-failed",
-              "unknown-stderr"
+              "unknown-stderr",
+              "diagnostic-unknown",
+              "model-mismatch",
+              "configuration-unverified",
+              "evidence-incomplete"
             ]
           },
           "cliLaunchCount": {
@@ -363,7 +367,10 @@
               "stderrClassification",
               "officialErrorCode",
               "itemTypes",
-              "policyReason"
+              "policyReason",
+              "diagnosticItemCount",
+              "preTurnDiagnosticCount",
+              "hostDiagnosticClasses"
             ],
             "properties": {
               "phase": {
@@ -400,7 +407,11 @@
                   "already-attempted",
                   "cleanup-failed",
                   "unknown-stderr",
-                  "execution-failed"
+                  "execution-failed",
+                  "diagnostic-unknown",
+                  "model-mismatch",
+                  "configuration-unverified",
+                  "evidence-incomplete"
                 ]
               },
               "returnCode": {
@@ -517,6 +528,30 @@
                   "unsupported-item",
                   "event-shape-rejected"
                 ]
+              },
+              "diagnosticItemCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "preTurnDiagnosticCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "hostDiagnosticClasses": {
+                "type": "array",
+                "maxItems": 5,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "model-rerouted",
+                    "configuration-unverified",
+                    "evidence-incomplete",
+                    "unknown",
+                    "upstream-error"
+                  ]
+                }
               }
             }
           }
@@ -547,7 +582,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 1
+      "const": 2
     },
     "priorResultSha256": {
       "anyOf": [

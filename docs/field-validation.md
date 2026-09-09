@@ -117,7 +117,7 @@ plugin-runtime, cross-host or full-profile observation is claimed.
 
 Diagnostic revision 1 of native v2 preserves that first result byte-for-byte in
 `historicalResults`, bound to its original implementation and result commits.
-It does not backfill the missing root cause. The current schema adds closed
+It does not backfill the missing root cause. That schema added closed
 first-cause diagnostics: phase/category, exit code or signal when available,
 timeout and observer termination, input delivery, bounded byte/event counts,
 known event/item types, and a separate cleanup-failure flag. Raw errors and
@@ -158,6 +158,38 @@ captured; stderr was unclassified. Those counts do not retain output content.
 The frozen item can represent multiple upstream conditions: its specific origin,
 any official error code and internal request count remain unknown. This is an
 observer rejection, not proof of an authentication, model or transport failure.
+
+Diagnostic revision 2 repairs the legal `item.completed / error` path. It
+validates the original stream without deleting diagnostics or translating them
+into reasoning. Diagnostics can appear after `thread.started` and before
+`turn.started`; they consume the same contiguous item IDs as content and reads.
+Content/diagnostic items complete directly; reads require matching starts,
+stable commands and complete closure. No event may follow the terminal.
+
+The receiver records only bounded counts and finite observer-inferred classes.
+The frozen model-rerouting template means `model-mismatch`; requirements
+fallback, rules parsing failure and hook-trust bypass mean
+`configuration-unverified`; the dropped-event template means
+`evidence-incomplete`. Other Warning, ConfigWarning and DeprecationNotice
+messages remain `diagnostic-unknown`: JSONL loses their originating notification
+type. No applicable harmless diagnostic template has been established for this
+fresh fixed-model path. A valid diagnostic stream can close normally without
+qualifying its result for PASS. A top-level error with unavailable retry
+semantics also cannot establish PASS solely from a later completed turn.
+Process failures and observer rejection retain their first cause; diagnostic
+classes remain separate context, and cleanup cannot overwrite the cause.
+
+These classifications are not official error codes and never authorize an
+action. `officialErrorCode` remains `unknown`. The public templates are bound to
+[frozen configuration handling](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/config/mod.rs)
+and [app-server rules handling](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/app-server/src/lib.rs).
+Raw messages, streams, stderr and private state are not retained.
+
+Both actual results are now immutable historical records with their original
+protocol and implementation bindings. Revision 2 has no actual observation;
+its current history is empty. The message discarded during the second attempt
+cannot be classified retrospectively. This compatibility correction adds no
+case allowance, creates no new preparation and does not reset either ledger.
 
 Cases 2-16 were not started. The task has consumed two starts, both Case 1;
 its authorized Case 1 limit is exhausted. The first incomplete result and its

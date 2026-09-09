@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "dda909527465f5609e72df0fa0b65feb3fc4d35deb813a9b2c3dfe7e24afb6e3"
+      "sha256": "3697fae8a4a896e3b0fde58ceff2fef79bd71e23d9ff8139f7d0f75b14bde780"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "aab51e4327615c6939dcc4052461615b506cc547c04e9ce691bb8feb12defff0"
+    "sha256": "b78fe5cbb518777a024fde21f484f0a00dcc64741d3a4565cd1456e47b128a0a"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,7 +134,7 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 1,
+  "diagnosticRevision": 2,
   "followup": {
     "priorResultSha256": "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
     "priorAttempts": 1,
@@ -148,7 +148,9 @@
     "turnFailed": "failure terminal; message discarded",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
     "retention": "closed first-cause facts; cleanup failure is separate; no raw output",
-    "historicalFailure": "immutable prior record; narrower cause unknown"
+    "historicalFailure": "two immutable results retain original protocols; retry message meaning unknown; no current observation or new attempt authorized",
+    "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
+    "assessment": "observer-inferred finite template classes; unknown or condition-changing diagnostics cannot pass; official error code remains unknown"
   },
-  "protocolDigest": "sha256:0990cdc1ff099e4cdd06f4a9c5f085b050df4adea3a081d19f47533124e0ae35"
+  "protocolDigest": "sha256:a6cb4550e9af63855535d5920810971bcec64e079c35fac63230d3ac2f45de08"
 }

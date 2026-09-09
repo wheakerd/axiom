@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import selectors
 import shlex
@@ -51,7 +52,8 @@ def _diagnostics() -> dict[str, Any]:
             "inputBytesSent": 0, "inputFullyDelivered": None, "stdoutBytes": 0,
             "stderrBytes": 0, "eventCount": 0, "eventTypes": [],
             "stderrClassification": "not-observed", "officialErrorCode": "unknown",
-            "itemTypes": [], "policyReason": "none"}
+            "itemTypes": [], "policyReason": "none", "diagnosticItemCount": 0,
+            "preTurnDiagnosticCount": 0, "hostDiagnosticClasses": []}
 
 
 def _first_failure(facts: dict[str, Any], phase: str, category: str) -> None:
@@ -182,7 +184,7 @@ def _protocol(root: Path) -> dict[str, Any]:
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
-    _require(document.get("diagnosticRevision") == 1 and document.get("followup") == {
+    _require(document.get("diagnosticRevision") == 2 and document.get("followup") == {
         "priorResultSha256": HISTORICAL_RESULT_SHA256, "priorAttempts": 1,
         "maximumCumulativeAttempts": 17, "maximumCaseOneAttempts": 2,
         "remainingCaseAttempts": 1,
@@ -240,9 +242,16 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             "sha256": HISTORICAL_RESULT_SHA256, "protocolDigest": HISTORICAL_PROTOCOL_DIGEST,
             "implementationCommit": "f7a590ad58e2a1200f64009e48556fa7448f2f86",
             "resultCommit": "5ac4c2b197bd4f3a32a9d50ca2de4814aefcf2c3", "attemptCount": 1}
-        _require(historical == [expected_historical], "historical native evidence migration changed")
-        _require(hashlib.sha256(_read(root / expected_historical["path"])).hexdigest() ==
-                 HISTORICAL_RESULT_SHA256, "historical native result bytes changed")
+        retry_sha = "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df"
+        expected_retry = {"path": "evals/no-hook-observation/results/codex-native-" + retry_sha + ".json",
+            "sha256": retry_sha,
+            "protocolDigest": "sha256:0990cdc1ff099e4cdd06f4a9c5f085b050df4adea3a081d19f47533124e0ae35",
+            "implementationCommit": "039faf3cc46bebae6823dd21c01bf023d1e2d0e0",
+            "resultCommit": "c64b9989bb620807011222f5680e0fd3060406c1", "attemptCount": 1}
+        _require(historical == [expected_historical, expected_retry], "historical native evidence migration changed")
+        for binding in historical:
+            _require(hashlib.sha256(_read(root / binding["path"])).hexdigest() == binding["sha256"],
+                     "historical native result bytes changed")
         # The exact previously validated bytes retain their old contract. They
         # are not interpreted under the new schema or filled with new facts.
         records = history["results"]
@@ -420,7 +429,8 @@ def bounded_process(argv: Sequence[str], *, cwd: Path, env: Mapping[str, str],
                             line_callback(bytes(line))
                         except NativeDiagnosticError as error:
                             _first_failure(facts, error.facts["phase"], error.facts["category"])
-                            for field in ("eventCount", "eventTypes", "itemTypes", "policyReason"):
+                            for field in ("eventCount", "eventTypes", "itemTypes", "policyReason",
+                                          "diagnosticItemCount", "preTurnDiagnosticCount", "hostDiagnosticClasses"):
                                 facts[field] = error.facts[field]
                             raise
                         except Exception:
@@ -871,26 +881,73 @@ def _read_command(command: str, readable: Mapping[str, bytes], cwd: Path) -> byt
     return data
 
 
+def _classify_host_diagnostic(message: str) -> str:
+    """Observer inference from frozen templates, never an upstream error code.
+
+    Warning, ConfigWarning and DeprecationNotice lose their source tag in
+    JSONL. Unrecognized text cannot establish unaffected test prerequisites.
+    """
+    if re.fullmatch(r"model rerouted: [^\r\n]+ -> [^\r\n]+ \([^\r\n]+\)", message):
+        return "model-rerouted"
+    if re.fullmatch(r"in-process app-server event stream lagged; dropped [0-9]+ events", message):
+        return "evidence-incomplete"
+    if re.fullmatch(
+            r"Configured value for `(windows\.sandbox|approval_policy|approvals_reviewer|permission_profile|web_search_mode)` "
+            r"is disallowed by requirements; falling back to required value [^\r\n]+\. Details: [^\r\n]+", message):
+        return "configuration-unverified"
+    if (message == "Error parsing rules; custom rules not applied." or
+            re.fullmatch(r"Error parsing rules; custom rules not applied\. \([^\r\n]+\)", message) or
+            message == "`--dangerously-bypass-hook-trust` is enabled. Enabled hooks may run without review for this invocation."):
+        return "configuration-unverified"
+    return "unknown"
+
+
+def _diagnostic_outcome(facts: Mapping[str, Any]) -> str | None:
+    classes = facts["hostDiagnosticClasses"]
+    for category in classes:
+        if category == "model-rerouted":
+            return "model-mismatch"
+        if category == "configuration-unverified":
+            return "configuration-unverified"
+        if category == "evidence-incomplete":
+            return "evidence-incomplete"
+        if category in {"unknown", "upstream-error"}:
+            return "diagnostic-unknown"
+    return None
+
+
 def inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -> None:
     event = legacy._parse_json_line(raw)
     kind = event.get("type")
-    _require(kind in EVENT_TYPES[:-1], "unknown native event")
-    if kind == "error":
-        _require(set(event) == {"type", "message"} and type(event["message"]) is str,
-                 "invalid native error event")
-        return
-    if kind == "turn.failed":
-        _require(set(event) == {"type", "error"} and type(event["error"]) is dict and
-                 set(event["error"]) == {"message"} and type(event["error"]["message"]) is str,
-                 "invalid native failed-turn event")
-        return
-    if kind.startswith("item."):
-        item = event.get("item")
+    _require(type(kind) is str and kind in EVENT_TYPES[:-1], "unknown native event")
+    if kind == "thread.started":
+        legacy._exact_keys(event, {"type", "thread_id"}, kind)
+        legacy._validate_thread_identifier(event["thread_id"])
+    elif kind == "turn.started":
+        legacy._exact_keys(event, {"type"}, kind)
+    elif kind == "turn.completed":
+        legacy._exact_keys(event, {"type", "usage"}, kind)
+        legacy._validate_usage(event["usage"])
+    elif kind in {"error", "turn.failed"}:
+        if kind == "turn.failed":
+            legacy._exact_keys(event, {"type", "error"}, kind)
+            payload = legacy._exact_keys(event["error"], {"message"}, kind)
+        else:
+            payload = legacy._exact_keys(event, {"type", "message"}, kind)
+        _require(type(payload["message"]) is str and
+                 len(payload["message"].encode("utf-8")) <= legacy.MAX_JSONL_LINE_BYTES,
+                 "invalid native error message")
+    else:
+        legacy._exact_keys(event, {"type", "item"}, kind)
+        item = event["item"]
         _require(type(item) is dict, "native item missing")
         item_type = item.get("type")
-        _require(item_type in {"reasoning", "agent_message", "command_execution"}, "unsupported native action")
+        _require(type(item_type) is str and item_type in {
+            "reasoning", "agent_message", "command_execution", "error"}, "unsupported native action")
         legacy._validate_item_payload(item, item_type)
-        if item_type == "command_execution":
+        if item_type != "command_execution":
+            _require(kind == "item.completed", "content or diagnostic item must be completed")
+        else:
             expected = _read_command(item["command"], readable, cwd)
             if kind == "item.completed":
                 _require(item["status"] == "completed" and item["exit_code"] == 0,
@@ -917,8 +974,9 @@ def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: d
         facts["eventTypes"].append(retained)
     item = event.get("item")
     item_type = item.get("type") if type(item) is dict else None
+    supported_items = {"reasoning", "agent_message", "command_execution", "error"}
     if type(kind) is str and kind.startswith("item."):
-        retained_item = item_type if type(item_type) is str and item_type in {"reasoning", "agent_message", "command_execution", "error"} else "unsupported"
+        retained_item = item_type if type(item_type) is str and item_type in supported_items else "unsupported"
         if retained_item not in facts["itemTypes"]:
             facts["itemTypes"].append(retained_item)
     if facts["eventCount"] > legacy.MAX_EVENT_COUNT:
@@ -931,58 +989,98 @@ def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: d
             facts["policyReason"] = ("unknown-event" if retained == "unknown" else
                 "read-contract-rejected" if item_type == "command_execution" else
                 "unsupported-item" if type(kind) is str and kind.startswith("item.") and
-                (type(item_type) is not str or item_type not in {"reasoning", "agent_message"}) else "event-shape-rejected")
+                (type(item_type) is not str or item_type not in supported_items) else "event-shape-rejected")
         _first_failure(facts, "event", "policy-rejected")
         raise NativeDiagnosticError(facts) from None
+    classification = None
+    if kind == "item.completed" and item_type == "error":
+        facts["diagnosticItemCount"] += 1
+        facts["preTurnDiagnosticCount"] += int("turn.started" not in facts["eventTypes"])
+        classification = _classify_host_diagnostic(item["message"])
+    elif kind == "error":
+        classification = "upstream-error"
+    if classification is not None and classification not in facts["hostDiagnosticClasses"]:
+        facts["hostDiagnosticClasses"].append(classification)
     if kind == "turn.failed":
         _first_failure(facts, "event", "host-failure")
-    # Top-level error loses upstream will_retry; it alone is not terminal.
+    # Diagnostics are not actions or terminal failures. Their effect on the
+    # fixed test conditions is assessed after process and stream closure.
 
 
 def parse_native_jsonl(data: bytes, taxonomy: Mapping[str, Any], readable: Mapping[str, bytes],
                        cwd: Path) -> tuple[legacy.StreamFacts, int]:
-    """Validate native commands, then reuse v1's strict non-tool stream closure."""
+    """Validate the original native stream without dropping or translating items."""
     _require(len(data) <= legacy.MAX_STDOUT_BYTES and data.endswith(b"\n") and b"\r" not in data,
              "native JSONL framing or size mismatch")
     lines = data.splitlines()
     _require(len(lines) <= legacy.MAX_EVENT_COUNT, "native event count exceeds limit")
+    ordered, item_types, statuses, journal = [], [], [], []
+    states: dict[str, tuple[str, str]] = {}
     commands: dict[str, str] = {}
-    completed: set[str] = set()
-    translated: list[bytes] = []
-    turn_started = False
-    terminal_seen = False
-    for raw in lines:
-        _require(not terminal_seen, "native event appeared after terminal")
+    completed_commands = 0
+    thread_seen = turn_seen = False
+    terminal = None
+    result = None
+    for ordinal, raw in enumerate(lines, 1):
+        _require(terminal is None, "native event appeared after terminal")
         inspect_native_event(raw, readable, cwd)
         event = legacy._parse_json_line(raw)
-        if event["type"] == "turn.started":
-            turn_started = True
-        if event["type"] in {"turn.completed", "turn.failed"}:
-            terminal_seen = True
-        if event["type"] == "error":
-            _require(turn_started, "native error appeared outside a turn")
-            # Frozen JSONL does not expose retry disposition. Keep its type in
-            # diagnostics while the final exit and complete stream decide status.
-            continue
-        item = event.get("item", {})
-        if item.get("type") == "command_execution":
-            identifier = item["id"]
-            kind = event["type"]
-            if kind == "item.started":
-                _require(identifier not in commands and identifier not in completed, "duplicate native command")
-                commands[identifier] = item["command"]
-                continue
-            _require(identifier in commands and commands[identifier] == item["command"], "native command lacks matching start")
-            if kind == "item.updated":
-                continue
-            _require(identifier not in completed, "duplicate native command completion")
-            completed.add(identifier)
-            # The original identifier is retained: v1 checks canonical item order.
-            event = {"type": "item.completed", "item": {"id": identifier, "type": "reasoning", "text": ""}}
-        if event["type"] == "turn.completed":
-            _require(set(commands) == completed, "terminal outcome left an active native command")
-        translated.append(legacy._canonical_json(event) + b"\n")
-    return legacy.parse_jsonl(b"".join(translated), taxonomy), len(completed)
+        kind = event["type"]
+        ordered.append(kind)
+        definition = taxonomy["topLevelTypes"][kind]
+        entry = {"ordinal": ordinal, "eventType": kind,
+                 "category": definition["category"], "role": definition["role"]}
+        if kind == "thread.started":
+            _require(ordinal == 1 and not thread_seen, "native thread start out of order")
+            thread_seen = True
+        elif kind == "turn.started":
+            _require(thread_seen and not turn_seen, "native turn start out of order")
+            turn_seen = True
+        elif kind in {"turn.completed", "turn.failed"}:
+            _require(turn_seen and all(state == "completed" for _, state in states.values()),
+                     "native terminal lacks start or leaves active items")
+            terminal = kind
+        elif kind == "error":
+            _require(thread_seen, "native error preceded thread")
+        else:
+            item = event["item"]
+            item_type, identifier = item["type"], item["id"]
+            _require(thread_seen and (turn_seen or item_type == "error"), "native item outside lifecycle")
+            previous = states.get(identifier)
+            if previous is None:
+                _require(identifier == f"item_{len(states)}", "native item id outside emission sequence")
+            else:
+                _require(previous[0] == item_type and previous[1] != "completed", "native item id reused")
+            if item_type == "command_execution":
+                if kind == "item.started":
+                    _require(previous is None, "duplicate native command start")
+                    commands[identifier] = item["command"]
+                else:
+                    _require(previous is not None and commands.get(identifier) == item["command"],
+                             "native command lacks matching start")
+                    completed_commands += int(kind == "item.completed")
+                statuses.append(item["status"])
+                entry["status"] = item["status"]
+            else:
+                _require(previous is None, "native content or diagnostic id reused")
+            states[identifier] = (item_type, "completed" if kind == "item.completed" else "active")
+            item_types.append(item_type)
+            entry.update(itemType=item_type, category=taxonomy["itemTypes"][item_type]["category"])
+            if item_type == "agent_message":
+                _require(result is None, "multiple native structured results")
+                _require(len(item["text"].encode("utf-8")) <= legacy.MAX_RESULT_BYTES,
+                         "native structured result exceeds limit")
+                result = _json(item["text"].encode("utf-8"))
+                _require(type(result) is dict, "native structured result must be an object")
+        journal.append(entry)
+    _require(terminal is not None, "native stream lacks terminal")
+    _require(result is not None or terminal == "turn.failed", "native stream lacks structured result")
+    return legacy.StreamFacts(ordered_event_types=tuple(ordered), item_types=tuple(item_types),
+        item_statuses=tuple(statuses), journal=tuple(journal), terminal_type=terminal,
+        terminal_count=1, events_after_terminal=0, structured_result_count=int(result is not None),
+        tool_capable_event_count=sum(item == "command_execution" for item in item_types),
+        unknown_event_count=0, unknown_item_count=0, unknown_status_count=0, malformed_line_count=0,
+        structured_result=result), completed_commands
 
 
 def _readable(paths: Mapping[str, Path], definition: Mapping[str, Any], installed: bool) -> dict[str, bytes]:
@@ -1097,7 +1195,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             _require(record["cliLaunchCount"] == 1, "client runner did not report a created process")
             facts = _capture_facts(capture)
             facts.update(eventCount=events["eventCount"], eventTypes=events["eventTypes"],
-                         itemTypes=events["itemTypes"], policyReason=events["policyReason"])
+                         itemTypes=events["itemTypes"], policyReason=events["policyReason"],
+                         diagnosticItemCount=events["diagnosticItemCount"],
+                         preTurnDiagnosticCount=events["preTurnDiagnosticCount"],
+                         hostDiagnosticClasses=events["hostDiagnosticClasses"])
             if events["category"] != "none":
                 facts.update(phase=events["phase"], category=events["category"])
             record["executionDiagnostics"] = facts
@@ -1110,6 +1211,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             stream, count = parse_native_jsonl(capture["stdout"], taxonomy, readable, paths["workspace"])
             record["readonlyCommandCount"] = count
             record["terminal"] = stream.terminal_type
+            condition_failure = _diagnostic_outcome(facts)
+            if condition_failure is not None:
+                _first_failure(facts, "event", condition_failure)
+                raise NativeDiagnosticError(facts)
             phase = "response"
             observed = dict(stream.structured_result)
             materialized_schema = _json(material.schema_bytes)
@@ -1132,7 +1237,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             record["status"] = "INCOMPLETE"
             facts = dict(error.facts) if isinstance(error, NativeDiagnosticError) else dict(record["executionDiagnostics"])
             facts.update(eventCount=events["eventCount"], eventTypes=events["eventTypes"],
-                         itemTypes=events["itemTypes"], policyReason=events["policyReason"])
+                         itemTypes=events["itemTypes"], policyReason=events["policyReason"],
+                         diagnosticItemCount=events["diagnosticItemCount"],
+                         preTurnDiagnosticCount=events["preTurnDiagnosticCount"],
+                         hostDiagnosticClasses=events["hostDiagnosticClasses"])
             if events["category"] != "none":
                 facts.update(phase=events["phase"], category=events["category"])
             _first_failure(facts, phase, "response-invalid" if phase == "response" else diagnostic)
@@ -1149,7 +1257,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "diagnosticRevision": 1, "protocolId": PROTOCOL_ID,
+    result = {"schemaVersion": "2", "diagnosticRevision": 2, "protocolId": PROTOCOL_ID,
               "priorResultSha256": HISTORICAL_RESULT_SHA256 if followup else None,
               "attemptCount": sum(item["attemptCount"] for item in results),
               "cumulativeAttemptCount": int(followup) + sum(item["attemptCount"] for item in results),
@@ -1235,6 +1343,19 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(facts["eventCount"] >= len(facts["eventTypes"]), "event summary count mismatch")
             _require(not facts["itemTypes"] or (any(kind.startswith("item.") for kind in facts["eventTypes"]) and
                      len(facts["itemTypes"]) <= facts["eventCount"]), "item summary lacks matching events")
+            _require(0 <= facts["preTurnDiagnosticCount"] <= facts["diagnosticItemCount"] <= facts["eventCount"],
+                     "diagnostic item counts disagree")
+            _require((facts["diagnosticItemCount"] == 0 or "error" in facts["itemTypes"]) and
+                     ("error" not in facts["itemTypes"] or facts["diagnosticItemCount"] > 0 or
+                      facts["policyReason"] == "event-shape-rejected"),
+                     "diagnostic items lack matching count")
+            classes = facts["hostDiagnosticClasses"]
+            _require((("upstream-error" in classes) == ("error" in facts["eventTypes"])) or
+                     (facts["policyReason"] == "event-shape-rejected" and "upstream-error" not in classes),
+                     "upstream error summary differs from events")
+            _require(bool(set(classes) - {"upstream-error"}) == (facts["diagnosticItemCount"] > 0) and
+                     len(set(classes) - {"upstream-error"}) <= facts["diagnosticItemCount"],
+                     "diagnostic classes lack matching items")
             _require(facts["inputBytesSent"] <= len(material.prompt_bytes), "input count exceeds prompt")
             if record["attemptCount"]:
                 if facts["inputFullyDelivered"] is True:
@@ -1273,7 +1394,8 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             if status in {"PASS", "FAIL"}:
                 _require(facts["category"] == "none" and facts["returnCode"] == 0 and
                          facts["policyReason"] == "none" and
-                         set(facts["itemTypes"]) <= {"reasoning", "agent_message", "command_execution"} and
+                         set(facts["itemTypes"]) <= {"reasoning", "agent_message", "command_execution", "error"} and
+                         _diagnostic_outcome(facts) is None and
                          facts["inputFullyDelivered"] is True and not facts["observerTerminated"] and
                          facts["stderrClassification"] in {"empty", "known-nonfatal"} and
                          "turn.completed" in facts["eventTypes"] and "turn.failed" not in facts["eventTypes"] and
