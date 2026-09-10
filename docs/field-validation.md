@@ -1,5 +1,45 @@
 # Field Validation
 
+## Seven-history batch outcome (diagnostic revision 10)
+
+Execution `7c4c2c8aa01cde728976d1047e8801852a7e2485`, tree
+`fcd7e72c576321b77742ba5d341f66ef817682f7`, used protocol
+`sha256:5ce454ebaf368fd11884f3e91c50bd7ecbcc2d755b21ce0554fe786db94e3a97`.
+The [unaltered normalized result](../evals/no-hook-observation/results/codex-native-ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b.json)
+is INCOMPLETE. Cases 1-4 passed the fixed routing/response acceptance; Case 5
+is INCOMPLETE with `unknown-stderr`; Cases 6-16 were not started.
+
+This batch made five attempts and five CLI launches. Lifetime totals are 12,
+including all seven historical INCOMPLETE attempts. Case 1 used its eighth and
+final allowance; Cases 2-5 used their sole allowance. Internal model request
+counts remain unknown. No retry, probe or fallback was used.
+
+For Cases 1-5, input delivery, strict stream, official final output agreement,
+and non-sensitive input/configuration postchecks were valid. All exited 0 with
+`turn.completed`, no policy rejection, timeout, observer termination or cleanup
+failure. Case 5 alone produced 143 bytes of unclassified stderr; its 158-byte
+UTF-8 JSON capture was saved privately without truncation (0600 file, 0700
+directory). Only the human operator may read it. No JSONL error diagnostic was
+emitted. This meets the recorded same-attempt review eligibility conditions,
+but is not approval of the unseen diagnostic or authority to restart a case.
+The existing batch and attempt markers remain consumed; any permitted later
+continuation must preserve this original result and append its review source.
+
+No command-execution item was observed in these five complete streams. Their
+zero verified read counts do not establish Skill-body consumption, nor prove
+absence of invisible actions. The package/discovery configuration and input
+postchecks establish the installed source; route names and model-reported
+permission fields are separate evidence. The plugin runtime was disabled and
+normal user Skill discovery was used. Case 11's zero-installation/discovery
+precheck remains intact, but its actual observation is NOT-RUN.
+
+Seven historical files and their original protocols are unchanged, including
+the seventh unknown read predicate. FCR-001/003/004 remain OPEN and FCR-002
+STILL_OPEN. Complete host acceptance, descendant closure and the legacy
+Combined implementation remain unproven. The Draft PR and open Issue are not
+ready for merge or completion. Builder, bundle, runtime, frozen cases and the
+266-character release-status reason are unchanged; no bundle was rebuilt.
+
 ## Seven-history continuation (diagnostic revision 10)
 
 One explicitly authorized continuation preserves all seven original results and

@@ -1,5 +1,15 @@
 # Routing Evaluations
 
+## Current native result binding
+
+The revision 10 batch is bound to execution `7c4c2c8aa01cde728976d1047e8801852a7e2485`.
+Cases 1-4 passed response/routing acceptance; Case 5 is INCOMPLETE on unknown
+stderr and Cases 6-16 are NOT-RUN. Five new starts bring lifetime attempts and
+CLI starts to 12. Seven historical records remain immutable. See the
+[exact result and evidence limits](../docs/field-validation.md#seven-history-batch-outcome-diagnostic-revision-10).
+No Skill-body consumption, plugin-runtime success or whole-Issue completion
+is inferred from these route responses. Runtime and bundle identities are unchanged.
+
 ## Seven-history continuation (diagnostic revision 10)
 
 One explicitly authorized continuation preserves all seven original results and
