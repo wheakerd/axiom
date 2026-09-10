@@ -16,13 +16,13 @@ from axiom_validation.no_hook_observation import check_no_hook_observation
 
 
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 117 required files, 6 JSON files, "
-    "117 Markdown files, 17 documentation negative fixtures, "
+    "Publication validation passed: 118 required files, 6 JSON files, "
+    "118 Markdown files, 17 documentation negative fixtures, "
     "78 offline route contract fixtures, "
     "95 black-box routing cases, 30 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 7 routing-context lifecycle scenarios, "
-    "17 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
+    "18 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
     "61 canonical installed-runtime inputs, "
     "12 critical-path CODEOWNERS entries, 238 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "

@@ -1461,3 +1461,22 @@ only their exact bound bytes; invisible consumption, descendants and stronger
 historical cleanup/credential guarantees are not inferred. Builder lifecycle v2
 retains its versioned support model, not a retroactive fix to the old guarantee.
 PR remains Draft, Issue 117 open and readyTransitionEligible=false.
+
+The first new final-head CI at `0cd8549379941d3cd35a187b193ac9afdddca31e`
+passed both repository guards and all four Hook jobs, but unit discovery failed.
+The public annotation exposed only exit 1. A focused external-copy run reproduced
+one failure among 31 runtime/context/policy/isolation tests: the isolation test's
+exact aggregate summary still expected 117 required/Markdown files and 17 release
+facts. The new release document requires 118 and 18. Only those three snapshot
+counts were corrected; the exact summary assertion and all import/runtime guards
+remain. This test-only correction does not change execution a29b950, its package,
+inputs or any actual result. The failed CI remains historical NON-PASS.
+
+A bounded source review also found that retired Combined real-builder fixtures
+still pair their old revision-5 source with the now-current revision-8 schema.
+Their broad incomplete assertions therefore cannot establish a successful
+new-runtime worker handoff or its injected post-create failure. This limitation
+is not treated as current builder evidence or as a repaired legacy path. The
+legacy actual entry remains disabled; current ordinary/native bundle coverage
+comes from the separately validated production builder and the two actual
+source-bound builds above.
