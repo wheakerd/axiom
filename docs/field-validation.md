@@ -2039,3 +2039,108 @@ The execution implementation must be signed and recorded before launch. All
 16 derived schemas and prompts bind that protocol without changing revision 3
 wording, original requests, fixtures, expectations or scoring. New observations
 are not historical regrades or evidence for unspecified host combinations.
+
+## Revision 3 complete batch result
+
+Execution implementation: `1cb076f4d54cb63e24ae097ccb728d67c614e1fd`.
+Execution tree: `5438670d41b75c88779f6749f652746f544e9cc9`.
+Protocol: `sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9`.
+Normalized result SHA-256: `c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1`.
+Result: `evals/no-hook-observation/results/codex-native-c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1.json`.
+
+This is one fresh 1-16 batch under assessment revision 3/material-delivery 1,
+Codex 0.153.0, gpt-5.5/medium, Direct and unchanged 0.10.1 runtime/package.
+All sixteen cases completed with valid stream, response, official final-output
+match and input postcheck, exit 0, complete input and no policy rejection,
+timeout, observer termination or cleanup failure. The fixed scorer returned
+15 PASS and one semantic FAIL; no INCOMPLETE, SKIP or NOT-RUN in this batch.
+Case 1 failed without stopping independent cases or receiving a retry.
+
+| Case | Result | Reported outcome | Selected routes | Pending clarification decision |
+| --- | --- | --- | --- | --- |
+| 1 | FAIL | unavailable | (none) | 0 |
+| 2 | PASS | selected | agents-architect | 0 |
+| 3 | PASS | selected | agent-plugin-architect | 0 |
+| 4 | PASS | selected | optimize-codex-usage | 0 |
+| 5 | PASS | selected | review-axiom-task | 0 |
+| 6 | PASS | selected | traceable-git-submit | 0 |
+| 7 | PASS | selected | confirm-external-action, reversible-system-change | 0 |
+| 8 | PASS | selected | confirm-external-action | 0 |
+| 9 | PASS | selected | reversible-system-change | 0 |
+| 10 | PASS | no-route | (none) | 0 |
+| 11 | PASS | unavailable | (none) | 0 |
+| 12 | PASS | clarification | (none) | 1 |
+| 13 | PASS | clarification | (none) | 1 |
+| 14 | PASS | clarification | (none) | 1 |
+| 15 | PASS | no-route | (none) | 0 |
+| 16 | PASS | no-route | (none) | 0 |
+
+Case 1 expected `selected`, `[using-axiom]` and front-door selection true; it
+reported `unavailable`, `[]` and front-door selection false. Count 0 matches.
+This is a semantic failure, not a parsing or authentication failure. Installed
+bytes and the standard discovery alias were verified before/after execution.
+No public read was retained for Case 1. Neither this absence nor the returned
+`unavailable` value proves that the host omitted initial descriptions. The
+recorded evidence does not establish the model's internal reason or a new
+implementation defect. No rule, input, scoring, model or product wording was
+changed after observation, and no further sampling is authorized.
+
+Public read completions bind exact source bytes: Case 6 read
+`skills/traceable-git-submit/SKILL.md`; Case 8 read
+`skills/confirm-external-action/SKILL.md`; Case 9 read
+`skills/reversible-system-change/SKILL.md`; Case 14 read `task-ledger.json`
+plus `skills/confirm-external-action/SKILL.md` and
+`skills/review-axiom-task/SKILL.md`. These are five Skill-body reads and one
+fixture read, not six Skill loads. Other cases have no verified public read.
+Cases 10/11 route correctly here but do not prove material-body consumption.
+Case 11 had no Axiom package, configuration or discovery alias; its fixture
+SKILL.md is task data. The fifteen installation/discovery mappings were
+verified; exact model-visible initial request rendering was not captured.
+Directory availability, route selection and observed body reads remain separate.
+
+Clarification decisions in 12-14 are disclosed pending decisions, not proof of
+questions actually sent, delivered or answered. All permission/mutation/Hook
+booleans in the response are model reports; the observer additionally verifies
+its bounded read events and unchanged public inputs. No invisible behavior is
+inferred. The package/configuration establishes the no-Hook source, not model
+self-report or absence of JSONL Hook events alone. Plugin runtime and Code Mode
+host stayed disabled; this is standard user-Skill discovery evidence only.
+
+All nonempty stderr matched the existing known-nonfatal classifier; Case 7
+had empty stderr. No human review or new diagnostic whitelist was used.
+Operator-only stderr files total 4386 bytes, with no truncation or write failure.
+They remain private in the registered revision-3 test state; neither their
+contents nor any credential enters Git/CI. There were no JSONL error messages
+or rejected-command captures. Raw JSONL and final-output buffers were discarded
+by the existing capture/cleanup path; dedicated states and owned authentication
+remain registered and retained, not claimed fully cleaned.
+
+Lifetime accounting is 38 deduplicated historical attempts plus 16 new attempts
+= 54 attempts and 54 CLI launches. Internal model request count is unknown.
+All historical outcomes and bindings remain byte-identical; no cross-version
+best-result union is used. The committed current result and exclusive markers
+consume this execution window and refuse another actual invocation.
+
+The finite evaluation is complete and NON-PASS. Issue #117 is not complete:
+explicit front-door selection still fails in this combination, actual
+clarification interaction remains unobserved, and other original host/support
+evidence is not supplied by this batch. FCR-001/003/004 remain OPEN and FCR-002
+STILL_OPEN in their recorded scopes. The five bound body reads are limited
+consumption evidence, not closure of all installation/consumption obligations.
+Normal bounded client exit is not a complete descendant-isolation proof;
+no invisible credential exclusion or stronger historical cleanup claim is
+created. The existing builder lifecycle-v2 disposition is unchanged. Combined
+remains incomplete/disabled. PR remains Draft, Issue open, Ready/merge false.
+
+Validation and self-review: full external-copy discovery passed 551 run,
+549 passed, two existing skips (Windows command shell and opt-in cgroup probe).
+Ten stable-byte targeted methods, publication aggregate, distribution drift
+and whitespace checks passed before execution. Test implementation support and
+main-agent self-review are not a new independent approval. The first public
+rejection fixture omitted captured stderr; it was corrected to use the existing
+bounded process, with no validator relaxation. An intermediate parallel test
+run encountered changing identity bytes; all affected methods passed on the
+frozen rerun. Final result maintenance is validated again without model calls.
+Runtime/bundle bytes and identities remain unchanged; no new build or version.
+Previous 5c85dff CI seven checks passed (runs 34465722932, 34465726621,
+34465726768, 34465726719); those are historical, not this final head's CI.
