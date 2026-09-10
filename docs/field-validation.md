@@ -2,16 +2,18 @@
 
 ## Current assessment and historical boundaries
 
-The unpublished 0.10.1 runtime candidate retains the original assessment and its
-separately bound unstarted-case segment: eight PASS, one FAIL, two INCOMPLETE
-and five NOT-RUN cases; lifetime attempts and CLI launches are 31. Host
-acceptance remains incomplete. The material-location input revision below is
-not observed and its execution window is closed. It does not regrade either
-historical segment or create another attempt.
+The unpublished 0.10.1 runtime candidate retains its original input view:
+eight PASS, one FAIL, two INCOMPLETE and five NOT-RUN cases. The new material-input
+segment separately observed Cases 10-16: three PASS and four semantic FAIL;
+Cases 1-9 are NOT-RUN under these new inputs. Lifetime attempts and canonical CLI
+launches are now 38. The seven authorized new attempts are consumed; there is
+no further start or retry authority. Host acceptance remains incomplete and no
+historical segment is regraded or combined into a sixteen-case PASS.
 
 See [Canonical assessment candidate 0.10.1](#canonical-assessment-candidate-0101),
 [Actual assessment batch and remaining evidence](#actual-assessment-batch-and-remaining-evidence),
-and [Material-location delivery correction](#material-location-delivery-correction).
+[Material-location delivery correction](#material-location-delivery-correction),
+and [Actual material-input segment evidence](#actual-material-input-segment-evidence).
 Older sections retain their original identities, counts and outcomes. Their
 use of "current" describes the execution at that time, not the new input
 revision. No historical failure is reclassified.
@@ -1764,3 +1766,88 @@ Any new normalized evidence is bound to this segment's actual implementation,
 protocol and generated inputs. It is a targeted material-input regression plus
 previously unobserved cases, not a complete sixteen-case run, and does not regrade
 any of the 31 historical attempts. Host results are NOT-RUN until actually recorded.
+
+### Actual material-input segment evidence
+
+Execution implementation: `12720d103a0b46b6223ad2a41b562c1ec2935b87`; tree
+`bde5a0d2f36ade6c6fa3bfbc0d951d1ab7054bf4`. The new immutable result is
+`3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360`, under native protocol
+`sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b`. The execution binding and private test-state
+ledger retain the generated schema/prompt identities and the reference to the
+stopped `e1504982` result. No historical result or old input was rewritten.
+
+| Case | New material-input result | Observed route response | Verified public reads |
+| --- | --- | --- | --- |
+| 10 | FAIL | selected; using-axiom; clarifications=0 | Not observed |
+| 11 | FAIL | selected; agent-plugin-architect, review-axiom-task; clarifications=0 | Not observed |
+| 12 | FAIL | selected; agent-plugin-architect, reversible-system-change; clarifications=0 | Not observed |
+| 13 | FAIL | clarification; traceable-git-submit; clarifications=0 | Not observed |
+| 14 | PASS | clarification; []; clarifications=1 | package: skills/confirm-external-action/SKILL.md; package: skills/review-axiom-task/SKILL.md; fixture: task-ledger.json |
+| 15 | PASS | no-route; []; clarifications=0 | fixture: README.md |
+| 16 | PASS | no-route; []; clarifications=0 | fixture: example.py; fixture: test_example.py |
+
+All seven launches returned 0 with complete input delivery, a closed valid stream,
+a valid structured response matching the official final output, and valid input,
+installation/discovery and model-metadata postchecks. There was no observer
+termination, timeout, cleanup failure or read-policy rejection. Stderr was
+classified known-nonfatal by the unchanged classifier; it was not empty. Bounded
+operator-only stderr files remain private in the registered segment state and
+were not read, hashed, copied to the validation repository or uploaded.
+
+Cases 10-13 have no validated public reads. In particular, Case 10 has no observed
+`document.txt` consumption, and Case 11 has no observed consumption of its two
+audit fixtures. Case 11's Axiom installation and discovery link were absent both
+before and after execution; its route names do not prove installed discovery.
+Case 14 read two bound Skill bodies and its task ledger. Cases 15-16 read only
+the listed task fixtures. No command-count total is substituted for Skill-body
+consumption. Model-reported permission fields are separate from the observed
+read contract and unchanged-input checks; invisible behavior is not inferred.
+
+The unchanged scorer returned these differences:
+
+- Case 10: discovery outcome mismatch; selected route mismatch; front-door observation mismatch.
+- Case 11: discovery outcome mismatch; selected route mismatch.
+- Case 12: discovery outcome mismatch; selected route mismatch; clarification mismatch.
+- Case 13: selected route mismatch; clarification mismatch.
+
+These are semantic FAILs, not parsing failures. No scoring/input or product
+change was made after observing them, and none was retried. They do not identify
+the model's internal cause or retrospectively explain the old arg0 targets.
+
+This segment used seven attempts and seven canonical CLI launches; lifetime
+counts are 38 and 38, with internal model requests unknown. Cases 1-9 are
+NOT-RUN under these new inputs. The result's overall INCOMPLETE reflects that
+partial coverage; the selected segment itself is 3 PASS / 4 FAIL / 0 INCOMPLETE /
+0 NOT-RUN. The old 0.10.1 view remains Case 1 FAIL, Cases 2-9 PASS, Cases 10-11
+INCOMPLETE and Cases 12-16 NOT-RUN under their original implementations/inputs.
+The views are not a combined sixteen-case acceptance run.
+
+Validation before execution: six focused segment regressions PASS; complete
+no-model discovery 541 run, 539 passed, 2 existing skips, no failures/errors;
+publication and distribution PASS. All sixteen actual written response schemas
+and generated prompt bindings passed preflight. An external preflight harness
+initially omitted the existing final newline in its request-suffix assertion;
+the harness assertion was corrected without changing the input or product.
+The bounded delegated test work and main-agent review are not a new full
+independent approval. Runtime, canonical Skills, bundle and product version did
+not change, so no bundle was rebuilt. PR remains Draft, Issue #117 remains open,
+and FCR-001/003/004 remain OPEN with FCR-002 STILL_OPEN.
+
+
+The first full discovery after adding the real result ran 541 tests and failed
+`test_seven_historical_attempts_keep_exact_original_bytes_and_protocols`: its
+current-result assertion still applied the old `20 + new` formula (27 versus
+38). The production validator and new segment ledger already used `31 + new`.
+The test now verifies the exact stopped assessment result (11 segment attempts,
+31 lifetime attempts), preserves the earlier 13/20 history checks, and derives
+the new cumulative count from that immutable stopped result plus only Cases
+10-16. It also checks the empty new-input prefix and the 7/38 limits. No result,
+scoring rule, observer implementation or protocol was changed by this test fix;
+the actual observation remains bound to implementation `12720d103a0b46b6223ad2a41b562c1ec2935b87`.
+
+
+After that test-only correction, the targeted historical-count regression passed
+and full discovery again completed 541 tests: 539 passed, 2 existing skips,
+0 failures and 0 errors. Publication, distribution and documentation validation
+passed on the evidence candidate. The failed initial result-stage discovery is
+retained above and is not a host-observation failure.

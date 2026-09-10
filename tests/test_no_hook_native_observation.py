@@ -2374,7 +2374,21 @@ class NativeObservationTests(unittest.TestCase):
             prior = json.loads(prior_bytes)
             self.assertEqual(prior["priorResultSha256s"], native.READ_PRIOR_RESULTS)
             self.assertEqual((prior["attemptCount"], prior["cumulativeAttemptCount"]), (13, 20))
-            self.assertEqual(result["cumulativeAttemptCount"], 20 + result["attemptCount"])
+            if result.get("executionSegment", {}).get("kind") == "material-delivery":
+                stopped_binding = history["assessmentRemainder"]
+                self.assertEqual(stopped_binding, native.ASSESSMENT_REMAINDER_BINDING)
+                stopped_bytes = (ROOT / stopped_binding["path"]).read_bytes()
+                self.assertEqual(hashlib.sha256(stopped_bytes).hexdigest(), stopped_binding["sha256"])
+                stopped = json.loads(stopped_bytes)
+                self.assertEqual((stopped["attemptCount"], stopped["cumulativeAttemptCount"]), (11, 31))
+                self.assertEqual(result["executionSegment"]["priorAttemptCount"], stopped["cumulativeAttemptCount"])
+                self.assertEqual([case["status"] for case in result["caseResults"][:9]], ["NOT-RUN"] * 9)
+                self.assertEqual(result["attemptCount"], sum(case["attemptCount"] for case in result["caseResults"][9:]))
+                self.assertEqual(result["cumulativeAttemptCount"], stopped["cumulativeAttemptCount"] + result["attemptCount"])
+                self.assertLessEqual(result["attemptCount"], 7)
+                self.assertLessEqual(result["cumulativeAttemptCount"], 38)
+            else:
+                self.assertEqual(result["cumulativeAttemptCount"], 20 + result["attemptCount"])
             self.assertEqual(result["runMode"], "actual")
             self.assertEqual(history["current"], {"codexObservation": result["status"].lower(),
                 "hostClaim": result["hostClaim"], "credentialUsed": result["cliLaunchCount"] > 0,
