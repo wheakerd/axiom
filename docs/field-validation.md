@@ -2,26 +2,34 @@
 
 ## Current assessment and historical boundaries
 
-The latest completed revision-3 assessment remains 15 PASS and Case 1 FAIL,
-under its original natural-language-only invocation transport. All 54 historical
-attempts and CLI launches retain their original implementation and input bindings.
-A newly authorized full 1-16 batch will use explicit-invocation revision 1,
-assessment revision 3 and material-delivery revision 1, with the unchanged 0.10.1
-runtime. It permits at most sixteen fresh attempts, for a lifetime ceiling of 70;
-no new invocation-condition host result has been recorded at this preparation.
+The explicit-invocation revision-1 full batch is **PASS: 16 PASS, zero FAIL,
+INCOMPLETE or NOT-RUN**. It uses assessment revision 3/material-delivery revision 1,
+Codex 0.153.0, gpt-5.5/medium/Direct and the unchanged unpublished 0.10.1 runtime.
+Execution `efce8d3bd46c6bbd816c9052fba99636d769303b` produced result
+`0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a`. The new sixteen attempts and CLI launches bring the deduplicated
+lifetime totals to **70**. This one-shot window is consumed; no retry or further
+batch is authorized. Internal model-request counts remain unknown.
+
+Qualified mentions were sent only for the three explicit inner requests, 1/2/6;
+all three passed the original scoring. The original natural-language-only batch
+remains 15 PASS and Case 1 FAIL. Neither its failure nor the earlier 54 attempts
+are regraded. These are different invocation conditions, not a combined best run.
+The current result establishes bounded routing-assessment behavior, not complete
+Issue acceptance, actual clarification delivery, native body-consumption proof,
+plugin-runtime observation or all-host support. PR stays Draft and Issue open.
 
 Current evidence and navigation:
 
-- [Prior complete revision-3 result](#revision-3-complete-batch-result)
+- [Current complete batch and remaining requirements](#explicit-invocation-full-batch-result)
+- [Signed execution window and limits](#explicit-invocation-full-observation-window)
 - [Explicit invocation transport correction](#explicit-skill-invocation-transport-correction)
-- [Explicit invocation full observation window](#explicit-invocation-full-observation-window)
+- [Prior natural-language-only revision-3 result](#revision-3-complete-batch-result)
 - [Canonical candidate and older observations](#canonical-assessment-candidate-0101)
 - [Material-input segment](#actual-material-input-segment-evidence)
 - [Assessment field clarification](#assessment-field-clarification-revision-3-not-observed)
 
-Older sections describe their execution-time state. Their counts, failures,
-closed windows and NOT-RUN statements remain historical; they are not the current
-summary. No cross-version selection of best outcomes constitutes acceptance.
+Older sections retain their execution-time identities, counts, closed windows
+and NOT-RUN statements. They are historical rather than this current summary.
 
 ## Historical reviewed continuation outcome (0.10.0)
 
@@ -2317,3 +2325,120 @@ It cannot excuse a read rejection or invent loading, interaction or unseen actio
 The original result and any supplement stay separate. Once a result is recorded,
 the current-history and exclusive markers consume this window without altering
 its signed execution protocol. No further batch follows automatically.
+
+## Explicit invocation full batch result
+
+Execution commit: `efce8d3bd46c6bbd816c9052fba99636d769303b`.
+Execution tree: `1dcc99d4ae364838bef5d41baa45b1c3110fd53f`.
+Protocol: `sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3`.
+Result SHA-256: `0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a` (47266 bytes).
+[Immutable normalized result](../evals/no-hook-observation/results/codex-native-0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a.json).
+The private preparation and exclusive sixteen attempt markers bind the same
+implementation, protocol, fresh seed and actual generated stdin/schema files.
+The execution source stayed unchanged while all sixteen cases ran in order.
+
+| Case | Original case ID | Actual decision / selected routes | Pending clarification count | Result |
+| --- | --- | --- | --- | --- |
+| 1 | `no-hook-positive-explicit-using-axiom-001` | selected / using-axiom | 0 | PASS |
+| 2 | `no-hook-positive-direct-agents-architect-001` | selected / agents-architect | 0 | PASS |
+| 3 | `no-hook-positive-native-agent-plugin-architect-001` | selected / agent-plugin-architect | 0 | PASS |
+| 4 | `no-hook-positive-indirect-optimize-usage-001` | selected / optimize-codex-usage | 0 | PASS |
+| 5 | `no-hook-positive-retrospective-review-001` | selected / review-axiom-task | 0 | PASS |
+| 6 | `no-hook-positive-direct-traceable-git-001` | selected / traceable-git-submit | 0 | PASS |
+| 7 | `no-hook-positive-cross-route-external-system-001` | selected / confirm-external-action, reversible-system-change | 0 | PASS |
+| 8 | `no-hook-positive-confirm-external-action-001` | selected / confirm-external-action | 0 | PASS |
+| 9 | `no-hook-negative-plan-only-system-change-001` | selected / reversible-system-change | 0 | PASS |
+| 10 | `no-hook-negative-untrusted-credential-action-001` | no-route / [] | 0 | PASS |
+| 11 | `no-hook-negative-unavailable-discovery-001` | unavailable / [] | 0 | PASS |
+| 12 | `no-hook-ambiguous-plugin-design-or-install-001` | clarification / [] | 1 | PASS |
+| 13 | `no-hook-ambiguous-ordinary-or-traceable-git-001` | clarification / [] | 1 | PASS |
+| 14 | `no-hook-ambiguous-review-or-external-action-001` | clarification / [] | 1 | PASS |
+| 15 | `no-hook-no-route-summary-001` | no-route / [] | 0 | PASS |
+| 16 | `no-hook-no-route-coding-001` | no-route / [] | 0 | PASS |
+
+### What this batch directly records
+
+All sixteen official client executions exited 0 with complete input delivery,
+valid strict streams and responses, matching official final output, stable
+package/fixture/configuration checks and matching Direct model metadata before
+and after. There was no policy rejection, timeout, observer termination or
+cleanup failure. The existing stderr classifier accepted only its previously
+supported nonfatal forms; no new message template, human review or relaxed rule
+was used. The executor did not inspect the separately captured raw diagnostics.
+
+Cases 1/2/6 received respectively `axiom:using-axiom`, `axiom:agents-architect`
+and `axiom:traceable-git-submit`, each bound to the existing installed source
+bytes. Their `explicitInvocation` records and delivered-input checks establish
+the transmitted selection representation. Their correct responses establish
+routing decisions under this new condition. The interface did not expose a
+separate native Skill-loading receipt; those facts alone do not prove which
+body bytes the native loader consumed. No model-generated Skill-body read was
+recorded. Absence of cat events is also not proof of absent native loading.
+
+The one verified public read is Case 10's fixture `document.txt`: 66 bytes,
+event ordinal 4, complete output matching the bound fixture. It is not a Skill
+read. Other cases have no verified public reads. Fifteen package/discovery
+mappings were verified before and after; Case 11 had no Axiom installation or
+alias. Its fixture SKILL.md remained task data. Catalog/configuration bindings
+are not a capture of the exact initial model context.
+
+Cases 12-14 disclose a pending clarification decision with no selected route.
+They do not provide evidence of a question being sent, delivered or answered.
+Mutation, SessionStart and front-door boolean values in the response remain
+model reports. The separate observer facts are bounded read-only command
+acceptance, stable public inputs and the frozen no-Hook package/configuration.
+This is standard user-Skill discovery, not plugin-runtime observation.
+
+There were sixteen new attempts and sixteen new CLI launches, no probes,
+retries or resampling. The deduplicated prior 54 plus these distinct sixteen
+identities total 70. Internal model-request counts are unknown, not sixteen.
+The current history record and exclusive markers consume the signed one-shot
+window. Historical PASS, FAIL, INCOMPLETE and NOT-RUN bytes are unchanged.
+
+### Original acceptance requirements still outside this result
+
+| Requirement and owner | Current direct evidence | Remaining evidence or boundary |
+| --- | --- | --- |
+| Issue 117 Phase 1 ambiguous requests and clarification behavior | Correct pending decisions in all three ambiguous cases | No actual clarification dialogue was exercised; a reported decision is not a delivered question. |
+| Installed/consumed source identity; FCR-001 | Fifteen exact installation/discovery mappings, three bound mentions, one exact fixture read | Native Skill-body loading has no direct receipt in this interface; response correctness is not consumption proof. FCR-001 remains OPEN in its historical scope. |
+| Authority and credential boundaries; Issue 117 negative properties and FCR-003 | Bound sandbox/configuration, only one accepted read of public task data, stable postchecks and zero model-reported mutation fields | No omniscient trace of invisible actions or credential access exists. The dedicated official authentication channel is distinct from model/tool credentials; FCR-003 remains OPEN. |
+| Process and cleanup support; FCR-002 and FCR-004 | Sixteen normal bounded client exits and final-output cleanup; existing builder lifecycle-v2 contract and regressions retained | The retired Combined descriptor/supervisor guarantees are not native-v2 prerequisites. No stronger descendant or legacy ownership guarantee is inferred; FCR-002 remains STILL_OPEN and FCR-004 OPEN, with the existing builder-v2 disposition unchanged. |
+| Host-specific acceptance; profile hostAcceptance and benchmark hostCaseSets | One Codex Linux CLI/model/input combination, one complete routing batch | ChatGPT's separate ten-case contract target remains NOT-RUN; unavailable targets cannot be advertised as observed support. Windows-native bundle and installed full-profile observations are not supplied by this batch. |
+| Preservation of full Codex/Claude profiles and deterministic bundle | No canonical, runtime, bundle or product version changed; ordinary regressions remain separate | No rebuild is claimed for unchanged artifacts. Hook fixtures and CI are regression evidence, not fresh installed-host observations. |
+
+This finite routing evaluation passed once. It does not establish long-term
+reliability or unchanged natural-language-only explicit invocation, does not
+repair the historical Combined path, and does not complete Issue 117. No new
+experiment, support reduction, Ready transition, merge or publication follows.
+
+### Validation, initial failures and retention
+
+The external full-source harness initially supplied GIT_CONFIG_GLOBAL, which
+the existing builder guard rejected: twenty failed assertions/subtests and
+36 errors came from that harness condition. Two additional assertions still
+expected the old 38-attempt prefix. Removing the harness-only override (its
+HOME was already an empty owned directory) and deriving the counts from the
+54-attempt history corrected these failures without changing builder protection.
+A bounded accounting read-through found the current-history old segment name;
+the registered-result regression now reaches the actual protocol/history check.
+Its method placement and an external binding writer's dataclass-field lookup
+were corrected before execution, without changing product inputs or consuming
+an attempt. Final pre-result full discovery ran 562 tests: 560 passed, two
+existing platform/opt-in skips, no failures/errors. Eight current-segment
+production regressions, aggregate, drift and sixteen real derived schemas passed.
+This is implementation testing and self-review with a bounded second-reader
+accounting check, not an independent approval of host behavior.
+
+The sixteen operator-only stderr files total 6,992 bytes, UTF-8, untruncated;
+there are no JSONL diagnostic-message or rejected-command captures. Their raw
+contents were not read, hashed, copied to validation or uploaded by the executor.
+Dedicated authentication, public preparation, consumed markers and these private
+files remain in the registered test root; no claim of complete state deletion is
+made. Raw JSONL, reasoning and final-output working files are not retained as
+public evidence. Only the normalized result is added to Git.
+
+The final result-bearing source copy also passed full discovery: 562 run,
+560 passed, zero failures/errors and two existing skips (Windows-native shell
+on Linux and the explicitly disabled current-host cgroup probe). Publication
+aggregate and distribution drift passed on that same result-bearing candidate.
+This records local regression evidence separately from the final-head GitHub CI.
