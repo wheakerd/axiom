@@ -1,5 +1,13 @@
 # Routing Evaluations
 
+## Read diagnostic regression scope
+
+Native diagnostic revision 9 preserves read rejection codes and event positions
+through the production receiver, parser, and result validator. Tests use real
+ordinary reads of public fixtures; they are not host observations. The seventh
+historical predicate remains unknown and actual execution stays closed. See
+[the contract and limits](../docs/field-validation.md#read-rejection-preservation-diagnostic-revision-9).
+
 ## Seventh attempt and subsequent discovery-path correction
 
 Signed execution `795b70d9bed5be841b03c58a3de31a38d708398b`, tree

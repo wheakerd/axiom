@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "3ebeb1bef20847dc415172b67e761a7f621649523a80e0cc3e93780fd2304e02"
+      "sha256": "5f6bdb4f2da7d478f751d4eeb06220dbd02eaf2b58d89fdb228baf6160e19d29"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "41c84e4281d4e2fd960165a40dc4074e438d60e68b2bf598fe86ac535ceb1bb9"
+    "sha256": "6a00ab7a89873de58cb3b7ccce426dc2635171552f4a1153b9334578b35b2c3a"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,7 +134,7 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 8,
+  "diagnosticRevision": 9,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
@@ -203,6 +203,23 @@
       "decision": "no automatic approval from metadata; assess every diagnostic against frozen upstream and required conditions; unresolved or unsafe content remains INCOMPLETE",
       "resume": "only previously NOT-RUN cases after supplement confirms no effect on required premises and non-model input/config/model/auth/ledger checks still pass; preserve batch and attempts; no Case 1 restart or budget refund",
       "limits": "route agreement does not prove Skill-body consumption or invisible actions; missing observations cannot be supplied by human classification"
+    },
+    "readRejections": {
+      "codes": [
+        "event-shape",
+        "read-command-syntax",
+        "read-target-unbound",
+        "read-lifecycle",
+        "read-output-mismatch",
+        "read-prefix-mismatch",
+        "event-unsupported",
+        "item-unsupported",
+        "item-lifecycle"
+      ],
+      "location": "first rejecting predicate and one-based event ordinal; shared receiver/parser/result; later framing, missing terminal or cleanup cannot replace it",
+      "retention": "closed codes only; no command, target path or output; unknown target is not resolved or read",
+      "sedLines": "LF-delimited, preserving CR and final unterminated bytes",
+      "history": "seven original results remain immutable; seventh exact read predicate is unknown; execution window stays closed"
     }
   },
   "responseTransport": {
@@ -242,5 +259,5 @@
     "lastResultSha256": "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
     "reason": "seventh attempt read-contract rejection; alias correction has no host revalidation"
   },
-  "protocolDigest": "sha256:76af2d4a1495e985931786a5d81ca5adceffc479927a807d292ee53e82be9a3c"
+  "protocolDigest": "sha256:26c73b020b7eb6acc4e11c4f1b3cc2d14d008c4e7b4bb273f17bb8c407e92f74"
 }

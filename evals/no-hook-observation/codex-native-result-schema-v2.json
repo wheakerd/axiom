@@ -537,7 +537,8 @@
                   "unknown-event",
                   "read-contract-rejected",
                   "unsupported-item",
-                  "event-shape-rejected"
+                  "event-shape-rejected",
+                  "item-lifecycle-rejected"
                 ]
               },
               "diagnosticItemCount": {
@@ -589,7 +590,15 @@
                   "final-message-invalid-json",
                   "final-message-not-object",
                   "final-output-unavailable",
-                  "final-output-mismatch"
+                  "final-output-mismatch",
+                  "read-command-syntax",
+                  "read-target-unbound",
+                  "read-lifecycle",
+                  "read-output-mismatch",
+                  "read-prefix-mismatch",
+                  "event-unsupported",
+                  "item-unsupported",
+                  "item-lifecycle"
                 ]
               },
               "streamEventOrdinal": {
@@ -820,7 +829,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 8
+      "const": 9
     },
     "attemptCount": {
       "type": "integer",

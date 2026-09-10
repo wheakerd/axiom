@@ -1,5 +1,32 @@
 # Field Validation
 
+## Read rejection preservation (diagnostic revision 9)
+
+The shared production reader now reports the actual rejecting predicate through
+`inspect_native_event`, the streaming receiver, strict JSONL parsing, and the
+normalized result validator. `streamAssertion` and `streamEventOrdinal` retain
+the first code and its one-based event location. `event-shape` means malformed
+fields or types; unsupported events/items and content lifecycle have separate
+codes. Reads distinguish `read-command-syntax`, `read-target-unbound`,
+`read-lifecycle`, `read-output-mismatch`, and `read-prefix-mismatch`.
+Later missing terminal, framing, or cleanup failures cannot replace that cause.
+This is the first assertion actually triggered, not a reconstruction of the
+earliest invalid event in a stream containing several different defects.
+No command, output, or unknown target path is retained or resolved.
+
+Ordinary no-model regressions use actual cat, sed, and supported shell-wrapped
+reads of public fixtures through discovery/package binding, reception, parsing,
+and result validation. Sed expectations count LF lines and preserve bare CR and
+unterminated final bytes. The finite grammar and negative cases remain strict.
+These tests do not require each canonical case to issue a particular command,
+and simulated results remain INCOMPLETE without a host claim.
+
+Revision 9 changes diagnosis and the sed expectation only; seven historical
+results retain their original bytes and bindings. The seventh rejection's exact
+predicate remains unknown. The execution window stays closed, with no new
+attempt, authentication operation, or host revalidation. Builder, bundle,
+runtime, Phase 1 inputs, and the release-status reason are unchanged.
+
 ## Seventh attempt and subsequent discovery-path correction
 
 Signed execution `795b70d9bed5be841b03c58a3de31a38d708398b`, tree

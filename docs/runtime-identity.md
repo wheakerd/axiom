@@ -1,5 +1,14 @@
 # Runtime And Repository Identity
 
+## Read diagnostic identity update
+
+Native diagnostic revision 9 binds the reader, closed rejection vocabulary, and
+result schema to a new protocol digest. Derived inputs use that digest; the
+seven historical results keep their original identities. The execution window
+and budgets are unchanged and closed. See [read rejection preservation](field-validation.md#read-rejection-preservation-diagnostic-revision-9).
+This repository-policy correction does not alter runtime, builder, or bundle
+identity and remains part of the unmerged revision 7.
+
 ## Seventh attempt and subsequent discovery-path correction
 
 Signed execution `795b70d9bed5be841b03c58a3de31a38d708398b`, tree

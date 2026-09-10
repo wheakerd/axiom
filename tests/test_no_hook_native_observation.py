@@ -7,6 +7,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -327,7 +328,7 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 8, "priorResultSha256s": [],
+        return {"schemaVersion": "2", "diagnosticRevision": 9, "priorResultSha256s": [],
                 "executionModel": {"model": "gpt-5.5", "reasoningEffort": "medium", "requiredToolMode": "direct"},
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
@@ -669,6 +670,15 @@ class NativeObservationTests(unittest.TestCase):
             return {**capture, "stdout": raw}
         return substituted
 
+    def _ordinary_public_read(self, argv, paths):
+        """Execute only a test-selected read of this fixture's public files."""
+        capture = subprocess.run(argv, cwd=paths["workspace"],
+            env=native.case_environment(paths), stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5, check=False)
+        self.assertEqual(capture.returncode, 0, capture.stderr)
+        self.assertEqual(capture.stderr, b"")
+        return capture.stdout
+
     def test_discovery_alias_cat_and_sed_accept_exact_bound_skill_bytes(self):
         parent = self.parent
         for name in ("cat", "sed"):
@@ -681,10 +691,11 @@ class NativeObservationTests(unittest.TestCase):
                 alias = paths["discovery"] / "using-axiom/SKILL.md"
                 source = canonical.read_bytes()
                 if name == "cat":
-                    command, expected = "cat " + str(alias), source
+                    argv = ["cat", str(alias)]
                 else:
-                    command = "sed -n '1,6p' " + str(alias)
-                    expected = b"".join(source.splitlines(keepends=True)[:6])
+                    argv = ["sed", "-n", "1,6p", str(alias)]
+                command = shlex.join(argv)
+                expected = self._ordinary_public_read(argv, paths)
                 fixtures = native._input(ROOT, self.protocol, "fixtureMatrix")
                 readable = native._readable(paths, native._definition(fixtures, 1), True)
                 # This invocation is also a regression against the old reader:
@@ -722,6 +733,222 @@ class NativeObservationTests(unittest.TestCase):
                 "aggregated_output": "", "exit_code": None, "status": "in_progress"}}).rstrip(b"\n"),
                 readable, paths["workspace"])
         self.assertEqual(calls, [])
+
+    def test_all_installed_read_aliases_and_real_shell_forms_reach_validated_results(self):
+        run, runner, calls = self._prepared_runner()
+        fixtures = native._input(ROOT, self.protocol, "fixtureMatrix")
+        checked = []
+        def ordinary_reads(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            paths = native._case_paths(run, ordinal)
+            readable = native._readable(paths, native._definition(fixtures, ordinal), ordinal != 11)
+            if ordinal == 11:
+                self.assertFalse(paths["discovery"].exists())
+                self.assertFalse(any(str(paths["discovery"]) in path for path in readable))
+                return runner(argv, **kwargs)
+            for path in (paths["package"] / "skills").rglob("*"):
+                if path.is_file():
+                    alias = paths["discovery"] / path.relative_to(paths["package"] / "skills")
+                    self.assertEqual(readable[str(alias)], path.read_bytes())
+                    self.assertEqual(readable[str(path)], path.read_bytes())
+            skill = ((paths["package"] / "skills") if ordinal % 2 else paths["discovery"]) / "using-axiom/SKILL.md"
+            forms = (["cat", str(skill)], ["/usr/bin/cat", "--", str(skill)],
+                     ["sed", "-n", "1,6p", str(skill)],
+                     ["/bin/sh", "-c", shlex.join(["cat", str(skill)])],
+                     ["/bin/sh", "-lc", shlex.join(["sed", "-n", "2,7p", str(skill)])])
+            read_argv = forms[(ordinal - 1) % len(forms)]
+            actual = self._ordinary_public_read(read_argv, paths)
+            command = shlex.join(read_argv)
+            self.assertEqual(native._read_command(command, readable, paths["workspace"]), actual)
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            document = json.loads(Path(argv[argv.index("--output-last-message") + 1]).read_bytes())
+            records = [json.loads(line) for line in stream(document, command, actual.decode("utf-8")).splitlines()]
+            records[2]["item"]["aggregated_output"] = actual.decode("utf-8")[:5]
+            update = copy.deepcopy(records[2])
+            update["type"] = "item.updated"
+            update["item"]["aggregated_output"] = actual.decode("utf-8")[:11]
+            records.insert(3, update)
+            raw = b"".join(event(record) for record in records)
+            facts = native._diagnostics()
+            for line in raw.splitlines():
+                native.inspect_native_event(line, readable, paths["workspace"])
+                native._observe_line(line, readable, paths["workspace"], facts)
+            parsed, count = native.parse_native_jsonl(raw, self.taxonomy, readable, paths["workspace"])
+            self.assertEqual((parsed.terminal_type, count), ("turn.completed", 1))
+            self.assertEqual(facts["streamAssertion"], "none")
+            self.assertEqual(facts["eventCount"], 7)
+            checked.append(ordinal)
+            if kwargs.get("line_callback"):
+                for line in raw.splitlines():
+                    kwargs["line_callback"](line)
+            return {**capture, "stdout": raw}
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True, process_runner=ordinary_reads)
+        self.assertEqual(checked, [ordinal for ordinal in range(1, 17) if ordinal != 11])
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual([case["readonlyCommandCount"] for case in result["caseResults"]], [1] * 10 + [0] + [1] * 5)
+        self.assertEqual((result["runMode"], result["status"], result["hostClaim"]), ("simulated", "INCOMPLETE", False))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_real_sed_uses_lf_lines_and_preserves_cr_vertical_tab_and_final_bytes(self):
+        paths = native._case_paths(self.parent, 11)
+        paths["workspace"].mkdir(parents=True)
+        source = b"first\r\nsecond\vstill-second\nthird\rfourth\nlast"
+        (paths["workspace"] / "public-lines.txt").write_bytes(source)
+        definition = {"files": [{"path": "public-lines.txt", "contentUtf8": source.decode("ascii")}]}
+        readable = native._readable(paths, definition, False)
+        for selection, independently_expected in (("1,1p", b"first\r\n"),
+                ("2,2p", b"second\vstill-second\n"), ("3,4p", b"third\rfourth\nlast")):
+            with self.subTest(selection=selection):
+                argv = ["sed", "-n", selection, "public-lines.txt"]
+                actual = self._ordinary_public_read(argv, paths)
+                self.assertEqual(actual, independently_expected)
+                command = shlex.join(argv)
+                self.assertEqual(native._read_command(command, readable, paths["workspace"]), actual)
+                raw = stream(response(self.cases[10], "ocb1_" + "0" * 64), command, actual.decode("ascii"))
+                parsed, count = native.parse_native_jsonl(raw, self.taxonomy, readable, paths["workspace"])
+                self.assertEqual((parsed.terminal_type, count), ("turn.completed", 1))
+
+    @staticmethod
+    def _read_faults():
+        """Only event mutations: none of these command strings are executed."""
+        return (
+            ("extra-field", 2, "event-shape", lambda item: item.__setitem__("unexpected", "public fixture")),
+            ("missing-command", 2, "event-shape", lambda item: item.pop("command")),
+            ("command-type", 2, "event-shape", lambda item: item.__setitem__("command", [])),
+            ("output-type", 2, "event-shape", lambda item: item.__setitem__("aggregated_output", [])),
+            ("exit-type", 3, "event-shape", lambda item: item.__setitem__("exit_code", False)),
+            ("status-type", 2, "event-shape", lambda item: item.__setitem__("status", [])),
+            ("syntax", 2, "read-command-syntax", lambda item: item.__setitem__("command", "cat -n public.txt")),
+            ("shell-syntax", 2, "read-command-syntax", lambda item: item.__setitem__("command", "cat public.txt; false")),
+            ("unclosed-quote", 2, "read-command-syntax", lambda item: item.__setitem__("command", "cat 'public.txt")),
+            ("unbound", 2, "read-target-unbound", lambda item: item.__setitem__("command", "cat unbound-public-file")),
+            ("completed-exit", 3, "read-lifecycle", lambda item: item.__setitem__("exit_code", 1)),
+            ("started-status", 2, "read-lifecycle", lambda item: item.update(status="completed", exit_code=0)),
+            ("output", 3, "read-output-mismatch", lambda item: item.__setitem__("aggregated_output", "PUBLIC-WRONG-OUTPUT")),
+            ("prefix", 2, "read-prefix-mismatch", lambda item: item.__setitem__("aggregated_output", "PUBLIC-WRONG-PREFIX")),
+        )
+
+    def test_read_rejection_codes_and_ordinals_agree_across_inspect_receiver_and_parser(self):
+        run, _, calls = self._prepared_runner()
+        paths = native._case_paths(run, 1)
+        definition = native._definition(native._input(ROOT, self.protocol, "fixtureMatrix"), 1)
+        readable = native._readable(paths, definition, True)
+        argv = ["cat", str(paths["discovery"] / "using-axiom/SKILL.md")]
+        actual = self._ordinary_public_read(argv, paths)
+        template = [json.loads(line) for line in stream(response(self.cases[0], "ocb1_" + "0" * 64),
+            shlex.join(argv), actual.decode("utf-8")).splitlines()]
+        for name, index, code, alter in self._read_faults():
+            with self.subTest(name=name):
+                records = copy.deepcopy(template)
+                alter(records[index]["item"])
+                raw = event(records[index]).rstrip(b"\n")
+                with self.assertRaises(native.NativeObservationError) as caught:
+                    native.inspect_native_event(raw, readable, paths["workspace"])
+                self.assertEqual(getattr(caught.exception, "code", None), code)
+                self.assertNotIn("PUBLIC-WRONG", str(caught.exception))
+                facts = native._diagnostics()
+                for record in records[:index]:
+                    native._observe_line(event(record).rstrip(b"\n"), readable, paths["workspace"], facts)
+                with self.assertRaises(native.NativeDiagnosticError) as captured:
+                    native._observe_line(raw, readable, paths["workspace"], facts)
+                self.assertEqual(captured.exception.facts["streamAssertion"], code)
+                self.assertEqual(captured.exception.facts["streamEventOrdinal"], index + 1)
+                self.assertEqual(captured.exception.facts["policyReason"],
+                                 "event-shape-rejected" if code == "event-shape" else "read-contract-rejected")
+                with self.assertRaises(native.NativeStreamError) as parsed:
+                    native.parse_native_jsonl(b"".join(event(record) for record in records),
+                                              self.taxonomy, readable, paths["workspace"])
+                self.assertEqual((parsed.exception.code, parsed.exception.event_ordinal), (code, index + 1))
+        self.assertEqual(calls, [])
+
+    def test_read_rejection_production_capture_keeps_specific_assertion_and_stops_batch(self):
+        parent = self.parent
+        for name, index, code, alter in self._read_faults():
+            with self.subTest(name=name):
+                self.parent = parent / name
+                self.parent.mkdir()
+                def change(records):
+                    paths = native._case_paths(self.parent / "run", 1)
+                    actual = self._ordinary_public_read(shlex.split(records[2]["item"]["command"]), paths)
+                    records[3]["item"]["aggregated_output"] = actual.decode("utf-8")
+                    alter(records[index]["item"])
+                result = self._diagnostic_stream_runner([], malformed=change)
+                first = result["caseResults"][0]
+                diagnostics = first["executionDiagnostics"]
+                self.assertEqual((first["status"], first["diagnostic"]), ("INCOMPLETE", "policy-rejected"))
+                self.assertEqual((diagnostics["streamAssertion"], diagnostics["streamEventOrdinal"]), (code, index + 1))
+                self.assertEqual(diagnostics["policyReason"],
+                                 "event-shape-rejected" if code == "event-shape" else "read-contract-rejected")
+                self.assertEqual((result["attemptCount"], result["cliLaunchCount"]), (1, 1))
+                self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertNotIn("PUBLIC-WRONG", json.dumps(result))
+                self.assertFalse(result["hostClaim"])
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_read_assertion_survives_cleanup_failure_and_later_missing_terminal(self):
+        original = native._close_process
+        def cleanup(process, **kwargs):
+            original(process, **kwargs)
+            raise OSError("PUBLIC-CLEANUP-DETAIL")
+        def truncated_rejection(records):
+            records[2]["item"]["command"] = "cat unbound-public-file"
+            return records[:3]
+        with patch.object(native, "_close_process", side_effect=cleanup):
+            result = self._diagnostic_stream_runner([], tail=truncated_rejection)
+        first = result["caseResults"][0]
+        diagnostics = first["executionDiagnostics"]
+        self.assertEqual(first["diagnostic"], "policy-rejected")
+        self.assertEqual((diagnostics["streamAssertion"], diagnostics["streamEventOrdinal"]), ("read-target-unbound", 3))
+        self.assertEqual(diagnostics["policyReason"], "read-contract-rejected")
+        self.assertTrue(diagnostics["cleanupFailed"])
+        self.assertFalse(diagnostics["finalOutputVerified"])
+        self.assertNotIn("PUBLIC-CLEANUP-DETAIL", json.dumps(result))
+        self.assertEqual([case["status"] for case in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_prior_failure_and_assertion_are_not_replaced_by_later_read_rejection(self):
+        facts = native._diagnostics()
+        facts.update(phase="stderr", category="unknown-stderr", streamAssertion="event-shape", streamEventOrdinal=1)
+        rejected = event({"type": "item.started", "item": {"id": "item_0", "type": "command_execution",
+            "command": "cat unbound-public-file", "aggregated_output": "", "exit_code": None, "status": "in_progress"}})
+        facts["eventCount"] = 4
+        with self.assertRaises(native.NativeDiagnosticError) as caught:
+            native._observe_line(rejected.rstrip(b"\n"), {}, self.parent, facts)
+        self.assertEqual((caught.exception.facts["phase"], caught.exception.facts["category"]), ("stderr", "unknown-stderr"))
+        self.assertEqual((caught.exception.facts["streamAssertion"], caught.exception.facts["streamEventOrdinal"]), ("event-shape", 1))
+
+    def test_unsupported_events_items_and_lifecycle_are_not_malformed_shapes(self):
+        prefix = [{"type": "thread.started", "thread_id": "019784a7-ec72-7000-8000-000000000001"},
+                  {"type": "turn.started"}]
+        cases = (
+            ({"type": "public.unknown"}, "event-unsupported", "unknown-event"),
+            ({"type": "item.completed", "item": {"id": "item_0", "type": "file_change"}},
+             "item-unsupported", "unsupported-item"),
+            ({"type": "item.started", "item": {"id": "item_0", "type": "agent_message", "text": "public fixture"}},
+             "item-lifecycle", "item-lifecycle-rejected"),
+            ({"type": ["item.completed"]}, "event-shape", "event-shape-rejected"),
+            ({"type": "item.completed", "item": []}, "event-shape", "event-shape-rejected"),
+        )
+        for record, code, policy in cases:
+            with self.subTest(code=code, record=record):
+                raw = event(record).rstrip(b"\n")
+                with self.assertRaises(native.NativeObservationError) as inspected:
+                    native.inspect_native_event(raw, {}, self.parent)
+                self.assertEqual(getattr(inspected.exception, "code", None), code)
+                facts = native._diagnostics()
+                for normal in prefix:
+                    native._observe_line(event(normal).rstrip(b"\n"), {}, self.parent, facts)
+                with self.assertRaises(native.NativeDiagnosticError) as captured:
+                    native._observe_line(raw, {}, self.parent, facts)
+                self.assertEqual((captured.exception.facts["streamAssertion"], captured.exception.facts["streamEventOrdinal"]), (code, 3))
+                self.assertEqual(captured.exception.facts["policyReason"], policy)
+                with self.assertRaises(native.NativeStreamError) as parsed:
+                    native.parse_native_jsonl(b"".join(event(entry) for entry in [*prefix, record]),
+                                              self.taxonomy, {}, self.parent)
+                self.assertEqual((parsed.exception.code, parsed.exception.event_ordinal), (code, 3))
 
     def test_readable_alias_registration_rejects_wrong_target_and_nonlink(self):
         parent = self.parent

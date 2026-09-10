@@ -71,6 +71,11 @@ SIXTH_PROTOCOL_DIGEST = "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01
 STDERR_PRIOR_RESULTS = [*MODEL_PRIOR_RESULTS, SIXTH_RESULT_SHA256]
 SEVENTH_RESULT_SHA256 = "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0"
 SEVENTH_PROTOCOL_DIGEST = "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2"
+READ_REJECTIONS = (
+    "event-shape", "read-command-syntax", "read-target-unbound", "read-lifecycle",
+    "read-output-mismatch", "read-prefix-mismatch",
+)
+EVENT_REJECTIONS = (*READ_REJECTIONS, "event-unsupported", "item-unsupported", "item-lifecycle")
 STREAM_ASSERTIONS = (
     "none", "framing-or-size", "event-count", "event-after-terminal", "event-shape",
     "thread-start-order", "turn-start-order", "terminal-active-items", "error-before-thread",
@@ -78,7 +83,27 @@ STREAM_ASSERTIONS = (
     "command-start-mismatch", "content-id-reused", "agent-message-size", "missing-terminal",
     "final-message-missing", "final-message-invalid-json", "final-message-not-object",
     "final-output-unavailable", "final-output-mismatch",
+    *EVENT_REJECTIONS[1:],
 )
+
+
+class NativeEventError(NativeObservationError):
+    """A closed event predicate, never host text or a raw exception."""
+
+    def __init__(self, code: str):
+        if code not in EVENT_REJECTIONS:
+            raise ValueError("invalid native event rejection")
+        self.code = code
+        super().__init__("native event assertion: " + code)
+
+
+class NativeReadError(NativeEventError):
+    """A read predicate failure without command, path, or output content."""
+
+    def __init__(self, code: str):
+        if code not in READ_REJECTIONS:
+            raise ValueError("invalid native read rejection")
+        super().__init__(code)
 
 
 class NativeStreamError(NativeObservationError):
@@ -108,6 +133,11 @@ def _diagnostics() -> dict[str, Any]:
 def _first_failure(facts: dict[str, Any], phase: str, category: str) -> None:
     if facts["category"] == "none":
         facts.update(phase=phase, category=category)
+
+
+def _first_assertion(facts: dict[str, Any], code: str, ordinal: int | None) -> None:
+    if facts["streamAssertion"] == "none":
+        facts.update(streamAssertion=code, streamEventOrdinal=ordinal)
 
 
 class NativeDiagnosticError(NativeObservationError):
@@ -493,11 +523,13 @@ def _protocol(root: Path) -> dict[str, Any]:
         "maxCaseLaunches": 16, "timeoutSeconds": 120,
         "stdoutBytes": 1048576, "stderrBytes": 262144,
     }, "native execution limits mismatch")
-    _require(document.get("diagnosticRevision") == 8 and document.get("followup") == {
+    _require(document.get("diagnosticRevision") == 9 and document.get("followup") == {
         "priorResultSha256s": STDERR_PRIOR_RESULTS, "priorAttempts": 6,
         "maximumCumulativeAttempts": 22, "maximumCaseOneAttempts": 7,
         "remainingCaseAttempts": 1,
     }, "native diagnostic migration or retry budget mismatch")
+    _require(document.get("diagnostics", {}).get("readRejections", {}).get("codes") == list(EVENT_REJECTIONS),
+             "native read rejection vocabulary mismatch")
     _require(document.get("responseTransport") == {
         "revision": 1, "stringConstants": "explicit-type-and-singleton-enum",
         "uniqueRoutes": "local-strict-validation", "annotations": "not-transmitted",
@@ -903,7 +935,8 @@ def bounded_process(argv: Sequence[str], *, cwd: Path, env: Mapping[str, str],
                         except NativeDiagnosticError as error:
                             _first_failure(facts, error.facts["phase"], error.facts["category"])
                             for field in ("eventCount", "eventTypes", "itemTypes", "policyReason",
-                                          "diagnosticItemCount", "preTurnDiagnosticCount", "hostDiagnosticClasses"):
+                                          "diagnosticItemCount", "preTurnDiagnosticCount", "hostDiagnosticClasses",
+                                          "streamAssertion", "streamEventOrdinal"):
                                 facts[field] = error.facts[field]
                             raise
                         except Exception:
@@ -1469,32 +1502,50 @@ def login_commands(root: Path, run_root: Path) -> list[dict[str, Any]]:
 
 def _read_command(command: str, readable: Mapping[str, bytes], cwd: Path) -> bytes:
     """Recognize a finite source-visible read grammar, with exact output bytes."""
-    words = shlex.split(command)
-    if len(words) == 3 and Path(words[0]).name in {"bash", "sh"} and words[1] in {"-c", "-lc"}:
-        words = shlex.split(words[2])
-    _require(bool(words), "empty shell action")
-    _require(not any(char in " ".join(words) for char in "\n\r;&|<>`$"), "unsupported shell grammar")
+    if type(command) is not str:
+        raise NativeReadError("event-shape")
+    try:
+        words = shlex.split(command)
+        if len(words) == 3 and Path(words[0]).name in {"bash", "sh"} and words[1] in {"-c", "-lc"}:
+            words = shlex.split(words[2])
+    except ValueError:
+        raise NativeReadError("read-command-syntax") from None
+    def syntax(condition: bool) -> None:
+        if not condition:
+            raise NativeReadError("read-command-syntax")
+    syntax(bool(words))
+    syntax(not any(char in " ".join(words) for char in "\n\r;&|<>`$\0"))
     name = Path(words[0]).name
     if name == "cat" and len(words) in {2, 3}:
-        _require(len(words) == 2 or words[1] == "--", "unsupported cat option")
+        syntax(len(words) == 2 or words[1] == "--")
         selected = words[-1]
         bounds = None
     elif name == "sed" and len(words) == 4 and words[1] == "-n":
         import re
         match = re.fullmatch(r"([1-9][0-9]*),([1-9][0-9]*)p", words[2])
-        _require(match is not None, "unsupported sed range")
+        syntax(match is not None)
+        # Bound the decimal conversion too; arbitrary host text must not escape
+        # into a generic ValueError (or an unbounded integer conversion).
+        syntax(len(match[1]) <= 6 and len(match[2]) <= 6)
         bounds = (int(match[1]), int(match[2]))
-        _require(bounds[0] <= bounds[1] <= 100000, "invalid sed range")
+        syntax(bounds[0] <= bounds[1] <= 100000)
         selected = words[3]
     else:
-        raise NativeObservationError("unrecognized native shell action")
+        raise NativeReadError("read-command-syntax")
     path = Path(selected)
     if not path.is_absolute():
         path = cwd / path
-    _require(".." not in path.parts and str(path) in readable, "shell read is outside bound public files")
+    if ".." in path.parts or str(path) not in readable:
+        raise NativeReadError("read-target-unbound")
     data = readable[str(path)]
     if bounds is not None:
-        data = b"".join(data.splitlines(keepends=True)[bounds[0] - 1:bounds[1]])
+        # sed counts LF-delimited lines. A bare CR is content, and a final
+        # unterminated line must not acquire a newline in the expectation.
+        pieces = data.split(b"\n")
+        lines = [piece + b"\n" for piece in pieces[:-1]]
+        if pieces[-1]:
+            lines.append(pieces[-1])
+        data = b"".join(lines[bounds[0] - 1:bounds[1]])
     return data
 
 
@@ -1542,10 +1593,12 @@ def _diagnostic_outcome(facts: Mapping[str, Any]) -> str | None:
     return None
 
 
-def inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -> None:
+def _inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -> None:
     event = legacy._parse_json_line(raw)
     kind = event.get("type")
-    _require(type(kind) is str and kind in EVENT_TYPES[:-1], "unknown native event")
+    _require(type(kind) is str, "invalid native event type")
+    if kind not in EVENT_TYPES[:-1]:
+        raise NativeEventError("event-unsupported")
     if kind == "thread.started":
         legacy._exact_keys(event, {"type", "thread_id"}, kind)
         legacy._validate_thread_identifier(event["thread_id"])
@@ -1568,23 +1621,38 @@ def inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -
         item = event["item"]
         _require(type(item) is dict, "native item missing")
         item_type = item.get("type")
-        _require(type(item_type) is str and item_type in {
-            "reasoning", "agent_message", "command_execution", "error"}, "unsupported native action")
+        _require(type(item_type) is str, "invalid native item type")
+        if item_type not in {"reasoning", "agent_message", "command_execution", "error"}:
+            raise NativeEventError("item-unsupported")
         legacy._validate_item_payload(item, item_type)
         if item_type != "command_execution":
-            _require(kind == "item.completed", "content or diagnostic item must be completed")
+            if kind != "item.completed":
+                raise NativeEventError("item-lifecycle")
         else:
+            _require(type(item["status"]) is str and item["status"] in {
+                "in_progress", "completed", "failed", "declined"}, "invalid native read status")
             expected = _read_command(item["command"], readable, cwd)
             if kind == "item.completed":
-                _require(item["status"] == "completed" and item["exit_code"] == 0,
-                         "native read command did not complete")
-                _require(item["aggregated_output"].encode("utf-8") == expected,
-                         "native read output differs from bound source")
+                if item["status"] != "completed" or item["exit_code"] != 0:
+                    raise NativeReadError("read-lifecycle")
+                if item["aggregated_output"].encode("utf-8") != expected:
+                    raise NativeReadError("read-output-mismatch")
             else:
-                _require(item["status"] == "in_progress" and item["exit_code"] is None,
-                         "native read lifecycle state mismatch")
-                _require(expected.startswith(item["aggregated_output"].encode("utf-8")),
-                         "native partial read output differs from bound source")
+                if item["status"] != "in_progress" or item["exit_code"] is not None:
+                    raise NativeReadError("read-lifecycle")
+                if not expected.startswith(item["aggregated_output"].encode("utf-8")):
+                    raise NativeReadError("read-prefix-mismatch")
+
+
+def inspect_native_event(raw: bytes, readable: Mapping[str, bytes], cwd: Path) -> None:
+    try:
+        _inspect_native_event(raw, readable, cwd)
+    except NativeEventError:
+        raise
+    except (ValueError, KeyError, TypeError, NativeObservationError):
+        # Only actual field/type/shape failures reach this conversion. Read
+        # predicates carry their own code before either consumer sees them.
+        raise NativeReadError("event-shape") from None
 
 
 def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: dict[str, Any]) -> None:
@@ -1592,6 +1660,7 @@ def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: d
     try:
         event = legacy._parse_json_line(raw)
     except (ValueError, NativeObservationError):
+        _first_assertion(facts, "event-shape", facts["eventCount"])
         _first_failure(facts, "event", "event-invalid")
         raise NativeDiagnosticError(facts) from None
     kind = event.get("type")
@@ -1610,12 +1679,13 @@ def _observe_line(raw: bytes, readable: Mapping[str, bytes], cwd: Path, facts: d
         raise NativeDiagnosticError(facts)
     try:
         inspect_native_event(raw, readable, cwd)
-    except (ValueError, KeyError, TypeError, NativeObservationError):
+    except NativeEventError as error:
+        _first_assertion(facts, error.code, facts["eventCount"])
         if facts["policyReason"] == "none":
-            facts["policyReason"] = ("unknown-event" if retained == "unknown" else
-                "read-contract-rejected" if item_type == "command_execution" else
-                "unsupported-item" if type(kind) is str and kind.startswith("item.") and
-                (type(item_type) is not str or item_type not in supported_items) else "event-shape-rejected")
+            facts["policyReason"] = ("unknown-event" if error.code == "event-unsupported" else
+                "read-contract-rejected" if error.code in READ_REJECTIONS[1:] else
+                "unsupported-item" if error.code == "item-unsupported" else
+                "item-lifecycle-rejected" if error.code == "item-lifecycle" else "event-shape-rejected")
         _first_failure(facts, "event", "policy-rejected")
         raise NativeDiagnosticError(facts) from None
     classification = None
@@ -1666,6 +1736,8 @@ def parse_native_jsonl(data: bytes, taxonomy: Mapping[str, Any], readable: Mappi
         try:
             inspect_native_event(raw, readable, cwd)
             event = legacy._parse_json_line(raw)
+        except NativeEventError as error:
+            raise NativeStreamError(error.code, ordinal) from None
         except (ValueError, KeyError, TypeError, NativeObservationError):
             raise NativeStreamError("event-shape", ordinal) from None
         kind = event["type"]
@@ -1924,6 +1996,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                 summaries.stderr(ordinal, capture["stderr"])
             _require(record["cliLaunchCount"] == 1, "client runner did not report a created process")
             facts = _capture_facts(capture)
+            if events["streamAssertion"] != "none":
+                _first_assertion(facts, events["streamAssertion"], events["streamEventOrdinal"])
             facts.update(eventCount=events["eventCount"], eventTypes=events["eventTypes"],
                          itemTypes=events["itemTypes"], policyReason=events["policyReason"],
                          diagnosticItemCount=events["diagnosticItemCount"],
@@ -1973,8 +2047,11 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         except (OSError, ValueError, KeyError, NativeObservationError, subprocess.SubprocessError) as error:
             record["status"] = "INCOMPLETE"
             facts = dict(error.facts) if isinstance(error, NativeDiagnosticError) else dict(record["executionDiagnostics"])
+            if events["streamAssertion"] != "none":
+                _first_assertion(facts, events["streamAssertion"], events["streamEventOrdinal"])
+                record["evidenceExtraction"]["stream"] = "invalid"
             if isinstance(error, NativeStreamError):
-                facts.update(streamAssertion=error.code, streamEventOrdinal=error.event_ordinal)
+                _first_assertion(facts, error.code, error.event_ordinal)
                 if error.phase == "response":
                     phase, diagnostic = "response", "response-invalid"
                     record["evidenceExtraction"].update(stream="valid", response="invalid")
@@ -2051,7 +2128,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
-    result = {"schemaVersion": "2", "diagnosticRevision": 8, "protocolId": PROTOCOL_ID,
+    result = {"schemaVersion": "2", "diagnosticRevision": 9, "protocolId": PROTOCOL_ID,
               "executionModel": {"model": MODEL, "reasoningEffort": REASONING_EFFORT, "requiredToolMode": "direct"},
               "priorResultSha256s": STDERR_PRIOR_RESULTS[:prior_count],
               "attemptCount": sum(item["attemptCount"] for item in results),
@@ -2179,6 +2256,16 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(facts["streamAssertion"] == "none" or
                      (status == "INCOMPLETE" and facts["category"] != "none"),
                      "native parser assertion cannot complete")
+            if facts["streamAssertion"] in READ_REJECTIONS[1:]:
+                _require(facts["streamEventOrdinal"] is not None and
+                         facts["policyReason"] == "read-contract-rejected" and
+                         facts["category"] != "none" and
+                         "command_execution" in facts["itemTypes"] and
+                         record["evidenceExtraction"]["stream"] == "invalid",
+                         "read rejection lacks matching source and stream facts")
+            _require(facts["policyReason"] != "read-contract-rejected" or
+                     facts["streamAssertion"] in READ_REJECTIONS[1:],
+                     "read rejection lost its predicate")
             _require(record["cliLaunchCount"] <= record["attemptCount"], "launch lacks consumed attempt")
             _require(facts["eventCount"] >= len(facts["eventTypes"]), "event summary count mismatch")
             _require(not facts["itemTypes"] or (any(kind.startswith("item.") for kind in facts["eventTypes"]) and
@@ -2187,7 +2274,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                      "diagnostic item counts disagree")
             _require((facts["diagnosticItemCount"] == 0 or "error" in facts["itemTypes"]) and
                      ("error" not in facts["itemTypes"] or facts["diagnosticItemCount"] > 0 or
-                      facts["policyReason"] == "event-shape-rejected"),
+                      facts["policyReason"] in {"event-shape-rejected", "item-lifecycle-rejected"}),
                      "diagnostic items lack matching count")
             classes = facts["hostDiagnosticClasses"]
             _require((("upstream-error" in classes) == ("error" in facts["eventTypes"])) or
