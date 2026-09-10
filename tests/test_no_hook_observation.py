@@ -39,6 +39,7 @@ GIT_EXECUTABLE = Path(shutil.which("git") or "/nonexistent/git").resolve()
 BUILDER_SOURCE_REPOSITORY = Path(
     os.environ.get("AXIOM_TEST_BUNDLE_SOURCE_REPOSITORY", REPOSITORY_ROOT)
 ).resolve()
+LEGACY_BUILDER_COMMIT = "2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223"
 PROTECTED_REPOSITORY_SENTINEL = b"axiom protected repository sentinel v1\n"
 
 
@@ -117,6 +118,45 @@ def happy_stream(response: dict[str, object], *, reasoning: bool = False) -> byt
     return b"".join(records)
 
 
+def legacy_worker_repository(parent: Path, source: Path, environment: dict[str, str]) -> Path:
+    """Current observer/helper with the archived lifecycle-v2 producer inputs.
+
+    The legacy source/receipt contract is revision 5/6, not the current 8/9
+    ordinary builder contract. No production constants or return values change.
+    """
+    destination = parent / "legacy-worker"
+    destination.mkdir()
+    paths = subprocess.check_output(
+        [str(GIT_EXECUTABLE), "ls-files", "-z"],
+        cwd=REPOSITORY_ROOT, env=environment,
+    ).split(b"\0")
+    for item in paths:
+        if not item:
+            continue
+        relative = item.decode("utf-8")
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(REPOSITORY_ROOT / relative, target)
+    evidence = load_json(REPOSITORY_ROOT / observer.STATIC_BUNDLE_EVIDENCE_RELATIVE)
+    dependencies = evidence["bundleManifest"]["builder"]["behaviorDependencies"]
+    expected_paths = {
+        "scripts/build-no-hook-bundle.py", "axiom_validation/no_hook_bundle.py",
+        "evals/no-hook/bundle-manifest-schema-v1.json",
+    }
+    if {item["path"] for item in dependencies} != expected_paths:
+        raise AssertionError("legacy worker behavior dependency inventory changed")
+    for binding in dependencies:
+        data = subprocess.check_output(
+            [str(GIT_EXECUTABLE), "show", f"{LEGACY_BUILDER_COMMIT}:{binding['path']}"],
+            cwd=source, env=environment,
+        )
+        if (len(data) != binding["size"]
+                or hashlib.sha256(data).hexdigest() != binding["sha256"]):
+            raise AssertionError("legacy worker dependency differs from archived evidence")
+        (destination / binding["path"]).write_bytes(data)
+    return destination
+
+
 def fake_run(
     scenarios: dict[str, str] | None = None,
     *,
@@ -128,6 +168,7 @@ def fake_run(
 ) -> dict[str, object]:
     test_parent = Path(tempfile.mkdtemp(prefix="axiom-observer-fake-parent-"))
     source_repository: Path | None = None
+    worker_repository = REPOSITORY_ROOT
     if real_builder:
         source_repository = test_parent / "source"
         clone_environment = {
@@ -139,7 +180,7 @@ def fake_run(
         }
         subprocess.run(
             [
-                str(GIT_EXECUTABLE), "clone", "--quiet",
+                str(GIT_EXECUTABLE), "clone", "--quiet", "--no-hardlinks",
                 str(BUILDER_SOURCE_REPOSITORY), str(source_repository),
             ],
             check=True,
@@ -161,6 +202,9 @@ def fake_run(
             env=clone_environment,
             cwd=source_repository,
         )
+        worker_repository = legacy_worker_repository(
+            test_parent, source_repository, clone_environment,
+        )
     run_root = test_parent / "run"
     run_root.mkdir(mode=0o700)
     fake = run_root / "fake-codex"
@@ -169,7 +213,7 @@ def fake_run(
     digest = hashlib.sha256(fake.read_bytes()).hexdigest()
     try:
         return observer.run_fake_validation(
-            repository_root=REPOSITORY_ROOT,
+            repository_root=worker_repository,
             run_root=run_root,
             fake_executable=fake,
             fake_executable_sha256=digest,
@@ -2809,11 +2853,27 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         # Lifecycle 2 retains ordinary output on failure. A successful ordinary
         # build cannot grant the legacy observer authority to remove that tree.
         process_domains = DeterministicProcessDomainSupervisor()
+        completed = []
+
+        def inspect_complete_output(phase, facts):
+            if phase != "before-cleanup":
+                return
+            output = facts["session"].identity.path / "bundle-build"
+            evidence = load_json(REPOSITORY_ROOT / observer.STATIC_BUNDLE_EVIDENCE_RELATIVE)
+            self.assertEqual(load_json(output / "plugin/BUNDLE-MANIFEST.json"), evidence["bundleManifest"])
+            self.assertTrue((output / "BUNDLE-ENVELOPE.json").is_file())
+            archives = list(output.glob("*.zip"))
+            self.assertEqual(len(archives), 1)
+            self.assertEqual(hashlib.sha256(archives[0].read_bytes()).hexdigest(), evidence["builds"]["archiveSha256"])
+            completed.append(True)
+
         result = fake_run(
             real_builder=True,
             seed=b"\x31" * 32,
             process_domains=process_domains,
+            hook=inspect_complete_output,
         )
+        self.assertEqual(completed, [True])
         self.assertEqual("fake-validation", result["runMode"])
         self.assertEqual("incomplete", result["overallStatus"])
         self.assertEqual(0, result["summary"]["modelCallCount"])
@@ -2825,11 +2885,25 @@ class ResultIntegrityAndEndToEndTests(unittest.TestCase):
         self.assertIn("domain-removed:1:bundle-builder", process_domains.events)
 
     def test_real_builder_failure_hard_stops_before_any_model_case(self):
+        partial = []
+
+        def inspect_partial_output(phase, facts):
+            if phase != "before-cleanup":
+                return
+            output = facts["session"].identity.path / "bundle-build"
+            self.assertTrue((output / "plugin").is_dir())
+            self.assertFalse((output / "BUNDLE-ENVELOPE.json").exists())
+            self.assertFalse((output / "plugin/BUNDLE-MANIFEST.json").exists())
+            self.assertEqual(list(output.glob("*.zip")), [])
+            partial.append(True)
+
         result = fake_run(
             real_builder=True,
             seed=b"\x32" * 32,
             builder_failure_relative="plugin",
+            hook=inspect_partial_output,
         )
+        self.assertEqual(partial, [True])
         self.assertEqual("incomplete", result["overallStatus"])
         self.assertEqual(0, result["summary"]["modelCallCount"])
         self.assertEqual("incomplete", result["cases"][0]["status"])

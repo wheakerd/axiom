@@ -1516,3 +1516,52 @@ contents and reason for the model's choice remain unobserved. No output or
 successful read is inferred. Case 10 remains INCOMPLETE; this is a separate
 post-execution explanation, not a modification of the normalized result or an
 eligible stderr-only review. Cases 11-16 remain NOT-RUN.
+
+### Complete unit discovery diagnosis after 3613fbfc
+
+A new external copy of exact commit `3613fbfc7507d9afd9d6bb5d5fc4e439a353bb42`
+ran the unchanged `unittest discover -s tests -p 'test_*.py' -v` suite. With
+Python 3.14.7, Fedora 44 and Node 24.18.0 it ran 525 tests and reported three
+failures, zero errors and two skips. GitHub run 34442631032 used Ubuntu 24.04
+and Node 24.19.0, so this local reproduction is not direct access to that
+protected run's detailed failure log. The old remote result remains NON-PASS.
+
+The initial external harness supplied GIT_CONFIG_GLOBAL=/dev/null; the builder
+correctly rejected that ambient Git override. Its 23 failures and 36 errors
+were harness-contaminated evidence. Removing only the harness overrides, while
+retaining the empty dedicated HOME and unchanged source, produced the three
+failures below. No authentication, operator capture or user configuration was
+copied into either execution environment.
+
+| Failing test | Confirmed local cause and correction |
+| --- | --- |
+| NativeObservationTests.test_seven_historical_attempts_keep_exact_original_bytes_and_protocols | The seven old attempts were intact, but the current assessment's prior chain also includes the separately recorded 20-attempt batch. The test now verifies both the seven-attempt chain and that exact archived batch, then checks current cumulative attempts as 20 plus new attempts. |
+| ResultIntegrityAndEndToEndTests.test_real_builder_output_bindings_cannot_authorize_observer_cleanup | The legacy revision-5 source was paired with the current revision-8 schema, failing before creation. Its external fixture now supplies the three exact archived lifecycle-v2 producer dependencies while running the current observer and helper. |
+| ResultIntegrityAndEndToEndTests.test_real_builder_failure_hard_stops_before_any_model_case | The same mismatched inputs prevented the intended after-create failure injection. The matched historical fixture reaches that phase, and the test verifies an existing plugin directory without a completion envelope, manifest or ZIP. |
+
+The three targeted regressions pass. The successful-worker test additionally
+compares the actual complete manifest and archive with the archived evidence
+before cleanup. Neither test replaces a production return value, changes a
+production constant or relaxes manual-cleanup, no-ownership or zero-model
+assertions. The historical producer's entrypoint, module and schema come from
+`2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223` and must match every size and SHA-256
+in bundle-revision-6.json. These are historical worker integration fixtures;
+current ordinary/native builder coverage remains separate. No new 0.10.1 bundle
+or runtime identity is produced by this test-only repair.
+
+Case 1's actual prompt, transport schema, discovery record and source bindings
+match the recorded execution. Its no-route, empty selectedRoutes and false
+front-door response fail the unchanged outcome, exact-list and front-door
+predicates. The explicit router selection and any subsequent leaf selection
+are different stages in the profile; absence of a leaf does not itself prove
+that no entrypoint was selected. The current uniform fields do not elaborate
+that distinction, but the retained response contains no evidence of why the
+model answered this way. There is no proven input or scoring contradiction
+that warrants changing the product, prompt or expected answer in this repair.
+The FAIL and lack of observed body consumption remain unchanged.
+
+Case 10's operator-supplied client temporary target remains outside the public
+read inventory. No mapping defect is established, its target was not accessed,
+and no allowlist or sandbox change is made. The observation remains bound to
+implementation a29b950, with ten new and 30 lifetime attempts. This unit repair
+starts no model, does not resume the batch, and does not change any host result.

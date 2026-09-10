@@ -1972,7 +1972,15 @@ class NativeObservationTests(unittest.TestCase):
             result = json.loads(data)
             self.assertEqual(result["diagnosticRevision"], 11)
             self.assertEqual(native.validate_native_result(result, ROOT), [])
-            self.assertEqual(result["priorResultSha256s"], native.READ_PRIOR_RESULTS)
+            self.assertEqual(result["priorResultSha256s"], native.ASSESSMENT_PRIOR_RESULTS)
+            prior_binding = history["historicalBatch"]
+            self.assertEqual(prior_binding, native.ASSESSMENT_PRIOR_BINDING)
+            prior_bytes = (ROOT / prior_binding["path"]).read_bytes()
+            self.assertEqual(hashlib.sha256(prior_bytes).hexdigest(), prior_binding["sha256"])
+            prior = json.loads(prior_bytes)
+            self.assertEqual(prior["priorResultSha256s"], native.READ_PRIOR_RESULTS)
+            self.assertEqual((prior["attemptCount"], prior["cumulativeAttemptCount"]), (13, 20))
+            self.assertEqual(result["cumulativeAttemptCount"], 20 + result["attemptCount"])
             self.assertEqual(result["runMode"], "actual")
             self.assertEqual(history["current"], {"codexObservation": result["status"].lower(),
                 "hostClaim": result["hostClaim"], "credentialUsed": result["cliLaunchCount"] > 0,
