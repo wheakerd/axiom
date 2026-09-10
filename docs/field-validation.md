@@ -1,6 +1,17 @@
 # Field Validation
 
-## Current reviewed continuation outcome
+## Current assessment and historical boundaries
+
+The unpublished 0.10.1 candidate and its actual ten-attempt batch are recorded
+under [Canonical assessment candidate 0.10.1](#canonical-assessment-candidate-0101)
+and [Actual assessment batch and remaining evidence](#actual-assessment-batch-and-remaining-evidence).
+The new batch has eight PASS, one FAIL, one INCOMPLETE and six NOT-RUN cases;
+lifetime attempts and CLI launches are 30. Host acceptance remains incomplete.
+The older sections below retain their original 0.10.0 identities, counts and
+outcomes. Their use of "current" describes that historical execution, not the
+0.10.1 candidate. No historical failure is reclassified.
+
+## Historical reviewed continuation outcome (0.10.0)
 
 Execution `04c7de8e972d64e1d15d4d40eb0a7081dca23407`, tree
 `0a9ce3fba5914684abf6cfe9e7dad3c851a143ad`, used protocol
@@ -1488,3 +1499,20 @@ was also still 20 rather than the current 21. Both counts were updated together;
 all structural, link, byte-size and negative checks remain. This additional local
 correction does not retroactively make either failed remote CI successful, and
 its remote verification must be reported separately if it is later synchronized.
+
+### Operator-supplied Case 10 target classification
+
+After the batch stopped, the operator supplied the captured command text. It
+was a shell-wrapped cat targeting a generated entry below that case's
+client-home/tmp/arg0 namespace. The executor did not read the private capture,
+inspect the target, follow links, or execute the command. The public record
+omits the full private path and generated identifier.
+
+The supplied target is outside the bound public package, discovery aliases and
+fixture inventory, so the recorded read-target-unbound predicate is consistent
+with this new operator evidence. It does not establish an alias defect or grant
+permission to expose client temporary state. The target's actual object type,
+contents and reason for the model's choice remain unobserved. No output or
+successful read is inferred. Case 10 remains INCOMPLETE; this is a separate
+post-execution explanation, not a modification of the normalized result or an
+eligible stderr-only review. Cases 11-16 remain NOT-RUN.
