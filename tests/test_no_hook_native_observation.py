@@ -2387,17 +2387,17 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(prior["priorResultSha256s"], native.READ_PRIOR_RESULTS)
             self.assertEqual((prior["attemptCount"], prior["cumulativeAttemptCount"]), (13, 20))
             counts = native._attempt_history(ROOT)
-            self.assertEqual((counts["attempts"], counts["cliLaunches"]), (38, 38))
+            self.assertEqual((counts["attempts"], counts["cliLaunches"]), (54, 54))
             self.assertEqual(result["executionSegment"], {
-                "kind": "assessment-revision-3",
-                "priorPartialSha256": native.MATERIAL_OBSERVATION_BINDING["sha256"],
+                "kind": "explicit-invocation-revision-1",
+                "priorPartialSha256": native.ASSESSMENT_REVISION_THREE["sha256"],
                 "firstNewOrdinal": 1, "priorAttemptCount": counts["attempts"],
                 "authenticationSourceOrdinal": 16,
                 "newAttemptCount": result["attemptCount"], "newCliLaunchCount": result["cliLaunchCount"]})
             self.assertEqual(result["attemptCount"], sum(case["attemptCount"] for case in result["caseResults"]))
             self.assertEqual(result["cumulativeAttemptCount"], counts["attempts"] + result["attemptCount"])
             self.assertLessEqual(result["attemptCount"], 16)
-            self.assertLessEqual(result["cumulativeAttemptCount"], 54)
+            self.assertLessEqual(result["cumulativeAttemptCount"], 70)
             self.assertFalse(any([case["ordinal"], case["materializationCommitmentSha256"]] in counts["identities"]
                                  for case in result["caseResults"]))
             self.assertEqual(result["runMode"], "actual")
@@ -4740,14 +4740,14 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256(current_bytes).hexdigest(), current_binding["sha256"])
             current = json.loads(current_bytes)
             self.assertEqual(current["protocolDigest"], self.protocol["protocolDigest"])
-            self.assertEqual(current["executionSegment"]["kind"], "assessment-revision-3")
-            self.assertEqual(current["executionSegment"]["priorPartialSha256"], binding["sha256"])
+            self.assertEqual(current["executionSegment"]["kind"], "explicit-invocation-revision-1")
+            self.assertEqual(current["executionSegment"]["priorPartialSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
             self.assertEqual(current["executionSegment"]["priorAttemptCount"], native._attempt_history(ROOT)["attempts"])
             self.assertEqual(native.validate_native_result(current, ROOT), [])
             self.assertEqual(history["current"]["codexObservation"], current["status"].lower())
         else:
             self.assertEqual(history["current"]["codexObservation"], "not-run")
-        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        self.assertEqual(self.protocol["executionWindow"]["state"], "authorized-once")
         self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
         # The existing scorer still rejects contradictory tuples without editing
@@ -4765,13 +4765,13 @@ class NativeObservationTests(unittest.TestCase):
 
     def test_current_assessment_attempt_history_deduplicates_inherited_prefixes(self):
         counts = native._attempt_history(ROOT)
-        self.assertEqual((counts["attempts"], counts["cliLaunches"]), (38, 38))
+        self.assertEqual((counts["attempts"], counts["cliLaunches"]), (54, 54))
         identities = counts["identities"]
-        self.assertEqual(len(identities), 38)
-        self.assertEqual(len({tuple(identity) for identity in identities}), 38)
+        self.assertEqual(len(identities), 54)
+        self.assertEqual(len({tuple(identity) for identity in identities}), 54)
         self.assertEqual([sum(identity[0] == ordinal for identity in identities)
                           for ordinal in range(1, 17)],
-                         [9, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 1, 1, 1])
+                         [10, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 2, 2, 2])
         # These prefixes overlap their later results. Their inclusion in the
         # referenced chain must not charge the same attempted cases again.
         self.assertIn(native.PREVIOUS_PARTIAL_SHA256, counts["resultSha256s"])
@@ -4779,14 +4779,14 @@ class NativeObservationTests(unittest.TestCase):
         self.assertIn(native.ASSESSMENT_PARTIAL_BINDING["sha256"], counts["resultSha256s"])
         self.assertIn(native.ASSESSMENT_REMAINDER_BINDING["sha256"], counts["resultSha256s"])
         self.assertIn(native.MATERIAL_OBSERVATION_BINDING["sha256"], counts["resultSha256s"])
-        self.assertEqual(len(counts["resultSha256s"]), 13)
+        self.assertEqual(len(counts["resultSha256s"]), 14)
 
     def test_current_assessment_attempt_history_refuses_changed_immutable_bytes(self):
         copied = self.parent / "public-history"
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
         references = [*history["historicalResults"], *[history[name] for name in
             ("previousPartial", "reviewedPartial", "historicalBatch", "assessmentPartial",
-             "assessmentRemainder", "materialObservation")]]
+             "assessmentRemainder", "materialObservation", "assessmentRevision3")]]
         for relative in [native.HISTORY_RELATIVE, *[Path(item["path"]) for item in references]]:
             target = copied / relative
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -4888,8 +4888,8 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(invoked, [ordinal for ordinal in range(1, 17) for _ in range(2)])
         self.assertEqual([record["status"] for record in result["caseResults"]], ["PASS"] * 16)
         self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
-                         (16, 16, 54))
-        self.assertEqual(result["priorResultSha256s"], [native.MATERIAL_OBSERVATION_BINDING["sha256"]])
+                         (16, 16, 70))
+        self.assertEqual(result["priorResultSha256s"], [native.ASSESSMENT_REVISION_THREE["sha256"]])
         self.assertEqual(result["executionSegment"]["priorAttemptCount"], prior["attempts"])
         self.assertEqual(result["executionSegment"]["firstNewOrdinal"], 1)
         self.assertEqual(result["executionSegment"]["newAttemptCount"], 16)
@@ -4911,6 +4911,7 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual((run / "normalized-result.json").read_bytes(), saved)
         for change in (lambda value: value.__setitem__("cumulativeAttemptCount", 38),
                        lambda value: value.__setitem__("cumulativeAttemptCount", 55),
+                       lambda value: value.__setitem__("cumulativeAttemptCount", 71),
                        lambda value: value["executionSegment"].__setitem__("priorAttemptCount", 31),
                        lambda value: value["executionSegment"].__setitem__("firstNewOrdinal", 10),
                        lambda value: value["priorResultSha256s"].pop()):
@@ -4961,7 +4962,7 @@ class NativeObservationTests(unittest.TestCase):
             process_runner=captured_rejection)
         self.assertEqual(calls, [1, 2, 3])
         self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
-                         (3, 3, 41))
+                         (3, 3, native._attempt_history(ROOT)["attempts"] + 3))
         rejected = result["caseResults"][2]
         self.assertEqual((rejected["status"], rejected["diagnostic"]), ("INCOMPLETE", "policy-rejected"))
         self.assertEqual(rejected["executionDiagnostics"]["streamAssertion"], "read-command-syntax")
@@ -4987,7 +4988,7 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(invoked, [1])
         self.assertEqual(calls, [])
         self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
-                         (1, 0, 39))
+                         (1, 0, native._attempt_history(ROOT)["attempts"] + 1))
         self.assertEqual(result["executionSegment"]["newAttemptCount"], 1)
         self.assertEqual(result["executionSegment"]["newCliLaunchCount"], 0)
         self.assertEqual([record["status"] for record in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
@@ -4998,6 +4999,30 @@ class NativeObservationTests(unittest.TestCase):
                 reuse_test_auth=True, assessment_batch=True, current_assessment=True,
                 process_runner=failed_spawn)
         self.assertEqual(invoked, [1])
+
+    def test_current_assessment_registered_result_reaches_protocol_validation(self):
+        run, _, runner, _, _, _ = self._current_assessment_fixture()
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, current_assessment=True,
+            process_runner=runner)
+        # Synthetic public fixture only. Exercise history consistency, which
+        # explicitly does not prove authenticity, without recording a host run.
+        result.update(runMode="actual", status="PASS", hostClaim=True)
+        copied = self.parent / "registered-public-result"
+        shutil.copytree(ROOT, copied, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+        raw = native._bytes(result)
+        digest = hashlib.sha256(raw).hexdigest()
+        relative = "evals/no-hook-observation/results/codex-native-" + digest + ".json"
+        (copied / relative).write_bytes(raw)
+        history_path = copied / native.HISTORY_RELATIVE
+        history = json.loads(history_path.read_bytes())
+        history["results"] = [{"path": relative, "sha256": digest,
+            "implementationCommit": "1" * 40, "implementationTree": "2" * 40}]
+        history["current"] = {"codexObservation": "pass", "hostClaim": True,
+            "credentialUsed": True, "cliLaunchCount": 16, "modelRequestCount": None,
+            "pluginInstalled": True}
+        history_path.write_bytes(native._bytes(history))
+        self.assertEqual(native.validate_native_protocol(copied), [])
 
 
 if __name__ == "__main__":

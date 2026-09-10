@@ -3,7 +3,7 @@
   "kind": "axiom-codex-native-result-history",
   "protocol": {
     "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-    "digest": "sha256:d958d65d794516bca3ae71d18a6ed0d78258414ea5448d626f9a81bb96777896"
+    "digest": "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3"
   },
   "results": [],
   "current": {

@@ -155,7 +155,7 @@ class ExplicitInvocationTests(unittest.TestCase):
         self.assertTrue(native.validate_native_result(missing, ROOT))
         self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
 
-    def test_migration_preserves_completed_history_and_closes_actual_preparation(self):
+    def test_migration_preserves_history_and_requires_fresh_registered_predecessor(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
         self.assertEqual(history["assessmentRevision3"], native.ASSESSMENT_REVISION_THREE)
         binding = history["assessmentRevision3"]
@@ -165,10 +165,12 @@ class ExplicitInvocationTests(unittest.TestCase):
         self.assertEqual(old["cumulativeAttemptCount"], 54)
         self.assertEqual([r["status"] for r in old["caseResults"]], ["FAIL"] + ["PASS"] * 15)
         self.assertTrue(all("explicitInvocation" not in r for r in old["caseResults"]))
-        self.assertEqual(history["results"], [])
-        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        self.assertLessEqual(len(history["results"]), 1)
+        self.assertEqual(self.protocol["executionWindow"]["state"], "authorized-once")
+        self.assertEqual(native.CURRENT_ASSESSMENT["priorResult"], binding)
+        self.assertEqual(native.CURRENT_ASSESSMENT["maximumCumulativeAttempts"], 70)
         with tempfile.TemporaryDirectory() as directory, patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
-            with self.assertRaisesRegex(native.NativeObservationError, "window closed"):
+            with self.assertRaises((native.NativeObservationError, OSError)):
                 native.prepare_current_assessment(ROOT, Path(directory)/"new", Path(directory)/"old",
                                                   authorize_install=True, authorize_copy=True)
             self.assertFalse((Path(directory)/"new").exists())

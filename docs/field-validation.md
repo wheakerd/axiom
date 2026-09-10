@@ -2,24 +2,26 @@
 
 ## Current assessment and historical boundaries
 
-The unpublished 0.10.1 runtime candidate retains its original input view:
-eight PASS, one FAIL, two INCOMPLETE and five NOT-RUN cases. The new material-input
-segment separately observed Cases 10-16: three PASS and four semantic FAIL;
-Cases 1-9 are NOT-RUN under these new inputs. Lifetime attempts and canonical CLI
-launches are now 38. The seven authorized new attempts are consumed; there is
-no further start or retry authority. Host acceptance remains incomplete and no
-historical segment is regraded or combined into a sixteen-case PASS.
+The latest completed revision-3 assessment remains 15 PASS and Case 1 FAIL,
+under its original natural-language-only invocation transport. All 54 historical
+attempts and CLI launches retain their original implementation and input bindings.
+A newly authorized full 1-16 batch will use explicit-invocation revision 1,
+assessment revision 3 and material-delivery revision 1, with the unchanged 0.10.1
+runtime. It permits at most sixteen fresh attempts, for a lifetime ceiling of 70;
+no new invocation-condition host result has been recorded at this preparation.
 
-See [Canonical assessment candidate 0.10.1](#canonical-assessment-candidate-0101),
-[Actual assessment batch and remaining evidence](#actual-assessment-batch-and-remaining-evidence),
-[Material-location delivery correction](#material-location-delivery-correction),
-[Actual material-input segment evidence](#actual-material-input-segment-evidence),
-and [Assessment field clarification](#assessment-field-clarification-revision-3-not-observed).
-Older sections retain their original identities, counts and outcomes. Their
-use of "current" describes the execution at that time, not the new input
-revision. No historical failure is reclassified. Assessment revision 3 clarifies the
-measurement fields only; it has no host observations and its execution window
-is closed.
+Current evidence and navigation:
+
+- [Prior complete revision-3 result](#revision-3-complete-batch-result)
+- [Explicit invocation transport correction](#explicit-skill-invocation-transport-correction)
+- [Explicit invocation full observation window](#explicit-invocation-full-observation-window)
+- [Canonical candidate and older observations](#canonical-assessment-candidate-0101)
+- [Material-input segment](#actual-material-input-segment-evidence)
+- [Assessment field clarification](#assessment-field-clarification-revision-3-not-observed)
+
+Older sections describe their execution-time state. Their counts, failures,
+closed windows and NOT-RUN statements remain historical; they are not the current
+summary. No cross-version selection of best outcomes constitutes acceptance.
 
 ## Historical reviewed continuation outcome (0.10.0)
 
@@ -2282,3 +2284,36 @@ nine affected regression methods passed. The publication aggregate,
 distribution drift, all sixteen actual derived transport-schema files, JSON
 parsing, English-only scan and whitespace checks passed. Ordinary regression
 fixtures are not canonical observations or fresh deterministic bundle evidence.
+
+## Explicit invocation full observation window
+
+The authorized batch is a new, exclusive fresh 1-16 execution segment. It binds
+its normally completed predecessor `c74da98c` and the union of fourteen immutable
+result references. Deduplication by ordinal and materialization commitment gives
+54 prior attempts/CLI launches, rather than summing overlapping cumulative views.
+The current segment permits sixteen new attempts, at most one per ordinal and
+70 lifetime attempts. Old markers, results, protocol and session identities are
+not reused or overwritten. Failed launches consume their reserved attempt.
+
+The existing preparation and run entry points now bind this predecessor's all
+sixteen markers, normal cleanup and public inputs. The previous normally completed
+Case 16 supplies only the owned opaque test credential, after official status
+checking; refresh handoff remains serial. The other client state and contexts
+are not copied. New homes, workspaces, installation/discovery and all sixteen
+prompt/schema pairs use the unchanged input meanings and package bytes.
+
+The execution conditions remain Codex 0.153.0, gpt-5.5/medium, Direct, user-Skill
+discovery and disabled Code Mode host/plugin runtime. Only unambiguous explicit
+inner requests 1, 2 and 6 receive the already-delivered qualified mentions.
+The representation binding does not establish native body loading. Public reads,
+routing decisions, installation/discovery and model-reported permissions stay
+separate; clarificationCount records a pending decision, not a sent question.
+
+No probing or resampling is permitted. A semantic FAIL can continue to independent
+cases; policy rejection or reliability failure stops the remainder. The existing
+unknown-stderr-only human supplement requires full valid input, stream, terminal,
+response, final-output agreement and postcheck, with no other failed premise.
+It cannot excuse a read rejection or invent loading, interaction or unseen actions.
+The original result and any supplement stay separate. Once a result is recorded,
+the current-history and exclusive markers consume this window without altering
+its signed execution protocol. No further batch follows automatically.

@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "38e582cb10e230cd4a603d672ff2fea06bedddce510ca99a361205b9384b95d3"
+      "sha256": "c300bc6577f9776fb94a627f8e4e053ee786226a5072da56a6d27fdbead68b62"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -119,7 +119,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "b262499a370831fbcd7754067e1fa3ef30f8c03f8ff40d51513a1a63bf7e5ae7"
+    "sha256": "828bdc283f383b863b1059d47e0764dddbf5689c6905df0c2e1feb82ff07b2a2"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -281,9 +281,9 @@
     }
   },
   "executionWindow": {
-    "state": "closed",
+    "state": "authorized-once",
     "lastResultSha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
-    "reason": "54 attempts consumed; explicit invocation transport has no model authorization"
+    "reason": "one fresh explicit-invocation batch; 16 new attempts, 70 cumulative maximum"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
@@ -331,7 +331,7 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:d958d65d794516bca3ae71d18a6ed0d78258414ea5448d626f9a81bb96777896",
+  "protocolDigest": "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",
@@ -358,21 +358,22 @@
   },
   "currentAssessment": {
     "priorResult": {
-      "path": "evals/no-hook-observation/results/codex-native-3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360.json",
-      "sha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
-      "implementationCommit": "12720d103a0b46b6223ad2a41b562c1ec2935b87",
-      "implementationTree": "bde5a0d2f36ade6c6fa3bfbc0d951d1ab7054bf4",
-      "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b"
+      "path": "evals/no-hook-observation/results/codex-native-c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1.json",
+      "sha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
+      "implementationCommit": "1cb076f4d54cb63e24ae097ccb728d67c614e1fd",
+      "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
+      "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9"
     },
     "firstNewOrdinal": 1,
     "lastOrdinal": 16,
     "maximumNewAttempts": 16,
-    "maximumCumulativeAttempts": 54,
+    "maximumCumulativeAttempts": 70,
     "authenticationSourceOrdinal": 16,
     "assessmentRevision": 3,
     "history": "deduplicate ordinal and materialization commitment; no inherited sessions",
     "stop": "any policy rejection or reliability failure stops remaining cases",
-    "stderrReview": "same-attempt only; all existing eligibility conditions required"
+    "stderrReview": "same-attempt only; all existing eligibility conditions required",
+    "explicitInvocationRevision": 1
   },
   "explicitInvocation": {
     "revision": 1,

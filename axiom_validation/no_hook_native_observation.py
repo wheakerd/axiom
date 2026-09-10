@@ -88,15 +88,6 @@ MATERIAL_OBSERVATION_BINDING = {
     "implementationTree": "bde5a0d2f36ade6c6fa3bfbc0d951d1ab7054bf4",
     "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b"
 }
-CURRENT_ASSESSMENT = {
-    "priorResult": MATERIAL_OBSERVATION_BINDING, "firstNewOrdinal": 1,
-    "lastOrdinal": 16, "maximumNewAttempts": 16, "maximumCumulativeAttempts": 54,
-    "authenticationSourceOrdinal": 16, "assessmentRevision": 3,
-    "history": "deduplicate ordinal and materialization commitment; no inherited sessions",
-    "stop": "any policy rejection or reliability failure stops remaining cases",
-    "stderrReview": "same-attempt only; all existing eligibility conditions required",
-}
-CURRENT_PRIOR_RESULTS = [MATERIAL_OBSERVATION_BINDING["sha256"]]
 ASSESSMENT_REVISION_THREE = {
     "path": "evals/no-hook-observation/results/codex-native-c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1.json",
     "sha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
@@ -104,6 +95,15 @@ ASSESSMENT_REVISION_THREE = {
     "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
     "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9",
 }
+CURRENT_ASSESSMENT = {
+    "priorResult": ASSESSMENT_REVISION_THREE, "firstNewOrdinal": 1,
+    "lastOrdinal": 16, "maximumNewAttempts": 16, "maximumCumulativeAttempts": 70,
+    "authenticationSourceOrdinal": 16, "assessmentRevision": 3, "explicitInvocationRevision": 1,
+    "history": "deduplicate ordinal and materialization commitment; no inherited sessions",
+    "stop": "any policy rejection or reliability failure stops remaining cases",
+    "stderrReview": "same-attempt only; all existing eligibility conditions required",
+}
+CURRENT_PRIOR_RESULTS = [ASSESSMENT_REVISION_THREE["sha256"]]
 EXPLICIT_INVOCATION = {
     "revision": 1, "transport": "codex-exec-stdin-namespaced-dollar-mention",
     "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
@@ -732,8 +732,8 @@ def _protocol(root: Path) -> dict[str, Any]:
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
-        "state": "closed", "lastResultSha256": ASSESSMENT_REVISION_THREE["sha256"],
-        "reason": "54 attempts consumed; explicit invocation transport has no model authorization",
+        "state": "authorized-once", "lastResultSha256": ASSESSMENT_REVISION_THREE["sha256"],
+        "reason": "one fresh explicit-invocation batch; 16 new attempts, 70 cumulative maximum",
     }, "native execution window differs from consumed attempt evidence")
     _require(document.get("explicitInvocation") == EXPLICIT_INVOCATION,
              "native explicit invocation contract mismatch")
@@ -875,7 +875,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         prior = _json(revision_three)
         _require(prior["protocolDigest"] == ASSESSMENT_REVISION_THREE["protocolDigest"] and
                  prior["attemptCount"] == prior["cliLaunchCount"] == 16 and
-                 prior["cumulativeAttemptCount"] == _attempt_history(root)["attempts"] + 16 == 54,
+                 prior["cumulativeAttemptCount"] == _attempt_history(root)["attempts"] == 54,
                  "historical revision-three attempt accounting changed")
         # Accepted historical bytes retain their own input meanings and scoring;
         # this no-model wording migration cannot regrade or refund any attempt.
@@ -900,7 +900,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             _require(not validate_native_result(result, root), "native history result is invalid")
             _require(result["priorResultSha256s"] == CURRENT_PRIOR_RESULTS,
                      "result does not continue the historical budget")
-            _require(result.get("executionSegment", {}).get("kind") == "assessment-revision-3" and
+            _require(result.get("executionSegment", {}).get("kind") == "explicit-invocation-revision-1" and
                      result["cumulativeAttemptCount"] == _attempt_history(root)["attempts"] + result["attemptCount"],
                      "current assessment budget differs from deduplicated history")
             _require(result["runMode"] == "actual", "simulated result is not a host-history observation")
@@ -1028,7 +1028,8 @@ def _attempt_history(root: Path) -> dict[str, Any]:
     """Count immutable attempt identities, never add overlapping cumulative snapshots."""
     shas = [*READ_PRIOR_RESULTS, PREVIOUS_PARTIAL_SHA256, REVIEWED_PARTIAL_SHA256,
             ASSESSMENT_PRIOR_SHA256, ASSESSMENT_PARTIAL_BINDING["sha256"],
-            ASSESSMENT_REMAINDER_BINDING["sha256"], MATERIAL_OBSERVATION_BINDING["sha256"]]
+            ASSESSMENT_REMAINDER_BINDING["sha256"], MATERIAL_OBSERVATION_BINDING["sha256"],
+            ASSESSMENT_REVISION_THREE["sha256"]]
     identities: dict[tuple[int, str], tuple[int, int]] = {}
     for digest in shas:
         data = _read(root / ("evals/no-hook-observation/results/codex-native-" + digest + ".json"))
@@ -1054,21 +1055,18 @@ def _attempt_history(root: Path) -> dict[str, Any]:
 def _current_assessment_history(root: Path, previous: Path) -> dict[str, Any]:
     """Check the registered normal predecessor without reading client state or secrets."""
     _ordinary_directory(previous)
-    data = _read(root / MATERIAL_OBSERVATION_BINDING["path"])
-    _require(hashlib.sha256(data).hexdigest() == MATERIAL_OBSERVATION_BINDING["sha256"] and
+    data = _read(root / ASSESSMENT_REVISION_THREE["path"])
+    _require(hashlib.sha256(data).hexdigest() == ASSESSMENT_REVISION_THREE["sha256"] and
              _read(previous / "normalized-result.json") == data, "registered assessment history changed")
     prior = _json(data)
     old = _json(_read(previous / STATE_NAME))
-    _require(old["protocolDigest"] == prior["protocolDigest"] == MATERIAL_OBSERVATION_BINDING["protocolDigest"] and
+    _require(old["protocolDigest"] == prior["protocolDigest"] == ASSESSMENT_REVISION_THREE["protocolDigest"] and
              old["materializationSeed"] == prior["materializationSeed"], "historical preparation changed")
     _require(_json(_read(previous / "batch-started.json")) == {"protocolDigest": prior["protocolDigest"]},
              "historical batch marker changed")
     fixtures = _input(root, _protocol(root), "fixtureMatrix")
     for ordinal in range(1, 17):
         marker = previous / f"attempt-{ordinal:02d}.json"
-        if ordinal < 10:
-            _require(not marker.exists() and not marker.is_symlink(), "unexpected historical attempt")
-            continue
         _require(_json(_read(marker)) == {"ordinal": ordinal,
                  "caseId": legacy.EXPECTED_CASE_IDS[ordinal - 1], "protocolDigest": prior["protocolDigest"]},
                  "historical attempt marker changed")
@@ -3041,7 +3039,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
               "cleanup": "retained-test-state", "descendantClosure": "not-observed"}
     if current_assessment:
         result["executionSegment"] = {
-            "kind": "assessment-revision-3", "priorPartialSha256": MATERIAL_OBSERVATION_BINDING["sha256"],
+            "kind": "explicit-invocation-revision-1", "priorPartialSha256": ASSESSMENT_REVISION_THREE["sha256"],
             "firstNewOrdinal": 1, "priorAttemptCount": current_chain["attempts"],
             "authenticationSourceOrdinal": 16,
             "newAttemptCount": result["attemptCount"], "newCliLaunchCount": result["cliLaunchCount"],
@@ -3111,13 +3109,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _require(prior_results in [*[READ_PRIOR_RESULTS[:i] for i in range(8)], ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS], "invalid historical prefix")
         segment = document.get("executionSegment")
         material_segment = segment is not None and segment.get("kind") == "material-delivery"
-        current_assessment = segment is not None and segment.get("kind") == "assessment-revision-3"
+        current_assessment = segment is not None and segment.get("kind") == "explicit-invocation-revision-1"
         chain = _attempt_history(root) if current_assessment else None
         _require((prior_results == CURRENT_PRIOR_RESULTS) == current_assessment, "current history requires its execution segment")
         prior_count = chain["attempts"] if current_assessment else 31 if material_segment else 20 if prior_results == ASSESSMENT_PRIOR_RESULTS else len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
-        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= (54 if current_assessment else 38 if material_segment else 16 + prior_count),
+        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= (CURRENT_ASSESSMENT["maximumCumulativeAttempts"] if current_assessment else 38 if material_segment else 16 + prior_count),
                  "native cumulative attempt budget mismatch")
         _require(sum(item["privateCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
                  "private capture batch limit exceeded")
@@ -3134,7 +3132,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         prefix_count = 10 if remainder else REVIEWED_PREFIX_COUNT
         if current_assessment:
             _require(segment == {
-                "kind": "assessment-revision-3", "priorPartialSha256": MATERIAL_OBSERVATION_BINDING["sha256"],
+                "kind": "explicit-invocation-revision-1", "priorPartialSha256": ASSESSMENT_REVISION_THREE["sha256"],
                 "firstNewOrdinal": 1, "priorAttemptCount": chain["attempts"], "authenticationSourceOrdinal": 16,
                 "newAttemptCount": document["attemptCount"], "newCliLaunchCount": document["cliLaunchCount"]
             } and document["attemptCount"] <= 16, "current assessment provenance or budget mismatch")
