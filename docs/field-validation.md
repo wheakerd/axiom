@@ -1,5 +1,62 @@
 # Field Validation
 
+## Current reviewed continuation outcome
+
+Execution `04c7de8e972d64e1d15d4d40eb0a7081dca23407`, tree
+`0a9ce3fba5914684abf6cfe9e7dad3c851a143ad`, used protocol
+`sha256:1938bd1e4335e35a9f0d46bf113777e8eb542c7219338d7683a6d0507854c70c`.
+The current normalized result is `e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d`.
+Only Cases 7-13 started under this implementation. Original Cases 1-5 remain
+bound to `7c4c2c8a`; Case 6 remains bound to `92e8e435`. Their exact partial
+results and the two source-bound, operator-supplied catalog reviews remain
+separate records. No old INCOMPLETE status was changed to PASS.
+
+| Cases | Recorded outcome | Evidence and limit |
+| --- | --- | --- |
+| 1-4 | PASS | Fixed response/routing acceptance; original execution |
+| 5-6 | INCOMPLETE | Original unknown stderr retained; separate same-attempt reviews permit continuation only |
+| 7 | FAIL | Valid response, semantic mismatch; no retry |
+| 8-10 | PASS | Fixed response/routing acceptance; current execution |
+| 11 | FAIL | Zero Axiom installation/discovery control, but response selected Axiom routes |
+| 12 | FAIL | Valid response, semantic mismatch; no retry |
+| 13 | INCOMPLETE | First rejection `read-target-unbound`, event ordinal 7; observer terminated the process |
+| 14-16 | NOT-RUN | Batch stopped after Case 13; no further model launch |
+
+There are seven PASS, three FAIL, three INCOMPLETE and three NOT-RUN records
+in the preserved 16-case view. Lifetime attempts and CLI launches are 20:
+seven historical Case 1 attempts plus thirteen in this batch. Case 1 has used
+all eight lifetime starts; Cases 2-13 each started once. Internal model request
+counts remain unknown. No retries, probes, model changes or budget refunds occurred.
+
+Case 13 retained complete input delivery and valid non-sensitive postchecks.
+The first unbound-target rejection was preserved at event 7, followed by
+observer termination (exit -9, signal 9); timeout and cleanup failure were false.
+No terminal or validated final response was obtained. The target and original
+command are not retained, so no specific alias or command defect is inferred
+and no unbound object was read to diagnose it. Its default zero read count is
+not proof that no read occurred. This policy rejection is ineligible for the
+unknown-stderr-only supplemental review path.
+
+Case 8's complete stream contains one contract-verified read command. The
+normalized count does not identify whether it read a Skill or a fixture;
+Skill body consumption is therefore not established. Other complete streams
+contain no command item. Model-reported routes and permission fields are not
+observer proof of body consumption or all invisible actions. Verified package
+and standard user-Skill discovery bindings remain separate facts. Case 11 had
+no Axiom installation/discovery path. The plugin runtime stayed disabled.
+
+The exact frozen catalog-timeout stderr template was classified only in new
+execution; additional or different stderr remains unknown. All input, terminal,
+response, fixed-model, final-output and postcheck requirements still apply.
+Original Case 5/6 diagnostics are unchanged. Operator-only raw files remain
+private and were not read by the executor or included in public evidence.
+
+The overall result remains INCOMPLETE with `hostClaim=false`. Seven historical
+failures remain immutable. FCR-001/003/004 remain OPEN; FCR-002 remains STILL_OPEN.
+No full host acceptance, descendant closure or legacy Combined completion is
+claimed. The PR remains Draft and the Issue open. Builder, bundle, runtime,
+Phase 1 inputs and the 266-character reason are unchanged; no bundle was rebuilt.
+
 ## Reviewed remainder execution
 
 Execution `92e8e435d3c39041ff2c86a0fa8c039c4996a121` used protocol
