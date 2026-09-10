@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "04d63ae629c70c7f2972008601ee6ca47a3fa32e20b9e6413d7b0d248093026d"
+      "sha256": "cd0c2c108f8baf388f2b62f0f4931b1adf86887833800d526d00acc278de53ef"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "b51e98daba75f9b09bf5da605a7192e8528e9aa1966d432a0d7a71761490c4c7"
+    "sha256": "c6d821ee502cb94228429dfe7700301874e3b76c9978db838deba7fd7a8c4d34"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -203,7 +203,8 @@
       "eligibility": "only unknown-stderr; exit 0; complete input; turn.completed; valid stream, response, official final output and postcheck; no timeout, observer termination, cleanup failure, policy rejection or condition-changing diagnostic; complete UTF-8 stderr capture",
       "decision": "no automatic approval from metadata; assess every diagnostic against frozen upstream and required conditions; unresolved or unsafe content remains INCOMPLETE",
       "resume": "only previously NOT-RUN cases after supplement confirms no effect on required premises and non-model input/config/model/auth/ledger checks still pass; preserve batch and attempts; no Case 1 restart or budget refund",
-      "limits": "route agreement does not prove Skill-body consumption or invisible actions; missing observations cannot be supplied by human classification"
+      "limits": "route agreement does not prove Skill-body consumption or invisible actions; missing observations cannot be supplied by human classification",
+      "continuation": "Specific source-bound Case 5 supplement; preserve original partial result and Cases 1-5; new implementation/protocol covers only Cases 6-16. Same ledger, exclusive remainder marker; inherit operator budgets without reading raw files."
     },
     "readRejections": {
       "codes": [
@@ -256,9 +257,13 @@
     "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings"
   },
   "executionWindow": {
-    "state": "authorized-once",
-    "lastResultSha256": "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
-    "reason": "one seven-history continuation; exclusive batch and attempt markers; no retry"
+    "state": "reviewed-remainder-only",
+    "lastResultSha256": "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b",
+    "reason": "same-batch reviewed Case 5; only unstarted Cases 6-16; no consumed attempt repeated"
   },
-  "protocolDigest": "sha256:5ce454ebaf368fd11884f3e91c50bd7ecbcc2d755b21ce0554fe786db94e3a97"
+  "sameAttemptReview": {
+    "path": "evals/no-hook-observation/case-05-catalog-review-v2.json",
+    "sha256": "b0b88827ee9f4fbe47f98e277b335b6a33c96b02c5cf84d82b6727309591d564"
+  },
+  "protocolDigest": "sha256:795610bb36b81bed4d52aa887b055de94de964b9167c7ee7437982ed2544e551"
 }

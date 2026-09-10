@@ -1,7 +1,7 @@
 """Ordinary offline regressions for the native observer's actual entrypoints."""
 
 import copy
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import hashlib
 import io
 import json
@@ -3286,6 +3286,209 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(calls, [])
         self.assertFalse((run / "read-contract-continuation/batch-started.json").exists())
         self.assertEqual(path.read_bytes(), changed)
+
+    def _review_resume_fixture(self):
+        """Public immutable evidence plus locally generated, secret-free state."""
+        run, runner, calls = self._seventh_prior_fixture()
+        partial_bytes = (ROOT / native.REVIEWED_PARTIAL_BINDING["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(partial_bytes).hexdigest(), native.REVIEWED_PARTIAL_SHA256)
+        partial = json.loads(partial_bytes)
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        state["materializationSeed"] = partial["materializationSeed"]
+        (run / native.STATE_NAME).write_bytes(native._bytes(state))
+        histories = ((None, native.HISTORICAL_PROTOCOL_DIGEST, legacy.materialize_case_contract),
+                     ("diagnostic-followup", native.RETRY_PROTOCOL_DIGEST, legacy.materialize_case_contract),
+                     ("diagnostic-continuation", native.THIRD_PROTOCOL_DIGEST, legacy.materialize_case_contract),
+                     ("operator-diagnostic-continuation", native.FOURTH_PROTOCOL_DIGEST, legacy.materialize_case_contract),
+                     ("schema-correction-continuation", native.FIFTH_PROTOCOL_DIGEST, native.materialize_native_case_contract),
+                     ("model-migration-continuation", native.SIXTH_PROTOCOL_DIGEST, native.materialize_native_case_contract),
+                     ("stderr-diagnostic-continuation", native.SEVENTH_PROTOCOL_DIGEST, native.materialize_native_case_contract))
+        for directory, digest, materialize in histories:
+            if directory is not None:
+                (run / directory / "preparation.json").write_bytes(native._bytes({**state, "protocolDigest": digest}))
+            for ordinal, case in enumerate(self.cases, 1):
+                material = materialize(materialization_seed=bytes.fromhex(state["materializationSeed"]),
+                    ordinal=ordinal, protocol_digest=digest,
+                    model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                    prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+                path = (run / directory / f"response-schema-{ordinal:02d}.json" if directory is not None else
+                        native._case_paths(run, ordinal)["case"] / "response-schema.json")
+                path.write_bytes(material.schema_bytes)
+        ledger = run / "read-contract-continuation"
+        ledger.mkdir(mode=0o700)
+        (ledger / "normalized-result.json").write_bytes(partial_bytes)
+        (ledger / "preparation.json").write_bytes(native._bytes({**state, "protocolDigest": native.REVIEWED_PARTIAL_PROTOCOL}))
+        (ledger / "batch-started.json").write_bytes(native._bytes({"protocolDigest": native.REVIEWED_PARTIAL_PROTOCOL}))
+        (ledger / "execution-implementation.json").write_bytes(native._bytes({
+            "implementationCommit": native.REVIEWED_PARTIAL_BINDING["implementationCommit"],
+            "implementationTree": native.REVIEWED_PARTIAL_BINDING["implementationTree"],
+            "protocolDigest": native.REVIEWED_PARTIAL_PROTOCOL, "priorAttempts": 7,
+            "maximumCumulativeAttempts": 23, "maximumCaseOneAttempts": 8}))
+        for ordinal, case in enumerate(self.cases, 1):
+            if ordinal <= 5:
+                (ledger / f"attempt-{ordinal:02d}.json").write_bytes(native._bytes({
+                    "ordinal": ordinal, "caseId": case["id"], "protocolDigest": native.REVIEWED_PARTIAL_PROTOCOL}))
+            material = native.materialize_native_case_contract(
+                materialization_seed=bytes.fromhex(state["materializationSeed"]), ordinal=ordinal,
+                protocol_digest=native.REVIEWED_PARTIAL_PROTOCOL,
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            (ledger / f"response-schema-{ordinal:02d}.json").write_bytes(material.schema_bytes)
+        directory = ledger / "operator-only-diagnostics"
+        directory.mkdir(mode=0o700)
+        # Intentionally not valid JSON. Production may inspect this fixture's
+        # metadata, but must not open it to recover the already reviewed text.
+        raw = directory / "case-05-stderr.json"
+        raw.write_bytes(b"PUBLIC-OPAQUE-FIXTURE:".ljust(158, b"x"))
+        raw.chmod(0o600)
+        # The unchanged public prefix records serial test-auth reuse. Use only
+        # this test's opaque plain-text fixture, never any real credential.
+        source = self._seed_test_auth(run)
+        metadata = source.stat()
+        native._exclusive(native._auth_owner(run, 1), native._bytes({
+            "ordinal": 1, "device": metadata.st_dev, "inode": metadata.st_ino}))
+        for ordinal in range(2, 17):
+            native._copy_test_auth(run, 1, ordinal, create=True)
+        native._exclusive(run / native.AUTH_COPY_STATE, native._bytes({
+            "protocolDigest": native.HISTORICAL_PROTOCOL_DIGEST, "sourceOrdinal": 1,
+            "copiedOrdinals": list(range(2, 17))}))
+        return run, runner, calls, partial, raw
+
+    @contextmanager
+    def _forbid_fixture_raw_reads(self, forbidden):
+        original_os_open, original_path_open = os.open, Path.open
+        def guarded_os_open(path, *args, **kwargs):
+            self.assertFalse(isinstance(path, (str, os.PathLike)) and Path(path) == forbidden,
+                             "production opened old operator-only content")
+            return original_os_open(path, *args, **kwargs)
+        def guarded_path_open(path, *args, **kwargs):
+            self.assertNotEqual(path, forbidden, "production opened old operator-only content")
+            return original_path_open(path, *args, **kwargs)
+        with patch.object(native.os, "open", side_effect=guarded_os_open), patch.object(Path, "open", guarded_path_open):
+            yield
+
+    def test_review_resume_runs_only_six_to_sixteen_and_preserves_partial_bytes(self):
+        run, runner, calls, partial, raw = self._review_resume_fixture()
+        ledger = run / "read-contract-continuation"
+        before = {path: path.read_bytes() for path in ledger.glob("*.json")}
+        raw_before = raw.read_bytes()
+        refreshed = b"PUBLIC-FRESH-CREDENTIAL-FIXTURE-FROM-CASE-05"
+        (native._case_paths(run, 5)["home"] / native.AUTH_FILE_NAME).write_bytes(refreshed)
+        client_ordinals = []
+        def resumed_runner(argv, **kwargs):
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            self.assertGreaterEqual(ordinal, 6)
+            client_ordinals.append(ordinal)
+            if ordinal == 6 and "login" in argv:
+                self.assertEqual((native._case_paths(run, 6)["home"] / native.AUTH_FILE_NAME).read_bytes(), refreshed)
+                self.assertNotEqual((native._case_paths(run, 1)["home"] / native.AUTH_FILE_NAME).read_bytes(), refreshed)
+            return runner(argv, **kwargs)
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_stderr_review_resume(ROOT, run)
+            result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, read_followup=True, resume_stderr_review=True, process_runner=resumed_runner)
+        self.assertEqual(calls, list(range(6, 17)))
+        self.assertEqual(client_ordinals, [ordinal for ordinal in range(6, 17) for _ in range(2)])
+        self.assertEqual(result["caseResults"][:5], partial["caseResults"][:5])
+        self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 4 + ["INCOMPLETE"] + ["PASS"] * 11)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 23, 16))
+        self.assertEqual(result["caseResults"][0]["attemptCount"], 1)
+        self.assertEqual(result["executionSegment"], {
+            "priorPartialSha256": native.REVIEWED_PARTIAL_SHA256,
+            "reviewSha256": self.protocol["sameAttemptReview"]["sha256"], "firstNewOrdinal": 6,
+            "newAttemptCount": 11, "newCliLaunchCount": 11})
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual(sum(case["operatorStderrCapture"]["bytes"] for case in result["caseResults"]), 158)
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for path, data in before.items():
+            self.assertEqual(path.read_bytes(), data, path.name)
+        self.assertEqual(raw.read_bytes(), raw_before)
+        saved = (ledger / "normalized-remainder-result.json").read_bytes()
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, read_followup=True, resume_stderr_review=True, process_runner=runner)
+        self.assertEqual(calls, list(range(6, 17)))
+        self.assertEqual((ledger / "normalized-remainder-result.json").read_bytes(), saved)
+        for change in (lambda value: value.pop("executionSegment"),
+                       lambda value: value["executionSegment"].__setitem__("firstNewOrdinal", 5),
+                       lambda value: value["executionSegment"].__setitem__("newAttemptCount", 16),
+                       lambda value: value.__setitem__("cumulativeAttemptCount", 22),
+                       lambda value: value["caseResults"][4].__setitem__("status", "PASS"),
+                       lambda value: value["caseResults"][4]["executionDiagnostics"].__setitem__("stderrClassification", "known-nonfatal")):
+            changed = copy.deepcopy(result)
+            change(changed)
+            self.assertTrue(native.validate_native_result(changed, ROOT))
+
+    def test_review_resume_carries_stderr_budget_and_does_not_accept_new_unknown_stderr(self):
+        run, runner, calls, partial, raw = self._review_resume_fixture()
+        ledger = run / "read-contract-continuation"
+        def unknown_stderr(argv, **kwargs):
+            capture = runner(argv, **kwargs)
+            return {**capture, "stderr": b"NEW-PUBLIC-UNKNOWN:" + b"x" * 20000} if "exec" in argv else capture
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_stderr_review_resume(ROOT, run)
+            result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, read_followup=True, resume_stderr_review=True, process_runner=unknown_stderr)
+        self.assertEqual(calls, [6])
+        self.assertEqual(result["caseResults"][:5], partial["caseResults"][:5])
+        current = result["caseResults"][5]
+        self.assertEqual((current["status"], current["diagnostic"]), ("INCOMPLETE", "unknown-stderr"))
+        self.assertEqual(current["operatorStderrCapture"], {"status": "saved", "bytes": 16384 - 158,
+                                                          "truncated": True, "encoding": "utf-8"})
+        self.assertEqual([case["status"] for case in result["caseResults"]][6:], ["NOT-RUN"] * 10)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (6, 13, 6))
+        self.assertEqual((result["executionSegment"]["newAttemptCount"], result["executionSegment"]["newCliLaunchCount"]), (1, 1))
+        self.assertEqual(len((ledger / "operator-only-diagnostics/case-06-stderr.json").read_bytes()), 16384 - 158)
+        self.assertNotIn("NEW-PUBLIC-UNKNOWN", json.dumps(result))
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_review_resume_rejects_partial_marker_preparation_and_input_drift(self):
+        parent = self.parent
+        for name in ("normalized-result.json", "batch-started.json", "attempt-01.json", "attempt-05.json",
+                     "attempt-06.json", "execution-implementation.json", "preparation.json", "response-schema-06.json"):
+            with self.subTest(name=name):
+                self.parent = parent / name.removesuffix(".json")
+                self.parent.mkdir()
+                run, _, calls, _, _ = self._review_resume_fixture()
+                ledger = run / "read-contract-continuation"
+                path = ledger / name
+                if name == "attempt-06.json":
+                    changed = native._bytes({"ordinal": 6, "caseId": self.cases[5]["id"], "protocolDigest": native.REVIEWED_PARTIAL_PROTOCOL})
+                elif name in {"normalized-result.json", "response-schema-06.json"}:
+                    changed = path.read_bytes() + b" "
+                else:
+                    document = json.loads(path.read_bytes())
+                    document["protocolDigest"] = native.SEVENTH_PROTOCOL_DIGEST
+                    changed = native._bytes(document)
+                path.write_bytes(changed)
+                with self.assertRaises(native.NativeObservationError):
+                    native.prepare_stderr_review_resume(ROOT, run)
+                self.assertEqual(calls, [])
+                self.assertFalse((ledger / "remainder-preparation.json").exists())
+                self.assertFalse((ledger / "same-attempt-review.json").exists())
+                self.assertEqual(path.read_bytes(), changed)
+
+    def test_review_resume_rejects_changed_review_and_never_replays_preparation(self):
+        run, runner, calls, _, _ = self._review_resume_fixture()
+        native.prepare_stderr_review_resume(ROOT, run)
+        ledger = run / "read-contract-continuation"
+        original = (ledger / "same-attempt-review.json").read_bytes()
+        with self.assertRaises(FileExistsError):
+            native.prepare_stderr_review_resume(ROOT, run)
+        self.assertEqual((ledger / "same-attempt-review.json").read_bytes(), original)
+        changed = original + b" "
+        (ledger / "same-attempt-review.json").write_bytes(changed)
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, read_followup=True, resume_stderr_review=True, process_runner=runner)
+        self.assertEqual(calls, [])
+        self.assertFalse((ledger / "remainder-started.json").exists())
+        self.assertFalse((ledger / "attempt-06.json").exists())
+        self.assertEqual((ledger / "same-attempt-review.json").read_bytes(), changed)
 
     def test_schema_followup_keeps_readonly_command_contract(self):
         def unauthorized_command(lines):

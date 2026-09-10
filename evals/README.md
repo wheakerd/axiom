@@ -1,5 +1,24 @@
 # Routing Evaluations
 
+## Same-attempt catalog diagnostic supplement
+
+The operator supplied the Case 5 stderr message: the frozen client reported a
+model-catalog refresh timeout. The [specific review](no-hook-observation/case-05-catalog-review-v2.json)
+binds that report to the immutable partial result. Frozen source maps the
+five-second asynchronous catalog timeout to a generic error whose display
+mentions a child process; the message alone does not establish a residual child.
+Case 5 retained a valid response and postcheck, with gpt-5.5 / medium and Direct
+before and after. Its original INCOMPLETE record is unchanged; the supplement
+permits only the unstarted Cases 6-16, without claiming Skill body consumption.
+
+The same ledger now requires a separate exclusive remainder marker and
+preparation. Original Cases 1-5 keep their original implementation, protocol and
+input bindings. New cases use the new implementation and derived inputs; the
+result identifies both segments. Prior stderr storage counts against the same
+16 KiB budget, without reading operator-only content. No consumed attempt is
+refunded. Seven historical failures and the partial result remain immutable.
+
+
 ## Current native result binding
 
 The revision 10 batch is bound to execution `7c4c2c8aa01cde728976d1047e8801852a7e2485`.

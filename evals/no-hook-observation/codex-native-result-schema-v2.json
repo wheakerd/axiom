@@ -872,6 +872,39 @@
           "type": "string"
         }
       }
+    },
+    "executionSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "priorPartialSha256",
+        "reviewSha256",
+        "firstNewOrdinal",
+        "newAttemptCount",
+        "newCliLaunchCount"
+      ],
+      "properties": {
+        "priorPartialSha256": {
+          "const": "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b"
+        },
+        "reviewSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "firstNewOrdinal": {
+          "const": 6
+        },
+        "newAttemptCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        },
+        "newCliLaunchCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11
+        }
+      }
     }
   }
 }
