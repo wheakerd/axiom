@@ -955,37 +955,77 @@
       }
     },
     "executionSegment": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "priorPartialSha256",
-        "reviewSha256",
-        "firstNewOrdinal",
-        "newAttemptCount",
-        "newCliLaunchCount"
-      ],
-      "properties": {
-        "priorPartialSha256": {
-          "const": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "priorPartialSha256",
+            "reviewSha256",
+            "firstNewOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "priorPartialSha256": {
+              "const": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd"
+            },
+            "reviewSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "firstNewOrdinal": {
+              "const": 7
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            }
+          }
         },
-        "reviewSha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "firstNewOrdinal": {
-          "const": 7
-        },
-        "newAttemptCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 10
-        },
-        "newCliLaunchCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 10
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "priorPartialSha256": {
+              "const": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9"
+            },
+            "firstNewOrdinal": {
+              "const": 11
+            },
+            "priorAttemptCount": {
+              "const": 30
+            },
+            "authenticationSourceOrdinal": {
+              "const": 9
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          }
         }
-      }
+      ]
     }
   }
 }

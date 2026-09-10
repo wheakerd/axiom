@@ -1565,3 +1565,34 @@ read inventory. No mapping defect is established, its target was not accessed,
 and no allowlist or sandbox change is made. The observation remains bound to
 implementation a29b950, with ten new and 30 lifetime attempts. This unit repair
 starts no model, does not resume the batch, and does not change any host result.
+
+### Independent unstarted assessment segment
+
+The 0.10.1 result `9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9`
+retains its hard stop after Case 10 under implementation a29b950. A separately
+authorized segment may attempt only Cases 11-16, once each, using the retained
+preparation and attempt ledger. Thirty lifetime attempts remain spent; the limit
+stays 36. The ten previous case records remain exact in the combined view, not
+observed again or regraded under the later protocol.
+
+The entrypoint verifies the original result, execution binding, markers,
+ordinary client reaping and cleanup, and stable inputs. Unstarted workspaces,
+homes, configuration and discovery remain separate. Case 11 has no Axiom
+installation or discovery link. The first credential handoff uses the last
+normally completed Case 9 dedicated client after official login-status checking;
+the terminated Case 10 is not a refresh source. Later handoffs remain serial.
+This is not new descendant isolation or proof of service-side model availability.
+
+Only protocol-derived opaque bindings and response-schema files are renewed.
+The model, requests, assessment definitions, Skills, runtime, bundle, read
+allowlist and sandbox stay unchanged. A new policy or reliability failure stops
+the segment; no further supplementary segment is implied. Existing same-attempt
+stderr review still requires complete input, a valid terminal and response,
+final-output agreement, valid postchecks, and no policy rejection, termination,
+timeout or other invalid prerequisite. It cannot manufacture body-read evidence.
+
+The segment identifies its own implementation, protocol and new attempt/CLI
+counts. Total attempts are 20 historical plus ten retained assessment attempts
+plus at most six new attempts. Case 1 FAIL and Case 10 INCOMPLETE stay in scope,
+so six new PASS results cannot make the combined assessment PASS. Operator-only
+diagnostics remain private and are not read back or committed.

@@ -3785,6 +3785,295 @@ class NativeObservationTests(unittest.TestCase):
         self.assertFalse(result["hostClaim"])
         self.assertIsNone(result["modelRequestCount"])
 
+    def _assessment_remainder_fixture(self, *, failed_case=None):
+        """Retained public evidence and fresh, opaque non-secret local fixtures."""
+        run, runner, calls = self._prepared_runner(failed_case=failed_case)
+        partial_bytes = (ROOT / native.ASSESSMENT_PARTIAL_BINDING["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(partial_bytes).hexdigest(),
+                         native.ASSESSMENT_PARTIAL_BINDING["sha256"])
+        partial = json.loads(partial_bytes)
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        state.update(protocolDigest=native.ASSESSMENT_PROTOCOL_DIGEST,
+                     materializationSeed=partial["materializationSeed"])
+        (run / native.STATE_NAME).write_bytes(native._bytes(state))
+        for ordinal, case in enumerate(self.cases, 1):
+            material = native.materialize_native_case_contract(
+                materialization_seed=bytes.fromhex(state["materializationSeed"]), ordinal=ordinal,
+                protocol_digest=native.ASSESSMENT_PROTOCOL_DIGEST,
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            (native._case_paths(run, ordinal)["case"] / "response-schema.json").write_bytes(material.schema_bytes)
+            if ordinal <= 10:
+                native._exclusive(run / f"attempt-{ordinal:02d}.json", native._bytes({
+                    "ordinal": ordinal, "caseId": case["id"],
+                    "protocolDigest": native.ASSESSMENT_PROTOCOL_DIGEST}))
+        native._exclusive(run / "normalized-result.json", partial_bytes)
+        native._exclusive(run / "batch-started.json", native._bytes({
+            "protocolDigest": native.ASSESSMENT_PROTOCOL_DIGEST}))
+        native._exclusive(run / "execution-binding.json", native._bytes({
+            "implementationCommit": native.ASSESSMENT_PARTIAL_BINDING["implementationCommit"],
+            "implementationTree": native.ASSESSMENT_PARTIAL_BINDING["implementationTree"],
+            "protocolDigest": native.ASSESSMENT_PROTOCOL_DIGEST, "lifetimeAttemptLimit": 36,
+            "modelRequestCount": None, "newAttemptLimit": 16, "priorAttemptCount": 20,
+            "priorResultSha256s": native.ASSESSMENT_PRIOR_RESULTS}))
+        directory = run / "operator-only-diagnostics"
+        directory.mkdir(mode=0o700)
+        raw = []
+        for case in partial["caseResults"][:10]:
+            for field, suffix in (("operatorStderrCapture", "stderr"),
+                                  ("operatorReadCapture", "read-rejection")):
+                count = case[field]["bytes"]
+                if count:
+                    path = directory / f"case-{case['ordinal']:02d}-{suffix}.json"
+                    native._exclusive(path, b"PUBLIC-OPAQUE-FIXTURE:".ljust(count, b"x"))
+                    raw.append(path)
+        # Only this test's public plain-text bytes enter the production copy
+        # mechanism. The prior Case 10 copy is deliberately not the next source.
+        source = self._seed_test_auth(run)
+        metadata = source.stat()
+        native._exclusive(native._auth_owner(run, 1), native._bytes({
+            "ordinal": 1, "device": metadata.st_dev, "inode": metadata.st_ino}))
+        for ordinal in range(2, 17):
+            native._copy_test_auth(run, 1, ordinal, create=True)
+        native._exclusive(run / native.AUTH_COPY_STATE, native._bytes({
+            "protocolDigest": native.ASSESSMENT_PROTOCOL_DIGEST, "sourceOrdinal": 1,
+            "copiedOrdinals": list(range(2, 17))}))
+        (native._case_paths(run, 9)["home"] / native.AUTH_FILE_NAME).write_bytes(b"PUBLIC-REFRESH-CASE-09")
+        (native._case_paths(run, 10)["home"] / native.AUTH_FILE_NAME).write_bytes(b"PUBLIC-ABNORMAL-CASE-10")
+        return run, runner, calls, partial, tuple(raw)
+
+    def test_assessment_remainder_prepares_all_inputs_without_replacing_originals(self):
+        run, _, calls, partial, raw = self._assessment_remainder_fixture()
+        old_paths = [run / native.STATE_NAME, run / "batch-started.json", run / "normalized-result.json",
+                     run / "execution-binding.json", run / native.AUTH_COPY_STATE]
+        old_paths += [run / f"attempt-{ordinal:02d}.json" for ordinal in range(1, 11)]
+        old_paths += [native._case_paths(run, ordinal)["case"] / "response-schema.json"
+                     for ordinal in range(1, 17)]
+        before = {path: path.read_bytes() for path in old_paths}
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_assessment_remainder(ROOT, run)
+        prepared = json.loads((run / "assessment-remainder-preparation.json").read_bytes())
+        self.assertEqual(prepared, {**json.loads(before[run / native.STATE_NAME]),
+                                   "protocolDigest": self.protocol["protocolDigest"]})
+        for ordinal, case in enumerate(self.cases, 1):
+            material = native.materialize_native_case_contract(
+                materialization_seed=bytes.fromhex(partial["materializationSeed"]), ordinal=ordinal,
+                protocol_digest=self.protocol["protocolDigest"],
+                model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
+                prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+            self.assertEqual((run / f"assessment-remainder-response-schema-{ordinal:02d}.json").read_bytes(),
+                             material.schema_bytes)
+            native.validate_response_transport(json.loads(material.schema_bytes))
+        self.assertEqual({path: path.read_bytes() for path in old_paths}, before)
+        self.assertFalse((run / "assessment-remainder-started.json").exists())
+        self.assertEqual(calls, [])
+        with self.assertRaises(FileExistsError), self._forbid_fixture_raw_reads(raw):
+            native.prepare_assessment_remainder(ROOT, run)
+        self.assertEqual({path: path.read_bytes() for path in old_paths}, before)
+
+    def test_assessment_remainder_runs_only_eleven_to_sixteen_and_hands_off_from_nine(self):
+        run, runner, calls, partial, raw = self._assessment_remainder_fixture()
+        retained = [run / "normalized-result.json", run / native.STATE_NAME, run / "batch-started.json",
+                    run / "execution-binding.json", run / native.AUTH_COPY_STATE]
+        retained += [run / f"attempt-{ordinal:02d}.json" for ordinal in range(1, 11)]
+        before = {path: path.read_bytes() for path in retained}
+        raw_metadata = {path: (path.stat().st_ino, path.stat().st_size, path.stat().st_mtime_ns) for path in raw}
+        client_ordinals = []
+        def refreshed_runner(argv, **kwargs):
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            self.assertGreaterEqual(ordinal, 11)
+            client_ordinals.append(ordinal)
+            auth = native._case_paths(run, ordinal)["home"] / native.AUTH_FILE_NAME
+            prior = 9 if ordinal == 11 else ordinal - 1
+            self.assertEqual(auth.read_bytes(), f"PUBLIC-REFRESH-CASE-{prior:02d}".encode())
+            if "exec" in argv:
+                self.assertEqual(Path(argv[argv.index("--output-schema") + 1]),
+                                 run / f"assessment-remainder-response-schema-{ordinal:02d}.json")
+                self.assertNotIn("resume", argv)
+                self.assertNotIn("fork", argv)
+            capture = runner(argv, **kwargs)
+            if "exec" in argv:
+                auth.write_bytes(f"PUBLIC-REFRESH-CASE-{ordinal:02d}".encode())
+            return capture
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_assessment_remainder(ROOT, run)
+            result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, assessment_remainder=True,
+                process_runner=refreshed_runner)
+        self.assertEqual(calls, list(range(11, 17)))
+        self.assertEqual(client_ordinals, [ordinal for ordinal in range(11, 17) for _ in range(2)])
+        self.assertEqual(result["caseResults"][:10], partial["caseResults"][:10])
+        self.assertEqual([case["status"] for case in result["caseResults"]][10:], ["PASS"] * 6)
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
+                         (16, 16, 36))
+        self.assertEqual(result["priorResultSha256s"], native.ASSESSMENT_PRIOR_RESULTS)
+        self.assertNotIn(native.ASSESSMENT_PARTIAL_BINDING["sha256"], result["priorResultSha256s"])
+        self.assertEqual(result["executionSegment"], {
+            "priorPartialSha256": native.ASSESSMENT_PARTIAL_BINDING["sha256"], "firstNewOrdinal": 11,
+            "newAttemptCount": 6, "newCliLaunchCount": 6, "priorAttemptCount": 30,
+            "authenticationSourceOrdinal": 9})
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertFalse(result["hostClaim"])
+        self.assertIsNone(result["modelRequestCount"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual({path: path.read_bytes() for path in retained}, before)
+        self.assertEqual({path: (path.stat().st_ino, path.stat().st_size, path.stat().st_mtime_ns)
+                          for path in raw}, raw_metadata)
+        saved = (run / "normalized-assessment-remainder-result.json").read_bytes()
+        with self.assertRaises(native.NativeObservationError), self._forbid_fixture_raw_reads(raw):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, assessment_remainder=True,
+                process_runner=refreshed_runner)
+        self.assertEqual(calls, list(range(11, 17)))
+        self.assertEqual((run / "normalized-assessment-remainder-result.json").read_bytes(), saved)
+        for change in (lambda value: value.pop("executionSegment"),
+                       lambda value: value["executionSegment"].__setitem__("firstNewOrdinal", 10),
+                       lambda value: value["executionSegment"].__setitem__("newAttemptCount", 7),
+                       lambda value: value["executionSegment"].__setitem__("newCliLaunchCount", 5),
+                       lambda value: value["executionSegment"].__setitem__("priorAttemptCount", 20),
+                       lambda value: value["executionSegment"].__setitem__("authenticationSourceOrdinal", 10),
+                       lambda value: value.__setitem__("cumulativeAttemptCount", 30),
+                       lambda value: value["priorResultSha256s"].append(native.ASSESSMENT_PARTIAL_BINDING["sha256"]),
+                       lambda value: value["caseResults"][0].__setitem__("status", "PASS"),
+                       lambda value: value["caseResults"][9].__setitem__("status", "PASS")):
+            changed = copy.deepcopy(result)
+            change(changed)
+            self.assertTrue(native.validate_native_result(changed, ROOT))
+
+    def test_assessment_remainder_unknown_stderr_stops_and_preserves_existing_capture_budget(self):
+        run, runner, calls, partial, raw = self._assessment_remainder_fixture()
+        prior_capture = sum(case["operatorStderrCapture"]["bytes"] for case in partial["caseResults"][:10])
+        self.assertEqual(prior_capture, 4316)
+        def unknown_stderr(argv, **kwargs):
+            capture = runner(argv, **kwargs)
+            return {**capture, "stderr": b"PUBLIC-NEW-UNKNOWN:" + b"x" * 20000} if "exec" in argv else capture
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_assessment_remainder(ROOT, run)
+            result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, assessment_remainder=True,
+                process_runner=unknown_stderr)
+        self.assertEqual(calls, [11])
+        self.assertEqual(result["caseResults"][:10], partial["caseResults"][:10])
+        current = result["caseResults"][10]
+        self.assertEqual((current["status"], current["diagnostic"]), ("INCOMPLETE", "unknown-stderr"))
+        self.assertEqual(current["operatorStderrCapture"], {"status": "saved", "bytes": 16384 - prior_capture,
+                                                           "truncated": True, "encoding": "utf-8"})
+        self.assertEqual(current["evidenceExtraction"], {"stream": "valid", "response": "valid", "postcheck": "valid"})
+        self.assertEqual([case["status"] for case in result["caseResults"]][11:], ["NOT-RUN"] * 5)
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
+                         (11, 11, 31))
+        self.assertEqual((result["executionSegment"]["newAttemptCount"],
+                          result["executionSegment"]["newCliLaunchCount"]), (1, 1))
+        self.assertFalse(any((run / f"attempt-{ordinal:02d}.json").exists() for ordinal in range(12, 17)))
+        self.assertNotIn("PUBLIC-NEW-UNKNOWN", json.dumps(result))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_assessment_remainder_spawn_failure_consumes_attempt_without_cli_launch(self):
+        run, runner, calls, partial, raw = self._assessment_remainder_fixture()
+        invoked = []
+        def fail_spawn(argv, **kwargs):
+            if "exec" in argv:
+                ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+                invoked.append(ordinal)
+                self.assertTrue((run / "attempt-11.json").is_file())
+                raise OSError("PUBLIC-FIXTURE-SPAWN-FAILURE")
+            return runner(argv, **kwargs)
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_assessment_remainder(ROOT, run)
+            result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, assessment_remainder=True,
+                process_runner=fail_spawn)
+        self.assertEqual(invoked, [11])
+        self.assertEqual(calls, [])
+        self.assertEqual(result["caseResults"][:10], partial["caseResults"][:10])
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
+                         (11, 10, 31))
+        self.assertEqual((result["executionSegment"]["newAttemptCount"],
+                          result["executionSegment"]["newCliLaunchCount"]), (1, 0))
+        self.assertEqual(result["caseResults"][10]["status"], "INCOMPLETE")
+        self.assertEqual([case["status"] for case in result["caseResults"]][11:], ["NOT-RUN"] * 5)
+        self.assertNotIn("PUBLIC-FIXTURE-SPAWN-FAILURE", json.dumps(result))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_assessment_remainder_semantic_failure_continues_but_read_rejection_stops(self):
+        run, runner, calls, partial, raw = self._assessment_remainder_fixture(failed_case=12)
+        untouched = native._case_paths(run, 13)["home"] / native.AUTH_FILE_NAME
+        original = untouched.read_bytes()
+        def wrong_control_answer(argv, **kwargs):
+            if "exec" in argv and Path(kwargs["cwd"]).parent.name == "case-12":
+                capture = runner(argv, **{**kwargs, "line_callback": None})
+                # As in the existing diagnostic-chain fixture, emit public
+                # events through the real capture boundary. A bare callback
+                # exception would omit the captured empty stderr and cleanup.
+                code = ("import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(" +
+                        repr(capture["stdout"]) + "); sys.stdout.buffer.flush()")
+                return native.bounded_process([sys.executable, "-I", "-B", "-c", code], **kwargs)
+            if "exec" not in argv or Path(kwargs["cwd"]).parent.name != "case-11":
+                return runner(argv, **kwargs)
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            final_output = Path(argv[argv.index("--output-last-message") + 1])
+            document = json.loads(final_output.read_bytes())
+            document.update(discoveryOutcome="selected", selectedRoutes=["using-axiom"],
+                            usingAxiomFrontDoorObserved=True)
+            final_output.write_bytes(event(document))
+            actual = stream(document)
+            for line in actual.splitlines():
+                kwargs["line_callback"](line)
+            return {**capture, "stdout": actual}
+        with self._forbid_fixture_raw_reads(raw):
+            native.prepare_assessment_remainder(ROOT, run)
+            result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, assessment_remainder=True,
+                process_runner=wrong_control_answer)
+        self.assertEqual(calls, [11, 12])
+        self.assertEqual(result["caseResults"][:10], partial["caseResults"][:10])
+        control, rejected = result["caseResults"][10:12]
+        self.assertEqual((control["status"], control["diagnostic"], control["installation"]),
+                         ("FAIL", "semantic-mismatch", "absent"))
+        self.assertEqual(rejected["status"], "INCOMPLETE")
+        self.assertIn(rejected["executionDiagnostics"]["streamAssertion"], native.READ_REJECTIONS)
+        self.assertEqual(rejected["operatorReadCapture"]["status"], "saved")
+        self.assertEqual([case["status"] for case in result["caseResults"]][12:], ["NOT-RUN"] * 4)
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
+                         (12, 12, 32))
+        self.assertEqual(untouched.read_bytes(), original)
+        self.assertFalse((run / "attempt-13.json").exists())
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_assessment_remainder_refuses_original_provenance_or_unstarted_marker_drift(self):
+        run, _, calls, _, raw = self._assessment_remainder_fixture()
+        for name in ("normalized-result.json", "batch-started.json", "execution-binding.json",
+                     native.STATE_NAME, "attempt-01.json", "attempt-10.json", "case-11/response-schema.json"):
+            path = run / name
+            before = path.read_bytes()
+            if name == "normalized-result.json" or name.endswith("response-schema.json"):
+                changed = before + b" "
+            else:
+                changed_document = json.loads(before)
+                changed_document["protocolDigest"] = "sha256:" + "0" * 64
+                changed = native._bytes(changed_document)
+            with self.subTest(name=name):
+                path.write_bytes(changed)
+                with self.assertRaises(native.NativeObservationError), self._forbid_fixture_raw_reads(raw):
+                    native.prepare_assessment_remainder(ROOT, run)
+                self.assertEqual(path.read_bytes(), changed)
+                self.assertFalse((run / "assessment-remainder-preparation.json").exists())
+                self.assertFalse((run / "assessment-remainder-response-schema-01.json").exists())
+                path.write_bytes(before)
+        for name in ("attempt-11.json", "attempt-16.json", "assessment-remainder-started.json",
+                     "normalized-assessment-remainder-result.json"):
+            path = run / name
+            with self.subTest(name=name):
+                path.symlink_to(run / "absent-public-fixture")
+                with self.assertRaises(native.NativeObservationError), self._forbid_fixture_raw_reads(raw):
+                    native.prepare_assessment_remainder(ROOT, run)
+                self.assertTrue(path.is_symlink())
+                path.unlink()
+        self.assertEqual(calls, [])
+
     def test_assessment_route_order_is_checked_without_reordering_the_response(self):
         run, runner, calls = self._prepared_runner()
         original = copy.deepcopy(self.cases)

@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "c8208af0be2e73a7fb7cf2e18866d6dfdba3cde8be79ee8a603a6bfab46d53d8"
+      "sha256": "20d9e66cefaedb6503970a7a1a03aa7cc76cfc226f8bb3f124c32075d1d70341"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "e81f1f1eecc93727dbd83ea6c6f322aa52f3a72de2b9c09aed3457fd20de4395"
+    "sha256": "f7fbaa6c48e6b19d42bd65ee948dca3344279932409e4ebda739d0f2ebc2340d"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -277,15 +277,14 @@
     }
   },
   "executionWindow": {
-    "state": "assessment-candidate-once",
-    "lastResultSha256": "e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d",
-    "reason": "new runtime and uniform assessment definitions; 20 prior attempts plus at most 16 fresh cases"
+    "state": "assessment-remainder-once",
+    "lastResultSha256": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9",
+    "reason": "independent unstarted cases 11-16 only; preserve the stopped ten-case segment and all 30 prior attempts"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
     "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
   },
-  "protocolDigest": "sha256:5dda0101d4558a899b3ed8600d615bbbfc461034dac56e12f9f496538f201a7e",
   "assessmentRevision": 1,
   "assessmentReview": {
     "scope": "same attempt only; immutable original plus separate user-provided diagnostic supplement",
@@ -311,5 +310,22 @@
       "refunded attempt"
     ],
     "continuation": "only unstarted cases after the exact supplementary assessment; no automatic review"
-  }
+  },
+  "assessmentRemainder": {
+    "priorResult": {
+      "path": "evals/no-hook-observation/results/codex-native-9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9.json",
+      "sha256": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9",
+      "implementationCommit": "a29b9503920a8798509407f40645a0efee14b474",
+      "implementationTree": "a5289b6a8e787b82bd1a73ba06a0447e619fb855"
+    },
+    "firstNewOrdinal": 11,
+    "lastOrdinal": 16,
+    "priorAttemptCount": 30,
+    "maximumNewAttempts": 6,
+    "maximumCumulativeAttempts": 36,
+    "authenticationSourceOrdinal": 9,
+    "priorStop": "preserved; independent unstarted cases only",
+    "stderrReview": "same-attempt only; all existing eligibility conditions required"
+  },
+  "protocolDigest": "sha256:23b358d0f357778cee7d14d897f0fe4566fdcf6d1d1fa7465b9e03feb07de7a0"
 }
