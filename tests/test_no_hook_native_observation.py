@@ -407,6 +407,8 @@ class NativeObservationTests(unittest.TestCase):
         calls = []
 
         def runner(argv, *, cwd, env, stdin=b"", line_callback=None, started_callback=None, **_):
+            # The same ordinary client fixture may prepare a fresh sibling run.
+            run_root = Path(cwd).parent.parent
             ordinal = int(Path(cwd).parent.name.removeprefix("case-"))
             paths = native._case_paths(run_root, ordinal)
             self.assertEqual(Path(cwd), paths["workspace"])
@@ -477,6 +479,211 @@ class NativeObservationTests(unittest.TestCase):
                                           authorize_install=True, runner=runner)
         self.assertEqual(state["runMode"], "simulated")
         return run_root, runner, calls
+
+    def _material_segment_fixture(self):
+        previous, runner, calls = self._prepared_runner()
+        old = json.loads((previous / native.STATE_NAME).read_bytes())
+        source = native._case_paths(previous, 9)["home"] / native.AUTH_FILE_NAME
+        source.write_bytes(b"PUBLIC-REFRESH-CASE-09")
+        source.chmod(0o600)
+        metadata = source.stat()
+        native._exclusive(native._auth_owner(previous, 9), native._bytes({
+            "ordinal": 9, "device": metadata.st_dev, "inode": metadata.st_ino}))
+        # Only the public historical-record integration is substituted. Fresh
+        # preparation, package/configuration, opaque copy and result checks are real.
+        history = patch.object(native, "_material_history", return_value=old)
+        checked_history = history.start()
+        self.addCleanup(history.stop)
+        run = self.parent / "material-segment"
+        operations = []
+        def preparation_runner(argv, **kwargs):
+            operations.append((Path(kwargs["cwd"]).parent.parent,
+                               int(Path(kwargs["cwd"]).parent.name.removeprefix("case-")),
+                               "marketplace" if "marketplace" in argv else
+                               "plugin" if "plugin" in argv else "login"))
+            return runner(argv, **kwargs)
+        native.prepare_material_segment(ROOT, run, previous, authorize_install=True,
+                                        authorize_copy=True, runner=preparation_runner)
+        return run, previous, runner, calls, checked_history, operations
+
+    def test_material_segment_prepares_only_authorized_installations_and_copies_normal_source(self):
+        run, previous, runner, calls, history, operations = self._material_segment_fixture()
+        self.assertEqual(operations[0], (previous, 9, "login"))
+        installed = [10, 12, 13, 14, 15, 16]
+        self.assertEqual(operations[1:], [(run, i, action) for i in installed
+                                         for action in ("marketplace", "plugin")])
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        for ordinal in range(1, 17):
+            paths = native._case_paths(run, ordinal)
+            self.assertEqual(paths["package"].exists(), ordinal in installed)
+            self.assertEqual(paths["discovery"].is_symlink(), ordinal in installed)
+            self.assertEqual(state["cases"][ordinal - 1]["packageSha256"],
+                             self.protocol["bundle"]["packageSha256"] if ordinal in installed else None)
+            self.assertTrue((paths["case"] / "response-schema.json").is_file())
+            self.assertEqual((paths["home"] / native.AUTH_FILE_NAME).exists(), ordinal == 10)
+        source = native._case_paths(previous, 9)["home"] / native.AUTH_FILE_NAME
+        target = native._case_paths(run, 10)["home"] / native.AUTH_FILE_NAME
+        self.assertEqual(target.read_bytes(), b"PUBLIC-REFRESH-CASE-09")
+        self.assertEqual(source.read_bytes(), target.read_bytes())
+        self.assertNotEqual(source.stat().st_ino, target.stat().st_ino)
+        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(json.loads((run / "material-segment-preparation.json").read_bytes()), {
+            "protocolDigest": self.protocol["protocolDigest"], "previousRunRoot": str(previous),
+            "contract": native.MATERIAL_SEGMENT})
+        saved = {p: p.read_bytes() for p in (run / native.STATE_NAME,
+                 run / "material-segment-preparation.json", target, source)}
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_material_segment(ROOT, run, previous, authorize_install=True,
+                                            authorize_copy=True, runner=runner)
+        self.assertEqual({p: p.read_bytes() for p in saved}, saved)
+        self.assertEqual(calls, [])
+        self.assertTrue(history.called)
+
+    def test_material_segment_runs_ten_to_sixteen_with_fresh_prefix_and_serial_auth(self):
+        run, previous, runner, calls, _, _ = self._material_segment_fixture()
+        old_files = {p: p.read_bytes() for p in (previous / native.STATE_NAME,
+                     native._auth_owner(previous, 9),
+                     native._case_paths(previous, 9)["home"] / native.AUTH_FILE_NAME)}
+        invoked = []
+        def refreshed_runner(argv, **kwargs):
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            invoked.append(ordinal)
+            self.assertGreaterEqual(ordinal, 10)
+            auth = native._case_paths(run, ordinal)["home"] / native.AUTH_FILE_NAME
+            self.assertEqual(auth.read_bytes(), f"PUBLIC-REFRESH-CASE-{ordinal - 1:02d}".encode())
+            self.assertNotIn("resume", argv)
+            self.assertNotIn("fork", argv)
+            capture = runner(argv, **kwargs)
+            if "exec" in argv:
+                auth.write_bytes(f"PUBLIC-REFRESH-CASE-{ordinal:02d}".encode())
+            return capture
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, material_segment=True,
+            process_runner=refreshed_runner)
+        self.assertEqual(calls, list(range(10, 17)))
+        self.assertEqual(invoked, [i for i in range(10, 17) for _ in range(2)])
+        self.assertEqual([r["status"] for r in result["caseResults"]], ["NOT-RUN"] * 9 + ["PASS"] * 7)
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (7, 7, 38))
+        self.assertEqual(result["executionSegment"], {"kind": "material-delivery",
+            "priorPartialSha256": native.ASSESSMENT_REMAINDER_BINDING["sha256"],
+            "firstNewOrdinal": 10, "priorAttemptCount": 31, "authenticationSourceOrdinal": 9,
+            "newAttemptCount": 7, "newCliLaunchCount": 7})
+        self.assertEqual(result["priorResultSha256s"], native.ASSESSMENT_PRIOR_RESULTS)
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertEqual(result["status"], "INCOMPLETE")
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual({p: p.read_bytes() for p in old_files}, old_files)
+        self.assertFalse(any((run / f"attempt-{i:02d}.json").exists() for i in range(1, 10)))
+        saved = (run / "normalized-result.json").read_bytes()
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, material_segment=True,
+                process_runner=refreshed_runner)
+        self.assertEqual(calls, list(range(10, 17)))
+        self.assertEqual((run / "normalized-result.json").read_bytes(), saved)
+
+    def test_material_segment_unknown_stderr_stops_before_later_handoffs(self):
+        run, previous, runner, calls, _, _ = self._material_segment_fixture()
+        source = native._case_paths(previous, 9)["home"] / native.AUTH_FILE_NAME
+        before = source.read_bytes()
+        def unknown(argv, **kwargs):
+            capture = runner(argv, **kwargs)
+            return {**capture, "stderr": b"PUBLIC-MATERIAL-UNKNOWN"} if "exec" in argv else capture
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, material_segment=True, process_runner=unknown)
+        self.assertEqual(calls, [10])
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 1, 32))
+        self.assertEqual((result["caseResults"][9]["status"], result["caseResults"][9]["diagnostic"]),
+                         ("INCOMPLETE", "unknown-stderr"))
+        self.assertEqual([r["status"] for r in result["caseResults"][:9]], ["NOT-RUN"] * 9)
+        self.assertEqual([r["status"] for r in result["caseResults"][10:]], ["NOT-RUN"] * 6)
+        self.assertEqual(result["caseResults"][9]["evidenceExtraction"],
+                         {"stream": "valid", "response": "valid", "postcheck": "valid"})
+        self.assertEqual(result["caseResults"][9]["operatorStderrCapture"]["status"], "saved")
+        self.assertFalse(any((native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME).exists()
+                             for i in range(11, 17)))
+        self.assertFalse(any((run / f"attempt-{i:02d}.json").exists() for i in range(11, 17)))
+        self.assertEqual(source.read_bytes(), before)
+        self.assertNotIn("PUBLIC-MATERIAL-UNKNOWN", json.dumps(result))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_material_segment_spawn_failure_consumes_only_the_new_attempt(self):
+        run, _, runner, calls, _, _ = self._material_segment_fixture()
+        invoked = []
+        def failed_spawn(argv, **kwargs):
+            if "exec" in argv:
+                invoked.append(int(Path(kwargs["cwd"]).parent.name.removeprefix("case-")))
+                self.assertTrue((run / "attempt-10.json").is_file())
+                raise OSError("PUBLIC-MATERIAL-SPAWN-FAILURE")
+            return runner(argv, **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, material_segment=True, process_runner=failed_spawn)
+        self.assertEqual(invoked, [10])
+        self.assertEqual(calls, [])
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 0, 32))
+        self.assertEqual(result["executionSegment"]["newAttemptCount"], 1)
+        self.assertEqual(result["executionSegment"]["newCliLaunchCount"], 0)
+        self.assertEqual(result["caseResults"][9]["status"], "INCOMPLETE")
+        self.assertEqual([r["status"] for r in result["caseResults"][10:]], ["NOT-RUN"] * 6)
+        self.assertNotIn("PUBLIC-MATERIAL-SPAWN-FAILURE", json.dumps(result))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                assessment_batch=True, material_segment=True, process_runner=failed_spawn)
+        self.assertEqual(invoked, [10])
+
+    def test_material_segment_history_record_or_marker_drift_refuses_before_start(self):
+        run, _, runner, calls, history, _ = self._material_segment_fixture()
+        preparation = run / "material-segment-preparation.json"
+        original = preparation.read_bytes()
+        changed = json.loads(original)
+        changed["contract"]["priorAttemptCount"] = 30
+        preparation.write_bytes(native._bytes(changed))
+        with self.assertRaisesRegex(native.NativeObservationError, "preparation changed"):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                assessment_batch=True, material_segment=True, process_runner=runner)
+        self.assertFalse((run / "batch-started.json").exists())
+        preparation.write_bytes(original)
+        history.side_effect = native.NativeObservationError("registered material history changed")
+        with self.assertRaisesRegex(native.NativeObservationError, "history changed"):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                assessment_batch=True, material_segment=True, process_runner=runner)
+        self.assertFalse((run / "batch-started.json").exists())
+        history.side_effect = None
+        for ordinal in (1, 10, 16):
+            marker = run / f"attempt-{ordinal:02d}.json"
+            marker.write_bytes(b"PUBLIC-UNEXPECTED-MARKER")
+            with self.assertRaisesRegex(native.NativeObservationError, "already attempted"):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                    assessment_batch=True, material_segment=True, process_runner=runner)
+            self.assertEqual(marker.read_bytes(), b"PUBLIC-UNEXPECTED-MARKER")
+            self.assertFalse((run / "batch-started.json").exists())
+            marker.unlink()
+        self.assertEqual(calls, [])
+
+    def test_material_segment_validator_rejects_inherited_facts_or_refunded_budget(self):
+        run, _, runner, _, _, _ = self._material_segment_fixture()
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, material_segment=True, process_runner=runner)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for change in (
+            lambda value: value.pop("executionSegment"),
+            lambda value: value.__setitem__("cumulativeAttemptCount", 27),
+            lambda value: value["executionSegment"].__setitem__("priorAttemptCount", 30),
+            lambda value: value["executionSegment"].__setitem__("firstNewOrdinal", 9),
+            lambda value: value["executionSegment"].__setitem__("newAttemptCount", 8),
+            lambda value: value["executionSegment"].__setitem__("newCliLaunchCount", 6),
+            lambda value: value["executionSegment"].__setitem__("authenticationSourceOrdinal", 10),
+            lambda value: value["executionSegment"].__setitem__("priorPartialSha256", "0" * 64),
+            lambda value: value["caseResults"][0].__setitem__("status", "PASS"),
+            lambda value: value["caseResults"][8].__setitem__("attemptCount", 1),
+            lambda value: value["caseResults"][8].__setitem__("installation", "verified"),
+        ):
+            changed = copy.deepcopy(result)
+            change(changed)
+            self.assertTrue(native.validate_native_result(changed, ROOT))
 
     def test_all_actual_schema_files_match_structured_output_subset(self):
         run, _, calls = self._prepared_runner()

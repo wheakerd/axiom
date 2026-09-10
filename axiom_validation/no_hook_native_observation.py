@@ -73,6 +73,13 @@ MATERIAL_DELIVERY = {
     "pathBase": "case-workspace", "order": "utf8-byte-order",
     "scope": "task-data-only; not-installed-skills; empty-list-is-not-discovery-evidence",
 }
+MATERIAL_SEGMENT = {
+    "priorResult": ASSESSMENT_REMAINDER_BINDING, "firstNewOrdinal": 10,
+    "lastOrdinal": 16, "priorAttemptCount": 31, "maximumNewAttempts": 7,
+    "maximumCumulativeAttempts": 38, "authenticationSourceOrdinal": 9,
+    "inputRevision": 2, "history": "references only; no inherited observations or sessions",
+    "stop": "any policy rejection or reliability failure stops remaining cases",
+}
 MODEL = "gpt-5.5"
 REASONING_EFFORT = "medium"
 AUTH_FILE_NAME = "auth.json"
@@ -686,10 +693,11 @@ def _protocol(root: Path) -> dict[str, Any]:
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
-        "state": "closed", "lastResultSha256": ASSESSMENT_REMAINDER_BINDING["sha256"],
-        "reason": "31 attempts consumed; material-location revision has no observation authorization",
+        "state": "material-segment-only", "lastResultSha256": ASSESSMENT_REMAINDER_BINDING["sha256"],
+        "reason": "31 historical attempts; only fresh material-input cases 10-16, once each",
     }, "native execution window differs from consumed attempt evidence")
     _require(document.get("assessmentRemainder") == ASSESSMENT_REMAINDER, "assessment remainder contract mismatch")
+    _require(document.get("materialSegment") == MATERIAL_SEGMENT, "material segment contract mismatch")
     _require(document.get("materialDelivery") == MATERIAL_DELIVERY, "native material delivery contract mismatch")
     bindings = list(document.get("implementationBindings", []))
     _require([item.get("path") for item in bindings] == list(IMPLEMENTATION_PATHS),
@@ -826,7 +834,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
             _require(not validate_native_result(result, root), "native history result is invalid")
             _require(result["priorResultSha256s"] == ASSESSMENT_PRIOR_RESULTS,
                      "result does not continue the historical budget")
-            _require(result.get("executionSegment", {}).get("firstNewOrdinal") == 11 and result["cumulativeAttemptCount"] == 20 + result["attemptCount"], "current assessment budget differs from historical evidence")
+            _require(result.get("executionSegment", {}).get("kind") == "material-delivery" and result["cumulativeAttemptCount"] == 31 + result["attemptCount"], "current material segment budget differs from historical evidence")
             _require(result["runMode"] == "actual", "simulated result is not a host-history observation")
             current = {"codexObservation": result["status"].lower(), "hostClaim": result["hostClaim"],
                        "credentialUsed": result["cliLaunchCount"] > 0, "cliLaunchCount": result["cliLaunchCount"],
@@ -946,6 +954,91 @@ def prepare_assessment_remainder(root: Path, run_root: Path) -> None:
         _exclusive(run_root / f"assessment-remainder-response-schema-{ordinal:02d}.json", material.schema_bytes)
     _exclusive(run_root / "assessment-remainder-preparation.json",
                _bytes({**old, "protocolDigest": protocol["protocolDigest"]}))
+
+
+def _material_history(root: Path, previous: Path) -> dict[str, Any]:
+    """Only registered public records and normal input checks; no client internals."""
+    _ordinary_directory(previous)
+    prior = _assessment_remainder_result(root)
+    _require(_read(previous / "normalized-result.json") == _read(root / ASSESSMENT_PARTIAL_BINDING["path"]) and
+             _read(previous / "normalized-assessment-remainder-result.json") == _read(root / ASSESSMENT_REMAINDER_BINDING["path"]),
+             "registered material history changed")
+    for ordinal in range(1, 17):
+        marker = previous / f"attempt-{ordinal:02d}.json"
+        if ordinal <= 11:
+            digest = ASSESSMENT_PROTOCOL_DIGEST if ordinal <= 10 else prior["protocolDigest"]
+            _require(_json(_read(marker)) == {"ordinal": ordinal,
+                     "caseId": legacy.EXPECTED_CASE_IDS[ordinal - 1], "protocolDigest": digest},
+                     "historical attempt marker changed")
+        else:
+            _require(not marker.exists() and not marker.is_symlink(), "historical later attempt exists")
+    for name, digest in (("batch-started.json", ASSESSMENT_PROTOCOL_DIGEST),
+                         ("assessment-remainder-started.json", prior["protocolDigest"])):
+        _require(_json(_read(previous / name)) == {"protocolDigest": digest}, "historical batch marker changed")
+    old = _json(_read(previous / STATE_NAME))
+    _require(old["protocolDigest"] == ASSESSMENT_PROTOCOL_DIGEST and
+             old["materializationSeed"] == prior["materializationSeed"], "historical preparation changed")
+    fixtures = _input(root, _protocol(root), "fixtureMatrix")
+    for ordinal in (9, 10, 11):
+        record = prior["caseResults"][ordinal - 1]
+        facts = record["executionDiagnostics"]
+        _require(facts["returnCode"] is not None and not facts["cleanupFailed"] and
+                 record["evidenceExtraction"]["postcheck"] == "valid", "historical ordinary cleanup incomplete")
+        paths = _case_paths(previous, ordinal)
+        _verify_config(paths, previous / "marketplace", ordinal != 11)
+        _verify_discovery(paths, ordinal != 11)
+        _require(fixture_identity(paths["workspace"], _definition(fixtures, ordinal)) == record["fixtureAfterSha256"] and
+                 (package_identity(paths["package"]) if ordinal != 11 else None) == record["packageAfterSha256"],
+                 "registered historical inputs changed")
+        final = previous / f"final-message-{ordinal:02d}.json"
+        _require(not final.exists() and not final.is_symlink(), "historical final-output cleanup incomplete")
+    source = prior["caseResults"][8]
+    facts = source["executionDiagnostics"]
+    _require(source["status"] in {"PASS", "FAIL"} and facts["returnCode"] == 0 and
+             not any(facts[k] for k in ("observerTerminated", "timedOut", "cleanupFailed")) and
+             facts["inputFullyDelivered"] and facts["finalOutputVerified"], "authentication source did not exit normally")
+    return old
+
+
+def prepare_material_segment(root: Path, run_root: Path, previous: Path, *,
+                             authorize_install: bool = False, authorize_copy: bool = False,
+                             runner: Callable[..., Mapping[str, Any]] | None = None) -> None:
+    """Fresh case states; reference the stopped ledger without resuming its sessions."""
+    _require(authorize_install and authorize_copy, "explicit material preparation and test-auth copy authorization required")
+    old = _material_history(root, previous)
+    _require(run_root.parent == previous.parent and run_root != previous,
+             "material segment must be separately registered under the same test owner")
+    executable = Path(old["executable"])
+    legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
+    source_paths = _case_paths(previous, 9)
+    _model_metadata(source_paths)
+    invoke = bounded_process if runner is None else runner
+    login = invoke([str(executable), "-c", 'cli_auth_credentials_store="file"', "login", "status"],
+                   cwd=source_paths["workspace"], env=case_environment(source_paths))
+    _require(login["returncode"] == 0 and (login["stdout"] + login["stderr"]).strip() == b"Logged in using ChatGPT",
+             "official source login status unavailable")
+    prepare_native_run(root, run_root, previous / "marketplace/plugin", executable,
+                       authorize_install=True, runner=runner, material_segment=True)
+    _exclusive(run_root / "material-segment-preparation.json", _bytes({
+        "protocolDigest": _protocol(root)["protocolDigest"], "previousRunRoot": str(previous),
+        "contract": MATERIAL_SEGMENT}))
+    _copy_test_auth(run_root, 9, 10, create=True, source_root=previous)
+
+
+def _verify_material_segment(root: Path, run_root: Path) -> None:
+    record = _json(_read(run_root / "material-segment-preparation.json"))
+    _require(set(record) == {"protocolDigest", "previousRunRoot", "contract"} and
+             record["protocolDigest"] == _protocol(root)["protocolDigest"] and
+             record["contract"] == MATERIAL_SEGMENT, "material segment preparation changed")
+    previous = Path(record["previousRunRoot"])
+    _require(run_root.parent == previous.parent and run_root != previous, "material segment owner changed")
+    _material_history(root, previous)
+    for ordinal in range(1, 17):
+        marker = run_root / f"attempt-{ordinal:02d}.json"
+        _require(not marker.exists() and not marker.is_symlink(), "material case already attempted")
+    for name in ("batch-started.json", "normalized-result.json"):
+        marker = run_root / name
+        _require(not marker.exists() and not marker.is_symlink(), "material segment already started")
 
 
 def _input(root: Path, protocol: Mapping[str, Any], name: str) -> Any:
@@ -1372,7 +1465,8 @@ def _verify_discovery(paths: Mapping[str, Path], installed: bool) -> None:
 
 def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable: Path, *,
                        authorize_install: bool = False,
-                       runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
+                       runner: Callable[..., Mapping[str, Any]] | None = None,
+                       material_segment: bool = False) -> dict[str, Any]:
     """Prepare once, before login. Failed preparations are retained, never retried."""
     _require(authorize_install is True, "explicit local-install authorization is required")
     protocol = _protocol(root)
@@ -1418,7 +1512,8 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
             materialization_seed=seed, ordinal=ordinal, protocol_digest=protocol["protocolDigest"],
             model_schema=model_schema, prompt_envelope=envelope, request=case["request"])
         _exclusive(paths["case"] / "response-schema.json", materialized.schema_bytes)
-        if ordinal != 11:
+        installed = ordinal != 11 and (not material_segment or ordinal >= 10)
+        if installed:
             legacy.recheck_executable(executable_identity)
             receipt = _json(_successful(invoke(legacy.build_marketplace_add_argv(executable, marketplace),
                 cwd=paths["workspace"], env=case_environment(paths)), "marketplace registration"))
@@ -1438,10 +1533,10 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
             _require(package_identity(paths["package"]) == expected_package, "installed plugin differs from verified bundle")
             paths["discovery"].parent.mkdir(mode=0o700)
             paths["discovery"].symlink_to(paths["package"] / "skills", target_is_directory=True)
-        _verify_config(paths, marketplace, ordinal != 11)
-        _verify_discovery(paths, ordinal != 11)
+        _verify_config(paths, marketplace, installed)
+        _verify_discovery(paths, installed)
         prepared.append({"ordinal": ordinal, "fixtureSha256": fixture,
-                         "packageSha256": expected_package if ordinal != 11 else None})
+                         "packageSha256": expected_package if installed else None})
     state = {"schemaVersion": "2", "protocolDigest": protocol["protocolDigest"],
              "runMode": "actual" if actual else "simulated", "executable": str(executable),
              "materializationSeed": seed.hex(), "cases": prepared}
@@ -1860,7 +1955,8 @@ def _open_test_auth(run_root: Path, ordinal: int, flags: int) -> int:
         raise
 
 
-def _copy_test_auth(run_root: Path, source_ordinal: int, target_ordinal: int, *, create: bool) -> None:
+def _copy_test_auth(run_root: Path, source_ordinal: int, target_ordinal: int, *, create: bool,
+                    source_root: Path | None = None) -> None:
     """Copy only the official credential file; bytes never enter any report/hash/parser.
 
     Supported only without concurrent operators/clients. The frozen client writes
@@ -1869,7 +1965,7 @@ def _copy_test_auth(run_root: Path, source_ordinal: int, target_ordinal: int, *,
     """
     _require(source_ordinal != target_ordinal and 2 <= target_ordinal <= CASE_COUNT,
              "invalid test-auth handoff")
-    source = _open_test_auth(run_root, source_ordinal, os.O_RDONLY)
+    source = _open_test_auth(source_root or run_root, source_ordinal, os.O_RDONLY)
     target = None
     try:
         if create:
@@ -2368,6 +2464,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                            reuse_test_auth: bool = False, followup: bool = False,
                            continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False,
                            assessment_batch: bool = False, assessment_remainder: bool = False,
+                           material_segment: bool = False,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
@@ -2378,12 +2475,15 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                          model_followup, stderr_followup, read_followup, resume_stderr_review, private_diagnostics)),
                  "assessment batch cannot reuse a historical execution ledger")
         _assessment_prior(root)
+    _require(not material_segment or (assessment_batch and not assessment_remainder), "material segment requires its own assessment mode")
+    if material_segment:
+        _verify_material_segment(root, run_root)
     _require(not assessment_remainder or assessment_batch, "assessment remainder requires assessment mode")
     partial = _verify_assessment_remainder(root, run_root)[0] if assessment_remainder else (_verify_review_resume(root, run_root)[0] if resume_stderr_review else None)
     prefix_count = 10 if assessment_remainder else REVIEWED_PREFIX_COUNT
     protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup, stderr_followup=stderr_followup, read_followup=read_followup, resume_stderr_review=resume_stderr_review, assessment_remainder=assessment_remainder)
     ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup)
-    prior_count = 20 if assessment_batch else 7 if read_followup else 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
+    prior_count = 31 if material_segment else 20 if assessment_batch else 7 if read_followup else 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
     if read_followup:
         _verify_seven_prior_attempts(run_root)
     elif stderr_followup:
@@ -2402,7 +2502,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
     _require(not actual or assessment_batch, "actual execution requires the authorized assessment candidate")
-    _require(not actual or assessment_remainder, "actual assessment requires the authorized unstarted remainder")
+    _require(not actual or material_segment, "actual execution requires the fixed material-input segment")
     _require(not actual or protocol["executionWindow"]["state"] != "closed",
              "actual execution window closed")
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
@@ -2424,12 +2524,12 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         _require(assessment_remainder or _read(ledger / "catalog-case-06-review.json") == _read(root / REVIEW_RELATIVE),
                  "prepared same-attempt review changed")
     schema_prefix = "assessment-remainder-response-schema" if assessment_remainder else "catalog-response-schema" if partial else "response-schema"
-    if reuse_test_auth:
+    if reuse_test_auth and not material_segment:
         _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else {"protocolDigest": ASSESSMENT_PROTOCOL_DIGEST} if assessment_remainder else protocol)
     _exclusive(ledger / ("assessment-remainder-started.json" if assessment_remainder else "catalog-remainder-started.json" if partial else "batch-started.json"),
                _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
-        if partial and ordinal <= prefix_count:
+        if (material_segment and ordinal < 10) or (partial and ordinal <= prefix_count):
             continue
         paths = _case_paths(run_root, ordinal)
         definition = _definition(fixtures, ordinal)
@@ -2458,10 +2558,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                      "prepared response schema changed")
             diagnostic = "authentication-unavailable"
             phase = "login"
-            if reuse_test_auth and ordinal > 1:
+            if reuse_test_auth and ordinal > 1 and not (material_segment and ordinal == 10):
                 # The prior iteration only advances after normal exit and closed
                 # output/input validation. Never refill from the initial stale copy.
-                _copy_test_auth(run_root, 9 if assessment_remainder and ordinal == 11 else ordinal - 1, ordinal, create=False)
+                _copy_test_auth(run_root, 9 if assessment_remainder and ordinal == 11 else ordinal - 1, ordinal, create=material_segment)
             if reuse_test_auth:
                 # Validate Case 1 as well as copied destinations before handing
                 # the path to the official client; never inspect credential bytes.
@@ -2671,7 +2771,13 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
               "materializationCommitmentRoot": legacy._materialization_commitment_root(
                   [item["materializationCommitmentSha256"] for item in results]),
               "cleanup": "retained-test-state", "descendantClosure": "not-observed"}
-    if assessment_remainder:
+    if material_segment:
+        result["executionSegment"] = {
+            "kind": "material-delivery", "priorPartialSha256": ASSESSMENT_REMAINDER_BINDING["sha256"],
+            "firstNewOrdinal": 10, "priorAttemptCount": 31, "authenticationSourceOrdinal": 9,
+            "newAttemptCount": result["attemptCount"], "newCliLaunchCount": result["cliLaunchCount"],
+        }
+    elif assessment_remainder:
         result["executionSegment"] = {
             "priorPartialSha256": ASSESSMENT_PARTIAL_BINDING["sha256"], "firstNewOrdinal": 11,
             "newAttemptCount": sum(item["attemptCount"] for item in results[10:]),
@@ -2728,10 +2834,12 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
         prior_results = document["priorResultSha256s"]
         _require(prior_results in [*[READ_PRIOR_RESULTS[:i] for i in range(8)], ASSESSMENT_PRIOR_RESULTS], "invalid historical prefix")
-        prior_count = 20 if prior_results == ASSESSMENT_PRIOR_RESULTS else len(prior_results)
+        segment = document.get("executionSegment")
+        material_segment = segment is not None and segment.get("kind") == "material-delivery"
+        prior_count = 31 if material_segment else 20 if prior_results == ASSESSMENT_PRIOR_RESULTS else len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
-        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= 16 + prior_count,
+        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= (38 if material_segment else 16 + prior_count),
                  "native cumulative attempt budget mismatch")
         _require(sum(item["privateCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
                  "private capture batch limit exceeded")
@@ -2744,9 +2852,16 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         seed = bytes.fromhex(document["materializationSeed"])
         segment = document.get("executionSegment")
         remainder = segment is not None and segment.get("firstNewOrdinal") == 11
-        partial = _assessment_partial(root) if remainder else _reviewed_partial(root) if segment is not None else None
+        partial = _assessment_partial(root) if remainder else _reviewed_partial(root) if segment is not None and not material_segment else None
         prefix_count = 10 if remainder else REVIEWED_PREFIX_COUNT
-        if remainder:
+        if material_segment:
+            _assessment_remainder_result(root)
+            _require(prior_results == ASSESSMENT_PRIOR_RESULTS and segment == {
+                "kind": "material-delivery", "priorPartialSha256": ASSESSMENT_REMAINDER_BINDING["sha256"],
+                "firstNewOrdinal": 10, "priorAttemptCount": 31, "authenticationSourceOrdinal": 9,
+                "newAttemptCount": document["attemptCount"], "newCliLaunchCount": document["cliLaunchCount"]
+            } and document["attemptCount"] <= 7, "material segment provenance or budget mismatch")
+        elif remainder:
             _require(prior_results == ASSESSMENT_PRIOR_RESULTS and
                      document["materializationSeed"] == partial["materializationSeed"] and
                      document["authenticationMode"] == partial["authenticationMode"] and
@@ -2780,6 +2895,9 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             for field in ("opaqueBindingSha256", "modelResponseSchemaSha256", "casePromptSha256", "materializationCommitmentSha256"):
                 _require(record[field] == expected[field], "native materialization binding mismatch")
             status = record["status"]
+            if material_segment and ordinal < 10:
+                _require(record == expected, "material segment attempted or inherited an out-of-scope case")
+                continue
             if stopped:
                 _require(status == "NOT-RUN", "native result continued after unreliable failure")
             if status == "NOT-RUN":
@@ -3008,6 +3126,9 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--prepare-read-followup", action="store_true")
     group.add_argument("--prepare-stderr-review-resume", action="store_true")
     group.add_argument("--prepare-assessment-remainder", action="store_true")
+    group.add_argument("--prepare-material-segment", action="store_true")
+    parser.add_argument("--previous-run-root", type=Path)
+    parser.add_argument("--material-segment", action="store_true")
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--codex", type=Path)
@@ -3029,7 +3150,13 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
-        if args.prepare_assessment_remainder:
+        if args.prepare_material_segment:
+            _require(args.run_root is not None and args.previous_run_root is not None, "material segment requires both registered roots")
+            prepare_material_segment(root, args.run_root, args.previous_run_root,
+                                     authorize_install=args.authorize_local_install,
+                                     authorize_copy=args.authorize_test_auth_copy)
+            print("Fresh material segment prepared; historical sessions retained; no model started.")
+        elif args.prepare_assessment_remainder:
             _require(args.run_root is not None, "assessment remainder requires the registered run root")
             prepare_assessment_remainder(root, args.run_root)
             print("Assessment remainder prepared; original hard stop retained; no client started.")
@@ -3061,7 +3188,7 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
                                             reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup,
                                             continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics,
-                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup, read_followup=args.read_followup, resume_stderr_review=args.resume_stderr_review, assessment_batch=args.assessment_batch, assessment_remainder=args.assessment_remainder)
+                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup, read_followup=args.read_followup, resume_stderr_review=args.resume_stderr_review, assessment_batch=args.assessment_batch, assessment_remainder=args.assessment_remainder, material_segment=args.material_segment)
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "PASS" else 1
         else:

@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "4d54642d4699f4459aea62c40c6296723d13a5d071ece27af75e0852dfa1d876"
+      "sha256": "12e15fbe275e65922d01c2724d91213f99347a9ec7f199154dd7f4d8a6f6b075"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "f7fbaa6c48e6b19d42bd65ee948dca3344279932409e4ebda739d0f2ebc2340d"
+    "sha256": "4fa95ac8c61cfa6c1438ac126649b6c647b9b524b0b635e8c67ebbdfb211433b"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -277,9 +277,9 @@
     }
   },
   "executionWindow": {
-    "state": "closed",
+    "state": "material-segment-only",
     "lastResultSha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
-    "reason": "31 attempts consumed; material-location revision has no observation authorization"
+    "reason": "31 historical attempts; only fresh material-input cases 10-16, once each"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
@@ -327,12 +327,29 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:073cf6197b55ac98d51e6946131fba34dda5df90eba299ea53eba9383a63a687",
+  "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",
     "pathBase": "case-workspace",
     "order": "utf8-byte-order",
     "scope": "task-data-only; not-installed-skills; empty-list-is-not-discovery-evidence"
+  },
+  "materialSegment": {
+    "priorResult": {
+      "path": "evals/no-hook-observation/results/codex-native-e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3.json",
+      "sha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
+      "implementationCommit": "34376415079fc59c5caf6614fd85e18e3beea030",
+      "implementationTree": "a73078150ac03b91db99dc04657d13fc5e757074"
+    },
+    "firstNewOrdinal": 10,
+    "lastOrdinal": 16,
+    "priorAttemptCount": 31,
+    "maximumNewAttempts": 7,
+    "maximumCumulativeAttempts": 38,
+    "authenticationSourceOrdinal": 9,
+    "inputRevision": 2,
+    "history": "references only; no inherited observations or sessions",
+    "stop": "any policy rejection or reliability failure stops remaining cases"
   }
 }

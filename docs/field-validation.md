@@ -1729,3 +1729,38 @@ new trailing space; it was removed without changing behavior, then identities
 and derived artifacts were refreshed. The frozen-source inspection and focused
 result checks are explicitly bounded self-review with delegated source/test
 assistance, not an additional full independent approval.
+
+## Material-input segment 10-16
+
+The next authorized native segment is restricted to Cases 10-16 under assessment
+revision 2 / material-delivery revision 1. It references the immutable `9880ebdd`
+and `e1504982` results and starts its lifetime accounting at 31 attempts and CLI
+launches. Each selected case has one attempt, with seven new attempts at most and
+38 lifetime attempts at most. Cases 1-9 remain NOT-RUN in this input revision;
+none of their historical observations is copied into the new result.
+
+The existing preparation entrypoint creates fresh case homes, working directories,
+fixtures, schemas and discovery state in a separately registered sibling of the
+stopped assessment root. The original batch and attempt markers remain intact.
+Case 11 has no Axiom installation or discovery link. Its task-data SKILL.md does
+not become an installed Skill. No request, fixture content, scoring rule, material
+location wording, model, runtime payload or bundle changes in this segment.
+
+The registered previous Case 9 is the last normal authentication refresh source.
+Its official login status must succeed before preparation. Only the authorized
+opaque test-auth file is copied to the first new case; subsequent copies come
+from the preceding new case after normal validated completion. Old Cases 10 and
+11 are not authentication refresh sources. No sessions, caches or authentication
+content are copied to a validation repository or included in an identity digest.
+
+A fresh exclusive batch marker and per-case attempt markers enforce one execution
+of the segment. The receiver, read contract, parser, postchecks and private
+operator diagnostics are unchanged. A policy or reliability failure stops all
+later cases; a semantic FAIL cannot be retried to obtain PASS. Unknown stderr
+requires the existing strict same-attempt eligibility conditions and separate
+operator evidence; a read rejection is never eligible for that review.
+
+Any new normalized evidence is bound to this segment's actual implementation,
+protocol and generated inputs. It is a targeted material-input regression plus
+previously unobserved cases, not a complete sixteen-case run, and does not regrade
+any of the 31 historical attempts. Host results are NOT-RUN until actually recorded.
