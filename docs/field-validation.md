@@ -1596,3 +1596,45 @@ counts. Total attempts are 20 historical plus ten retained assessment attempts
 plus at most six new attempts. Case 1 FAIL and Case 10 INCOMPLETE stay in scope,
 so six new PASS results cannot make the combined assessment PASS. Operator-only
 diagnostics remain private and are not read back or committed.
+
+
+The unstarted segment executed under `34376415079fc59c5caf6614fd85e18e3beea030` (tree
+`a73078150ac03b91db99dc04657d13fc5e757074`), protocol `sha256:23b358d0f357778cee7d14d897f0fe4566fdcf6d1d1fa7465b9e03feb07de7a0`.
+Its immutable normalized result is `e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3`. Only Case 11 was newly attempted;
+its event 3 was rejected as `read-target-unbound`. The observer terminated the
+ordinary client (return -9), cleanup reported no failure, complete input was
+sent, and postchecks remained valid. No terminal response or successful public
+read was established. The zero-Axiom installation/discovery control remained
+absent; the attempted unbound target is not inferred from the rejection code.
+
+| Current 0.10.1 cases | Outcome | Execution evidence |
+| --- | --- | --- |
+| 1 | FAIL | Original a29b950 / 9880ebdd; no-route response retained. |
+| 2-9 | PASS | Original a29b950 / 9880ebdd; evidence limits unchanged. |
+| 10 | INCOMPLETE | Original a29b950 / 9880ebdd; unbound client temporary read rejected. |
+| 11 | INCOMPLETE | Supplementary 3437641; unbound read rejected at event 3. |
+| 12-16 | NOT-RUN | No attempt markers; this segment stopped. |
+
+The combined view contains 11 assessment attempts and 31 lifetime attempts/CLI
+launches; this segment adds one of each. Internal model-request counts remain
+unknown. It is not a continuous 16-case run or a full host PASS. Cases 1 and 10
+are still necessary failed/incomplete evidence. The new refusal is not eligible
+for stderr-only review. Its private command capture (148 bytes) and stderr
+capture (446 bytes), both untruncated, remain operator-only; neither was read
+back or committed. No follow-up attempt or additional segment is authorized by
+this result.
+
+Validation for the segment included 164 existing native regressions, six new
+remainder methods, publication/distribution checks and all 16 actual derived
+schema files. One new public fixture initially omitted the real subprocess
+capture boundary; correcting that fixture made its targeted test pass without
+changing production acceptance. Test results are not model behavior evidence.
+
+The operator subsequently supplied the Case 11 command text: a shell-wrapped
+`cat` targeting that case's own `client-home/tmp/arg0` entry. This is separately
+attributed user-provided evidence, not a field recovered by the observer. The
+private absolute path and temporary basename are omitted here. Client temporary
+state is outside the bound public package/fixture/discovery inventory, so this
+information supports the existing refusal. It establishes neither the object's
+contents nor a mapping defect or the model's motive. No target or link was
+inspected, no permission changed, and no further case was launched.
