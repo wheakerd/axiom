@@ -18,7 +18,7 @@
     },
     "promptEnvelope": {
       "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
-      "sha256": "f1f4d8b4dee5898784ddfe3eb200f4478c6e3576470d497c30c835bdc1dac629"
+      "sha256": "5816932a3ab2b530753e738da325d14ed1cc018cc4997c4f2255f8315eb26f09"
     },
     "taxonomy": {
       "path": "evals/codex-exec-jsonl-observer-v3.json",
@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "20d9e66cefaedb6503970a7a1a03aa7cc76cfc226f8bb3f124c32075d1d70341"
+      "sha256": "4d54642d4699f4459aea62c40c6296723d13a5d071ece27af75e0852dfa1d876"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -277,9 +277,9 @@
     }
   },
   "executionWindow": {
-    "state": "assessment-remainder-once",
-    "lastResultSha256": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9",
-    "reason": "independent unstarted cases 11-16 only; preserve the stopped ten-case segment and all 30 prior attempts"
+    "state": "closed",
+    "lastResultSha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
+    "reason": "31 attempts consumed; material-location revision has no observation authorization"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
@@ -327,5 +327,12 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:23b358d0f357778cee7d14d897f0fe4566fdcf6d1d1fa7465b9e03feb07de7a0"
+  "protocolDigest": "sha256:073cf6197b55ac98d51e6946131fba34dda5df90eba299ea53eba9383a63a687",
+  "materialDelivery": {
+    "revision": 1,
+    "source": "fixtureMatrix.files[].path",
+    "pathBase": "case-workspace",
+    "order": "utf8-byte-order",
+    "scope": "task-data-only; not-installed-skills; empty-list-is-not-discovery-evidence"
+  }
 }

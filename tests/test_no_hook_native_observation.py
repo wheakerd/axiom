@@ -519,8 +519,10 @@ class NativeObservationTests(unittest.TestCase):
                 material = native.materialize_native_case_contract(**arguments)
                 transported = json.loads(material.schema_bytes)
                 self.assertIsNone(native.validate_response_transport(transported))
-                self.assertEqual(material.prompt_bytes, original.prompt_bytes)
-                self.assertEqual(material.prompt_sha256, original.prompt_sha256)
+                restored, _, _ = self._task_material_block(material.prompt_bytes)
+                self.assertEqual(restored, original.prompt_bytes)
+                self.assertEqual(material.prompt_sha256, hashlib.sha256(material.prompt_bytes).hexdigest())
+                self.assertNotEqual(material.prompt_sha256, original.prompt_sha256)
                 self.assertEqual((material.token, material.opaque_binding_sha256),
                                  (original.token, original.opaque_binding_sha256))
                 self.assertNotEqual(material.schema_bytes, original.schema_bytes)
@@ -545,6 +547,191 @@ class NativeObservationTests(unittest.TestCase):
                 with self.assertRaisesRegex(native.NativeObservationError, "duplicate"):
                     native._validate_native_response(duplicate, source, material.token)
         self.assertEqual(source, before)
+
+    def _task_material_block(self, prompt):
+        """Locate only the new input layer; preserve every surrounding byte."""
+        self.assertEqual(prompt.count(b"\nTask materials:\n"), 1)
+        prefix, rest = prompt.split(b"\nTask materials:\n", 1)
+        block, request = rest.split(b"\nUser request:\n", 1)
+        lines = block.splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(lines[0],
+            b"Paths are relative to the current working directory and identify supplied task data only, "
+            b"not installed Skills or the host discovery catalog. An empty list says nothing about Skill installation.")
+        self.assertTrue(lines[1].startswith(b"taskMaterialPaths: "))
+        paths = json.loads(lines[1].removeprefix(b"taskMaterialPaths: "))
+        self.assertEqual(paths, sorted(paths, key=lambda value: value.encode("utf-8")))
+        return prefix + b"\nUser request:\n" + request, paths, block
+
+    def test_task_material_paths_match_all_prepared_schemas_and_runner_inputs(self):
+        run, runner, calls = self._prepared_runner()
+        state = json.loads((run / native.STATE_NAME).read_bytes())
+        fixtures = native._input(ROOT, self.protocol, "fixtureMatrix")
+        schema = native._input(ROOT, self.protocol, "modelResponseSchema")
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        delivered = {}
+        def inspect_input(argv, **kwargs):
+            if "exec" in argv:
+                ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+                definition = native._definition(fixtures, ordinal)
+                expected_paths = sorted((entry["path"] for entry in definition["files"]),
+                                        key=lambda value: value.encode("utf-8"))
+                prompt = kwargs["stdin"]
+                restored, listed, block = self._task_material_block(prompt)
+                self.assertEqual(listed, expected_paths)
+                self.assertEqual([line for line in prompt.splitlines() if line.startswith(b"taskMaterialPaths:")],
+                                 [b"taskMaterialPaths: " + json.dumps(expected_paths).encode("ascii")])
+                arguments = {"materialization_seed": bytes.fromhex(state["materializationSeed"]),
+                    "ordinal": ordinal, "protocol_digest": self.protocol["protocolDigest"],
+                    "model_schema": schema, "prompt_envelope": envelope,
+                    "request": self.cases[ordinal - 1]["request"]}
+                material = native.materialize_native_case_contract(root=ROOT, **arguments)
+                self.assertEqual(prompt, material.prompt_bytes)
+                self.assertEqual(restored, legacy.materialize_case_contract(**arguments).prompt_bytes)
+                schema_path = Path(argv[argv.index("--output-schema") + 1])
+                self.assertEqual(schema_path.read_bytes(), material.schema_bytes)
+                for relative in listed:
+                    self.assertFalse(Path(relative).is_absolute())
+                    self.assertNotIn("..", Path(relative).parts)
+                    self.assertNotEqual(Path(relative).parts[0], ".git")
+                    self.assertTrue((Path(kwargs["cwd"]) / relative).is_file())
+                for key in (b"caseId", b"expectedRoutes", b"expectedOutcome", b"caseClass"):
+                    self.assertNotIn(key, block)
+                self.assertNotIn(self.cases[ordinal - 1]["id"].encode(), prompt)
+                delivered[ordinal] = listed
+            return runner(argv, **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               process_runner=inspect_input)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual(len(delivered), 16)
+        self.assertEqual(delivered[10], ["document.txt"])
+        self.assertEqual(delivered[11], [".codex-plugin/plugin.json", "skills/context/SKILL.md"])
+        self.assertEqual(delivered[1], [])
+        self.assertEqual([item["status"] for item in result["caseResults"]], ["PASS"] * 16)
+        self.assertEqual((result["status"], result["hostClaim"]), ("INCOMPLETE", False))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_task_material_delivery_is_request_independent_and_old_envelope_compatible(self):
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        schema = native._input(ROOT, self.protocol, "modelResponseSchema")
+        for ordinal, expected_paths in ((1, []), (10, ["document.txt"]),
+                                       (11, [".codex-plugin/plugin.json", "skills/context/SKILL.md"])):
+            with self.subTest(ordinal=ordinal):
+                arguments = {"materialization_seed": bytes(range(32)), "ordinal": ordinal,
+                    "protocol_digest": self.protocol["protocolDigest"], "model_schema": schema,
+                    "prompt_envelope": envelope, "request": self.cases[ordinal - 1]["request"]}
+                canonical = native.materialize_native_case_contract(root=ROOT, **arguments)
+                alternative = native.materialize_native_case_contract(root=ROOT,
+                    **{**arguments, "request": "Explain these supplied materials briefly; perform no actions."})
+                _, paths, block = self._task_material_block(canonical.prompt_bytes)
+                restored, alternate_paths, alternate_block = self._task_material_block(alternative.prompt_bytes)
+                self.assertEqual(paths, expected_paths)
+                self.assertEqual(alternate_paths, expected_paths)
+                self.assertEqual(alternate_block, block)
+                self.assertEqual(canonical.schema_bytes, alternative.schema_bytes)
+                self.assertTrue(restored.endswith(b"Explain these supplied materials briefly; perform no actions.\n"))
+                old_envelope = copy.deepcopy(envelope)
+                old_envelope.pop("materialDelivery")
+                old_envelope.pop("fixtureMatrix")
+                old_envelope["assessmentRevision"] = 1
+                old_arguments = {**arguments, "prompt_envelope": old_envelope}
+                previous = legacy.materialize_case_contract(**old_arguments)
+                compatible = native.materialize_native_case_contract(root=ROOT, **old_arguments)
+                self.assertEqual(compatible.prompt_bytes, previous.prompt_bytes)
+                self.assertEqual(compatible.prompt_sha256, previous.prompt_sha256)
+                self.assertNotIn(b"taskMaterialPaths:", compatible.prompt_bytes)
+                self.assertEqual(canonical.token, compatible.token)
+
+    def test_task_material_case_ten_and_control_reads_reach_normalized_result(self):
+        run, runner, calls = self._prepared_runner()
+        fixtures = native._input(ROOT, self.protocol, "fixtureMatrix")
+        expected_reads = {}
+        def read_materials(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            if ordinal not in (10, 11):
+                return runner(argv, **kwargs)
+            paths = native._case_paths(run, ordinal)
+            _, listed, _ = self._task_material_block(kwargs["stdin"])
+            definition = native._definition(fixtures, ordinal)
+            readable = native._readable(paths, definition, ordinal != 11)
+            if ordinal == 11:
+                self.assertFalse(paths["package"].exists())
+                self.assertFalse(paths["discovery"].exists())
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            document = json.loads(Path(argv[argv.index("--output-last-message") + 1]).read_bytes())
+            records = [json.loads(line) for line in stream(document).splitlines()][:2]
+            expected_reads[ordinal] = []
+            for index, relative in enumerate(listed):
+                if ordinal == 10:
+                    read_argv, bounds = ["cat", relative], None
+                elif index == 0:
+                    read_argv, bounds = ["sed", "-n", "1,4p", relative], [1, 4]
+                else:
+                    read_argv, bounds = ["/bin/sh", "-lc", shlex.join(["cat", relative])], None
+                actual = self._ordinary_public_read(read_argv, paths)
+                command = shlex.join(read_argv)
+                self.assertEqual(native._read_command(command, readable, paths["workspace"]), actual)
+                for kind, status, code, text in (
+                    ("item.started", "in_progress", None, actual.decode("utf-8")[:2]),
+                    ("item.updated", "in_progress", None, actual.decode("utf-8")[:5]),
+                    ("item.completed", "completed", 0, actual.decode("utf-8")),
+                ):
+                    records.append({"type": kind, "item": {"id": f"item_{index}",
+                        "type": "command_execution", "command": command,
+                        "aggregated_output": text, "exit_code": code, "status": status}})
+                expected_reads[ordinal].append({"eventOrdinal": len(records), "source": "fixture",
+                    "path": relative, "range": bounds, "bytes": len(actual)})
+            records.append({"type": "item.completed", "item": {"id": f"item_{len(listed)}",
+                            "type": "agent_message", "text": json.dumps(document)}})
+            records.append(json.loads(stream(document).splitlines()[-1]))
+            raw = b"".join(event(record) for record in records)
+            facts = native._diagnostics()
+            for line in raw.splitlines():
+                native.inspect_native_event(line, readable, paths["workspace"])
+                native._observe_line(line, readable, paths["workspace"], facts)
+            parsed, count = native.parse_native_jsonl(raw, self.taxonomy, readable, paths["workspace"])
+            self.assertEqual((parsed.terminal_type, count), ("turn.completed", len(listed)))
+            self.assertEqual(facts["streamAssertion"], "none")
+            for line in raw.splitlines():
+                kwargs["line_callback"](line)
+            return {**capture, "stdout": raw}
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               process_runner=read_materials)
+        self.assertEqual(calls, list(range(1, 17)))
+        for ordinal in (10, 11):
+            record = result["caseResults"][ordinal - 1]
+            self.assertEqual(record["status"], "PASS")
+            self.assertEqual(record["publicReads"], expected_reads[ordinal])
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertFalse(result["hostClaim"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_task_material_delivery_does_not_authorize_client_tmp_or_arg0_reads(self):
+        parent = self.parent
+        for label in ("client", "tmp", "arg0"):
+            with self.subTest(target=label):
+                self.parent = parent / label
+                self.parent.mkdir()
+                def rejected(records):
+                    paths = native._case_paths(self.parent / "run", 1)
+                    # These are command strings only. No target is opened or executed.
+                    target = {"client": paths["home"] / "unbound-public.txt",
+                              "tmp": paths["tmp"] / "unbound-public.txt",
+                              "arg0": paths["home"] / "tmp/arg0/unbound-public.txt"}[label]
+                    records[2]["item"]["command"] = shlex.join(["cat", str(target)])
+                result = self._diagnostic_stream_runner([], malformed=rejected)
+                first = result["caseResults"][0]
+                facts = first["executionDiagnostics"]
+                self.assertEqual((first["status"], first["diagnostic"]), ("INCOMPLETE", "policy-rejected"))
+                self.assertEqual((facts["streamAssertion"], facts["streamEventOrdinal"], facts["policyReason"]),
+                                 ("read-target-unbound", 3, "read-contract-rejected"))
+                self.assertEqual(first["publicReads"], [])
+                self.assertEqual((result["attemptCount"], result["cliLaunchCount"]), (1, 1))
+                self.assertEqual([item["status"] for item in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+                self.assertNotIn("unbound-public.txt", json.dumps(result))
+                self.assertEqual(native.validate_native_result(result, ROOT), [])
 
     def _transport_fixture(self):
         arguments = {"materialization_seed": bytes(range(32)), "ordinal": 1,

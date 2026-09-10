@@ -62,6 +62,17 @@ ASSESSMENT_REMAINDER = {
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required",
 }
+ASSESSMENT_REMAINDER_BINDING = {
+    "path": "evals/no-hook-observation/results/codex-native-e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3.json",
+    "sha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
+    "implementationCommit": "34376415079fc59c5caf6614fd85e18e3beea030",
+    "implementationTree": "a73078150ac03b91db99dc04657d13fc5e757074",
+}
+MATERIAL_DELIVERY = {
+    "revision": 1, "source": "fixtureMatrix.files[].path",
+    "pathBase": "case-workspace", "order": "utf8-byte-order",
+    "scope": "task-data-only; not-installed-skills; empty-list-is-not-discovery-evidence",
+}
 MODEL = "gpt-5.5"
 REASONING_EFFORT = "medium"
 AUTH_FILE_NAME = "auth.json"
@@ -675,10 +686,11 @@ def _protocol(root: Path) -> dict[str, Any]:
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
-        "state": "assessment-remainder-once", "lastResultSha256": ASSESSMENT_PARTIAL_BINDING["sha256"],
-        "reason": "independent unstarted cases 11-16 only; preserve the stopped ten-case segment and all 30 prior attempts",
+        "state": "closed", "lastResultSha256": ASSESSMENT_REMAINDER_BINDING["sha256"],
+        "reason": "31 attempts consumed; material-location revision has no observation authorization",
     }, "native execution window differs from consumed attempt evidence")
     _require(document.get("assessmentRemainder") == ASSESSMENT_REMAINDER, "assessment remainder contract mismatch")
+    _require(document.get("materialDelivery") == MATERIAL_DELIVERY, "native material delivery contract mismatch")
     bindings = list(document.get("implementationBindings", []))
     _require([item.get("path") for item in bindings] == list(IMPLEMENTATION_PATHS),
              "native implementation binding owner set changed")
@@ -701,6 +713,12 @@ def _protocol(root: Path) -> dict[str, Any]:
                  "native binding is not repository-relative")
         _require(hashlib.sha256(_read(root / relative)).hexdigest() == binding["sha256"],
                  "native bound input changed")
+    envelope = _json(_read(root / inputs["promptEnvelope"]["path"]))
+    _require(envelope.get("assessmentRevision") == 2 and
+             envelope.get("materialDelivery") == MATERIAL_DELIVERY and
+             envelope.get("fixtureMatrix") == inputs["fixtureMatrix"] and
+             envelope.get("promptEnvelopeDigest") == legacy.self_digest(envelope, "promptEnvelopeDigest"),
+             "native material envelope binding mismatch")
     evidence = _json(_read(root / STATIC_BUNDLE_EVIDENCE_RELATIVE))
     bundle = document.get("bundle", {})
     _require(bundle.get("manifestDigest") == evidence["bundleManifest"]["bundleManifestDigest"] and
@@ -726,11 +744,11 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         _require(protocol["inputs"]["fixtureMatrix"]["path"] == legacy.FIXTURES_RELATIVE.as_posix(),
                  "native fixture owner changed")
         for ordinal, case in enumerate(legacy.load_golden_cases(root), 1):
-            materialize_native_case_contract(materialization_seed=bytes(32), ordinal=ordinal,
+            materialize_native_case_contract(root=root, materialization_seed=bytes(32), ordinal=ordinal,
                 protocol_digest=protocol["protocolDigest"], model_schema=_input(root, protocol, "modelResponseSchema"),
                 prompt_envelope=_input(root, protocol, "promptEnvelope"), request=case["request"])
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
                  history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": protocol["protocolDigest"]},
                  "native history identity is inconsistent")
@@ -784,6 +802,9 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         prior_batch = _assessment_prior(root)
         _require(history["assessmentPartial"] == ASSESSMENT_PARTIAL_BINDING, "assessment prefix binding changed")
         _assessment_partial(root)
+        _require(history["assessmentRemainder"] == ASSESSMENT_REMAINDER_BINDING,
+                 "stopped assessment remainder binding changed")
+        _assessment_remainder_result(root)
         records = history["results"]
         _require(type(records) is list and len(records) <= 1, "native history permits one current observation")
         current = {"codexObservation": "not-run", "hostClaim": False, "credentialUsed": False,
@@ -840,6 +861,21 @@ def _assessment_partial(root: Path) -> dict[str, Any]:
     return result  # Previously accepted exact bytes; never regrade under the new protocol.
 
 
+def _assessment_remainder_result(root: Path) -> dict[str, Any]:
+    """Preserve the validated old input/implementation, without regrading it."""
+    data = _read(root / ASSESSMENT_REMAINDER_BINDING["path"])
+    _require(hashlib.sha256(data).hexdigest() == ASSESSMENT_REMAINDER_BINDING["sha256"],
+             "stopped assessment remainder bytes changed")
+    result = _json(data)
+    _require(result["caseResults"][:10] == _assessment_partial(root)["caseResults"][:10] and
+             result["attemptCount"] == result["cliLaunchCount"] == 11 and
+             result["cumulativeAttemptCount"] == 31 and
+             result["caseResults"][10]["status"] == "INCOMPLETE" and
+             all(item["status"] == "NOT-RUN" for item in result["caseResults"][11:]),
+             "stopped assessment remainder evidence changed")
+    return result
+
+
 def _verify_assessment_remainder(root: Path, run_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     partial = _assessment_partial(root)
     _ordinary_directory(run_root)
@@ -890,7 +926,7 @@ def prepare_assessment_remainder(root: Path, run_root: Path) -> None:
     # Preserve old input files; derive all sixteen new bindings without changing their semantics.
     for ordinal, case in enumerate(legacy.load_golden_cases(root), 1):
         paths = _case_paths(run_root, ordinal)
-        previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+        previous = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=ASSESSMENT_PROTOCOL_DIGEST, model_schema=schema,
             prompt_envelope=envelope, request=case["request"])
         _require(_read(paths["case"] / "response-schema.json") == previous.schema_bytes,
@@ -903,7 +939,7 @@ def prepare_assessment_remainder(root: Path, run_root: Path) -> None:
             package = package_identity(paths["package"]) if ordinal != 11 else None
             _require(old["cases"][ordinal - 1] == {"ordinal": ordinal,
                      "fixtureSha256": fixture, "packageSha256": package}, "prepared assessment inputs changed")
-        materials.append(materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+        materials.append(materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
     for ordinal, material in enumerate(materials, 1):
@@ -1041,14 +1077,39 @@ def validate_response_transport(schema: Mapping[str, Any]) -> None:
     _require(schema["type"] == "object", "response transport root must be an object")
 
 
-def materialize_native_case_contract(**arguments: Any) -> legacy.CaseMaterialization:
+def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **arguments: Any) -> legacy.CaseMaterialization:
     """Adapt only known response fields; retain the frozen local acceptance schema.
 
     Explicit string types and singleton enums carry the same values. uniqueItems
     has no supported transport representation and remains mandatory in the local
-    strict validator. Prompts and their blinding are unchanged by this adapter.
+    strict validator. Material delivery is a separately versioned input layer;
+    old envelopes without it retain their original prompt bytes.
     """
     material = legacy.materialize_case_contract(**arguments)
+    envelope = arguments["prompt_envelope"]
+    delivery = envelope.get("materialDelivery")
+    if delivery is not None:
+        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") == 2,
+                 "unsupported material delivery revision")
+        binding = envelope["fixtureMatrix"]
+        _require(set(binding) == {"path", "sha256"} and
+                 binding["path"] == legacy.FIXTURES_RELATIVE.as_posix(),
+                 "material fixture owner changed")
+        fixture_bytes = _read(root / legacy.FIXTURES_RELATIVE)
+        _require(hashlib.sha256(fixture_bytes).hexdigest() == binding["sha256"],
+                 "material fixture binding changed")
+        definition = _definition(_json(fixture_bytes), arguments["ordinal"])
+        paths = sorted((record["path"] for record in definition["files"]), key=lambda value: value.encode("utf-8"))
+        # Only explicit task data is listed. No generated .git metadata, package
+        # inventory, client state, absolute roots, file contents or answer facts.
+        location = ("\nTask materials:\n"
+                    "Paths are relative to the current working directory and identify supplied task data only, "
+                    "not installed Skills or the host discovery catalog. An empty list says nothing about Skill installation.\n"
+                    "taskMaterialPaths: " + json.dumps(paths, ensure_ascii=True) + "\n")
+        prefix, marker, request = material.prompt_bytes.partition(b"\nUser request:\n")
+        _require(bool(marker), "native request boundary missing")
+        prompt = prefix + location.encode("utf-8") + marker + request
+        material = replace(material, prompt_bytes=prompt, prompt_sha256=hashlib.sha256(prompt).hexdigest())
     schema = _json(material.schema_bytes)
     for annotation in ("$schema", "$id", "title"):
         schema.pop(annotation, None)
@@ -1353,6 +1414,7 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
             (paths["user"] / name).mkdir(mode=0o700)
         fixture = materialize_fixture(paths["workspace"], _definition(fixtures, ordinal))
         materialized = materialize_native_case_contract(
+            root=root,
             materialization_seed=seed, ordinal=ordinal, protocol_digest=protocol["protocolDigest"],
             model_schema=model_schema, prompt_envelope=envelope, request=case["request"])
         _exclusive(paths["case"] / "response-schema.json", materialized.schema_bytes)
@@ -1564,7 +1626,7 @@ def _reviewed_partial(root: Path) -> dict[str, Any]:
     case = legacy.load_golden_cases(root)[REVIEWED_PREFIX_COUNT - 1]
     schema = _json(_read(root / legacy.MODEL_RESPONSE_SCHEMA_RELATIVE))
     envelope = _json(_read(root / INPUT_PATHS["promptEnvelope"]))
-    material = materialize_native_case_contract(materialization_seed=bytes.fromhex(partial["materializationSeed"]),
+    material = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(partial["materializationSeed"]),
         ordinal=REVIEWED_PREFIX_COUNT, protocol_digest=REVIEWED_PARTIAL_PROTOCOL, model_schema=schema,
         prompt_envelope=envelope, request=case["request"])
     response = {**record["observed"], "opaqueCaseBinding": material.token}
@@ -1643,12 +1705,12 @@ def prepare_stderr_review_resume(root: Path, run_root: Path) -> None:
         _require(old["cases"][ordinal - 1] == {"ordinal": ordinal, "fixtureSha256": fixture,
                  "packageSha256": package} and (ordinal == 11 or package == protocol["bundle"]["packageSha256"]),
                  "reviewed installed inputs changed")
-        previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+        previous = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=REVIEWED_PARTIAL_PROTOCOL, model_schema=schema,
             prompt_envelope=envelope, request=case["request"])
         _require(_read(ledger / f"remainder-response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                  "reviewed response schema changed")
-        materials.append(materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+        materials.append(materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
     _exclusive(ledger / "catalog-case-06-review.json", _read(root / REVIEW_RELATIVE))
@@ -1694,7 +1756,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
             prompt_envelope=envelope, request=case["request"])
         _require(_read(paths["case"] / "response-schema.json") == previous.schema_bytes,
                  "historical materialization changed")
-        prepared.append(materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+        prepared.append(materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
     if continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup:
@@ -1732,7 +1794,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
         _require(previous_state == {**old, "protocolDigest": FIFTH_PROTOCOL_DIGEST},
                  "fifth preparation no longer matches the installed inputs")
         for ordinal, case in enumerate(cases, 1):
-            previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+            previous = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=FIFTH_PROTOCOL_DIGEST, model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"schema-correction-continuation/response-schema-{ordinal:02d}.json") ==
@@ -1743,7 +1805,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
         _require(previous_state == {**old, "protocolDigest": SIXTH_PROTOCOL_DIGEST},
                  "sixth preparation no longer matches the installed inputs")
         for ordinal, case in enumerate(cases, 1):
-            previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+            previous = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=SIXTH_PROTOCOL_DIGEST, model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"model-migration-continuation/response-schema-{ordinal:02d}.json") ==
@@ -1753,7 +1815,7 @@ def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: boo
         _require(previous_state == {**old, "protocolDigest": SEVENTH_PROTOCOL_DIGEST},
                  "seventh preparation no longer matches the installed inputs")
         for ordinal, case in enumerate(cases, 1):
-            previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
+            previous = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(old["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=SEVENTH_PROTOCOL_DIGEST, model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             _require(_read(run_root / f"stderr-diagnostic-continuation/response-schema-{ordinal:02d}.json") ==
@@ -2352,7 +2414,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     envelope = _input(root, protocol, "promptEnvelope")
     taxonomy = _input(root, protocol, "taxonomy")
     seed = bytes.fromhex(state["materializationSeed"])
-    materials = [materialize_native_case_contract(materialization_seed=seed, ordinal=i,
+    materials = [materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=i,
         protocol_digest=protocol["protocolDigest"], model_schema=schema,
         prompt_envelope=envelope, request=case["request"]) for i, case in enumerate(cases, 1)]
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
@@ -2710,7 +2772,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 _require(record == partial["caseResults"][ordinal - 1], "reviewed prefix facts changed")
                 continue  # Exact old bytes were validated under their original implementation/protocol.
             definition = _definition(fixtures, ordinal)
-            material = materialize_native_case_contract(materialization_seed=seed, ordinal=ordinal,
+            material = materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=ordinal,
                 protocol_digest=protocol["protocolDigest"], model_schema=model_schema,
                 prompt_envelope=envelope, request=case["request"])
             expected = _blank_case(case, material, seed, protocol, definition)

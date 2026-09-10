@@ -44,6 +44,7 @@
     "sessionStartDelivered",
     "routeAssessmentOnly",
     "fixedInstructions",
+    "taskMaterialPaths",
     "request"
   ],
   "forbiddenModelInputs": [
@@ -122,6 +123,17 @@
       "requestSha256": "02d537ebf47c5fe6f86ac7c9a3a5531d9638d0aa1d3cd758060337a532ebf77a"
     }
   ],
-  "promptEnvelopeDigest": "sha256:e152eba9a2c514b3126c33131597e555e0310987ad5a7b11a031a153156a45ee",
-  "assessmentRevision": 1
+  "promptEnvelopeDigest": "sha256:dca146deefb7d91db2f809c064dab0e627ee205e03c38e682a13550e5312e881",
+  "assessmentRevision": 2,
+  "materialDelivery": {
+    "revision": 1,
+    "source": "fixtureMatrix.files[].path",
+    "pathBase": "case-workspace",
+    "order": "utf8-byte-order",
+    "scope": "task-data-only; not-installed-skills; empty-list-is-not-discovery-evidence"
+  },
+  "fixtureMatrix": {
+    "path": "evals/no-hook-observation/codex-fixtures-v1.json",
+    "sha256": "7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"
+  }
 }

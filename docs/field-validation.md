@@ -2,14 +2,19 @@
 
 ## Current assessment and historical boundaries
 
-The unpublished 0.10.1 candidate and its actual ten-attempt batch are recorded
-under [Canonical assessment candidate 0.10.1](#canonical-assessment-candidate-0101)
-and [Actual assessment batch and remaining evidence](#actual-assessment-batch-and-remaining-evidence).
-The new batch has eight PASS, one FAIL, one INCOMPLETE and six NOT-RUN cases;
-lifetime attempts and CLI launches are 30. Host acceptance remains incomplete.
-The older sections below retain their original 0.10.0 identities, counts and
-outcomes. Their use of "current" describes that historical execution, not the
-0.10.1 candidate. No historical failure is reclassified.
+The unpublished 0.10.1 runtime candidate retains the original assessment and its
+separately bound unstarted-case segment: eight PASS, one FAIL, two INCOMPLETE
+and five NOT-RUN cases; lifetime attempts and CLI launches are 31. Host
+acceptance remains incomplete. The material-location input revision below is
+not observed and its execution window is closed. It does not regrade either
+historical segment or create another attempt.
+
+See [Canonical assessment candidate 0.10.1](#canonical-assessment-candidate-0101),
+[Actual assessment batch and remaining evidence](#actual-assessment-batch-and-remaining-evidence),
+and [Material-location delivery correction](#material-location-delivery-correction).
+Older sections retain their original identities, counts and outcomes. Their
+use of "current" describes the execution at that time, not the new input
+revision. No historical failure is reclassified.
 
 ## Historical reviewed continuation outcome (0.10.0)
 
@@ -1638,3 +1643,89 @@ state is outside the bound public package/fixture/discovery inventory, so this
 information supports the existing refusal. It establishes neither the object's
 contents nor a mapping defect or the model's motive. No target or link was
 inspected, no permission changed, and no further case was launched.
+
+
+## Material-location delivery correction
+
+The operator supplied the Case 10 and Case 11 shell-wrapped `cat` commands.
+Both operands have the form `client-home/tmp/arg0/codex-arg0<generated suffix>`
+in their respective case states. Their private prefixes and generated names
+are not reproduced here. They are different submitted path strings; neither
+object, its type, contents nor link destination was inspected.
+
+The frozen [arg0 implementation](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/arg0/src/lib.rs#L319)
+creates auxiliary command directories under `CODEX_HOME/tmp/arg0` and prepends
+them to PATH. This code does not make the directory the working directory or
+generate a `cat` operand. The frozen [shell wrapper](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/shell.rs#L20)
+and [JSONL event conversion](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/event_processor_with_jsonl_output.rs#L150)
+explain the displayed shell command representation, not why that operand was
+chosen. JSONL command items do not carry cwd. The user-provided strings do not
+recover the original model tool arguments or internal reasoning.
+
+Axiom's `build_native_argv` already supplies `--cd` with the case workspace;
+the canonical process invocation also passes that workspace as `cwd`.
+`case_environment` supplies dedicated client HOME and CODEX_HOME, separately
+from the workspace. These bindings are unchanged. There is no evidence here
+of cwd drift, a broken discovery alias, or a shared cause for both refusals.
+The two old `read-target-unbound` outcomes remain valid policy refusals.
+
+There is a separate, directly reproducible input-delivery gap. Re-rendering
+Case 10 and Case 11 from their public result seed, original protocol digest and
+bound inputs exactly reproduces each historical `casePromptSha256`. Neither
+prompt names its material files. The original requests also do not name them.
+The fixture builder creates `document.txt` for Case 10 and
+`.codex-plugin/plugin.json` plus `skills/context/SKILL.md` for Case 11, but
+creation alone does not deliver those paths. Working-directory context is not
+a file inventory. The frozen [environment renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/world_state/environment.rs#L239)
+includes cwd and [configured permission entries](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/environment_context.rs#L107),
+not a traversal of workspace files. Our permission entries bind the workspace,
+package (when present) and client binary, not individual fixture filenames.
+Under the existing cat/sed-only contract, undisclosed names must be guessed;
+listing commands are not available. This gap is established,
+but its causal role in either historical `tmp/arg0` request remains unknown.
+
+The native envelope now has assessment revision 2 and material-delivery revision
+1. One generation rule reads the envelope-bound fixture matrix, validates the
+selected definition and inserts `taskMaterialPaths`, sorted by path UTF-8 bytes,
+before the unchanged original request. The list contains only explicit
+`files[].path` entries, relative to the current workspace. It excludes generated
+Git metadata, installed package inventories, client state, absolute roots,
+contents, case labels, routes, outcomes and permission grants. The uniform
+explanation distinguishes task data from installed Skills and says that an
+empty list is not evidence about installation. The plugin-shaped files in
+Case 11 remain inspected task data, not an Axiom installation or discovered
+route. No special Case 11 answer is supplied.
+
+The same materialization function produces prepared schemas, execution stdin
+and verifier-side input commitments. Its source root is passed explicitly by
+production callers. Old envelopes without material delivery retain their exact
+prompt bytes; old result files keep their original protocols and implementations.
+The stopped `e1504982` segment is retained as an immutable historical reference.
+Current results are empty because this input revision has not been observed.
+The execution window is closed; neither limits nor attempt markers change.
+
+Canonical Skills, fixture bytes, requests, scoring, model response vocabulary,
+full-profile runtime, builder and bundle are unchanged. No product version or
+bundle rebuild is introduced. Only the native input envelope, implementation,
+protocol and derived prompt/schema/opaque bindings change. Existing shell syntax,
+output validation, read inventory, sandbox and first-rejection propagation are
+unchanged. A constructed client temporary path is rejected without accessing it.
+No model launch, login or private diagnostic inspection is part of this repair.
+
+Validation used an external complete source copy on Python 3.14.7 and Node
+24.18.0. Five focused methods passed, including four new material-delivery
+production-chain regressions and the retained transport equivalence test.
+Full unittest discovery ran 535 tests: 533 passed, zero failures/errors and two
+skips (the real Windows shell regression and the explicitly opt-in delegated
+cgroup probe). The probe was not enabled. All sixteen written response-schema
+files passed transport checks; their selected argv paths, material lists and
+original request suffixes matched the generation contract. The original Case
+10/11 prompt hashes were reproduced before editing, which proves the delivery
+difference but does not recover either model's reasoning or predict new behavior.
+These are no-model checks; canonical attempts and CLI launches remain 31.
+
+Publication and distribution checks passed. A whitespace check first found one
+new trailing space; it was removed without changing behavior, then identities
+and derived artifacts were refreshed. The frozen-source inspection and focused
+result checks are explicitly bounded self-review with delegated source/test
+assistance, not an additional full independent approval.
