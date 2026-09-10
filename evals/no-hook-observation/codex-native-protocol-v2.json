@@ -18,7 +18,7 @@
     },
     "promptEnvelope": {
       "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
-      "sha256": "d309812f14cd8edd948b4a65ec256d3357ae3b55965ef270a6a9843a632e9b45"
+      "sha256": "d69a957f242a98bc96f70f380a045095298e6a54e2ee490e6cd17ce29e8270d7"
     },
     "taxonomy": {
       "path": "evals/codex-exec-jsonl-observer-v3.json",
@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "bedc418b0ad53846e4b9cb42f1fcb88a3899dd8fb6b97c7ea2e6e62425f50105"
+      "sha256": "38e582cb10e230cd4a603d672ff2fea06bedddce510ca99a361205b9384b95d3"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -77,6 +77,10 @@
     {
       "path": "axiom_validation/routing_evals/jsonio.py",
       "sha256": "8de0a31bcd0f4827ddc4e4c5abc7d11952b24e4d6cdc3a895084df1333d1b07a"
+    },
+    {
+      "path": "axiom_validation/yaml_subset.py",
+      "sha256": "2d3ae17152586431d170e97d4e0c21fc83d4b87ce133dd58046addba9877444c"
     },
     {
       "path": "scripts/run-no-hook-native-observation.py",
@@ -115,7 +119,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "7cf0745bb0f20325152927fd6ad4876441ac50f389403b64ca8f33f36f1d7b8f"
+    "sha256": "b262499a370831fbcd7754067e1fa3ef30f8c03f8ff40d51513a1a63bf7e5ae7"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -277,9 +281,9 @@
     }
   },
   "executionWindow": {
-    "state": "assessment-revision-3",
-    "lastResultSha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
-    "reason": "one fresh 16-case assessment; preserve 38 deduplicated prior attempts"
+    "state": "closed",
+    "lastResultSha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
+    "reason": "54 attempts consumed; explicit invocation transport has no model authorization"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
@@ -327,7 +331,7 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9",
+  "protocolDigest": "sha256:d958d65d794516bca3ae71d18a6ed0d78258414ea5448d626f9a81bb96777896",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",
@@ -369,5 +373,26 @@
     "history": "deduplicate ordinal and materialization commitment; no inherited sessions",
     "stop": "any policy rejection or reliability failure stops remaining cases",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
+  },
+  "explicitInvocation": {
+    "revision": 1,
+    "transport": "codex-exec-stdin-namespaced-dollar-mention",
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "sourcePaths": [
+      "codex-rs/exec/src/lib.rs",
+      "codex-rs/ext/skills/src/provider/host.rs",
+      "codex-rs/ext/skills/src/loader/host.rs",
+      "codex-rs/ext/skills/src/loader/namespace.rs",
+      "codex-rs/ext/skills/src/selection.rs",
+      "codex-rs/skills/src/mentions.rs",
+      "codex-rs/skills/src/selection.rs"
+    ],
+    "source": "inner-request-leading-Invoke-name-to-or-explicitly-to; Use-the-name-Skill-to",
+    "catalog": "bound-package-frontmatter-and-nearest-plugin-namespace",
+    "matching": "exact-case-sensitive-unique-enabled-name; no-display-name-or-route-inference",
+    "connectorCondition": "existing apps=false and mcp_servers={} configuration; no connector-name collision",
+    "noInstallation": "no-selection-added",
+    "evidence": "selection-representation; not-observed-native-body-load",
+    "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
   }
 }

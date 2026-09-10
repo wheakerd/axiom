@@ -2144,3 +2144,141 @@ frozen rerun. Final result maintenance is validated again without model calls.
 Runtime/bundle bytes and identities remain unchanged; no new build or version.
 Previous 5c85dff CI seven checks passed (runs 34465722932, 34465726621,
 34465726768, 34465726719); those are historical, not this final head's CI.
+
+## Explicit Skill invocation transport correction
+
+This no-model follow-up starts at `51d496c3f78f7f481a9de2ae59f697ae4885a41a`
+and preserves the revision-3 observation executed by
+`1cb076f4d54cb63e24ae097ccb728d67c614e1fd`. That result remains 15 PASS and
+Case 1 FAIL, with 54 cumulative attempts and CLI launches. No new observation
+window, attempt, login, installation or model call is authorized here.
+
+### Bound input and frozen host selection
+
+All sixteen historical prompt/schema pairs were rematerialized from the
+retained public preparation seed and original protocol/envelope, and matched
+`execution-binding.json`. Case 1's complete stdin was 2,969 bytes with SHA-256
+`5117ca0c6e7d20af7ef9360d60520bf3621d7f2a3e36c171a7fc00aa7cd1c14d`.
+It contained zero dollar mentions, including its outer assessment and material
+sections. Its original request starts with `Invoke using-axiom explicitly`.
+The bound argv uses `codex exec --ephemeral --json --model gpt-5.5`,
+`--cd`, `--output-schema`, fixed configuration overrides and stdin `-`.
+There is no structured Skill/Mention argument in that execution path.
+
+At frozen Codex source `41e22fee981a63b3698df7ed36bad393cda24715`:
+
+- [exec input construction](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/lib.rs#L781)
+  wraps the full stdin as `UserInput::Text` with empty `text_elements`; it does
+  not translate natural-language naming into a structured Skill selection.
+- [text mentions](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/skills/src/mentions.rs#L81)
+  recognize dollar names and linked mentions. The historical full Case 1 input
+  selects no Skill under the frozen functions, independent of its prose intent.
+- [host catalog mapping](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/provider/host.rs#L129)
+  uses the loaded metadata name, not UI display_name. Non-implicit policy hides
+  using-axiom from the default prompt catalog while retaining explicit selection.
+- [root loading](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/loader/host.rs#L129)
+  canonicalizes the registered user discovery root; the
+  [nearest plugin namespace](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/loader/namespace.rs#L111)
+  qualifies the public frontmatter name as `axiom:using-axiom`. The current
+  registered alias targets this same bound package. Its name is not `Use Axiom`
+  or bare `using-axiom`. An earlier official skills/list record corroborates
+  naming but is not reused as a current request's captured model context.
+- The [host selector](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/skills/src/selection.rs#L177)
+  requires a unique enabled name and no connector-name collision. The existing
+  apps-disabled/MCP-empty configuration is retained. The extension selector's
+  first-match implementation is not generalized to the stricter host path.
+- [explicit resource loading](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/extension.rs#L457)
+  can read the selected main resource and create SkillInstructions. Native
+  loading does not require a model-generated cat event. This loading capability
+  is source-derived here; no current native body load or model behavior occurred.
+
+The concrete mismatch is in the invocation transport. It does not recover the
+model's internal reason for returning unavailable and does not establish that
+an added mention will produce the expected behavior.
+
+### Explicit invocation revision 1
+
+The existing materializer now recognizes only a literal leading
+`Invoke <name> [explicitly] to ...` or `Use the <name> Skill to ...` in the
+inner original request. It uses exact case-sensitive names from verified
+bundle frontmatter and the bound plugin namespace. An enabled match must be
+unique. Display names, approximate names and unknown or ambiguous matches are
+not guessed. No catalog means no added selection and no fabricated installation.
+
+The shared rule adds a namespaced dollar mention for Cases 1, 2 and 6 only.
+It does not inspect expectedRoutes, outcomes, case IDs, fixture contents or
+outer assessment instructions to select a Skill. Implicit, ambiguous,
+negative and no-route cases receive no extra selection. Case 11 retains its
+zero-Axiom control; its fixture named SKILL.md is task data, not a catalog.
+The original request bytes/digest, response vocabulary, expected values,
+scoring, permission boundaries and material paths remain unchanged.
+
+`explicitInvocation` is a separately versioned prompt/protocol input and
+normalized binding of the request digest, host name, public package-relative
+Skill path, source bytes and mention bytes. It records a transported selection,
+not an observed load. Current result validation requires its exact recomputed
+value. Exact historical prefixes may omit this new field and remain equal to
+their original records; no missing field is filled into historical evidence.
+The completed revision-3 result is retained under its original SHA, execution
+and protocol binding; the current transport has no host result. The execution
+window is closed and all 54 consumed attempts remain consumed.
+
+This is an explicit-host-invocation support condition added to assessment
+revision 3, not proof that unchanged natural-language text alone triggers an
+explicit-only Skill. The old natural-language-only FAIL remains. No canonical
+description, implicit-invocation policy, full-profile payload, bundle or product
+version changed. No mandatory front-door, SessionStart or Hook was added.
+
+### No-model verification and limits
+
+The persistent production regressions cover input generation, prepared schema
+files, actual runner stdin delivery through the existing simulated-client
+fixture, strict parsing, separate selection binding and result validation.
+They reject incorrect case, duplicate names, nonexistent entries, source-byte
+changes, wrong public path shapes and missing or altered current bindings.
+They verify that fixture/outer text does not create a selection, and preserve
+no-installation and closed-window boundaries. These are not host observations.
+
+Two small external Rust harnesses compiled the unchanged frozen mention and
+selection functions against non-secret fixture types using existing rustc
+1.96.1, edition 2024: 14 extension-selector and 16 host-selector assertions
+passed. A further 18 assertions fed the actual generated production inputs to
+the unchanged host selector: the full historical Case 1 selects none, the new
+sixteen prompts select only the three explicitly requested bound Skills, and
+an empty catalog selects none. No official CLI, loader, login or model ran;
+namespace and resource-loading conclusions remain source analysis. The first
+external compilation selected edition 2021 and failed before execution; using
+the frozen source's edition 2024 corrected only that external harness setting.
+
+The first full discovery exposed five failed subtests/assertions in material
+block tests and six errors in historical-prefix regressions. The material test
+helper now checks and removes the complete independently bound invocation
+block before comparing the unchanged material layer. The record schema allows
+exact historical prefixes to retain their old fields, while current semantic
+validation still requires the new binding. A focused rerun launcher initially
+constructed duplicate test-method names and failed to load those methods;
+correcting the external name extraction did not alter tests or validators.
+All initial results remain distinct from the final verification below.
+
+A bounded second-reader source and diff review supplemented main-agent
+verification; it is not an external approval. A suspected regex overescape was
+checked against decoded schema bytes: canonical public paths match and wrong
+separators/backslashes do not. A persistent positive/negative pattern regression
+records that check; no speculative schema rewrite was needed.
+
+Actual host revalidation of this invocation condition is NOT-RUN. The prior
+54 attempts, including the latest 15 PASS/1 FAIL, are not reinterpreted or
+combined with no-model checks into a 16 PASS claim. FCR-001/003/004 remain OPEN,
+FCR-002 remains STILL_OPEN, and actual clarification dialogue, invisible actions
+and other unobserved host support remain outside this evidence. PR #120 stays
+Draft and Issue #117 stays open.
+
+Final external-copy verification used Python 3.14.7 with `-I -B`, an explicitly
+fixed physical cwd and imports from that copy. Complete unittest discovery:
+561 run, 559 passed, two existing platform/opt-in skips, zero failures/errors.
+The Windows-native shell test and explicit delegated-cgroup probe were skipped;
+no extra host probe was enabled. Ten new persistent invocation tests and all
+nine affected regression methods passed. The publication aggregate,
+distribution drift, all sixteen actual derived transport-schema files, JSON
+parsing, English-only scan and whitespace checks passed. Ordinary regression
+fixtures are not canonical observations or fresh deterministic bundle evidence.

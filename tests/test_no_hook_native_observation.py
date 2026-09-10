@@ -760,6 +760,15 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(prompt.count(b"\nTask materials:\n"), 1)
         prefix, rest = prompt.split(b"\nTask materials:\n", 1)
         block, request = rest.split(b"\nUser request:\n", 1)
+        # The new independently versioned native invocation layer is not task
+        # data. Check its complete shape before restoring the old envelope.
+        selection_marker = b"\nHost explicit Skill selection from the inner request: $"
+        if selection_marker in block:
+            block, selection = block.split(selection_marker, 1)
+            name, notice = selection.split(b"\n", 1)
+            self.assertRegex(name, rb"^[a-z0-9-]+:[a-z0-9-]+$")
+            self.assertEqual(notice,
+                b"This transports the user's named invocation; it grants no task execution authority.\n")
         lines = block.splitlines()
         self.assertEqual(len(lines), 2)
         self.assertEqual(lines[0],
@@ -840,6 +849,7 @@ class NativeObservationTests(unittest.TestCase):
                 old_envelope = copy.deepcopy(envelope)
                 old_envelope.pop("materialDelivery")
                 old_envelope.pop("fixtureMatrix")
+                old_envelope.pop("explicitInvocation")
                 old_envelope["assessmentRevision"] = 1
                 old_arguments = {**arguments, "prompt_envelope": old_envelope}
                 previous = legacy.materialize_case_contract(**old_arguments)
@@ -4737,8 +4747,8 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(history["current"]["codexObservation"], current["status"].lower())
         else:
             self.assertEqual(history["current"]["codexObservation"], "not-run")
-        self.assertEqual(self.protocol["executionWindow"]["state"], "assessment-revision-3")
-        self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], binding["sha256"])
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
         # The existing scorer still rejects contradictory tuples without editing
         # the response, inventing a question or treating a route name as a read.

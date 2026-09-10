@@ -881,6 +881,50 @@
                 }
               }
             }
+          },
+          "explicitInvocation": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "revision",
+                  "requestSha256",
+                  "hostName",
+                  "skillPath",
+                  "skillSha256",
+                  "mentionSha256"
+                ],
+                "properties": {
+                  "revision": {
+                    "const": 1
+                  },
+                  "requestSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "hostName": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+:[a-z0-9-]+$"
+                  },
+                  "skillPath": {
+                    "type": "string",
+                    "pattern": "^skills/[a-z0-9-]+/SKILL\\.md$"
+                  },
+                  "skillSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "mentionSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
           }
         },
         "description": "New cases require publicReads and operatorReadCapture semantically; exact-hash historical prefixes retain their original representation."

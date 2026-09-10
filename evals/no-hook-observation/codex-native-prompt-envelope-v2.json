@@ -46,6 +46,7 @@
     "routeAssessmentOnly",
     "fixedInstructions",
     "taskMaterialPaths",
+    "hostExplicitSkillSelection",
     "request"
   ],
   "forbiddenModelInputs": [
@@ -124,7 +125,7 @@
       "requestSha256": "02d537ebf47c5fe6f86ac7c9a3a5531d9638d0aa1d3cd758060337a532ebf77a"
     }
   ],
-  "promptEnvelopeDigest": "sha256:e8dfd323b28c1db137a9a3740c960f5a45bf094f80e0239acc3c19b486a4528b",
+  "promptEnvelopeDigest": "sha256:93ae61925db388d5cc30f2b58aa5da6d449b92ded1f6cc8764a9c42631686343",
   "assessmentRevision": 3,
   "materialDelivery": {
     "revision": 1,
@@ -136,5 +137,26 @@
   "fixtureMatrix": {
     "path": "evals/no-hook-observation/codex-fixtures-v1.json",
     "sha256": "7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"
+  },
+  "explicitInvocation": {
+    "revision": 1,
+    "transport": "codex-exec-stdin-namespaced-dollar-mention",
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "sourcePaths": [
+      "codex-rs/exec/src/lib.rs",
+      "codex-rs/ext/skills/src/provider/host.rs",
+      "codex-rs/ext/skills/src/loader/host.rs",
+      "codex-rs/ext/skills/src/loader/namespace.rs",
+      "codex-rs/ext/skills/src/selection.rs",
+      "codex-rs/skills/src/mentions.rs",
+      "codex-rs/skills/src/selection.rs"
+    ],
+    "source": "inner-request-leading-Invoke-name-to-or-explicitly-to; Use-the-name-Skill-to",
+    "catalog": "bound-package-frontmatter-and-nearest-plugin-namespace",
+    "matching": "exact-case-sensitive-unique-enabled-name; no-display-name-or-route-inference",
+    "connectorCondition": "existing apps=false and mcp_servers={} configuration; no connector-name collision",
+    "noInstallation": "no-selection-added",
+    "evidence": "selection-representation; not-observed-native-body-load",
+    "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
   }
 }

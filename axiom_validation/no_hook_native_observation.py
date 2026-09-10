@@ -29,6 +29,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from . import no_hook_observation as legacy
 from .context import REPOSITORY_ROOT
+from .yaml_subset import parse_skill_frontmatter_document
 
 
 PROTOCOL_RELATIVE = Path("evals/no-hook-observation/codex-native-protocol-v2.json")
@@ -96,6 +97,27 @@ CURRENT_ASSESSMENT = {
     "stderrReview": "same-attempt only; all existing eligibility conditions required",
 }
 CURRENT_PRIOR_RESULTS = [MATERIAL_OBSERVATION_BINDING["sha256"]]
+ASSESSMENT_REVISION_THREE = {
+    "path": "evals/no-hook-observation/results/codex-native-c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1.json",
+    "sha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
+    "implementationCommit": "1cb076f4d54cb63e24ae097ccb728d67c614e1fd",
+    "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
+    "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9",
+}
+EXPLICIT_INVOCATION = {
+    "revision": 1, "transport": "codex-exec-stdin-namespaced-dollar-mention",
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "sourcePaths": ["codex-rs/exec/src/lib.rs", "codex-rs/ext/skills/src/provider/host.rs",
+                    "codex-rs/ext/skills/src/loader/host.rs", "codex-rs/ext/skills/src/loader/namespace.rs",
+                    "codex-rs/ext/skills/src/selection.rs", "codex-rs/skills/src/mentions.rs",
+                    "codex-rs/skills/src/selection.rs"],
+    "source": "inner-request-leading-Invoke-name-to-or-explicitly-to; Use-the-name-Skill-to",
+    "catalog": "bound-package-frontmatter-and-nearest-plugin-namespace",
+    "matching": "exact-case-sensitive-unique-enabled-name; no-display-name-or-route-inference",
+    "connectorCondition": "existing apps=false and mcp_servers={} configuration; no connector-name collision",
+    "noInstallation": "no-selection-added", "evidence": "selection-representation; not-observed-native-body-load",
+    "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery",
+}
 MODEL = "gpt-5.5"
 REASONING_EFFORT = "medium"
 AUTH_FILE_NAME = "auth.json"
@@ -598,6 +620,7 @@ IMPLEMENTATION_PATHS = (
     "axiom_validation/no_hook_linux_isolation.py", "axiom_validation/no_hook_native_observation.py",
     "axiom_validation/no_hook_observation.py", "axiom_validation/no_hook_profile.py",
     "axiom_validation/release_versions.py", "axiom_validation/routing_evals/jsonio.py",
+    "axiom_validation/yaml_subset.py",
     "scripts/run-no-hook-native-observation.py",
 )
 INPUT_PATHS = {
@@ -709,9 +732,11 @@ def _protocol(root: Path) -> dict[str, Any]:
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
-        "state": "assessment-revision-3", "lastResultSha256": MATERIAL_OBSERVATION_BINDING["sha256"],
-        "reason": "one fresh 16-case assessment; preserve 38 deduplicated prior attempts",
+        "state": "closed", "lastResultSha256": ASSESSMENT_REVISION_THREE["sha256"],
+        "reason": "54 attempts consumed; explicit invocation transport has no model authorization",
     }, "native execution window differs from consumed attempt evidence")
+    _require(document.get("explicitInvocation") == EXPLICIT_INVOCATION,
+             "native explicit invocation contract mismatch")
     _require(document.get("currentAssessment") == CURRENT_ASSESSMENT,
              "current assessment execution contract mismatch")
     _require(document.get("assessmentRemainder") == ASSESSMENT_REMAINDER, "assessment remainder contract mismatch")
@@ -741,6 +766,7 @@ def _protocol(root: Path) -> dict[str, Any]:
                  "native bound input changed")
     envelope = _json(_read(root / inputs["promptEnvelope"]["path"]))
     _require(envelope.get("assessmentRevision") == 3 and document.get("assessmentRevision") == 3 and
+             envelope.get("explicitInvocation") == EXPLICIT_INVOCATION and
              envelope.get("materialDelivery") == MATERIAL_DELIVERY and
              envelope.get("fixtureMatrix") == inputs["fixtureMatrix"] and
              envelope.get("promptEnvelopeDigest") == legacy.self_digest(envelope, "promptEnvelopeDigest"),
@@ -774,7 +800,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                 protocol_digest=protocol["protocolDigest"], model_schema=_input(root, protocol, "modelResponseSchema"),
                 prompt_envelope=_input(root, protocol, "promptEnvelope"), request=case["request"])
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation", "assessmentRevision3"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
                  history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": protocol["protocolDigest"]},
                  "native history identity is inconsistent")
@@ -841,6 +867,16 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                  material_result["attemptCount"] == material_result["cliLaunchCount"] == 7 and
                  material_result["cumulativeAttemptCount"] == 38,
                  "historical material observation accounting changed")
+        _require(history["assessmentRevision3"] == ASSESSMENT_REVISION_THREE,
+                 "historical revision-three binding changed")
+        revision_three = _read(root / ASSESSMENT_REVISION_THREE["path"])
+        _require(hashlib.sha256(revision_three).hexdigest() == ASSESSMENT_REVISION_THREE["sha256"],
+                 "historical revision-three result bytes changed")
+        prior = _json(revision_three)
+        _require(prior["protocolDigest"] == ASSESSMENT_REVISION_THREE["protocolDigest"] and
+                 prior["attemptCount"] == prior["cliLaunchCount"] == 16 and
+                 prior["cumulativeAttemptCount"] == _attempt_history(root)["attempts"] + 16 == 54,
+                 "historical revision-three attempt accounting changed")
         # Accepted historical bytes retain their own input meanings and scoring;
         # this no-model wording migration cannot regrade or refund any attempt.
         records = history["results"]
@@ -1057,6 +1093,8 @@ def prepare_current_assessment(root: Path, run_root: Path, previous: Path, *,
                                authorize_install: bool = False, authorize_copy: bool = False,
                                runner: Callable[..., Mapping[str, Any]] | None = None) -> None:
     _require(authorize_install and authorize_copy, "explicit assessment install and test-auth copy authorization required")
+    _require(runner is not None or _protocol(root)["executionWindow"]["state"] != "closed",
+             "actual execution window closed")
     old = _current_assessment_history(root, previous)
     chain = _attempt_history(root)
     _require(chain["attempts"] + CASE_COUNT <= CURRENT_ASSESSMENT["maximumCumulativeAttempts"],
@@ -1310,6 +1348,70 @@ def validate_response_transport(schema: Mapping[str, Any]) -> None:
     _require(schema["type"] == "object", "response transport root must be an object")
 
 
+def bound_native_skill_catalog(root: Path) -> list[dict[str, Any]]:
+    """Reconstruct names only for this bound, single-package user discovery root.
+
+    Frozen loader/host.rs canonicalizes the discovery root, and namespace.rs
+    uses the nearest package manifest. Do not use interface.display_name or
+    the no-Hook output vocabulary as host names. Installation and the alias
+    are separately checked before any client execution.
+    """
+    manifest = _json(_read(root / STATIC_BUNDLE_EVIDENCE_RELATIVE))["bundleManifest"]
+    namespace = manifest["derivedPluginManifest"]["fields"]["name"]
+    _require(type(namespace) is str and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", namespace),
+             "unsupported bound Skill namespace")
+    records = []
+    for item in manifest["runtimeFiles"]:
+        if item["kind"] != "skill":
+            continue
+        relative = item["path"]
+        _require(re.fullmatch(r"skills/[a-z0-9-]+/SKILL\.md", relative), "unsupported bound Skill path")
+        raw = _read(root / relative)
+        _require(hashlib.sha256(raw).hexdigest() == item["sha256"], "bound Skill source bytes changed")
+        name = parse_skill_frontmatter_document(raw.decode("utf-8"), relative)["name"]
+        _require(name == Path(relative).parent.name, "bound Skill basename differs from its path")
+        records.append({"name": namespace + ":" + name, "localName": name,
+                        "path": relative, "sha256": item["sha256"], "enabled": True})
+    _require(len({item["name"] for item in records}) == len(records), "ambiguous bound host Skill names")
+    return records
+
+
+def explicit_skill_selection(request: str, catalog: Sequence[Mapping[str, Any]]) -> dict[str, Any] | None:
+    """Translate only a literal invocation at the start of the inner request.
+
+    This deliberately small English invocation grammar does not route intent.
+    It neither searches fixture/assessment text nor examines expected results.
+    Skill names stay case-sensitive even though the leading command words are
+    case-insensitive. Unrecognized sentence forms receive no added selection.
+    """
+    match = re.match(r"\A(?:(?i:Invoke) (?P<invoke>[A-Za-z0-9_:-]+) (?:(?i:explicitly) )?(?i:to)\b|"
+                     r"(?i:Use the) (?P<use>[A-Za-z0-9_:-]+) (?i:Skill to)\b)", request)
+    if match is None or not catalog:
+        return None
+    name = match.group("invoke") or match.group("use")
+    matches = [item for item in catalog if item.get("enabled") is True and
+               name in (item.get("name"), item.get("localName"))]
+    _require(len(matches) == 1, "explicit Skill name is not uniquely bound")
+    item = matches[0]
+    _require(re.fullmatch(r"[a-z0-9-]+:[a-z0-9-]+", item["name"]) is not None and
+             sum(entry.get("enabled") is True and entry.get("name") == item["name"] for entry in catalog) == 1,
+             "explicit host Skill name is not uniquely selectable")
+    mention = "$" + item["name"]
+    return {"revision": 1, "requestSha256": hashlib.sha256(request.encode("utf-8")).hexdigest(),
+            "hostName": item["name"], "skillPath": item["path"], "skillSha256": item["sha256"],
+            "mentionSha256": hashlib.sha256(mention.encode("utf-8")).hexdigest()}
+
+
+def _case_explicit_selection(root: Path, request: str, ordinal: int) -> dict[str, Any] | None:
+    # Availability comes from the independently bound fixture/discovery mode,
+    # not the ordinal, expected route or expected discovery outcome.
+    fixtures = _json(_read(root / legacy.FIXTURES_RELATIVE))
+    _definition(fixtures, ordinal)  # Validate the same bound fixture/discovery record as production.
+    installed = fixtures["cases"][ordinal - 1]["pluginState"] == "installed-derived-profile"
+    catalog = bound_native_skill_catalog(root) if installed else []
+    return explicit_skill_selection(request, catalog)
+
+
 def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **arguments: Any) -> legacy.CaseMaterialization:
     """Adapt only known response fields; retain the frozen local acceptance schema.
 
@@ -1349,6 +1451,17 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
         _require(bool(marker), "native request boundary missing")
         prompt = prefix + location.encode("utf-8") + marker + request
         material = replace(material, prompt_bytes=prompt, prompt_sha256=hashlib.sha256(prompt).hexdigest())
+    invocation = envelope.get("explicitInvocation")
+    if invocation is not None:
+        _require(invocation == EXPLICIT_INVOCATION, "unsupported explicit invocation transport")
+        selection = _case_explicit_selection(root, arguments["request"], arguments["ordinal"])
+        if selection is not None:
+            prefix, marker, request = material.prompt_bytes.partition(b"\nUser request:\n")
+            _require(bool(marker), "native request boundary missing")
+            transport = ("\nHost explicit Skill selection from the inner request: $" + selection["hostName"] +
+                         "\nThis transports the user's named invocation; it grants no task execution authority.\n")
+            prompt = prefix + transport.encode("utf-8") + marker + request
+            material = replace(material, prompt_bytes=prompt, prompt_sha256=hashlib.sha256(prompt).hexdigest())
     schema = _json(material.schema_bytes)
     for annotation in ("$schema", "$id", "title"):
         schema.pop(annotation, None)
@@ -2589,7 +2702,8 @@ def _readable(paths: Mapping[str, Path], definition: Mapping[str, Any], installe
 
 
 def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterialization,
-                seed: bytes, protocol: Mapping[str, Any], definition: Mapping[str, Any]) -> dict[str, Any]:
+                seed: bytes, protocol: Mapping[str, Any], definition: Mapping[str, Any], *,
+                root: Path = REPOSITORY_ROOT) -> dict[str, Any]:
     fields = legacy._case_materialization_fields(
         materialization=materialized, materialization_seed=seed, protocol_digest=protocol["protocolDigest"],
         case=case, realized_fixture_digest=legacy._expected_realized_fixture_digest(definition),
@@ -2598,6 +2712,7 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
             "diagnostic": "not-run", "cliLaunchCount": 0, "attemptCount": 0, "modelRequestCount": None,
             "privateCapture": _private_capture(), "operatorStderrCapture": _stderr_capture(),
             "operatorReadCapture": _private_capture(), "publicReads": [],
+            "explicitInvocation": _case_explicit_selection(root, case["request"], materialized.ordinal),
             "executionDiagnostics": _diagnostics(),
             "evidenceExtraction": {"stream": "not-checked", "response": "not-checked", "postcheck": "not-checked"},
             "installation": "not-checked", "authentication": "not-checked",
@@ -2670,7 +2785,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     materials = [materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=i,
         protocol_digest=protocol["protocolDigest"], model_schema=schema,
         prompt_envelope=envelope, request=case["request"]) for i, case in enumerate(cases, 1)]
-    results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
+    results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i), root=root)
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
     if partial:
         results[:prefix_count] = partial["caseResults"][:prefix_count]
@@ -3061,8 +3176,10 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             material = materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=ordinal,
                 protocol_digest=protocol["protocolDigest"], model_schema=model_schema,
                 prompt_envelope=envelope, request=case["request"])
-            expected = _blank_case(case, material, seed, protocol, definition)
+            expected = _blank_case(case, material, seed, protocol, definition, root=root)
             _require(set(record) == set(expected), "current case record fields are not closed")
+            _require(record["explicitInvocation"] == expected["explicitInvocation"],
+                     "native explicit invocation binding mismatch")
             for field in ("opaqueBindingSha256", "modelResponseSchemaSha256", "casePromptSha256", "materializationCommitmentSha256"):
                 _require(record[field] == expected[field], "native materialization binding mismatch")
             status = record["status"]
