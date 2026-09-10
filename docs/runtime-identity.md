@@ -6,7 +6,7 @@ The compatible canonical discovery-description correction advances both manifest
 from `0.10.0` to `0.10.1`. Repository policy revision 8 records this source candidate
 against `2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223`. Runtime-contract schema v1 still
 classifies 61 installed inputs; its new digest is
-`sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2`.
+`sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28`.
 The same canonical Skill source serves the full and derived profiles. Existing
 Hooks, their wrappers, original case requests, classifications, expectations and
 scorer are unchanged. The descriptions clarify existing routing boundaries and

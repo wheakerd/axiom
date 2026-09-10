@@ -10,7 +10,7 @@
     "pluginVersion": "0.10.1",
     "repositoryPolicyRevision": 8,
     "runtimeContractSchemaVersion": "1",
-    "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2",
+    "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "history": "evidence/runtime-contract-history-v1.json"
   },
@@ -23,7 +23,7 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2",
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
       "status": "not-run",
       "reason": "Offline protocol contract checks only; Combined implementation remains incomplete and actual execution disabled. Runtime and host observation NOT-RUN. No Codex calls, credential use, installation, Golden Set or host results. FCR-001/003/004 OPEN; FCR-002 STILL OPEN."
     },
@@ -34,7 +34,7 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2",
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
       "status": "unavailable",
       "reason": "Axiom v0.10.1 changes shared canonical Skill descriptions. Claude Code no-Hook remains excluded; authenticated full-profile installed-host and lifecycle observation remain unavailable and not run."
     }

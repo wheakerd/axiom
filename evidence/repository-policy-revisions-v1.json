@@ -63,7 +63,7 @@
       "baselineCommit": "2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223",
       "sourceIssue": 117,
       "summary": "Bind the v0.10.1 canonical discovery-description corrections and source runtime identity for the next no-Hook bundle; preserve prior case contracts and observation records.",
-      "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2"
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
     }
   ]
 }

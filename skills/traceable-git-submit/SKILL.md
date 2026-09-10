@@ -1,6 +1,6 @@
 ---
 name: traceable-git-submit
-description: Route explicit $traceable-git-submit, checkpoints/baselines, consolidation/recovery, hardened, multi-target or history-replacing Git, and combined commit/tag/push of a prepared plugin release. Other ordinary named-remote non-force Git, status, diffs and conceptual Git stay host-native. Clarify mutually exclusive ordinary/traceable choices first; delegation grants no broader authority.
+description: Route explicit $traceable-git-submit; checkpoints/baselines, consolidation/recovery, hardened, multi-target or history-replacing Git; and combined commit, tag, and push of an already-prepared plugin release. Ordinary named-remote non-force Git without a tag or these triggers, status/diff and Git concepts stay host-native. Clarify mutually exclusive ordinary/traceable choices first.
 ---
 
 # Traceable Git Submit
