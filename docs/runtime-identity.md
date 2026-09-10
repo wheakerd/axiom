@@ -2,6 +2,13 @@
 
 ## Current v0.10.1 source identity
 
+This section preserves the source-creation record. The subsequently completed
+policy-revision-9 artifact is owned by the
+[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json);
+current observation and acceptance are summarized in
+[Field Validation](field-validation.md#final-pr-acceptance-and-issue-remainder).
+Those records do not change the identities or outcomes of historical sections.
+
 The compatible canonical discovery-description correction advances both manifests
 from `0.10.0` to `0.10.1`. Repository policy revision 8 records this source candidate
 against `2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223`. Runtime-contract schema v1 still

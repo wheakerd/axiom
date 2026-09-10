@@ -16,10 +16,13 @@ remains 15 PASS and Case 1 FAIL. Neither its failure nor the earlier 54 attempts
 are regraded. These are different invocation conditions, not a combined best run.
 The current result establishes bounded routing-assessment behavior, not complete
 Issue acceptance, actual clarification delivery, native body-consumption proof,
-plugin-runtime observation or all-host support. PR stays Draft and Issue open.
+plugin-runtime observation or all-host support. Issue 117 remains open. The
+[final acceptance assessment](#final-pr-acceptance-and-issue-remainder) separates
+the delivered PR from its remaining Issue-level behavior evidence.
 
 Current evidence and navigation:
 
+- [Final PR acceptance and Issue remainder](#final-pr-acceptance-and-issue-remainder)
 - [Current complete batch and remaining requirements](#explicit-invocation-full-batch-result)
 - [Signed execution window and limits](#explicit-invocation-full-observation-window)
 - [Explicit invocation transport correction](#explicit-skill-invocation-transport-correction)
@@ -676,9 +679,11 @@ and `scripts/run-no-hook-native-observation.py` separate ordinary repository
 validation, temporary installation, attended authentication, and model execution.
 The default `--check` validates bound files only. It does not inspect login state,
 start a client, install a plugin, or make a model request. The
-[v2 history](../evals/no-hook-observation/result-history-v2.json) records three actual
-attempts across three implementations: Case 1 is **INCOMPLETE** each time, and
-Cases 2-16 are **NOT-RUN**.
+[v2 history](../evals/no-hook-observation/result-history-v2.json) preserves the
+initial three attempts across three implementations: Case 1 was **INCOMPLETE**
+each time, and Cases 2-16 were **NOT-RUN**. Those are historical outcomes; the
+[current complete batch](#explicit-invocation-full-batch-result) has its own
+implementation and input bindings.
 
 Version 2 replaces the unfinished v1 execution path only for this limited
 compatibility experiment. End-to-end host acceptance is still pending. It retains
@@ -2442,3 +2447,58 @@ The final result-bearing source copy also passed full discovery: 562 run,
 on Linux and the explicitly disabled current-host cgroup probe). Publication
 aggregate and distribution drift passed on that same result-bearing candidate.
 This records local regression evidence separately from the final-head GitHub CI.
+
+## Final PR acceptance and Issue remainder
+
+Assessment date: 2026-09-10. Reviewed delivery: `6abec00027a132b835b42499292a1b451df64f8e`,
+tree `c6eb72551c7b6e3f08d3da2163c2bc535c25c36e`. The final clarification of this
+report changes documentation only. All execution, scoring, protocol, runtime,
+bundle and historical-result bytes remain attached to their original identities.
+The complete routing result above remains 16 PASS; lifetime attempts and CLI
+launches remain 70. No observation window is reopened.
+
+The governing sources are [Issue 117](https://github.com/wheakerd/axiom/issues/117),
+the immutable [Phase 1 profile](../evals/no-hook/profile-v1.json),
+[benchmark](../evals/no-hook/benchmark-v1.json), original Golden Set, and the
+explicitly approved native-v2, assessment-3 and explicit-invocation migrations.
+The original end-to-end execution instructions and later authority were supplied
+in the maintenance task, not inferred from a historical report. That authority
+allows conditional PR integration while keeping the Issue open; it does not
+waive any original behavior requirement or authorize publication.
+
+| Requirement and source | Current applicable delivery | Evidence and limit | Merge impact and smallest remaining evidence |
+| --- | --- | --- | --- |
+| Useful no-SessionStart profile; Issue goals 1-5 and Phase 1 discovery | Canonical eight-Skill derivative; explicit-only router and host-discovered workflows | The fixed Codex 0.153.0/gpt-5.5/medium/Direct batch passed all 16 original outcomes. Assessment 3/material delivery 1/explicit invocation 1 are disclosed conditions; only inner explicit requests 1/2/6 received qualified mentions. | Satisfied for this finite routing-assessment delivery. No claim of unchanged natural-language-only explicit selection, every host, or long-term reliability. No rerun is needed for this unchanged evidence. |
+| Clarification behavior; Issue Phase 1 and Golden Set ambiguous requests, especially review-or-external-action | The packaged selection boundary requires clarification before choosing mutually exclusive workflows; the assessment interface returns only the routing decision | All three cases defer selection and report count 1. This is not a visible clarifying question. | Issue-level behavior acceptance remains incomplete. Minimum evidence is the actual one-question clarification before selecting a route; neither a delivery receipt, user answer nor a full multi-turn completion is an original requirement. This assessment-only interface does not claim to perform that dialogue, so its absence is not an unimplemented function of the delivered observer. |
+| Source identity and consumption; Issue Phase 2/4 and FCR-001 | Exact bundle installation, discovery aliases and explicit native selection | Fifteen package/discovery mappings and three transmitted selections are bound; current native loading has no separate receipt. One verified read is a fixture, not a Skill. | Installation/selection binding is accepted; native body loading and model consumption remain unproved. A supported non-sensitive host loading record identifying the bound file, if available, would support loading; a validated public read supports only that read. Correct routing or absent cat cannot substitute. No tracing service or complete context capture is required or authorized. FCR-001's stronger legacy consumption claim stays OPEN; it is not claimed by this PR. |
+| No authority or credential expansion; Issue goals 3/6 and Phase 3 negatives; FCR-003 | Dedicated official-client authentication, explicit opaque serial copying, denied-by-default tool filesystem, public read roots, tool environment allowlist and disabled tool network | `case_environment`, `_config_args`, `_open_test_auth` and `_copy_test_auth` implement these boundaries; existing secret-free permission regressions and actual stable-input/postchecks support them. Response mutation booleans remain model reports. | No current credential-exposure defect found under the supported configuration. A universal invisible-access trace is not a merge prerequisite. FCR-003's old stronger claim is not VERIFIED_FIXED. Any concrete breach of the current boundary would block merge; none was identified in this bounded review. |
+| Bounded execution and process cleanup; native-v2 migration and FCR-002 | Official foreground client with output/time limits, process-group termination and reaping; fresh separate case states | Current batch has 16 normal exits, no timeout or cleanup error; existing failure-path regressions cover bounded termination. | Current ordinary lifecycle accepted. Arbitrary escaping descendants and the retired Combined supervisor are not native-v2 promises. FCR-002 remains STILL_OPEN in that historical scope, not a reason to implement a new supervisor before this PR. |
+| Ordinary bundle data preservation; Issue Phase 2 and FCR-004 | Lifecycle 2 on supported Linux/filesystem, empty external destination and documented single-writer use | Exclusive creation retains descriptors and records creation before fallible registration; no named output is deleted; failures retain partial products and first cause. Validation and required closure precede no-overwrite completion publication. Production regressions and two prior real deterministic builds cover this path. | No known current ordinary-builder data-misprocessing gap. Its old name-based deletion path was removed and universal concurrency claims were explicitly migrated, not VERIFIED_FIXED. The disabled legacy observer cleanup finding remains OPEN. No additional build or stronger exclusion mechanism is needed for this unchanged builder. |
+| Other host targets; profile capabilityModel/hostCapabilities and benchmark hostCaseSets; Issue non-goals and required validation | Codex finite observed combination; ChatGPT ten-case contract target; full Claude profile remains separate | `contract-target` means eligible only when required host surfaces exist. ChatGPT is NOT-RUN, not proven unavailable. Windows-native bundle and new full-profile installed observations are also NOT-RUN. | These remain Issue evidence work, not fabricated current support or a reason to drop targets. Use the corresponding supported host/interface and its own fixed contract when separately available/authorized; report genuine unavailability only with direct evidence. The PR advertises only its observed combination and static integrations. |
+| Single source, full profiles, identity and regression; Issue goals 5/6 and implementation acceptance | One canonical Skill tree, versioned 0.10.1 description correction, unchanged full-profile bodies/Hooks/wrappers | Six descriptions clarify existing boundaries; implicit router invocation stays disabled. Full/profile/bundle digests are separate. Existing two-build records, 562 local tests and seven exact-head CI checks retain their own scope. | Preservation and finite implementation acceptance are supported. Historical generic plugin-validator NON-PASS for hooks/brandColorDark/supportURL is a documented tool-schema mismatch; canonical publication accepts the intentional metadata. It is not silently marked PASS or attributed to unit failures. New full-profile host observation is not inferred from fixtures. |
+
+The single final independent technical review read the current builder/native
+production paths, relevant regressions, canonical/full-profile diff and exact
+result bindings. It found no concrete unresolved defect within the documented
+support model. It ran no tests or clients and supplies no GitHub approval. Main
+review separately read the Issue, profile, benchmark, existing comments, reviews
+and live rules. There were no submitted PR reviews or review threads to resolve
+at this assessment, and no review approval was fabricated.
+
+The acceptance judgment is that the implemented profile derivative, ordinary
+builder, guarded native assessment tooling and finite result may be integrated
+without claiming complete Issue acceptance. This does not move a known current
+implementation defect into future work or change the PR title to hide one.
+Actual-question and loading/consumption evidence are still explicitly unfinished;
+the original host targets remain. Historical FCR states are retained rather than
+silently closed or applied to an unrelated support model.
+
+Conditional merge still requires the final documentation candidate's checks,
+valid signed head, unchanged live base/head, and allowed squash operation. On
+2026-09-10 the live main rules required signatures, strict repository-guards and
+unit-and-integration-tests, zero required approvals, and squash-only integration.
+No bypass, automatic merge or workflow rerun is authorized. A subsequent squash
+must have the same reviewed tree; actual merged state, signature and new-main
+checks must be read back. This record does not invent that future commit.
+Issue 117 remains open regardless of the PR integration result. No tag, Release,
+listing, installed-profile promotion or new model call follows from this review.

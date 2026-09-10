@@ -1,6 +1,15 @@
 # Routing Evaluations
 
-## Current reviewed continuation outcome
+## Current evidence
+
+The current no-Hook assessment and its exact execution/result identities are
+maintained in [Field Validation](../docs/field-validation.md#explicit-invocation-full-batch-result).
+The [final acceptance matrix](../docs/field-validation.md#final-pr-acceptance-and-issue-remainder)
+separates finite routing evidence from unfinished Issue-level host behavior.
+All earlier sections below retain their original counts, outcomes and bindings;
+their execution-time use of "current" does not supersede that current summary.
+
+## Historical reviewed continuation outcome
 
 Execution `04c7de8e972d64e1d15d4d40eb0a7081dca23407`, tree
 `0a9ce3fba5914684abf6cfe9e7dad3c851a143ad`, used protocol
