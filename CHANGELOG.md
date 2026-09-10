@@ -9,6 +9,29 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.10.1 - unreleased candidate
+
+### Fixed
+
+- Clarified six canonical Skill discovery descriptions: compound requests retain
+  prerequisite order, and mutually exclusive architecture or installation scopes
+  require one clarification. Existing routes and action authority are unchanged.
+- Advanced both manifests and the full-profile runtime identity for this compatible
+  correction. Derived no-Hook packages bind the corrected canonical source;
+  prior packages and observations retain their original identities and outcomes.
+
+### Behavioral impact
+
+Descriptions expose existing ordering and ambiguity boundaries during native
+Skill discovery. Original case requests, classifications, expected routes and
+scoring are unchanged. Hooks and their wrappers are unchanged. Static validation
+and version-specific host observations remain distinct evidence categories.
+
+### Required action
+
+None. See [the v0.10.1 release notes](docs/releases/v0.10.1.md) for migration
+and compatibility evidence boundaries.
+
 ## 0.10.0 - unreleased candidate
 
 ### Added

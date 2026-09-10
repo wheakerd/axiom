@@ -1465,13 +1465,30 @@ def check_unit_test_workflow_text(
             or scalar(checkout.get("name")) != "Check out repository"
             or scalar(checkout.get("uses"))
             != "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803"
-            or not isinstance(checkout_with, dict)
-            or set(checkout_with) != {"persist-credentials"}
-            or scalar(checkout_with.get("persist-credentials")) != "false"
         ):
             failures.append(
-                f"{label} checkout must remain immutable and must not persist credentials"
+                f"{label} checkout Action and shape must remain pinned"
             )
+        if not isinstance(checkout_with, dict) or set(checkout_with) != {
+            "fetch-depth",
+            "persist-credentials",
+        }:
+            failures.append(
+                f"{label} checkout inputs must contain only fetch-depth and "
+                "persist-credentials"
+            )
+        if (
+            not isinstance(checkout_with, dict)
+            or scalar(checkout_with.get("fetch-depth")) != "0"
+        ):
+            failures.append(
+                f"{label} checkout must fetch complete history with fetch-depth: 0"
+            )
+        if (
+            not isinstance(checkout_with, dict)
+            or scalar(checkout_with.get("persist-credentials")) != "false"
+        ):
+            failures.append(f"{label} checkout must not persist credentials")
 
         python_with = python.get("with")
         if (

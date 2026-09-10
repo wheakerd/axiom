@@ -29,6 +29,7 @@ from axiom_validation.no_hook_bundle import (
     _validate_reference_closure,
     _validate_runtime_text,
     build_bundle,
+    build_bundle_to_directory_fd,
     check_no_hook_bundle,
     inspect_source,
     validate_archive_bytes,
@@ -69,13 +70,17 @@ class SourceFixture:
             shutil.copy2(source, destination)
         source_identity_path = self.root / "evidence/runtime-identity.json"
         source_identity = json.loads(source_identity_path.read_text(encoding="utf-8"))
-        source_identity["repositoryPolicyRevision"] = 5
+        schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+        source_identity["repositoryPolicyRevision"] = schema["x-axiom-contract"]["sourceRepositoryPolicyRevision"]
         source_identity_path.write_text(
             json.dumps(source_identity, indent=2) + "\n", encoding="utf-8"
         )
         self.git("init", "--quiet")
         self.git("config", "user.name", "Axiom Test")
         self.git("config", "user.email", "axiom-test@example.invalid")
+        self.git("config", "gc.auto", "0")
+        self.git("config", "gc.autoPackLimit", "0")
+        self.git("config", "maintenance.auto", "false")
         self.commit("fixture")
 
     def git(
@@ -263,10 +268,264 @@ class ScriptedProcess:
 
 
 class NoHookBundleTests(unittest.TestCase):
+    def test_frozen_local_objects_build_identical_archive_without_runtime_backend(self):
+        """Read existing history only; no fixture commit or isolation backend."""
+        from axiom_validation import no_hook_linux_isolation as isolation
+
+        evidence = json.loads((REPOSITORY_ROOT / bundle_module.EVIDENCE_RELATIVE).read_text(encoding="utf-8"))
+        source = evidence["source"]
+        expected_manifest = evidence["bundleManifest"]
+        with tempfile.TemporaryDirectory() as directory, (
+            mock.patch.object(isolation, "detect_process_domain_capabilities", side_effect=AssertionError("runtime detector called"))
+        ), mock.patch.object(isolation.LinuxProcessDomainSupervisor, "open", side_effect=AssertionError("runtime backend called")):
+            parent = Path(directory)
+            outputs = []
+            for name in ("first", "second"):
+                destination = parent / name
+                destination.mkdir()
+                result = build_bundle(
+                    REPOSITORY_ROOT,
+                    source["commit"],
+                    source["tree"],
+                    destination,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                    entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                    module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                )
+                self.assertEqual(expected_manifest["bundleManifestDigest"], result.bundle_manifest_digest)
+                self.assertEqual(evidence["builds"]["archiveSha256"], result.archive_sha256)
+                self.assertEqual(expected_manifest["profileRuntimeDigest"], result.profile_runtime_digest)
+                outputs.append(_directory_files(destination))
+            self.assertEqual(outputs[0], outputs[1])
+
     def test_checked_in_static_evidence_reproduces_without_output(self):
         failures: list[str] = []
         self.assertEqual((50, 2), check_no_hook_bundle(failures))
         self.assertEqual([], failures)
+
+    def test_schema_revision_migration_preserves_legacy_pair_and_rejects_mixed_pairs(self):
+        current = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+        contract = bundle_module._schema_contract(current)
+        self.assertEqual((8, 9), (
+            contract["sourceRepositoryPolicyRevision"],
+            contract["candidateRepositoryPolicyRevision"],
+        ))
+        legacy = copy.deepcopy(current)
+        legacy["properties"]["repositoryPolicyRevision"] = {"const": 6}
+        legacy["$defs"]["source"]["properties"]["repositoryPolicyRevision"] = {"const": 5}
+        legacy_contract = legacy["x-axiom-contract"]
+        legacy_contract["sourceRepositoryPolicyRevision"] = 5
+        legacy_contract["candidateRepositoryPolicyRevision"] = 6
+        legacy_contract["runtimeInventory"]["runtimeBytes"] = 230826
+        del legacy_contract["fullProfileRuntimeDigest"]
+        self.assertEqual(legacy_contract, bundle_module._schema_contract(legacy))
+
+        for source_revision, owner_revision in ((5, 9), (8, 6), (7, 8), (True, 9)):
+            with self.subTest(source=source_revision, owner=owner_revision):
+                bad = copy.deepcopy(current)
+                bad["x-axiom-contract"]["sourceRepositoryPolicyRevision"] = source_revision
+                bad["x-axiom-contract"]["candidateRepositoryPolicyRevision"] = owner_revision
+                with self.assertRaisesRegex(BundleContractError, "revision pair is unsupported"):
+                    bundle_module._schema_contract(bad)
+
+        for label, mutate, diagnostic in (
+            ("owner-const", lambda value: value["properties"]["repositoryPolicyRevision"].update(const=6), "top-level property"),
+            ("source-const", lambda value: value["$defs"]["source"]["properties"]["repositoryPolicyRevision"].update(const=5), "source definition"),
+            ("missing-runtime-binding", lambda value: value["x-axiom-contract"].pop("fullProfileRuntimeDigest"), "x-axiom-contract"),
+            ("invalid-runtime-binding", lambda value: value["x-axiom-contract"].update(fullProfileRuntimeDigest="unknown"), "runtime digest is invalid"),
+        ):
+            with self.subTest(label=label):
+                bad = copy.deepcopy(current)
+                mutate(bad)
+                with self.assertRaisesRegex(BundleContractError, diagnostic):
+                    bundle_module._schema_contract(bad)
+
+        legacy_contract["runtimeInventory"]["runtimeBytes"] += 1
+        with self.assertRaisesRegex(BundleContractError, "runtime inventory contract drifted"):
+            bundle_module._schema_contract(legacy)
+        for byte_count in (False, 0, bundle_module.MAX_RUNTIME_BYTES + 1):
+            with self.subTest(runtime_bytes=byte_count):
+                bad = copy.deepcopy(current)
+                bad["x-axiom-contract"]["runtimeInventory"]["runtimeBytes"] = byte_count
+                with self.assertRaisesRegex(BundleContractError, "runtime inventory contract drifted"):
+                    bundle_module._schema_contract(bad)
+
+    def test_new_source_runtime_inventory_and_full_profile_binding_are_checked(self):
+        for field in ("digest", "repositoryPolicyRevision"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                identity_path = fixture.root / "evidence/runtime-identity.json"
+                identity = json.loads(identity_path.read_text(encoding="utf-8"))
+                if field == "digest":
+                    identity["runtimeContract"]["digest"] = "sha256:" + "0" * 64
+                    expected = "full-profile runtime digest differs from bundle schema"
+                else:
+                    identity["repositoryPolicyRevision"] = 5
+                    expected = "source repositoryPolicyRevision does not match bundle schema"
+                identity_path.write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
+                fixture.commit("mismatched source identity")
+                with self.assertRaisesRegex(BundleContractError, expected):
+                    _build(fixture, fixture.destination("output"))
+
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+            schema["x-axiom-contract"]["runtimeInventory"]["runtimeBytes"] += 1
+            schema_path = Path(directory) / "wrong-inventory-schema.json"
+            schema_path.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(BundleContractError, "byte count drifted from the frozen inventory"):
+                inspect_source(
+                    fixture.root, fixture.commit_oid, fixture.tree_oid,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=schema_path,
+                    entrypoint_path=REPOSITORY_ROOT / bundle_module.ENTRYPOINT_RELATIVE,
+                    module_path=REPOSITORY_ROOT / bundle_module.MODULE_RELATIVE,
+                )
+
+    def test_static_evidence_keeps_declared_owner_after_later_revision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._copy_repository(Path(directory))
+            revision_path = root / "evidence/repository-policy-revisions-v1.json"
+            revision_document = json.loads(
+                revision_path.read_text(
+                    encoding="utf-8"
+                )
+            )
+            revisions = revision_document["revisions"]
+            evidence = json.loads(
+                (
+                    root
+                    / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
+                ).read_text(encoding="utf-8")
+            )
+            manifest = evidence["bundleManifest"]
+            schema = json.loads((root / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+            contract = schema["x-axiom-contract"]
+            later_revision = copy.deepcopy(revisions[-1])
+            later_revision["revision"] = max(item["revision"] for item in revisions) + 1
+            later_revision["baselineCommit"] = "0" * 40
+            later_revision["runtimeContractDigest"] = "sha256:" + "0" * 64
+            revisions.append(later_revision)
+            revision_path.write_text(json.dumps(revision_document, indent=2) + "\n", encoding="utf-8")
+            before = _directory_files(root)
+
+            self.assertGreater(revisions[-1]["revision"], contract["candidateRepositoryPolicyRevision"])
+            self.assertEqual(contract["candidateRepositoryPolicyRevision"], evidence["candidateRepositoryPolicyRevision"])
+            self.assertEqual(contract["candidateRepositoryPolicyRevision"], manifest["repositoryPolicyRevision"])
+            failures: list[str] = []
+            self.assertEqual((50, 2), check_no_hook_bundle(failures, root))
+            self.assertEqual([], failures)
+            self.assertEqual(before, _directory_files(root))
+            self.assertFalse((root / "plugin").exists())
+            self.assertFalse((root / BUNDLE_ENVELOPE_NAME).exists())
+            self.assertEqual(8, len({record["path"].split("/", 2)[1] for record in manifest["runtimeFiles"]}))
+            self.assertEqual(50, len(manifest["runtimeFiles"]))
+            self.assertEqual(contract["runtimeInventory"]["runtimeBytes"], sum(record["size"] for record in manifest["runtimeFiles"]))
+            full_manifest = json.loads((root / ".codex-plugin/plugin.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                {
+                    "name": "axiom",
+                    "version": full_manifest["version"],
+                    "description": "Think before AI thinks.",
+                    "skills": "./skills/",
+                },
+                manifest["derivedPluginManifest"]["fields"],
+            )
+            self.assertEqual(evidence["builds"]["profileRuntimeDigest"], manifest["profileRuntimeDigest"])
+
+    def test_static_evidence_rejects_invalid_bundle_owner_revision_binding(self):
+        schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+        owner = schema["x-axiom-contract"]["candidateRepositoryPolicyRevision"]
+
+        def mutate_missing(
+            evidence: dict[str, object], revisions: list[dict[str, object]]
+        ) -> None:
+            del evidence
+            revisions[:] = [revision for revision in revisions if revision["revision"] != owner]
+
+        def mutate_duplicate(
+            evidence: dict[str, object], revisions: list[dict[str, object]]
+        ) -> None:
+            del evidence
+            revision = next(item for item in revisions if item["revision"] == owner)
+            revisions.insert(-1, copy.deepcopy(revision))
+
+        def mutate_revision_field(
+            field: str, value: object
+        ):
+            def mutate(
+                evidence: dict[str, object], revisions: list[dict[str, object]]
+            ) -> None:
+                del evidence
+                revision = next(item for item in revisions if item["revision"] == owner)
+                revision[field] = value
+
+            return mutate
+
+        def mutate_candidate(
+            evidence: dict[str, object], revisions: list[dict[str, object]]
+        ) -> None:
+            del revisions
+            evidence["candidateRepositoryPolicyRevision"] = owner + 1
+
+        cases = (
+            (
+                "missing-owner-later-revision-not-owner",
+                mutate_missing,
+                f"bundle owner revision {owner} is missing",
+            ),
+            (
+                "duplicate-owner-revision",
+                mutate_duplicate,
+                f"bundle owner revision {owner} is duplicated",
+            ),
+            (
+                "baseline",
+                mutate_revision_field("baselineCommit", "0" * 40),
+                f"revision {owner} baselineCommit does not bind",
+            ),
+            (
+                "source-issue",
+                mutate_revision_field("sourceIssue", 999),
+                f"revision {owner} sourceIssue must be 117",
+            ),
+            (
+                "runtime-digest",
+                mutate_revision_field("runtimeContractDigest", "sha256:" + "0" * 64),
+                f"revision {owner} runtimeContractDigest does not bind",
+            ),
+            (
+                "candidate-manifest-mismatch",
+                mutate_candidate,
+                "candidate repositoryPolicyRevision differs from its bundle manifest",
+            ),
+        )
+        for label, mutate, diagnostic in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
+                root = self._copy_repository(Path(directory))
+                evidence_path = (
+                    root
+                    / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
+                )
+                revisions_path = root / "evidence/repository-policy-revisions-v1.json"
+                evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+                revision_document = json.loads(revisions_path.read_text(encoding="utf-8"))
+                revisions = revision_document["revisions"]
+                mutate(evidence, revisions)
+                evidence_path.write_text(
+                    json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
+                )
+                revisions_path.write_text(
+                    json.dumps(revision_document, indent=2) + "\n", encoding="utf-8"
+                )
+
+                failures: list[str] = []
+                self.assertEqual((0, 0), check_no_hook_bundle(failures, root))
+                self.assertEqual(1, len(failures))
+                self.assertIn(diagnostic, failures[0])
+                self.assertFalse((root / "plugin").exists())
+                self.assertFalse((root / BUNDLE_ENVELOPE_NAME).exists())
 
     def test_regular_file_reader_bounds_extra_short_growth_and_identity_drift(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -578,7 +837,7 @@ class NoHookBundleTests(unittest.TestCase):
             expected_manifest = (
                 b'{\n'
                 b'  "name": "axiom",\n'
-                b'  "version": "0.10.0",\n'
+                b'  "version": "0.10.1",\n'
                 b'  "description": "Think before AI thinks.",\n'
                 b'  "skills": "./skills/"\n'
                 b'}\n'
@@ -622,6 +881,448 @@ class NoHookBundleTests(unittest.TestCase):
                 self.skipTest(f"directory symlink unavailable: {error}")
             with self.assertRaisesRegex(BundleContractError, "must not be a symbolic link"):
                 _build(fixture, linked_parent / "output")
+
+    def test_descriptor_destination_builds_and_path_api_delegates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("fd-output")
+            descriptor = os.open(
+                destination,
+                os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0),
+            )
+            try:
+                metadata = os.fstat(descriptor)
+                publications: list[str] = []
+
+                def hook(phase: str, facts: dict[str, object]) -> None:
+                    if phase in {"builder-after-publish", "builder-before-completion-publish"}:
+                        publications.append(str(facts["destination"]))
+                        self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+                result = build_bundle_to_directory_fd(
+                    fixture.root,
+                    fixture.commit_oid,
+                    fixture.tree_oid,
+                    descriptor,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                    entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                    module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                    expected_destination_identity=(metadata.st_dev, metadata.st_ino),
+                    _test_hook=hook,
+                )
+            finally:
+                os.close(descriptor)
+            self.assertGreater(len(result.creation_records), result.directory_file_count)
+            self.assertEqual("2", result.output_lifecycle_version)
+            self.assertTrue(all(
+                record.creation_phase.startswith("builder-output-v2:")
+                for record in result.creation_records
+            ))
+            self.assertEqual(
+                ["plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME],
+                publications,
+            )
+            self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+            self.assertEqual(
+                {"plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME},
+                {path.name for path in destination.iterdir()},
+            )
+
+            delegated = fixture.destination("delegated")
+            real_core = bundle_module.build_bundle_to_directory_fd
+            with mock.patch.object(
+                bundle_module,
+                "build_bundle_to_directory_fd",
+                wraps=real_core,
+            ) as core:
+                _build(fixture, delegated)
+            core.assert_called_once()
+
+            alias = Path(f"/proc/self/fd/{os.open(delegated, os.O_RDONLY)}")
+            try:
+                with self.assertRaisesRegex(
+                    BundleContractError, "symbolic link"
+                ):
+                    build_bundle(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        alias,
+                        git_executable=GIT_EXECUTABLE,
+                    )
+            finally:
+                os.close(int(alias.name))
+
+    def test_descriptor_destination_rejects_identity_nonempty_and_non_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("fd-errors")
+            descriptor = os.open(destination, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                metadata = os.fstat(descriptor)
+                with self.assertRaisesRegex(BundleContractError, "identity does not match"):
+                    build_bundle_to_directory_fd(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        descriptor,
+                        git_executable=GIT_EXECUTABLE,
+                        expected_destination_identity=(metadata.st_dev, metadata.st_ino + 1),
+                    )
+                (destination / "unknown").write_text("keep\n", encoding="utf-8")
+                with self.assertRaisesRegex(BundleContractError, "destination must be empty"):
+                    build_bundle_to_directory_fd(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        descriptor,
+                        git_executable=GIT_EXECUTABLE,
+                    )
+            finally:
+                os.close(descriptor)
+            regular = Path(directory) / "regular"
+            regular.write_text("not a directory\n", encoding="utf-8")
+            file_fd = os.open(regular, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+            try:
+                with self.assertRaisesRegex(BundleContractError, "ordinary directory"):
+                    build_bundle_to_directory_fd(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        file_fd,
+                        git_executable=GIT_EXECUTABLE,
+                    )
+            finally:
+                os.close(file_fd)
+
+            if hasattr(os, "O_PATH"):
+                target = Path(directory) / "symlink-target"
+                target.mkdir()
+                linked = Path(directory) / "symlink-destination"
+                try:
+                    linked.symlink_to(target, target_is_directory=True)
+                except OSError as error:
+                    self.skipTest(f"directory symlink unavailable: {error}")
+                link_fd = os.open(
+                    linked,
+                    os.O_PATH | getattr(os, "O_NOFOLLOW", 0),
+                )
+                try:
+                    with self.assertRaisesRegex(
+                        BundleContractError, "ordinary directory"
+                    ):
+                        build_bundle_to_directory_fd(
+                            fixture.root,
+                            fixture.commit_oid,
+                            fixture.tree_oid,
+                            link_fd,
+                            git_executable=GIT_EXECUTABLE,
+                        )
+                finally:
+                    os.close(link_fd)
+
+    def test_builder_creation_and_cleanup_races_preserve_unknown_objects(self):
+        # Lifecycle v2 removes quarantine deletion. Its successor negative case
+        # checks replacement during failed validation and preserves both objects.
+        for scenario in ("before-ledger", "after-ledger", "failure-retention"):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                destination = fixture.destination("race-output")
+                mutated = False
+
+                def hook(phase: str, facts: dict[str, object]) -> None:
+                    nonlocal mutated
+                    parent_fd = int(facts.get("parentDescriptor", -1))
+                    if mutated or parent_fd < 0:
+                        return
+                    if (
+                        scenario == "before-ledger"
+                        and phase == "builder-after-create-before-ledger"
+                        and facts["relativePath"] == "plugin"
+                    ):
+                        name = str(facts["basename"])
+                        os.rename(name, "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                        os.mkdir(name, 0o700, dir_fd=parent_fd)
+                        mutated = True
+                    elif (
+                        scenario == "after-ledger"
+                        and phase == "builder-after-publish"
+                        and facts["destination"] == "plugin"
+                    ):
+                        os.rename("plugin", "moved-original", src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                        os.mkdir("plugin", 0o755, dir_fd=parent_fd)
+                        mutated = True
+                def failed_validation(*args, **kwargs):
+                    nonlocal mutated
+                    (destination / "plugin").rename(destination / "moved-original")
+                    (destination / "plugin").mkdir()
+                    (destination / "plugin/caller.txt").write_bytes(b"preserve caller object\n")
+                    mutated = True
+                    raise BundleContractError("injected validation failure")
+
+                if scenario == "failure-retention":
+                    verifier = mock.patch.object(
+                        bundle_module,
+                        "_validate_published_outputs_fd",
+                        side_effect=failed_validation,
+                    )
+                else:
+                    verifier = mock.patch.object(
+                        bundle_module,
+                        "_validate_published_outputs_fd",
+                        wraps=bundle_module._validate_published_outputs_fd,
+                    )
+                with verifier, self.assertRaisesRegex(
+                    bundle_module.BuilderCleanupError, "manual cleanup required"
+                ):
+                    build_bundle(
+                        fixture.root,
+                        fixture.commit_oid,
+                        fixture.tree_oid,
+                        destination,
+                        git_executable=GIT_EXECUTABLE,
+                        schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                        entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                        module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                        _test_hook=hook,
+                    )
+                self.assertTrue(mutated)
+                self.assertTrue((destination / "moved-original").exists())
+                self.assertTrue((destination / "plugin").exists())
+                self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+                self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+                if scenario == "failure-retention":
+                    self.assertEqual(
+                        b"preserve caller object\n",
+                        (destination / "plugin/caller.txt").read_bytes(),
+                    )
+
+    def test_lifecycle_v2_registration_failure_retains_created_file_and_cause(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("registration-failure")
+            original_error = BundleContractError("injected registration failure")
+            original = bundle_module._BuilderCreationLedger._record_created
+
+            def reject_file(ledger, relative, parent_fd, name, descriptor, kind, phase):
+                if kind == "file":
+                    raise original_error
+                return original(ledger, relative, parent_fd, name, descriptor, kind, phase)
+
+            with mock.patch.object(
+                bundle_module._BuilderCreationLedger, "_record_created", reject_file,
+            ), self.assertRaises(bundle_module.BuilderBuildIncompleteError) as caught:
+                _build(fixture, destination)
+            failure = caught.exception
+            self.assertIs(original_error, failure.__cause__)
+            unregistered = [
+                item for item in failure.creation_attempts
+                if item.created and not item.registered
+            ]
+            self.assertEqual(1, len(unregistered))
+            attempt = unregistered[0]
+            self.assertEqual("file", attempt.kind)
+            retained = destination / attempt.relative_path
+            self.assertTrue(retained.is_file())
+            self.assertEqual(
+                (attempt.device, attempt.inode),
+                (retained.stat().st_dev, retained.stat().st_ino),
+            )
+            self.assertEqual(b"", retained.read_bytes())
+            self.assertTrue(failure.manual_cleanup_required)
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_lifecycle_v2_mkdir_open_failure_preserves_unbound_creation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("open-failure")
+            original_error = OSError("injected directory open failure")
+            original_open = os.open
+
+            def reject_plugin_open(path, flags, *args, **kwargs):
+                if path == "plugin" and flags & getattr(os, "O_DIRECTORY", 0):
+                    raise original_error
+                return original_open(path, flags, *args, **kwargs)
+
+            with mock.patch.object(bundle_module.os, "open", reject_plugin_open):
+                with self.assertRaises(bundle_module.BuilderBuildIncompleteError) as caught:
+                    _build(fixture, destination)
+            failure = caught.exception
+            self.assertIs(original_error, failure.__cause__)
+            self.assertEqual(1, len(failure.creation_attempts))
+            attempt = failure.creation_attempts[0]
+            self.assertEqual("plugin", attempt.relative_path)
+            self.assertTrue(attempt.created)
+            self.assertFalse(attempt.registered)
+            self.assertIsNone(attempt.device)
+            self.assertIsNone(attempt.inode)
+            self.assertEqual((), failure.output_records)
+            self.assertTrue((destination / "plugin").is_dir())
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_lifecycle_v2_existing_name_is_not_claimed_or_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("preexisting-output")
+            injected = False
+
+            def hook(phase, facts):
+                nonlocal injected
+                if phase == "builder-before-create" and facts["relativePath"] == "plugin":
+                    (destination / "plugin").mkdir()
+                    (destination / "plugin/caller.txt").write_bytes(b"caller\n")
+                    injected = True
+
+            with self.assertRaisesRegex(BundleContractError, "already exists") as caught:
+                build_bundle(
+                    fixture.root, fixture.commit_oid, fixture.tree_oid, destination,
+                    git_executable=GIT_EXECUTABLE, _test_hook=hook,
+                )
+            self.assertTrue(injected)
+            self.assertNotIsInstance(caught.exception, bundle_module.BuilderBuildIncompleteError)
+            self.assertEqual(b"caller\n", (destination / "plugin/caller.txt").read_bytes())
+            self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+
+    def test_lifecycle_v2_fallible_preconditions_precede_completion_marker(self):
+        patches = (
+            (bundle_module, "_validate_published_outputs_fd"),
+            (bundle_module.BundleInputs, "verify_source_unchanged"),
+            (bundle_module._BuilderCreationLedger, "exported_records"),
+        )
+        for owner, name in patches:
+            with self.subTest(check=name), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                destination = fixture.destination("precondition-failure")
+                original_error = BundleContractError(f"injected {name}")
+
+                def reject(*args, **kwargs):
+                    self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+                    raise original_error
+
+                with mock.patch.object(owner, name, side_effect=reject):
+                    with self.assertRaises(bundle_module.BuilderBuildIncompleteError) as caught:
+                        _build(fixture, destination)
+                self.assertIs(original_error, caught.exception.__cause__)
+                self.assertTrue((destination / "plugin").is_dir())
+                self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
+                self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+
+    def test_lifecycle_v2_completion_collision_preserves_existing_marker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("completion-collision")
+            original_publish = bundle_module._BuilderCompletionFile.publish
+
+            def collide(completion):
+                (destination / BUNDLE_ENVELOPE_NAME).write_bytes(b"caller marker\n")
+                return original_publish(completion)
+
+            with mock.patch.object(bundle_module._BuilderCompletionFile, "publish", collide):
+                with self.assertRaisesRegex(
+                    bundle_module.BuilderBuildIncompleteError, "already exists",
+                ):
+                    _build(fixture, destination)
+            self.assertEqual(b"caller marker\n", (destination / BUNDLE_ENVELOPE_NAME).read_bytes())
+            self.assertTrue((destination / "plugin").is_dir())
+            self.assertFalse((destination / bundle_module.STAGING_DIRECTORY_NAME).exists())
+
+    def test_lifecycle_v2_unsupported_completion_file_leaves_destination_empty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("unsupported-completion")
+            original_open = os.open
+            original_error = OSError("injected unsupported unnamed completion")
+
+            def reject_tmpfile(path, flags, *args, **kwargs):
+                if flags & os.O_TMPFILE == os.O_TMPFILE:
+                    raise original_error
+                return original_open(path, flags, *args, **kwargs)
+
+            with mock.patch.object(bundle_module.os, "open", reject_tmpfile):
+                with self.assertRaises(OSError) as caught:
+                    _build(fixture, destination)
+            self.assertIs(original_error, caught.exception)
+            self.assertEqual([], list(destination.iterdir()))
+
+    def test_lifecycle_v2_success_never_deletes_or_renames_named_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("no-named-cleanup")
+            with mock.patch.object(bundle_module.os, "unlink", side_effect=AssertionError("unlink")), \
+                 mock.patch.object(bundle_module.os, "rmdir", side_effect=AssertionError("rmdir")), \
+                 mock.patch.object(bundle_module.os, "rename", side_effect=AssertionError("rename")):
+                result = _build(fixture, destination)
+            self.assertEqual(
+                {"plugin", result.archive_filename, BUNDLE_ENVELOPE_NAME},
+                {item.name for item in destination.iterdir()},
+            )
+            marker = json.loads((destination / BUNDLE_ENVELOPE_NAME).read_bytes())
+            self.assertTrue(marker["complete"])
+            self.assertEqual(result.archive_sha256, marker["archive"]["sha256"])
+
+    def test_lifecycle_v2_cli_build_and_repeated_destination_preserve_outputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("cli-output")
+            command = [
+                sys.executable, "-I", "-B", "scripts/build-no-hook-bundle.py",
+                "--git-executable", str(GIT_EXECUTABLE),
+                "--source-repository", str(fixture.root),
+                "--source-commit", fixture.commit_oid,
+                "--expected-source-tree", fixture.tree_oid,
+                "--destination", str(destination),
+            ]
+            completed = subprocess.run(
+                command, cwd=REPOSITORY_ROOT.resolve(),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60,
+                check=False,
+            )
+            self.assertEqual(0, completed.returncode, completed.stderr.decode("utf-8"))
+            self.assertEqual(b"", completed.stderr)
+            summary = json.loads(completed.stdout)
+            envelope = json.loads((destination / BUNDLE_ENVELOPE_NAME).read_bytes())
+            self.assertTrue(envelope["complete"])
+            self.assertEqual(
+                {
+                    "profileRuntimeDigest": envelope["profileRuntimeDigest"],
+                    "bundleManifestDigest": envelope["bundleManifestDigest"],
+                    "archiveSha256": envelope["archive"]["sha256"],
+                    "archiveSize": envelope["archive"]["size"],
+                    "archiveFilename": envelope["archive"]["filename"],
+                    "directoryFileCount": envelope["directory"]["fileCount"],
+                    "directoryTotalBytes": envelope["directory"]["totalBytes"],
+                },
+                summary,
+            )
+            archive = (destination / summary["archiveFilename"]).read_bytes()
+            self.assertEqual(summary["archiveSize"], len(archive))
+            self.assertEqual(summary["archiveSha256"], hashlib.sha256(archive).hexdigest())
+            before = _directory_files(destination)
+            identities = {
+                path.relative_to(destination).as_posix(): (
+                    path.stat().st_dev, path.stat().st_ino, path.stat().st_mode,
+                )
+                for path in destination.rglob("*")
+            }
+            repeated = subprocess.run(
+                command, cwd=REPOSITORY_ROOT.resolve(),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60,
+                check=False,
+            )
+            self.assertEqual(1, repeated.returncode)
+            self.assertEqual(b"", repeated.stdout)
+            self.assertIn(b"destination must be empty", repeated.stderr)
+            self.assertEqual(before, _directory_files(destination))
+            self.assertEqual(
+                identities,
+                {
+                    path.relative_to(destination).as_posix(): (
+                        path.stat().st_dev, path.stat().st_ino, path.stat().st_mode,
+                    )
+                    for path in destination.rglob("*")
+                },
+            )
 
     def test_runtime_path_policy_rejects_unsafe_names_and_collisions(self):
         invalid = (
@@ -770,6 +1471,55 @@ class NoHookBundleTests(unittest.TestCase):
             self.assertFalse(marker.exists())
             with self.assertRaisesRegex(BundleContractError, "explicit absolute path"):
                 GitObjectSource(fixture.root, Path("git"))
+
+    def test_git_children_receive_only_the_credential_free_allowlist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            destination = fixture.destination("credential-free-git")
+            commit_oid = fixture.commit_oid
+            tree_oid = fixture.tree_oid
+            observed_environment_names: list[frozenset[str]] = []
+            real_popen = subprocess.Popen
+
+            def recording_popen(*args: object, **kwargs: object):
+                environment = kwargs.get("env")
+                self.assertIsInstance(environment, dict)
+                observed_environment_names.append(frozenset(environment))
+                return real_popen(*args, **kwargs)
+
+            synthetic_parent = {
+                "CODEX_API_KEY": "sentinel-not-a-real-secret",
+                "OPENAI_API_KEY": "second-synthetic-value",
+                "AXIOM_TEST_TOKEN": "third-synthetic-value",
+                "AXIOM_TEST_SECRET": "fourth-synthetic-value",
+                "CODEX_HOME": "/synthetic/codex-home",
+                "XDG_CONFIG_HOME": "/synthetic/xdg-config",
+            }
+            with mock.patch.object(bundle_module.os, "environ", synthetic_parent), mock.patch.object(
+                bundle_module.subprocess,
+                "Popen",
+                side_effect=recording_popen,
+            ):
+                result = build_bundle(
+                    fixture.root,
+                    commit_oid,
+                    tree_oid,
+                    destination,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
+                    entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
+                    module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
+                )
+            self.assertEqual(52, result.directory_file_count)
+            self.assertTrue(observed_environment_names)
+            allowed = {
+                "LANG", "LC_ALL", "NO_COLOR", "GIT_CONFIG_GLOBAL",
+                "GIT_CONFIG_NOSYSTEM", "GIT_CONFIG_SYSTEM", "GIT_NO_LAZY_FETCH",
+                "GIT_OPTIONAL_LOCKS", "GIT_PROTOCOL_FROM_USER", "GIT_TERMINAL_PROMPT",
+            }
+            self.assertTrue(
+                all(names == allowed for names in observed_environment_names)
+            )
 
     def test_git_requires_no_lazy_fetch_capability_before_object_reads(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -1695,13 +2445,16 @@ class NoHookBundleTests(unittest.TestCase):
 
             with mock.patch.object(
                 bundle_module,
-                "_validate_published_outputs",
+                "_validate_published_outputs_fd",
                 side_effect=fail_after_unknown,
             ):
                 with self.assertRaisesRegex(BundleContractError, "injected"):
                     _build(fixture, destination)
             self.assertEqual("keep\n", (destination / "caller-arrived.txt").read_text(encoding="utf-8"))
-            self.assertFalse((destination / "plugin").exists())
+            # Version 2 intentionally retains partial output on failure. This
+            # does not delegate normal successful cleanup to the caller: no
+            # staging directory or other named temporary artifact is created.
+            self.assertTrue((destination / "plugin").is_dir())
             self.assertFalse((destination / BUNDLE_ENVELOPE_NAME).exists())
             self.assertFalse((destination / ".axiom-no-hook-bundle-staging").exists())
 
@@ -1739,14 +2492,14 @@ class NoHookBundleTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "current release v0.10.0 STATIC-ONLY.\n",
+                "current release v0.10.1 STATIC-ONLY.\n",
                 result.stdout,
             )
             self_test = self._run_compatibility_scanner(root, "--self-test")
             self.assertEqual(0, self_test.returncode, self_test.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "12 negative fixtures, current release v0.10.0 STATIC-ONLY.\n",
+                "12 negative fixtures, current release v0.10.1 STATIC-ONLY.\n",
                 self_test.stdout,
             )
 

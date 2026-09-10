@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1",
+  "partialResultSha256": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd",
+  "ordinal": 6,
+  "source": "user-provided-decoded-stderr",
+  "originalStatus": "INCOMPLETE",
+  "decision": "catalog-refresh-timeout-does-not-invalidate-fixed-case-conditions",
+  "officialErrorCode": "unknown",
+  "reportedComponent": "codex_models_manager::manager",
+  "reportedError": "failed to refresh available models: timeout waiting for child process to exit",
+  "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+  "sourcePaths": [
+    "codex-rs/models-manager/src/manager.rs",
+    "codex-rs/model-provider/src/models_endpoint.rs",
+    "codex-rs/protocol/src/error.rs"
+  ],
+  "sourceFinding": "The models endpoint five-second async timeout maps to the generic Timeout display. Catalog refresh failure retains the existing catalog; this wording alone does not establish a child-process timeout or residual child.",
+  "observedConditions": "Case 6 has full input, valid closed stream and response, official final-output agreement and valid postcheck; no policy rejection, termination, timeout or cleanup failure. Before/after gpt-5.5 entries support medium and infer Direct; source changes from frozen-embedded to official-cache.",
+  "semanticReview": "Original route and permission response remain strictly validated; agreement is not proof of Skill body consumption. Original INCOMPLETE is preserved, not relabelled.",
+  "scope": "Same Case 6 only. Does not reclassify seven historical failures or automatically accept future stderr; authorizes no repeated attempts.",
+  "previousReviewSha256": "b0b88827ee9f4fbe47f98e277b335b6a33c96b02c5cf84d82b6727309591d564"
+}

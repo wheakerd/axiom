@@ -48,6 +48,30 @@
       "sourceIssue": 117,
       "summary": "Add the deterministic no-Hook derived bundle builder, three-layer identity, and static evidence without changing or publishing the installed full profile.",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+    },
+    {
+      "revision": 7,
+      "recordedOn": "2026-09-03",
+      "baselineCommit": "c7a3b5988cf0d922762bb4498e0a833c7412ea8d",
+      "sourceIssue": 117,
+      "summary": "Add native Codex observation v2 with independent test state; retain disabled v1 and builder lifecycle v2. Preserve runtime and revision 6 bundle ownership; host observations remain NOT-RUN.",
+      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+    },
+    {
+      "revision": 8,
+      "recordedOn": "2026-09-10",
+      "baselineCommit": "2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223",
+      "sourceIssue": 117,
+      "summary": "Bind the v0.10.1 canonical discovery-description corrections and source runtime identity for the next no-Hook bundle; preserve prior case contracts and observation records.",
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
+    },
+    {
+      "revision": 9,
+      "recordedOn": "2026-09-10",
+      "baselineCommit": "8a12877f6c72d6b6f7a804de79e1a95ac3a72bc9",
+      "sourceIssue": 117,
+      "summary": "Bind the new canonical runtime source to a deterministic no-Hook bundle and uniform native assessment definitions; preserve historical observations and limits.",
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
     }
   ]
 }

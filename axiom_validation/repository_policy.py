@@ -53,6 +53,13 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/review-response-schema-v1.json",
     "evals/review-sequences-v1.json",
     "evals/codex-exec-jsonl-observer-v2.json",
+    "evals/codex-exec-jsonl-observer-v3.json",
+    "evals/no-hook-observation/codex-protocol-v1.json",
+    "evals/no-hook-observation/codex-prompt-envelope-v1.json",
+    "evals/no-hook-observation/codex-fixtures-v1.json",
+    "evals/no-hook-observation/codex-model-response-schema-v1.json",
+    "evals/no-hook-observation/codex-result-schema-v1.json",
+    "evals/no-hook-observation/result-history-v1.json",
     "evals/benchmarks/codex-core-v1.json",
     "evals/benchmarks/codex-core-v2.json",
     "evals/no-hook/bundle-manifest-schema-v1.json",
@@ -68,11 +75,14 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "scripts/check-runtime-identity.py",
     "scripts/check-release-evidence.py",
     "scripts/build-no-hook-bundle.py",
+    "scripts/run-no-hook-codex-observation.py",
     "scripts/create-release-tag.py",
     "scripts/measure-routing-context.py",
     "scripts/render-release-facts.py",
     "axiom_validation/route-boundaries-v1.json",
     "axiom_validation/no_hook_bundle.py",
+    "axiom_validation/no_hook_linux_isolation.py",
+    "axiom_validation/no_hook_observation.py",
     "axiom_validation/runtime-contract-inputs-v1.json",
     "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
     ".github/workflows/publish-immutable-release.yml",
@@ -115,7 +125,9 @@ AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
     "packaged agent-plugin architecture work. Do not use for repository-local "
     "AGENTS.md or .agents/skills systems, ordinary source-code or documentation work "
     "merely because it is in a plugin repository, host installation, publication, "
-    "deployment, or Git submission."
+    "deployment, or Git submission. When architecture and installation or deployment "
+    "are mutually exclusive alternatives, ask one concise clarification before "
+    "routing; delegated choice does not resolve the scope difference."
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",

@@ -1,5 +1,459 @@
 # Routing Evaluations
 
+## Current evidence
+
+The current no-Hook assessment and its exact execution/result identities are
+maintained in [Field Validation](../docs/field-validation.md#explicit-invocation-full-batch-result).
+The [final acceptance matrix](../docs/field-validation.md#final-pr-acceptance-and-issue-remainder)
+separates finite routing evidence from unfinished Issue-level host behavior.
+All earlier sections below retain their original counts, outcomes and bindings;
+their execution-time use of "current" does not supersede that current summary.
+
+## Historical reviewed continuation outcome
+
+Execution `04c7de8e972d64e1d15d4d40eb0a7081dca23407`, tree
+`0a9ce3fba5914684abf6cfe9e7dad3c851a143ad`, used protocol
+`sha256:1938bd1e4335e35a9f0d46bf113777e8eb542c7219338d7683a6d0507854c70c`.
+The current normalized result is `e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d`.
+Only Cases 7-13 started under this implementation. Original Cases 1-5 remain
+bound to `7c4c2c8a`; Case 6 remains bound to `92e8e435`. Their exact partial
+results and the two source-bound, operator-supplied catalog reviews remain
+separate records. No old INCOMPLETE status was changed to PASS.
+
+| Cases | Recorded outcome | Evidence and limit |
+| --- | --- | --- |
+| 1-4 | PASS | Fixed response/routing acceptance; original execution |
+| 5-6 | INCOMPLETE | Original unknown stderr retained; separate same-attempt reviews permit continuation only |
+| 7 | FAIL | Valid response, semantic mismatch; no retry |
+| 8-10 | PASS | Fixed response/routing acceptance; current execution |
+| 11 | FAIL | Zero Axiom installation/discovery control, but response selected Axiom routes |
+| 12 | FAIL | Valid response, semantic mismatch; no retry |
+| 13 | INCOMPLETE | First rejection `read-target-unbound`, event ordinal 7; observer terminated the process |
+| 14-16 | NOT-RUN | Batch stopped after Case 13; no further model launch |
+
+There are seven PASS, three FAIL, three INCOMPLETE and three NOT-RUN records
+in the preserved 16-case view. Lifetime attempts and CLI launches are 20:
+seven historical Case 1 attempts plus thirteen in this batch. Case 1 has used
+all eight lifetime starts; Cases 2-13 each started once. Internal model request
+counts remain unknown. No retries, probes, model changes or budget refunds occurred.
+
+Case 13 retained complete input delivery and valid non-sensitive postchecks.
+The first unbound-target rejection was preserved at event 7, followed by
+observer termination (exit -9, signal 9); timeout and cleanup failure were false.
+No terminal or validated final response was obtained. The target and original
+command are not retained, so no specific alias or command defect is inferred
+and no unbound object was read to diagnose it. Its default zero read count is
+not proof that no read occurred. This policy rejection is ineligible for the
+unknown-stderr-only supplemental review path.
+
+Case 8's complete stream contains one contract-verified read command. The
+normalized count does not identify whether it read a Skill or a fixture;
+Skill body consumption is therefore not established. Other complete streams
+contain no command item. Model-reported routes and permission fields are not
+observer proof of body consumption or all invisible actions. Verified package
+and standard user-Skill discovery bindings remain separate facts. Case 11 had
+no Axiom installation/discovery path. The plugin runtime stayed disabled.
+
+The exact frozen catalog-timeout stderr template was classified only in new
+execution; additional or different stderr remains unknown. All input, terminal,
+response, fixed-model, final-output and postcheck requirements still apply.
+Original Case 5/6 diagnostics are unchanged. Operator-only raw files remain
+private and were not read by the executor or included in public evidence.
+
+The overall result remains INCOMPLETE with `hostClaim=false`. Seven historical
+failures remain immutable. FCR-001/003/004 remain OPEN; FCR-002 remains STILL_OPEN.
+No full host acceptance, descendant closure or legacy Combined completion is
+claimed. The PR remains Draft and the Issue open. Builder, bundle, runtime,
+Phase 1 inputs and the 266-character reason are unchanged; no bundle was rebuilt.
+
+## Reviewed remainder execution
+
+Execution `92e8e435d3c39041ff2c86a0fa8c039c4996a121` used protocol
+`sha256:795610bb36b81bed4d52aa887b055de94de964b9167c7ee7437982ed2544e551`.
+Only Case 6 started, once; it is INCOMPLETE because of new unknown stderr.
+It retained full input, a valid closed stream and strict response, official
+final-output agreement and a valid postcheck, with no policy rejection,
+termination, timeout or cleanup failure. Its validated route response selects
+`traceable-git-submit`; that response alone is not body-consumption evidence.
+No command item appeared in the closed stream. No later case started.
+
+The result preserves original Cases 1-5 and references their earlier execution
+separately. Cases 1-4 remain PASS; Case 5 remains INCOMPLETE with a separate
+same-attempt catalog review. At capture Case 6 required its own human stderr explanation; equal byte length
+did not identify its message. The operator subsequently supplied the same exact
+catalog-timeout explanation. A separate Case 6 supplement now permits only
+Cases 7-16, preserving both original INCOMPLETE records and both executions. Its operator file is private,
+158 bytes per case, UTF-8 and untruncated; inherited stderr use is 316 bytes. The executor has not read its contents.
+Cumulative attempts and CLI launches are 13: seven historical plus six in this
+batch. Internal model-request count is unknown; Cases 7-16 remain NOT-RUN.
+Host claim remains false. No repeated case, model probe or retry occurred.
+
+
+## Same-attempt catalog diagnostic supplement
+
+The operator supplied the Case 5 stderr message: the frozen client reported a
+model-catalog refresh timeout. The [specific review](no-hook-observation/case-05-catalog-review-v2.json)
+binds that report to the immutable partial result. Frozen source maps the
+five-second asynchronous catalog timeout to a generic error whose display
+mentions a child process; the message alone does not establish a residual child.
+Case 5 retained a valid response and postcheck, with gpt-5.5 / medium and Direct
+before and after. Its original INCOMPLETE record is unchanged; the supplement
+permits only the unstarted Cases 6-16, without claiming Skill body consumption.
+
+The same ledger now requires a separate exclusive remainder marker and
+preparation. Original Cases 1-5 keep their original implementation, protocol and
+input bindings. New cases use the new implementation and derived inputs; the
+result identifies both segments. Prior stderr storage counts against the same
+16 KiB budget, without reading operator-only content. No consumed attempt is
+refunded. Seven historical failures and the partial result remain immutable.
+
+
+## Current native result binding
+
+The revision 10 batch is bound to execution `7c4c2c8aa01cde728976d1047e8801852a7e2485`.
+Cases 1-4 passed response/routing acceptance; Case 5 is INCOMPLETE on unknown
+stderr and Cases 6-16 are NOT-RUN. Five new starts bring lifetime attempts and
+CLI starts to 12. Seven historical records remain immutable. See the
+[exact result and evidence limits](../docs/field-validation.md#seven-history-batch-outcome-diagnostic-revision-10).
+No Skill-body consumption, plugin-runtime success or whole-Issue completion
+is inferred from these route responses. Runtime and bundle identities are unchanged.
+
+## Seven-history continuation (diagnostic revision 10)
+
+One explicitly authorized continuation preserves all seven original results and
+attempt markers. It permits Case 1 once more (eight lifetime starts) and each
+unstarted Case 2-16 once, for at most 23 lifetime attempts. The exclusive
+`read-contract-continuation` ledger binds the current implementation and all
+16 regenerated inputs before any client starts; consumed attempts are not
+refunded. Codex 0.153.0, gpt-5.5 / medium, Direct tools, the installed package,
+Case 11's absent discovery, and the revision 9 read predicates are unchanged.
+
+The same-attempt human review applies only to this continuation when unknown
+stderr is the sole failure and every recorded eligibility condition passes.
+It cannot supply missing Skill-body consumption or invisible permission facts.
+The seventh policy rejection is ineligible and its exact predicate remains
+unknown. Operator-only raw diagnostic and stderr files remain private to the
+human operator; they are excluded from executor/model reads, Git and CI.
+
+## Read diagnostic regression scope
+
+Native diagnostic revision 9 preserves read rejection codes and event positions
+through the production receiver, parser, and result validator. Tests use real
+ordinary reads of public fixtures; they are not host observations. The seventh
+historical predicate remains unknown; revision 9 kept actual execution closed. See
+[the contract and limits](../docs/field-validation.md#read-rejection-preservation-diagnostic-revision-9).
+
+## Seventh attempt and subsequent discovery-path correction
+
+Signed execution `795b70d9bed5be841b03c58a3de31a38d708398b`, tree
+`5fc888ee4253b6f7824c298ff2c22ae8742b6eeb`, used protocol
+`sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2`.
+Its exact result is
+`c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0`.
+Case 1 is INCOMPLETE; Cases 2-16 remain NOT-RUN. This was the second gpt-5.5
+attempt, bringing lifetime attempts and CLI launches to seven. Internal model
+request count remains unknown; that seventh-attempt record authorized no eighth start.
+
+The receiver rejected event 5 as `read-contract-rejected` / `policy-rejected`
+and terminated the client (signal 9, return code -9). Input was fully delivered;
+postchecks passed. No complete terminal or response was accepted. The strict
+parser separately recorded `event-shape` at event 5. Command events were seen,
+but the stored zero completed-read count is not an observed absence of actions:
+that count requires a successfully parsed stream. The rejected command and its
+output were not retained, so its narrower failing predicate is unknown.
+
+Captured stderr was empty (zero bytes, UTF-8); no JSONL diagnostic messages were
+observed. Neither operator-only file needed creation. This is a different result
+from the sixth attempt's lost 429-byte stderr, whose contents remain unknown.
+The new attempt is not eligible for the unknown-stderr supplemental-review path:
+policy rejection, observer termination and incomplete stream independently block it.
+
+A subsequent no-model production regression established a separate wiring gap:
+`_readable` registered package paths but omitted the standard discovery alias
+advertised to the host. The corrected implementation checks that exact alias,
+then maps only its public `skills/` subtree to the same bound package bytes.
+It keeps original package paths, rejects other aliases or external paths, and
+keeps Case 11 without a discovery root. This does not prove which command caused
+the actual event-5 rejection. The correction has no host revalidation; the seventh
+result remains bound to the preceding signed implementation, not this correction.
+
+The current protocol closes actual execution for the consumed observation window.
+Synthetic regression remains available. Seven original result files retain their
+original protocols, models and implementation bindings; current corrected-code
+host observation is NOT-RUN. PR remains Draft, Issue #117 open, with no host PASS.
+FCR-001/003/004 remain OPEN and FCR-002 STILL_OPEN. Builder, bundle, runtime,
+Phase 1 cases and the 266-character release-status reason are unchanged.
+
+## Native stderr retention and same-attempt review
+
+Diagnostic revision 8 retains six immutable INCOMPLETE attempts (five Sol and
+one gpt-5.5). It authorizes one further gpt-5.5 / medium Case 1 attempt and the
+unstarted Cases 2-16: at most 22 lifetime attempts, seven for Case 1. Codex
+0.153.0, Direct tools, disabled Code Mode host, and all frozen case semantics
+remain unchanged. Earlier diagnostic revisions below are historical contracts.
+
+`--prepare-stderr-followup` checks all six results, attempt markers, preparations
+and derived schemas before adding `stderr-diagnostic-continuation` to the
+existing test root. `--run --stderr-followup --authorize-model-calls
+--reuse-test-auth` uses that ledger once. It does not remove or reset old state.
+
+Only the canonical client's captured stderr may enter the new human-only file,
+`operator-only-diagnostics/case-NN-stderr.json`. The independent batch limit is
+16 KiB including JSON framing; JSONL diagnostic messages retain their separate
+16 KiB limit. Files are exclusive, mode 0600, under a mode 0700 directory.
+Controls are escaped as JSON data. Public results report written size,
+truncation, UTF-8 faults and write status, never content or a content hash.
+The executor and both models must not read, parse, print, hash or upload these
+files. This operational boundary is not isolation from the same user. Login,
+build and test process output is outside the actual capture exception.
+
+Unknown stderr still stops the batch as INCOMPLETE, even with exit zero and a
+valid final response. Valid normalized response, terminal, command count and
+postchecks remain available. A diagnostic-only pause may receive a separate,
+append-only review bound to this same result, protocol and execution commit,
+using human-provided sanitized stderr and frozen source evidence. The original
+result and all six historical results remain unchanged. No missing observation
+may be supplied by classification, and capture metadata alone cannot approve it.
+
+Review is eligible only for the new attempt's sole unknown-stderr cause with
+complete UTF-8 retention, exit zero, complete input, turn.completed, valid stream,
+response, matching official final output and postcheck, and no timeout, observer
+termination, cleanup failure, rejected action or condition-changing diagnostic.
+Every retained diagnostic must be accounted for without weakening a required
+premise. Only after that review and fresh non-model checks of the unchanged
+inputs, configuration, model metadata, authentication ownership and attempt
+ledger may previously NOT-RUN cases continue. Case 1 cannot restart; no budget
+is refunded. Uncertain or unsafe diagnostics continue to block execution.
+
+Routing-field agreement, discovery-source verification and observed Skill-body
+reads are separate evidence. Zero command items neither proves body consumption
+nor establishes the absence of invisible actions; positive command counts also
+include fixture reads. Frozen per-case response semantics remain the case gate;
+there is no universal minimum read count. Installation and pre/post checks bind
+the available source, not unobserved model consumption. Open FCRs and Issue-wide
+host acceptance retain their separate evidence requirements. No Hook or plugin
+runtime acceptance follows from a correct routing response.
+
+## Native model migration
+
+Diagnostic revision 7 selects the explicitly authorized Codex 0.153.0 / gpt-5.5 /
+medium combination. Five historical Sol INCOMPLETE records retain their original
+bytes, implementation and protocol bindings. One new attempt per original case
+has a lifetime ceiling of 21; this is neither a Sol fix nor an automatic fallback.
+The new protocol, all 16 transport schemas, prompts and commitments change;
+canonical cases, scoring, runtime and bundle identities do not.
+
+Pre/post official catalog facts must support Direct under the bound configuration.
+Metadata sources are recorded separately from source-derived effective mode;
+local preflight cannot prove service acceptance. Case 11 remains the zero-Axiom
+control. Contexts and state stay separate, authentication uses the approved serial
+test-only handoff, and Code Mode host/plugin runtime remain disabled.
+The implementation was saved before the actual attempt below. See the
+[model migration and execution limits](../docs/field-validation.md#native-model-migration).
+The sections below describe their original historical revisions and budgets.
+
+### Actual gpt-5.5 attempt and retained partial evidence
+
+Signed execution implementation `a469930ac2c7a0598f44ed7aee62bcf532220c6a`
+(tree `8538c2f63771569046540f91dcff7a9f73732fe6`) checked all 16 actual derived
+schema files, then launched Case 1 once with Codex 0.153.0 / `gpt-5.5 / medium`.
+This was Case 1's sixth lifetime attempt and the first under the new combination.
+It ended **INCOMPLETE**; Cases 2-16 were not started. Total canonical attempts
+and CLI launches are **6**, comprising five historical Sol attempts plus one
+new attempt. Internal model-request count remains unknown, not one per CLI.
+
+The client exited 0 and the strict stream closed with `turn.completed`.
+Structured response validation and JSON-value agreement with official final
+output passed, as did post-execution fixture, package, configuration and
+discovery checks. Pre/post official cache facts both normalized optional tool
+mode to null, supported medium, and derived Direct under the bound feature flags.
+There was no error item, top-level error or failed-turn event, no timeout,
+observer termination or recorded cleanup failure. The stream contained one
+agent message and zero command-execution items. This is not proof of invisible
+actions or Skill-body consumption. The validated response selected `using-axiom`
+and matched the frozen Case 1 semantics, but its declarations remain model
+response fields, not independently observed action or routing facts.
+
+The first cause is **unknown-stderr**, 429 bytes. Its content was not retained
+under the existing policy; byte count cannot identify its cause or establish
+harmlessness. No new benign template, raw-log recovery or further case probe
+was used. Operator-only capture reports `no-diagnostics`, zero bytes, no
+truncation: no new original-message file exists. The operator-only mechanism
+captures only the three authorized host message fields, not stderr.
+A valid response and exit code do not override unknown diagnostics, so this
+attempt is not host PASS. No retry is authorized for this combination.
+
+The normalized result SHA-256 is
+`b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a`.
+It binds the actual execution implementation, not the later result commit.
+All five historical files and ledgers remain unchanged. The new result preserves
+partial evidence without reclassifying older failures. FCR-001/003/004 remain
+OPEN and FCR-002 STILL_OPEN; none is closed by model migration or this partial
+observation. Legacy Combined execution remains disabled. PR stays Draft and
+Issue #117 open; required no-Hook host acceptance is incomplete.
+
+## Native diagnostic revision 6
+
+Current protocol revision 6 records closed parser assertion codes/ordinals and
+requires the last emitted response candidate to agree with the official private
+final-output artifact before strict acceptance. Commentary is not itself a JSON
+result. Temporary final output is removed after bounded extraction; no raw
+message or diagnostic is added to public result fields.
+
+The fifth user-provided fail-closed notice and frozen model catalog establish a
+separate limitation: `gpt-5.6-sol` requests `CodeModeOnly`, which cannot use the
+ordinary `CodeMode` Direct fallback when its host is disabled. Feature flags do
+not override explicit model metadata. No permitted Direct path was established;
+no host, model, sandbox, authentication or catalog setting was changed.
+See the [source distinctions and parser migration](../docs/field-validation.md#native-tool-mode-diagnosis-and-final-response-correction).
+
+All five historical INCOMPLETE results and their original identities remain
+unchanged. Current history points to the new protocol while the fifth retained
+result is accepted by its immutable historical hash and original binding only.
+No new observation, preparation state or attempt exists. Canonical attempts and
+CLI launches remain 5, all Case 1; internal model-request count is unknown and
+Cases 2-16 are NOT-RUN. This revision's behavior has only no-model regression
+evidence. The fifth exact parser assertion and stderr content remain unknown.
+
+## Historical native response transport correction
+
+Native diagnostic revision 5 preserves four immutable historical attempts and
+allows one linked schema-correction followup (Case 1 at most five times; 20
+cumulative attempts). Its outgoing schema is a typed Structured Outputs
+representation; the frozen source definition remains the strict local result
+validator, including route uniqueness. All 16 final derived files are checked.
+See the [transport migration and user-provided fourth-error evidence](../docs/field-validation.md#historical-native-response-transport-correction).
+This local preflight is not server acceptance or a completed host observation.
+
+
+### Fifth actual attempt after the transport correction
+
+Signed implementation `c3ce63d789394f60e93687ec34db05be199fbc19` (tree
+`be21ad749edb25e4fb832bce7debe9e0fa75175b`) generated and checked all 16 actual
+schema files before launching Case 1 once, its fifth attempt. The configured
+client remained Codex 0.153.0, `gpt-5.6-sol / medium`, with fresh context and
+standard user-Skill discovery from the bound package. The plugin runtime stayed
+disabled. No model probe, fallback model, re-login or further case was started.
+
+The client exited 0 and the receiver observed `turn.completed`, but the
+normalized result is **INCOMPLETE**. First cause is `unknown-stderr` (94 bytes);
+one pre-turn error item remained unclassified. Input delivery was complete,
+with no timeout, observer termination or cleanup failure. Complete stream
+validation failed, so no structured response or read-command facts were
+accepted. The receiver's observed terminal event is distinct from the
+`terminal=not-observed` field of the unsuccessful closed-stream parse.
+Post-execution package, fixture, configuration and discovery checks passed.
+These facts do not establish route acceptance or identify the new diagnostic
+message, and are not relabeled as another `invalid_json_schema` failure.
+
+Operator-only capture saved 197 bytes without truncation. Its original content
+was not read, searched, hashed or uploaded by the executor. It remains available
+only to the human operator in the dedicated continuation state. No stderr was
+retained in that file. The four historical results retain their exact bytes and
+original implementation/protocol bindings; the user-provided fourth diagnosis
+is not applied to earlier or later attempts.
+
+Result SHA-256:
+`7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018`.
+Protocol digest:
+`sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d`.
+Cumulative attempts and canonical CLI launches are **5**, all Case 1;
+Cases 2-16 remain **NOT-RUN**. Observable internal model-request count remains
+unknown. No sixth Case 1 attempt is authorized. PR remains Draft and Issue #117
+open; this result is not complete host acceptance or Combined validation.
+
+## Historical operator-only diagnostic continuation
+
+Native diagnostic revision 4 preserves all three historical Case 1 INCOMPLETE
+results and their original implementation/protocol bindings. The separately
+authorized `operator-diagnostic-continuation` ledger verifies those results,
+markers and prepared inputs before deriving new inputs. It permits Case 1
+attempt four, then Cases 2-16 once only after a complete valid first result and
+reliable execution: at most 19 cumulative attempts, no automatic retry.
+`--prepare-operator-diagnostics` starts no client; `--run --operator-diagnostics
+--authorize-model-calls --reuse-test-auth` uses the same frozen model, package,
+permissions and separate fresh case state. Preparation alone is not observation.
+
+The human operator explicitly authorized local retention of only
+`error.message`, `turn.failed.error.message`, and completed error-item messages.
+These original strings are captured before classification in exclusive 0600
+JSON-string files under the new ledger's 0700 `operator-only-diagnostics`
+directory. The batch limit is 16 KiB including JSON framing: item notices use
+at most 4 KiB, with 6 KiB reserved for each of top-level errors and turn failures.
+Truncation and write failure are reported; capture cannot change a failure or
+unknown diagnostic into PASS. Public results contain only closed capture status,
+byte count and truncation metadata, never the original strings or private paths.
+
+Only the human operator may read the actual files. Neither executing agent nor
+subagent may read, search, hash, encode, upload or attach them. The files remain
+outside model-readable sandbox roots, Git, validation copies, archives and CI.
+Mode 0600 is not claimed to isolate another same-UID process; the executor's
+no-read rule is an explicit operational boundary. No stderr, reasoning, agent
+message, tool output, request body or authentication file is captured. This
+narrow exception does not reinterpret the earlier discarded diagnostics.
+
+### Fourth attempt as originally recorded
+
+Implementation `23d2d9d3a2e98bc67e74cbcf865cb53a929202eb` (tree
+`b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b`) produced one new Case 1
+**INCOMPLETE**: exit 1, top-level error and turn.failed, with complete input
+delivery, a valid event stream and valid post-execution input checks. There was
+no validated structured response, timeout, observer termination or cleanup
+failure. Three pre-turn diagnostic items and unknown stderr were recorded only
+as closed public facts. Their meaning is not inferred from earlier attempts.
+
+The explicitly authorized human-only message file was saved: 1606 bytes,
+not truncated, mode 0600 inside its private 0700 directory. The executor checked
+only metadata and did not read, hash, attach or publish the original messages.
+The file is retained for the human operator; its contents are not host PASS
+or a diagnosis available to the executor. Cases 2-16 remain NOT-RUN.
+Cumulative attempts and canonical CLI launches are four, all Case 1; internal
+model request count is unknown. The three previous INCOMPLETE results and
+bindings remain unchanged. This historical record did not authorize a fifth attempt.
+
+## Historical native continuation after two attempts
+
+Native v2 diagnostic revision 3 retains both historical Case 1 INCOMPLETE
+results unchanged. An explicitly authorized `diagnostic-continuation` ledger
+checks both result hashes, both attempt markers and both preparations before
+rebinding derived inputs. It permits one further Case 1 attempt and each of
+Cases 2-16 once: at most 18 cumulative attempts, including the two historical
+attempts. It does not reset attempts or reuse an earlier conversation.
+`--prepare-diagnostic-continuation` performs no client launch;
+`--run --diagnostic-continuation --authorize-model-calls --reuse-test-auth
+--private-diagnostics` uses the registered installations and serial test-auth
+handoff. It never copies authentication into validation or evidence artifacts.
+
+The optional private diagnostic summaries have a 16 KiB batch limit and 0600
+files in a 0700 directory inside that ledger. They contain only frozen template
+summaries and predeclared public fields; uncertain dynamic content is omitted.
+They are not raw logs, public evidence or a claim that arbitrary text can be
+made safe by regex. Unknown or condition-changing diagnostics remain INCOMPLETE.
+Closed-stream, response-schema and post-execution input checks are recorded
+separately so an incomplete attempt can retain independently validated partial
+facts. Unperformed checks and unavailable model-request counts remain unknown.
+These facts do not establish host PASS or validate the retired Combined path.
+
+Earlier budget and retention descriptions below retain their historical scope.
+The continuation executed implementation `07e92135a85523c774cc3cb32499be6d98eee31f`
+(tree `82d09603eaa18acd415e8972729b5e429255781e`). Case 1 attempt three is
+INCOMPLETE: the client reported `turn.failed` and exited 1 after receiving the
+complete input. Stream validation and post-execution input checks passed; no
+structured response was available. The observer neither timed out nor terminated
+the client. Three pre-turn diagnostics and an upstream error were observed,
+but the private finite-template summary could not safely classify their meaning.
+The underlying host cause remains unknown; this is not a claim of unavailable
+authentication, model service or an administrator restriction. Case 2-16 remained
+NOT-RUN. The task has consumed three attempts and three CLI launches; observable
+internal model-request count remains unknown. No fourth Case 1 attempt is allowed.
+
+The normalized result SHA-256 is
+`bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79`.
+Both earlier INCOMPLETE results keep their original bytes and implementation
+bindings. This result does not validate the plugin runtime subsystem, the old
+Combined backend or successful Skill discovery. The raw diagnostic content was
+not retained, and no later inference is backfilled into it.
+
 This directory defines Axiom's host-independent black-box routing contract.
 It complements the repository-static fixtures in `tests/fixtures/`; it does not
 replace them and it is not installed runtime behavior.
@@ -163,6 +617,212 @@ generated outputs are not tracked or published. Tracked static evidence
 records the independent profile runtime, bundle manifest, and archive
 identities after two equal builds. Codex and ChatGPT host observations remain
 `NOT-RUN`, and full-profile evidence remains outside this acceptance boundary.
+
+Ordinary output lifecycle **2** supersedes the prototype's automatic
+creation-ledger cleanup. On supported Linux filesystems, one writer builds into
+an existing empty external destination. The caller maintains that single-writer
+condition; the builder does not establish a same-user security boundary.
+Exclusive file creation never overwrites existing names. Successful creation
+and incomplete registration are retained as progress, and failures preserve
+partial and unknown outputs without automatic unlink, rename, or recursive
+removal. Normal builds leave their intended products without staging residue.
+The fully prepared anonymous envelope is linked without replacement only after
+all required output validation and prepublication closure. See
+`docs/runtime-identity.md` for prerequisites, failure recovery, migration, and
+the distinction between output bindings and deletion authority.
+
+This changes the builder dependency, manifest, and actual archive identities,
+not the frozen runtime payload or v1 package schema. The old observer handoff
+cannot consume lifecycle 2 records as cleanup ownership and now fails closed.
+That removed integration is not a successful host observation or a closure of
+FCR-004. Other deterministic fake orchestration remains test-only.
+
+## Native Codex no-Hook observation v2
+
+The [native v2 protocol](no-hook-observation/codex-native-protocol-v2.json)
+owns the frozen CLI/model, original case inputs, implementation bindings, and
+bounded execution limits. Its
+[prompt envelope](no-hook-observation/codex-native-prompt-envelope-v2.json)
+permits a finite grammar of read-only Skill/fixture commands; it does not change
+the original requests, expected answers, model-response definition, or case
+coverage. The [closed result schema](no-hook-observation/codex-native-result-schema-v2.json)
+and production semantic validator recompute each outcome and materialization
+commitment. [V2 history](no-hook-observation/result-history-v2.json) records the
+actual incomplete first attempt; v1 history is preserved separately.
+
+`scripts/run-no-hook-native-observation.py --check` is a no-call static entry and
+is also checked by the publication aggregate. Explicit `--prepare` performs
+only the authorized temporary local installation. `--login-commands` returns
+foreground official-client commands for human authentication. Explicit
+`--share-test-auth --authorize-test-auth-copy` permits opaque copying of Case 1's
+dedicated test credentials into the other registered homes, without copying
+configuration or session state. `--run --reuse-test-auth` serially hands off the
+latest official-client file after each successful exit. Each case retains its
+own home, workspace and fresh session. Only separately authorized `--run` can
+consume the ordered case budget. Preparation and login are not model
+observations. Case 11 has no plugin or Axiom discovery root.
+
+The former parent-deny/child-read configuration failed its real pre-login read.
+After correction, native discovery reported the eight bound Axiom user Skills in
+all 15 installed states and none in Case 11; native sandbox reads and non-secret
+excluded-root checks passed. All cases disable plugin runtime and bundled system
+Skills and use the standard user Skill root linked to the verified installed
+package. This avoids account plugin startup synchronization without injecting
+Skill bodies. These are no-model prerequisites, not canonical observations.
+Authorized reuse of the dedicated Case 1 test login passed official status in
+all 16 independent homes; these checks were not model requests. The actual batch
+then launched Case 1 once and stopped with `execution-failed` / INCOMPLETE before
+a valid terminal response. Cases 2-16 remain NOT-RUN. The normalized evidence
+binds implementation `f7a590ad58e2a1200f64009e48556fa7448f2f86`; it does not
+identify a narrower failure cause, prove internal request counts, or claim host
+PASS. No retry or model fallback occurred in that historical batch.
+Native v2 diagnostic revision 1 adds bounded, closed failure facts and preserves
+that immutable record. Its explicitly authorized follow-up has one additional
+Case 1 slot and the original unused slots for Cases 2-16, at most 17 total starts.
+The new protocol rematerializes all inputs; it does not fill historical unknowns
+or convert a nonfatal stderr classification into host evidence.
+The authorized follow-up used `039faf3cc46bebae6823dd21c01bf023d1e2d0e0`:
+Case 1 again INCOMPLETE, now with `policy-rejected / unsupported-item` diagnostics
+for an observed `error` item. Input delivery completed; no timeout or cleanup
+failure was recorded. The specific upstream message was not retained. Total
+starts are two, both Case 1, and Cases 2-16 remain NOT-RUN. Neither incomplete
+record is host PASS; no further Case 1 retry occurred.
+
+Diagnostic revision 2 accepts legal error-item shapes and shared item numbering,
+including warnings before the turn starts. Production-chain regressions use
+public, secret-free fixtures and ordinary Python children. They distinguish
+stream closure from acceptance: model rerouting, critical configuration
+fallback, event loss and unclassified diagnostics remain INCOMPLETE even after
+a zero exit and `turn.completed`. Generic nonfatal source mapping does not prove
+a warning harmless. No raw message or official error code is invented. Both
+actual results remain byte-identical historical records; the current protocol
+has no actual result. This repair does not run another canonical case.
+
+See [Field Validation](../docs/field-validation.md#native-codex-no-hook-observation-v2)
+for the supported environment, authentication and model-tool separation,
+failure handling, retained test state, and limits of the resulting evidence.
+The former Combined path is not enabled by this migration. Native v2 uses the
+official client's existing permissions and ordinary bounded process handling;
+it makes no new system-isolation or adversarial descendant-closure claim.
+
+## Historical Codex no-Hook v1 protocol
+
+The following records the prior unfinished implementation, its requirements,
+and historical checks. Its actual execution remains disabled. Native v2 has a
+separate protocol and result schema; its evidence cannot be relabeled as v1.
+
+Repository policy revision 7 defines, but does not execute, the Codex no-Hook
+host-observation protocol. It also makes revision 6 bundle evidence compatible
+with later append-only policy records. That validator maintenance refreshes
+the builder-bound bundle manifest and archive identities without changing
+runtime bytes, the profile runtime digest, the revision 6 artifact owner, or
+any host claim. The canonical protocol owners are the
+[`codex-protocol-v1.json`](no-hook-observation/codex-protocol-v1.json) run
+contract, [`codex-prompt-envelope-v1.json`](no-hook-observation/codex-prompt-envelope-v1.json)
+model-input envelope, [`codex-fixtures-v1.json`](no-hook-observation/codex-fixtures-v1.json)
+fixture matrix, closed
+[`codex-result-schema-v1.json`](no-hook-observation/codex-result-schema-v1.json),
+and empty append-only
+[`result-history-v1.json`](no-hook-observation/result-history-v1.json). The
+history reserves one result path without creating a placeholder result or host
+claim.
+
+The source-bound
+[`codex-exec-jsonl-observer-v3.json`](codex-exec-jsonl-observer-v3.json)
+taxonomy binds Codex CLI 0.153.0 to the exact `openai/codex` `rust-v0.153.0`
+tag object, commit, and fourteen source blobs, including item, notification,
+feature, plugin, marketplace-command, marketplace-add, and plugin-store
+owners. It closes every public top-level
+event, source-required payload, item type, applicable status, lifecycle edge,
+terminal rule, and privacy-safe retained field; source-valid action items are
+never acceptance-safe. Source-suppressed action surfaces are bound to explicit
+feature controls and are disabled in the canonical invocation. The one-call
+compatibility probe's initial
+`INCOMPLETE` result was adjudicated `PASS` only for JSONL compatibility: exact
+source and invocation semantics uniquely account for the complete 39-byte
+positional-prompt stdin notice. The probe did not install Axiom, run a Golden
+Set case, or establish host evidence.
+
+The canonical 16-case runner instead uses `codex exec - --json` and writes the
+complete envelope with bounded write-all semantics. Normal stderr is empty;
+the probe-only notice is not an allowed actual-case warning. The model-facing
+schema is separate from the frozen host response contract and contains no
+descriptive case ID or expected answer. Each run records a public 256-bit
+materialization seed, while the model sees only a token derived from that seed,
+the canonical ordinal, and the protocol digest. The validator reconstructs the
+unretained token, materialized schema, and exact prompt, then recomputes every
+case commitment and their ordered 16-case root. Default and
+repository-validation modes are no-call. A later execution requires the
+explicit execution flag plus a registry-backed capability that binds exact
+protocol, runner/module, binary,
+source, host, model, run-root, credential-presence, nonce, ordered launch plan,
+and irreversible 16-call budget. Each case then requires a fresh isolated
+process, Codex home, workspace, and ephemeral session; Case 11 alone has no
+installed plugin.
+
+The Combined Group 1 + Group 2 offline contract uses one lifecycle across
+writer handoff, logical view sealing, contract preconditions, consumption,
+consumer closure, control-resource closure, and result derivation. The
+observer alone retains invocation authorization, canonical case order, and
+the irreversible 16-call budget. Writer closure precedes receipt acceptance;
+consumer closure precedes view release. Missing or contradictory completion
+records are irreversible and cannot be repaired by submitting success booleans.
+Pending consumption keeps the scope's matching view control open, including
+Case 11. A failed run can close inactive resources without resuming consumption.
+Failed scope construction stops the run without incrementing its scope count.
+Closed scope and component records constrain incomplete prefixes as well as
+complete runs; aggregate totals alone do not establish their order or ownership.
+
+The helper distinguishes contract-only facts from
+`deterministic-contract-backend-v1` simulation. Runtime facts stay not-verified
+and actual execution is hard-disabled. Workload and control resources have
+separate bounded counts; there is no fabricated supervisor-process record.
+Unknown objects remain untouched. Only unresolved resources that were actually
+created can require manual cleanup. Ordinary validators do not call capability
+detectors or the runtime backend, and ordinary fake results remain incomplete.
+
+The existing delegated-cgroup code is retained but does not implement the full
+Combined backend. Private filesystem lifecycle, detached model-home view,
+identity transition, descriptor inheritance, capability reduction, descendant
+coverage, and teardown need separate implementation and runtime validation.
+Historical local process-domain results remain historical partial evidence,
+not complete Group 2 acceptance. FCR-001/003/004 remain OPEN, FCR-002 remains
+STILL OPEN, and Group 3 credential-exclusion proof remains pending. The Codex
+observation stays NOT-RUN with an empty history and no execution readiness.
+
+All sixteen deterministic fixtures are materialized by the production runner
+from closed logical file records and observer-owned Git facts. The local
+marketplace receipt is bound to the already-held source object; it is not
+treated as a copied child of the Codex home. Plugin receipts use the bounded
+Codex 0.153.0 JSON shape and the real
+`plugins/cache/<marketplace>/<plugin>/<version>` hierarchy below the held
+temporary Codex-home descriptor. The installed directory remains open and its
+name binding and tree are rechecked before and after model launch. All
+security-sensitive run-root writes are
+descriptor-relative, each model consumes the exact held schema through an
+inherited `/proc/self/fd` alias, and Linux cleanup quarantines only identities
+owned at creation or accepted from a closed receipt. Unknown replacements are
+preserved. Normalized output is created exclusively relative to a separately
+frozen external-parent descriptor; output-parent or name substitution makes
+the run incomplete. Windows is rejected by this protocol and remains a
+separate `NOT-RUN` track. Hard
+observer-integrity, schema, tool, mutation, identity, prompt-delivery, or
+cleanup failures revoke the launch budget and mark every later case `NOT-RUN`.
+
+Only normalized, observer-owned facts may enter the reserved result. Raw
+JSONL, stderr, model or reasoning text, tool arguments and output, identifiers,
+credentials, configuration, absolute paths, temporary names, environment
+dumps, raw opaque tokens, descriptor numbers, device/inode identities, and
+procfs aliases are forbidden. Object identities exist only during observation;
+tracked evidence keeps closed booleans/status and materialization commitments.
+Free-form limitations are replaced by closed diagnostic
+codes. The validator recomputes each case, summary, route coverage, safety
+invariants, cleanup, and overall status from frozen contracts; synchronized
+unsafe status arithmetic cannot create `PASS`. Codex 0.153.0 public JSONL
+suppresses Hook lifecycle telemetry, so no-Hook proof is owned by verified
+package, installed-tree, temporary-config, and wrapper-absence facts rather
+than JSONL silence. Protocol validation and fake-CLI tests are not Codex
+no-Hook host observation; that status remains `NOT-RUN`.
 
 ## Contract changes
 
@@ -828,3 +1488,13 @@ Never upload private conversations, full transcripts, credentials, private
 paths, customer data, session identifiers, or external-service content. Keep
 public evidence to the fixed observer-derived facts allowed by the observation
 contract.
+
+
+The native assessment candidate 0.10.1 uses uniform route-order and discovery
+field definitions together with updated canonical discovery descriptions. See
+[the candidate boundary](../docs/field-validation.md#canonical-assessment-candidate-0101).
+Its new 16-case limit follows 20 historical attempts; old results are immutable.
+The model response v2 schema documents the new measurement definitions; native
+transport adaptation and local strict validation retain the existing values,
+route uniqueness and permissions. The retired v1 protocol retains its historical
+revision 6 bundle document and remains unavailable for actual execution.

@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "2",
+  "kind": "axiom-codex-native-result-history",
+  "protocol": {
+    "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
+    "digest": "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3"
+  },
+  "results": [
+    {
+      "path": "evals/no-hook-observation/results/codex-native-0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a.json",
+      "sha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
+      "implementationCommit": "efce8d3bd46c6bbd816c9052fba99636d769303b",
+      "implementationTree": "1dcc99d4ae364838bef5d41baa45b1c3110fd53f"
+    }
+  ],
+  "current": {
+    "codexObservation": "pass",
+    "hostClaim": true,
+    "credentialUsed": true,
+    "cliLaunchCount": 16,
+    "modelRequestCount": null,
+    "pluginInstalled": true
+  },
+  "historicalResults": [
+    {
+      "path": "evals/no-hook-observation/results/codex-native-5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef.json",
+      "sha256": "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
+      "protocolDigest": "sha256:735ad73170d6d1f3b4b6a21a4dfdc4dc280100a07e47bead22b2af9562a577dc",
+      "implementationCommit": "f7a590ad58e2a1200f64009e48556fa7448f2f86",
+      "resultCommit": "5ac4c2b197bd4f3a32a9d50ca2de4814aefcf2c3",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df.json",
+      "sha256": "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df",
+      "protocolDigest": "sha256:0990cdc1ff099e4cdd06f4a9c5f085b050df4adea3a081d19f47533124e0ae35",
+      "implementationCommit": "039faf3cc46bebae6823dd21c01bf023d1e2d0e0",
+      "resultCommit": "c64b9989bb620807011222f5680e0fd3060406c1",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79.json",
+      "sha256": "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79",
+      "protocolDigest": "sha256:f3debf395d3f03e1bd34a7b62a4b07a3be3f23a77109d9449f1e175993c7b640",
+      "implementationCommit": "07e92135a85523c774cc3cb32499be6d98eee31f",
+      "resultCommit": "0e036ed2c34864b85fd6536b2ff5eec9fbcfc813",
+      "attemptCount": 1,
+      "implementationTree": "82d09603eaa18acd415e8972729b5e429255781e"
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b.json",
+      "sha256": "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b",
+      "implementationCommit": "23d2d9d3a2e98bc67e74cbcf865cb53a929202eb",
+      "implementationTree": "b7ba3d8383f0c25e1af0b76d52a0756bb1acc14b",
+      "protocolDigest": "sha256:91e5e56969c25e10477880935fe78af3825cd6f436126adc4e0d179f31855a4b",
+      "resultCommit": "5a359ae6e4226fb7ad45935be878bfe871cb0a4f",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018.json",
+      "sha256": "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
+      "implementationCommit": "c3ce63d789394f60e93687ec34db05be199fbc19",
+      "implementationTree": "be21ad749edb25e4fb832bce7debe9e0fa75175b",
+      "protocolDigest": "sha256:59170c119dca1de340c286c5502d2176c222deb0c34784b5c19d30cc091d4b6d",
+      "resultCommit": "cf7c58eeef159a7899fb2a6a2421cd3446bc0c07",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a.json",
+      "sha256": "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a",
+      "implementationCommit": "a469930ac2c7a0598f44ed7aee62bcf532220c6a",
+      "implementationTree": "8538c2f63771569046540f91dcff7a9f73732fe6",
+      "protocolDigest": "sha256:7e157a874983131fcbcc2f48d399dfc540eefd7941b23f01c641567d137f6c99",
+      "resultCommit": "5fe04cbe7d742096023868150795e2e3580ea67b",
+      "attemptCount": 1
+    },
+    {
+      "path": "evals/no-hook-observation/results/codex-native-c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0.json",
+      "sha256": "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
+      "implementationCommit": "795b70d9bed5be841b03c58a3de31a38d708398b",
+      "implementationTree": "5fc888ee4253b6f7824c298ff2c22ae8742b6eeb",
+      "protocolDigest": "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2",
+      "attemptCount": 1
+    }
+  ],
+  "reviewedPartial": {
+    "path": "evals/no-hook-observation/results/codex-native-72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd.json",
+    "sha256": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd",
+    "implementationCommit": "92e8e435d3c39041ff2c86a0fa8c039c4996a121",
+    "implementationTree": "208af3be62f98c91b576b3259b325bb929457596"
+  },
+  "previousPartial": {
+    "path": "evals/no-hook-observation/results/codex-native-ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b.json",
+    "sha256": "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b",
+    "implementationCommit": "7c4c2c8aa01cde728976d1047e8801852a7e2485",
+    "implementationTree": "fcd7e72c576321b77742ba5d341f66ef817682f7"
+  },
+  "historicalBatch": {
+    "path": "evals/no-hook-observation/results/codex-native-e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d.json",
+    "sha256": "e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d",
+    "implementationCommit": "04c7de8e972d64e1d15d4d40eb0a7081dca23407",
+    "implementationTree": "0a9ce3fba5914684abf6cfe9e7dad3c851a143ad"
+  },
+  "assessmentPartial": {
+    "path": "evals/no-hook-observation/results/codex-native-9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9.json",
+    "sha256": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9",
+    "implementationCommit": "a29b9503920a8798509407f40645a0efee14b474",
+    "implementationTree": "a5289b6a8e787b82bd1a73ba06a0447e619fb855"
+  },
+  "assessmentRemainder": {
+    "path": "evals/no-hook-observation/results/codex-native-e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3.json",
+    "sha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
+    "implementationCommit": "34376415079fc59c5caf6614fd85e18e3beea030",
+    "implementationTree": "a73078150ac03b91db99dc04657d13fc5e757074"
+  },
+  "materialObservation": {
+    "path": "evals/no-hook-observation/results/codex-native-3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360.json",
+    "sha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
+    "implementationCommit": "12720d103a0b46b6223ad2a41b562c1ec2935b87",
+    "implementationTree": "bde5a0d2f36ade6c6fa3bfbc0d951d1ab7054bf4",
+    "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b"
+  },
+  "assessmentRevision3": {
+    "path": "evals/no-hook-observation/results/codex-native-c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1.json",
+    "sha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
+    "implementationCommit": "1cb076f4d54cb63e24ae097ccb728d67c614e1fd",
+    "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
+    "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9"
+  }
+}

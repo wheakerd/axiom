@@ -1,6 +1,6 @@
 ---
 name: using-axiom
-description: Route an Axiom plugin session to the smallest matching bundled skill. Use at startup, resume, or compaction, or when explicitly deciding whether Axiom applies; no-match requests continue normally.
+description: Route an Axiom plugin session to the smallest matching bundled skill. Use at startup, resume, or compaction, or when explicitly deciding whether Axiom applies; no-match requests continue normally. For mutually exclusive outcomes that change route ownership or authority, clarify before selecting; delegated choice does not resolve that ambiguity.
 ---
 
 # Using Axiom

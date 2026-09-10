@@ -6,6 +6,9 @@ import hashlib
 import io
 import json
 import os
+import ctypes
+import errno
+import platform
 import re
 import shutil
 import stat
@@ -15,7 +18,7 @@ import unicodedata
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +38,17 @@ RUNTIME_CANONICALIZATION_VERSION = "1"
 BUNDLE_SCHEMA_VERSION = "1"
 BUILDER_ID = "axiom-no-hook-bundle-builder"
 BUILDER_VERSION = "1"
+# The frozen manifest/ZIP format remains v1. Lifecycle v2 requires one writer
+# for the destination throughout construction. It retains visible partial
+# output on failure and never removes or relocates a named output object.
+# Directory descriptors bind accesses; they do not prove atomic mkdir ownership.
+BUILDER_LIFECYCLE_VERSION = "2"
 SOURCE_REPOSITORY_SLUG = "wheakerd/axiom"
+# Preserve the source-revision-5 identity for the legacy (5, 6) contract.
+# New frozen sources carry their own explicit full-profile binding in schema.
+FULL_PROFILE_RUNTIME_DIGEST = (
+    "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+)
 
 MAX_RUNTIME_FILES = 128
 MAX_RUNTIME_FILE_BYTES = 256 * 1024
@@ -304,6 +317,8 @@ class BuildResult:
     directory_total_bytes: int
     bundle_manifest: dict[str, Any]
     envelope: dict[str, Any]
+    creation_records: tuple["BuilderCreatedObject", ...] = ()
+    output_lifecycle_version: str = BUILDER_LIFECYCLE_VERSION
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -315,6 +330,58 @@ class BuildResult:
             "directoryFileCount": self.directory_file_count,
             "directoryTotalBytes": self.directory_total_bytes,
         }
+
+
+@dataclass(frozen=True)
+class BuilderCreatedObject:
+    """Output binding, not authority to delete a caller-visible named object.
+
+    A regular file is bound through its exclusive-create descriptor. A directory
+    is bound after mkdir under the lifecycle-v2 single-writer prerequisite;
+    opening a directory is not an atomic proof of which process created it.
+    """
+
+    relative_path: str
+    parent_relative_path: str
+    basename: str
+    kind: str
+    device: int
+    inode: int
+    mode: int
+    creation_phase: str
+
+
+class BuilderCleanupError(BundleContractError):
+    """Raised when output bindings are incomplete; named outputs are retained."""
+
+
+@dataclass
+class BuilderCreationAttempt:
+    """Bounded progress retained even when output binding registration fails."""
+
+    relative_path: str
+    kind: str
+    creation_phase: str
+    created: bool = False
+    device: int | None = None
+    inode: int | None = None
+    registered: bool = False
+
+
+class BuilderBuildIncompleteError(BuilderCleanupError):
+    """A failed build preserves visible output and its original exception chain."""
+
+    def __init__(
+        self, error: BaseException, attempts: tuple[BuilderCreationAttempt, ...],
+        records: tuple[BuilderCreatedObject, ...],
+    ) -> None:
+        super().__init__(
+            f"{error}; bundle build incomplete, partial outputs preserved; "
+            "manual cleanup required"
+        )
+        self.creation_attempts = attempts
+        self.output_records = records
+        self.manual_cleanup_required = any(item.created for item in attempts)
 
 
 def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -628,22 +695,28 @@ class GitObjectSource:
             raise BundleContractError(
                 "dangerous ambient Git environment is not allowed: " + ", ".join(dangerous)
             )
+        # Do not inherit the parent process environment.  In particular, the
+        # dedicated model credential and ambient auth/helper variables must
+        # never reach these read-only Git subprocesses.  Git is resolved and
+        # identity-pinned above, so PATH and user HOME/XDG state are unnecessary.
         self.environment = {
-            key: value
-            for key, value in os.environ.items()
-            if not key.startswith("GIT_")
+            "LANG": "C",
+            "LC_ALL": "C",
+            "NO_COLOR": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_SYSTEM": os.devnull,
+            "GIT_NO_LAZY_FETCH": "1",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_PROTOCOL_FROM_USER": "0",
+            "GIT_TERMINAL_PROMPT": "0",
         }
-        self.environment.update(
-            {
-                "GIT_CONFIG_GLOBAL": os.devnull,
-                "GIT_CONFIG_NOSYSTEM": "1",
-                "GIT_CONFIG_SYSTEM": os.devnull,
-                "GIT_NO_LAZY_FETCH": "1",
-                "GIT_OPTIONAL_LOCKS": "0",
-                "GIT_PROTOCOL_FROM_USER": "0",
-                "GIT_TERMINAL_PROMPT": "0",
-            }
-        )
+        if os.name == "nt":
+            # CreateProcess needs the OS root on Windows, but no user or auth
+            # environment is copied.  The value is an OS location, not user state.
+            system_root = os.environ.get("SystemRoot") or os.environ.get("SYSTEMROOT")
+            if system_root:
+                self.environment["SystemRoot"] = system_root
         self.git_global_options = REQUIRED_GIT_GLOBAL_OPTIONS
         self._verify_required_git_capability()
         actual_root = Path(
@@ -754,6 +827,7 @@ class GitObjectSource:
         try:
             process = subprocess.Popen(
                 command,
+                cwd=self.repository,
                 stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -1433,6 +1507,31 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         raise BundleContractError("bundle schema top-level identity or closure drifted")
     if schema["required"] != list(MANIFEST_FIELD_ORDER):
         raise BundleContractError("bundle schema top-level required fields drifted")
+    contract_value = schema.get("x-axiom-contract")
+    if type(contract_value) is not dict:
+        raise BundleContractError("bundle schema x-axiom-contract must be an object")
+    source_revision = contract_value.get("sourceRepositoryPolicyRevision")
+    candidate_revision = contract_value.get("candidateRepositoryPolicyRevision")
+    if (
+        type(source_revision) is not int
+        or type(candidate_revision) is not int
+        or (source_revision, candidate_revision) not in {(5, 6), (8, 9)}
+    ):
+        raise BundleContractError("bundle schema source/owner revision pair is unsupported")
+    contract_fields = {
+        "candidateRepositoryPolicyRevision",
+        "sourceRepositoryPolicyRevision",
+        "runtimeInventory",
+        "contractBindings",
+    }
+    if source_revision == 8:
+        contract_fields.add("fullProfileRuntimeDigest")
+    contract = _exact_object(contract_value, contract_fields, "bundle schema x-axiom-contract")
+    if source_revision == 8 and (
+        type(contract["fullProfileRuntimeDigest"]) is not str
+        or DIGEST_PATTERN.fullmatch(contract["fullProfileRuntimeDigest"]) is None
+    ):
+        raise BundleContractError("bundle schema full-profile runtime digest is invalid")
     properties = _exact_object(
         schema["properties"],
         MANIFEST_FIELD_ORDER,
@@ -1447,7 +1546,7 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         "kind": {"const": "axiom-hook-independent-derived-bundle"},
         "profileId": {"const": PROFILE_ID},
         "pluginVersion": semver_schema,
-        "repositoryPolicyRevision": {"const": 6},
+        "repositoryPolicyRevision": {"const": candidate_revision},
         "source": {"$ref": "#/$defs/source"},
         "contractBindings": {"$ref": "#/$defs/contractBindings"},
         "runtimeCanonicalization": {"$ref": "#/$defs/runtimeCanonicalization"},
@@ -1525,7 +1624,7 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         "repository": {"const": SOURCE_REPOSITORY_SLUG},
         "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-        "repositoryPolicyRevision": {"const": 5},
+        "repositoryPolicyRevision": {"const": source_revision},
     }:
         raise BundleContractError("bundle schema source definition drifted")
     host_set = closed_definition("hostCaseSet", ("id", "host", "sha256"))
@@ -1644,32 +1743,23 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
     if transport_definition["properties"] != transport_properties:
         raise BundleContractError("bundle schema transport definition drifted")
 
-    contract = _exact_object(
-        schema.get("x-axiom-contract"),
-        {
-            "candidateRepositoryPolicyRevision",
-            "sourceRepositoryPolicyRevision",
-            "runtimeInventory",
-            "contractBindings",
-        },
-        "bundle schema x-axiom-contract",
-    )
     inventory = _exact_object(
         contract["runtimeInventory"],
         {"directSkillRoots", "runtimeFiles", "runtimeBytes", "allowedExtensions"},
         "bundle schema runtimeInventory",
     )
-    if inventory != {
-        "directSkillRoots": 8,
-        "runtimeFiles": 50,
-        "runtimeBytes": 230826,
-        "allowedExtensions": [".md", ".yaml"],
-    }:
+    expected_runtime_bytes = 230826 if source_revision == 5 else inventory["runtimeBytes"]
+    if (
+        type(expected_runtime_bytes) is not int
+        or not 1 <= expected_runtime_bytes <= MAX_RUNTIME_BYTES
+        or inventory != {
+            "directSkillRoots": 8,
+            "runtimeFiles": 50,
+            "runtimeBytes": expected_runtime_bytes,
+            "allowedExtensions": [".md", ".yaml"],
+        }
+    ):
         raise BundleContractError("bundle schema runtime inventory contract drifted")
-    if contract["candidateRepositoryPolicyRevision"] != 6:
-        raise BundleContractError("bundle schema candidate repository policy revision drifted")
-    if contract["sourceRepositoryPolicyRevision"] != 5:
-        raise BundleContractError("bundle schema source repository policy revision drifted")
     bindings = _exact_object(
         contract["contractBindings"],
         {*PROFILE_ARTIFACT_KEYS, "hostCaseSets"},
@@ -1936,6 +2026,11 @@ def inspect_source(
     full_profile_digest = runtime_contract.get("digest")
     if type(full_profile_digest) is not str or DIGEST_PATTERN.fullmatch(full_profile_digest) is None:
         raise BundleContractError("source full-profile runtime digest is invalid")
+    if (
+        "fullProfileRuntimeDigest" in contract
+        and full_profile_digest != contract["fullProfileRuntimeDigest"]
+    ):
+        raise BundleContractError("source full-profile runtime digest differs from bundle schema")
     if runtime_contract.get("recordCount") != 61:
         raise BundleContractError("source installed input count must remain 61")
     minimal_manifest = {
@@ -2580,109 +2675,721 @@ def validate_envelope(
     return document
 
 
-def _write_plugin_tree(root: Path, files: dict[str, bytes]) -> None:
-    root.mkdir(mode=0o755)
-    _set_posix_mode(root, 0o755)
-    created_directories = {root}
-    for relative_path, data in files.items():
-        destination = root.joinpath(*PurePosixPath(relative_path).parts)
-        missing: list[Path] = []
-        parent = destination.parent
-        while parent not in created_directories and parent != root.parent:
-            missing.append(parent)
-            parent = parent.parent
-        for directory in reversed(missing):
-            directory.mkdir(mode=0o755)
-            _set_posix_mode(directory, 0o755)
-            created_directories.add(directory)
-        with destination.open("xb") as handle:
-            handle.write(data)
-        _set_posix_mode(destination, 0o644)
+def _builder_directory_flags() -> int:
+    return (
+        os.O_RDONLY
+        | getattr(os, "O_DIRECTORY", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_CLOEXEC", 0)
+    )
 
 
-def _read_plugin_tree(root: Path) -> dict[str, bytes]:
+def _close_builder_access_fd(descriptor: int) -> None:
+    """Release a Linux descriptor without invalidating a committed artifact.
+
+    Linux releases a descriptor before reporting delayed close errors; retrying
+    close can target a reused descriptor. Artifact data is fsynced before the
+    completion link. These remaining handles carry no pending content writes.
+    """
     try:
-        root_metadata = root.lstat()
-    except OSError as error:
-        raise BundleContractError(f"cannot inspect generated plugin root: {error}") from error
-    if _is_link_or_reparse(root_metadata) or not stat.S_ISDIR(root_metadata.st_mode):
-        raise BundleContractError("generated plugin root must be an ordinary directory")
-    _validate_physical_mode(root_metadata, 0o755, "generated plugin root")
-    files: dict[str, bytes] = {}
-    pending = [(root, "")]
-    while pending:
-        directory, prefix = pending.pop()
-        try:
-            with os.scandir(directory) as iterator:
-                children = list(iterator)
-            children.sort(key=lambda item: item.name.encode("utf-8"), reverse=True)
-        except (OSError, UnicodeError) as error:
-            raise BundleContractError(f"cannot enumerate generated plugin tree: {error}") from error
-        for child in children:
-            relative = f"{prefix}/{child.name}".lstrip("/")
-            validate_portable_path(relative, label="generated plugin path")
-            try:
-                metadata = child.stat(follow_symlinks=False)
-            except OSError as error:
-                raise BundleContractError(
-                    f"cannot inspect generated plugin path {relative}: {error}"
-                ) from error
-            if _is_link_or_reparse(metadata):
-                raise BundleContractError(
-                    f"generated plugin path {relative} must not be a symlink or reparse point"
-                )
-            path = Path(child.path)
-            if stat.S_ISDIR(metadata.st_mode):
-                _validate_physical_mode(metadata, 0o755, f"generated directory {relative}")
-                pending.append((path, relative))
-                continue
-            if not stat.S_ISREG(metadata.st_mode):
-                raise BundleContractError(f"generated path {relative} must be a regular file")
-            _validate_physical_mode(metadata, 0o644, f"generated file {relative}")
-            files[relative] = _read_regular_file(
-                path,
-                f"generated file {relative}",
-                maximum=MAX_BUNDLE_MANIFEST_BYTES,
+        os.close(descriptor)
+    except OSError:
+        pass
+
+
+class _BuilderCompletionFile:
+    """Prepare an unnamed completion file; linking it is the sole commit point."""
+
+    def __init__(self, root_fd: int, data: bytes) -> None:
+        self.root_fd = root_fd
+        self.descriptor: int | None = None
+        self.record: BuilderCreatedObject | None = None
+        self.linked = False
+        if platform.system() != "Linux" or not hasattr(os, "O_TMPFILE"):
+            raise BundleContractError(
+                "builder lifecycle v2 requires Linux O_TMPFILE completion publication"
             )
-    return {path: files[path] for path in sorted(files, key=lambda item: item.encode("utf-8"))}
+        libc = ctypes.CDLL(None, use_errno=True)
+        self._linkat = getattr(libc, "linkat", None)
+        if self._linkat is None:
+            raise BundleContractError(
+                "builder lifecycle v2 requires Linux linkat completion publication"
+            )
+        self._linkat.argtypes = [
+            ctypes.c_int, ctypes.c_char_p, ctypes.c_int,
+            ctypes.c_char_p, ctypes.c_int,
+        ]
+        self._linkat.restype = ctypes.c_int
+        try:
+            # This occurs before any visible output is created. An unsupported
+            # destination filesystem therefore fails without partial output.
+            self.descriptor = os.open(
+                ".", os.O_RDWR | os.O_TMPFILE | getattr(os, "O_CLOEXEC", 0),
+                0o644, dir_fd=root_fd,
+            )
+            os.fchmod(self.descriptor, 0o644)
+            _BuilderCreationLedger._write_all(self.descriptor, data)
+            os.fsync(self.descriptor)
+            metadata = os.fstat(self.descriptor)
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_nlink != 0
+                or metadata.st_size != len(data)
+                or stat.S_IMODE(metadata.st_mode) != 0o644
+                or os.pread(self.descriptor, len(data) + 1, 0) != data
+            ):
+                raise BundleContractError("unnamed completion file validation failed")
+            # /proc/self/fd here is the documented, unprivileged linkat source
+            # for O_TMPFILE; it does not inspect host capability or process state.
+            self._source = os.fsencode(f"/proc/self/fd/{self.descriptor}")
+            source_metadata = os.stat(self._source)
+            if (source_metadata.st_dev, source_metadata.st_ino) != (
+                metadata.st_dev, metadata.st_ino
+            ):
+                raise BundleContractError("completion descriptor alias is unavailable")
+            self.record = BuilderCreatedObject(
+                BUNDLE_ENVELOPE_NAME, "", BUNDLE_ENVELOPE_NAME, "file",
+                metadata.st_dev, metadata.st_ino, metadata.st_mode,
+                "builder-output-v2:envelope-final-publish",
+            )
+        except BaseException:
+            self.close()
+            raise
+
+    def publish(self) -> None:
+        if self.descriptor is None or self.record is None or self.linked:
+            raise BundleContractError("completion file is not ready for publication")
+        # AT_SYMLINK_FOLLOW resolves only our held descriptor alias. linkat never
+        # replaces an existing destination. No callback, validation, allocation
+        # of result records, or named cleanup follows a successful link.
+        if self._linkat(
+            -100, self._source, self.root_fd,
+            os.fsencode(BUNDLE_ENVELOPE_NAME), 0x400,
+        ) != 0:
+            observed_errno = ctypes.get_errno()
+            category = (
+                "already exists" if observed_errno == errno.EEXIST
+                else os.strerror(observed_errno)
+            )
+            raise BundleContractError(
+                f"completion publication failed without replacement: {category}"
+            )
+        self.linked = True
+
+    def close(self) -> None:
+        if self.descriptor is not None:
+            descriptor, self.descriptor = self.descriptor, None
+            _close_builder_access_fd(descriptor)
 
 
-def _validate_published_outputs(
-    plugin_root: Path,
-    archive_path: Path,
+def _builder_same_object(metadata: os.stat_result, record: BuilderCreatedObject) -> bool:
+    expected_type = stat.S_IFDIR if record.kind == "directory" else stat.S_IFREG
+    return (
+        stat.S_IFMT(metadata.st_mode) == expected_type
+        and metadata.st_dev == record.device
+        and metadata.st_ino == record.inode
+    )
+
+
+class _BuilderCreationLedger:
+    """Bounded output bindings under the explicit single-writer prerequisite.
+
+    These records confer no named-object deletion authority. Lifecycle v2 has
+    no quarantine, rename, unlink, or recursive cleanup path.
+    """
+
+    def __init__(
+        self,
+        root_fd: int,
+        root_metadata: os.stat_result,
+        test_hook: Callable[[str, dict[str, Any]], None] | None,
+    ) -> None:
+        self.root_fd = root_fd
+        self.root_metadata = root_metadata
+        self.records: dict[str, BuilderCreatedObject] = {}
+        self.attempts: list[BuilderCreationAttempt] = []
+        self.test_hook = test_hook
+
+    def _reserve_creation(
+        self, relative: str, kind: str, phase: str,
+    ) -> BuilderCreationAttempt:
+        if len(self.attempts) >= MAX_RUNTIME_ENTRIES + 4:
+            raise BundleContractError("builder creation inventory exceeds its bound")
+        if any(item.relative_path == relative for item in self.attempts):
+            raise BundleContractError("builder creation attempt path is duplicated")
+        attempt = BuilderCreationAttempt(relative, kind, f"builder-output-v2:{phase}")
+        self.attempts.append(attempt)
+        return attempt
+
+    def _hook(self, phase: str, **facts: Any) -> None:
+        if self.test_hook is not None:
+            self.test_hook(phase, facts)
+
+    @staticmethod
+    def _parts(relative: str) -> tuple[str, ...]:
+        validate_portable_path(relative, label="builder-owned path")
+        return PurePosixPath(relative).parts
+
+    def _open_parent(self, relative: str) -> tuple[int, str]:
+        parts = self._parts(relative)
+        descriptor = os.dup(self.root_fd)
+        prefix = ""
+        try:
+            for part in parts[:-1]:
+                child_relative = f"{prefix}/{part}".lstrip("/")
+                expected = self.records.get(child_relative)
+                if expected is None or expected.kind != "directory":
+                    raise BundleContractError(
+                        "builder-owned parent is absent from its creation ledger"
+                    )
+                child = os.open(part, _builder_directory_flags(), dir_fd=descriptor)
+                metadata = os.fstat(child)
+                if not _builder_same_object(metadata, expected):
+                    os.close(child)
+                    raise BuilderCleanupError(
+                        "builder-owned parent identity changed; manual cleanup required"
+                    )
+                os.close(descriptor)
+                descriptor = child
+                prefix = child_relative
+            return descriptor, parts[-1]
+        except BaseException:
+            os.close(descriptor)
+            raise
+
+    def _record_created(
+        self,
+        relative: str,
+        parent_fd: int,
+        name: str,
+        descriptor: int,
+        kind: str,
+        phase: str,
+    ) -> BuilderCreatedObject:
+        metadata = os.fstat(descriptor)
+        self._hook(
+            "builder-after-create-before-ledger",
+            relativePath=relative,
+            parentDescriptor=parent_fd,
+            basename=name,
+            descriptor=descriptor,
+            device=metadata.st_dev,
+            inode=metadata.st_ino,
+        )
+        try:
+            current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+        except OSError as error:
+            raise BuilderCleanupError(
+                "new builder object lost its name before ownership was recorded; "
+                "manual cleanup required"
+            ) from error
+        expected_type = stat.S_IFDIR if kind == "directory" else stat.S_IFREG
+        if (
+            stat.S_IFMT(metadata.st_mode) != expected_type
+            or stat.S_IFMT(current.st_mode) != expected_type
+            or (current.st_dev, current.st_ino) != (metadata.st_dev, metadata.st_ino)
+            or metadata.st_dev != self.root_metadata.st_dev
+            or (kind == "file" and metadata.st_nlink != 1)
+        ):
+            raise BuilderCleanupError(
+                "new builder object changed before ownership was recorded; "
+                "manual cleanup required"
+            )
+        parent_relative, _, basename = relative.rpartition("/")
+        record = BuilderCreatedObject(
+            relative_path=relative,
+            parent_relative_path=parent_relative,
+            basename=basename,
+            kind=kind,
+            device=metadata.st_dev,
+            inode=metadata.st_ino,
+            mode=metadata.st_mode,
+            creation_phase=f"builder-output-v2:{phase}",
+        )
+        if relative in self.records:
+            raise BundleContractError("builder creation ledger path is duplicated")
+        self.records[relative] = record
+        return record
+
+    def create_directory(self, relative: str, *, mode: int, phase: str) -> int:
+        parent_fd, name = self._open_parent(relative)
+        descriptor: int | None = None
+        try:
+            attempt = self._reserve_creation(relative, "directory", phase)
+            self._hook(
+                "builder-before-create", relativePath=relative,
+                parentDescriptor=parent_fd, basename=name, kind="directory",
+            )
+            os.mkdir(name, mode, dir_fd=parent_fd)
+            # Preserve successful mkdir even if open/fstat/registration fails.
+            # The later descriptor is an access binding under one-writer use,
+            # not proof that an arbitrary concurrent replacement is ours.
+            attempt.created = True
+            descriptor = os.open(name, _builder_directory_flags(), dir_fd=parent_fd)
+            metadata = os.fstat(descriptor)
+            attempt.device, attempt.inode = metadata.st_dev, metadata.st_ino
+            self._record_created(
+                relative, parent_fd, name, descriptor, "directory", phase
+            )
+            attempt.registered = True
+            os.fchmod(descriptor, mode)
+            # fchmod may change mode after the access binding is recorded.
+            self.records[relative] = BuilderCreatedObject(
+                relative, relative.rpartition("/")[0], name, "directory",
+                metadata.st_dev, metadata.st_ino, os.fstat(descriptor).st_mode,
+                attempt.creation_phase,
+            )
+            result = descriptor
+            descriptor = None
+            return result
+        except FileExistsError as error:
+            raise BundleContractError(f"fixed output already exists: {name}") from error
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent_fd)
+
+    def ensure_directory(self, relative: str, *, mode: int, phase: str) -> int:
+        prefix = ""
+        descriptor = os.dup(self.root_fd)
+        try:
+            for part in self._parts(relative):
+                child_relative = f"{prefix}/{part}".lstrip("/")
+                expected = self.records.get(child_relative)
+                if expected is None:
+                    os.close(descriptor)
+                    descriptor = self.create_directory(
+                        child_relative, mode=mode, phase=phase
+                    )
+                else:
+                    if expected.kind != "directory":
+                        raise BundleContractError("builder directory collides with a file")
+                    child = os.open(part, _builder_directory_flags(), dir_fd=descriptor)
+                    metadata = os.fstat(child)
+                    if not _builder_same_object(metadata, expected):
+                        os.close(child)
+                        raise BuilderCleanupError(
+                            "builder directory identity changed; manual cleanup required"
+                        )
+                    os.close(descriptor)
+                    descriptor = child
+                prefix = child_relative
+            result = descriptor
+            descriptor = -1
+            return result
+        finally:
+            if descriptor >= 0:
+                os.close(descriptor)
+
+    @staticmethod
+    def _write_all(descriptor: int, data: bytes) -> None:
+        view = memoryview(data)
+        while view:
+            written = os.write(descriptor, view)
+            if type(written) is not int or written < 1 or written > len(view):
+                raise BundleContractError("builder file write made invalid progress")
+            view = view[written:]
+
+    def create_file(
+        self,
+        relative: str,
+        data: bytes,
+        *,
+        mode: int,
+        phase: str,
+    ) -> None:
+        parent_fd, name = self._open_parent(relative)
+        descriptor: int | None = None
+        try:
+            attempt = self._reserve_creation(relative, "file", phase)
+            self._hook(
+                "builder-before-create", relativePath=relative,
+                parentDescriptor=parent_fd, basename=name, kind="file",
+            )
+            descriptor = os.open(
+                name,
+                os.O_WRONLY
+                | os.O_CREAT
+                | os.O_EXCL
+                | getattr(os, "O_NOFOLLOW", 0)
+                | getattr(os, "O_CLOEXEC", 0),
+                mode,
+                dir_fd=parent_fd,
+            )
+            attempt.created = True
+            metadata = os.fstat(descriptor)
+            attempt.device, attempt.inode = metadata.st_dev, metadata.st_ino
+            # The returned O_EXCL descriptor identifies this created file.
+            # Record it before fallible mode changes or content writes.
+            self._record_created(relative, parent_fd, name, descriptor, "file", phase)
+            attempt.registered = True
+            os.fchmod(descriptor, mode)
+            self.records[relative] = BuilderCreatedObject(
+                relative, relative.rpartition("/")[0], name, "file",
+                metadata.st_dev, metadata.st_ino, os.fstat(descriptor).st_mode,
+                attempt.creation_phase,
+            )
+            self._write_all(descriptor, data)
+            os.fsync(descriptor)
+            metadata = os.fstat(descriptor)
+            if metadata.st_size != len(data):
+                raise BundleContractError("builder file size changed while writing")
+            self.verify_name(relative)
+        except FileExistsError as error:
+            raise BundleContractError(f"fixed output already exists: {name}") from error
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent_fd)
+
+    def verify_name(self, relative: str) -> BuilderCreatedObject:
+        expected = self.records.get(relative)
+        if expected is None:
+            raise BundleContractError("builder object is absent from its creation ledger")
+        parent_fd, name = self._open_parent(relative)
+        try:
+            current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+        except OSError as error:
+            raise BuilderCleanupError(
+                "builder object name disappeared; manual cleanup required"
+            ) from error
+        finally:
+            os.close(parent_fd)
+        if not _builder_same_object(current, expected):
+            raise BuilderCleanupError(
+                "builder object name changed identity; manual cleanup required"
+            )
+        return expected
+
+    def open_directory(self, relative: str) -> int:
+        expected = self.verify_name(relative)
+        if expected.kind != "directory":
+            raise BundleContractError("builder object is not a directory")
+        parent_fd, name = self._open_parent(relative)
+        try:
+            descriptor = os.open(name, _builder_directory_flags(), dir_fd=parent_fd)
+            if not _builder_same_object(os.fstat(descriptor), expected):
+                os.close(descriptor)
+                raise BuilderCleanupError(
+                    "builder directory changed while opening; manual cleanup required"
+                )
+            return descriptor
+        finally:
+            os.close(parent_fd)
+
+    def exported_records(self) -> tuple[BuilderCreatedObject, ...]:
+        root_current = os.fstat(self.root_fd)
+        if (
+            not stat.S_ISDIR(root_current.st_mode)
+            or (root_current.st_dev, root_current.st_ino)
+            != (self.root_metadata.st_dev, self.root_metadata.st_ino)
+        ):
+            raise BuilderCleanupError(
+                "bundle destination descriptor changed identity; manual cleanup required"
+            )
+        for path in tuple(self.records):
+            self.verify_name(path)
+        return tuple(
+            self.records[path]
+            for path in sorted(self.records, key=lambda value: value.encode("utf-8"))
+        )
+
+
+def _read_fd_bounded(
+    parent_fd: int,
+    name: str,
+    *,
+    maximum: int,
+    expected: BuilderCreatedObject,
+) -> bytes:
+    descriptor = os.open(
+        name,
+        os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0),
+        dir_fd=parent_fd,
+    )
+    try:
+        metadata = os.fstat(descriptor)
+        if (
+            not _builder_same_object(metadata, expected)
+            or metadata.st_size > maximum
+            or metadata.st_nlink != 1
+        ):
+            raise BuilderCleanupError(
+                "builder file changed while reading; manual cleanup required"
+            )
+        data = bytearray()
+        while len(data) <= maximum:
+            chunk = os.read(descriptor, min(64 * 1024, maximum + 1 - len(data)))
+            if not chunk:
+                break
+            data.extend(chunk)
+        if len(data) > maximum or len(data) != metadata.st_size:
+            raise BundleContractError("generated file exceeds its bounded size")
+        return bytes(data)
+    finally:
+        os.close(descriptor)
+
+
+def _read_plugin_tree_fd(
+    root_fd: int,
+    ledger: _BuilderCreationLedger,
+    root_relative: str,
+) -> dict[str, bytes]:
+    files: dict[str, bytes] = {}
+    pending: list[tuple[int, str, str]] = [(os.dup(root_fd), root_relative, "")]
+    try:
+        while pending:
+            directory_fd, physical_prefix, logical_prefix = pending.pop()
+            try:
+                names = sorted(os.listdir(directory_fd), key=os.fsencode, reverse=True)
+                for name in names:
+                    physical = f"{physical_prefix}/{name}"
+                    logical = f"{logical_prefix}/{name}".lstrip("/")
+                    validate_portable_path(logical, label="generated plugin path")
+                    record = ledger.records.get(physical)
+                    if record is None:
+                        raise BuilderCleanupError(
+                            "generated plugin contains an unknown object; manual cleanup required"
+                        )
+                    metadata = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+                    if not _builder_same_object(metadata, record):
+                        raise BuilderCleanupError(
+                            "generated plugin object changed identity; manual cleanup required"
+                        )
+                    if record.kind == "directory":
+                        _validate_physical_mode(metadata, 0o755, f"generated directory {logical}")
+                        child = os.open(name, _builder_directory_flags(), dir_fd=directory_fd)
+                        pending.append((child, physical, logical))
+                    else:
+                        _validate_physical_mode(metadata, 0o644, f"generated file {logical}")
+                        files[logical] = _read_fd_bounded(
+                            directory_fd,
+                            name,
+                            maximum=MAX_BUNDLE_MANIFEST_BYTES,
+                            expected=record,
+                        )
+            finally:
+                os.close(directory_fd)
+    except BaseException:
+        for descriptor, _, _ in pending:
+            os.close(descriptor)
+        raise
+    return {
+        path: files[path]
+        for path in sorted(files, key=lambda item: item.encode("utf-8"))
+    }
+
+
+def _validate_published_outputs_fd(
+    ledger: _BuilderCreationLedger,
+    plugin_relative: str,
+    archive_relative: str,
     expected_files: dict[str, bytes],
     envelope: dict[str, Any],
 ) -> bytes:
-    actual_files = _read_plugin_tree(plugin_root)
+    plugin_fd = ledger.open_directory(plugin_relative)
+    try:
+        actual_files = _read_plugin_tree_fd(plugin_fd, ledger, plugin_relative)
+    finally:
+        os.close(plugin_fd)
     if actual_files != expected_files:
         raise BundleContractError("generated directory file set or bytes drifted")
-    archive_bytes = _read_regular_file(
-        archive_path,
-        archive_path.name,
-        maximum=MAX_ARCHIVE_BYTES,
-    )
+    archive_record = ledger.verify_name(archive_relative)
+    archive_parent, archive_name = ledger._open_parent(archive_relative)
+    try:
+        archive_bytes = _read_fd_bounded(
+            archive_parent,
+            archive_name,
+            maximum=MAX_ARCHIVE_BYTES,
+            expected=archive_record,
+        )
+    finally:
+        os.close(archive_parent)
     validate_archive_bytes(archive_bytes, expected_files)
     validate_envelope(
         envelope,
-        manifest=_load_json_bytes(expected_files[BUNDLE_MANIFEST_NAME], BUNDLE_MANIFEST_NAME),
+        manifest=_load_json_bytes(
+            expected_files[BUNDLE_MANIFEST_NAME], BUNDLE_MANIFEST_NAME
+        ),
         files=expected_files,
         archive_bytes=archive_bytes,
     )
     return archive_bytes
 
 
-def _remove_builder_owned(path: Path) -> None:
-    """Remove a fixed output under the documented caller-exclusive destination."""
+def build_bundle_to_directory_fd(
+    source_repository: Path,
+    source_commit: str,
+    expected_source_tree: str,
+    destination_fd: int,
+    *,
+    git_executable: Path,
+    schema_path: Path | None = None,
+    entrypoint_path: Path | None = None,
+    module_path: Path | None = None,
+    expected_destination_identity: tuple[int, int] | None = None,
+    _test_hook: Callable[[str, dict[str, Any]], None] | None = None,
+) -> BuildResult:
+    """Construct a bundle with lifecycle v2, preserving partial output on failure.
+
+    The caller must keep the destination and its ancestors exclusively writable
+    by this build until completion. This prerequisite is not an OS isolation
+    guarantee. The caller's destination is never claimed as a created object.
+    """
+    if platform.system() != "Linux" or os.name != "posix":
+        raise BundleContractError(
+            "descriptor bundle destination requires Linux/POSIX semantics"
+        )
+    if type(destination_fd) is not int or destination_fd < 0:
+        raise BundleContractError("destination descriptor must be an open integer fd")
     try:
-        metadata = path.lstat()
-    except FileNotFoundError:
-        return
-    if stat.S_ISLNK(metadata.st_mode):
-        path.unlink()
-    elif stat.S_ISDIR(metadata.st_mode):
-        shutil.rmtree(path)
-    elif stat.S_ISREG(metadata.st_mode):
-        path.unlink()
+        root_fd = os.dup(destination_fd)
+    except OSError as error:
+        raise BundleContractError("cannot duplicate destination descriptor") from error
+    try:
+        root_metadata = os.fstat(root_fd)
+        if (
+            not stat.S_ISDIR(root_metadata.st_mode)
+            or root_metadata.st_dev <= 0
+            or root_metadata.st_ino <= 0
+            or root_metadata.st_uid != os.geteuid()
+        ):
+            raise BundleContractError(
+                "destination descriptor must identify an owned ordinary directory"
+            )
+        if expected_destination_identity is not None and expected_destination_identity != (
+            root_metadata.st_dev,
+            root_metadata.st_ino,
+        ):
+            raise BundleContractError("destination descriptor identity does not match")
+        if os.listdir(root_fd):
+            raise BundleContractError("destination must be empty")
+        ledger = _BuilderCreationLedger(root_fd, root_metadata, _test_hook)
+        source_repository = Path(source_repository)
+        git_executable, _ = _resolve_git_executable(
+            git_executable,
+            forbidden_roots=(source_repository,),
+        )
+        schema_path = schema_path or REPOSITORY_ROOT / SCHEMA_RELATIVE
+        entrypoint_path = entrypoint_path or REPOSITORY_ROOT / ENTRYPOINT_RELATIVE
+        inputs = inspect_source(
+            source_repository,
+            source_commit,
+            expected_source_tree,
+            git_executable=git_executable,
+            schema_path=schema_path,
+            entrypoint_path=entrypoint_path,
+            module_path=module_path,
+        )
+        manifest = create_bundle_manifest(inputs)
+        manifest_bytes = _pretty_json_bytes(manifest)
+        if len(manifest_bytes) > MAX_BUNDLE_MANIFEST_BYTES:
+            raise BundleContractError("BUNDLE-MANIFEST.json exceeds the 512 KiB limit")
+        files = _file_map(inputs, manifest_bytes)
+        archive_bytes = build_archive_bytes(files)
+        validate_archive_bytes(archive_bytes, files)
+        envelope = _create_envelope(inputs, manifest, files, archive_bytes)
+        envelope_bytes = _pretty_json_bytes(envelope)
+        archive_filename = manifest["transport"]["archiveFilename"]
+
+        completion = _BuilderCompletionFile(root_fd, envelope_bytes)
+        try:
+            plugin_fd = ledger.create_directory(
+                PLUGIN_DIRECTORY_NAME,
+                mode=0o755,
+                phase="plugin-root-create",
+            )
+            os.close(plugin_fd)
+            created_directories = {PLUGIN_DIRECTORY_NAME}
+            for relative_path, data in files.items():
+                parent_parts = PurePosixPath(relative_path).parent.parts
+                prefix = PLUGIN_DIRECTORY_NAME
+                for part in parent_parts:
+                    prefix = f"{prefix}/{part}"
+                    if prefix not in created_directories:
+                        directory_fd = ledger.create_directory(
+                            prefix,
+                            mode=0o755,
+                            phase="plugin-directory-create",
+                        )
+                        os.close(directory_fd)
+                        created_directories.add(prefix)
+                ledger.create_file(
+                    f"{PLUGIN_DIRECTORY_NAME}/{relative_path}",
+                    data,
+                    mode=0o644,
+                    phase="plugin-file-create",
+                )
+            ledger._hook(
+                "builder-after-publish",
+                destination=PLUGIN_DIRECTORY_NAME,
+                publicationPhase="plugin-direct-create",
+                parentDescriptor=root_fd,
+            )
+            ledger.create_file(
+                archive_filename, archive_bytes, mode=0o644, phase="archive-create",
+            )
+            ledger._hook(
+                "builder-after-publish",
+                destination=archive_filename,
+                publicationPhase="archive-direct-create",
+                parentDescriptor=root_fd,
+            )
+            # Hooks are before all final checks, never after the commit point.
+            ledger._hook(
+                "builder-before-completion-publish",
+                destination=BUNDLE_ENVELOPE_NAME,
+                parentDescriptor=root_fd,
+            )
+            _validate_published_outputs_fd(
+                ledger, PLUGIN_DIRECTORY_NAME, archive_filename, files, envelope
+            )
+            inputs.verify_source_unchanged()
+            if set(os.listdir(root_fd)) != {PLUGIN_DIRECTORY_NAME, archive_filename}:
+                raise BuilderCleanupError(
+                    "destination contains an unknown object; manual cleanup required"
+                )
+            records = ledger.exported_records()
+            if any(item.created and not item.registered for item in ledger.attempts):
+                raise BundleContractError("builder creation registration is incomplete")
+            os.fsync(root_fd)
+            if completion.record is None:
+                raise BundleContractError("completion file has no output binding")
+            result = BuildResult(
+                profile_runtime_digest=manifest["profileRuntimeDigest"],
+                bundle_manifest_digest=manifest["bundleManifestDigest"],
+                archive_sha256=_sha256(archive_bytes),
+                archive_size=len(archive_bytes),
+                archive_filename=archive_filename,
+                directory_file_count=len(files),
+                directory_total_bytes=sum(len(data) for data in files.values()),
+                bundle_manifest=manifest,
+                envelope=envelope,
+                creation_records=tuple(sorted(
+                    (*records, completion.record),
+                    key=lambda record: record.relative_path.encode("utf-8"),
+                )),
+            )
+            # All output validation, source checks, result construction and
+            # necessary temporary cleanup precede this no-overwrite link.
+            # No named temporary output exists. This is process-level commit,
+            # not a claim of multi-file crash durability or concurrent exclusion.
+            completion.publish()
+            return result
+        except BaseException as error:
+            # Preserve unknown names and all visible partial output. The original
+            # error remains the cause, including a successful create followed by
+            # failed descriptor acquisition or registration. No ownership is
+            # reconstructed from the object currently occupying a path.
+            if any(item.created for item in ledger.attempts):
+                raise BuilderBuildIncompleteError(
+                    error, tuple(ledger.attempts), tuple(ledger.records.values()),
+                ) from error
+            raise
+        finally:
+            completion.close()
+    finally:
+        _close_builder_access_fd(root_fd)
 
 
 def build_bundle(
@@ -2695,88 +3402,35 @@ def build_bundle(
     schema_path: Path | None = None,
     entrypoint_path: Path | None = None,
     module_path: Path | None = None,
+    _test_hook: Callable[[str, dict[str, Any]], None] | None = None,
 ) -> BuildResult:
-    """Build one deterministic bundle in a destination exclusively owned by its caller."""
+    """Validate a pathname once, then delegate construction to the fd core."""
     source_repository = Path(source_repository)
     destination = _validate_destination(source_repository, Path(destination))
-    git_executable, _ = _resolve_git_executable(
-        git_executable,
-        forbidden_roots=(source_repository, destination),
-    )
-    schema_path = schema_path or REPOSITORY_ROOT / SCHEMA_RELATIVE
-    entrypoint_path = entrypoint_path or REPOSITORY_ROOT / ENTRYPOINT_RELATIVE
-    inputs = inspect_source(
-        source_repository,
-        source_commit,
-        expected_source_tree,
-        git_executable=git_executable,
-        schema_path=schema_path,
-        entrypoint_path=entrypoint_path,
-        module_path=module_path,
-    )
-    manifest = create_bundle_manifest(inputs)
-    manifest_bytes = _pretty_json_bytes(manifest)
-    if len(manifest_bytes) > MAX_BUNDLE_MANIFEST_BYTES:
-        raise BundleContractError("BUNDLE-MANIFEST.json exceeds the 512 KiB limit")
-    files = _file_map(inputs, manifest_bytes)
-    archive_bytes = build_archive_bytes(files)
-    validate_archive_bytes(archive_bytes, files)
-    envelope = _create_envelope(inputs, manifest, files, archive_bytes)
-    envelope_bytes = _pretty_json_bytes(envelope)
-    archive_filename = manifest["transport"]["archiveFilename"]
-
-    staging = destination / STAGING_DIRECTORY_NAME
-    plugin_output = destination / PLUGIN_DIRECTORY_NAME
-    archive_output = destination / archive_filename
-    envelope_output = destination / BUNDLE_ENVELOPE_NAME
-    for output in (staging, plugin_output, archive_output, envelope_output):
-        if output.exists() or output.is_symlink():
-            raise BundleContractError(f"fixed output already exists: {output.name}")
-    published: list[Path] = []
+    descriptor: int | None = None
     try:
-        staging.mkdir(mode=0o700)
-        staged_plugin = staging / PLUGIN_DIRECTORY_NAME
-        staged_archive = staging / archive_filename
-        staged_envelope = staging / BUNDLE_ENVELOPE_NAME
-        _write_plugin_tree(staged_plugin, files)
-        with staged_archive.open("xb") as handle:
-            handle.write(archive_bytes)
-        _set_posix_mode(staged_archive, 0o644)
-        with staged_envelope.open("xb") as handle:
-            handle.write(envelope_bytes)
-        _set_posix_mode(staged_envelope, 0o644)
-        _validate_published_outputs(staged_plugin, staged_archive, files, envelope)
-        inputs.verify_source_unchanged()
-        if set(destination.iterdir()) != {staging}:
-            raise BundleContractError("destination changed while the bundle was staged")
-
-        os.replace(staged_plugin, plugin_output)
-        published.append(plugin_output)
-        os.replace(staged_archive, archive_output)
-        published.append(archive_output)
-        _validate_published_outputs(plugin_output, archive_output, files, envelope)
-        inputs.verify_source_unchanged()
-        os.replace(staged_envelope, envelope_output)
-        published.append(envelope_output)
-        staging.rmdir()
-    except Exception:
-        for output in reversed(published):
-            _remove_builder_owned(output)
-        _remove_builder_owned(staging)
-        raise
-
-    result = BuildResult(
-        profile_runtime_digest=manifest["profileRuntimeDigest"],
-        bundle_manifest_digest=manifest["bundleManifestDigest"],
-        archive_sha256=_sha256(archive_bytes),
-        archive_size=len(archive_bytes),
-        archive_filename=archive_filename,
-        directory_file_count=len(files),
-        directory_total_bytes=sum(len(data) for data in files.values()),
-        bundle_manifest=manifest,
-        envelope=envelope,
-    )
-    return result
+        before = destination.lstat()
+        descriptor = os.open(destination, _builder_directory_flags())
+        opened = os.fstat(descriptor)
+        if _physical_identity(opened) != _physical_identity(before):
+            raise BundleContractError(
+                "destination changed identity while its descriptor was opened"
+            )
+        return build_bundle_to_directory_fd(
+            source_repository,
+            source_commit,
+            expected_source_tree,
+            descriptor,
+            git_executable=git_executable,
+            schema_path=schema_path,
+            entrypoint_path=entrypoint_path,
+            module_path=module_path,
+            expected_destination_identity=(opened.st_dev, opened.st_ino),
+            _test_hook=_test_hook,
+        )
+    finally:
+        if descriptor is not None:
+            _close_builder_access_fd(descriptor)
 
 
 def _filesystem_runtime(
@@ -3119,6 +3773,11 @@ def _evidence_inputs(
     runtime_contract = identity.get("runtimeContract")
     if type(runtime_contract) is not dict:
         raise BundleContractError("current runtime identity is missing runtimeContract")
+    if (
+        "fullProfileRuntimeDigest" in contract
+        and runtime_contract.get("digest") != contract["fullProfileRuntimeDigest"]
+    ):
+        raise BundleContractError("current full-profile runtime digest differs from bundle schema")
     return BundleInputs(
         source=None,  # type: ignore[arg-type]
         source_commit=source["commit"],
@@ -3179,8 +3838,13 @@ def check_no_hook_bundle(
         )
         if evidence["source"] != manifest["source"]:
             raise BundleContractError("static evidence source differs from its bundle manifest")
-        if evidence["candidateRepositoryPolicyRevision"] != 6:
-            raise BundleContractError("static evidence candidate repositoryPolicyRevision must be 6")
+        candidate_revision = evidence["candidateRepositoryPolicyRevision"]
+        if candidate_revision != manifest["repositoryPolicyRevision"]:
+            raise BundleContractError(
+                "static evidence candidate repositoryPolicyRevision differs from its bundle manifest"
+            )
+        if candidate_revision != contract["candidateRepositoryPolicyRevision"]:
+            raise BundleContractError("static evidence candidate repositoryPolicyRevision differs from schema owner")
 
         revision_document = _load_json_bytes(
             _read_regular_file(
@@ -3191,15 +3855,35 @@ def check_no_hook_bundle(
             "evidence/repository-policy-revisions-v1.json",
         )
         revisions = revision_document.get("revisions")
-        if type(revisions) is not list or not revisions or type(revisions[-1]) is not dict:
+        if type(revisions) is not list or not revisions:
             raise BundleContractError("repository policy revision history is unavailable")
-        revision = revisions[-1]
-        if (
-            revision.get("revision") != 6
-            or revision.get("baselineCommit") != manifest["source"]["commit"]
-            or revision.get("sourceIssue") != 117
+        matching_revisions = [
+            revision
+            for revision in revisions
+            if type(revision) is dict
+            and revision.get("revision") == candidate_revision
+        ]
+        if not matching_revisions:
+            raise BundleContractError(
+                f"bundle owner revision {candidate_revision} is missing from repository policy history"
+            )
+        if len(matching_revisions) != 1:
+            raise BundleContractError(
+                f"bundle owner revision {candidate_revision} is duplicated in repository policy history"
+            )
+        revision = matching_revisions[0]
+        if revision.get("baselineCommit") != manifest["source"]["commit"]:
+            raise BundleContractError(
+                f"bundle owner revision {candidate_revision} baselineCommit does not bind the frozen bundle source"
+            )
+        if revision.get("sourceIssue") != 117:
+            raise BundleContractError(f"bundle owner revision {candidate_revision} sourceIssue must be 117")
+        if revision.get("runtimeContractDigest") != contract.get(
+            "fullProfileRuntimeDigest", FULL_PROFILE_RUNTIME_DIGEST
         ):
-            raise BundleContractError("revision 6 does not bind the frozen Phase 2 source")
+            raise BundleContractError(
+                f"bundle owner revision {candidate_revision} runtimeContractDigest does not bind the frozen full profile"
+            )
 
         frozen_bindings = contract["contractBindings"]
         for key in PROFILE_ARTIFACT_KEYS:
@@ -3300,7 +3984,7 @@ def check_no_hook_bundle(
             raise BundleContractError("static evidence bundle manifest drifted")
         if evidence.get("source") != expected_envelope["source"] | {
             "repository": SOURCE_REPOSITORY_SLUG,
-            "repositoryPolicyRevision": 5,
+            "repositoryPolicyRevision": contract["sourceRepositoryPolicyRevision"],
         }:
             raise BundleContractError("static evidence source provenance drifted")
         return len(inputs.runtime_records), builds["independentBuildCount"]
@@ -3312,12 +3996,15 @@ def check_no_hook_bundle(
 __all__ = [
     "BUNDLE_ENVELOPE_NAME",
     "BUNDLE_MANIFEST_NAME",
+    "BuilderCleanupError",
+    "BuilderCreatedObject",
     "BuildResult",
     "BundleContractError",
     "GitObjectSource",
     "PROFILE_ID",
     "build_archive_bytes",
     "build_bundle",
+    "build_bundle_to_directory_fd",
     "check_no_hook_bundle",
     "create_bundle_manifest",
     "inspect_source",
