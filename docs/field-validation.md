@@ -1360,3 +1360,47 @@ Before updating compatibility claims:
 
 Summaries belong in [Compatibility](compatibility.md). Release notes should cite
 only evidence that applies to the released tree.
+
+
+## Canonical assessment candidate 0.10.1
+
+The new candidate exposes the existing mutually exclusive selection boundaries
+in six canonical Skill descriptions; their bodies and action authority remain
+unchanged. The same source serves full Codex/Claude profiles and the derived
+no-Hook package. No always-first Skill, SessionStart injection or case-specific
+answer is added. This is an unpublished compatible runtime correction.
+
+The native v2 assessment revision 1 defines selectedRoutes as a UTF-8 lexical
+report list, independently of action execution order. Response enums are output
+vocabulary and cannot establish Skill installation or discovery. These uniform
+model-side assessment explanations are additional evaluation conditions, not a
+claim about an unprompted host default. The original 16 requests, classes,
+expected routes and exact-list scoring remain unchanged.
+
+The source is commit `8a12877f6c72d6b6f7a804de79e1a95ac3a72bc9`, tree
+`5b6365d27fe906a2d352d2b746eeecb76c4afdda`, policy revision 8. Bundle owner
+revision 9 binds that source. Two independent ordinary builds produced identical
+files and ZIP bytes. The initial source and build were superseded before any
+observation after the routing validator required preservation of the existing
+tagged-release description anchors; no historical host result is reinterpreted.
+
+Native diagnostic revision 11 permits one new batch of at most 16 attempts after
+the previous cumulative 20 (maximum 36). Old unused attempts do not add capacity.
+Each case gets one fresh session for this new runtime under Codex 0.153.0,
+gpt-5.5 / medium and standard Direct tools; plugin runtime and Code Mode host
+remain disabled. Case 11 has no Axiom installation or discovery alias.
+
+Public read evidence contains only bound fixture/package/discovery identifiers,
+validated completion event ordinals, ranges and byte counts. It separates actual
+file reads from route names and directory discovery. Missing or invalid stream
+evidence is not proof that no access occurred. A rejected command may be saved
+only for the local operator: one exclusive 0600 JSON file, at most 4 KiB, below a
+0700 directory. Neither model nor the observer reads or uploads that raw file;
+its target is never accessed for diagnosis. Existing independent JSONL and
+stderr operator budgets and unknown-diagnostic stops remain in effect.
+
+Original observations and their separate same-attempt supplements remain bound
+to their original implementation, model, protocol and runtime. New observations
+are NOT-RUN until actually executed and recorded. FCR-001/003/004 remain OPEN and
+FCR-002 remains STILL_OPEN; full-profile installed-host and Hook observations
+are separate from no-Hook routing assessment.

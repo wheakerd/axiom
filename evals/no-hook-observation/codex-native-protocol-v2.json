@@ -13,12 +13,12 @@
       "sha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
     },
     "modelResponseSchema": {
-      "path": "evals/no-hook-observation/codex-model-response-schema-v1.json",
-      "sha256": "74e182e71bbce324a170f88c935b094ad54cf79a3ece74df66dad41471f9e002"
+      "path": "evals/no-hook-observation/codex-model-response-schema-v2.json",
+      "sha256": "338929f0be0d73121aab561b9a64033f2d15853b45a524bbd8fc2291d74cf78e"
     },
     "promptEnvelope": {
       "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
-      "sha256": "744e5249ab936d79b0b4ce8600b07e6ab6f1adf0a0ba8e254d89a6c8c2607a43"
+      "sha256": "f1f4d8b4dee5898784ddfe3eb200f4478c6e3576470d497c30c835bdc1dac629"
     },
     "taxonomy": {
       "path": "evals/codex-exec-jsonl-observer-v3.json",
@@ -38,11 +38,11 @@
     },
     "bundleSchema": {
       "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-      "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
+      "sha256": "0d3ee658e1c2e5b02047c39835f977ef9bb0141cae5421a6a59c2d3e765cdd50"
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
-      "sha256": "10e6cfc950d5190fd22596de744100dba4b8a965621cbd65e7f386a19164e8e9"
+      "sha256": "6c393607dbb474fe412ff0c165c43ee0566ac6219aedf6adc1147acb95889ac3"
     }
   },
   "implementationBindings": [
@@ -52,7 +52,7 @@
     },
     {
       "path": "axiom_validation/no_hook_bundle.py",
-      "sha256": "cf4e7ef0d358015c81752878009d2c928d63e24de6f5fff34c988051c06f13d1"
+      "sha256": "203937bbbff1110b2256fb8e01bcd6dae07912b18b67f15c5e8d3090e61fa13a"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -60,11 +60,11 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "d016beb27bd5221955931c5a9d09228b56293f6331f1881bbd23b607e01d56bf"
+      "sha256": "c8208af0be2e73a7fb7cf2e18866d6dfdba3cde8be79ee8a603a6bfab46d53d8"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
-      "sha256": "d1874b0ebd148ec25f2d629e3725552af672bb43a15b40447eccf5e69afbf741"
+      "sha256": "3de5625a1cb775366aa23b2bface9059b77f1604e1a5901b4de137ef5f1c7e31"
     },
     {
       "path": "axiom_validation/no_hook_profile.py",
@@ -84,10 +84,10 @@
     }
   ],
   "bundle": {
-    "manifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5",
-    "archiveSha256": "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98",
-    "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
-    "packageSha256": "158e234e256c96028f64f31ae52a7c6c3bd1c662e6acc143d7fa989e78920be2"
+    "manifestDigest": "sha256:dd73e63ff790a3ca759f2bb12e2086f63c40af637846f907214901fda97970e8",
+    "archiveSha256": "9e53e1748f9db3f46defb1eb5bef026fd8bcdff49644e12a2275260461e97332",
+    "profileRuntimeDigest": "sha256:7c5451750c262343bb8bc142dc6af03c9b7ab86b35df1bf84b60162e353944ab",
+    "packageSha256": "d5697a3ce61f7d02e0ee729ef6ffeb1c15a3dd865729b453f664cea7db8fe081"
   },
   "caseIds": [
     "no-hook-positive-explicit-using-axiom-001",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "efdd26a5d11ca6ae25d50fdd695e972efe0edcd5e0c8169325f4434ca55495dc"
+    "sha256": "e81f1f1eecc93727dbd83ea6c6f322aa52f3a72de2b9c09aed3457fd20de4395"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,7 +134,7 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 10,
+  "diagnosticRevision": 11,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
@@ -143,11 +143,12 @@
       "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b",
       "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
       "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a",
-      "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0"
+      "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
+      "e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d"
     ],
-    "priorAttempts": 7,
-    "maximumCumulativeAttempts": 23,
-    "maximumCaseOneAttempts": 8,
+    "priorAttempts": 20,
+    "maximumCumulativeAttempts": 36,
+    "maximumCaseOneAttempts": 9,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
@@ -223,7 +224,18 @@
       "sedLines": "LF-delimited, preserving CR and final unterminated bytes",
       "history": "seven original results remain immutable; seventh exact read predicate is unknown; revision 10 grants one explicitly linked continuation without changing read predicates"
     },
-    "catalogRefreshTimeout": "Only the full frozen timestamped codex_models_manager::manager catalog Timeout line is known-nonfatal; all full-input, stream, final-output, fixed-model and postcheck conditions still apply. Extra/different stderr remains unknown. No retroactive classification of original results."
+    "catalogRefreshTimeout": "Only the full frozen timestamped codex_models_manager::manager catalog Timeout line is known-nonfatal; all full-input, stream, final-output, fixed-model and postcheck conditions still apply. Extra/different stderr remains unknown. No retroactive classification of original results.",
+    "operatorReadRejection": {
+      "scope": "command field of first rejected command_execution only; human-only",
+      "maximumBytes": 4096,
+      "encoding": "JSON-escaped data",
+      "fileMode": "0600",
+      "directoryMode": "0700",
+      "exclusiveCreate": true,
+      "readByObserver": false,
+      "uploaded": false,
+      "targetAccess": false
+    }
   },
   "responseTransport": {
     "revision": 1,
@@ -254,17 +266,50 @@
   "evidenceLayers": {
     "caseSemantics": "unchanged Golden Set and benchmark route/clarification/front-door and authority fields",
     "discoverySource": "bound installed package, standard user Skill directory and pre/post configuration; Case 11 absent",
-    "bodyConsumption": "only corresponding verified read-command evidence; command count alone also includes fixture reads; zero is not proof of consumption or absence of invisible actions",
-    "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings"
+    "bodyConsumption": "publicReads binds receiver- and strict-stream-validated file identity, range and byte count; discovery/fixture/route facts remain separate; absent records are not proof of no access",
+    "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings",
+    "assessmentDefinitions": {
+      "revision": 1,
+      "routeOrder": "route ID UTF-8 lexical; report order only",
+      "discovery": "schema vocabulary does not establish installation",
+      "delivery": "uniform field definitions plus canonical discovery metadata",
+      "historicalResultsReinterpreted": false
+    }
   },
   "executionWindow": {
-    "state": "reviewed-remainder-only",
-    "lastResultSha256": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd",
-    "reason": "same-batch reviewed Cases 5-6; only unstarted Cases 7-16; no consumed attempt repeated"
+    "state": "assessment-candidate-once",
+    "lastResultSha256": "e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d",
+    "reason": "new runtime and uniform assessment definitions; 20 prior attempts plus at most 16 fresh cases"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
     "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
   },
-  "protocolDigest": "sha256:1938bd1e4335e35a9f0d46bf113777e8eb542c7219338d7683a6d0507854c70c"
+  "protocolDigest": "sha256:5dda0101d4558a899b3ed8600d615bbbfc461034dac56e12f9f496538f201a7e",
+  "assessmentRevision": 1,
+  "assessmentReview": {
+    "scope": "same attempt only; immutable original plus separate user-provided diagnostic supplement",
+    "eligibleOnlyIf": [
+      "unknown-stderr-only",
+      "full-input-delivered",
+      "exit-zero",
+      "turn-completed",
+      "strict-stream-valid",
+      "response-valid",
+      "official-final-output-equal",
+      "postcheck-valid",
+      "no-policy-rejection",
+      "no-timeout",
+      "no-observer-termination",
+      "no-cleanup-failure",
+      "no-model-or-config-change"
+    ],
+    "cannotSupply": [
+      "Skill consumption",
+      "unobserved actions",
+      "replacement result",
+      "refunded attempt"
+    ],
+    "continuation": "only unstarted cases after the exact supplementary assessment; no automatic review"
+  }
 }

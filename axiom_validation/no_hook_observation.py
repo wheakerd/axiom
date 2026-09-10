@@ -64,7 +64,7 @@ BENCHMARK_RELATIVE = Path("evals/no-hook/benchmark-v1.json")
 GOLDEN_SET_RELATIVE = Path("evals/no-hook/golden-set-v1.jsonl")
 RESPONSE_SCHEMA_RELATIVE = Path("evals/no-hook/host-response-schema-v1.json")
 STATIC_BUNDLE_EVIDENCE_RELATIVE = Path(
-    "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
+    "evidence/profiles/openai-hook-independent-v1/bundle-revision-6.json"
 )
 RUNTIME_IDENTITY_RELATIVE = Path("evidence/runtime-identity.json")
 RELEASE_STATUS_RELATIVE = Path("evidence/release-status.json")
@@ -4049,11 +4049,15 @@ def _validate_history(history: dict[str, Any], protocol: dict[str, Any], root: P
 
 def _validate_repository_identity(documents: Mapping[Path, dict[str, Any]]) -> None:
     runtime = documents[RUNTIME_IDENTITY_RELATIVE]
-    _expect(runtime.get("pluginVersion"), PLUGIN_VERSION, "runtime pluginVersion")
-    _expect(runtime.get("repositoryPolicyRevision"), CANDIDATE_POLICY_REVISION, "runtime policy revision")
+    # v1 remains disabled and bound to its historical package. A later
+    # candidate has its own installed runtime identity, validated by the
+    # repository identity owner; it does not retrofit v1 execution evidence.
+    migrated = runtime.get("pluginVersion") == "0.10.1"
+    _expect(runtime.get("pluginVersion"), "0.10.1" if migrated else PLUGIN_VERSION, "runtime pluginVersion")
+    _expect(runtime.get("repositoryPolicyRevision"), 9 if migrated else CANDIDATE_POLICY_REVISION, "runtime policy revision")
     contract = runtime.get("runtimeContract", {})
     _expect(contract.get("recordCount"), FULL_PROFILE_INPUT_COUNT, "full-profile input count")
-    _expect(contract.get("digest"), FULL_PROFILE_DIGEST, "full-profile digest")
+    _expect(contract.get("digest"), "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28" if migrated else FULL_PROFILE_DIGEST, "full-profile digest")
 
     bundle = documents[STATIC_BUNDLE_EVIDENCE_RELATIVE]
     _expect(bundle.get("candidateRepositoryPolicyRevision"), 6, "bundle evidence policy revision")
@@ -4069,9 +4073,9 @@ def _validate_repository_identity(documents: Mapping[Path, dict[str, Any]]) -> N
 
     release_status = documents[RELEASE_STATUS_RELATIVE]
     status_identity = release_status.get("runtimeIdentity", {})
-    _expect(status_identity.get("repositoryPolicyRevision"), 7, "release-status policy revision")
-    _expect(status_identity.get("pluginVersion"), PLUGIN_VERSION, "release-status pluginVersion")
-    _expect(status_identity.get("runtimeContractDigest"), FULL_PROFILE_DIGEST, "release-status runtime digest")
+    _expect(status_identity.get("repositoryPolicyRevision"), runtime["repositoryPolicyRevision"], "release-status policy revision")
+    _expect(status_identity.get("pluginVersion"), runtime["pluginVersion"], "release-status pluginVersion")
+    _expect(status_identity.get("runtimeContractDigest"), contract["digest"], "release-status runtime digest")
     current = release_status.get("currentHostEvidence")
     if type(current) is not list:
         raise ObservationError("release-status currentHostEvidence must be an array")
@@ -4083,9 +4087,9 @@ def _validate_repository_identity(documents: Mapping[Path, dict[str, Any]]) -> N
         raise ObservationError("release-status Codex reason must distinguish protocol from observation")
 
     revisions = documents[POLICY_REVISIONS_RELATIVE].get("revisions")
-    if type(revisions) is not list or [item.get("revision") for item in revisions if type(item) is dict] != list(range(1, 8)):
+    if type(revisions) is not list or [item.get("revision") for item in revisions if type(item) is dict] != list(range(1, 10 if migrated else 8)):
         raise ObservationError("repository policy revisions must remain contiguous through revision 7")
-    last = revisions[-1]
+    last = revisions[6]
     _expect(last.get("baselineCommit"), SOURCE_COMMIT, "revision 7 baseline")
     _expect(last.get("sourceIssue"), 117, "revision 7 source issue")
     _expect(last.get("runtimeContractDigest"), FULL_PROFILE_DIGEST, "revision 7 runtime digest")
@@ -6945,7 +6949,11 @@ def _prepare_local_marketplace(
     return session.open_directory(relative, phase="marketplace-launch-source")
 
 
-def _verify_bundle_surface(bundle: Path, *, fake_only: bool) -> tuple[tuple[str, int, int, str], ...]:
+def _verify_bundle_surface(bundle: Path, *, fake_only: bool, expected_identity: Mapping[str, Any] | None = None) -> tuple[tuple[str, int, int, str], ...]:
+    identity = expected_identity or {"pluginVersion": PLUGIN_VERSION,
+        "fullProfileDigest": FULL_PROFILE_DIGEST, "profileRuntimeDigest": PROFILE_RUNTIME_DIGEST,
+        "bundleManifestDigest": BUNDLE_MANIFEST_DIGEST, "runtimeBytes": 230826}
+    _exact_keys(identity, {"pluginVersion", "fullProfileDigest", "profileRuntimeDigest", "bundleManifestDigest", "runtimeBytes"}, "expected package identity")
     snapshot = snapshot_tree(bundle)
     paths = {record[0] for record in snapshot}
     manifest_path = bundle / ".codex-plugin" / "plugin.json"
@@ -6956,7 +6964,7 @@ def _verify_bundle_surface(bundle: Path, *, fake_only: bool) -> tuple[tuple[str,
         raise ObservationError("derived plugin manifest is invalid") from error
     _exact_keys(manifest, {"name", "version", "description", "skills"}, "derived plugin manifest")
     _expect(manifest, {
-        "name": "axiom", "version": PLUGIN_VERSION, "description": "Think before AI thinks.",
+        "name": "axiom", "version": identity["pluginVersion"], "description": "Think before AI thinks.",
         "skills": "./skills/",
     }, "derived plugin manifest")
     forbidden = (
@@ -6975,15 +6983,15 @@ def _verify_bundle_surface(bundle: Path, *, fake_only: bool) -> tuple[tuple[str,
         from .no_hook_bundle import BundleContractError, validate_bundle_manifest
         try:
             validated = validate_bundle_manifest(
-                bundle_manifest, full_profile_runtime_digest=FULL_PROFILE_DIGEST
+                bundle_manifest, full_profile_runtime_digest=identity["fullProfileDigest"]
             )
         except BundleContractError as error:
             raise ObservationError(f"bundle manifest validation failed: {error}") from error
-        _expect(validated["profileRuntimeDigest"], PROFILE_RUNTIME_DIGEST, "source bundle runtime identity")
-        _expect(validated["bundleManifestDigest"], BUNDLE_MANIFEST_DIGEST, "source bundle manifest identity")
+        _expect(validated["profileRuntimeDigest"], identity["profileRuntimeDigest"], "source bundle runtime identity")
+        _expect(validated["bundleManifestDigest"], identity["bundleManifestDigest"], "source bundle manifest identity")
         runtime = bundle_manifest["runtimeFiles"]
         _expect(len(runtime), 50, "source bundle runtime file count")
-        _expect(sum(item["size"] for item in runtime), 230826, "source bundle runtime bytes")
+        _expect(sum(item["size"] for item in runtime), identity["runtimeBytes"], "source bundle runtime bytes")
         expected_paths = {item["path"] for item in runtime} | {".codex-plugin/plugin.json", "BUNDLE-MANIFEST.json"}
         _expect(paths, expected_paths, "source bundle exact path set")
     return snapshot

@@ -70,7 +70,8 @@ class SourceFixture:
             shutil.copy2(source, destination)
         source_identity_path = self.root / "evidence/runtime-identity.json"
         source_identity = json.loads(source_identity_path.read_text(encoding="utf-8"))
-        source_identity["repositoryPolicyRevision"] = 5
+        schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+        source_identity["repositoryPolicyRevision"] = schema["x-axiom-contract"]["sourceRepositoryPolicyRevision"]
         source_identity_path.write_text(
             json.dumps(source_identity, indent=2) + "\n", encoding="utf-8"
         )
@@ -269,9 +270,11 @@ class ScriptedProcess:
 class NoHookBundleTests(unittest.TestCase):
     def test_frozen_local_objects_build_identical_archive_without_runtime_backend(self):
         """Read existing history only; no fixture commit or isolation backend."""
-        from axiom_validation import no_hook_observation as observer
         from axiom_validation import no_hook_linux_isolation as isolation
 
+        evidence = json.loads((REPOSITORY_ROOT / bundle_module.EVIDENCE_RELATIVE).read_text(encoding="utf-8"))
+        source = evidence["source"]
+        expected_manifest = evidence["bundleManifest"]
         with tempfile.TemporaryDirectory() as directory, (
             mock.patch.object(isolation, "detect_process_domain_capabilities", side_effect=AssertionError("runtime detector called"))
         ), mock.patch.object(isolation.LinuxProcessDomainSupervisor, "open", side_effect=AssertionError("runtime backend called")):
@@ -282,17 +285,17 @@ class NoHookBundleTests(unittest.TestCase):
                 destination.mkdir()
                 result = build_bundle(
                     REPOSITORY_ROOT,
-                    observer.BUNDLE_RUNTIME_SOURCE_COMMIT,
-                    observer.BUNDLE_RUNTIME_SOURCE_TREE,
+                    source["commit"],
+                    source["tree"],
                     destination,
                     git_executable=GIT_EXECUTABLE,
                     schema_path=REPOSITORY_ROOT / "evals/no-hook/bundle-manifest-schema-v1.json",
                     entrypoint_path=REPOSITORY_ROOT / "scripts/build-no-hook-bundle.py",
                     module_path=REPOSITORY_ROOT / "axiom_validation/no_hook_bundle.py",
                 )
-                self.assertEqual(observer.BUNDLE_MANIFEST_DIGEST, result.bundle_manifest_digest)
-                self.assertEqual(observer.ARCHIVE_SHA256, result.archive_sha256)
-                self.assertEqual(observer.PROFILE_RUNTIME_DIGEST, result.profile_runtime_digest)
+                self.assertEqual(expected_manifest["bundleManifestDigest"], result.bundle_manifest_digest)
+                self.assertEqual(evidence["builds"]["archiveSha256"], result.archive_sha256)
+                self.assertEqual(expected_manifest["profileRuntimeDigest"], result.profile_runtime_digest)
                 outputs.append(_directory_files(destination))
             self.assertEqual(outputs[0], outputs[1])
 
@@ -301,14 +304,95 @@ class NoHookBundleTests(unittest.TestCase):
         self.assertEqual((50, 2), check_no_hook_bundle(failures))
         self.assertEqual([], failures)
 
-    def test_static_evidence_keeps_revision_six_owner_after_revision_seven(self):
+    def test_schema_revision_migration_preserves_legacy_pair_and_rejects_mixed_pairs(self):
+        current = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+        contract = bundle_module._schema_contract(current)
+        self.assertEqual((8, 9), (
+            contract["sourceRepositoryPolicyRevision"],
+            contract["candidateRepositoryPolicyRevision"],
+        ))
+        legacy = copy.deepcopy(current)
+        legacy["properties"]["repositoryPolicyRevision"] = {"const": 6}
+        legacy["$defs"]["source"]["properties"]["repositoryPolicyRevision"] = {"const": 5}
+        legacy_contract = legacy["x-axiom-contract"]
+        legacy_contract["sourceRepositoryPolicyRevision"] = 5
+        legacy_contract["candidateRepositoryPolicyRevision"] = 6
+        legacy_contract["runtimeInventory"]["runtimeBytes"] = 230826
+        del legacy_contract["fullProfileRuntimeDigest"]
+        self.assertEqual(legacy_contract, bundle_module._schema_contract(legacy))
+
+        for source_revision, owner_revision in ((5, 9), (8, 6), (7, 8), (True, 9)):
+            with self.subTest(source=source_revision, owner=owner_revision):
+                bad = copy.deepcopy(current)
+                bad["x-axiom-contract"]["sourceRepositoryPolicyRevision"] = source_revision
+                bad["x-axiom-contract"]["candidateRepositoryPolicyRevision"] = owner_revision
+                with self.assertRaisesRegex(BundleContractError, "revision pair is unsupported"):
+                    bundle_module._schema_contract(bad)
+
+        for label, mutate, diagnostic in (
+            ("owner-const", lambda value: value["properties"]["repositoryPolicyRevision"].update(const=6), "top-level property"),
+            ("source-const", lambda value: value["$defs"]["source"]["properties"]["repositoryPolicyRevision"].update(const=5), "source definition"),
+            ("missing-runtime-binding", lambda value: value["x-axiom-contract"].pop("fullProfileRuntimeDigest"), "x-axiom-contract"),
+            ("invalid-runtime-binding", lambda value: value["x-axiom-contract"].update(fullProfileRuntimeDigest="unknown"), "runtime digest is invalid"),
+        ):
+            with self.subTest(label=label):
+                bad = copy.deepcopy(current)
+                mutate(bad)
+                with self.assertRaisesRegex(BundleContractError, diagnostic):
+                    bundle_module._schema_contract(bad)
+
+        legacy_contract["runtimeInventory"]["runtimeBytes"] += 1
+        with self.assertRaisesRegex(BundleContractError, "runtime inventory contract drifted"):
+            bundle_module._schema_contract(legacy)
+        for byte_count in (False, 0, bundle_module.MAX_RUNTIME_BYTES + 1):
+            with self.subTest(runtime_bytes=byte_count):
+                bad = copy.deepcopy(current)
+                bad["x-axiom-contract"]["runtimeInventory"]["runtimeBytes"] = byte_count
+                with self.assertRaisesRegex(BundleContractError, "runtime inventory contract drifted"):
+                    bundle_module._schema_contract(bad)
+
+    def test_new_source_runtime_inventory_and_full_profile_binding_are_checked(self):
+        for field in ("digest", "repositoryPolicyRevision"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                fixture = SourceFixture(Path(directory))
+                identity_path = fixture.root / "evidence/runtime-identity.json"
+                identity = json.loads(identity_path.read_text(encoding="utf-8"))
+                if field == "digest":
+                    identity["runtimeContract"]["digest"] = "sha256:" + "0" * 64
+                    expected = "full-profile runtime digest differs from bundle schema"
+                else:
+                    identity["repositoryPolicyRevision"] = 5
+                    expected = "source repositoryPolicyRevision does not match bundle schema"
+                identity_path.write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
+                fixture.commit("mismatched source identity")
+                with self.assertRaisesRegex(BundleContractError, expected):
+                    _build(fixture, fixture.destination("output"))
+
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = SourceFixture(Path(directory))
+            schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+            schema["x-axiom-contract"]["runtimeInventory"]["runtimeBytes"] += 1
+            schema_path = Path(directory) / "wrong-inventory-schema.json"
+            schema_path.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(BundleContractError, "byte count drifted from the frozen inventory"):
+                inspect_source(
+                    fixture.root, fixture.commit_oid, fixture.tree_oid,
+                    git_executable=GIT_EXECUTABLE,
+                    schema_path=schema_path,
+                    entrypoint_path=REPOSITORY_ROOT / bundle_module.ENTRYPOINT_RELATIVE,
+                    module_path=REPOSITORY_ROOT / bundle_module.MODULE_RELATIVE,
+                )
+
+    def test_static_evidence_keeps_declared_owner_after_later_revision(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self._copy_repository(Path(directory))
-            revisions = json.loads(
-                (root / "evidence/repository-policy-revisions-v1.json").read_text(
+            revision_path = root / "evidence/repository-policy-revisions-v1.json"
+            revision_document = json.loads(
+                revision_path.read_text(
                     encoding="utf-8"
                 )
-            )["revisions"]
+            )
+            revisions = revision_document["revisions"]
             evidence = json.loads(
                 (
                     root
@@ -316,11 +400,19 @@ class NoHookBundleTests(unittest.TestCase):
                 ).read_text(encoding="utf-8")
             )
             manifest = evidence["bundleManifest"]
+            schema = json.loads((root / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+            contract = schema["x-axiom-contract"]
+            later_revision = copy.deepcopy(revisions[-1])
+            later_revision["revision"] = max(item["revision"] for item in revisions) + 1
+            later_revision["baselineCommit"] = "0" * 40
+            later_revision["runtimeContractDigest"] = "sha256:" + "0" * 64
+            revisions.append(later_revision)
+            revision_path.write_text(json.dumps(revision_document, indent=2) + "\n", encoding="utf-8")
             before = _directory_files(root)
 
-            self.assertEqual(7, revisions[-1]["revision"])
-            self.assertEqual(6, evidence["candidateRepositoryPolicyRevision"])
-            self.assertEqual(6, manifest["repositoryPolicyRevision"])
+            self.assertGreater(revisions[-1]["revision"], contract["candidateRepositoryPolicyRevision"])
+            self.assertEqual(contract["candidateRepositoryPolicyRevision"], evidence["candidateRepositoryPolicyRevision"])
+            self.assertEqual(contract["candidateRepositoryPolicyRevision"], manifest["repositoryPolicyRevision"])
             failures: list[str] = []
             self.assertEqual((50, 2), check_no_hook_bundle(failures, root))
             self.assertEqual([], failures)
@@ -329,33 +421,34 @@ class NoHookBundleTests(unittest.TestCase):
             self.assertFalse((root / BUNDLE_ENVELOPE_NAME).exists())
             self.assertEqual(8, len({record["path"].split("/", 2)[1] for record in manifest["runtimeFiles"]}))
             self.assertEqual(50, len(manifest["runtimeFiles"]))
-            self.assertEqual(230826, sum(record["size"] for record in manifest["runtimeFiles"]))
+            self.assertEqual(contract["runtimeInventory"]["runtimeBytes"], sum(record["size"] for record in manifest["runtimeFiles"]))
+            full_manifest = json.loads((root / ".codex-plugin/plugin.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 {
                     "name": "axiom",
-                    "version": "0.10.0",
+                    "version": full_manifest["version"],
                     "description": "Think before AI thinks.",
                     "skills": "./skills/",
                 },
                 manifest["derivedPluginManifest"]["fields"],
             )
-            self.assertEqual(
-                "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
-                manifest["profileRuntimeDigest"],
-            )
+            self.assertEqual(evidence["builds"]["profileRuntimeDigest"], manifest["profileRuntimeDigest"])
 
     def test_static_evidence_rejects_invalid_bundle_owner_revision_binding(self):
+        schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
+        owner = schema["x-axiom-contract"]["candidateRepositoryPolicyRevision"]
+
         def mutate_missing(
             evidence: dict[str, object], revisions: list[dict[str, object]]
         ) -> None:
             del evidence
-            revisions[:] = [revision for revision in revisions if revision["revision"] != 6]
+            revisions[:] = [revision for revision in revisions if revision["revision"] != owner]
 
         def mutate_duplicate(
             evidence: dict[str, object], revisions: list[dict[str, object]]
         ) -> None:
             del evidence
-            revision = next(item for item in revisions if item["revision"] == 6)
+            revision = next(item for item in revisions if item["revision"] == owner)
             revisions.insert(-1, copy.deepcopy(revision))
 
         def mutate_revision_field(
@@ -365,7 +458,7 @@ class NoHookBundleTests(unittest.TestCase):
                 evidence: dict[str, object], revisions: list[dict[str, object]]
             ) -> None:
                 del evidence
-                revision = next(item for item in revisions if item["revision"] == 6)
+                revision = next(item for item in revisions if item["revision"] == owner)
                 revision[field] = value
 
             return mutate
@@ -374,33 +467,33 @@ class NoHookBundleTests(unittest.TestCase):
             evidence: dict[str, object], revisions: list[dict[str, object]]
         ) -> None:
             del revisions
-            evidence["candidateRepositoryPolicyRevision"] = 7
+            evidence["candidateRepositoryPolicyRevision"] = owner + 1
 
         cases = (
             (
-                "missing-revision-six-latest-seven-not-owner",
+                "missing-owner-later-revision-not-owner",
                 mutate_missing,
-                "bundle owner revision 6 is missing",
+                f"bundle owner revision {owner} is missing",
             ),
             (
-                "duplicate-revision-six",
+                "duplicate-owner-revision",
                 mutate_duplicate,
-                "bundle owner revision 6 is duplicated",
+                f"bundle owner revision {owner} is duplicated",
             ),
             (
                 "baseline",
                 mutate_revision_field("baselineCommit", "0" * 40),
-                "revision 6 baselineCommit does not bind",
+                f"revision {owner} baselineCommit does not bind",
             ),
             (
                 "source-issue",
                 mutate_revision_field("sourceIssue", 999),
-                "revision 6 sourceIssue must be 117",
+                f"revision {owner} sourceIssue must be 117",
             ),
             (
                 "runtime-digest",
                 mutate_revision_field("runtimeContractDigest", "sha256:" + "0" * 64),
-                "revision 6 runtimeContractDigest does not bind",
+                f"revision {owner} runtimeContractDigest does not bind",
             ),
             (
                 "candidate-manifest-mismatch",
@@ -744,7 +837,7 @@ class NoHookBundleTests(unittest.TestCase):
             expected_manifest = (
                 b'{\n'
                 b'  "name": "axiom",\n'
-                b'  "version": "0.10.0",\n'
+                b'  "version": "0.10.1",\n'
                 b'  "description": "Think before AI thinks.",\n'
                 b'  "skills": "./skills/"\n'
                 b'}\n'
@@ -2399,14 +2492,14 @@ class NoHookBundleTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "current release v0.10.0 STATIC-ONLY.\n",
+                "current release v0.10.1 STATIC-ONLY.\n",
                 result.stdout,
             )
             self_test = self._run_compatibility_scanner(root, "--self-test")
             self.assertEqual(0, self_test.returncode, self_test.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "12 negative fixtures, current release v0.10.0 STATIC-ONLY.\n",
+                "12 negative fixtures, current release v0.10.1 STATIC-ONLY.\n",
                 self_test.stdout,
             )
 

@@ -1479,3 +1479,13 @@ Never upload private conversations, full transcripts, credentials, private
 paths, customer data, session identifiers, or external-service content. Keep
 public evidence to the fixed observer-derived facts allowed by the observation
 contract.
+
+
+The native assessment candidate 0.10.1 uses uniform route-order and discovery
+field definitions together with updated canonical discovery descriptions. See
+[the candidate boundary](../docs/field-validation.md#canonical-assessment-candidate-0101).
+Its new 16-case limit follows 20 historical attempts; old results are immutable.
+The model response v2 schema documents the new measurement definitions; native
+transport adaptation and local strict validation retain the existing values,
+route uniqueness and permissions. The retired v1 protocol retains its historical
+revision 6 bundle document and remains unavailable for actual execution.

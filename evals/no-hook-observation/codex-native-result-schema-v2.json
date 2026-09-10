@@ -801,8 +801,89 @@
                 ]
               }
             }
+          },
+          "operatorReadCapture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "bytes",
+              "truncated"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "not-requested",
+                  "saved",
+                  "write-failed"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
+          },
+          "publicReads": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "eventOrdinal",
+                "source",
+                "path",
+                "bytes",
+                "range"
+              ],
+              "properties": {
+                "eventOrdinal": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "enum": [
+                    "fixture",
+                    "package",
+                    "discovery"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "range": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100000
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "New cases require publicReads and operatorReadCapture semantically; exact-hash historical prefixes retain their original representation."
       }
     },
     "materializationCommitmentRoot": {
@@ -829,7 +910,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 10
+      "const": 11
     },
     "attemptCount": {
       "type": "integer",
@@ -839,12 +920,12 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 23
+      "maximum": 36
     },
     "priorResultSha256s": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 7,
+      "maxItems": 8,
       "items": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"

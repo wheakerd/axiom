@@ -44,6 +44,8 @@ BUILDER_VERSION = "1"
 # Directory descriptors bind accesses; they do not prove atomic mkdir ownership.
 BUILDER_LIFECYCLE_VERSION = "2"
 SOURCE_REPOSITORY_SLUG = "wheakerd/axiom"
+# Preserve the source-revision-5 identity for the legacy (5, 6) contract.
+# New frozen sources carry their own explicit full-profile binding in schema.
 FULL_PROFILE_RUNTIME_DIGEST = (
     "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
 )
@@ -1505,6 +1507,31 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         raise BundleContractError("bundle schema top-level identity or closure drifted")
     if schema["required"] != list(MANIFEST_FIELD_ORDER):
         raise BundleContractError("bundle schema top-level required fields drifted")
+    contract_value = schema.get("x-axiom-contract")
+    if type(contract_value) is not dict:
+        raise BundleContractError("bundle schema x-axiom-contract must be an object")
+    source_revision = contract_value.get("sourceRepositoryPolicyRevision")
+    candidate_revision = contract_value.get("candidateRepositoryPolicyRevision")
+    if (
+        type(source_revision) is not int
+        or type(candidate_revision) is not int
+        or (source_revision, candidate_revision) not in {(5, 6), (8, 9)}
+    ):
+        raise BundleContractError("bundle schema source/owner revision pair is unsupported")
+    contract_fields = {
+        "candidateRepositoryPolicyRevision",
+        "sourceRepositoryPolicyRevision",
+        "runtimeInventory",
+        "contractBindings",
+    }
+    if source_revision == 8:
+        contract_fields.add("fullProfileRuntimeDigest")
+    contract = _exact_object(contract_value, contract_fields, "bundle schema x-axiom-contract")
+    if source_revision == 8 and (
+        type(contract["fullProfileRuntimeDigest"]) is not str
+        or DIGEST_PATTERN.fullmatch(contract["fullProfileRuntimeDigest"]) is None
+    ):
+        raise BundleContractError("bundle schema full-profile runtime digest is invalid")
     properties = _exact_object(
         schema["properties"],
         MANIFEST_FIELD_ORDER,
@@ -1519,7 +1546,7 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         "kind": {"const": "axiom-hook-independent-derived-bundle"},
         "profileId": {"const": PROFILE_ID},
         "pluginVersion": semver_schema,
-        "repositoryPolicyRevision": {"const": 6},
+        "repositoryPolicyRevision": {"const": candidate_revision},
         "source": {"$ref": "#/$defs/source"},
         "contractBindings": {"$ref": "#/$defs/contractBindings"},
         "runtimeCanonicalization": {"$ref": "#/$defs/runtimeCanonicalization"},
@@ -1597,7 +1624,7 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         "repository": {"const": SOURCE_REPOSITORY_SLUG},
         "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-        "repositoryPolicyRevision": {"const": 5},
+        "repositoryPolicyRevision": {"const": source_revision},
     }:
         raise BundleContractError("bundle schema source definition drifted")
     host_set = closed_definition("hostCaseSet", ("id", "host", "sha256"))
@@ -1716,32 +1743,23 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
     if transport_definition["properties"] != transport_properties:
         raise BundleContractError("bundle schema transport definition drifted")
 
-    contract = _exact_object(
-        schema.get("x-axiom-contract"),
-        {
-            "candidateRepositoryPolicyRevision",
-            "sourceRepositoryPolicyRevision",
-            "runtimeInventory",
-            "contractBindings",
-        },
-        "bundle schema x-axiom-contract",
-    )
     inventory = _exact_object(
         contract["runtimeInventory"],
         {"directSkillRoots", "runtimeFiles", "runtimeBytes", "allowedExtensions"},
         "bundle schema runtimeInventory",
     )
-    if inventory != {
-        "directSkillRoots": 8,
-        "runtimeFiles": 50,
-        "runtimeBytes": 230826,
-        "allowedExtensions": [".md", ".yaml"],
-    }:
+    expected_runtime_bytes = 230826 if source_revision == 5 else inventory["runtimeBytes"]
+    if (
+        type(expected_runtime_bytes) is not int
+        or not 1 <= expected_runtime_bytes <= MAX_RUNTIME_BYTES
+        or inventory != {
+            "directSkillRoots": 8,
+            "runtimeFiles": 50,
+            "runtimeBytes": expected_runtime_bytes,
+            "allowedExtensions": [".md", ".yaml"],
+        }
+    ):
         raise BundleContractError("bundle schema runtime inventory contract drifted")
-    if contract["candidateRepositoryPolicyRevision"] != 6:
-        raise BundleContractError("bundle schema candidate repository policy revision drifted")
-    if contract["sourceRepositoryPolicyRevision"] != 5:
-        raise BundleContractError("bundle schema source repository policy revision drifted")
     bindings = _exact_object(
         contract["contractBindings"],
         {*PROFILE_ARTIFACT_KEYS, "hostCaseSets"},
@@ -2008,6 +2026,11 @@ def inspect_source(
     full_profile_digest = runtime_contract.get("digest")
     if type(full_profile_digest) is not str or DIGEST_PATTERN.fullmatch(full_profile_digest) is None:
         raise BundleContractError("source full-profile runtime digest is invalid")
+    if (
+        "fullProfileRuntimeDigest" in contract
+        and full_profile_digest != contract["fullProfileRuntimeDigest"]
+    ):
+        raise BundleContractError("source full-profile runtime digest differs from bundle schema")
     if runtime_contract.get("recordCount") != 61:
         raise BundleContractError("source installed input count must remain 61")
     minimal_manifest = {
@@ -3750,6 +3773,11 @@ def _evidence_inputs(
     runtime_contract = identity.get("runtimeContract")
     if type(runtime_contract) is not dict:
         raise BundleContractError("current runtime identity is missing runtimeContract")
+    if (
+        "fullProfileRuntimeDigest" in contract
+        and runtime_contract.get("digest") != contract["fullProfileRuntimeDigest"]
+    ):
+        raise BundleContractError("current full-profile runtime digest differs from bundle schema")
     return BundleInputs(
         source=None,  # type: ignore[arg-type]
         source_commit=source["commit"],
@@ -3815,8 +3843,8 @@ def check_no_hook_bundle(
             raise BundleContractError(
                 "static evidence candidate repositoryPolicyRevision differs from its bundle manifest"
             )
-        if candidate_revision != 6:
-            raise BundleContractError("static evidence candidate repositoryPolicyRevision must be 6")
+        if candidate_revision != contract["candidateRepositoryPolicyRevision"]:
+            raise BundleContractError("static evidence candidate repositoryPolicyRevision differs from schema owner")
 
         revision_document = _load_json_bytes(
             _read_regular_file(
@@ -3837,22 +3865,24 @@ def check_no_hook_bundle(
         ]
         if not matching_revisions:
             raise BundleContractError(
-                "bundle owner revision 6 is missing from repository policy history"
+                f"bundle owner revision {candidate_revision} is missing from repository policy history"
             )
         if len(matching_revisions) != 1:
             raise BundleContractError(
-                "bundle owner revision 6 is duplicated in repository policy history"
+                f"bundle owner revision {candidate_revision} is duplicated in repository policy history"
             )
         revision = matching_revisions[0]
         if revision.get("baselineCommit") != manifest["source"]["commit"]:
             raise BundleContractError(
-                "bundle owner revision 6 baselineCommit does not bind the frozen bundle source"
+                f"bundle owner revision {candidate_revision} baselineCommit does not bind the frozen bundle source"
             )
         if revision.get("sourceIssue") != 117:
-            raise BundleContractError("bundle owner revision 6 sourceIssue must be 117")
-        if revision.get("runtimeContractDigest") != FULL_PROFILE_RUNTIME_DIGEST:
+            raise BundleContractError(f"bundle owner revision {candidate_revision} sourceIssue must be 117")
+        if revision.get("runtimeContractDigest") != contract.get(
+            "fullProfileRuntimeDigest", FULL_PROFILE_RUNTIME_DIGEST
+        ):
             raise BundleContractError(
-                "bundle owner revision 6 runtimeContractDigest does not bind the frozen full profile"
+                f"bundle owner revision {candidate_revision} runtimeContractDigest does not bind the frozen full profile"
             )
 
         frozen_bindings = contract["contractBindings"]
@@ -3954,7 +3984,7 @@ def check_no_hook_bundle(
             raise BundleContractError("static evidence bundle manifest drifted")
         if evidence.get("source") != expected_envelope["source"] | {
             "repository": SOURCE_REPOSITORY_SLUG,
-            "repositoryPolicyRevision": 5,
+            "repositoryPolicyRevision": contract["sourceRepositoryPolicyRevision"],
         }:
             raise BundleContractError("static evidence source provenance drifted")
         return len(inputs.runtime_records), builds["independentBuildCount"]

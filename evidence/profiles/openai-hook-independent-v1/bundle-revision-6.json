@@ -4,22 +4,22 @@
   "profileId": "openai-hook-independent-v1",
   "source": {
     "repository": "wheakerd/axiom",
-    "commit": "8a12877f6c72d6b6f7a804de79e1a95ac3a72bc9",
-    "tree": "5b6365d27fe906a2d352d2b746eeecb76c4afdda",
-    "repositoryPolicyRevision": 8
+    "commit": "de365be1797ab897a8889bc6c42d82268741d12e",
+    "tree": "1d12e98347c27cf61cbdf4de1765b3a914dcc277",
+    "repositoryPolicyRevision": 5
   },
-  "candidateRepositoryPolicyRevision": 9,
+  "candidateRepositoryPolicyRevision": 6,
   "bundleManifest": {
     "schemaVersion": "1",
     "kind": "axiom-hook-independent-derived-bundle",
     "profileId": "openai-hook-independent-v1",
-    "pluginVersion": "0.10.1",
-    "repositoryPolicyRevision": 9,
+    "pluginVersion": "0.10.0",
+    "repositoryPolicyRevision": 6,
     "source": {
       "repository": "wheakerd/axiom",
-      "commit": "8a12877f6c72d6b6f7a804de79e1a95ac3a72bc9",
-      "tree": "5b6365d27fe906a2d352d2b746eeecb76c4afdda",
-      "repositoryPolicyRevision": 8
+      "commit": "de365be1797ab897a8889bc6c42d82268741d12e",
+      "tree": "1d12e98347c27cf61cbdf4de1765b3a914dcc277",
+      "repositoryPolicyRevision": 5
     },
     "contractBindings": {
       "profileContract": {
@@ -52,7 +52,7 @@
       ],
       "bundleSchema": {
         "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-        "sha256": "0d3ee658e1c2e5b02047c39835f977ef9bb0141cae5421a6a59c2d3e765cdd50"
+        "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
       }
     },
     "runtimeCanonicalization": {
@@ -70,10 +70,10 @@
     "derivedPluginManifest": {
       "path": ".codex-plugin/plugin.json",
       "size": 114,
-      "sha256": "b4532cc590fb7624689ed08ee2369c83b1f54e0a0ad6291344de34c78c774a92",
+      "sha256": "82825ee740ad8be2c8de13b109e81f8e05c4b29ea6cc43c25298d8d3c99fbab7",
       "fields": {
         "name": "axiom",
-        "version": "0.10.1",
+        "version": "0.10.0",
         "description": "Think before AI thinks.",
         "skills": "./skills/"
       }
@@ -83,8 +83,8 @@
         "path": "skills/agent-plugin-architect/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 2982,
-        "sha256": "1f8b8b355cfa31b58655ac324141137a4bb2870b02a12b8ba2c4ec0517c746cb"
+        "size": 2794,
+        "sha256": "92bc94408ffa557107e19dea3d13b72c7427f53d07928d7106a595f33879499f"
       },
       {
         "path": "skills/agent-plugin-architect/agents/openai.yaml",
@@ -251,8 +251,8 @@
         "path": "skills/confirm-external-action/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 8123,
-        "sha256": "a16e50e57436cef6354f4ce2d05781b1a5bc4600fc2a5b1c629865f1f3761502"
+        "size": 7967,
+        "sha256": "278a6f07e8d513cfd8d9b66ffe85cc35bb651cf7c6c1c6adf63d2a72bb03c1ee"
       },
       {
         "path": "skills/confirm-external-action/agents/openai.yaml",
@@ -286,8 +286,8 @@
         "path": "skills/reversible-system-change/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 7083,
-        "sha256": "08497c236641de9d77cd574300f0f3c6ea20e47ba7359637bd182688b3233f2c"
+        "size": 6908,
+        "sha256": "12308ebc64be7b1c82f62feb34836cf74470a3cacf98aefca68db829ad27221e"
       },
       {
         "path": "skills/reversible-system-change/agents/openai.yaml",
@@ -314,8 +314,8 @@
         "path": "skills/review-axiom-task/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 8149,
-        "sha256": "e6b1336ae7dfc2b490be72a4a2846f67b8c1bfa86348da5b8bcf063987cb7942"
+        "size": 8079,
+        "sha256": "04bb26729693bf25294f60163fe258efea93cd5164dfcf155a9081031f3d2068"
       },
       {
         "path": "skills/review-axiom-task/agents/openai.yaml",
@@ -328,8 +328,8 @@
         "path": "skills/traceable-git-submit/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 8186,
-        "sha256": "6fea9854bbb5efea10314ef4c74a410f8cccd460f00a2a1b80c9a8a3f1b0548c"
+        "size": 8175,
+        "sha256": "d9147c167464ceb4c469d9b6b55e7e45d34bce6a79c63bb3e31f75283e8347e3"
       },
       {
         "path": "skills/traceable-git-submit/agents/openai.yaml",
@@ -405,8 +405,8 @@
         "path": "skills/using-axiom/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 7110,
-        "sha256": "34ff05c32ed17a3ced506f3cced49a3bdca7aa30e0cb79326a4d0d0953deeb9c"
+        "size": 6960,
+        "sha256": "55bbff945d557161c94c625fb4136eafa3ff68b2e2fe0fd06b7bb3c8f50f464e"
       },
       {
         "path": "skills/using-axiom/agents/openai.yaml",
@@ -430,7 +430,7 @@
         "sha256": "e99a497b2415d4069abc69ec714fca8d89d17529f8bc464b014c3b19dd305a8d"
       }
     ],
-    "profileRuntimeDigest": "sha256:7c5451750c262343bb8bc142dc6af03c9b7ab86b35df1bf84b60162e353944ab",
+    "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
     "includedSurfaces": [
       {
         "surface": ".codex-plugin/plugin.json",
@@ -515,20 +515,20 @@
         {
           "path": "axiom_validation/no_hook_bundle.py",
           "role": "implementation",
-          "size": 173843,
-          "sha256": "203937bbbff1110b2256fb8e01bcd6dae07912b18b67f15c5e8d3090e61fa13a"
+          "size": 172025,
+          "sha256": "cf4e7ef0d358015c81752878009d2c928d63e24de6f5fff34c988051c06f13d1"
         },
         {
           "path": "evals/no-hook/bundle-manifest-schema-v1.json",
           "role": "contract-schema",
-          "size": 12533,
-          "sha256": "0d3ee658e1c2e5b02047c39835f977ef9bb0141cae5421a6a59c2d3e765cdd50"
+          "size": 12426,
+          "sha256": "24c68a5c73adcb31f527d838a90a0458c8a314c6524c28085896e2e70d0fcf7f"
         }
       ]
     },
     "transport": {
       "directoryRoot": "plugin/",
-      "archiveFilename": "axiom-openai-hook-independent-v1-0.10.1.zip",
+      "archiveFilename": "axiom-openai-hook-independent-v1-0.10.0.zip",
       "archiveContentRoot": ".",
       "format": "zip",
       "compression": "stored",
@@ -545,16 +545,16 @@
       "dataDescriptor": false,
       "archiveDigestLocation": "BUNDLE-ENVELOPE.json"
     },
-    "bundleManifestDigest": "sha256:dd73e63ff790a3ca759f2bb12e2086f63c40af637846f907214901fda97970e8"
+    "bundleManifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5"
   },
   "builds": {
     "independentBuildCount": 2,
     "repositoryOutsideDestinations": true,
     "directoryFileSetsEqual": true,
     "directoryBytesEqual": true,
-    "profileRuntimeDigest": "sha256:7c5451750c262343bb8bc142dc6af03c9b7ab86b35df1bf84b60162e353944ab",
-    "bundleManifestDigest": "sha256:dd73e63ff790a3ca759f2bb12e2086f63c40af637846f907214901fda97970e8",
-    "archiveSha256": "9e53e1748f9db3f46defb1eb5bef026fd8bcdff49644e12a2275260461e97332",
+    "profileRuntimeDigest": "sha256:296340751d4ee418432d41347bb766a380e6b6f0c74e8fcc1a7b04ce770b77e7",
+    "bundleManifestDigest": "sha256:6c5ac1d3d43487049953dfae23933beab7e466897b776347f9390f7b54707ae5",
+    "archiveSha256": "54643f5d175c28d9b1bb1117099eb8c304846cac5802326e80ffa66b68e02b98",
     "archiveBytesEqual": true,
     "envelopeSemanticFieldsEqual": true
   },

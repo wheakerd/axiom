@@ -328,7 +328,7 @@ class NativeObservationTests(unittest.TestCase):
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
             records.append(native._blank_case(case, material, seed, self.protocol, definition))
-        return {"schemaVersion": "2", "diagnosticRevision": 10, "priorResultSha256s": [],
+        return {"schemaVersion": "2", "diagnosticRevision": 11, "priorResultSha256s": [],
                 "executionModel": {"model": "gpt-5.5", "reasoningEffort": "medium", "requiredToolMode": "direct"},
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
                 "discoveryMechanism": native.DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
@@ -383,7 +383,7 @@ class NativeObservationTests(unittest.TestCase):
         """Only the external CLI is simulated; all production validators run."""
         bundle = self.parent / "bundle"
         bundle.mkdir()
-        evidence = json.loads((ROOT / legacy.STATIC_BUNDLE_EVIDENCE_RELATIVE).read_bytes())
+        evidence = json.loads((ROOT / native.STATIC_BUNDLE_EVIDENCE_RELATIVE).read_bytes())
         manifest = evidence["bundleManifest"]
         files = {record["path"]: (ROOT / record["path"]).read_bytes() for record in manifest["runtimeFiles"]}
         files[".codex-plugin/plugin.json"] = (json.dumps(manifest["derivedPluginManifest"]["fields"], ensure_ascii=True, indent=2) + "\n").encode("ascii")
@@ -428,7 +428,7 @@ class NativeObservationTests(unittest.TestCase):
                 with (paths["home"] / "config.toml").open("a") as file:
                     file.write('\n[plugins."' + legacy.PLUGIN_ID + '"]\nenabled=true\n')
                 receipt = {"pluginId": legacy.PLUGIN_ID, "name": legacy.PLUGIN_NAME,
-                           "marketplaceName": legacy.MARKETPLACE_NAME, "version": legacy.PLUGIN_VERSION,
+                           "marketplaceName": legacy.MARKETPLACE_NAME, "version": native.PLUGIN_VERSION,
                            "installedPath": str(paths["package"]), "authPolicy": "ON_INSTALL"}
             elif "login" in argv:
                 self.assertEqual(argv[-2:], ["login", "status"])
@@ -1498,7 +1498,7 @@ class NativeObservationTests(unittest.TestCase):
         altered["caseResults"][0]["executionDiagnostics"]["eventTypes"] = ["thread.started", "turn.started", "turn.completed"]
         self.assertTrue(native.validate_native_result(altered, ROOT))
 
-    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False, schema_followup=False, stderr_followup=False, read_followup=False, final_output_mode="match", final_output_transform=None):
+    def _diagnostic_stream_runner(self, messages, *, before_turn=True, malformed=None, exit_code=0, stderr=b"", tail=None, private=False, operator=False, schema_followup=False, stderr_followup=False, read_followup=False, assessment_batch=False, final_output_mode="match", final_output_transform=None):
         run, runner, calls = (self._seventh_prior_fixture() if read_followup else
                               self._sixth_prior_fixture() if stderr_followup else
                               self._fourth_prior_fixture() if schema_followup else
@@ -1556,7 +1556,8 @@ class NativeObservationTests(unittest.TestCase):
         return native.run_native_observation(ROOT, run, authorize_model_calls=True,
                                              process_runner=diagnostic_runner, private_diagnostics=private,
                                              operator_diagnostics=operator, schema_followup=schema_followup,
-                                             stderr_followup=stderr_followup, read_followup=read_followup)
+                                             stderr_followup=stderr_followup, read_followup=read_followup,
+                                             assessment_batch=assessment_batch)
 
     def _two_historical_preparations(self):
         run, runner, calls = self._historical_preparation()
@@ -1969,7 +1970,7 @@ class NativeObservationTests(unittest.TestCase):
             data = (ROOT / current["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(data).hexdigest(), current["sha256"])
             result = json.loads(data)
-            self.assertEqual(result["diagnosticRevision"], 10)
+            self.assertEqual(result["diagnosticRevision"], 11)
             self.assertEqual(native.validate_native_result(result, ROOT), [])
             self.assertEqual(result["priorResultSha256s"], native.READ_PRIOR_RESULTS)
             self.assertEqual(result["runMode"], "actual")
@@ -3149,7 +3150,7 @@ class NativeObservationTests(unittest.TestCase):
                                               read_followup=True, process_runner=runner)
         self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"], result["cliLaunchCount"]), (16, 23, 16))
         self.assertEqual(result["priorResultSha256s"], native.READ_PRIOR_RESULTS)
-        self.assertEqual(result["diagnosticRevision"], 10)
+        self.assertEqual(result["diagnosticRevision"], 11)
         self.assertEqual(calls, list(range(1, 17)))
         self.assertEqual([case["status"] for case in result["caseResults"]], ["PASS"] * 16)
         for case in result["caseResults"]:
@@ -3688,6 +3689,279 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertFalse(result["hostClaim"])
                 self.assertNotIn("public unknown stderr fixture", json.dumps(result))
                 self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+
+    def test_assessment_field_definitions_reach_all_blinded_prompts_and_schema_files(self):
+        run, _, calls = self._prepared_runner()
+        source = native._input(ROOT, self.protocol, "modelResponseSchema")
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        order_rule = source["properties"]["selectedRoutes"]["description"]
+        discovery_rule = source["properties"]["discoveryOutcome"]["description"]
+        self.assertIn("UTF-8 byte order", order_rule)
+        self.assertIn("not the execution order", order_rule)
+        self.assertIn("output vocabulary, not the host Skill catalog", discovery_rule)
+        self.assertIn("training memory", discovery_rule)
+        self.assertIn("fixture text", discovery_rule)
+        self.assertIn("do not establish installation", discovery_rule)
+        for rule in (order_rule, discovery_rule):
+            self.assertEqual(envelope["fixedInstructions"].count(rule), 1)
+        # Original measurement inputs remain separately frozen, not regenerated
+        # from either the new descriptions or the observer's expected answers.
+        self.assertEqual(hashlib.sha256((ROOT / "evals/no-hook/golden-set-v1.jsonl").read_bytes()).hexdigest(),
+                         "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c")
+        seed = bytes.fromhex(json.loads((run / native.STATE_NAME).read_bytes())["materializationSeed"])
+        uniform_fields = None
+        for ordinal, case in enumerate(self.cases, 1):
+            with self.subTest(ordinal=ordinal):
+                material = native.materialize_native_case_contract(materialization_seed=seed, ordinal=ordinal,
+                    protocol_digest=self.protocol["protocolDigest"], model_schema=source,
+                    prompt_envelope=envelope, request=case["request"])
+                prefix, request = material.prompt_bytes.decode("utf-8").split("\nUser request:\n", 1)
+                self.assertEqual(request, case["request"] + "\n")
+                self.assertEqual([line[2:] for line in prefix.splitlines() if line.startswith("- ")],
+                                 envelope["fixedInstructions"])
+                self.assertNotIn(case["id"], prefix)
+                for field in ("expectedRoutes", "expectedOutcome", "expectedClarificationCount", "caseClass"):
+                    self.assertNotIn(field, prefix)
+                argv = native.build_native_argv(Path("/fixture/client"), run, ordinal)
+                payload = Path(argv[argv.index("--output-schema") + 1]).read_bytes()
+                self.assertEqual(payload, material.schema_bytes)
+                schema = json.loads(payload)
+                native.validate_response_transport(schema)
+                fields = {name: schema["properties"][name] for name in ("selectedRoutes", "discoveryOutcome")}
+                self.assertNotIn("description", fields["selectedRoutes"])
+                self.assertNotIn("description", fields["discoveryOutcome"])
+                if uniform_fields is None:
+                    uniform_fields = fields
+                self.assertEqual(fields, uniform_fields)
+                self.assertEqual(fields["selectedRoutes"]["items"]["enum"],
+                                 source["properties"]["selectedRoutes"]["items"]["enum"])
+        # The same public rules also render for a non-benchmark request; there
+        # is no special branch that supplies a frozen case's route or outcome.
+        novel = "Assess the requested scope for a local research notebook."
+        material = native.materialize_native_case_contract(materialization_seed=seed, ordinal=1,
+            protocol_digest=self.protocol["protocolDigest"], model_schema=source,
+            prompt_envelope=envelope, request=novel)
+        self.assertTrue(material.prompt_bytes.endswith((novel + "\n").encode()))
+        self.assertEqual(calls, [])
+
+    def test_assessment_batch_counts_twenty_prior_attempts_without_duplicate_snapshots(self):
+        run, runner, calls = self._prepared_runner()
+        prior_path = ROOT / native.ASSESSMENT_PRIOR_BINDING["path"]
+        before = prior_path.read_bytes()
+        prior = native._assessment_prior(ROOT)
+        self.assertEqual((prior["attemptCount"], prior["cumulativeAttemptCount"]), (13, 20))
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               assessment_batch=True, process_runner=runner)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]),
+                         (16, 16, 36))
+        self.assertEqual(result["priorResultSha256s"], [*native.READ_PRIOR_RESULTS, native.ASSESSMENT_PRIOR_SHA256])
+        self.assertEqual(len(result["priorResultSha256s"]), 8)
+        self.assertNotIn(native.PREVIOUS_PARTIAL_SHA256, result["priorResultSha256s"])
+        self.assertNotIn(native.REVIEWED_PARTIAL_SHA256, result["priorResultSha256s"])
+        self.assertEqual(prior_path.read_bytes(), before)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for wrong_total in (16, 24, 37):
+            bad = copy.deepcopy(result)
+            bad["cumulativeAttemptCount"] = wrong_total
+            self.assertTrue(native.validate_native_result(bad, ROOT), wrong_total)
+        bad = copy.deepcopy(result)
+        bad["priorResultSha256s"].append(native.PREVIOUS_PARTIAL_SHA256)
+        self.assertTrue(native.validate_native_result(bad, ROOT))
+        before_calls = list(calls)
+        with self.assertRaises(FileExistsError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                          assessment_batch=True, process_runner=runner)
+        self.assertEqual(calls, before_calls)
+        self.assertFalse(result["hostClaim"])
+        self.assertIsNone(result["modelRequestCount"])
+
+    def test_assessment_route_order_is_checked_without_reordering_the_response(self):
+        run, runner, calls = self._prepared_runner()
+        original = copy.deepcopy(self.cases)
+        def reversed_report(argv, **kwargs):
+            if "exec" not in argv or Path(kwargs["cwd"]).parent.name != "case-07":
+                return runner(argv, **kwargs)
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            final_path = Path(argv[argv.index("--output-last-message") + 1])
+            document = json.loads(final_path.read_bytes())
+            document["selectedRoutes"] = list(reversed(document["selectedRoutes"]))
+            final_path.write_bytes(event(document))
+            raw = stream(document)
+            for line in raw.splitlines():
+                kwargs["line_callback"](line)
+            return {**capture, "stdout": raw}
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               assessment_batch=True, process_runner=reversed_report)
+        actual = result["caseResults"][6]
+        self.assertEqual(actual["status"], "FAIL")
+        self.assertEqual(actual["diagnostic"], "semantic-mismatch")
+        self.assertEqual(actual["observed"]["selectedRoutes"], list(reversed(original[6]["expectedRoutes"])))
+        self.assertEqual(self.cases, original)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        forged = copy.deepcopy(result)
+        forged["caseResults"][6].update(status="PASS", diagnostic="none")
+        self.assertTrue(native.validate_native_result(forged, ROOT))
+
+    def test_assessment_read_rejection_captures_only_the_emitted_command_privately(self):
+        command = "cat unbound-public-fixture"
+        def rejected(lines):
+            lines[2]["item"]["command"] = command
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            result = self._diagnostic_stream_runner([], malformed=rejected, assessment_batch=True)
+        first = result["caseResults"][0]
+        self.assertEqual((first["status"], first["diagnostic"]), ("INCOMPLETE", "policy-rejected"))
+        self.assertEqual((first["executionDiagnostics"]["streamAssertion"],
+                          first["executionDiagnostics"]["streamEventOrdinal"]), ("read-target-unbound", 3))
+        private = self.parent / "run/operator-only-diagnostics/case-01-read-rejection.json"
+        # This file contains only this test's public string, never real state.
+        raw = private.read_bytes()
+        self.assertEqual(json.loads(raw), {"command": command})
+        self.assertEqual(private.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(private.parent.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(first["operatorReadCapture"], {"status": "saved", "bytes": len(raw), "truncated": False})
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (1, 21))
+        self.assertEqual(first["publicReads"], [])
+        self.assertEqual([record["status"] for record in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        for public in (json.dumps(result), stdout.getvalue(), stderr.getvalue()):
+            self.assertNotIn(command, public)
+            self.assertNotIn("unbound-public-fixture", public)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_assessment_command_capture_is_bounded_escaped_and_exclusive(self):
+        capture = native.OperatorDiagnostics(self.parent)
+        control_text = 'cat "public\x00\x1b\n\r\t\\\u2603"'
+        item = {"id": "item_0", "type": "command_execution", "command": control_text,
+                "aggregated_output": "PUBLIC-OUTPUT-MUST-NOT-BE-CAPTURED", "exit_code": None,
+                "status": "in_progress"}
+        capture.rejected_command(event({"type": "item.started", "item": item}))
+        facts = capture.save_command(1)
+        path = capture.directory / "case-01-read-rejection.json"
+        raw = path.read_bytes()
+        self.assertEqual(json.loads(raw), {"command": control_text})
+        self.assertTrue(raw.isascii())
+        self.assertTrue(all(value >= 32 for value in raw[:-1]))
+        self.assertEqual(raw.count(b"\n"), 1)
+        self.assertEqual(facts, {"status": "saved", "bytes": len(raw), "truncated": False})
+        self.assertNotIn(b"PUBLIC-OUTPUT", raw)
+        long_text = "cat " + "public-fixture-" * 1000
+        capture.rejected_command(event({"type": "item.completed", "item": {**item, "command": long_text}}))
+        facts = capture.save_command(2)
+        raw = (capture.directory / "case-02-read-rejection.json").read_bytes()
+        self.assertLessEqual(len(raw), 4096)
+        self.assertTrue(facts["truncated"])
+        self.assertTrue(long_text.startswith(json.loads(raw)["command"]))
+        self.assertEqual(facts["bytes"], len(raw))
+        retained = capture.directory / "case-03-read-rejection.json"
+        retained.write_bytes(b"unrelated public object")
+        capture.rejected_command(event({"type": "item.started", "item": item}))
+        self.assertEqual(capture.save_command(3)["status"], "write-failed")
+        self.assertEqual(retained.read_bytes(), b"unrelated public object")
+        other = self.parent / "other-public-object"
+        other.write_bytes(b"keep")
+        (capture.directory / "case-04-read-rejection.json").symlink_to(other)
+        capture.rejected_command(event({"type": "item.started", "item": item}))
+        self.assertEqual(capture.save_command(4)["status"], "write-failed")
+        self.assertEqual(other.read_bytes(), b"keep")
+        self.assertEqual(capture.save_command(5), native._private_capture())
+
+    def test_assessment_command_write_failure_does_not_replace_read_first_cause(self):
+        original_save = native.OperatorDiagnostics.save_command
+        def failed_save(capture, ordinal):
+            with patch.object(native.os, "write", side_effect=OSError("PUBLIC-WRITER-DETAIL")):
+                return original_save(capture, ordinal)
+        def rejected(lines):
+            lines[2]["item"]["command"] = "cat unbound-public-fixture"
+        with patch.object(native.OperatorDiagnostics, "save_command", autospec=True, side_effect=failed_save):
+            result = self._diagnostic_stream_runner([], malformed=rejected, assessment_batch=True)
+        first = result["caseResults"][0]
+        self.assertEqual(first["operatorReadCapture"], {"status": "write-failed", "bytes": 0, "truncated": False})
+        self.assertTrue(first["executionDiagnostics"]["cleanupFailed"])
+        self.assertEqual((first["diagnostic"], first["executionDiagnostics"]["streamAssertion"],
+                          first["executionDiagnostics"]["streamEventOrdinal"]),
+                         ("policy-rejected", "read-target-unbound", 3))
+        self.assertNotIn("PUBLIC-WRITER-DETAIL", json.dumps(result))
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+
+    def test_assessment_public_reads_distinguish_real_fixture_package_and_discovery_bytes(self):
+        run, runner, calls = self._prepared_runner()
+        fixtures = native._input(ROOT, self.protocol, "fixtureMatrix")
+        # Case 1 deliberately has an empty fixture. Use the existing public
+        # Case 2 fixture for mixed reads without changing any case's inputs.
+        installed_ordinal = 2
+        expected = {}
+        def public_reads(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            if ordinal not in (installed_ordinal, 11):
+                return runner(argv, **kwargs)
+            paths = native._case_paths(run, ordinal)
+            definition = native._definition(fixtures, ordinal)
+            self.assertTrue(definition["files"])
+            relative_fixture = definition["files"][0]["path"]
+            reads = [("fixture", relative_fixture, None,
+                      ["cat", str(paths["workspace"] / relative_fixture)])]
+            if ordinal != 11:
+                reads.extend([
+                    ("package", "skills/using-axiom/SKILL.md", None,
+                     ["cat", str(paths["package"] / "skills/using-axiom/SKILL.md")]),
+                    ("discovery", "skills/using-axiom/SKILL.md", [2, 4],
+                     ["sed", "-n", "2,4p", str(paths["discovery"] / "using-axiom/SKILL.md")]),
+                ])
+            else:
+                self.assertFalse(paths["package"].exists())
+                self.assertFalse(paths["discovery"].exists())
+            capture = runner(argv, **{**kwargs, "line_callback": None})
+            document = json.loads(Path(argv[argv.index("--output-last-message") + 1]).read_bytes())
+            records = [json.loads(line) for line in stream(document).splitlines()][:2]
+            expected[ordinal] = []
+            for index, (source, relative, bounds, read_argv) in enumerate(reads):
+                output = self._ordinary_public_read(read_argv, paths)
+                command = shlex.join(read_argv)
+                for kind, status, code, text in (
+                    ("item.started", "in_progress", None, output.decode("utf-8")[:3]),
+                    ("item.updated", "in_progress", None, output.decode("utf-8")[:7]),
+                    ("item.completed", "completed", 0, output.decode("utf-8")),
+                ):
+                    records.append({"type": kind, "item": {"id": f"item_{index}", "type": "command_execution",
+                        "command": command, "aggregated_output": text, "exit_code": code, "status": status}})
+                expected[ordinal].append({"eventOrdinal": len(records), "source": source,
+                    "path": relative, "bytes": len(output), "range": bounds})
+            records.append({"type": "item.completed", "item": {"id": f"item_{len(reads)}",
+                            "type": "agent_message", "text": json.dumps(document)}})
+            records.append(json.loads(stream(document).splitlines()[-1]))
+            raw = b"".join(event(record) for record in records)
+            for line in raw.splitlines():
+                kwargs["line_callback"](line)
+            return {**capture, "stdout": raw}
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                                               assessment_batch=True, process_runner=public_reads)
+        self.assertEqual(calls, list(range(1, 17)))
+        for ordinal in (installed_ordinal, 11):
+            self.assertEqual(result["caseResults"][ordinal - 1]["publicReads"], expected[ordinal])
+        installed = result["caseResults"][installed_ordinal - 1]
+        self.assertEqual(installed["readonlyCommandCount"], 3)
+        self.assertEqual(sum(read["source"] == "fixture" for read in installed["publicReads"]), 1)
+        self.assertEqual(sum(read["source"] in {"package", "discovery"} for read in installed["publicReads"]), 2)
+        self.assertEqual(result["caseResults"][10]["installation"], "absent")
+        self.assertEqual(result["caseResults"][10]["readonlyCommandCount"], 1)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for label, mutate in (
+            ("deleted", lambda document: document["caseResults"][installed_ordinal - 1].update(publicReads=[])),
+            ("wrong-bytes", lambda document: document["caseResults"][installed_ordinal - 1]["publicReads"][1].update(bytes=1)),
+            ("unknown-path", lambda document: document["caseResults"][installed_ordinal - 1]["publicReads"][1].update(path="skills/unbound/SKILL.md")),
+            ("duplicate-event", lambda document: document["caseResults"][installed_ordinal - 1]["publicReads"][1].update(eventOrdinal=5)),
+            ("control-installation", lambda document: document["caseResults"][10]["publicReads"][0].update(source="package")),
+        ):
+            with self.subTest(label=label):
+                invalid = copy.deepcopy(result)
+                mutate(invalid)
+                self.assertTrue(native.validate_native_result(invalid, ROOT), label)
+        self.assertFalse(result["hostClaim"])
 
 
 if __name__ == "__main__":
