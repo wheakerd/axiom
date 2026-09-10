@@ -1999,3 +1999,43 @@ and the four historical derived input pairs matched their retained binding.
 The earlier five focused methods passed after the two first-run corrections
 noted above. No production client or canonical case was started. These results
 validate the new measurement delivery and history handling only.
+
+## Assessment revision 3 full observation window
+
+This window authorizes one fresh session for each original ordinal 1-16, in
+order, under the unchanged 0.10.1 package, Codex 0.153.0, gpt-5.5/medium,
+Direct tools, assessment revision 3 and material-delivery revision 1. It does
+not reuse the stopped material segment or alter its results. The measurement
+reports the inner request's routing decision; `clarificationCount=1` records a
+disclosed pending clarification decision, not a delivered or answered question.
+
+`--prepare-current-assessment` checks the registered preceding material result
+and normal completion, then prepares fresh case homes and fixtures. Only the
+owned authentication file passes from the preceding normally completed Case 16
+to new Case 1, then serially after each normal client exit. Case 11 still has no
+installed Axiom or discovery alias. No historical sessions or client directories
+are copied. Existing package/configuration, Direct metadata and input checks
+remain required.
+
+The immutable attempt chain is deduplicated by ordinal and materialization
+commitment, with equal counts required for overlaps. The seven early attempts,
+13-case historical batch, 11-case assessment prefix (including its inherited
+ten-case prefix), and seven-case material observation total 38 attempts and
+38 CLI launches. This window permits at most 16 additional attempts, cumulative
+54; launch failure consumes its reserved attempt without inventing a launch.
+Internal model request counts remain unknown. Original per-case limits in old
+windows are not silently rewritten.
+
+The existing receiver, read allowlist, first-cause preservation, bounded
+operator-only diagnostic files and hard stop remain in force. Semantic FAIL
+may continue independent cases; a policy or reliability failure stops the
+remaining cases. Unknown-stderr-only human review requires full input, valid
+stream/terminal/response, matching official final output, valid input postcheck,
+and no policy rejection, timeout, termination, cleanup or other prerequisite
+failure. Any supplement is separate from the original result, cannot invent
+Skill consumption or interaction facts, and cannot refund an attempt.
+
+The execution implementation must be signed and recorded before launch. All
+16 derived schemas and prompts bind that protocol without changing revision 3
+wording, original requests, fixtures, expectations or scoring. New observations
+are not historical regrades or evidence for unspecified host combinations.

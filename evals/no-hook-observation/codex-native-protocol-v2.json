@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "64699b8aa4672bfbcb0b80ab5b1036f37695c1590198b3c8717d9f9fa4f3d87a"
+      "sha256": "bedc418b0ad53846e4b9cb42f1fcb88a3899dd8fb6b97c7ea2e6e62425f50105"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "4fa95ac8c61cfa6c1438ac126649b6c647b9b524b0b635e8c67ebbdfb211433b"
+    "sha256": "7cf0745bb0f20325152927fd6ad4876441ac50f389403b64ca8f33f36f1d7b8f"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -277,9 +277,9 @@
     }
   },
   "executionWindow": {
-    "state": "closed",
+    "state": "assessment-revision-3",
     "lastResultSha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
-    "reason": "38 attempts consumed; assessment wording revision 3 is not observed"
+    "reason": "one fresh 16-case assessment; preserve 38 deduplicated prior attempts"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
@@ -327,7 +327,7 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:2398557b8e2a8dc74bb0e00820fedbf417ed4740b0257af876e7dab44be93ab0",
+  "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",
@@ -351,5 +351,23 @@
     "inputRevision": 2,
     "history": "references only; no inherited observations or sessions",
     "stop": "any policy rejection or reliability failure stops remaining cases"
+  },
+  "currentAssessment": {
+    "priorResult": {
+      "path": "evals/no-hook-observation/results/codex-native-3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360.json",
+      "sha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
+      "implementationCommit": "12720d103a0b46b6223ad2a41b562c1ec2935b87",
+      "implementationTree": "bde5a0d2f36ade6c6fa3bfbc0d951d1ab7054bf4",
+      "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b"
+    },
+    "firstNewOrdinal": 1,
+    "lastOrdinal": 16,
+    "maximumNewAttempts": 16,
+    "maximumCumulativeAttempts": 54,
+    "authenticationSourceOrdinal": 16,
+    "assessmentRevision": 3,
+    "history": "deduplicate ordinal and materialization commitment; no inherited sessions",
+    "stop": "any policy rejection or reliability failure stops remaining cases",
+    "stderrReview": "same-attempt only; all existing eligibility conditions required"
   }
 }
