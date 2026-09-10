@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "cd0c2c108f8baf388f2b62f0f4931b1adf86887833800d526d00acc278de53ef"
+      "sha256": "d016beb27bd5221955931c5a9d09228b56293f6331f1881bbd23b607e01d56bf"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "c6d821ee502cb94228429dfe7700301874e3b76c9978db838deba7fd7a8c4d34"
+    "sha256": "efdd26a5d11ca6ae25d50fdd695e972efe0edcd5e0c8169325f4434ca55495dc"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -204,7 +204,7 @@
       "decision": "no automatic approval from metadata; assess every diagnostic against frozen upstream and required conditions; unresolved or unsafe content remains INCOMPLETE",
       "resume": "only previously NOT-RUN cases after supplement confirms no effect on required premises and non-model input/config/model/auth/ledger checks still pass; preserve batch and attempts; no Case 1 restart or budget refund",
       "limits": "route agreement does not prove Skill-body consumption or invisible actions; missing observations cannot be supplied by human classification",
-      "continuation": "Specific source-bound Case 5 supplement; preserve original partial result and Cases 1-5; new implementation/protocol covers only Cases 6-16. Same ledger, exclusive remainder marker; inherit operator budgets without reading raw files."
+      "continuation": "Specific source-bound Case 5 and 6 supplements; preserve both partial results and their original facts. Only unstarted Cases 7-16 under new implementation; same ledger and inherited 316-byte stderr use."
     },
     "readRejections": {
       "codes": [
@@ -222,7 +222,8 @@
       "retention": "closed codes only; no command, target path or output; unknown target is not resolved or read",
       "sedLines": "LF-delimited, preserving CR and final unterminated bytes",
       "history": "seven original results remain immutable; seventh exact read predicate is unknown; revision 10 grants one explicitly linked continuation without changing read predicates"
-    }
+    },
+    "catalogRefreshTimeout": "Only the full frozen timestamped codex_models_manager::manager catalog Timeout line is known-nonfatal; all full-input, stream, final-output, fixed-model and postcheck conditions still apply. Extra/different stderr remains unknown. No retroactive classification of original results."
   },
   "responseTransport": {
     "revision": 1,
@@ -258,12 +259,12 @@
   },
   "executionWindow": {
     "state": "reviewed-remainder-only",
-    "lastResultSha256": "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b",
-    "reason": "same-batch reviewed Case 5; only unstarted Cases 6-16; no consumed attempt repeated"
+    "lastResultSha256": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd",
+    "reason": "same-batch reviewed Cases 5-6; only unstarted Cases 7-16; no consumed attempt repeated"
   },
   "sameAttemptReview": {
-    "path": "evals/no-hook-observation/case-05-catalog-review-v2.json",
-    "sha256": "b0b88827ee9f4fbe47f98e277b335b6a33c96b02c5cf84d82b6727309591d564"
+    "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
+    "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
   },
-  "protocolDigest": "sha256:795610bb36b81bed4d52aa887b055de94de964b9167c7ee7437982ed2544e551"
+  "protocolDigest": "sha256:1938bd1e4335e35a9f0d46bf113777e8eb542c7219338d7683a6d0507854c70c"
 }

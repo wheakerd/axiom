@@ -3,7 +3,7 @@
   "kind": "axiom-codex-native-result-history",
   "protocol": {
     "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-    "digest": "sha256:795610bb36b81bed4d52aa887b055de94de964b9167c7ee7437982ed2544e551"
+    "digest": "sha256:1938bd1e4335e35a9f0d46bf113777e8eb542c7219338d7683a6d0507854c70c"
   },
   "results": [],
   "current": {
@@ -77,6 +77,12 @@
     }
   ],
   "reviewedPartial": {
+    "path": "evals/no-hook-observation/results/codex-native-72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd.json",
+    "sha256": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd",
+    "implementationCommit": "92e8e435d3c39041ff2c86a0fa8c039c4996a121",
+    "implementationTree": "208af3be62f98c91b576b3259b325bb929457596"
+  },
+  "previousPartial": {
     "path": "evals/no-hook-observation/results/codex-native-ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b.json",
     "sha256": "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b",
     "implementationCommit": "7c4c2c8aa01cde728976d1047e8801852a7e2485",

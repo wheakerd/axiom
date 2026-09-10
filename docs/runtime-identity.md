@@ -1,5 +1,28 @@
 # Runtime And Repository Identity
 
+## Reviewed remainder execution
+
+Execution `92e8e435d3c39041ff2c86a0fa8c039c4996a121` used protocol
+`sha256:795610bb36b81bed4d52aa887b055de94de964b9167c7ee7437982ed2544e551`.
+Only Case 6 started, once; it is INCOMPLETE because of new unknown stderr.
+It retained full input, a valid closed stream and strict response, official
+final-output agreement and a valid postcheck, with no policy rejection,
+termination, timeout or cleanup failure. Its validated route response selects
+`traceable-git-submit`; that response alone is not body-consumption evidence.
+No command item appeared in the closed stream. No later case started.
+
+The result preserves original Cases 1-5 and references their earlier execution
+separately. Cases 1-4 remain PASS; Case 5 remains INCOMPLETE with a separate
+same-attempt catalog review. At capture Case 6 required its own human stderr explanation; equal byte length
+did not identify its message. The operator subsequently supplied the same exact
+catalog-timeout explanation. A separate Case 6 supplement now permits only
+Cases 7-16, preserving both original INCOMPLETE records and both executions. Its operator file is private,
+158 bytes per case, UTF-8 and untruncated; inherited stderr use is 316 bytes. The executor has not read its contents.
+Cumulative attempts and CLI launches are 13: seven historical plus six in this
+batch. Internal model-request count is unknown; Cases 7-16 remain NOT-RUN.
+Host claim remains false. No repeated case, model probe or retry occurred.
+
+
 ## Same-attempt catalog diagnostic supplement
 
 The operator supplied the Case 5 stderr message: the frozen client reported a

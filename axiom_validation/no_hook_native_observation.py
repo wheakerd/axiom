@@ -72,14 +72,25 @@ STDERR_PRIOR_RESULTS = [*MODEL_PRIOR_RESULTS, SIXTH_RESULT_SHA256]
 SEVENTH_RESULT_SHA256 = "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0"
 SEVENTH_PROTOCOL_DIGEST = "sha256:60565e21524e334a029b72846cd68a22b705236064a3e26dffd1354f5fba0ad2"
 READ_PRIOR_RESULTS = [*STDERR_PRIOR_RESULTS, SEVENTH_RESULT_SHA256]
-REVIEWED_PARTIAL_SHA256 = "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b"
-REVIEWED_PARTIAL_PROTOCOL = "sha256:5ce454ebaf368fd11884f3e91c50bd7ecbcc2d755b21ce0554fe786db94e3a97"
-REVIEW_RELATIVE = Path("evals/no-hook-observation/case-05-catalog-review-v2.json")
+PREVIOUS_PARTIAL_SHA256 = "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b"
+PREVIOUS_PARTIAL_PROTOCOL = "sha256:5ce454ebaf368fd11884f3e91c50bd7ecbcc2d755b21ce0554fe786db94e3a97"
+PREVIOUS_REVIEW_RELATIVE = Path("evals/no-hook-observation/case-05-catalog-review-v2.json")
+PREVIOUS_PARTIAL_BINDING = {
+    "path": "evals/no-hook-observation/results/codex-native-" + PREVIOUS_PARTIAL_SHA256 + ".json",
+    "sha256": PREVIOUS_PARTIAL_SHA256,
+    "implementationCommit": "7c4c2c8aa01cde728976d1047e8801852a7e2485",
+    "implementationTree": "fcd7e72c576321b77742ba5d341f66ef817682f7",
+}
+REVIEWED_PARTIAL_SHA256 = "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd"
+REVIEWED_PARTIAL_PROTOCOL = "sha256:795610bb36b81bed4d52aa887b055de94de964b9167c7ee7437982ed2544e551"
+REVIEW_RELATIVE = Path("evals/no-hook-observation/case-06-catalog-review-v2.json")
+PREVIOUS_REVIEW_SHA256 = "b0b88827ee9f4fbe47f98e277b335b6a33c96b02c5cf84d82b6727309591d564"
+REVIEWED_PREFIX_COUNT = 6
 REVIEWED_PARTIAL_BINDING = {
     "path": "evals/no-hook-observation/results/codex-native-" + REVIEWED_PARTIAL_SHA256 + ".json",
     "sha256": REVIEWED_PARTIAL_SHA256,
-    "implementationCommit": "7c4c2c8aa01cde728976d1047e8801852a7e2485",
-    "implementationTree": "fcd7e72c576321b77742ba5d341f66ef817682f7",
+    "implementationCommit": "92e8e435d3c39041ff2c86a0fa8c039c4996a121",
+    "implementationTree": "208af3be62f98c91b576b3259b325bb929457596",
 }
 READ_REJECTIONS = (
     "event-shape", "read-command-syntax", "read-target-unbound", "read-lifecycle",
@@ -277,7 +288,7 @@ class OperatorDiagnostics:
             metadata = self.directory.lstat()
             _require(stat.S_ISDIR(metadata.st_mode) and metadata.st_uid == os.getuid() and
                      stat.S_IMODE(metadata.st_mode) == 0o700, "operator directory ownership changed")
-            _require(len(reviewed_prefix) == 5 and all(item["privateCapture"]["bytes"] == 0
+            _require(len(reviewed_prefix) == REVIEWED_PREFIX_COUNT and all(item["privateCapture"]["bytes"] == 0
                      for item in reviewed_prefix), "unsupported prior event capture budget")
         else:
             self.directory.mkdir(mode=0o700)
@@ -437,7 +448,14 @@ def _stderr_classification(data: bytes) -> str:
     prefixes = (b"Could not create otel exporter: ",
                 b"WARNING: proceeding, even though we could not create PATH aliases: ",
                 b"WARNING: failed to clean up stale arg0 temp dirs: ")
-    if data.endswith(b"\n") and all(line in fixed or any(
+    catalog_timeout = re.compile(
+        rb"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{1,9}Z "
+        rb"ERROR codex_models_manager::manager: failed to refresh available models: "
+        rb"timeout waiting for child process to exit")
+    # Frozen models_endpoint.rs maps its bounded catalog timeout to the generic
+    # Timeout display. manager.rs keeps the prior catalog. This classification
+    # cannot bypass the full input, final-output, model and postcheck gates.
+    if data.endswith(b"\n") and all(line in fixed or catalog_timeout.fullmatch(line) is not None or any(
             line.startswith(prefix) and len(line) > len(prefix) for prefix in prefixes)
             for line in data.splitlines()):
         return "known-nonfatal"
@@ -572,7 +590,7 @@ def _protocol(root: Path) -> dict[str, Any]:
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
         "state": "reviewed-remainder-only", "lastResultSha256": REVIEWED_PARTIAL_SHA256,
-        "reason": "same-batch reviewed Case 5; only unstarted Cases 6-16; no consumed attempt repeated",
+        "reason": "same-batch reviewed Cases 5-6; only unstarted Cases 7-16; no consumed attempt repeated",
     }, "native execution window differs from consumed attempt evidence")
     bindings = list(document.get("implementationBindings", []))
     _require([item.get("path") for item in bindings] == list(IMPLEMENTATION_PATHS),
@@ -625,7 +643,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                 protocol_digest=protocol["protocolDigest"], model_schema=_input(root, protocol, "modelResponseSchema"),
                 prompt_envelope=_input(root, protocol, "promptEnvelope"), request=case["request"])
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
                  history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": protocol["protocolDigest"]},
                  "native history identity is inconsistent")
@@ -671,7 +689,8 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                      "historical native result bytes changed")
         # The exact previously validated bytes retain their old contract. They
         # are not interpreted under the new schema or filled with new facts.
-        _require(history["reviewedPartial"] == REVIEWED_PARTIAL_BINDING, "reviewed prefix identity changed")
+        _require(history["reviewedPartial"] == REVIEWED_PARTIAL_BINDING and
+                 history["previousPartial"] == PREVIOUS_PARTIAL_BINDING, "reviewed prefix identity changed")
         _reviewed_partial(root)
         records = history["results"]
         _require(type(records) is list and len(records) <= 1, "native history permits one current observation")
@@ -1173,7 +1192,7 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
 def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
-    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup) / ("remainder-preparation.json" if resume_stderr_review else "preparation.json")
+    state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup) / ("catalog-preparation.json" if resume_stderr_review else "preparation.json")
                         if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else run_root / STATE_NAME))
     _require(set(state) == {"schemaVersion", "protocolDigest", "runMode", "executable", "materializationSeed", "cases"},
              "native preparation record is not closed")
@@ -1307,19 +1326,27 @@ def _reviewed_partial(root: Path) -> dict[str, Any]:
     _require(hashlib.sha256(data).hexdigest() == REVIEWED_PARTIAL_SHA256,
              "same-attempt partial result changed")
     partial = _json(data)
+    previous = _read(root / PREVIOUS_PARTIAL_BINDING["path"])
+    _require(hashlib.sha256(previous).hexdigest() == PREVIOUS_PARTIAL_SHA256 and
+             hashlib.sha256(_read(root / PREVIOUS_REVIEW_RELATIVE)).hexdigest() == PREVIOUS_REVIEW_SHA256 and
+             partial["caseResults"][:5] == _json(previous)["caseResults"][:5] and
+             partial["executionSegment"] == {"firstNewOrdinal": 6, "newAttemptCount": 1,
+                 "newCliLaunchCount": 1, "priorPartialSha256": PREVIOUS_PARTIAL_SHA256,
+                 "reviewSha256": PREVIOUS_REVIEW_SHA256}, "earlier reviewed segment changed")
     review = _json(_read(root / REVIEW_RELATIVE))
-    _require(review["partialResultSha256"] == REVIEWED_PARTIAL_SHA256 and review["ordinal"] == 5 and
+    _require(review["previousReviewSha256"] == PREVIOUS_REVIEW_SHA256 and
+             review["partialResultSha256"] == REVIEWED_PARTIAL_SHA256 and review["ordinal"] == REVIEWED_PREFIX_COUNT and
              review["source"] == "user-provided-decoded-stderr" and
              review["decision"] == "catalog-refresh-timeout-does-not-invalidate-fixed-case-conditions" and
              review["originalStatus"] == "INCOMPLETE" and review["officialErrorCode"] == "unknown",
              "same-attempt review lacks the specific authorized assessment")
-    record = partial["caseResults"][4]
+    record = partial["caseResults"][REVIEWED_PREFIX_COUNT - 1]
     facts = record["executionDiagnostics"]
     _require(partial["protocolDigest"] == REVIEWED_PARTIAL_PROTOCOL and
              partial["priorResultSha256s"] == READ_PRIOR_RESULTS and
-             (partial["attemptCount"], partial["cumulativeAttemptCount"], partial["cliLaunchCount"]) == (5, 12, 5) and
+             (partial["attemptCount"], partial["cumulativeAttemptCount"], partial["cliLaunchCount"]) == (6, 13, 6) and
              all(item["status"] == "PASS" for item in partial["caseResults"][:4]) and
-             all(item["status"] == "NOT-RUN" for item in partial["caseResults"][5:]),
+             all(item["status"] == "NOT-RUN" for item in partial["caseResults"][REVIEWED_PREFIX_COUNT:]),
              "reviewed partial has a different attempt prefix")
     _require(record["status"] == "INCOMPLETE" and record["diagnostic"] == "unknown-stderr" and
              facts["category"] == "unknown-stderr" and facts["stderrClassification"] == "unknown" and
@@ -1336,11 +1363,11 @@ def _reviewed_partial(root: Path) -> dict[str, Any]:
         _require(metadata["model"] == MODEL and metadata["toolMode"] is None and
                  metadata["supportsMedium"] is True and metadata["derivedEffectiveToolMode"] == "direct",
                  "review lacks the fixed model and Direct conditions")
-    case = legacy.load_golden_cases(root)[4]
+    case = legacy.load_golden_cases(root)[REVIEWED_PREFIX_COUNT - 1]
     schema = _json(_read(root / legacy.MODEL_RESPONSE_SCHEMA_RELATIVE))
     envelope = _json(_read(root / INPUT_PATHS["promptEnvelope"]))
     material = materialize_native_case_contract(materialization_seed=bytes.fromhex(partial["materializationSeed"]),
-        ordinal=5, protocol_digest=REVIEWED_PARTIAL_PROTOCOL, model_schema=schema,
+        ordinal=REVIEWED_PREFIX_COUNT, protocol_digest=REVIEWED_PARTIAL_PROTOCOL, model_schema=schema,
         prompt_envelope=envelope, request=case["request"])
     response = {**record["observed"], "opaqueCaseBinding": material.token}
     _validate_native_response(response, schema, material.token)
@@ -1354,36 +1381,46 @@ def _verify_review_resume(root: Path, run_root: Path) -> tuple[dict[str, Any], d
     partial = _reviewed_partial(root)
     ledger = _ledger(run_root, False, False, read_followup=True)
     _ordinary_directory(ledger)
-    _require(_read(ledger / "normalized-result.json") == _read(root / REVIEWED_PARTIAL_BINDING["path"]),
-             "registered partial result changed")
-    _require(_json(_read(ledger / "batch-started.json")) == {"protocolDigest": REVIEWED_PARTIAL_PROTOCOL},
+    for filename, binding in (("normalized-result.json", PREVIOUS_PARTIAL_BINDING),
+                              ("normalized-remainder-result.json", REVIEWED_PARTIAL_BINDING)):
+        _require(_read(ledger / filename) == _read(root / binding["path"]), "registered partial result changed")
+    _require(_json(_read(ledger / "batch-started.json")) == {"protocolDigest": PREVIOUS_PARTIAL_PROTOCOL} and
+             _json(_read(ledger / "remainder-started.json")) == {"protocolDigest": REVIEWED_PARTIAL_PROTOCOL},
              "reviewed batch marker changed")
     for ordinal in range(1, 17):
         marker = ledger / f"attempt-{ordinal:02d}.json"
-        if ordinal <= 5:
+        if ordinal <= REVIEWED_PREFIX_COUNT:
             _require(_json(_read(marker)) == {"ordinal": ordinal, "caseId": legacy.EXPECTED_CASE_IDS[ordinal - 1],
-                     "protocolDigest": REVIEWED_PARTIAL_PROTOCOL}, "reviewed attempt marker changed")
+                     "protocolDigest": PREVIOUS_PARTIAL_PROTOCOL if ordinal <= 5 else REVIEWED_PARTIAL_PROTOCOL},
+                     "reviewed attempt marker changed")
         else:
             _require(not marker.exists() and not marker.is_symlink(), "remaining case already attempted")
-    _require(not (ledger / "remainder-started.json").exists() and
-             not (ledger / "remainder-started.json").is_symlink(), "remainder already started")
+    _require(not (ledger / "catalog-remainder-started.json").exists() and
+             not (ledger / "catalog-remainder-started.json").is_symlink(), "remainder already started")
     _require(_json(_read(ledger / "execution-implementation.json")) == {
+        "implementationCommit": PREVIOUS_PARTIAL_BINDING["implementationCommit"],
+        "implementationTree": PREVIOUS_PARTIAL_BINDING["implementationTree"],
+        "protocolDigest": PREVIOUS_PARTIAL_PROTOCOL, "priorAttempts": 7,
+        "maximumCumulativeAttempts": 23, "maximumCaseOneAttempts": 8}, "partial execution identity changed")
+    _require(_json(_read(ledger / "remainder-execution-implementation.json")) == {
         "implementationCommit": REVIEWED_PARTIAL_BINDING["implementationCommit"],
         "implementationTree": REVIEWED_PARTIAL_BINDING["implementationTree"],
-        "protocolDigest": REVIEWED_PARTIAL_PROTOCOL, "priorAttempts": 7,
-        "maximumCumulativeAttempts": 23, "maximumCaseOneAttempts": 8},
-        "partial execution identity changed")
+        "protocolDigest": REVIEWED_PARTIAL_PROTOCOL, "priorPartialSha256": PREVIOUS_PARTIAL_SHA256,
+        "firstNewOrdinal": 6, "priorAttempts": 12, "maximumCumulativeAttempts": 23,
+        "maximumCaseOneAttempts": 8}, "remainder execution identity changed")
+    _require(_read(ledger / "same-attempt-review.json") == _read(root / PREVIOUS_REVIEW_RELATIVE),
+             "previous prepared review changed")
     # Metadata only: human-only text is never reopened.
-    metadata = (ledger / "operator-only-diagnostics/case-05-stderr.json").lstat()
-    _require(stat.S_ISREG(metadata.st_mode) and metadata.st_uid == os.getuid() and
-             stat.S_IMODE(metadata.st_mode) == 0o600 and metadata.st_size == 158,
-             "reviewed operator file metadata changed")
-    state = _json(_read(ledger / "preparation.json"))
+    for ordinal in (5, 6):
+        metadata = (ledger / f"operator-only-diagnostics/case-{ordinal:02d}-stderr.json").lstat()
+        _require(stat.S_ISREG(metadata.st_mode) and metadata.st_uid == os.getuid() and
+                 stat.S_IMODE(metadata.st_mode) == 0o600 and metadata.st_size == 158,
+                 "reviewed operator file metadata changed")
+    state = _json(_read(ledger / "remainder-preparation.json"))
     initial = _json(_read(run_root / STATE_NAME))
     _require(state == {**initial, "protocolDigest": REVIEWED_PARTIAL_PROTOCOL} and
+             _json(_read(ledger / "preparation.json")) == {**initial, "protocolDigest": PREVIOUS_PARTIAL_PROTOCOL} and
              state["materializationSeed"] == partial["materializationSeed"], "reviewed preparation changed")
-    # The already reviewed result fixes the execution identity; a mutable local
-    # preparation cannot silently retarget the run to a different installation.
     _require(state["runMode"] == "actual", "reviewed preparation was not actual")
     return partial, state
 
@@ -1411,15 +1448,15 @@ def prepare_stderr_review_resume(root: Path, run_root: Path) -> None:
         previous = materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=REVIEWED_PARTIAL_PROTOCOL, model_schema=schema,
             prompt_envelope=envelope, request=case["request"])
-        _require(_read(ledger / f"response-schema-{ordinal:02d}.json") == previous.schema_bytes,
+        _require(_read(ledger / f"remainder-response-schema-{ordinal:02d}.json") == previous.schema_bytes,
                  "reviewed response schema changed")
         materials.append(materialize_native_case_contract(materialization_seed=bytes.fromhex(old["materializationSeed"]),
             ordinal=ordinal, protocol_digest=protocol["protocolDigest"], model_schema=schema,
             prompt_envelope=envelope, request=case["request"]))
-    _exclusive(ledger / "same-attempt-review.json", _read(root / REVIEW_RELATIVE))
+    _exclusive(ledger / "catalog-case-06-review.json", _read(root / REVIEW_RELATIVE))
     for ordinal, material in enumerate(materials, 1):
-        _exclusive(ledger / f"remainder-response-schema-{ordinal:02d}.json", material.schema_bytes)
-    _exclusive(ledger / "remainder-preparation.json", _bytes({**old, "protocolDigest": protocol["protocolDigest"]}))
+        _exclusive(ledger / f"catalog-response-schema-{ordinal:02d}.json", material.schema_bytes)
+    _exclusive(ledger / "catalog-preparation.json", _bytes({**old, "protocolDigest": protocol["protocolDigest"]}))
 
 
 def prepare_diagnostic_followup(root: Path, run_root: Path, *, continuation: bool = False,
@@ -2073,7 +2110,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     _require(not actual or protocol["executionWindow"]["state"] != "closed",
              "actual execution window closed")
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
-    operator = OperatorDiagnostics(ledger, reviewed_prefix=partial["caseResults"][:5] if partial else ()) if operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else None
+    operator = OperatorDiagnostics(ledger, reviewed_prefix=partial["caseResults"][:REVIEWED_PREFIX_COUNT] if partial else ()) if operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else None
     invoke = bounded_process if process_runner is None else process_runner
     cases = legacy.load_golden_cases(root)
     fixtures = _input(root, protocol, "fixtureMatrix")
@@ -2087,16 +2124,16 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i))
                for i, (case, material) in enumerate(zip(cases, materials), 1)]
     if partial:
-        results[:5] = partial["caseResults"][:5]
-        _require(_read(ledger / "same-attempt-review.json") == _read(root / REVIEW_RELATIVE),
+        results[:REVIEWED_PREFIX_COUNT] = partial["caseResults"][:REVIEWED_PREFIX_COUNT]
+        _require(_read(ledger / "catalog-case-06-review.json") == _read(root / REVIEW_RELATIVE),
                  "prepared same-attempt review changed")
-    schema_prefix = "remainder-response-schema" if partial else "response-schema"
+    schema_prefix = "catalog-response-schema" if partial else "response-schema"
     if reuse_test_auth:
         _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else protocol)
-    _exclusive(ledger / ("remainder-started.json" if partial else "batch-started.json"),
+    _exclusive(ledger / ("catalog-remainder-started.json" if partial else "batch-started.json"),
                _bytes({"protocolDigest": protocol["protocolDigest"]}))
     for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
-        if partial and ordinal <= 5:
+        if partial and ordinal <= REVIEWED_PREFIX_COUNT:
             continue
         paths = _case_paths(run_root, ordinal)
         definition = _definition(fixtures, ordinal)
@@ -2329,13 +2366,13 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     if partial:
         result["executionSegment"] = {
             "priorPartialSha256": REVIEWED_PARTIAL_SHA256,
-            "reviewSha256": protocol["sameAttemptReview"]["sha256"], "firstNewOrdinal": 6,
-            "newAttemptCount": sum(item["attemptCount"] for item in results[5:]),
-            "newCliLaunchCount": sum(item["cliLaunchCount"] for item in results[5:]),
+            "reviewSha256": protocol["sameAttemptReview"]["sha256"], "firstNewOrdinal": REVIEWED_PREFIX_COUNT + 1,
+            "newAttemptCount": sum(item["attemptCount"] for item in results[REVIEWED_PREFIX_COUNT:]),
+            "newCliLaunchCount": sum(item["cliLaunchCount"] for item in results[REVIEWED_PREFIX_COUNT:]),
         }
     failures = validate_native_result(result, root)
     _require(not failures, "native normalized result failed semantic validation")
-    _exclusive(ledger / ("normalized-remainder-result.json" if partial else "normalized-result.json"), _bytes(result))
+    _exclusive(ledger / ("normalized-catalog-remainder-result.json" if partial else "normalized-result.json"), _bytes(result))
     return result
 
 
@@ -2397,14 +2434,14 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                      document["materializationSeed"] == partial["materializationSeed"] and
                      document["authenticationMode"] == partial["authenticationMode"] and
                      segment == {"priorPartialSha256": REVIEWED_PARTIAL_SHA256,
-                         "reviewSha256": protocol["sameAttemptReview"]["sha256"], "firstNewOrdinal": 6,
-                         "newAttemptCount": sum(item["attemptCount"] for item in document["caseResults"][5:]),
-                         "newCliLaunchCount": sum(item["cliLaunchCount"] for item in document["caseResults"][5:])},
+                         "reviewSha256": protocol["sameAttemptReview"]["sha256"], "firstNewOrdinal": REVIEWED_PREFIX_COUNT + 1,
+                         "newAttemptCount": sum(item["attemptCount"] for item in document["caseResults"][REVIEWED_PREFIX_COUNT:]),
+                         "newCliLaunchCount": sum(item["cliLaunchCount"] for item in document["caseResults"][REVIEWED_PREFIX_COUNT:])},
                      "remainder provenance or budget mismatch")
         stopped = False
         for ordinal, (case, record) in enumerate(zip(cases, document["caseResults"]), 1):
             _require(record["ordinal"] == ordinal and record["caseId"] == case["id"], "native result case order mismatch")
-            if partial and ordinal <= 5:
+            if partial and ordinal <= REVIEWED_PREFIX_COUNT:
                 _require(record == partial["caseResults"][ordinal - 1], "reviewed prefix facts changed")
                 continue  # Exact old bytes were validated under their original implementation/protocol.
             definition = _definition(fixtures, ordinal)

@@ -885,24 +885,24 @@
       ],
       "properties": {
         "priorPartialSha256": {
-          "const": "ccf99c208c1131e6fb9c31d65077138602dd7abc5f803bd50c0bdcaea783dd4b"
+          "const": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd"
         },
         "reviewSha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
         "firstNewOrdinal": {
-          "const": 6
+          "const": 7
         },
         "newAttemptCount": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 11
+          "maximum": 10
         },
         "newCliLaunchCount": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 11
+          "maximum": 10
         }
       }
     }
