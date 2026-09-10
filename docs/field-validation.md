@@ -1404,3 +1404,60 @@ to their original implementation, model, protocol and runtime. New observations
 are NOT-RUN until actually executed and recorded. FCR-001/003/004 remain OPEN and
 FCR-002 remains STILL_OPEN; full-profile installed-host and Hook observations
 are separate from no-Hook routing assessment.
+
+### Actual assessment batch and remaining evidence
+
+The first new batch used signed implementation
+`a29b9503920a8798509407f40645a0efee14b474`, tree
+`a5289b6a8e787b82bd1a73ba06a0447e619fb855`, with protocol digest
+`sha256:5dda0101d4558a899b3ed8600d615bbbfc461034dac56e12f9f496538f201a7e`.
+Its normalized record is
+[`9880ebdd`](../evals/no-hook-observation/results/codex-native-9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9.json).
+Ten fresh canonical attempts and ten CLI launches brought the lifetime total
+to 30. Internal model request count remains unknown. No case was retried.
+
+| Case | New result | Direct evidence and limitation |
+| --- | --- | --- |
+| 1 | FAIL | Valid no-route/empty-list response differs from the unchanged selected/using-axiom expectation. No body-read command was observed; the cause of this model choice is not established. |
+| 2-5 | PASS | Valid expected routes; no body-read command was observed. |
+| 6 | PASS | Expected traceable-git-submit route and a verified 8,186-byte read of its installed SKILL.md. |
+| 7 | PASS | Exact lexical route list confirm-external-action, reversible-system-change; report order does not imply action order. |
+| 8 | PASS | Expected confirm-external-action route; no body-read command was observed. |
+| 9 | PASS | Expected reversible-system-change route; verified reads of its SKILL.md and preflight-and-rollback.md, 7,083 and 7,735 bytes. |
+| 10 | INCOMPLETE | First refusal read-target-unbound at event 3, item.started; observer terminated the client with signal 9. Input and postchecks passed, no timeout or cleanup failure; no valid terminal/response. |
+| 11-16 | NOT-RUN | No launch after the read-policy refusal. New unavailable and ambiguity behavior is not yet host-verified. |
+
+Case 10's emitted command is retained only in its dedicated operator-only file
+(148 bytes, not truncated), never read or uploaded by the executor. The unknown
+target is not accessed or treated as bound. Zero verified completed reads for
+an invalid stream is not evidence that no read was attempted. The historical
+Case 13 refusal retains its unknown target and original result. This refusal is
+not eligible for the unknown-stderr-only same-attempt review path.
+
+The frozen client's skills/list precheck reported eight bound user Skills in
+each installed state and zero in Case 11. Native sandbox reads of eight public
+Skill entries and the no-install fixture succeeded before authentication reuse.
+These no-model checks are separate from actual model consumption. Authentication
+was copied opaquely from the last normally completed dedicated client (old
+Case 12), not from the abnormally terminated Case 13, then reused serially.
+No normal user authentication was inspected or copied.
+
+Current source validation passed 264 selected bundle/native/routing tests,
+publication aggregate, distribution drift, runtime identity and documentation.
+All six changed Skills and Claude strict validation passed. The generic local
+plugin-creator validator rejected unchanged hooks, brandColorDark and supportURL
+metadata; this tool mismatch is not reported as PASS. Canonical publication
+validated those manifests. A focused independent review covered canonical rule
+delivery, blinding and full-profile impact; identity authorship received self-review,
+not a second independent approval. Two external preflight harness mistakes
+(wrong sandbox subcommand and early app-server input close) were corrected before
+any model launch; they are not canonical case attempts.
+
+All old outcomes and same-attempt supplements are unchanged. New routing success
+is evidence only for this explicit assessment wrapper and runtime, not unprompted
+host behavior, plugin-runtime execution or full-profile installed observation.
+FCR-001/003/004 remain OPEN and FCR-002 STILL_OPEN: current known reads establish
+only their exact bound bytes; invisible consumption, descendants and stronger
+historical cleanup/credential guarantees are not inferred. Builder lifecycle v2
+retains its versioned support model, not a retroactive fix to the old guarantee.
+PR remains Draft, Issue 117 open and readyTransitionEligible=false.
