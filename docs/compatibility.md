@@ -46,15 +46,15 @@ canonical current summary. It binds the current plugin and runtime identity,
 keeps current host states separate from prior evidence, and requires an
 immutable subject before a host pass can be claimed.
 
-The Git record for `v0.10.0` reports:
+The Git record for `v0.10.1` reports:
 
 - target binding: `pending-immutable-tag`;
 - checked-in status: `STATIC-ONLY`;
-- installed-runtime identity: plugin `0.10.0`, runtime-contract schema v1;
+- installed-runtime identity: plugin `0.10.1`, runtime-contract schema v1;
 - current Codex installed-host observation: `NOT-RUN`;
 - current authenticated Claude Code observation: `UNAVAILABLE / NOT-RUN`.
 
-See the [v0.10.0 version notes](releases/v0.10.0.md) for candidate-specific
+See the [v0.10.1 version notes](releases/v0.10.1.md) for candidate-specific
 architecture and validation detail. The candidate cannot bind itself to a
 future signed merge, immutable tag, final workflow result, or post-publication
 host observation.
@@ -63,8 +63,8 @@ host observation.
 
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
-| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.10.0 | Static support only |
-| Claude Code | `CHECKED-IN`; deterministic package and contract checks are available | `UNAVAILABLE / NOT-RUN` for v0.10.0 | Static support only |
+| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.10.1 | Static support only |
+| Claude Code | `CHECKED-IN`; deterministic package and contract checks are available | `UNAVAILABLE / NOT-RUN` for v0.10.1 | Static support only |
 
 An identical runtime digest may make older evidence relevant to the same bytes,
 but it does not create a new observation or change the older record's host,
@@ -128,9 +128,9 @@ Current sources:
 - [current release status](../evidence/release-status.json);
 - [runtime identity](../evidence/runtime-identity.json) and its
   [policy](runtime-identity.md);
-- [current routing-context record](../evals/context-budget/results/v0.10.0.json);
+- [current routing-context record](../evals/context-budget/results/v0.10.1.json);
 - [current route corpus](../evals/README.md); and
-- [v0.10.0 version notes](releases/v0.10.0.md).
+- [v0.10.1 version notes](releases/v0.10.1.md).
 
 Historical sources:
 

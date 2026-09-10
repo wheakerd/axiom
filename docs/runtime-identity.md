@@ -1,6 +1,27 @@
 # Runtime And Repository Identity
 
-## Current reviewed continuation outcome
+## Current v0.10.1 source identity
+
+The compatible canonical discovery-description correction advances both manifests
+from `0.10.0` to `0.10.1`. Repository policy revision 8 records this source candidate
+against `2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223`. Runtime-contract schema v1 still
+classifies 61 installed inputs; its new digest is
+`sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2`.
+The same canonical Skill source serves the full and derived profiles. Existing
+Hooks, their wrappers, original case requests, classifications, expectations and
+scorer are unchanged. The descriptions clarify existing routing boundaries and
+do not add mutation or publication authority.
+
+A subsequent no-Hook artifact must bind the actual committed source, revised
+profile runtime and complete builder dependency identities. No future commit or
+bundle digest is assigned by this source record. Prior native results below remain
+historical evidence for their exact v0.10.0 inputs; they do not validate the new
+runtime. Current full-profile host and lifecycle observation remains NOT-RUN.
+Revision records 1-7, immutable tag history, previous context-budget records and
+all original normalized host results remain unchanged. No tag or Release is made.
+
+
+## Historical v0.10.0 reviewed continuation outcome
 
 Execution `04c7de8e972d64e1d15d4d40eb0a7081dca23407`, tree
 `0a9ce3fba5914684abf6cfe9e7dad3c851a143ad`, used protocol
@@ -99,7 +120,7 @@ result identifies both segments. Prior stderr storage counts against the same
 refunded. Seven historical failures and the partial result remain immutable.
 
 
-## Current native result binding
+## Historical v0.10.0 native result binding
 
 The revision 10 batch is bound to execution `7c4c2c8aa01cde728976d1047e8801852a7e2485`.
 Cases 1-4 passed response/routing acceptance; Case 5 is INCOMPLETE on unknown

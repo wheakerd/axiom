@@ -56,6 +56,14 @@
       "sourceIssue": 117,
       "summary": "Add native Codex observation v2 with independent test state; retain disabled v1 and builder lifecycle v2. Preserve runtime and revision 6 bundle ownership; host observations remain NOT-RUN.",
       "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3"
+    },
+    {
+      "revision": 8,
+      "recordedOn": "2026-09-10",
+      "baselineCommit": "2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223",
+      "sourceIssue": 117,
+      "summary": "Bind the v0.10.1 canonical discovery-description corrections and source runtime identity for the next no-Hook bundle; preserve prior case contracts and observation records.",
+      "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2"
     }
   ]
 }

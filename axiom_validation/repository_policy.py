@@ -125,7 +125,9 @@ AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
     "packaged agent-plugin architecture work. Do not use for repository-local "
     "AGENTS.md or .agents/skills systems, ordinary source-code or documentation work "
     "merely because it is in a plugin repository, host installation, publication, "
-    "deployment, or Git submission."
+    "deployment, or Git submission. When architecture and installation or deployment "
+    "are mutually exclusive alternatives, ask one concise clarification before "
+    "routing; delegated choice does not resolve the scope difference."
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",

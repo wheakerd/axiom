@@ -1,6 +1,6 @@
 ---
 name: review-axiom-task
-description: Review an Axiom-guided task's routing, scope, authorization, actions, evidence, stops, and outcome. Use when the user asks what Axiom did; why it selected, allowed, or refused something; or to audit, criticize, appeal, or narrow that decision. Do not use for ordinary summaries, code review, execution, or retry.
+description: Review an Axiom task's routing, scope, authorization, actions, evidence, stops and outcome; explain, audit, criticize, appeal or narrow its decisions, including why it selected, allowed or refused an action. Ordinary summaries, code review, execution and retry stay outside. Clarify mutually exclusive review versus execution/retry before routing; review grants no action authority.
 ---
 
 # Review Axiom Task

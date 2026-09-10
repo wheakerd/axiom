@@ -64,11 +64,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.10.0 adds an on-demand release-readiness audit and fixed "
-            "routing cases without adding a public route. No installed Codex host "
-            "or lifecycle observation "
-            "was run for this candidate; static validation and prior evidence remain "
-            "separate."
+            "Axiom v0.10.1 clarifies canonical discovery descriptions without adding a "
+            "route. Current full-profile Codex host, usage and lifecycle observation "
+            "remain NOT-RUN; prior no-Hook observations bind their original runtime only."
         ),
     },
     "claude-code": {
@@ -80,10 +78,9 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.10.0 changes shared Skill behavior for release-readiness "
-            "audits. Authenticated Claude Code installed-host and lifecycle "
-            "observation are unavailable and not run; offline validation and prior "
-            "evidence remain separate."
+            "Axiom v0.10.1 changes shared Skill descriptions. Authenticated Claude "
+            "Code installed-host and lifecycle observation remain unavailable and not "
+            "run; static and historical evidence stay separate."
         ),
     },
 }

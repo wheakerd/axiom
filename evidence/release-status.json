@@ -1,16 +1,16 @@
 {
   "schemaVersion": "2",
   "targetRelease": {
-    "version": "0.10.0",
-    "tag": "v0.10.0",
+    "version": "0.10.1",
+    "tag": "v0.10.1",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
   "runtimeIdentity": {
-    "pluginVersion": "0.10.0",
-    "repositoryPolicyRevision": 7,
+    "pluginVersion": "0.10.1",
+    "repositoryPolicyRevision": 8,
     "runtimeContractSchemaVersion": "1",
-    "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
+    "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "history": "evidence/runtime-contract-history-v1.json"
   },
@@ -22,8 +22,8 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.10.0",
-      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
+      "pluginVersion": "0.10.1",
+      "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2",
       "status": "not-run",
       "reason": "Offline protocol contract checks only; Combined implementation remains incomplete and actual execution disabled. Runtime and host observation NOT-RUN. No Codex calls, credential use, installation, Golden Set or host results. FCR-001/003/004 OPEN; FCR-002 STILL OPEN."
     },
@@ -33,10 +33,10 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.10.0",
-      "runtimeContractDigest": "sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3",
+      "pluginVersion": "0.10.1",
+      "runtimeContractDigest": "sha256:007f0fbe99e6f3aa0b0ce35d879a75e42dc1f88882a3219aaae83d77d0d149c2",
       "status": "unavailable",
-      "reason": "Repository policy revision 7 does not define a Claude Code no-Hook profile and does not alter the installed Axiom v0.10.0 runtime. Claude Code no-Hook remains excluded; authenticated full-profile installed-host and lifecycle observation remain unavailable and not run."
+      "reason": "Axiom v0.10.1 changes shared canonical Skill descriptions. Claude Code no-Hook remains excluded; authenticated full-profile installed-host and lifecycle observation remain unavailable and not run."
     }
   ],
   "priorReleaseEvidence": [
