@@ -829,7 +829,7 @@
       ]
     },
     "diagnosticRevision": {
-      "const": 9
+      "const": 10
     },
     "attemptCount": {
       "type": "integer",
@@ -839,12 +839,12 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 22
+      "maximum": 23
     },
     "priorResultSha256s": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 6,
+      "maxItems": 7,
       "items": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"

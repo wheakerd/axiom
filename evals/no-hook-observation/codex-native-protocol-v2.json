@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "5f6bdb4f2da7d478f751d4eeb06220dbd02eaf2b58d89fdb228baf6160e19d29"
+      "sha256": "04d63ae629c70c7f2972008601ee6ca47a3fa32e20b9e6413d7b0d248093026d"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -115,7 +115,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "6a00ab7a89873de58cb3b7ccce426dc2635171552f4a1153b9334578b35b2c3a"
+    "sha256": "b51e98daba75f9b09bf5da605a7192e8528e9aa1966d432a0d7a71761490c4c7"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -134,7 +134,7 @@
     "refreshHandoff": "after-successful-client-exit",
     "contentRecorded": false
   },
-  "diagnosticRevision": 9,
+  "diagnosticRevision": 10,
   "followup": {
     "priorResultSha256s": [
       "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
@@ -142,11 +142,12 @@
       "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79",
       "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b",
       "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
-      "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a"
+      "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a",
+      "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0"
     ],
-    "priorAttempts": 6,
-    "maximumCumulativeAttempts": 22,
-    "maximumCaseOneAttempts": 7,
+    "priorAttempts": 7,
+    "maximumCumulativeAttempts": 23,
+    "maximumCaseOneAttempts": 8,
     "remainingCaseAttempts": 1
   },
   "diagnostics": {
@@ -155,7 +156,7 @@
     "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
     "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
     "retention": "Closed public first-cause and partial evidence; independent human-only JSONL diagnostic and canonical-client stderr exceptions; no executor/model readback.",
-    "historicalFailure": "Six immutable INCOMPLETE results retain original bytes and protocols: five Sol, one gpt-5.5. Revision 8 permits one further gpt-5.5 Case 1 attempt and the unstarted cases; no refund or automatic retry.",
+    "historicalFailure": "Seven immutable INCOMPLETE results retain original bytes and protocols: five Sol, two gpt-5.5. Revision 10 permits one further gpt-5.5 Case 1 attempt and unstarted cases; no refund or automatic retry.",
     "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
     "assessment": "observer-inferred finite template classes; CodeModeOnly with unavailable host fails closed; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
     "privateSummary": {
@@ -196,7 +197,7 @@
       "isolation": "operational no-read boundary, not same-UID isolation"
     },
     "sameAttemptReview": {
-      "scope": "new six-history continuation only; six historical results are immutable and ineligible",
+      "scope": "new seven-history read-contract-continuation only; seven historical results are immutable and ineligible, including the seventh policy rejection",
       "record": "append-only supplement bound to original result SHA, protocol and execution implementation; never replace original INCOMPLETE",
       "source": "human-provided sanitized contents from this attempt operator-only stderr; freeze public source/code basis separately; no executor raw-file access",
       "eligibility": "only unknown-stderr; exit 0; complete input; turn.completed; valid stream, response, official final output and postcheck; no timeout, observer termination, cleanup failure, policy rejection or condition-changing diagnostic; complete UTF-8 stderr capture",
@@ -219,7 +220,7 @@
       "location": "first rejecting predicate and one-based event ordinal; shared receiver/parser/result; later framing, missing terminal or cleanup cannot replace it",
       "retention": "closed codes only; no command, target path or output; unknown target is not resolved or read",
       "sedLines": "LF-delimited, preserving CR and final unterminated bytes",
-      "history": "seven original results remain immutable; seventh exact read predicate is unknown; execution window stays closed"
+      "history": "seven original results remain immutable; seventh exact read predicate is unknown; revision 10 grants one explicitly linked continuation without changing read predicates"
     }
   },
   "responseTransport": {
@@ -255,9 +256,9 @@
     "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings"
   },
   "executionWindow": {
-    "state": "closed",
+    "state": "authorized-once",
     "lastResultSha256": "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
-    "reason": "seventh attempt read-contract rejection; alias correction has no host revalidation"
+    "reason": "one seven-history continuation; exclusive batch and attempt markers; no retry"
   },
-  "protocolDigest": "sha256:26c73b020b7eb6acc4e11c4f1b3cc2d14d008c4e7b4bb273f17bb8c407e92f74"
+  "protocolDigest": "sha256:5ce454ebaf368fd11884f3e91c50bd7ecbcc2d755b21ce0554fe786db94e3a97"
 }

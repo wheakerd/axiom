@@ -1,11 +1,28 @@
 # Routing Evaluations
 
+## Seven-history continuation (diagnostic revision 10)
+
+One explicitly authorized continuation preserves all seven original results and
+attempt markers. It permits Case 1 once more (eight lifetime starts) and each
+unstarted Case 2-16 once, for at most 23 lifetime attempts. The exclusive
+`read-contract-continuation` ledger binds the current implementation and all
+16 regenerated inputs before any client starts; consumed attempts are not
+refunded. Codex 0.153.0, gpt-5.5 / medium, Direct tools, the installed package,
+Case 11's absent discovery, and the revision 9 read predicates are unchanged.
+
+The same-attempt human review applies only to this continuation when unknown
+stderr is the sole failure and every recorded eligibility condition passes.
+It cannot supply missing Skill-body consumption or invisible permission facts.
+The seventh policy rejection is ineligible and its exact predicate remains
+unknown. Operator-only raw diagnostic and stderr files remain private to the
+human operator; they are excluded from executor/model reads, Git and CI.
+
 ## Read diagnostic regression scope
 
 Native diagnostic revision 9 preserves read rejection codes and event positions
 through the production receiver, parser, and result validator. Tests use real
 ordinary reads of public fixtures; they are not host observations. The seventh
-historical predicate remains unknown and actual execution stays closed. See
+historical predicate remains unknown; revision 9 kept actual execution closed. See
 [the contract and limits](../docs/field-validation.md#read-rejection-preservation-diagnostic-revision-9).
 
 ## Seventh attempt and subsequent discovery-path correction
@@ -17,7 +34,7 @@ Its exact result is
 `c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0`.
 Case 1 is INCOMPLETE; Cases 2-16 remain NOT-RUN. This was the second gpt-5.5
 attempt, bringing lifetime attempts and CLI launches to seven. Internal model
-request count remains unknown; no eighth Case 1 start is authorized.
+request count remains unknown; that seventh-attempt record authorized no eighth start.
 
 The receiver rejected event 5 as `read-contract-rejected` / `policy-rejected`
 and terminated the client (signal 9, return code -9). Input was fully delivered;
