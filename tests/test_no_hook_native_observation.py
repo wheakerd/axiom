@@ -4668,6 +4668,76 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertTrue(native.validate_native_result(invalid, ROOT), label)
         self.assertFalse(result["hostClaim"])
 
+    def test_assessment_fields_reach_all_actual_transport_inputs_without_answers(self):
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        schema = native._input(ROOT, self.protocol, "modelResponseSchema")
+        self.assertIn("description", schema["properties"]["clarificationCount"])
+        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+            self.assertIn(schema["properties"][field]["description"], envelope["fixedInstructions"])
+        self.assertIn("inner User request", schema["properties"]["selectedRoutes"]["description"])
+        self.assertIn("pending routing clarification", schema["properties"]["clarificationCount"]["description"])
+        self.assertIn("not evidence", schema["properties"]["clarificationCount"]["description"])
+        for ordinal, original in enumerate(self.cases, 1):
+            # New words are not tied to a canonical request or an expected route.
+            request = "Inspect the supplied material for a general maintenance task."
+            material = native.materialize_native_case_contract(root=ROOT,
+                materialization_seed=bytes(32), ordinal=ordinal,
+                protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
+                prompt_envelope=envelope, request=request)
+            target = self.parent / f"schema-{ordinal}.json"
+            target.write_bytes(material.schema_bytes)
+            argv = native.build_native_argv(Path("/fixture/codex"), self.parent, ordinal, response_schema=target)
+            self.assertEqual(argv[argv.index("--output-schema") + 1], str(target))
+            transport = json.loads(target.read_bytes())
+            native.validate_response_transport(transport)
+            self.assertEqual(transport["properties"]["selectedRoutes"]["items"]["enum"],
+                             schema["properties"]["selectedRoutes"]["items"]["enum"])
+            text = material.prompt_bytes.decode()
+            for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+                self.assertEqual(text.count(schema["properties"][field]["description"]), 1)
+            self.assertTrue(text.endswith("User request:\n" + request + "\n"))
+            self.assertNotIn(original["id"], text)
+            self.assertNotIn("expectedRoutes", text)
+            self.assertNotIn("caseClass", text)
+
+    def test_assessment_definition_drift_rejects_before_material_delivery(self):
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        schema = native._input(ROOT, self.protocol, "modelResponseSchema")
+        envelope["fixedInstructions"] = [value for value in envelope["fixedInstructions"]
+                                          if value != schema["properties"]["clarificationCount"]["description"]]
+        with self.assertRaisesRegex(native.NativeObservationError, "assessment field definitions"):
+            native.materialize_native_case_contract(root=ROOT,
+                materialization_seed=bytes(32), ordinal=1,
+                protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
+                prompt_envelope=envelope, request="A generic request.")
+
+    def test_measurement_migration_preserves_history_and_does_not_regrade_contradictions(self):
+        history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
+        binding = history["materialObservation"]
+        raw = (ROOT / binding["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360")
+        old = json.loads(raw)
+        self.assertEqual((old["attemptCount"], old["cumulativeAttemptCount"]), (7, 38))
+        self.assertEqual([case["status"] for case in old["caseResults"][9:]], ["FAIL"] * 4 + ["PASS"] * 3)
+        thirteen = old["caseResults"][12]["observed"]
+        self.assertEqual((thirteen["discoveryOutcome"], thirteen["selectedRoutes"], thirteen["clarificationCount"]),
+                         ("clarification", ["traceable-git-submit"], 0))
+        self.assertEqual(history["results"], [])
+        self.assertEqual(history["current"]["codexObservation"], "not-run")
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        schema = native._input(ROOT, self.protocol, "modelResponseSchema")
+        # The existing scorer still rejects contradictory tuples without editing
+        # the response, inventing a question or treating a route name as a read.
+        case = {**self.cases[0], "request": "Choose between two incompatible scopes.",
+                "expectedOutcome": "clarification", "expectedRoutes": [],
+                "expectedClarificationCount": 1, "expectedUsingAxiomFrontDoorObserved": False}
+        value = response(case, "ocb1_" + "a" * 64)
+        value.update(selectedRoutes=["traceable-git-submit"], clarificationCount=0)
+        before = copy.deepcopy(value)
+        self.assertEqual(legacy.validate_model_response(value, case, "ocb1_" + "a" * 64, schema),
+                         ["selected route mismatch", "clarification mismatch"])
+        self.assertEqual(value, before)
+
 
 if __name__ == "__main__":
     unittest.main()

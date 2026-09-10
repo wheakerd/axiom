@@ -13,10 +13,13 @@ historical segment is regraded or combined into a sixteen-case PASS.
 See [Canonical assessment candidate 0.10.1](#canonical-assessment-candidate-0101),
 [Actual assessment batch and remaining evidence](#actual-assessment-batch-and-remaining-evidence),
 [Material-location delivery correction](#material-location-delivery-correction),
-and [Actual material-input segment evidence](#actual-material-input-segment-evidence).
+[Actual material-input segment evidence](#actual-material-input-segment-evidence),
+and [Assessment field clarification](#assessment-field-clarification-revision-3-not-observed).
 Older sections retain their original identities, counts and outcomes. Their
 use of "current" describes the execution at that time, not the new input
-revision. No historical failure is reclassified.
+revision. No historical failure is reclassified. Assessment revision 3 clarifies the
+measurement fields only; it has no host observations and its execution window
+is closed.
 
 ## Historical reviewed continuation outcome (0.10.0)
 
@@ -1851,3 +1854,148 @@ and full discovery again completed 541 tests: 539 passed, 2 existing skips,
 0 failures and 0 errors. Publication, distribution and documentation validation
 passed on the evidence candidate. The failed initial result-stage discovery is
 retained above and is not a host-observation failure.
+
+## Assessment field clarification (revision 3, not observed)
+
+This bounded review starts at `03d890450b380859f2d7c4c4aa1bad4279720c22`,
+with tree `9658f7430f9620b2d5fbf140aeba96a9066ae36f`. It examines the
+`3b10da27` material-input result above, not an older attachment. There are no
+new canonical starts: lifetime attempts and CLI launches remain 38/38. No
+operator-only file, authentication content or rejected temporary target was read.
+
+### Exact failures and evidence layers
+
+| Case | Recorded decision / routes / clarificationCount | Frozen expected tuple | Scoring predicate that fails |
+| --- | --- | --- | --- |
+| 10 | selected / using-axiom / 0 | no-route / [] / 0 | Outcome, exact route list, front-door field |
+| 11 | selected / agent-plugin-architect, review-axiom-task / 0 | unavailable / [] / 0 | Outcome and exact route list |
+| 12 | selected / agent-plugin-architect, reversible-system-change / 0 | clarification / [] / 1 | Outcome, exact route list and clarification count |
+| 13 | clarification / traceable-git-submit / 0 | clarification / [] / 1 | Exact route list and clarification count; outcome already matches |
+
+`validate_model_response()` in `axiom_validation/no_hook_observation.py`
+compares these fields directly to the frozen corpus. The corpus validation in
+`no_hook_profile.py` already requires selection to have routes and zero
+clarifications, deferred selection to have no routes and one clarification,
+and no-route/unavailable to have neither. These predicates are unchanged.
+Case 13 recognized a clarification outcome but returned inconsistent routing
+and count fields. It is not described as wholly failing to recognize ambiguity.
+All four are semantic FAILs after valid parsing and final-output verification.
+No model response is sorted, corrected, supplied with missing facts or regraded.
+
+The evidence reaches different layers:
+
+- Public source: the architecture and Git descriptions already contain the
+  mutually exclusive choice boundary. The using-axiom entry can assess Axiom
+  applicability, but its metadata disables implicit invocation. No duplicate
+  routing rule or new mandatory front-door step is added.
+- Installation: read-only comparison of the five relevant public Skill files
+  in Cases 10, 12 and 13 matches execution `12720d10` and the current source.
+  Their registered user-Skill aliases still name that installed package.
+  Case 11 still has neither the Axiom package nor its discovery alias; its
+  audit fixture named SKILL.md is task data, not installation evidence.
+- Host catalog: installation/discovery prechecks and postchecks are retained.
+  The old 0.10.0 skills/list record is not substituted for a directory snapshot
+  of this 0.10.1 execution. The current result does not contain that request's
+  full catalog or system/developer message payload.
+- Frozen rendering: upstream `41e22fee981a63b3698df7ed36bad393cda24715`
+  parses the full frontmatter description, resolves the nearest plugin
+  namespace, maps host metadata into its catalog, and renders the host
+  world-state catalog with `CoreCompatible` full descriptions. Its alternate
+  extension rendering policy is not proof that this host catalog used UI
+  short descriptions. The seven implicitly visible Axiom entries reconstruct
+  to 5,249 line characters at the registered discovery paths; each description
+  is below the 1,024-character per-entry limit. using-axiom remains available
+  for explicit invocation rather than implicit catalog selection. This is
+  source reconstruction, not recovery of the actual model request or proof
+  that no other context-budget transformation occurred.
+- Bound evaluation input: recomputing the four old prompt/schema pairs using
+  their original seed, protocol, envelope and requests matches the retained
+  execution binding. This establishes the supplied evaluation input, not the
+  host's entire augmented request. No new client or model probe was used.
+- Observed behavior: all four `publicReads` lists are empty. Thus no bound
+  Skill body or audit material consumption was verified in these cases.
+  That absence does not mean initial descriptions were absent. Route names
+  also do not prove discovery, loading, external actions or secret access;
+  model-reported permission fields do not establish invisible behavior.
+
+Relevant frozen sources are [frontmatter parsing](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/skills/src/parser.rs),
+[namespace resolution](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/loader/namespace.rs),
+[host catalog mapping](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/provider/host.rs),
+[world-state contribution](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/world_state_catalogs.rs)
+and [catalog rendering](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/render.rs).
+No current upstream behavior replaces that frozen source.
+
+### Narrow measurement migration and its limits
+
+The old envelope already said to assess the user request and distinguished
+response vocabulary from discovered Skills. Nevertheless, selectedRoutes only
+specified report ordering, and clarificationCount only had an integer range.
+The JSON-only task also required observable facts without distinguishing a
+pending routing clarification from an actually delivered question. This is a
+reproducible field-definition gap, not a proven internal cause of any FAIL.
+In particular, the outer assessment could use using-axiom while the inner task
+has no selected workflow; the existing words did not expressly separate those
+reports. Case 11's vocabulary/discovery rule was already present and its failure
+cannot be attributed solely to the shared enum.
+
+Assessment revision 3 uniformly defines all three fields in the bound schema
+and envelope. selectedRoutes reports workflows selected for the inner request,
+not candidates, catalog entries, bodies read or helpers used only for the outer
+assessment. An explicitly selected entry workflow need not select a leaf.
+discoveryOutcome and clarificationCount describe the same routing decision.
+Within this assessment-only response, the latter reports one pending routing
+clarification when selection is deferred, not evidence that a question was
+asked, delivered or answered. This interpretation is explicit new input
+wording; it is not backported into old observations or claimed as native
+host-default behavior. No request, expected value, route enum, scoring
+predicate, permission boundary, fixture or Skill text changes.
+
+The production materializer requires each definition exactly once in the
+common prompt. Its transport adaptation keeps the strict local constraints
+and strips documentation annotations from the API representation. Historical
+review scoring now derives its original opaque token directly instead of
+reconstructing an old response against the current envelope. The immutable
+material-input result moves to an explicit historical binding with its original
+protocol and implementation; the new wording has no observation. The execution
+window is closed, budgets are unchanged, and no new attempt ledger is created.
+
+The old source fails the new missing-clarification-definition assertion. After
+the fix, all sixteen actual transport schemas and generated prompts preserve
+their request suffix, enum and blindness, carry the common definitions once,
+and select the generated schema through the real argv builder. A definition
+missing from the envelope fails before material delivery. Another regression
+preserves the original result bytes and Case 13 tuple while proving that the
+existing scorer still rejects contradictory route/count values without repair.
+Initial candidate testing exposed a malformed synthetic opaque token and the
+historical-envelope coupling; both were corrected and the original failures
+were retained as test evidence. These are no-model tests, not host PASS.
+
+One independent targeted review corroborated the field-definition gap and
+recommended retaining canonical descriptions and original scoring. It did not
+approve the product or claim knowledge of the model's internal cause. The
+main agent checked the migration and subsequent regression results. Beyond
+this proven measurement gap, no directory wiring or result-processing defect
+was established to explain these four historical responses. The bounded
+historical diagnosis is complete; speculation about internal reasoning is not
+an outstanding task. Any future observation would need an explicitly authorized
+budget bound to revision 3, and would still have to establish behavior under
+these disclosed evaluation conditions. This turn neither authorizes nor
+schedules it. Adding an automatic router or changing the supported host contract
+is not justified by this review.
+
+Runtime, canonical source, full profiles, builder and bundle remain unchanged;
+no bundle build is repeated and product version remains 0.10.1. New wording has
+host observation NOT-RUN. Historical FAILs and the old Case 1 FAIL remain in
+their separate input/implementation scopes. PR remains Draft and Issue #117 open;
+FCR-001/003/004 remain OPEN and FCR-002 STILL_OPEN.
+
+Final no-model validation in the external full-source copy: 544 tests run,
+542 passed, two existing skips (Windows command shell and the opt-in cgroup
+probe), no failures or errors;
+publication aggregate, distribution drift, documentation, JSON parsing and
+whitespace/language checks passed. Python was 3.14.7. All sixteen written
+transport schemas and prompt bindings also passed the production preflight,
+and the four historical derived input pairs matched their retained binding.
+The earlier five focused methods passed after the two first-run corrections
+noted above. No production client or canonical case was started. These results
+validate the new measurement delivery and history handling only.

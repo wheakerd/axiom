@@ -14,11 +14,11 @@
     },
     "modelResponseSchema": {
       "path": "evals/no-hook-observation/codex-model-response-schema-v2.json",
-      "sha256": "338929f0be0d73121aab561b9a64033f2d15853b45a524bbd8fc2291d74cf78e"
+      "sha256": "88c56b88253fc6bfb0a4dac519b0baa4e78be493568a5d51734f5b22db21f35d"
     },
     "promptEnvelope": {
       "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
-      "sha256": "5816932a3ab2b530753e738da325d14ed1cc018cc4997c4f2255f8315eb26f09"
+      "sha256": "d309812f14cd8edd948b4a65ec256d3357ae3b55965ef270a6a9843a632e9b45"
     },
     "taxonomy": {
       "path": "evals/codex-exec-jsonl-observer-v3.json",
@@ -60,7 +60,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "12e15fbe275e65922d01c2724d91213f99347a9ec7f199154dd7f4d8a6f6b075"
+      "sha256": "64699b8aa4672bfbcb0b80ab5b1036f37695c1590198b3c8717d9f9fa4f3d87a"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -277,15 +277,15 @@
     }
   },
   "executionWindow": {
-    "state": "material-segment-only",
-    "lastResultSha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
-    "reason": "31 historical attempts; only fresh material-input cases 10-16, once each"
+    "state": "closed",
+    "lastResultSha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
+    "reason": "38 attempts consumed; assessment wording revision 3 is not observed"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
     "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
   },
-  "assessmentRevision": 1,
+  "assessmentRevision": 3,
   "assessmentReview": {
     "scope": "same attempt only; immutable original plus separate user-provided diagnostic supplement",
     "eligibleOnlyIf": [
@@ -327,7 +327,7 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b",
+  "protocolDigest": "sha256:2398557b8e2a8dc74bb0e00820fedbf417ed4740b0257af876e7dab44be93ab0",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",

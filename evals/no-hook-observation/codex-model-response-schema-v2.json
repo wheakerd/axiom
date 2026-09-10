@@ -51,7 +51,7 @@
         "no-route",
         "unavailable"
       ],
-      "description": "Schema enums define output vocabulary, not the host Skill catalog. Select only Skills actually discovered in this fresh session; names, training memory, fixture text and schema values do not establish installation."
+      "description": "Schema enums define output vocabulary, not the host Skill catalog. Select only Skills actually discovered in this fresh session; names, training memory, fixture text and schema values do not establish installation. discoveryOutcome reports the routing decision for the inner User request. selected means a nonempty selectedRoutes list and clarificationCount=0; clarification defers selection, with selectedRoutes=[] and clarificationCount=1; no-route means a usable discovered catalog with no applicable route, and unavailable means the required Skill discovery is unavailable; both have selectedRoutes=[] and clarificationCount=0."
     },
     "selectedRoutes": {
       "type": "array",
@@ -70,12 +70,13 @@
           "traceable-git-submit"
         ]
       },
-      "description": "Report selectedRoutes in ascending route ID UTF-8 byte order. This is report representation, not the execution order of external actions or system changes."
+      "description": "Report selectedRoutes in ascending route ID UTF-8 byte order. This is report representation, not the execution order of external actions or system changes. selectedRoutes reports only workflows selected for the inner User request, not candidate routes, routes used only to perform this outer assessment, visible catalog entries or Skills merely read. A directly requested entry workflow can itself be selected without selecting a leaf workflow."
     },
     "clarificationCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 1
+      "maximum": 1,
+      "description": "In this assessment-only response, clarificationCount is the model-reported pending routing clarification count: 1 when selection is deferred for one clarifying question, otherwise 0. This decision is not evidence that a question was actually asked, delivered or answered."
     },
     "usingAxiomFrontDoorObserved": {
       "type": "boolean"

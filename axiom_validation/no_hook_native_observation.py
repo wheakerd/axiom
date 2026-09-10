@@ -80,6 +80,13 @@ MATERIAL_SEGMENT = {
     "inputRevision": 2, "history": "references only; no inherited observations or sessions",
     "stop": "any policy rejection or reliability failure stops remaining cases",
 }
+MATERIAL_OBSERVATION_BINDING = {
+    "path": "evals/no-hook-observation/results/codex-native-3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360.json",
+    "sha256": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360",
+    "implementationCommit": "12720d103a0b46b6223ad2a41b562c1ec2935b87",
+    "implementationTree": "bde5a0d2f36ade6c6fa3bfbc0d951d1ab7054bf4",
+    "protocolDigest": "sha256:23b888e9dc090027b939b525c34ca12884769ee7ecb52aa5418ef2e88b7b7e4b"
+}
 MODEL = "gpt-5.5"
 REASONING_EFFORT = "medium"
 AUTH_FILE_NAME = "auth.json"
@@ -693,8 +700,8 @@ def _protocol(root: Path) -> dict[str, Any]:
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
-        "state": "material-segment-only", "lastResultSha256": ASSESSMENT_REMAINDER_BINDING["sha256"],
-        "reason": "31 historical attempts; only fresh material-input cases 10-16, once each",
+        "state": "closed", "lastResultSha256": MATERIAL_OBSERVATION_BINDING["sha256"],
+        "reason": "38 attempts consumed; assessment wording revision 3 is not observed",
     }, "native execution window differs from consumed attempt evidence")
     _require(document.get("assessmentRemainder") == ASSESSMENT_REMAINDER, "assessment remainder contract mismatch")
     _require(document.get("materialSegment") == MATERIAL_SEGMENT, "material segment contract mismatch")
@@ -722,7 +729,7 @@ def _protocol(root: Path) -> dict[str, Any]:
         _require(hashlib.sha256(_read(root / relative)).hexdigest() == binding["sha256"],
                  "native bound input changed")
     envelope = _json(_read(root / inputs["promptEnvelope"]["path"]))
-    _require(envelope.get("assessmentRevision") == 2 and
+    _require(envelope.get("assessmentRevision") == 3 and document.get("assessmentRevision") == 3 and
              envelope.get("materialDelivery") == MATERIAL_DELIVERY and
              envelope.get("fixtureMatrix") == inputs["fixtureMatrix"] and
              envelope.get("promptEnvelopeDigest") == legacy.self_digest(envelope, "promptEnvelopeDigest"),
@@ -756,7 +763,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                 protocol_digest=protocol["protocolDigest"], model_schema=_input(root, protocol, "modelResponseSchema"),
                 prompt_envelope=_input(root, protocol, "promptEnvelope"), request=case["request"])
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
                  history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": protocol["protocolDigest"]},
                  "native history identity is inconsistent")
@@ -813,6 +820,18 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         _require(history["assessmentRemainder"] == ASSESSMENT_REMAINDER_BINDING,
                  "stopped assessment remainder binding changed")
         _assessment_remainder_result(root)
+        _require(history["materialObservation"] == MATERIAL_OBSERVATION_BINDING,
+                 "historical material observation binding changed")
+        material_bytes = _read(root / MATERIAL_OBSERVATION_BINDING["path"])
+        _require(hashlib.sha256(material_bytes).hexdigest() == MATERIAL_OBSERVATION_BINDING["sha256"],
+                 "historical material observation bytes changed")
+        material_result = _json(material_bytes)
+        _require(material_result["protocolDigest"] == MATERIAL_OBSERVATION_BINDING["protocolDigest"] and
+                 material_result["attemptCount"] == material_result["cliLaunchCount"] == 7 and
+                 material_result["cumulativeAttemptCount"] == 38,
+                 "historical material observation accounting changed")
+        # Accepted historical bytes retain their own input meanings and scoring;
+        # this no-model wording migration cannot regrade or refund any attempt.
         records = history["results"]
         _require(type(records) is list and len(records) <= 1, "native history permits one current observation")
         current = {"codexObservation": "not-run", "hostClaim": False, "credentialUsed": False,
@@ -1178,11 +1197,17 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     strict validator. Material delivery is a separately versioned input layer;
     old envelopes without it retain their original prompt bytes.
     """
-    material = legacy.materialize_case_contract(**arguments)
     envelope = arguments["prompt_envelope"]
+    if envelope.get("assessmentRevision") == 3:
+        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+            definition = arguments["model_schema"]["properties"][field].get("description")
+            _require(type(definition) is str and definition and
+                     envelope["fixedInstructions"].count(definition) == 1,
+                     "native assessment field definitions are not uniformly delivered")
+    material = legacy.materialize_case_contract(**arguments)
     delivery = envelope.get("materialDelivery")
     if delivery is not None:
-        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") == 2,
+        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") in {2, 3},
                  "unsupported material delivery revision")
         binding = envelope["fixtureMatrix"]
         _require(set(binding) == {"path", "sha256"} and
@@ -1219,8 +1244,8 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
             node["enum"] = [node.pop("const")]
     _require(props["selectedRoutes"].pop("uniqueItems") is True, "local route uniqueness changed")
     # Model-side definitions are uniformly delivered by the bound envelope;
-    # these two local schema annotations are documentation, not API keywords.
-    for field in ("selectedRoutes", "discoveryOutcome"):
+    # these local schema annotations are documentation, not API keywords.
+    for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
         props[field].pop("description", None)
     validate_response_transport(schema)
     data = _bytes(schema)
@@ -1720,13 +1745,13 @@ def _reviewed_partial(root: Path) -> dict[str, Any]:
                  "review lacks the fixed model and Direct conditions")
     case = legacy.load_golden_cases(root)[REVIEWED_PREFIX_COUNT - 1]
     schema = _json(_read(root / legacy.MODEL_RESPONSE_SCHEMA_RELATIVE))
-    envelope = _json(_read(root / INPUT_PATHS["promptEnvelope"]))
-    material = materialize_native_case_contract(root=root, materialization_seed=bytes.fromhex(partial["materializationSeed"]),
-        ordinal=REVIEWED_PREFIX_COUNT, protocol_digest=REVIEWED_PARTIAL_PROTOCOL, model_schema=schema,
-        prompt_envelope=envelope, request=case["request"])
-    response = {**record["observed"], "opaqueCaseBinding": material.token}
-    _validate_native_response(response, schema, material.token)
-    _require(not legacy.validate_model_response(response, case, material.token, schema),
+    # Historical scoring needs its original opaque token, not a prompt rebuilt
+    # with the current assessment wording and a different response schema.
+    token = legacy.derive_opaque_case_binding(bytes.fromhex(partial["materializationSeed"]),
+                                             REVIEWED_PREFIX_COUNT, REVIEWED_PARTIAL_PROTOCOL)
+    response = {**record["observed"], "opaqueCaseBinding": token}
+    _validate_native_response(response, schema, token)
+    _require(not legacy.validate_model_response(response, case, token, schema),
              "reviewed response does not meet the original case semantics")
     return partial
 
