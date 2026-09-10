@@ -1480,3 +1480,11 @@ is not treated as current builder evidence or as a repaired legacy path. The
 legacy actual entry remains disabled; current ordinary/native bundle coverage
 comes from the separately validated production builder and the two actual
 source-bound builds above.
+
+Unit CI at `16728438e27b97c666164100501d10728a8fd74a` also failed.
+A second bounded metadata/protocol run passed 33 of 34 tests and identified
+the documentation snapshot's old 117 Markdown count. Its generated-region count
+was also still 20 rather than the current 21. Both counts were updated together;
+all structural, link, byte-size and negative checks remain. This additional local
+correction does not retroactively make either failed remote CI successful, and
+its remote verification must be reported separately if it is later synchronized.
