@@ -80,6 +80,14 @@
       "sourceIssue": 117,
       "summary": "Add three separately budgeted user-visible clarification observations using unchanged native protections, with independent reply evidence and historical accounting.",
       "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
+    },
+    {
+      "revision": 11,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "b99880298bc91fac582c7a06cfbaf7a31357c25a",
+      "sourceIssue": 117,
+      "summary": "Clarify unresolved material Git workflow choices before selection while preserving unchanged selected-envelope and host-native boundaries; revise the unpublished 0.10.1 candidate runtime.",
+      "runtimeContractDigest": "sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
     }
   ]
 }

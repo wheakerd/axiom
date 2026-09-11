@@ -1,6 +1,25 @@
 # Runtime And Repository Identity
 
-## Current v0.10.1 source identity
+## Current unpublished v0.10.1 Git-entry correction
+
+The existing 0.10.1 candidate is not tagged or released; repository version policy
+keeps that assigned version while the candidate is revised. Policy revision 11
+records a compatible change to the canonical Git Skill entry, against
+`b99880298bc91fac582c7a06cfbaf7a31357c25a`. The full runtime digest changes to
+`sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d` across the
+same 61 installed inputs. The descriptions, using-axiom gate and explicit-only
+policy, Hooks, fixtures, original requests and scoring remain unchanged.
+
+The entry distinguishes unresolved material workflow choices from questions
+within an already selected workflow. It requires one clarification before a
+material choice, and limits subsequent questions to necessary missing input or
+material conflict. Read-only authority does not select a workflow. The shared
+canonical entry affects both full and derived profiles; neither has a new host
+PASS at this source stage. The original 0.10.1 artifacts and all 73 attempts retain
+their original identity. A separate frozen build and three-reply observation
+must use the revised runtime; the old 16/16 result does not transfer to it.
+
+## Historical v0.10.1 description-source identity
 
 This section preserves the source-creation record. The subsequently completed
 policy-revision-9 artifact is owned by the
