@@ -112,6 +112,14 @@
       "sourceIssue": 117,
       "summary": "Bind the pending-choice runtime to two identical frozen builds and static validation, preserving all 76 observed attempts and both historical reply protocols without new model execution.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 15,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "1f0362d18fc281b251387a357bb6ad4a7eb5c661",
+      "sourceIssue": 117,
+      "summary": "Register one fixed 16-routing plus three-reply window, inheriting 76 attempts and preserving consumed windows, canonical runtime, and source/bundle policies 13/14.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

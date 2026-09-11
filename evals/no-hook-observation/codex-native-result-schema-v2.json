@@ -964,7 +964,7 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 70
+      "maximum": 92
     },
     "priorResultSha256s": {
       "type": "array",
@@ -1186,6 +1186,71 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fixed-candidate-acceptance-1"
+            },
+            "priorPartialSha256": {
+              "const": "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 76
+            },
+            "authenticationSourceOrdinal": {
+              "const": 14
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        }
+      ]
+    },
+    "executionSource": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "tree"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "tree": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
             }
           }
         }

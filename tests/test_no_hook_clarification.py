@@ -273,6 +273,8 @@ class ClarificationTests(unittest.TestCase):
         def check(doc):
             data=native._bytes(doc);relative="evals/no-hook-observation/results/clarification-fixture.json"
             history={"protocolDigest":p["protocolDigest"],"results":[*json.loads((ROOT/supplement.ARCHIVE/supplement.HISTORY.name).read_text())["results"],{"path":relative,"sha256":supplement.digest(data)}]}
+            history["fixedAcceptance"] = {"windowId": native.FIXED_ACCEPTANCE["windowId"],
+                "protocolDigest": p["protocolDigest"], "results": []}
             def read(path,*args,**kw):
                 if path==ROOT/supplement.HISTORY:return native._bytes(history)
                 if path==ROOT/relative:return data

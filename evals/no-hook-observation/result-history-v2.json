@@ -126,5 +126,10 @@
     "implementationCommit": "1cb076f4d54cb63e24ae097ccb728d67c614e1fd",
     "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
     "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9"
+  },
+  "fixedAcceptance": {
+    "windowId": "pending-choice-fixed-1",
+    "protocolDigest": "sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7",
+    "results": []
   }
 }

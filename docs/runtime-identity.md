@@ -1,5 +1,16 @@
 # Runtime And Repository Identity
 
+## Fixed-candidate observation registration
+
+Repository policy 15 registers one fixed 16-case routing assessment followed by
+three actual clarification replies, inheriting all 76 previous attempts with a
+maximum cumulative count of 95. It changes only repository observation and
+evidence machinery. Plugin 0.10.1, all 61 canonical runtime inputs and the full
+runtime digest remain unchanged. The frozen source and bundle continue to use
+policies 13/14 and their existing byte-identical build evidence; this policy
+revision is not a new package or build. Execution and result commits are recorded
+separately from frozen product source.
+
 ## Current unpublished v0.10.1 pending-choice clarification
 
 The assigned 0.10.1 candidate remains untagged and unreleased. Policy revision

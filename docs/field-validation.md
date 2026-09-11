@@ -3018,3 +3018,53 @@ These are current validation bindings, not new execution identities or
 permission to consume another observation. The recorded reply history keeps its
 original protocol and execution commits. Final-head CI results are reported
 separately in PR 121; no local count is reused as CI evidence.
+
+
+## Fixed-candidate routing and reply acceptance window
+
+This window starts from PR #121 head
+`1f0362d18fc281b251387a357bb6ad4a7eb5c661`, tree
+`795c08276f56f1096a1fe9878ecab53febfd24e6`. It freezes the canonical Skills,
+Hooks, unpublished plugin 0.10.1 and the existing source/bundle policies 13/14.
+Frozen source `8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`, retains full runtime
+`sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2`
+and profile runtime
+`sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3`.
+The preceding two identical actual builds remain the build evidence; registration
+and result changes do not rebuild the artifact.
+
+Repository policy 15 registers exactly one fixed acceptance set through the
+existing native and clarification entrypoints: the original 16 routing cases in
+benchmark order, followed by the three original natural-language reply cases in
+order 12, 13, 14. Each case has one independent fresh context. Only originally
+explicit requests 1, 2, 6 retain their existing qualified mentions; Case 11 has
+no Axiom installation or discovery. Requests, fixtures, prompt envelopes,
+expectations, scoring, public-reply retention and official final-output checks
+are unchanged. No canonical Skill or Hook is edited in this window.
+
+Both parts are registered before the first observation. The exact historical
+chain remains 76 canonical attempts and 76 observation CLI starts; internal
+model requests are unknown. The new maximum is 19 attempts and 19 observation
+CLI starts, with cumulative ceilings of 95. A reserved attempt is never refunded
+when spawn fails. Semantic mismatch remains FAIL and allows the fixed remainder
+only while execution and safety prerequisites hold. Reliability, identity or
+policy failure stops all remaining observations, including authentication
+handoff to the reply part. Consumed windows and exclusive attempt markers cannot
+be reused; no retry or additional sample is authorized.
+
+The fixed combination remains Codex 0.153.0 / gpt-5.5 / medium / Direct with
+Code Mode host and plugin runtime disabled. The available frozen package is
+installed through the existing dedicated local marketplace and discovered via
+the existing temporary user-Skill path. Only registered dedicated authentication
+moves opaquely after normal completion. User credentials, whole client homes and
+operator-only raw diagnostics remain excluded from validation copies, Git and
+CI. No second observation executor is introduced.
+
+At the registration implementation stage, new observations are NOT-RUN. An
+actual signed execution commit and tree are read from the committed implementation
+before preparation and checked again before launch; they are not the product
+source commit and are not prefilled with a future result commit. Actual outcomes,
+R4/R5 disposition and the exact retained cleanup inventory are recorded below
+when obtained. This window does not authorize Ready, merge, Issue closure,
+publication, or deletion of any branch, worktree, credential, session or ledger.

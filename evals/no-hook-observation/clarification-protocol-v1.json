@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:ab1c0c7af0d0fd2e4010f10397eb1a1faffb5a401ccd80119907d5dc22ba582d",
+  "nativeProtocolDigest": "sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -20,7 +20,7 @@
   "bindings": [
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "7bab2fbd577356b4aba5fb3e81d36bced6a30ac85338ba94aa3060d35839186c"
+      "sha256": "6c20c21d387822414fbd3cbd94a743a1fe2f197e70dac5600ebc444104063978"
     },
     {
       "path": "scripts/run-no-hook-clarification.py",
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "51cb1ef79853060287c9a37caf50c327fae824e9f8bdad20101278fd3cdcfe26"
+      "sha256": "a3baaf529729f3da8d024536bfb29ef4e28363f17c68b1b75b9ee07cd7c4c674"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -89,5 +89,14 @@
   ],
   "revision": 2,
   "priorSupplementSha256": "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae",
-  "protocolDigest": "sha256:a16e4b07f2c071e4d88b2d718001cd47de1a25312398e67219e6e80e78d3d99e"
+  "fixedAcceptance": {
+    "windowId": "pending-choice-fixed-1",
+    "requires": "completed-fixed-routing",
+    "limits": {
+      "newAttempts": 3,
+      "maximumCumulativeAttempts": 95,
+      "replyBytesPerCase": 8192
+    }
+  },
+  "protocolDigest": "sha256:aef166e67f3228eaea84436f8d4be75cb9037cd8c3d5080f9f46124438c45fa1"
 }

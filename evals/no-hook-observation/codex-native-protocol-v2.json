@@ -55,12 +55,16 @@
       "sha256": "78f47126df262737482d490f641fa27013c88f1a3edd1549b92d72f9a7e2e49d"
     },
     {
+      "path": "axiom_validation/no_hook_clarification.py",
+      "sha256": "6c20c21d387822414fbd3cbd94a743a1fe2f197e70dac5600ebc444104063978"
+    },
+    {
       "path": "axiom_validation/no_hook_linux_isolation.py",
       "sha256": "6ddae4cd0b7fcd64841b29a0e9386838c0f46adbed7fc81259543d36b0913907"
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "cb0f5506fb194d7edfec8a2a0d5e6de47d025fa81e837e4ae98057e081792900"
+      "sha256": "93a97bb5415faf6c2adf94660158f06249a12babb9b9f7b0d36a4f7ed02c5279"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -119,7 +123,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "828bdc283f383b863b1059d47e0764dddbf5689c6905df0c2e1feb82ff07b2a2"
+    "sha256": "84543f57fc9c6da62b10d4bcbdf83bcee3a4d815f750cce244560d914a254f81"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -281,9 +285,9 @@
     }
   },
   "executionWindow": {
-    "state": "authorized-once",
-    "lastResultSha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
-    "reason": "one fresh explicit-invocation batch; 16 new attempts, 70 cumulative maximum"
+    "state": "closed",
+    "lastResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
+    "reason": "the original explicit-invocation window is consumed; no reopening"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
@@ -395,5 +399,51 @@
     "evidence": "selection-representation; not-observed-native-body-load",
     "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
   },
-  "protocolDigest": "sha256:ab1c0c7af0d0fd2e4010f10397eb1a1faffb5a401ccd80119907d5dc22ba582d"
+  "fixedAcceptance": {
+    "windowId": "pending-choice-fixed-1",
+    "state": "authorized-once",
+    "candidateCommit": "1f0362d18fc281b251387a357bb6ad4a7eb5c661",
+    "candidateTree": "795c08276f56f1096a1fe9878ecab53febfd24e6",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
+      "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae",
+      "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449"
+    ],
+    "priorAttempts": 76,
+    "priorCliLaunches": 76,
+    "routingOrdinals": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 19,
+    "maximumCumulativeAttempts": 95,
+    "routingRunName": "cases-pending-choice-routing-1",
+    "clarificationRunName": "cases-pending-choice-clarification-1",
+    "order": "complete routing before clarification; semantic failures do not resample",
+    "stop": "reliability, identity or policy failure stops all remaining observations"
+  },
+  "protocolDigest": "sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7"
 }

@@ -166,7 +166,8 @@ class ExplicitInvocationTests(unittest.TestCase):
         self.assertEqual([r["status"] for r in old["caseResults"]], ["FAIL"] + ["PASS"] * 15)
         self.assertTrue(all("explicitInvocation" not in r for r in old["caseResults"]))
         self.assertLessEqual(len(history["results"]), 1)
-        self.assertEqual(self.protocol["executionWindow"]["state"], "authorized-once")
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        self.assertEqual(self.protocol["fixedAcceptance"], native.FIXED_ACCEPTANCE)
         self.assertEqual(native.CURRENT_ASSESSMENT["priorResult"], binding)
         self.assertEqual(native.CURRENT_ASSESSMENT["maximumCumulativeAttempts"], 70)
         with tempfile.TemporaryDirectory() as directory, patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):

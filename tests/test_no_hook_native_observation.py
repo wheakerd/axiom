@@ -4747,8 +4747,9 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(history["current"]["codexObservation"], current["status"].lower())
         else:
             self.assertEqual(history["current"]["codexObservation"], "not-run")
-        self.assertEqual(self.protocol["executionWindow"]["state"], "authorized-once")
-        self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], native.FIXED_ROUTING_PRIOR)
+        self.assertEqual(self.protocol["fixedAcceptance"], native.FIXED_ACCEPTANCE)
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
         # The existing scorer still rejects contradictory tuples without editing
         # the response, inventing a question or treating a route name as a read.
@@ -4999,6 +5000,131 @@ class NativeObservationTests(unittest.TestCase):
                 reuse_test_auth=True, assessment_batch=True, current_assessment=True,
                 process_runner=failed_spawn)
         self.assertEqual(invoked, [1])
+
+    def _fixed_acceptance_fixture(self):
+        from axiom_validation import no_hook_clarification as replies
+        prepared, runner, calls = self._prepared_runner()
+        old = json.loads((prepared / native.STATE_NAME).read_bytes())
+        previous = self.parent / "cases-clarification-2"
+        paths = native._case_paths(previous, 14)
+        paths["workspace"].mkdir(parents=True)
+        paths["home"].mkdir()
+        auth = paths["home"] / native.AUTH_FILE_NAME
+        auth.write_bytes(b"PUBLIC-SYNTHETIC-PREDECESSOR")
+        auth.chmod(0o600)
+        metadata = auth.stat()
+        native._exclusive(native._auth_owner(previous, 14), native._bytes({
+            "ordinal": 14, "device": metadata.st_dev, "inode": metadata.st_ino}))
+        run = self.parent / native.FIXED_ACCEPTANCE["routingRunName"]
+        with patch.object(replies, "_prior_state", return_value=old):
+            native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, runner=runner)
+        return run, previous, runner, calls
+
+    def test_fixed_acceptance_counts_all_76_and_keeps_consumed_windows_closed(self):
+        from axiom_validation import no_hook_clarification as replies
+        chain = native.fixed_attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"], len(chain["identities"])), (76, 76, 76))
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "window closed"):
+                native.prepare_current_assessment(ROOT, self.parent / "new", self.parent / "old",
+                    authorize_install=True, authorize_copy=True)
+            with self.assertRaises(native.NativeObservationError):
+                replies._unrecorded(ROOT, replies.protocol(ROOT))
+
+    def test_fixed_acceptance_registers_both_parts_before_any_observation(self):
+        run, previous, runner, calls = self._fixed_acceptance_fixture()
+        registration = native._fixed_registration(ROOT, self.parent)
+        self.assertEqual(calls, [])
+        self.assertEqual(registration["contract"]["routingOrdinals"], list(range(1, 17)))
+        self.assertEqual(registration["contract"]["clarificationOrdinals"], [12, 13, 14])
+        self.assertEqual(registration["contract"]["maximumCumulativeAttempts"], 95)
+        self.assertIsNone(registration["executionSource"])
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual([i for i in range(1, 17) if (native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME).exists()], [1])
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("real client started from simulation")):
+            with self.assertRaisesRegex(native.NativeObservationError, "preparation mode"):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                    reuse_test_auth=True, assessment_batch=True, fixed_acceptance=True)
+        self.assertFalse((run / "batch-started.json").exists())
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, runner=runner)
+        self.assertEqual(calls, [])
+
+    def test_fixed_acceptance_full_synthetic_handoff_preserves_counts_and_no_host_claim(self):
+        from axiom_validation import no_hook_clarification as replies
+        from tests.test_no_hook_clarification import text_stream
+        run, _, runner, calls = self._fixed_acceptance_fixture()
+        def wrong_route(argv, **kwargs):
+            if "exec" not in argv or Path(kwargs["cwd"]).parent.name != "case-01":
+                return runner(argv, **kwargs)
+            captured = runner(argv, **{**kwargs, "line_callback": None})
+            final = Path(argv[argv.index("--output-last-message") + 1])
+            document = json.loads(final.read_bytes())
+            document.update(discoveryOutcome="no-route", selectedRoutes=[], usingAxiomFrontDoorObserved=False)
+            final.write_bytes(event(document))
+            raw = stream(document)
+            for line in raw.splitlines(): kwargs["line_callback"](line)
+            return {**captured, "stdout": raw}
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, fixed_acceptance=True, process_runner=wrong_route)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual([x["status"] for x in result["caseResults"]], ["FAIL"] + ["PASS"] * 15)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (16, 92))
+        self.assertFalse(result["hostClaim"])
+        self.assertIsNone(result["executionSource"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for field, value in (("cumulativeAttemptCount", 93), ("priorResultSha256s", native.CURRENT_PRIOR_RESULTS)):
+            altered = copy.deepcopy(result); altered[field] = value
+            self.assertTrue(native.validate_native_result(altered, ROOT))
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, fixed_acceptance=True, process_runner=runner)
+        reply_root = self.parent / native.FIXED_ACCEPTANCE["clarificationRunName"]
+        replies.prepare(ROOT, reply_root, run, bundle_root=self.parent / "bundle",
+            authorized=True, fixed_acceptance=True, runner=runner)
+        reply_calls = []
+        message = "Public fixture reply for transport validation."
+        def reply_runner(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            self.assertNotIn("--output-schema", argv)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            reply_calls.append(ordinal)
+            kwargs["started_callback"]()
+            raw = text_stream((message,))
+            for line in raw.splitlines(): kwargs["line_callback"](line)
+            Path(argv[argv.index("--output-last-message") + 1]).write_text(message)
+            return {"returncode": 0, "stdout": raw, "stderr": b"",
+                    "diagnostics": {**native._diagnostics(), "inputFullyDelivered": True}}
+        captured = replies.run(ROOT, reply_root, authorized=True, fixed_acceptance=True, runner=reply_runner)
+        self.assertEqual(reply_calls, [12, 13, 14])
+        self.assertEqual((captured["attemptCount"], captured["cumulativeAttemptCount"]), (3, 95))
+        self.assertEqual([x["status"] for x in captured["caseResults"]], ["CAPTURED"] * 3)
+        self.assertEqual(captured["semanticAssessment"], "separate-review-required")
+        self.assertEqual(captured["runMode"], "simulated")
+        with self.assertRaises(native.NativeObservationError):
+            replies.run(ROOT, reply_root, authorized=True, fixed_acceptance=True, runner=reply_runner)
+        self.assertEqual(reply_calls, [12, 13, 14])
+
+    def test_fixed_acceptance_spawn_failure_consumes_and_blocks_later_handoff(self):
+        from axiom_validation import no_hook_clarification as replies
+        run, _, runner, calls = self._fixed_acceptance_fixture()
+        def failed_spawn(argv, **kwargs):
+            if "exec" in argv: raise OSError("synthetic spawn failure")
+            return runner(argv, **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, fixed_acceptance=True, process_runner=failed_spawn)
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 0, 77))
+        self.assertEqual([x["status"] for x in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        with patch.object(replies, "_login", side_effect=AssertionError("authentication continued")):
+            with self.assertRaises(native.NativeObservationError):
+                replies.prepare(ROOT, self.parent / native.FIXED_ACCEPTANCE["clarificationRunName"], run,
+                    bundle_root=self.parent / "bundle", authorized=True, fixed_acceptance=True, runner=runner)
+        self.assertEqual(calls, [])
 
     def test_current_assessment_registered_result_reaches_protocol_validation(self):
         run, _, runner, _, _, _ = self._current_assessment_fixture()

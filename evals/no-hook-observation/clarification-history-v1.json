@@ -13,5 +13,10 @@
       "implementationCommit": "ec72c13256cb729d3fc7a6ea469c9481732d1a59",
       "implementationTree": "2945c92eb2e1f460e86f08707b5d2e0c8b0c6de0"
     }
-  ]
+  ],
+  "fixedAcceptance": {
+    "windowId": "pending-choice-fixed-1",
+    "protocolDigest": "sha256:aef166e67f3228eaea84436f8d4be75cb9037cd8c3d5080f9f46124438c45fa1",
+    "results": []
+  }
 }
