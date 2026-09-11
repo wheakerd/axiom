@@ -72,6 +72,14 @@
       "sourceIssue": 117,
       "summary": "Bind the new canonical runtime source to a deterministic no-Hook bundle and uniform native assessment definitions; preserve historical observations and limits.",
       "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
+    },
+    {
+      "revision": 10,
+      "recordedOn": "2026-09-10",
+      "baselineCommit": "6719a8323a754f5c5dda5e18a2225ac324347fe3",
+      "sourceIssue": 117,
+      "summary": "Add three separately budgeted user-visible clarification observations using unchanged native protections, with independent reply evidence and historical accounting.",
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
     }
   ]
 }

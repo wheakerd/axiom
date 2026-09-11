@@ -2378,7 +2378,7 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(native.validate_native_result(result, ROOT), [])
             self.assertEqual(result["priorResultSha256s"], native.CURRENT_PRIOR_RESULTS)
             self.assertEqual(result["protocolDigest"], history["protocol"]["digest"])
-            self.assertEqual(result["protocolDigest"], self.protocol["protocolDigest"])
+            self.assertEqual(result["protocolDigest"], native._merged_protocol(ROOT)["protocolDigest"])
             prior_binding = history["historicalBatch"]
             self.assertEqual(prior_binding, native.ASSESSMENT_PRIOR_BINDING)
             prior_bytes = (ROOT / prior_binding["path"]).read_bytes()
@@ -4739,7 +4739,7 @@ class NativeObservationTests(unittest.TestCase):
             current_bytes = (ROOT / current_binding["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(current_bytes).hexdigest(), current_binding["sha256"])
             current = json.loads(current_bytes)
-            self.assertEqual(current["protocolDigest"], self.protocol["protocolDigest"])
+            self.assertEqual(current["protocolDigest"], native._merged_protocol(ROOT)["protocolDigest"])
             self.assertEqual(current["executionSegment"]["kind"], "explicit-invocation-revision-1")
             self.assertEqual(current["executionSegment"]["priorPartialSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
             self.assertEqual(current["executionSegment"]["priorAttemptCount"], native._attempt_history(ROOT)["attempts"])

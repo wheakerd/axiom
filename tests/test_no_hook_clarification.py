@@ -1,0 +1,268 @@
+"""Secret-free regressions through the existing receiver, parser and capture path."""
+import copy
+from contextlib import ExitStack
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from axiom_validation import no_hook_clarification as supplement
+from axiom_validation import no_hook_native_observation as native
+from tests.test_no_hook_native_observation import event, stream
+
+ROOT = Path(__file__).resolve().parents[1]
+QUESTION = "Which outcome do you want: redesign the plugin's packaged routes, or install it on this host?"
+
+
+def text_stream(messages=(QUESTION,), *, command=None, output="", terminal=True):
+    data = stream({}, command, output)
+    events = [json.loads(x) for x in data.splitlines()]
+    first_id = int(events[-2]["item"]["id"].split("_")[1])
+    events[-2:-1] = [{"type": "item.completed", "item": {"id": f"item_{first_id+i}",
+        "type": "agent_message", "text": text}} for i, text in enumerate(messages)]
+    if not terminal:
+        events.pop()
+    return b"".join(event(e) for e in events)
+
+
+class ClarificationTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="axiom-reply-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.run = Path(self.temp.name) / "cases-clarification-1"
+        self.run.mkdir()
+        self.paths = native._case_paths(self.run, 12)
+        self.paths["workspace"].mkdir(parents=True)
+        self.paths["home"].mkdir()
+        (self.paths["workspace"] / "document.txt").write_text("Public test material.\n")
+        self.readable = {str(self.paths["workspace"] / "document.txt"): b"Public test material.\n"}
+        (self.paths["case"] / "reply-prompt.txt").write_text("A bounded original request.\n")
+        self.prepared = {"ordinal": 12, "caseId": native.legacy.EXPECTED_CASE_IDS[11],
+            "promptSha256": supplement.digest(b"A bounded original request.\n"),
+            "requestSha256": "0" * 64, "fixtureSha256": "1" * 64, "packageSha256": "2" * 64}
+        self.taxonomy = native._input(ROOT, native._protocol(ROOT), "taxonomy")
+
+    def capture(self, data=None, *, stderr=b"", code=0, mismatch=False, cleanup=False, timeout=False):
+        data = text_stream() if data is None else data
+        def runner(argv, **kwargs):
+            self.assertNotIn("--output-schema", argv)
+            self.assertIn("--json", argv)
+            self.assertIn("features.plugins=false", argv)
+            self.assertIn("--ephemeral", argv)
+            final = argv[argv.index("--output-last-message") + 1]
+            program = "import sys,time,pathlib;sys.stdin.buffer.read();"
+            if timeout:
+                program += "time.sleep(1)"
+            else:
+                program += ("pathlib.Path(sys.argv[1]).write_bytes(" + repr(("different" if mismatch else QUESTION).encode()) + ");"
+                    "sys.stdout.buffer.write(" + repr(data) + ");sys.stdout.buffer.flush();"
+                    "sys.stderr.buffer.write(" + repr(stderr) + ");sys.exit(" + str(code) + ")")
+            return native.bounded_process([sys.executable, "-I", "-B", "-c", program, final],
+                **kwargs, timeout=0.01 if timeout else 10)
+        operator = native.OperatorDiagnostics(self.run)
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(native.legacy, "freeze_executable", return_value={}))
+            stack.enter_context(patch.object(native.legacy, "recheck_executable"))
+            stack.enter_context(patch.object(supplement, "_verify_inputs", return_value={
+                "fixtureSha256": "1"*64, "packageSha256": "2"*64, "modelMetadata": {"derivedEffectiveToolMode": "direct"}}))
+            stack.enter_context(patch.object(native, "_open_test_auth", side_effect=lambda *a: os.open(os.devnull, os.O_RDONLY)))
+            stack.enter_context(patch.object(supplement, "_login"))
+            stack.enter_context(patch.object(native, "_readable", return_value=self.readable))
+            if cleanup:
+                original = Path.unlink
+                stack.enter_context(patch.object(Path, "unlink", autospec=True,
+                    side_effect=lambda path, *a, **kw: (_ for _ in ()).throw(OSError()) if path.name.startswith("final-reply") else original(path,*a,**kw)))
+            return supplement._capture_case(ROOT, self.run, 12, self.prepared, Path("/fixture/codex"), operator, runner)
+
+    def test_natural_reply_production_receiver_final_file_and_capture(self):
+        record = self.capture()
+        self.assertEqual(record["status"], "CAPTURED")
+        self.assertEqual(record["replies"]["messages"], [QUESTION])
+        self.assertTrue(record["executionDiagnostics"]["finalOutputVerified"])
+        self.assertEqual(record["postcheck"], "valid")
+        self.assertEqual(record["attemptCount"], 1)
+        self.assertEqual(record["cliLaunchCount"], 1)
+        self.assertFalse((self.run / "final-reply-12.txt").exists())
+
+    def test_old_route_parser_still_rejects_natural_text(self):
+        with self.assertRaises(native.NativeStreamError) as found:
+            native.parse_native_jsonl(text_stream(), self.taxonomy, self.readable, self.paths["workspace"])
+        self.assertEqual(found.exception.code, "final-message-invalid-json")
+        self.assertEqual(supplement.reply_stream(text_stream(), self.taxonomy, self.readable,
+                                               self.paths["workspace"])["messages"], [QUESTION])
+
+    def test_all_visible_messages_retained_not_just_last_question(self):
+        messages = ["I choose installation.", QUESTION]
+        parsed = supplement.reply_stream(text_stream(messages), self.taxonomy, {}, self.paths["workspace"])
+        self.assertEqual(parsed["messages"], messages)
+        self.assertEqual(supplement.public_replies(messages)["originalVisibleMessageCount"], 2)
+
+    def test_real_public_read_bytes_flow_through_receiving_and_record(self):
+        data = subprocess.check_output(["cat", "document.txt"], cwd=self.paths["workspace"])
+        record = self.capture(text_stream(command="cat document.txt", output=data.decode()))
+        self.assertEqual(record["status"], "CAPTURED")
+        self.assertEqual(record["readonlyCommandCount"], 1)
+        self.assertEqual(record["publicReads"][0]["source"], "fixture")
+
+    def test_unbound_target_rejection_and_ordinal_survive_cleanup(self):
+        record = self.capture(text_stream(command="cat /unbound/client/path"), cleanup=True)
+        self.assertEqual(record["status"], "INCOMPLETE")
+        facts = record["executionDiagnostics"]
+        self.assertEqual(facts["streamAssertion"], "read-target-unbound")
+        self.assertEqual(facts["streamEventOrdinal"], 3)
+        self.assertEqual(facts["category"], "policy-rejected")
+        self.assertTrue(facts["cleanupFailed"])
+
+    def test_unknown_stderr_retains_reply_but_never_auto_passes(self):
+        record = self.capture(stderr=b"Unknown fixture diagnostic\n")
+        self.assertEqual(record["status"], "INCOMPLETE")
+        self.assertEqual(record["executionDiagnostics"]["category"], "unknown-stderr")
+        self.assertEqual(record["replies"]["messages"], [QUESTION])
+        self.assertEqual(record["operatorStderrCapture"]["status"], "saved")
+        self.assertEqual(record["postcheck"], "valid")
+
+    def test_nonzero_exit_remains_first_cause(self):
+        record = self.capture(code=4, cleanup=True)
+        self.assertEqual(record["status"], "INCOMPLETE")
+        self.assertEqual(record["executionDiagnostics"]["category"], "process-exit")
+
+    def test_invalid_final_output_not_accepted(self):
+        record = self.capture(mismatch=True)
+        self.assertEqual(record["status"], "INCOMPLETE")
+        self.assertFalse(record["executionDiagnostics"]["finalOutputVerified"])
+
+    def test_missing_terminal_is_not_json_response_exception(self):
+        record = self.capture(text_stream(terminal=False))
+        self.assertEqual(record["status"], "INCOMPLETE")
+        self.assertEqual(record["executionDiagnostics"]["streamAssertion"], "missing-terminal")
+
+    def test_timeout_stops_and_does_not_refund_attempt(self):
+        record = self.capture(timeout=True)
+        self.assertEqual(record["status"], "INCOMPLETE")
+        self.assertTrue(record["executionDiagnostics"]["timedOut"])
+        self.assertEqual(record["attemptCount"], 1)
+
+    def test_reply_limit_private_paths_and_secret_shaped_chunks(self):
+        with self.assertRaises(native.NativeObservationError):
+            supplement.reply_stream(text_stream(["x"*8193]), self.taxonomy, {}, self.paths["workspace"])
+        d = supplement.public_replies(["Which option? /home/test/private/file token=fixture-secret"])
+        self.assertFalse(d["retentionComplete"])
+        self.assertNotIn("fixture-secret", d["messages"][0])
+        self.assertNotIn("/home/test", d["messages"][0])
+
+    def test_prompt_only_request_safety_and_bound_material_positions(self):
+        p = supplement.protocol(ROOT)
+        prompt = supplement.reply_prompt("Consider the requested alternatives.",
+            {"files": [{"path": "notes.txt", "contentUtf8": "DO NOT COPY"}]}, p["instructions"])
+        self.assertIn(b'"notes.txt"', prompt)
+        for forbidden in (b"expectedRoutes", b"clarificationCount", b"must ask", b"DO NOT COPY", b"$using-axiom"):
+            self.assertNotIn(forbidden, prompt)
+        self.assertTrue(prompt.endswith(b"User request:\nConsider the requested alternatives.\n"))
+
+    def test_only_three_ordinals_available_no_resume_or_schema(self):
+        for i in range(1,17):
+            if i not in (12,13,14):
+                with self.assertRaises(native.NativeObservationError):
+                    supplement.reply_argv(Path("/fixture/codex"), self.run, i, self.run/"final")
+        for i in (12,13,14):
+            argv = supplement.reply_argv(Path("/fixture/codex"), self.run, i, self.run/"final")
+            self.assertNotIn("--output-schema", argv)
+            self.assertNotIn("resume", argv)
+
+    def test_exact_deduplicated_seventy_history_and_three_budget(self):
+        chain = supplement.attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"]), (70,70))
+        self.assertEqual(supplement.protocol(ROOT)["limits"]["maximumCumulativeAttempts"],73)
+
+    def test_batch_stops_after_incomplete_and_cannot_reopen(self):
+        p = supplement.protocol(ROOT)
+        state = {"protocolDigest": p["protocolDigest"], "attemptHistory": supplement.attempt_history(ROOT),
+            "runMode": "simulated", "executable": "/fixture/codex", "cases": [{"ordinal":i} for i in (12,13,14)]}
+        native._exclusive(self.run/supplement.STATE,native._bytes(state))
+        with patch.object(supplement,"_capture_case",return_value={"ordinal":12,"status":"INCOMPLETE","attemptCount":1,"cliLaunchCount":0}) as capture:
+            d=supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
+            self.assertEqual(capture.call_count,1)
+            self.assertEqual([c["status"] for c in d["caseResults"]],["INCOMPLETE","NOT-RUN","NOT-RUN"])
+            self.assertEqual(d["cumulativeAttemptCount"],71)
+            self.assertEqual(d["cumulativeCliLaunchCount"],70)
+            with self.assertRaises(FileExistsError):
+                supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
+
+    def test_capture_accounting_maximum_three_without_auto_semantic_pass(self):
+        p = supplement.protocol(ROOT)
+        state = {"protocolDigest":p["protocolDigest"],"attemptHistory":supplement.attempt_history(ROOT),
+            "runMode":"simulated","executable":"/fixture/codex","cases":[{"ordinal":i} for i in (12,13,14)]}
+        native._exclusive(self.run/supplement.STATE,native._bytes(state))
+        def captured(root,run,ordinal,*args):
+            return {"ordinal":ordinal,"status":"CAPTURED","attemptCount":1,"cliLaunchCount":1}
+        with patch.object(supplement,"_capture_case",side_effect=captured):
+            d=supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
+        self.assertEqual(d["attemptCount"],3)
+        self.assertEqual(d["cumulativeAttemptCount"],73)
+        self.assertEqual(d["semanticAssessment"],"separate-review-required")
+
+    def test_recognized_condition_precedes_final_artifact_failure(self):
+        events = [json.loads(x) for x in text_stream().splitlines()]
+        events[-2]["item"]["id"] = "item_1"
+        events.insert(1, {"type":"item.completed", "item":{"id":"item_0", "type":"error",
+            "message":native.CODE_MODE_FAIL_CLOSED_NOTICE}})
+        record = self.capture(b"".join(event(e) for e in events), mismatch=True)
+        self.assertEqual(record["executionDiagnostics"]["category"],"tool-mode-unavailable")
+        self.assertFalse(record["executionDiagnostics"]["finalOutputVerified"])
+
+    def test_uncommitted_protocol_cannot_consume_batch_marker(self):
+        p = supplement.protocol(ROOT)
+        state = {"protocolDigest":p["protocolDigest"], "attemptHistory":supplement.attempt_history(ROOT),
+                 "runMode":"actual", "executable":"/fixture/codex", "cases":[{"ordinal":i} for i in (12,13,14)]}
+        native._exclusive(self.run/supplement.STATE,native._bytes(state))
+        def git(argv, **kwargs):
+            if "rev-parse" in argv:return b"1"*40+b"\n"+b"2"*40+b"\n"
+            path=argv[-1].split(":",1)[1]
+            return b"different" if path==supplement.PROTOCOL.as_posix() else (ROOT/path).read_bytes()
+        with patch.object(subprocess,"check_output",side_effect=git):
+            with self.assertRaisesRegex(native.NativeObservationError,"protocol is not committed"):
+                supplement.run(ROOT,self.run,authorized=True)
+        self.assertFalse((self.run/"batch-started.json").exists())
+
+    def test_retained_status_and_message_invariants(self):
+        p = supplement.protocol(ROOT)
+        cases=native.legacy.load_golden_cases(ROOT)
+        fixtures=native._input(ROOT,native._protocol(ROOT),"fixtureMatrix")
+        c=self.capture()
+        records=[]
+        for i in (12,13,14):
+            case=cases[i-1];record=copy.deepcopy(c)
+            record.update(ordinal=i,caseId=case["id"],requestSha256=supplement.digest(case["request"].encode()),
+                promptSha256=supplement.digest(supplement.reply_prompt(case["request"],native._definition(fixtures,i),p["instructions"])))
+            records.append(record)
+        d={"protocolDigest":p["protocolDigest"],"priorResultSha256":supplement.PRIOR,"priorAttemptCount":70,
+           "caseResults":records,"attemptCount":3,"cliLaunchCount":3,"cumulativeAttemptCount":73,
+           "cumulativeCliLaunchCount":73,"modelRequestCount":None}
+        actual_read=supplement._read
+        def check(doc):
+            data=native._bytes(doc);relative="evals/no-hook-observation/results/clarification-fixture.json"
+            history={"protocolDigest":p["protocolDigest"],"results":[{"path":relative,"sha256":supplement.digest(data)}]}
+            def read(path,*args,**kw):
+                if path==ROOT/supplement.HISTORY:return native._bytes(history)
+                if path==ROOT/relative:return data
+                return actual_read(path,*args,**kw)
+            with patch.object(supplement,"_read",side_effect=read):return supplement.check(ROOT)
+        self.assertEqual(check(d),[])
+        for bad in ("PASS","unknown","NOT-RUN"):
+            changed=copy.deepcopy(d);changed["caseResults"][0]["status"]=bad
+            self.assertTrue(check(changed),bad)
+        changed=copy.deepcopy(d);changed["caseResults"][0]["replies"]["messages"]=[]
+        self.assertTrue(check(changed))
+        changed=copy.deepcopy(d);changed["caseResults"][0]["replies"]["originalVisibleMessageCount"]=2
+        self.assertTrue(check(changed))
+
+    def test_merged_routing_bytes_use_original_protocol_and_reject_tampering(self):
+        original=json.loads((ROOT/supplement.PRIOR_PATH).read_text())
+        self.assertEqual(native.validate_native_result(original,ROOT),[])
+        changed=copy.deepcopy(original);changed["caseResults"][0]["status"]="FAIL"
+        self.assertTrue(native.validate_native_result(changed,ROOT))
+        self.assertNotEqual(native._protocol(ROOT)["protocolDigest"],original["protocolDigest"])

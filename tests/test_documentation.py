@@ -23,7 +23,7 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(18, report.current_document_count)
         self.assertEqual(13, report.indexed_document_count)
         self.assertEqual(21, report.generated_region_count)
-        self.assertEqual(8605, report.readme_bytes)
+        self.assertEqual(8606, report.readme_bytes)
         self.assertEqual("within", report.preferred_budget_status)
 
     def test_named_negative_fixtures_are_all_rejected(self):
@@ -44,7 +44,7 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("", result.stderr)
         self.assertIn(
-            "README 8605 bytes (preferred 8-12 KiB: within)", result.stdout
+            "README 8606 bytes (preferred 8-12 KiB: within)", result.stdout
         )
         self.assertIn("17 negative fixtures", result.stdout)
 

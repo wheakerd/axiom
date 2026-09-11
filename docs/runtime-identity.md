@@ -853,3 +853,10 @@ runtime contract, but it never changes that observation's host, version, date,
 or lifecycle. Reuse is a reference to prior evidence, not a new run. The
 machine-readable release status keeps `NOT-RUN` and `UNAVAILABLE` current-host
 states separate from any prior record.
+
+
+Repository policy revision 10 adds the post-merge single-reply clarification
+supplement and its independent evidence checks. It preserves plugin 0.10.1,
+61 installed inputs, the full runtime digest and the existing derived bundle.
+The actual supplement implementation commit is recorded separately from its
+result commit; no future Git SHA is included in a self-referential identity.

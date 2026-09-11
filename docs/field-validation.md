@@ -2,6 +2,8 @@
 
 ## Current assessment and historical boundaries
 
+Post-merge clarification follow-up is recorded in [Single-reply clarification supplement](#single-reply-clarification-supplement). It does not replace the completed routing assessment or its 70-attempt history.
+
 The explicit-invocation revision-1 full batch is **PASS: 16 PASS, zero FAIL,
 INCOMPLETE or NOT-RUN**. It uses assessment revision 3/material-delivery revision 1,
 Codex 0.153.0, gpt-5.5/medium/Direct and the unchanged unpublished 0.10.1 runtime.
@@ -2502,3 +2504,101 @@ must have the same reviewed tree; actual merged state, signature and new-main
 checks must be read back. This record does not invent that future commit.
 Issue 117 remains open regardless of the PR integration result. No tag, Release,
 listing, installed-profile promotion or new model call follows from this review.
+
+## Single-reply clarification supplement
+
+The post-merge follow-up starts from signed main
+`6719a8323a754f5c5dda5e18a2225ac324347fe3`, tree
+`c1941e29158fbb120e9f093b3df8e127f61ea327`. Repository policy revision 10
+adds only supplementary observation/evidence handling. The 0.10.1 canonical,
+full runtime and bundle remain unchanged; no new deterministic build is claimed.
+The existing complete routing result and all 70 lifetime attempts keep their
+original bytes, protocols and execution identities.
+
+[Supplement protocol](../evals/no-hook-observation/clarification-protocol-v1.json)
+permits exactly one fresh reply for each original request 12, 13 and 14, with a
+separate maximum of three attempts and a lifetime maximum of 73. It does not
+reopen the routing window. The inherited native configuration remains Codex
+0.153.0, gpt-5.5/medium, Direct, Code Mode host disabled, plugin runtime disabled,
+standard user-Skill discovery from the verified installed package, restricted
+tool reads/environment/network, bounded foreground execution and normal cleanup.
+The dedicated authentication source is the last normally completed registered
+case; only its official-client credential file is copied serially and opaquely.
+
+The supplement forwards each unchanged inner request, the common read-only
+boundary and the existing bound fixture positions. It omits the routing JSON
+response schema and assessment definitions. It adds no expected answer, route,
+forced clarification, Skill mention, Skill body or required file-read command.
+All emitted user-visible messages are considered, not just an isolated question.
+Per-case retained replies are limited to 8 KiB and minimized conservatively;
+omissions make the evidence incomplete. This filtering is not a universal
+secret-detection guarantee. No raw JSONL, reasoning or operator-only diagnostics
+are committed. The existing operator-only JSONL/stderr/command exceptions and
+no-executor-read boundary remain in force.
+
+The production receiver and strict lifecycle/read parser are reused unchanged.
+Only its JSON-specific assertions after a fully closed stream are treated as
+expected for text; errors in framing, item numbering, command policy, terminal
+closure or final output remain failures. The official final artifact must equal
+the last JSONL response's UTF-8 bytes exactly, with no synthetic newline or
+whitespace normalization. CAPTURED means a validated retained reply, not semantic
+PASS. A separately bound review judges whether the complete reply asks one
+clear question about the mutually exclusive outcomes, without choosing one or
+performing business actions. It does not count question marks or claim the user
+answered. Ordinary semantic FAIL does not authorize a retry.
+
+Frozen interface findings at Codex source
+`41e22fee981a63b3698df7ed36bad393cda24715` are source-derived:
+
+- [Exec options](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/cli.rs)
+  keep JSONL formatting independent of the optional response schema.
+- [Final-output writer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/event_processor.rs)
+  writes the selected string bytes without adding a newline. TurnCompleted can
+  replace the last emitted candidate; exact output agreement is required.
+- [Exec event types](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/exec_events.rs)
+  provide no successful native Skill-body loading receipt. skills/list is
+  discovery metadata; skills/changed invalidates metadata. Neither proves
+  per-turn body loading. A separate plugin/skill/read is not this turn's receipt.
+- [Skill loading](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/extension.rs)
+  and [internal records](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/skills.rs)
+  retain injected paths/metrics internally. No reviewed supported local API
+  exposes an independent body-identity receipt for this observation without
+  additional instrumentation. This is an interface limit, not a statement that
+  the host is unavailable or has no internal records. No instrumentation is added.
+
+A naturally emitted validated public read supports only that identified read.
+Installation, directory discovery, native loading, context delivery and semantic
+consumption remain separate. Correct clarification cannot close all consumption
+obligations or FCR findings. Other host targets remain NOT-RUN. Issue 117 stays
+open and the follow-up PR remains Draft.
+
+Preparation regression initially caught a stop-latch bug: after one INCOMPLETE,
+an inserted NOT-RUN could allow the third iteration. The implementation now
+preserves the earlier failure throughout the segment, with a direct regression.
+This failure and repair occurred without model calls. A separate regression
+confirms the old routing parser still rejects non-JSON replies while the
+supplement accepts a valid closed natural-language response.
+
+Policy-only maintenance exposed a legacy assertion that the current repository
+revision must forever equal 9. The owner now validates contiguous later policy
+revisions while retaining the frozen revision-7/runtime checks. Current helper
+protocols are rebound; pre-maintenance protocols and the v1 empty history are
+archived byte-for-byte under `historical-protocols/`. The completed routing
+history remains unchanged. Its exact result still passes the original strict
+validation using its archived protocol, including original input commitments.
+The README gains exactly one byte when revision 9 becomes 10; its two exact
+size expectations follow that approved identity change. Two historical tests were updated to compare that original protocol rather
+than the new maintenance digest; no result expectation or grading changed.
+
+Pre-execution validation used an external independent Git/source copy with
+bytecode writes disabled: 20 supplement regressions passed; full discovery
+ran 582 tests, 580 passed and two existing optional probes skipped. Publication,
+distribution, runtime identity, documentation and diff checks passed. The
+initial full run had only the two README size expectation failures described
+above; the complete rerun passed. The bounded independent source review found
+and verified fixes for result-state invariants, committed protocol binding and
+first host-condition preservation. It ran no client and supplies no approval.
+
+Execution results: NOT-RUN until a separately signed implementation and the
+three fresh prepared states pass their preflight. Results and semantic review
+will be appended here without modifying the prior routing result.

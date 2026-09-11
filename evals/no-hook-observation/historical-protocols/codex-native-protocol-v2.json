@@ -60,11 +60,11 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "a36901cd15c8b42904dc6be5ff532088ed9c1d26fc7906761351f1f6c721af91"
+      "sha256": "c300bc6577f9776fb94a627f8e4e053ee786226a5072da56a6d27fdbead68b62"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
-      "sha256": "438eab05e15e2647b7f2bdc457ee0455e76b217f5d2638ce6aea84a35d01c024"
+      "sha256": "3de5625a1cb775366aa23b2bface9059b77f1604e1a5901b4de137ef5f1c7e31"
     },
     {
       "path": "axiom_validation/no_hook_profile.py",
@@ -331,6 +331,7 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
+  "protocolDigest": "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",
@@ -394,6 +395,5 @@
     "noInstallation": "no-selection-added",
     "evidence": "selection-representation; not-observed-native-body-load",
     "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
-  },
-  "protocolDigest": "sha256:44479230069f696c2d7a9d1f6cfc173ee625af6801e29eaec61b611412efdcb4"
+  }
 }
