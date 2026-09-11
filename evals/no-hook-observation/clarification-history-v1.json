@@ -6,6 +6,12 @@
       "sha256": "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae",
       "implementationCommit": "525f96f70073f9eb6038ab46b1ac27327a2b4d2e",
       "implementationTree": "1a4805b8f35f1ac423eef9b60223067832c00ad4"
+    },
+    {
+      "path": "evals/no-hook-observation/results/clarification-2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449.json",
+      "sha256": "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449",
+      "implementationCommit": "ec72c13256cb729d3fc7a6ea469c9481732d1a59",
+      "implementationTree": "2945c92eb2e1f460e86f08707b5d2e0c8b0c6de0"
     }
   ]
 }

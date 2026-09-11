@@ -2786,3 +2786,108 @@ local generic plugin validator remains NON-PASS for the existing protected
 not removed or treated as newly unsupported product metadata. Static contract
 validation and the independent source review do not claim model repair. The
 three new replies are still unobserved at this signed implementation stage.
+
+### Second supplement: actual replies and bounded semantic review
+
+The authorized second supplement has now completed. Its committed execution
+source is `ec72c13256cb729d3fc7a6ea469c9481732d1a59`, tree
+`2945c92eb2e1f460e86f08707b5d2e0c8b0c6de0`, with protocol
+`sha256:e4d54501c67d8c8ca29b1fbf448df8daf3833f42e746bb1be57422db9757c442`.
+The complete minimized public record is
+[clarification result 2567ec1a](../evals/no-hook-observation/results/clarification-2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449.json):
+9,253 bytes, SHA-256
+`2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449`.
+It is copied byte for byte from the registered result, including English
+typographic apostrophes in the model's messages. No message was omitted,
+rewritten or redacted. The history records it separately from the first result.
+
+Preparation installed the new frozen package in three independent fresh states
+using the existing dedicated authentication handoff. Each installed Git entry
+matched the 8,179 canonical bytes. Each case's request, common prompt and fixture
+digest matched its original counterpart; only the approved artifact and
+implementation bindings changed. The client remained Codex 0.153.0,
+gpt-5.5 / medium, Direct, with Code Mode host and plugin runtime disabled.
+There was no qualified Skill mention, explicit read command, added clarification
+hint, generated user answer or follow-up business operation.
+
+| Case | Original 0.10.1 reply | Revised 0.10.1 reply | Current semantic finding |
+| --- | --- | --- | --- |
+| 12 | PASS | FAIL | It asks a clear question, then uses read-only limits to make redesign review/plan the actionable default in the same reply. |
+| 13 | FAIL | PASS | It reads Git guidance, then explicitly asks the user to choose between the two workflows without selecting either implementation. |
+| 14 | PASS | PASS | It asks which outcome is wanted and leaves both alternatives pending. |
+
+These are primary-agent semantic judgments under the unchanged assessment, not
+an independent approval or the collector's `CAPTURED` transport status. The
+independent review above covered source contracts only. Both rounds have two
+PASS and one FAIL, on different runtime digests and with different failing
+cases. This observation does not establish that the Git text change caused the
+changed behavior in Case 12.
+
+Case 12's opening question is retained together with its final sentence,
+"the actionable path is a route redesign review/plan unless you want to restart
+with write/install authority." The read-only restriction limits execution; it
+does not resolve the user's workflow choice. Counting only the question would
+hide the same-reply default and incorrectly produce PASS.
+
+Case 13 has two visible messages, both retained. The opening announces use of
+`axiom:traceable-git-submit` to read guidance before answering. The final message
+says "Please pick one:" and presents ordinary named-remote push and independently
+traceable checkpoint workflow, while preserving the read-only execution limit.
+This is an actual choice request even without a question mark. The opening
+selects guidance; it does not choose checkpoint execution over ordinary push.
+The semantic PASS therefore does not assert that no Skill was selected before
+the question, that all startup routing behavior passed, or that reading guidance
+granted Git authority.
+
+The public command evidence for Case 13 validates a complete 8,179-byte package
+read at event ordinal 5, requested line range 1-240. Cases 12 and 14 have no
+recorded public reads. The old Case 13's 8,186-byte read remains intact and
+valuable despite its FAIL. Package installation and byte checks establish which
+source was available; the public read establishes which text was returned; the
+visible choice request supports the bounded semantic result. None supplies an
+independent native loading receipt or proves internal semantic consumption.
+Those fields remain `not-observed`; the already-inspected exec interface was
+not searched again and no tracking framework was added.
+
+All three sessions reached `turn.completed`, returned zero, delivered the full
+input, verified the final message against the official final-output artifact,
+and passed their input/package postchecks. All visible-message retention is
+complete. No timeout, observer termination, cleanup failure or stop diagnostic
+occurred. Operator-only content and credentials were not inspected. The
+internal model-request count remains unknown.
+
+This round consumed exactly three canonical attempts and three CLI starts,
+bringing each cumulative total to 76. The original 70 routing attempts and first
+three reply attempts are neither reset nor refunded. All 16 pre-existing result
+files remain byte-identical to the baseline. Sampling is finished, the FAIL is
+retained, and no attempt 77 or automatic retry is authorized. The dedicated
+authentication, public evidence and private diagnostic state remain preserved.
+
+Local Linux Hook regression passed all five tests. This supplements text and
+contract checks; it is not installed full-profile acceptance. Revised-runtime
+16-case routing acceptance and the other host targets remain NOT-RUN. The old
+16/16 result applies only to its original runtime and inputs. Issue 117 and FCR
+applicability remain open, PR 121 remains Draft, and PR 120 is unchanged.
+
+Final result-bearing no-model discovery passed in the disposable validation
+copy: 586 tests in 121.459 seconds, 584 passed, two existing optional skips,
+zero failures/errors. Publication, distribution, documentation, runtime identity
+and both-round clarification checks passed. The publication aggregate includes
+238 Git contract fixtures, 78 offline route fixtures, 95 black-box routing cases,
+10 structured Git-boundary scenarios and the unchanged Hook contracts; these
+are no-model checks, not new canonical attempts. All 116 repository JSON files
+parse, and all 42 packaged instruction Markdown files are below 8,192 bytes.
+
+The literal ASCII-only scan is NON-PASS: existing multilingual test fixtures,
+existing documentation punctuation and the original/revised verbatim replies
+contain non-ASCII characters. Authored project prose and canonical definitions
+remain English. The new result's seven U+2019 apostrophes are observed English
+text and are retained without changing its registered bytes. This scan does not
+justify rewriting historical inputs or model output. The generic-validator
+limitation reported above also remains explicit.
+
+One of the two verified frozen builds is retained byte for byte in the task's
+dedicated artifact area outside the publishable tree. This is a retention copy,
+not a third successful build. The original artifact and observation state are
+preserved. Final-head GitHub checks are reported separately in PR 121; local
+test counts do not stand in for CI or other-host acceptance.
