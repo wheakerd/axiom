@@ -7,6 +7,10 @@ The assigned 0.10.1 candidate remains untagged and unreleased. Policy revision
 description and first entry step against `37b6cb63313425f2a802eead82401dfe1ff79a83`.
 The full runtime digest is
 `sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2` across the same 61 installed inputs.
+Policy revision 14 binds two identical actual builds from signed source
+`8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`, to the current
+[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
 
 The existing contract already required clarification. This revision explicitly
 keeps a material workflow choice unselected after asking until the user chooses;

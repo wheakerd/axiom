@@ -2892,3 +2892,129 @@ dedicated artifact area outside the publishable tree. This is a retention copy,
 not a third successful build. The original artifact and observation state are
 preserved. Final-head GitHub checks are reported separately in PR 121; local
 test counts do not stand in for CI or other-host acceptance.
+
+
+## Pending-choice entry clarification without new observations
+
+Baseline `37b6cb63313425f2a802eead82401dfe1ff79a83` already required clarification
+in the agent-plugin-architect description and prohibited choosing for the user
+in its route reference. The using-axiom body also resumed routing only after the
+user chose. The rule was not absent. The architect's discovery description ended
+at asking, however, and its first entry step moved directly into architecture
+work without explicitly carrying the pending choice through the reply.
+
+The minimal canonical change is confined to
+`skills/agent-plugin-architect/SKILL.md`: its existing discovery clause now keeps
+the workflow unselected until the user chooses, and its first entry step states
+that explaining unavailable actions cannot justify a same-reply default,
+continuation of one option, or a requirement that the user object to stop.
+Read-only authority, lower risk, lighter work and present feasibility do not
+resolve a material routing, write-surface, persistent-metadata or authority
+choice. Explicit architecture proceeds normally; explicit installation stays
+with its own owner and any unavailable authority is explained without an audit
+being substituted. Conceptual comparisons and immaterial choices are excluded.
+A selected workflow with unchanged conditions is not reconfirmed.
+
+One independent read-only targeted review examined that description and entry,
+the owning route reference, using-axiom and the preserved Git correction. It
+found no blocking scope, over-clarification or answer-injection defect. Its
+independent semantic examples were:
+
+| Review example | Text-contract finding |
+| --- | --- |
+| Delegated choice between reorganizing Skill ownership and activating an existing archive, with inspection authority only | Ask once; leave both workflows pending without beginning either. |
+| Explicit manifest-to-Skill ownership audit | Continue architecture work without a workflow-choice question. |
+| Explicit installation of an identified archive with unavailable execution authority | Explain the installation boundary without replacing it with an audit. |
+| Conceptual comparison of restructuring and activation, or prose versus diagram presentation | No material workflow gate is required. |
+| Continuing a selected audit with unchanged scope | Do not reconfirm; ask only for necessary missing input or material conflict. |
+
+This is semantic source review, not a keyword assertion, host approval or proof
+of stable model behavior. The reviewed entry is 3,944 bytes. It contains no case
+identifier, original observation request, fixed question or answer template.
+No other Skill, using-axiom explicit-only policy, Hook or runtime service changed.
+The reviewer performed no client/model launches, tests, writes or private reads.
+
+Remote tags and Releases still end at v0.10.0. The assigned but unfinished
+0.10.1 version remains current, with source policy 13 and bundle/evidence policy
+14. Full runtime identity (61 installed inputs):
+`sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2`.
+Signed frozen source: `8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`. Two actual successful builds from
+that source, in separate external destinations, produced identical sets and
+bytes for all 54 files, including the archive and envelope:
+
+- Profile runtime: `sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3`.
+- Bundle manifest: `sha256:0dc5615c8635cd1055313fb6d17fc088ae81779627f0191cd8bebc30c0a326f6`.
+- ZIP: `c134efca8fa922f065c4dd25094ee6869043ccae15caf064207e4c9ca1877a7e`, 261,066 bytes.
+- Package inventory: `a15c339b26268d730c0d4135d07e89b60ce31b279294365c1f5f3756d20fd9ff`.
+
+Offline verification compares the actual bundle bytes with the corrected
+canonical entry and preserved Git entry. It is not installation or native
+loading evidence. The builder adds only the supported 13/14 revision pair;
+5/6, 8/9 and 11/12 remain accepted, with mixed/unknown pairs rejected. The
+source-stage supplement suite had 24 passing tests and one old-package identity
+error before the new frozen package existed; that pending check is not claimed
+as source-stage PASS.
+
+The original second-round protocol and its dependencies are archived under
+`historical-protocols/clarification-round-2`, with its artifact retained as
+[revision-12 evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-12.json).
+The existing two-entry clarification history is unchanged, including protocol
+`sha256:e4d54501c67d8c8ca29b1fbf448df8daf3833f42e746bb1be57422db9757c442`.
+The current checker binds current dependencies but validates the recorded replies
+against their original protocol. It rejects relabeling them as current-runtime
+results and still refuses to reopen the recorded window. This creates no new
+attempt ledger or observation mode. Original requests, fixtures, assessment,
+prompt generation and all historical result bytes remain unchanged.
+
+The two observed rounds remain separately 2 PASS / 1 FAIL: original 12/13/14
+are PASS/FAIL/PASS; the Git-corrected round remains FAIL/PASS/PASS. In particular,
+the latter Case 12's same-reply default is still FAIL, and its Case 13 PASS only
+supports an actual workflow-choice request. The original 8,186-byte and revised
+8,179-byte Git reads retain their original source/implementation identities.
+Neither is proof of native loading or internal semantic consumption. No outcome
+is regraded, combined with another round, attributed causally to a text change,
+or used to justify reverting the prior Git scope correction.
+
+This round starts zero canonical observation clients or models, creates no fresh
+case state, performs no authentication handoff and reads no credentials or
+operator-only material. Cumulative canonical attempts and observation CLI starts
+remain 76/76. New behavior, revised-runtime 16-case acceptance and other host
+targets remain NOT-RUN. No further sample is scheduled or authorized. PR 121 stays
+Draft; Issue 117 and FCR applicability remain open, and PR 120 is unchanged.
+
+
+The first complete no-model discovery ran 567 tests with nine failures, 20
+errors and two skips. It exposed obsolete description/entry anchors, the missing
+ownership entry for the archived bundle, a stale release-status policy field,
+and an incorrectly placed digest in the existing empty v1 history. Class setup
+failures prevented the remaining tests from running. The fixes update only
+those exact contracts and metadata: the archived evidence path is explicitly
+owned, the existing empty history uses its nested protocol digest, and no
+historical result or scoring rule changes. Exact-text ownership checks are
+consistent with the independently reviewed wording; they do not replace that
+semantic review.
+
+Final complete discovery passed in the disposable copy: **587 tests in 119.025
+seconds, 585 passed, two existing optional skips, zero failures/errors**. This
+includes all 25 supplement regressions and the previously pending package check.
+The local Linux Hook suite passed all five tests. Publication validation passed,
+including 238 Git contracts, 78 offline route fixtures, 95 black-box routing
+cases, 10 structured Git-boundary scenarios, identity and documentation checks.
+All 122 JSON files parse; all 42 packaged instruction Markdown files are below
+8,192 bytes. The canonical 3,944-byte entry reviewed independently is the entry
+in both actual builds.
+
+Skill quick validation and Claude strict plugin validation passed. The generic
+plugin validator remains NON-PASS for the existing protected `hooks`,
+`interface.brandColorDark` and `interface.supportURL` fields. The explicit-root
+ASCII-only scan is NON-PASS for unchanged historical English punctuation in
+this report and the two verbatim reply records; every matched non-ASCII character
+is identical to the baseline. No evidence is rewritten to make that scan pass.
+
+Current native dependency-check protocol: `sha256:ab1c0c7af0d0fd2e4010f10397eb1a1faffb5a401ccd80119907d5dc22ba582d`.
+Current clarification dependency-check protocol: `sha256:a16e4b07f2c071e4d88b2d718001cd47de1a25312398e67219e6e80e78d3d99e`.
+These are current validation bindings, not new execution identities or
+permission to consume another observation. The recorded reply history keeps its
+original protocol and execution commits. Final-head CI results are reported
+separately in PR 121; no local count is reused as CI evidence.

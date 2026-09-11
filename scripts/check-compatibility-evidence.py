@@ -892,6 +892,7 @@ def collect_records(failures: list[str]) -> dict[str, dict[str, Any]]:
         PROFILE_STATIC_EVIDENCE_PATH.resolve(),
         (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-6.json").resolve(),
         (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-9.json").resolve(),
+        (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-12.json").resolve(),
     }
     expected_json.update((REPOSITORY_ROOT / path).resolve() for path in records)
     unexpected_json = sorted(

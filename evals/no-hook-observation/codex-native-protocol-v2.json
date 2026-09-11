@@ -42,7 +42,7 @@
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
-      "sha256": "c7cd240b8036fb0f02c25812e94f0d5a0a50f173eed13621d8d1db8ec1f96ffe"
+      "sha256": "0e34cb8c805b301343e989453f20e2b82ed0474e33fdc68f7502b393dbe1012a"
     }
   },
   "implementationBindings": [
@@ -88,10 +88,10 @@
     }
   ],
   "bundle": {
-    "manifestDigest": "sha256:9e4d734981102a8b05281ba41e5d879eb83c2977472f03c2eba0e01f2a9b53af",
-    "archiveSha256": "3deed9be9749ea343260e2a2224df37fc9632710b680a84be93988ff714531e5",
-    "profileRuntimeDigest": "sha256:017f0b78d07c480fbb0851f5d40cb94e93a4fa90c48c1c176cf36d2cb93f5d44",
-    "packageSha256": "c5d699c096d699d1c2345aa1e2ca9745db3d90b7fa20cc20f6e6a0c550f47397"
+    "manifestDigest": "sha256:0dc5615c8635cd1055313fb6d17fc088ae81779627f0191cd8bebc30c0a326f6",
+    "archiveSha256": "c134efca8fa922f065c4dd25094ee6869043ccae15caf064207e4c9ca1877a7e",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "packageSha256": "a15c339b26268d730c0d4135d07e89b60ce31b279294365c1f5f3756d20fd9ff"
   },
   "caseIds": [
     "no-hook-positive-explicit-using-axiom-001",
@@ -395,5 +395,5 @@
     "evidence": "selection-representation; not-observed-native-body-load",
     "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
   },
-  "protocolDigest": "sha256:25bf38370fc10ad5b686b6d2344aafd5a960b12db1b1e63153dafb852d5b4acc"
+  "protocolDigest": "sha256:ab1c0c7af0d0fd2e4010f10397eb1a1faffb5a401ccd80119907d5dc22ba582d"
 }
