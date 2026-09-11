@@ -3262,3 +3262,85 @@ publication passed on the corrected status and documentation; its checks include
 normal hooks, non-force or data-preservation boundaries. Final-head CI is
 reported separately in PR #121 and the delivery report; local counts are not
 reused as unread CI statistics.
+
+### Bounded diagnostic follow-up: Cases 6, 7 and 11
+
+This separate no-model review binds to execution
+`6f9c132e8088105347e602f1c43c8bc99ffe8c6b` and the unchanged
+[original normalized result](../evals/no-hook-observation/results/codex-native-3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d.json),
+SHA-256 `3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d`.
+Its evidence is limited to frozen public source, registered inputs, normalized
+outputs and a later user-provided redacted command excerpt. It does not extend
+the reviewed execution or claim access to private reasoning or diagnostics.
+
+**Case 11: the excerpt identifies an unbound target category.** The user supplied
+the first rejected command's structure; the executor did not read operator-only
+raw text. Interpreting its placeholders as redactions, the command uses a
+supported `bash -lc` wrapper and single-target `cat`, with no `..` path component.
+The target is a client temporary `arg0` helper, outside the registered readable
+set. The frozen [reader and exact-target check](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/axiom_validation/no_hook_native_observation.py#L2542-L2579)
+accept that syntax but reject an unbound target; the
+[readable-set constructor](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/axiom_validation/no_hook_native_observation.py#L2900-L2914)
+admits supplied task files and, when installed, verified public package files,
+not arbitrary client temporary paths. The existing
+[`test_task_material_delivery_does_not_authorize_client_tmp_or_arg0_reads`](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/tests/test_no_hook_native_observation.py#L928-L951)
+already covers this rejection category; it was neither duplicated nor rerun.
+This source reconstruction explains the recorded `read-target-unbound` category,
+not the target's contents or whether the client accessed them before termination.
+The target was not opened or replayed. Case 11 remains **INCOMPLETE**; its
+`read-contract-rejected` stop, absent official final output and original bytes
+remain unchanged. No readable boundary or admission rule was widened.
+
+**Case 6: the assessment field lacks a semantic definition.** The frozen
+[response schema](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/evals/no-hook-observation/codex-model-response-schema-v2.json#L73-L83)
+defines `usingAxiomFrontDoorObserved` only as a boolean. The
+[prompt envelope](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/evals/no-hook-observation/codex-native-prompt-envelope-v2.json#L27-L35)
+does not define it or distinguish an explicit leaf invocation from the
+`using-axiom` front door. The existing
+[definition-delivery logic](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/axiom_validation/no_hook_native_observation.py#L1627-L1699)
+covers only `selectedRoutes`, `discoveryOutcome` and `clarificationCount`.
+Read-only, in-memory reconstruction from the retained public seed matched both
+recorded prompt/schema digests for Cases 6 and 7, including their 3,135 and 2,973
+prompt bytes. Both records report full input delivery and official-final
+agreement. The missing definition is present at the input source; no transport
+loss of an existing definition was found.
+
+The original [profile](../evals/no-hook/profile-v1.json) keeps the front door
+explicit-only, and the [Golden Set](../evals/no-hook/golden-set-v1.jsonl) expects
+`false` for the explicit Git leaf request. The observed Git route and 8,179-byte
+public leaf read do not erase the incorrect `true` field. That field proves only
+what the model reported; front-door invocation or native loading is not observed
+by it. The minimal future correction belongs to the assessment schema/envelope,
+their existing uniform definition-delivery logic and corresponding protocol
+bindings and focused input regression. It does not require a Git Skill change or
+a changed expected answer. No such correction was applied here, and the field
+gap does not establish why the model returned `true`. Case 6 remains **FAIL**.
+
+**Case 7: composition is specified; the reason for deferral is unavailable.** The
+original request combines a persistent migration with external publication.
+The frozen [cross-route rule](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/skills/using-axiom/SKILL.md#L59-L84)
+selects both `confirm-external-action` and `reversible-system-change`; both leaf
+descriptions also specify that pairing. These are combined effects, not mutually
+exclusive alternatives. The external action's
+[execution envelope](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/skills/confirm-external-action/SKILL.md#L32-L66)
+and the persistent change's
+[mutation authority](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/skills/reversible-system-change/SKILL.md#L37-L49)
+remain separate gates. Missing execution details or permission can block actions
+without turning selection of both workflows into an either/or decision. The
+assessment envelope already limits this observation to routing and forbids
+requesting execution approval.
+
+The normalized answer instead records `clarification`, no selected routes and
+count `1`, with no public Skill read. That count does not establish an actual
+question or its subject. Public evidence therefore establishes the mismatch,
+but not whether execution gating, mutual-exclusion rules or another factor
+caused it. No definite source or delivery defect was located for Case 7, and no
+causal claim about the architect revision or corrective patch follows. Its
+original combined expectation and **FAIL** remain intact.
+
+This was a bounded self-review, not an independent approval or behavioral
+retest. Canonical content, model inputs, scoring, implementation and historical
+results were not changed. Additional tested-model starts are **0**; canonical
+attempts and observation CLI starts remain **87/87**. The stopped window's eight
+remaining items stay unconsumed, R2 stays **NOT-RUN**, and Issue #117 remains
+**BLOCKED** with PR #121 in Draft.
