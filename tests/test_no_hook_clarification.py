@@ -45,6 +45,16 @@ class ClarificationTests(unittest.TestCase):
             "promptSha256": supplement.digest(b"A bounded original request.\n"),
             "requestSha256": "0" * 64, "fixtureSha256": "1" * 64, "packageSha256": "2" * 64}
         self.taxonomy = native._input(ROOT, native._protocol(ROOT), "taxonomy")
+        # These tests construct a new secret-free simulated batch, independently
+        # of whether the real three-call window has already been recorded.
+        if self._testMethodName in {"test_batch_stops_after_incomplete_and_cannot_reopen",
+                "test_capture_accounting_maximum_three_without_auto_semantic_pass",
+                "test_uncommitted_protocol_cannot_consume_batch_marker"}:
+            actual_read=supplement._read
+            empty=native._bytes({"protocolDigest":supplement.protocol(ROOT)["protocolDigest"],"results":[]})
+            self.enterContext(patch.object(supplement,"_read",side_effect=lambda p,*a,**kw:
+                empty if p==ROOT/supplement.HISTORY else actual_read(p,*a,**kw)))
+
 
     def capture(self, data=None, *, stderr=b"", code=0, mismatch=False, cleanup=False, timeout=False):
         data = text_stream() if data is None else data
@@ -266,3 +276,12 @@ class ClarificationTests(unittest.TestCase):
         changed=copy.deepcopy(original);changed["caseResults"][0]["status"]="FAIL"
         self.assertTrue(native.validate_native_result(changed,ROOT))
         self.assertNotEqual(native._protocol(ROOT)["protocolDigest"],original["protocolDigest"])
+
+    def test_recorded_supplement_refuses_a_new_window_before_launch(self):
+        actual_read=supplement._read
+        recorded=native._bytes({"results":[{"path":"immutable-existing-result"}]})
+        with patch.object(supplement,"_read",side_effect=lambda p,*a,**kw:
+                recorded if p==ROOT/supplement.HISTORY else actual_read(p,*a,**kw)):
+            with self.assertRaisesRegex(native.NativeObservationError,"supplement already recorded"):
+                supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
+        self.assertFalse((self.run/"batch-started.json").exists())

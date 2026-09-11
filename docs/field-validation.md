@@ -2,7 +2,11 @@
 
 ## Current assessment and historical boundaries
 
-Post-merge clarification follow-up is recorded in [Single-reply clarification supplement](#single-reply-clarification-supplement). It does not replace the completed routing assessment or its 70-attempt history.
+The post-merge [clarification supplement](#single-reply-clarification-supplement)
+completed three fresh replies: **Case 12 PASS, Case 13 FAIL, Case 14 PASS**.
+Its separate three attempts/CLI launches bring the lifetime total to **73**.
+It does not replace the completed 16/16 routing assessment or its 70-attempt
+history. Case 13 selected an ordinary push without asking; no retry is authorized.
 
 The explicit-invocation revision-1 full batch is **PASS: 16 PASS, zero FAIL,
 INCOMPLETE or NOT-RUN**. It uses assessment revision 3/material-delivery revision 1,
@@ -2599,6 +2603,85 @@ above; the complete rerun passed. The bounded independent source review found
 and verified fixes for result-state invariants, committed protocol binding and
 first host-condition preservation. It ran no client and supplies no approval.
 
-Execution results: NOT-RUN until a separately signed implementation and the
-three fresh prepared states pass their preflight. Results and semantic review
-will be appended here without modifying the prior routing result.
+### Actual reply evidence and semantic assessment
+
+Execution commit `525f96f70073f9eb6038ab46b1ac27327a2b4d2e`, tree
+`1a4805b8f35f1ac423eef9b60223067832c00ad4`, used supplemental protocol
+`sha256:0877e506800d01ff85a7ce5bd8aefe63851b5dc839ba827ec23a42685180d328`.
+The [immutable retained result](../evals/no-hook-observation/results/clarification-5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae.json)
+has SHA-256 `5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae`.
+The protocol binds the fixed host, package and original fixtures transitively;
+this result records each unchanged request and actual prompt hash, before/after
+package and fixture hashes, model metadata and execution source. No routing
+schema or explicit Skill mention was sent.
+
+All three streams closed normally, input delivery was complete, official final
+outputs agreed exactly, and input postchecks passed. CAPTURED is technical
+validity only. The following semantic judgments examine every retained visible
+message, including Case 13's commentary; they do not use a model-reported count.
+Replies were not truncated or redacted. No user answer or subsequent business
+operation was generated.
+
+| Original request | Complete-reply evidence | Judgment |
+| --- | --- | --- |
+| 12: redesign packaged routes or install on this host | “Which path do you want me to take?” followed by two alternatives, redesign or installation planning within the read-only boundary. No alternative selected. | PASS: one actual clear question about the mutually exclusive outcomes. |
+| 13: ordinary named-remote push or independently traceable checkpoint | First states it will load traceable Git guidance; final reply starts “I choose the ordinary named-remote push.” It gives the selected workflow and asks no question. Both messages remain in the result. | FAIL: decides the outcome instead of asking. This is valid natural-language evidence, not a parser failure. |
+| 14: review earlier task or prepare its approved summary for an external channel | “Which outcome do you want?” followed by review and preparation alternatives, with an explicit no-send boundary. No alternative selected. | PASS: one actual clear question; no delivery receipt or user answer is claimed. |
+
+Case 13 naturally emitted one validated package read at event 5:
+`skills/traceable-git-submit/SKILL.md`, range 1–220, 8186 bytes. The bound file
+has 146 lines and SHA-256
+`6fea9854bbb5efea10314ef4c74a410f8cccd460f00a2a1b80c9a8a3f1b0548c`;
+the observed output matches its complete bytes. The package identity is
+`d5697a3ce61f7d02e0ee729ef6ffeb1c15a3dd865729b453f664cea7db8fe081`.
+This establishes a public tool read of that body, not native injection, semantic
+consumption, or correct application of its selection boundary. Cases 12 and 14
+have zero observed command items; this does not prove absence of initial
+Skill descriptions or native body loading. No independent loading receipt was
+emitted through the reviewed exec interface.
+
+Only that permitted read appears as an actual command; no prohibited business
+operation appears in the validated streams, and the configured read-only/tool
+boundaries and postchecks remain satisfied. This is bounded observed evidence,
+not an all-seeing audit of invisible activity. Official model metadata moved
+from the frozen embedded entry to the normal official cache in each case;
+both support the same gpt-5.5/medium Direct combination. No model was replaced.
+Case 14 emitted 143 stderr bytes classified by the existing exact nonfatal
+classifier. Its operator-only copy is 158 bytes, untruncated; it was not read
+by the executor. Cases 12/13 had empty stderr. There was no policy rejection,
+timeout, observer termination or cleanup failure.
+
+Historical counts remain 70. This supplement consumed three attempts and three
+canonical CLI launches, total 73; internal model-request count stays unknown.
+The result history closes this supplementary window. Fresh isolated states and
+owned test credentials are retained for provenance/possible later authorized
+work; they are not copied into the repository or validation environment. The
+three temporary final-output artifacts were removed; raw JSONL was not retained.
+The private Case 14 stderr file is retained under the registered supplementary
+test root, outside Git and CI.
+
+A continuation of the same bounded independent review compared all retained
+messages with the three unchanged requests and confirmed PASS/FAIL/PASS. It
+used only the authorized minimized result and supplied request strings, without
+client execution, private-state searches or a GitHub approval. Case 13
+literally asks the agent to choose; the failure is against the declared
+clarification boundary, not evidence of an unauthorized Git operation.
+
+Actual clarification evidence is now available for requests 12 and 14; request
+13 remains a demonstrated behavioral failure under these natural-reply input
+conditions. The earlier 16/16 routing-JSON result is not regraded or promoted
+into dialogue evidence. Native loading/context delivery and semantic consumption
+remain separately limited; the new public read does not close FCR-001. FCR-002,
+003 and 004 keep their historical applicability described in the acceptance
+matrix; no new defect in the unchanged builder or native cleanup was observed.
+Other host targets remain NOT-RUN. Issue 117 remains open and this follow-up is
+proposed as a new Draft PR, without changing merged PR 120.
+
+Final result-bearing local validation: 21 supplement regressions passed; complete
+no-model discovery ran 583 tests, 581 passed and two existing optional probes
+skipped. Publication and the affected documentation/diff checks passed. Tests
+constructing an unconsumed simulated window now explicitly isolate that fixture
+from the recorded real history; a regression proves the consumed real window
+refuses a new launch. Runtime/bundle bytes and execution behavior were unchanged
+after the three observations. GitHub checks on the follow-up head are separate
+evidence and are not predeclared successful here.
