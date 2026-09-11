@@ -38,11 +38,11 @@
     },
     "bundleSchema": {
       "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-      "sha256": "112c22ce504d4fd06978257cd8c3e80dfc08041ed9a2589539b03b5a4ebbaae9"
+      "sha256": "0d3ee658e1c2e5b02047c39835f977ef9bb0141cae5421a6a59c2d3e765cdd50"
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
-      "sha256": "c7cd240b8036fb0f02c25812e94f0d5a0a50f173eed13621d8d1db8ec1f96ffe"
+      "sha256": "6c393607dbb474fe412ff0c165c43ee0566ac6219aedf6adc1147acb95889ac3"
     }
   },
   "implementationBindings": [
@@ -52,7 +52,7 @@
     },
     {
       "path": "axiom_validation/no_hook_bundle.py",
-      "sha256": "7c3ceb1283228e81a3b10224e6c829808ff92634e2fc6d678b97a8c9a8679e1f"
+      "sha256": "203937bbbff1110b2256fb8e01bcd6dae07912b18b67f15c5e8d3090e61fa13a"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -60,11 +60,11 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "cb0f5506fb194d7edfec8a2a0d5e6de47d025fa81e837e4ae98057e081792900"
+      "sha256": "a36901cd15c8b42904dc6be5ff532088ed9c1d26fc7906761351f1f6c721af91"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
-      "sha256": "11fd6688003c968021671324951a788aba687a880217079163898aed5dc84e85"
+      "sha256": "438eab05e15e2647b7f2bdc457ee0455e76b217f5d2638ce6aea84a35d01c024"
     },
     {
       "path": "axiom_validation/no_hook_profile.py",
@@ -88,10 +88,10 @@
     }
   ],
   "bundle": {
-    "manifestDigest": "sha256:9e4d734981102a8b05281ba41e5d879eb83c2977472f03c2eba0e01f2a9b53af",
-    "archiveSha256": "3deed9be9749ea343260e2a2224df37fc9632710b680a84be93988ff714531e5",
-    "profileRuntimeDigest": "sha256:017f0b78d07c480fbb0851f5d40cb94e93a4fa90c48c1c176cf36d2cb93f5d44",
-    "packageSha256": "c5d699c096d699d1c2345aa1e2ca9745db3d90b7fa20cc20f6e6a0c550f47397"
+    "manifestDigest": "sha256:dd73e63ff790a3ca759f2bb12e2086f63c40af637846f907214901fda97970e8",
+    "archiveSha256": "9e53e1748f9db3f46defb1eb5bef026fd8bcdff49644e12a2275260461e97332",
+    "profileRuntimeDigest": "sha256:7c5451750c262343bb8bc142dc6af03c9b7ab86b35df1bf84b60162e353944ab",
+    "packageSha256": "d5697a3ce61f7d02e0ee729ef6ffeb1c15a3dd865729b453f664cea7db8fe081"
   },
   "caseIds": [
     "no-hook-positive-explicit-using-axiom-001",
@@ -395,5 +395,5 @@
     "evidence": "selection-representation; not-observed-native-body-load",
     "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
   },
-  "protocolDigest": "sha256:eaddf8a359f2b6a9a1028e9a2d3afd6b44b9dde39037dc98a45ba626e5ef8059"
+  "protocolDigest": "sha256:44479230069f696c2d7a9d1f6cfc173ee625af6801e29eaec61b611412efdcb4"
 }

@@ -29,6 +29,10 @@ PRIOR_PATH = Path("evals/no-hook-observation/results/codex-native-" + PRIOR + ".
 STATE = "clarification-preparation.json"
 RESULT = "clarification-result.json"
 REPLY_LIMIT = 8192
+PRIOR_SUPPLEMENT = "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae"
+PRIOR_SUPPLEMENT_PATH = Path("evals/no-hook-observation/results/clarification-" + PRIOR_SUPPLEMENT + ".json")
+ARCHIVE = Path("evals/no-hook-observation/historical-protocols/clarification-round-1")
+RUN_NAME = "cases-clarification-2"
 _require = native._require
 _bytes = native._bytes
 _read = native._read
@@ -45,14 +49,32 @@ def protocol(root: Path) -> dict:
     check = dict(p)
     _require(check.pop("protocolDigest") == "sha256:" + digest(_bytes(check)), "supplement protocol digest changed")
     _require(p["ordinals"] == list(ORDINALS) and p["limits"] == {
-        "newAttempts": 3, "maximumCumulativeAttempts": 73, "replyBytesPerCase": REPLY_LIMIT},
+        "newAttempts": 3, "maximumCumulativeAttempts": 76, "replyBytesPerCase": REPLY_LIMIT},
         "supplement budget or retained reply limit changed")
+    _require(p["revision"] == 2 and p["priorSupplementSha256"] == PRIOR_SUPPLEMENT,
+             "supplement segment identity changed")
     for binding in p["bindings"]:
         _require(digest(_read(root / binding["path"])) == binding["sha256"], "supplement source binding changed")
     _require(p["priorResultSha256"] == PRIOR and digest(_read(root / PRIOR_PATH)) == PRIOR,
              "prior routing result changed")
     _require(p["nativeProtocolDigest"] == native._protocol(root)["protocolDigest"], "native guard protocol changed")
+    old = _json(_read(root / ARCHIVE / PROTOCOL.name))
+    _require(all(p[k] == old[k] for k in ("instructions", "replyEvidence", "assessment", "loadingEvidence")),
+             "supplement observation contract changed")
     return p
+
+
+def _prior_supplement(root: Path) -> dict:
+    data = _read(root / PRIOR_SUPPLEMENT_PATH)
+    _require(digest(data) == PRIOR_SUPPLEMENT, "prior supplementary result changed")
+    return _json(data)
+
+
+def _unrecorded(root: Path, p: dict) -> None:
+    history = _json(_read(root / HISTORY))
+    old = _json(_read(root / ARCHIVE / HISTORY.name))
+    _require(history.get("protocolDigest") == p["protocolDigest"] and
+             history.get("results") == old["results"], "supplement already recorded or history changed")
 
 
 def attempt_history(root: Path) -> dict:
@@ -66,8 +88,19 @@ def attempt_history(root: Path) -> dict:
         _require(value == (1, 1) and key not in identities, "latest batch overlaps or is incomplete")
         identities[key] = value
     _require(len(identities) == prior["cumulativeAttemptCount"] == 70, "historical total is not 70")
+    supplement = _prior_supplement(root)
+    _require(supplement["priorAttemptCount"] == 70 and supplement["attemptCount"] ==
+             supplement["cliLaunchCount"] == 3 and supplement["cumulativeAttemptCount"] ==
+             supplement["cumulativeCliLaunchCount"] == 73, "prior supplement accounting mismatch")
+    for record in supplement["caseResults"]:
+        key = (record["ordinal"], PRIOR_SUPPLEMENT)
+        _require(record["ordinal"] in ORDINALS and key not in identities and
+                 record["attemptCount"] == record["cliLaunchCount"] == 1, "prior reply attempt overlap")
+        identities[key] = (1, 1)
+    _require(len(identities) == 73, "historical total is not 73")
     return {"attempts": len(identities), "cliLaunches": sum(v[1] for v in identities.values()),
-            "priorResultSha256": PRIOR, "identityDigest": digest(_bytes(sorted(identities)))}
+            "priorResultSha256": PRIOR, "priorSupplementSha256": PRIOR_SUPPLEMENT,
+            "identityDigest": digest(_bytes(sorted(identities)))}
 
 
 def reply_prompt(request: str, definition: dict, instructions: str) -> bytes:
@@ -163,14 +196,16 @@ def _verify_inputs(root: Path, run_root: Path, ordinal: int, record: dict) -> di
 
 
 def _prior_state(root: Path, previous: Path) -> dict:
-    prior_bytes = _read(root / PRIOR_PATH)
-    _require(digest(prior_bytes) == PRIOR and _read(previous / "normalized-result.json") == prior_bytes,
+    prior = _prior_supplement(root)
+    _require(previous.name == "cases-clarification-1" and
+             _read(previous / RESULT) == _read(root / PRIOR_SUPPLEMENT_PATH),
              "registered predecessor result mismatch")
-    prior = _json(prior_bytes)
-    state = _json(_read(previous / native.STATE_NAME))
-    _require(state["protocolDigest"] == prior["protocolDigest"] and state["materializationSeed"] == prior["materializationSeed"],
+    state = _json(_read(previous / STATE))
+    _require(state["protocolDigest"] == prior["protocolDigest"] and state["runMode"] == "actual" and
+             [r["ordinal"] for r in state["cases"]] == list(ORDINALS),
              "predecessor preparation mismatch")
-    _require(_json(_read(previous / "batch-started.json")) == {"protocolDigest": prior["protocolDigest"]},
+    _require(_json(_read(previous / "batch-started.json")) == {
+        "protocolDigest": prior["protocolDigest"], "priorAttempts": 70},
              "predecessor batch marker mismatch")
     for record in prior["caseResults"]:
         ordinal = record["ordinal"]
@@ -178,14 +213,27 @@ def _prior_state(root: Path, previous: Path) -> dict:
             "ordinal": ordinal, "caseId": record["caseId"], "protocolDigest": prior["protocolDigest"]},
             "predecessor attempt marker mismatch")
         facts = record["executionDiagnostics"]
-        _require(record["status"] == "PASS" and facts["returnCode"] == 0 and
+        _require(record["status"] == "CAPTURED" and facts["returnCode"] == 0 and
                  not any(facts[x] for x in ("cleanupFailed", "timedOut", "observerTerminated")) and
                  facts["inputFullyDelivered"] and facts["finalOutputVerified"] and
-                 record["evidenceExtraction"]["postcheck"] == "valid", "predecessor did not close normally")
-        _require(not (previous / f"final-message-{ordinal:02d}.json").exists(), "predecessor output remains")
-    source = prior["caseResults"][15]
-    _verify_inputs(root, previous, 16, {"fixtureSha256": source["fixtureAfterSha256"],
-                                     "packageSha256": source["packageAfterSha256"]})
+                 record["postcheck"] == "valid", "predecessor did not close normally")
+        _require(not (previous / f"final-reply-{ordinal:02d}.txt").exists(), "predecessor output remains")
+        prepared = next(r for r in state["cases"] if r["ordinal"] == ordinal)
+        _require(all(prepared[k] == record[k] for k in
+                     ("caseId", "promptSha256", "requestSha256", "fixtureSha256", "packageSha256")),
+                 "predecessor input binding changed")
+    source = prior["caseResults"][-1]
+    paths = native._case_paths(previous, 14)
+    native._verify_config(paths, previous / "marketplace", True)
+    native._verify_discovery(paths, True)
+    # Recheck only the old public installed package against its old recorded
+    # bytes. Applying the new runtime identity here would rebind history.
+    records = legacy.snapshot_tree(paths["package"])
+    _require(digest(legacy._canonical_json(records)) == source["packageSha256"], "predecessor package changed")
+    fixtures = native._input(root, native._protocol(root), "fixtureMatrix")
+    _require(native.fixture_identity(paths["workspace"], native._definition(fixtures, 14)) ==
+             source["fixtureSha256"], "predecessor fixture changed")
+    native._model_metadata(paths)
     return state
 
 
@@ -197,21 +245,22 @@ def _login(executable: Path, paths: dict, invoke) -> None:
              "official test login status unavailable")
 
 
-def prepare(root: Path, run_root: Path, previous: Path, *, authorized: bool = False, runner=None) -> dict:
+def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
+            authorized: bool = False, runner=None) -> dict:
     _require(authorized, "explicit preparation and opaque auth-copy authorization required")
     p = protocol(root)
-    _require(not _json(_read(root / HISTORY))["results"], "supplement already recorded")
+    _unrecorded(root, p)
     chain = attempt_history(root)
     old = _prior_state(root, previous)
-    _require(run_root.parent == previous.parent and run_root.name == "cases-clarification-1" and run_root != previous and
+    _require(run_root.parent == previous.parent and run_root.name == RUN_NAME and run_root != previous and
              not run_root.exists() and not run_root.is_symlink(), "fresh registered sibling required")
     executable = Path(old["executable"])
     legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
     invoke = native.bounded_process if runner is None else runner
-    _login(executable, native._case_paths(previous, 16), invoke)
-    bundle = previous / "marketplace/plugin"
+    _login(executable, native._case_paths(previous, 14), invoke)
+    bundle = bundle_root
     np = native._protocol(root)
-    _require(native.package_identity(bundle) == np["bundle"]["packageSha256"], "retained bundle changed")
+    _require(native.package_identity(bundle) == np["bundle"]["packageSha256"], "new frozen bundle mismatch")
     native._ordinary_directory(run_root.parent)
     run_root.mkdir(mode=0o700)
     _exclusive(run_root / "preparation-started.json", _bytes({"protocolDigest": p["protocolDigest"]}))
@@ -256,7 +305,7 @@ def prepare(root: Path, run_root: Path, previous: Path, *, authorized: bool = Fa
     state = {"protocolDigest": p["protocolDigest"], "runMode": "actual" if runner is None else "simulated",
              "previousRunRoot": str(previous), "executable": str(executable), "attemptHistory": chain, "cases": records}
     _exclusive(run_root / STATE, _bytes(state))
-    native._copy_test_auth(run_root, 16, 12, create=True, source_root=previous)
+    native._copy_test_auth(run_root, 14, 12, create=True, source_root=previous)
     return state
 
 
@@ -378,8 +427,8 @@ def _capture_case(root: Path, run_root: Path, ordinal: int, prepared: dict, exec
 def run(root: Path, run_root: Path, *, authorized: bool = False, runner=None) -> dict:
     _require(authorized, "explicit three-call authorization required")
     p = protocol(root)
-    _require(run_root.name == "cases-clarification-1", "unregistered supplemental run root")
-    _require(not _json(_read(root / HISTORY))["results"], "supplement already recorded")
+    _require(run_root.name == RUN_NAME, "unregistered supplemental run root")
+    _unrecorded(root, p)
     state = _json(_read(run_root / STATE))
     chain = attempt_history(root)
     _require(state["protocolDigest"] == p["protocolDigest"] and state["attemptHistory"] == chain and
@@ -406,7 +455,8 @@ def run(root: Path, run_root: Path, *, authorized: bool = False, runner=None) ->
             continue
         cases.append(_capture_case(root, run_root, prepared["ordinal"], prepared, Path(state["executable"]), operator, invoke))
     doc = {"executionSource": source, "protocolDigest": p["protocolDigest"], "kind": "single-user-visible-reply", "runMode": state["runMode"],
-           "priorResultSha256": PRIOR, "priorAttemptCount": chain["attempts"], "caseResults": cases,
+           "priorResultSha256": PRIOR, "priorSupplementSha256": PRIOR_SUPPLEMENT,
+           "priorAttemptCount": chain["attempts"], "caseResults": cases,
            "attemptCount": sum(c["attemptCount"] for c in cases), "cliLaunchCount": sum(c["cliLaunchCount"] for c in cases),
            "modelRequestCount": None, "semanticAssessment": "separate-review-required",
            "loadingReceipt": "not-observed", "cleanup": "retained-dedicated-test-state"}
@@ -421,22 +471,29 @@ def check(root: Path) -> list[str]:
         p = protocol(root)
         chain = attempt_history(root)
         history = _json(_read(root / HISTORY))
-        _require(history["protocolDigest"] == p["protocolDigest"] and len(history["results"]) <= 1,
+        prior_entries = _json(_read(root / ARCHIVE / HISTORY.name))["results"]
+        _require(history["protocolDigest"] == p["protocolDigest"] and 1 <= len(history["results"]) <= 2 and
+                 history["results"][:1] == prior_entries,
                  "supplement history mismatch")
         cases = legacy.load_golden_cases(root)
         fixtures = native._input(root, native._protocol(root), "fixtureMatrix")
         for entry in history["results"]:
+            historical = entry["sha256"] == PRIOR_SUPPLEMENT
+            active = _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else p
+            prior_count = 70 if historical else chain["attempts"]
             data = _read(root / entry["path"])
             _require(digest(data) == entry["sha256"], "supplement result digest changed")
             d = _json(data)
-            _require(d["protocolDigest"] == p["protocolDigest"] and d["priorResultSha256"] == PRIOR and
-                     d["priorAttemptCount"] == chain["attempts"] and
+            _require(d["protocolDigest"] == active["protocolDigest"] and d["priorResultSha256"] == PRIOR and
+                     d["priorAttemptCount"] == prior_count and
                      [c["ordinal"] for c in d["caseResults"]] == list(ORDINALS), "supplement result binding mismatch")
+            if not historical:
+                _require(d["priorSupplementSha256"] == PRIOR_SUPPLEMENT, "new result lost prior supplement")
             stopped = False
             for c in d["caseResults"]:
                 ordinal = c["ordinal"]
                 case = cases[ordinal - 1]
-                prompt = reply_prompt(case["request"], native._definition(fixtures, ordinal), p["instructions"])
+                prompt = reply_prompt(case["request"], native._definition(fixtures, ordinal), active["instructions"])
                 _require(c["caseId"] == case["id"] and c["requestSha256"] == digest(case["request"].encode()) and
                          c["promptSha256"] == digest(prompt), "supplement input changed")
                 _require(type(c["attemptCount"]) is int and c["attemptCount"] in (0, 1) and
@@ -460,8 +517,8 @@ def check(root: Path) -> list[str]:
                              public_replies(c["replies"]["messages"])["retentionComplete"], "retained reply not bounded/public")
             _require(d["attemptCount"] == sum(c["attemptCount"] for c in d["caseResults"]) and
                      d["cliLaunchCount"] == sum(c["cliLaunchCount"] for c in d["caseResults"]) and
-                     d["cumulativeAttemptCount"] == 70 + d["attemptCount"] <= 73 and
-                     d["cumulativeCliLaunchCount"] == 70 + d["cliLaunchCount"] and d["modelRequestCount"] is None,
+                     d["cumulativeAttemptCount"] == prior_count + d["attemptCount"] <= active["limits"]["maximumCumulativeAttempts"] and
+                     d["cumulativeCliLaunchCount"] == prior_count + d["cliLaunchCount"] and d["modelRequestCount"] is None,
                      "supplement cumulative accounting mismatch")
     except (OSError, ValueError, KeyError, native.NativeObservationError):
         return ["clarification supplement contract or result invalid"]
@@ -473,6 +530,7 @@ def main(argv=None, *, root=REPOSITORY_ROOT) -> int:
     parser.add_argument("mode", choices=("check", "prepare", "run"))
     parser.add_argument("--run-root", type=Path)
     parser.add_argument("--previous", type=Path)
+    parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--authorize", action="store_true")
     args = parser.parse_args(argv)
     try:
@@ -482,8 +540,8 @@ def main(argv=None, *, root=REPOSITORY_ROOT) -> int:
             return int(bool(failures))
         _require(args.run_root is not None, "run root required")
         if args.mode == "prepare":
-            _require(args.previous is not None, "registered predecessor required")
-            prepare(root, args.run_root, args.previous, authorized=args.authorize)
+            _require(args.previous is not None and args.bundle_root is not None, "registered predecessor and new bundle required")
+            prepare(root, args.run_root, args.previous, bundle_root=args.bundle_root, authorized=args.authorize)
             print("Prepared three dedicated clarification states; no models started.")
         else:
             d = run(root, args.run_root, authorized=args.authorize)

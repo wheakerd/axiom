@@ -33,7 +33,7 @@ class ClarificationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="axiom-reply-test-")
         self.addCleanup(self.temp.cleanup)
-        self.run = Path(self.temp.name) / "cases-clarification-1"
+        self.run = Path(self.temp.name) / supplement.RUN_NAME
         self.run.mkdir()
         self.paths = native._case_paths(self.run, 12)
         self.paths["workspace"].mkdir(parents=True)
@@ -51,7 +51,7 @@ class ClarificationTests(unittest.TestCase):
                 "test_capture_accounting_maximum_three_without_auto_semantic_pass",
                 "test_uncommitted_protocol_cannot_consume_batch_marker"}:
             actual_read=supplement._read
-            empty=native._bytes({"protocolDigest":supplement.protocol(ROOT)["protocolDigest"],"results":[]})
+            empty=native._bytes({"protocolDigest":supplement.protocol(ROOT)["protocolDigest"],"results":json.loads((ROOT/supplement.ARCHIVE/supplement.HISTORY.name).read_text())["results"]})
             self.enterContext(patch.object(supplement,"_read",side_effect=lambda p,*a,**kw:
                 empty if p==ROOT/supplement.HISTORY else actual_read(p,*a,**kw)))
 
@@ -183,10 +183,10 @@ class ClarificationTests(unittest.TestCase):
             self.assertNotIn("--output-schema", argv)
             self.assertNotIn("resume", argv)
 
-    def test_exact_deduplicated_seventy_history_and_three_budget(self):
+    def test_exact_seventy_three_history_and_three_budget(self):
         chain = supplement.attempt_history(ROOT)
-        self.assertEqual((chain["attempts"], chain["cliLaunches"]), (70,70))
-        self.assertEqual(supplement.protocol(ROOT)["limits"]["maximumCumulativeAttempts"],73)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"]), (73,73))
+        self.assertEqual(supplement.protocol(ROOT)["limits"]["maximumCumulativeAttempts"],76)
 
     def test_batch_stops_after_incomplete_and_cannot_reopen(self):
         p = supplement.protocol(ROOT)
@@ -197,8 +197,8 @@ class ClarificationTests(unittest.TestCase):
             d=supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
             self.assertEqual(capture.call_count,1)
             self.assertEqual([c["status"] for c in d["caseResults"]],["INCOMPLETE","NOT-RUN","NOT-RUN"])
-            self.assertEqual(d["cumulativeAttemptCount"],71)
-            self.assertEqual(d["cumulativeCliLaunchCount"],70)
+            self.assertEqual(d["cumulativeAttemptCount"],74)
+            self.assertEqual(d["cumulativeCliLaunchCount"],73)
             with self.assertRaises(FileExistsError):
                 supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
 
@@ -212,7 +212,7 @@ class ClarificationTests(unittest.TestCase):
         with patch.object(supplement,"_capture_case",side_effect=captured):
             d=supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
         self.assertEqual(d["attemptCount"],3)
-        self.assertEqual(d["cumulativeAttemptCount"],73)
+        self.assertEqual(d["cumulativeAttemptCount"],76)
         self.assertEqual(d["semanticAssessment"],"separate-review-required")
 
     def test_recognized_condition_precedes_final_artifact_failure(self):
@@ -249,13 +249,13 @@ class ClarificationTests(unittest.TestCase):
             record.update(ordinal=i,caseId=case["id"],requestSha256=supplement.digest(case["request"].encode()),
                 promptSha256=supplement.digest(supplement.reply_prompt(case["request"],native._definition(fixtures,i),p["instructions"])))
             records.append(record)
-        d={"protocolDigest":p["protocolDigest"],"priorResultSha256":supplement.PRIOR,"priorAttemptCount":70,
-           "caseResults":records,"attemptCount":3,"cliLaunchCount":3,"cumulativeAttemptCount":73,
-           "cumulativeCliLaunchCount":73,"modelRequestCount":None}
+        d={"protocolDigest":p["protocolDigest"],"priorResultSha256":supplement.PRIOR,"priorAttemptCount":73,"priorSupplementSha256":supplement.PRIOR_SUPPLEMENT,
+           "caseResults":records,"attemptCount":3,"cliLaunchCount":3,"cumulativeAttemptCount":76,
+           "cumulativeCliLaunchCount":76,"modelRequestCount":None}
         actual_read=supplement._read
         def check(doc):
             data=native._bytes(doc);relative="evals/no-hook-observation/results/clarification-fixture.json"
-            history={"protocolDigest":p["protocolDigest"],"results":[{"path":relative,"sha256":supplement.digest(data)}]}
+            history={"protocolDigest":p["protocolDigest"],"results":[*json.loads((ROOT/supplement.ARCHIVE/supplement.HISTORY.name).read_text())["results"],{"path":relative,"sha256":supplement.digest(data)}]}
             def read(path,*args,**kw):
                 if path==ROOT/supplement.HISTORY:return native._bytes(history)
                 if path==ROOT/relative:return data
@@ -285,3 +285,45 @@ class ClarificationTests(unittest.TestCase):
             with self.assertRaisesRegex(native.NativeObservationError,"supplement already recorded"):
                 supplement.run(ROOT,self.run,authorized=True,runner=lambda:None)
         self.assertFalse((self.run/"batch-started.json").exists())
+
+    def test_original_reply_result_and_contract_are_retained(self):
+        old = supplement._prior_supplement(ROOT)
+        archived = json.loads((ROOT/supplement.ARCHIVE/supplement.PROTOCOL.name).read_text())
+        self.assertEqual(old["protocolDigest"], archived["protocolDigest"])
+        self.assertEqual(old["cumulativeAttemptCount"], 73)
+        self.assertEqual(old["caseResults"][1]["publicReads"][0]["bytes"], 8186)
+        current = supplement.protocol(ROOT)
+        self.assertNotEqual(current["protocolDigest"], old["protocolDigest"])
+        for key in ("instructions", "replyEvidence", "assessment", "loadingEvidence"):
+            self.assertEqual(current[key], archived[key])
+
+    def test_old_run_root_cannot_receive_new_attempts(self):
+        old = self.run.parent/"cases-clarification-1"
+        old.mkdir()
+        with self.assertRaisesRegex(native.NativeObservationError, "unregistered"):
+            supplement.run(ROOT, old, authorized=True, runner=lambda: None)
+        self.assertFalse(list(old.iterdir()))
+
+    def test_same_version_wrong_runtime_rejected_before_preparation(self):
+        package = self.run.parent/"public-package"
+        manifest = json.loads((ROOT/native.STATIC_BUNDLE_EVIDENCE_RELATIVE).read_text())["bundleManifest"]
+        for item in manifest["runtimeFiles"]:
+            target = package/item["path"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((ROOT/item["path"]).read_bytes())
+        target = package/".codex-plugin/plugin.json"
+        target.parent.mkdir()
+        target.write_text(json.dumps(manifest["derivedPluginManifest"]["fields"], indent=2)+"\n")
+        (package/"BUNDLE-MANIFEST.json").write_text(json.dumps(manifest, indent=2)+"\n")
+        self.assertEqual(native.package_identity(package), native._protocol(ROOT)["bundle"]["packageSha256"])
+        with (package/"skills/traceable-git-submit/SKILL.md").open("ab") as stream:
+            stream.write(b"Unexpected old or changed runtime bytes.\n")
+        new_run = self.run.parent/"fresh"/supplement.RUN_NAME
+        previous = new_run.parent/"cases-clarification-1"
+        with patch.object(supplement, "_unrecorded"), \
+                patch.object(supplement, "_prior_state", return_value={"executable":"/fixture/codex"}), \
+                patch.object(native.legacy, "freeze_executable"), patch.object(supplement, "_login"):
+            with self.assertRaises(native.NativeObservationError):
+                supplement.prepare(ROOT, new_run, previous, bundle_root=package,
+                                   authorized=True, runner=lambda: None)
+        self.assertFalse(new_run.exists())

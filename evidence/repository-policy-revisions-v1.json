@@ -88,6 +88,14 @@
       "sourceIssue": 117,
       "summary": "Clarify unresolved material Git workflow choices before selection while preserving unchanged selected-envelope and host-native boundaries; revise the unpublished 0.10.1 candidate runtime.",
       "runtimeContractDigest": "sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
+    },
+    {
+      "revision": 12,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "83ff44b1ecab526c70061ccb878dc1dd1e6b34f8",
+      "sourceIssue": 117,
+      "summary": "Bind the revised Git-entry runtime to two identical frozen no-Hook builds and one three-reply supplementary regression, preserving 73 historical attempts and original runtime records.",
+      "runtimeContractDigest": "sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
     }
   ]
 }

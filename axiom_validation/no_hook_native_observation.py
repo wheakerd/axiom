@@ -1412,13 +1412,28 @@ def explicit_skill_selection(request: str, catalog: Sequence[Mapping[str, Any]])
             "mentionSha256": hashlib.sha256(mention.encode("utf-8")).hexdigest()}
 
 
-def _case_explicit_selection(root: Path, request: str, ordinal: int) -> dict[str, Any] | None:
+def _case_explicit_selection(root: Path, request: str, ordinal: int, *,
+                             protocol_digest: str | None = None) -> dict[str, Any] | None:
     # Availability comes from the independently bound fixture/discovery mode,
     # not the ordinal, expected route or expected discovery outcome.
     fixtures = _json(_read(root / legacy.FIXTURES_RELATIVE))
     _definition(fixtures, ordinal)  # Validate the same bound fixture/discovery record as production.
     installed = fixtures["cases"][ordinal - 1]["pluginState"] == "installed-derived-profile"
-    catalog = bound_native_skill_catalog(root) if installed else []
+    if installed and protocol_digest == MERGED_PROTOCOL_DIGEST:
+        # Reconstruct the completed assessment's selection identity from its
+        # immutable package inventory, never the revised candidate's Skill hash.
+        prior = _merged_protocol(root)
+        data = _read(root / "evidence/profiles/openai-hook-independent-v1/bundle-revision-9.json")
+        _require(hashlib.sha256(data).hexdigest() == prior["inputs"]["staticBundleEvidence"]["sha256"],
+                 "historical selection package evidence changed")
+        manifest = _json(data)["bundleManifest"]
+        namespace = manifest["derivedPluginManifest"]["fields"]["name"]
+        catalog = [{"name": namespace + ":" + Path(item["path"]).parent.name,
+                    "localName": Path(item["path"]).parent.name, "path": item["path"],
+                    "sha256": item["sha256"], "enabled": True}
+                   for item in manifest["runtimeFiles"] if item["kind"] == "skill"]
+    else:
+        catalog = bound_native_skill_catalog(root) if installed else []
     return explicit_skill_selection(request, catalog)
 
 
@@ -1464,7 +1479,8 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     invocation = envelope.get("explicitInvocation")
     if invocation is not None:
         _require(invocation == EXPLICIT_INVOCATION, "unsupported explicit invocation transport")
-        selection = _case_explicit_selection(root, arguments["request"], arguments["ordinal"])
+        selection = _case_explicit_selection(root, arguments["request"], arguments["ordinal"],
+                                             protocol_digest=arguments["protocol_digest"])
         if selection is not None:
             prefix, marker, request = material.prompt_bytes.partition(b"\nUser request:\n")
             _require(bool(marker), "native request boundary missing")
@@ -2722,7 +2738,8 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
             "diagnostic": "not-run", "cliLaunchCount": 0, "attemptCount": 0, "modelRequestCount": None,
             "privateCapture": _private_capture(), "operatorStderrCapture": _stderr_capture(),
             "operatorReadCapture": _private_capture(), "publicReads": [],
-            "explicitInvocation": _case_explicit_selection(root, case["request"], materialized.ordinal),
+            "explicitInvocation": _case_explicit_selection(root, case["request"], materialized.ordinal,
+                                                          protocol_digest=protocol["protocolDigest"]),
             "executionDiagnostics": _diagnostics(),
             "evidenceExtraction": {"stream": "not-checked", "response": "not-checked", "postcheck": "not-checked"},
             "installation": "not-checked", "authentication": "not-checked",

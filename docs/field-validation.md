@@ -2685,3 +2685,104 @@ from the recorded real history; a regression proves the consumed real window
 refuses a new launch. Runtime/bundle bytes and execution behavior were unchanged
 after the three observations. GitHub checks on the follow-up head are separate
 evidence and are not predeclared successful here.
+
+## Git workflow clarification scope correction and second supplement
+
+The first reply supplement remains immutable: execution
+`525f96f70073f9eb6038ab46b1ac27327a2b4d2e`, result
+`5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae`,
+Case 12 PASS, Case 13 FAIL, Case 14 PASS, and 73 cumulative attempts/CLI starts.
+Its protocol, history, bundle schema and source identity are archived byte for
+byte; the original reply entry remains in the current history. The old bundle
+is [revision-9 evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-9.json).
+Original routing history and its 16/16 PASS retain their original runtime.
+
+The Git entry's description required clarification before mutually exclusive
+ordinary/traceable choices, while its Intent Gate restricted questions to
+checkpoint history. The revised entry distinguishes stages: before selecting a
+workflow, material differences in route ownership, persistent metadata, write
+surfaces or authority require one concise clarification without delegated
+selection. Read-only scope or choosing the lighter option does not resolve that
+ambiguity. After selection, an unchanged envelope is not reconfirmed; necessary
+missing input or material conflict can require a question. Ordinary explicit Git
+and conceptual requests stay host-native. Reading guidance and routing grant no
+Git operation authority. The redundant direct-push outcome paragraph now routes
+to its existing direct-submit owner; normal hooks, non-force negotiation, one
+attempt and data protection remain there. No description, using-axiom policy,
+Hook, original request, fixture, expected result or scorer changed.
+
+One independent targeted source review found no blocking scope, full-profile or
+answer-injection defect. Its independent examples checked inspection-only choice
+between local commits and persistent checkpoint provenance; a specifically named
+non-force push; an explicit checkpoint request; an unchanged authorized envelope;
+and conceptual or presentation-only choices. Only the first requires workflow
+clarification. This is text-contract review, not observed behavior or a GitHub
+approval. The review read the 8,165-byte draft. A subsequent self-reviewed
+restoration of the original explicit commit/tag/push non-authorization clause
+satisfied the existing contract anchor without changing its meaning. Final entry:
+8,179 bytes, below 8,192. Sixteen existing Git/routing regressions passed.
+
+Remote tags and Releases still end at v0.10.0. Under the assigned-but-unfinished
+version rule, this is a revised unpublished 0.10.1 candidate, not a 0.10.2
+release. Policy revision 11 records source correction; revision 12 owns its
+frozen bundle and second reply supplement. Full runtime digest:
+`sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d`
+(61 installed inputs). Both full and derived profiles share the corrected
+canonical entry; old host evidence does not transfer to this digest.
+
+Initial source commit `4a8e4f3b5aba10bcc9bcc5b0e2bc151c2fca1742` reached the
+builder's unsupported revision-pair guard before output. The directly dependent
+builder correction adds only the 11/12 pair, preserves 5/6 and 8/9, and retains
+rejection of mixed and unknown pairs. Its targeted migration regression passed.
+Two actual successful builds then used signed source
+`83ff44b1ecab526c70061ccb878dc1dd1e6b34f8`, tree
+`67293ed0f9cf27762a55deabeb4f3ee4ff941e37`, in separate external destinations.
+All file sets and bytes, manifests, ZIPs and envelopes were identical:
+
+- Profile runtime: `sha256:017f0b78d07c480fbb0851f5d40cb94e93a4fa90c48c1c176cf36d2cb93f5d44`.
+- Bundle manifest: `sha256:9e4d734981102a8b05281ba41e5d879eb83c2977472f03c2eba0e01f2a9b53af`.
+- Archive: `3deed9be9749ea343260e2a2224df37fc9632710b680a84be93988ff714531e5`, 260,104 bytes.
+- Installed-package inventory: `c5d699c096d699d1c2345aa1e2ca9745db3d90b7fa20cc20f6e6a0c550f47397`.
+
+The second supplement keeps the original common safety text, task material
+positions, requests, natural-reply collection, 8 KiB evidence limit and semantic
+criteria unchanged. Only its new artifact/implementation identity and bounded
+execution eligibility change. It registers fresh sibling `cases-clarification-2`
+states, explicitly accepts the new frozen bundle, and rejects same-version
+packages with different bytes. Authentication comes opaquely from the first
+supplement's normally completed registered Case 14, with normal official status
+and serial handoff; no old conversation or whole client directory is copied.
+
+The historical total is 73, with one attempt each for 12-14 and a maximum of 76.
+The original routing window stays consumed. Existing history is retained, old
+run roots cannot receive new attempts, and a recorded second result cannot be
+reopened. Policy/reliability failure stops subsequent launches. Semantic FAIL
+is retained without retry. The old strict routing result validator now uses the
+original frozen package inventory for its selection identities; the changed Git
+Skill hash is not backfilled into the old 16/16 record. Targeted regressions
+confirm the original result passes its original binding and tampering fails.
+
+No new native loading receipt interface search or instrumentation is performed.
+The first Case 13's public 8,186-byte read remains evidence of that read, despite
+its behavioral FAIL. No read implies correct rule application or hidden semantic
+consumption. Other host targets and full 16-case acceptance of this revised
+runtime remain NOT-RUN. Issue 117 and FCR applicability remain open; PR 121 stays
+Draft, and PR 120 is not changed.
+
+Before execution, the complete no-model discovery initially stopped with 566
+collected tests, five failures and 20 errors (two skips): the disabled v1
+validator still fixed every 0.10.1 candidate to the former runtime digest, and
+its class setup failures prevented later tests from running. The owner now
+requires the revised digest for revisions 11 and later, while preserving the
+old revision-7 and 8-10 identity checks. Its former disabled protocol and empty
+history are archived, and current dependencies are rebound. No actual v1
+execution or historical normalized result is changed. Complete discovery then
+passed: 586 run, 584 passed, two existing optional skips, zero failures/errors.
+
+The publication aggregate, distribution, documentation, JSON parsing, English
+scan and instruction sizes pass. Claude strict plugin validation passes. The
+local generic plugin validator remains NON-PASS for the existing protected
+`hooks`, `interface.brandColorDark` and `interface.supportURL` fields; these are
+not removed or treated as newly unsupported product metadata. Static contract
+validation and the independent source review do not claim model repair. The
+three new replies are still unobserved at this signed implementation stage.

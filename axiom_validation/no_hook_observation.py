@@ -4061,7 +4061,10 @@ def _validate_repository_identity(documents: Mapping[Path, dict[str, Any]]) -> N
         _expect(revision, CANDIDATE_POLICY_REVISION, "runtime policy revision")
     contract = runtime.get("runtimeContract", {})
     _expect(contract.get("recordCount"), FULL_PROFILE_INPUT_COUNT, "full-profile input count")
-    _expect(contract.get("digest"), "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28" if migrated else FULL_PROFILE_DIGEST, "full-profile digest")
+    migrated_digest = ("sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
+                       if migrated and revision >= 11 else
+                       "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28")
+    _expect(contract.get("digest"), migrated_digest if migrated else FULL_PROFILE_DIGEST, "full-profile digest")
 
     bundle = documents[STATIC_BUNDLE_EVIDENCE_RELATIVE]
     _expect(bundle.get("candidateRepositoryPolicyRevision"), 6, "bundle evidence policy revision")
