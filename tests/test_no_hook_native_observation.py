@@ -5003,6 +5003,19 @@ class NativeObservationTests(unittest.TestCase):
 
     def _fixed_acceptance_fixture(self):
         from axiom_validation import no_hook_clarification as replies
+        # Exercise preparation with a synthetic, unconsumed registration. The
+        # checked-in actual result keeps the production window closed.
+        actual_read = native._read
+        def synthetic_registration(path, *args, **kwargs):
+            data = actual_read(path, *args, **kwargs)
+            if path == ROOT / native.HISTORY_RELATIVE:
+                history = json.loads(data)
+                history["fixedAcceptance"]["results"] = []
+                return native._bytes(history)
+            return data
+        registration = patch.object(native, "_read", side_effect=synthetic_registration)
+        registration.start()
+        self.addCleanup(registration.stop)
         prepared, runner, calls = self._prepared_runner()
         old = json.loads((prepared / native.STATE_NAME).read_bytes())
         previous = self.parent / "cases-clarification-2"
@@ -5053,6 +5066,14 @@ class NativeObservationTests(unittest.TestCase):
             native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
                 authorize_install=True, authorize_copy=True, runner=runner)
         self.assertEqual(calls, [])
+
+    def test_recorded_fixed_result_blocks_preparation_without_starting_a_client(self):
+        binding = native._fixed_result_binding(ROOT)
+        self.assertIsNotNone(binding)
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True)
 
     def test_fixed_acceptance_full_synthetic_handoff_preserves_counts_and_no_host_claim(self):
         from axiom_validation import no_hook_clarification as replies

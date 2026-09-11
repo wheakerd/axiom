@@ -130,6 +130,13 @@
   "fixedAcceptance": {
     "windowId": "pending-choice-fixed-1",
     "protocolDigest": "sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d.json",
+        "sha256": "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d",
+        "implementationCommit": "6f9c132e8088105347e602f1c43c8bc99ffe8c6b",
+        "implementationTree": "4b16ee800b8d0bd6657383ddcc02062a1b6ffe20"
+      }
+    ]
   }
 }
