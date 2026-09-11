@@ -15,5 +15,6 @@
     "credentialUsed": false,
     "modelCallCount": 0,
     "pluginInstalled": false
-  }
+  },
+  "protocolDigest": "sha256:98b07983233d2b19c31f0cf04b989ca17a1fe3ea7d3a01d209b72db032e654a1"
 }

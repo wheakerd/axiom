@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:25bf38370fc10ad5b686b6d2344aafd5a960b12db1b1e63153dafb852d5b4acc",
+  "nativeProtocolDigest": "sha256:eaddf8a359f2b6a9a1028e9a2d3afd6b44b9dde39037dc98a45ba626e5ef8059",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -20,7 +20,7 @@
   "bindings": [
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "7bab2fbd577356b4aba5fb3e81d36bced6a30ac85338ba94aa3060d35839186c"
+      "sha256": "208e621a0c7037586ae655be7f6411bf0a7b24b21a6fab68d1d7425aa91096c7"
     },
     {
       "path": "scripts/run-no-hook-clarification.py",
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "f40c4dd2a1b091f83e5ef534f78ae74e841178cde88b656056f867172a9926c3"
+      "sha256": "902cb1ed916521cc6bf45661a863fb817f3583906a0dee1831f72855eb7cb5f6"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -61,33 +61,9 @@
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/result-history-v1.json",
       "sha256": "289743f01425afed9cca36780e05a29134a402db85a45b90df8954817cd37e31"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/clarification-round-2/bundle-manifest-schema-v1.json",
-      "sha256": "112c22ce504d4fd06978257cd8c3e80dfc08041ed9a2589539b03b5a4ebbaae9"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/clarification-round-2/clarification-protocol-v1.json",
-      "sha256": "ca765224dd1d487ea2f60d92914b5ac1ff104fd03ecb751b110b91ac2862ba27"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/clarification-round-2/codex-native-protocol-v2.json",
-      "sha256": "902cb1ed916521cc6bf45661a863fb817f3583906a0dee1831f72855eb7cb5f6"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/clarification-round-2/codex-protocol-v1.json",
-      "sha256": "984b4f4e63c995ac6afe05206ad4246ea604abecf0bb1cecb6d7a434725c18d9"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/clarification-round-2/runtime-identity.json",
-      "sha256": "08e06b42c92f72e99d5cadcc03f514bb80b74dfbb3bec91b66c919a8f818e91b"
-    },
-    {
-      "path": "evidence/profiles/openai-hook-independent-v1/bundle-revision-12.json",
-      "sha256": "c7cd240b8036fb0f02c25812e94f0d5a0a50f173eed13621d8d1db8ec1f96ffe"
     }
   ],
   "revision": 2,
   "priorSupplementSha256": "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae",
-  "protocolDigest": "sha256:c03aae4ad9d68b26efaa8633994e0d52fed5d2618b2ce5755a5975885798d5f9"
+  "protocolDigest": "sha256:e4d54501c67d8c8ca29b1fbf448df8daf3833f42e746bb1be57422db9757c442"
 }

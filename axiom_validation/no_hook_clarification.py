@@ -32,6 +32,7 @@ REPLY_LIMIT = 8192
 PRIOR_SUPPLEMENT = "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae"
 PRIOR_SUPPLEMENT_PATH = Path("evals/no-hook-observation/results/clarification-" + PRIOR_SUPPLEMENT + ".json")
 ARCHIVE = Path("evals/no-hook-observation/historical-protocols/clarification-round-1")
+RECORDED_PROTOCOL = Path("evals/no-hook-observation/historical-protocols/clarification-round-2/clarification-protocol-v1.json")
 RUN_NAME = "cases-clarification-2"
 _require = native._require
 _bytes = native._bytes
@@ -472,14 +473,20 @@ def check(root: Path) -> list[str]:
         chain = attempt_history(root)
         history = _json(_read(root / HISTORY))
         prior_entries = _json(_read(root / ARCHIVE / HISTORY.name))["results"]
-        _require(history["protocolDigest"] == p["protocolDigest"] and 1 <= len(history["results"]) <= 2 and
+        recorded = p
+        if history["protocolDigest"] != p["protocolDigest"]:
+            recorded = _json(_read(root / RECORDED_PROTOCOL))
+            unsigned = dict(recorded)
+            _require(unsigned.pop("protocolDigest") == "sha256:" + digest(_bytes(unsigned)),
+                     "recorded supplement protocol changed")
+        _require(history["protocolDigest"] == recorded["protocolDigest"] and 1 <= len(history["results"]) <= 2 and
                  history["results"][:1] == prior_entries,
                  "supplement history mismatch")
         cases = legacy.load_golden_cases(root)
         fixtures = native._input(root, native._protocol(root), "fixtureMatrix")
         for entry in history["results"]:
             historical = entry["sha256"] == PRIOR_SUPPLEMENT
-            active = _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else p
+            active = _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
             prior_count = 70 if historical else chain["attempts"]
             data = _read(root / entry["path"])
             _require(digest(data) == entry["sha256"], "supplement result digest changed")

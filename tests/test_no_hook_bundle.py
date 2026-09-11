@@ -307,10 +307,13 @@ class NoHookBundleTests(unittest.TestCase):
     def test_schema_revision_migration_preserves_legacy_pair_and_rejects_mixed_pairs(self):
         current = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
         contract = bundle_module._schema_contract(current)
-        self.assertEqual((11, 12), (
+        self.assertEqual((13, 14), (
             contract["sourceRepositoryPolicyRevision"],
             contract["candidateRepositoryPolicyRevision"],
         ))
+        recorded = json.loads((REPOSITORY_ROOT /
+            "evals/no-hook-observation/historical-protocols/clarification-round-2/bundle-manifest-schema-v1.json").read_text())
+        self.assertEqual(recorded["x-axiom-contract"], bundle_module._schema_contract(recorded))
         prior = copy.deepcopy(current)
         prior["properties"]["repositoryPolicyRevision"] = {"const": 9}
         prior["$defs"]["source"]["properties"]["repositoryPolicyRevision"] = {"const": 8}
@@ -326,7 +329,7 @@ class NoHookBundleTests(unittest.TestCase):
         del legacy_contract["fullProfileRuntimeDigest"]
         self.assertEqual(legacy_contract, bundle_module._schema_contract(legacy))
 
-        for source_revision, owner_revision in ((5, 9), (8, 6), (7, 8), (True, 9), (8, 12), (11, 9), (12, 13)):
+        for source_revision, owner_revision in ((5, 9), (8, 6), (7, 8), (True, 9), (8, 12), (11, 9), (12, 13), (11, 14), (13, 12), (14, 15)):
             with self.subTest(source=source_revision, owner=owner_revision):
                 bad = copy.deepcopy(current)
                 bad["x-axiom-contract"]["sourceRepositoryPolicyRevision"] = source_revision

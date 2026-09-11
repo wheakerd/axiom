@@ -1,6 +1,28 @@
 # Runtime And Repository Identity
 
-## Current unpublished v0.10.1 Git-entry correction
+## Current unpublished v0.10.1 pending-choice clarification
+
+The assigned 0.10.1 candidate remains untagged and unreleased. Policy revision
+13 records a compatible clarification of the agent-plugin-architect discovery
+description and first entry step against `37b6cb63313425f2a802eead82401dfe1ff79a83`.
+The full runtime digest is
+`sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2` across the same 61 installed inputs.
+
+The existing contract already required clarification. This revision explicitly
+keeps a material workflow choice unselected after asking until the user chooses;
+execution limits may be explained without defaulting to a feasible or lighter
+alternative. Explicit architecture, explicit installation, conceptual comparisons
+and unchanged selected workflows retain their distinct boundaries. No other
+Skill, using-axiom policy, Hook, original input or scoring contract changes.
+
+Both full and derived profiles receive the same canonical correction. This
+round performs zero model/client observation launches and creates no new attempt
+ledger. All 76 historical attempts, two separate 2 PASS / 1 FAIL reply rounds,
+and their original implementation/input bindings remain historical. Current
+behavior and installed-host acceptance are NOT-RUN; neither old 16/16 routing
+acceptance nor individual replies transfer to this runtime.
+
+## Historical v0.10.1 Git-entry correction
 
 The existing 0.10.1 candidate is not tagged or released; repository version policy
 keeps that assigned version while the candidate is revised. Policy revision 11
@@ -23,7 +45,7 @@ must use the revised runtime; the old 16/16 result does not transfer to it.
 
 This section preserves the source-creation record. The subsequently completed
 policy-revision-9 artifact is owned by the
-[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json);
+[revision-9 bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-9.json);
 current observation and acceptance are summarized in
 [Field Validation](field-validation.md#final-pr-acceptance-and-issue-remainder).
 Those records do not change the identities or outcomes of historical sections.

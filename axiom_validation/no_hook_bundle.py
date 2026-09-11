@@ -1515,7 +1515,7 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
     if (
         type(source_revision) is not int
         or type(candidate_revision) is not int
-        or (source_revision, candidate_revision) not in {(5, 6), (8, 9), (11, 12)}
+        or (source_revision, candidate_revision) not in {(5, 6), (8, 9), (11, 12), (13, 14)}
     ):
         raise BundleContractError("bundle schema source/owner revision pair is unsupported")
     contract_fields = {
@@ -1524,10 +1524,10 @@ def _schema_contract(schema: dict[str, Any]) -> dict[str, Any]:
         "runtimeInventory",
         "contractBindings",
     }
-    if source_revision in {8, 11}:
+    if source_revision in {8, 11, 13}:
         contract_fields.add("fullProfileRuntimeDigest")
     contract = _exact_object(contract_value, contract_fields, "bundle schema x-axiom-contract")
-    if source_revision in {8, 11} and (
+    if source_revision in {8, 11, 13} and (
         type(contract["fullProfileRuntimeDigest"]) is not str
         or DIGEST_PATTERN.fullmatch(contract["fullProfileRuntimeDigest"]) is None
     ):

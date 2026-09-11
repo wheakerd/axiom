@@ -183,6 +183,23 @@ class ClarificationTests(unittest.TestCase):
             self.assertNotIn("--output-schema", argv)
             self.assertNotIn("resume", argv)
 
+    def test_runtime_rebind_keeps_recorded_reply_protocol_and_closed_window(self):
+        current = supplement.protocol(ROOT)
+        recorded = json.loads((ROOT / supplement.RECORDED_PROTOCOL).read_text())
+        history = json.loads((ROOT / supplement.HISTORY).read_text())
+        self.assertNotEqual(current["protocolDigest"], recorded["protocolDigest"])
+        self.assertEqual(history["protocolDigest"], recorded["protocolDigest"])
+        self.assertEqual(len(history["results"]), 2)
+        self.assertEqual(supplement.check(ROOT), [])
+        with self.assertRaises(native.NativeObservationError):
+            supplement._unrecorded(ROOT, current)
+        relabeled = dict(history, protocolDigest=current["protocolDigest"])
+        actual_read = supplement._read
+        with patch.object(supplement, "_read", side_effect=lambda path, *args, **kwargs:
+                native._bytes(relabeled) if path == ROOT / supplement.HISTORY
+                else actual_read(path, *args, **kwargs)):
+            self.assertTrue(supplement.check(ROOT))
+
     def test_exact_seventy_three_history_and_three_budget(self):
         chain = supplement.attempt_history(ROOT)
         self.assertEqual((chain["attempts"], chain["cliLaunches"]), (73,73))

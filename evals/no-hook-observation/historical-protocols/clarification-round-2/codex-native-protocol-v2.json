@@ -38,7 +38,7 @@
     },
     "bundleSchema": {
       "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-      "sha256": "558bfcd7059a38216d2044eca823772e5fea6bcb3f0f44d0b7a5c160a7bb9dc9"
+      "sha256": "112c22ce504d4fd06978257cd8c3e80dfc08041ed9a2589539b03b5a4ebbaae9"
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
@@ -52,7 +52,7 @@
     },
     {
       "path": "axiom_validation/no_hook_bundle.py",
-      "sha256": "78f47126df262737482d490f641fa27013c88f1a3edd1549b92d72f9a7e2e49d"
+      "sha256": "7c3ceb1283228e81a3b10224e6c829808ff92634e2fc6d678b97a8c9a8679e1f"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -64,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
-      "sha256": "d98e782f101bee723ffa3ba13bfa15f1a51be4a5527960fb5f6a893878fb2c60"
+      "sha256": "11fd6688003c968021671324951a788aba687a880217079163898aed5dc84e85"
     },
     {
       "path": "axiom_validation/no_hook_profile.py",
@@ -395,5 +395,5 @@
     "evidence": "selection-representation; not-observed-native-body-load",
     "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
   },
-  "protocolDigest": "sha256:25bf38370fc10ad5b686b6d2344aafd5a960b12db1b1e63153dafb852d5b4acc"
+  "protocolDigest": "sha256:eaddf8a359f2b6a9a1028e9a2d3afd6b44b9dde39037dc98a45ba626e5ef8059"
 }
