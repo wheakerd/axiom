@@ -2807,8 +2807,9 @@ matched the 8,179 canonical bytes. Each case's request, common prompt and fixtur
 digest matched its original counterpart; only the approved artifact and
 implementation bindings changed. The client remained Codex 0.153.0,
 gpt-5.5 / medium, Direct, with Code Mode host and plugin runtime disabled.
-There was no qualified Skill mention, explicit read command, added clarification
-hint, generated user answer or follow-up business operation.
+The observation inputs added no qualified Skill mention, prescribed read command
+or clarification hint. No user answer or follow-up business operation was
+generated; Case 13's own Skill announcement and public read are retained below.
 
 | Case | Original 0.10.1 reply | Revised 0.10.1 reply | Current semantic finding |
 | --- | --- | --- | --- |
