@@ -83,6 +83,107 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(env["HOME"], str(paths["user"]))
         self.assertEqual(env["CODEX_HOME"], str(paths["home"]))
 
+    def test_host_context_overrides_are_uniform_and_keep_permission_and_discovery_contract(self):
+        from axiom_validation import no_hook_clarification as replies
+        executable = Path("/synthetic/codex")
+        for mode, ordinals in (("routing", range(1, 17)), ("reply", (12, 13, 14))):
+            for ordinal in ordinals:
+                with self.subTest(mode=mode, ordinal=ordinal):
+                    argv = (native.build_native_argv(executable, self.parent, ordinal) if mode == "routing" else
+                            replies.reply_argv(executable, self.parent, ordinal, self.parent / "final.txt"))
+                    overrides = [argv[i+1] for i, value in enumerate(argv) if value == "-c"]
+                    config = tomllib.loads("\n".join(overrides))
+                    self.assertIs(config["include_environment_context"], False)
+                    self.assertIs(config["include_permissions_instructions"], True)
+                    self.assertFalse(config["features"]["code_mode_host"])
+                    self.assertFalse(config["features"]["plugins"])
+                    self.assertTrue(config["features"]["shell_tool"])
+                    self.assertFalse(config["features"]["skip_host_skill_discovery"])
+                    paths = native._case_paths(self.parent, ordinal)
+                    expected = {":root": "deny", ":minimal": "read", str(executable): "read",
+                                str(paths["workspace"]): "read"}
+                    if ordinal != 11:
+                        expected[str(paths["package"])] = "read"
+                    self.assertEqual(config["permissions"]["native-case"]["filesystem"], expected)
+                    self.assertEqual("--output-schema" in argv, mode == "routing")
+                    self.assertNotIn("developer_instructions", config)
+
+    def test_host_context_history_preserves_106_and_all_recorded_windows(self):
+        from axiom_validation import no_hook_clarification as replies
+        chain = native.host_context_attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"], len(chain["identities"])), (106, 106, 106))
+        archived = ROOT / "evals/no-hook-observation/historical-protocols/routing-tail-1"
+        protocol = native._routing_tail_protocol(ROOT)
+        self.assertEqual(protocol["protocolDigest"], "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9")
+        self.assertEqual(hashlib.sha256((archived / native.RESULT_SCHEMA_RELATIVE.name).read_bytes()).hexdigest(),
+                         protocol["resultSchema"]["sha256"])
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")), \
+             patch.object(native, "_revision_four_auth_source", side_effect=AssertionError("auth source accessed")):
+            for flags in ({}, {"revision_four": True}):
+                with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                    native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                        self.parent / "bundle", authorize_install=True, authorize_copy=True, **flags)
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_routing_tail(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True)
+            with self.assertRaises(native.NativeObservationError):
+                replies._unrecorded(ROOT, replies.protocol(ROOT), independent=True)
+
+    def test_retained_host_context_stop_cannot_start_another_window(self):
+        binding = native._fixed_result_binding(ROOT, host_context=True)
+        self.assertIsNotNone(binding)
+        result = json.loads((ROOT / binding["path"]).read_bytes())
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (11, 11, 117))
+        self.assertEqual([c["status"] for c in result["caseResults"]], ["PASS"] * 10 + ["INCOMPLETE"] + ["NOT-RUN"] * 5)
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")), \
+             patch.object(native, "_revision_four_auth_source", side_effect=AssertionError("auth handoff continued")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True, host_context=True)
+
+    def test_host_context_fixed_registration_has_19_fresh_cases_and_zero_install_control(self):
+        run, _, _, calls = self._fixed_acceptance_fixture(host_context=True)
+        registration = native._fixed_registration(ROOT, self.parent, host_context=True)
+        self.assertEqual(registration["contract"]["routingOrdinals"], list(range(1, 17)))
+        self.assertEqual(registration["contract"]["clarificationOrdinals"], [12, 13, 14])
+        self.assertEqual(registration["contract"]["maximumCumulativeAttempts"], 125)
+        self.assertEqual(registration["attemptHistory"]["attempts"], 106)
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual([i for i in range(1, 17) if
+                          (native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME).exists()], [1])
+        self.assertEqual(calls, [])
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("real client from simulation")):
+            with self.assertRaisesRegex(native.NativeObservationError, "preparation mode"):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                    reuse_test_auth=True, assessment_batch=True, host_context=True)
+        self.assertFalse((run / "batch-started.json").exists())
+
+    def test_host_context_full_synthetic_handoff_keeps_failure_and_125_limit(self):
+        self._exercise_fixed_handoff(False, host_context=True)
+
+    def test_host_context_spawn_failure_consumes_without_refund_or_later_handoff(self):
+        self._exercise_fixed_spawn_failure(False, host_context=True)
+
+    def test_host_context_read_stop_preserves_messages_and_blocks_reply_handoff(self):
+        from axiom_validation import no_hook_clarification as replies
+        run, _, runner, _ = self._fixed_acceptance_fixture(host_context=True)
+        result, calls, messages = self._run_routing_tail(run, runner, rejected=11, host_context=True)
+        self.assertEqual(calls, list(range(1, 12)))
+        self.assertEqual(result["cumulativeAttemptCount"], 117)
+        self.assertEqual(result["caseResults"][10]["diagnostic"], "policy-rejected")
+        self.assertEqual([c["status"] for c in result["caseResults"]][11:], ["NOT-RUN"] * 5)
+        self.assertEqual(result["caseResults"][0]["visibleReplies"]["messages"], messages[1])
+        self.assertEqual(result["caseResults"][10]["visibleReplies"]["messages"], ["Reviewing the request."])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        target = self.parent / native.HOST_CONTEXT_ACCEPTANCE["clarificationRunName"]
+        with patch.object(replies, "_login", side_effect=AssertionError("later authentication")):
+            with self.assertRaises(native.NativeObservationError):
+                replies.prepare(ROOT, target, run, bundle_root=self.parent / "bundle",
+                    authorized=True, host_context=True, runner=runner)
+        self.assertFalse(target.exists())
+
     def test_case_homes_workspaces_and_state_roots_are_distinct(self):
         for name in ("home", "user", "workspace", "state", "tmp"):
             self.assertEqual(len({native._case_paths(self.parent, ordinal)[name] for ordinal in range(1, 17)}), 16)
@@ -459,7 +560,7 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual(final_output.stat().st_mode & 0o777, 0o600)
                 self.assertEqual(final_output.read_bytes(), b"")
                 self.synthetic_final_outputs.append(final_output)
-                final_output.write_bytes(event(document))
+                final_output.write_text(json.dumps(document))
                 if failed_case == ordinal:
                     raw = stream(document, "touch unexpected", "")
                 elif ordinal == 1:
@@ -2378,7 +2479,7 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(native.validate_native_result(result, ROOT), [])
             self.assertEqual(result["priorResultSha256s"], native.CURRENT_PRIOR_RESULTS)
             self.assertEqual(result["protocolDigest"], history["protocol"]["digest"])
-            self.assertEqual(result["protocolDigest"], self.protocol["protocolDigest"])
+            self.assertEqual(result["protocolDigest"], native._merged_protocol(ROOT)["protocolDigest"])
             prior_binding = history["historicalBatch"]
             self.assertEqual(prior_binding, native.ASSESSMENT_PRIOR_BINDING)
             prior_bytes = (ROOT / prior_binding["path"]).read_bytes()
@@ -4124,13 +4225,16 @@ class NativeObservationTests(unittest.TestCase):
         envelope = native._input(ROOT, self.protocol, "promptEnvelope")
         order_rule = source["properties"]["selectedRoutes"]["description"]
         discovery_rule = source["properties"]["discoveryOutcome"]["description"]
+        front_door_rule = source["properties"]["usingAxiomFrontDoorObserved"]["description"]
+        self.assertEqual(envelope["contractBindings"]["modelResponseSchemaSha256"],
+                         self.protocol["inputs"]["modelResponseSchema"]["sha256"])
         self.assertIn("UTF-8 byte order", order_rule)
         self.assertIn("not the execution order", order_rule)
         self.assertIn("output vocabulary, not the host Skill catalog", discovery_rule)
         self.assertIn("training memory", discovery_rule)
         self.assertIn("fixture text", discovery_rule)
         self.assertIn("do not establish installation", discovery_rule)
-        for rule in (order_rule, discovery_rule):
+        for rule in (order_rule, discovery_rule, front_door_rule):
             self.assertEqual(envelope["fixedInstructions"].count(rule), 1)
         # Original measurement inputs remain separately frozen, not regenerated
         # from either the new descriptions or the observer's expected answers.
@@ -4148,6 +4252,8 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual([line[2:] for line in prefix.splitlines() if line.startswith("- ")],
                                  envelope["fixedInstructions"])
                 self.assertNotIn(case["id"], prefix)
+                self.assertIn("modelResponseSchemaSha256: " +
+                              self.protocol["inputs"]["modelResponseSchema"]["sha256"], prefix)
                 for field in ("expectedRoutes", "expectedOutcome", "expectedClarificationCount", "caseClass"):
                     self.assertNotIn(field, prefix)
                 argv = native.build_native_argv(Path("/fixture/client"), run, ordinal)
@@ -4155,9 +4261,11 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual(payload, material.schema_bytes)
                 schema = json.loads(payload)
                 native.validate_response_transport(schema)
-                fields = {name: schema["properties"][name] for name in ("selectedRoutes", "discoveryOutcome")}
+                fields = {name: schema["properties"][name] for name in
+                          ("selectedRoutes", "discoveryOutcome", "usingAxiomFrontDoorObserved")}
                 self.assertNotIn("description", fields["selectedRoutes"])
                 self.assertNotIn("description", fields["discoveryOutcome"])
+                self.assertEqual(fields["usingAxiomFrontDoorObserved"], {"type": "boolean"})
                 if uniform_fields is None:
                     uniform_fields = fields
                 self.assertEqual(fields, uniform_fields)
@@ -4683,7 +4791,7 @@ class NativeObservationTests(unittest.TestCase):
         envelope = native._input(ROOT, self.protocol, "promptEnvelope")
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
         self.assertIn("description", schema["properties"]["clarificationCount"])
-        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount", "usingAxiomFrontDoorObserved"):
             self.assertIn(schema["properties"][field]["description"], envelope["fixedInstructions"])
         self.assertIn("inner User request", schema["properties"]["selectedRoutes"]["description"])
         self.assertIn("pending routing clarification", schema["properties"]["clarificationCount"]["description"])
@@ -4704,7 +4812,7 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(transport["properties"]["selectedRoutes"]["items"]["enum"],
                              schema["properties"]["selectedRoutes"]["items"]["enum"])
             text = material.prompt_bytes.decode()
-            for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+            for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount", "usingAxiomFrontDoorObserved"):
                 self.assertEqual(text.count(schema["properties"][field]["description"]), 1)
             self.assertTrue(text.endswith("User request:\n" + request + "\n"))
             self.assertNotIn(original["id"], text)
@@ -4714,13 +4822,65 @@ class NativeObservationTests(unittest.TestCase):
     def test_assessment_definition_drift_rejects_before_material_delivery(self):
         envelope = native._input(ROOT, self.protocol, "promptEnvelope")
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
-        envelope["fixedInstructions"] = [value for value in envelope["fixedInstructions"]
-                                          if value != schema["properties"]["clarificationCount"]["description"]]
-        with self.assertRaisesRegex(native.NativeObservationError, "assessment field definitions"):
-            native.materialize_native_case_contract(root=ROOT,
-                materialization_seed=bytes(32), ordinal=1,
-                protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
-                prompt_envelope=envelope, request="A generic request.")
+        for field in ("clarificationCount", "usingAxiomFrontDoorObserved"):
+            for change in ("missing", "duplicate", "different"):
+                with self.subTest(field=field, change=change):
+                    altered = copy.deepcopy(envelope)
+                    definition = schema["properties"][field]["description"]
+                    altered["fixedInstructions"].remove(definition)
+                    altered["fixedInstructions"] += ([definition] * 2 if change == "duplicate" else
+                                                     [definition + " Changed."] if change == "different" else [])
+                    with self.assertRaisesRegex(native.NativeObservationError, "assessment field definitions"):
+                        native.materialize_native_case_contract(root=ROOT,
+                            materialization_seed=bytes(32), ordinal=1,
+                            protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
+                            prompt_envelope=altered, request="A generic request.")
+
+    def test_current_prompt_cannot_advertise_the_historical_schema(self):
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        envelope["contractBindings"]["modelResponseSchemaSha256"] = (
+            native._fixed_protocol(ROOT)["inputs"]["modelResponseSchema"]["sha256"])
+        envelope["promptEnvelopeDigest"] = legacy.self_digest(envelope, "promptEnvelopeDigest")
+        data = native._bytes(envelope)
+        protocol = copy.deepcopy(self.protocol)
+        protocol["inputs"]["promptEnvelope"]["sha256"] = hashlib.sha256(data).hexdigest()
+        protocol["protocolDigest"] = legacy.self_digest(protocol, "protocolDigest")
+        overrides = {ROOT / native.PROTOCOL_RELATIVE: native._bytes(protocol),
+                     ROOT / protocol["inputs"]["promptEnvelope"]["path"]: data}
+        read = native._read
+        with patch.object(native, "_read", side_effect=lambda path, *a, **kw:
+                          overrides[path] if path in overrides else read(path, *a, **kw)):
+            with self.assertRaisesRegex(native.NativeObservationError, "material envelope binding"):
+                native._protocol(ROOT)
+
+    def test_front_door_measurement_keeps_fixed_result_inputs_and_stopped_window(self):
+        from axiom_validation import no_hook_clarification as replies
+        binding = native._fixed_result_binding(ROOT)
+        raw = (ROOT / binding["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), native.FIXED_RESULT_SHA256)
+        result = json.loads(raw)
+        frozen = native._fixed_protocol(ROOT)
+        self.assertEqual(result["protocolDigest"], frozen["protocolDigest"])
+        self.assertNotEqual(result["protocolDigest"], self.protocol["protocolDigest"])
+        self.assertEqual(result["executionSource"]["commit"], "6f9c132e8088105347e602f1c43c8bc99ffe8c6b")
+        self.assertEqual([c["status"] for c in result["caseResults"]],
+                         ["PASS"] * 5 + ["FAIL", "FAIL"] + ["PASS"] * 3 + ["INCOMPLETE"] + ["NOT-RUN"] * 5)
+        self.assertEqual((result["cumulativeAttemptCount"],
+                          native.fixed_attempt_history(ROOT)["cliLaunches"] + result["cliLaunchCount"]), (87, 87))
+        schema = native._input(ROOT, frozen, "modelResponseSchema")
+        envelope = native._input(ROOT, frozen, "promptEnvelope")
+        self.assertEqual(schema["properties"]["usingAxiomFrontDoorObserved"], {"type": "boolean"})
+        self.assertEqual(envelope["assessmentRevision"], 3)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        changed = copy.deepcopy(result)
+        changed["protocolDigest"] = self.protocol["protocolDigest"]
+        self.assertTrue(native.validate_native_result(changed, ROOT))
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True)
+            with self.assertRaisesRegex(native.NativeObservationError, "registration changed"):
+                replies._unrecorded(ROOT, replies.protocol(ROOT), fixed_acceptance=True)
 
     def test_measurement_migration_preserves_history_and_does_not_regrade_contradictions(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
@@ -4739,7 +4899,7 @@ class NativeObservationTests(unittest.TestCase):
             current_bytes = (ROOT / current_binding["path"]).read_bytes()
             self.assertEqual(hashlib.sha256(current_bytes).hexdigest(), current_binding["sha256"])
             current = json.loads(current_bytes)
-            self.assertEqual(current["protocolDigest"], self.protocol["protocolDigest"])
+            self.assertEqual(current["protocolDigest"], native._merged_protocol(ROOT)["protocolDigest"])
             self.assertEqual(current["executionSegment"]["kind"], "explicit-invocation-revision-1")
             self.assertEqual(current["executionSegment"]["priorPartialSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
             self.assertEqual(current["executionSegment"]["priorAttemptCount"], native._attempt_history(ROOT)["attempts"])
@@ -4747,8 +4907,9 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(history["current"]["codexObservation"], current["status"].lower())
         else:
             self.assertEqual(history["current"]["codexObservation"], "not-run")
-        self.assertEqual(self.protocol["executionWindow"]["state"], "authorized-once")
-        self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], native.ASSESSMENT_REVISION_THREE["sha256"])
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        self.assertEqual(self.protocol["executionWindow"]["lastResultSha256"], native.FIXED_ROUTING_PRIOR)
+        self.assertEqual(self.protocol["fixedAcceptance"], native.FIXED_ACCEPTANCE)
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
         # The existing scorer still rejects contradictory tuples without editing
         # the response, inventing a question or treating a route name as a read.
@@ -5000,6 +5161,270 @@ class NativeObservationTests(unittest.TestCase):
                 process_runner=failed_spawn)
         self.assertEqual(invoked, [1])
 
+    def _fixed_acceptance_fixture(self, revision_four=False, host_context=False):
+        from axiom_validation import no_hook_clarification as replies
+        # Exercise preparation with a synthetic, unconsumed registration. The
+        # checked-in actual result keeps the production window closed.
+        actual_read = native._read
+        def synthetic_registration(path, *args, **kwargs):
+            data = actual_read(path, *args, **kwargs)
+            if path == ROOT / native.HISTORY_RELATIVE:
+                history = json.loads(data)
+                history[native._fixed_history_key(revision_four, host_context)]["results"] = []
+                return native._bytes(history)
+            if path == ROOT / replies.HISTORY:
+                history = json.loads(data)
+                key = native._fixed_history_key(revision_four, host_context)
+                history[key]["protocolDigest"] = replies.protocol(ROOT)["protocolDigest"]
+                history[key]["results"] = []
+                return native._bytes(history)
+            return data
+        registration = patch.object(native, "_read", side_effect=synthetic_registration)
+        registration.start()
+        self.addCleanup(registration.stop)
+        reply_registration = patch.object(replies, "_read", side_effect=synthetic_registration)
+        reply_registration.start()
+        self.addCleanup(reply_registration.stop)
+        prepared, runner, calls = self._prepared_runner()
+        old = json.loads((prepared / native.STATE_NAME).read_bytes())
+        source_ordinal = 16 if host_context else 10 if revision_four else 14
+        previous = self.parent / (native.ROUTING_TAIL["runName"] if host_context else native.FIXED_ACCEPTANCE["routingRunName"] if revision_four else "cases-clarification-2")
+        paths = native._case_paths(previous, source_ordinal)
+        paths["workspace"].mkdir(parents=True)
+        paths["home"].mkdir()
+        auth = paths["home"] / native.AUTH_FILE_NAME
+        auth.write_bytes(b"PUBLIC-SYNTHETIC-PREDECESSOR")
+        auth.chmod(0o600)
+        metadata = auth.stat()
+        native._exclusive(native._auth_owner(previous, source_ordinal), native._bytes({
+            "ordinal": source_ordinal, "device": metadata.st_dev, "inode": metadata.st_ino}))
+        run = self.parent / native._fixed_contract(revision_four, host_context)["routingRunName"]
+        owner, helper = (native, "_revision_four_auth_source") if revision_four or host_context else (replies, "_prior_state")
+        with patch.object(owner, helper, return_value=old):
+            native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, revision_four=revision_four, host_context=host_context, runner=runner)
+        return run, previous, runner, calls
+
+    def test_fixed_acceptance_counts_all_76_and_keeps_consumed_windows_closed(self):
+        from axiom_validation import no_hook_clarification as replies
+        chain = native.fixed_attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"], len(chain["identities"])), (76, 76, 76))
+        self.assertEqual(self.protocol["executionWindow"]["state"], "closed")
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "window closed"):
+                native.prepare_current_assessment(ROOT, self.parent / "new", self.parent / "old",
+                    authorize_install=True, authorize_copy=True)
+            with self.assertRaises(native.NativeObservationError):
+                replies._unrecorded(ROOT, replies.protocol(ROOT))
+
+    def test_fixed_acceptance_registers_both_parts_before_any_observation(self):
+        run, previous, runner, calls = self._fixed_acceptance_fixture()
+        registration = native._fixed_registration(ROOT, self.parent)
+        self.assertEqual(calls, [])
+        self.assertEqual(registration["contract"]["routingOrdinals"], list(range(1, 17)))
+        self.assertEqual(registration["contract"]["clarificationOrdinals"], [12, 13, 14])
+        self.assertEqual(registration["contract"]["maximumCumulativeAttempts"], 95)
+        self.assertIsNone(registration["executionSource"])
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual([i for i in range(1, 17) if (native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME).exists()], [1])
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("real client started from simulation")):
+            with self.assertRaisesRegex(native.NativeObservationError, "preparation mode"):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                    reuse_test_auth=True, assessment_batch=True, fixed_acceptance=True)
+        self.assertFalse((run / "batch-started.json").exists())
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, runner=runner)
+        self.assertEqual(calls, [])
+
+    def test_recorded_fixed_result_blocks_preparation_without_starting_a_client(self):
+        binding = native._fixed_result_binding(ROOT)
+        self.assertIsNotNone(binding)
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True)
+
+    def test_revision_four_registers_19_after_87_without_reopening_old_window(self):
+        chain = native.revision_four_attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"], len(chain["identities"])), (87, 87, 87))
+        self.assertEqual(native._fixed_result_binding(ROOT)["sha256"], native.FIXED_RESULT_SHA256)
+        run, previous, runner, calls = self._fixed_acceptance_fixture(True)
+        registration = native._fixed_registration(ROOT, self.parent, revision_four=True)
+        contract = registration["contract"]
+        self.assertEqual(contract["routingOrdinals"], list(range(1, 17)))
+        self.assertEqual(contract["clarificationOrdinals"], [12, 13, 14])
+        self.assertEqual((contract["maximumNewAttempts"], contract["maximumCumulativeAttempts"],
+                          contract["authenticationSourceOrdinal"]), (19, 106, 10))
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual([i for i in range(1, 17) if
+                          (native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME).exists()], [1])
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, revision_four=True, runner=runner)
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True, reuse_test_auth=True,
+                assessment_batch=True, fixed_acceptance=True, process_runner=runner)
+        self.assertEqual(calls, [])
+        self.assertFalse((run / "batch-started.json").exists())
+
+    def test_retained_revision_four_stop_cannot_start_another_window(self):
+        binding = native._fixed_result_binding(ROOT, revision_four=True)
+        self.assertIsNotNone(binding)
+        result = json.loads((ROOT / binding["path"]).read_bytes())
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (11, 11, 98))
+        self.assertEqual(result["status"], "INCOMPLETE")
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")), \
+             patch.object(native, "_revision_four_auth_source", side_effect=AssertionError("handoff continued")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True, revision_four=True)
+
+    def test_revision_four_rejects_abnormal_auth_source_before_client_or_secret_access(self):
+        from axiom_validation import no_hook_clarification as replies
+        binding = native._fixed_result_binding(ROOT)
+        result = json.loads((ROOT / binding["path"]).read_bytes())
+        previous = self.parent / native.FIXED_ACCEPTANCE["routingRunName"]
+        previous.mkdir()
+        (previous / "normalized-result.json").write_bytes((ROOT / binding["path"]).read_bytes())
+        (previous / native.STATE_NAME).write_bytes(native._bytes({
+            "protocolDigest": result["protocolDigest"], "runMode": "actual",
+            "materializationSeed": result["materializationSeed"]}))
+        (previous / "batch-started.json").write_bytes(native._bytes({"protocolDigest": result["protocolDigest"]}))
+        (previous / "attempt-10.json").write_bytes(native._bytes({
+            "ordinal": 10, "caseId": result["caseResults"][9]["caseId"], "protocolDigest": result["protocolDigest"]}))
+        # The public retained result identifies a normal source at 10 and an
+        # abnormal stop at 11. A corrupted source fact must stop before paths,
+        # authentication or subprocess operations, even with a valid marker.
+        self.assertEqual(result["caseResults"][9]["executionDiagnostics"]["category"], "none")
+        self.assertNotEqual(result["caseResults"][10]["executionDiagnostics"]["category"], "none")
+        actual_json = native._json
+        def abnormal(data):
+            value = actual_json(data)
+            if isinstance(value, dict) and "caseResults" in value:
+                value["caseResults"][9]["executionDiagnostics"]["category"] = "policy-rejected"
+            return value
+        with patch.object(native, "_fixed_result_binding", return_value=binding), \
+             patch.object(native, "_json", side_effect=abnormal), \
+             patch.object(native, "_case_paths", side_effect=AssertionError("source paths accessed")), \
+             patch.object(replies, "_login", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "did not close normally"):
+                native._revision_four_auth_source(ROOT, previous)
+
+    def test_revision_four_read_rejection_stops_fixed_set_and_clarification_handoff(self):
+        from axiom_validation import no_hook_clarification as replies
+        run, _, runner, calls = self._fixed_acceptance_fixture(True)
+        def rejected(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            captured = runner(argv, **{**kwargs, "line_callback": None})
+            raw = b"".join(event({**entry, "item": {**entry["item"], "command": "cat unbound-public-fixture"}})
+                if entry.get("item", {}).get("type") == "command_execution" else event(entry)
+                for entry in (json.loads(line) for line in captured["stdout"].splitlines()))
+            code = "import sys; sys.stdin.buffer.read(); sys.stdout.buffer.write(" + repr(raw) + ")"
+            return native.bounded_process([sys.executable, "-I", "-B", "-c", code], **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True, reuse_test_auth=True,
+            assessment_batch=True, revision_four=True, process_runner=rejected)
+        self.assertEqual(calls, [1])
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 1, 88))
+        self.assertEqual(result["caseResults"][0]["diagnostic"], "policy-rejected")
+        self.assertEqual([c["status"] for c in result["caseResults"]][1:], ["NOT-RUN"] * 15)
+        target = self.parent / native.REVISION_FOUR_ACCEPTANCE["clarificationRunName"]
+        with patch.object(replies, "_login", side_effect=AssertionError("authentication continued")):
+            with self.assertRaises(native.NativeObservationError):
+                replies.prepare(ROOT, target, run, bundle_root=self.parent / "bundle",
+                    authorized=True, revision_four=True, runner=runner)
+        self.assertFalse(target.exists())
+
+    def test_fixed_acceptance_full_synthetic_handoff_preserves_counts_and_no_host_claim(self):
+        self._exercise_fixed_handoff(False)
+
+    def test_revision_four_full_synthetic_handoff_preserves_106_ceiling_and_no_host_claim(self):
+        self._exercise_fixed_handoff(True)
+
+    def _exercise_fixed_handoff(self, revision_four, host_context=False):
+        from axiom_validation import no_hook_clarification as replies
+        from tests.test_no_hook_clarification import text_stream
+        run, _, runner, calls = self._fixed_acceptance_fixture(revision_four, host_context)
+        flags = {"host_context": True} if host_context else {"revision_four": True} if revision_four else {"fixed_acceptance": True}
+        prior = 106 if host_context else 87 if revision_four else 76
+        def wrong_route(argv, **kwargs):
+            if "exec" not in argv or Path(kwargs["cwd"]).parent.name != "case-01":
+                return runner(argv, **kwargs)
+            captured = runner(argv, **{**kwargs, "line_callback": None})
+            final = Path(argv[argv.index("--output-last-message") + 1])
+            document = json.loads(final.read_bytes())
+            document.update(discoveryOutcome="no-route", selectedRoutes=[], usingAxiomFrontDoorObserved=False)
+            final.write_text(json.dumps(document))
+            raw = stream(document)
+            for line in raw.splitlines(): kwargs["line_callback"](line)
+            return {**captured, "stdout": raw}
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, **flags, process_runner=wrong_route)
+        self.assertEqual(calls, list(range(1, 17)))
+        self.assertEqual([x["status"] for x in result["caseResults"]], ["FAIL"] + ["PASS"] * 15)
+        self.assertEqual((result["attemptCount"], result["cumulativeAttemptCount"]), (16, prior + 16))
+        self.assertFalse(result["hostClaim"])
+        self.assertIsNone(result["executionSource"])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        for field, value in (("cumulativeAttemptCount", prior + 17), ("priorResultSha256s", native.CURRENT_PRIOR_RESULTS)):
+            altered = copy.deepcopy(result); altered[field] = value
+            self.assertTrue(native.validate_native_result(altered, ROOT))
+        with self.assertRaises(native.NativeObservationError):
+            native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                reuse_test_auth=True, assessment_batch=True, **flags, process_runner=runner)
+        reply_root = self.parent / native._fixed_contract(revision_four, host_context)["clarificationRunName"]
+        replies.prepare(ROOT, reply_root, run, bundle_root=self.parent / "bundle",
+            authorized=True, **flags, runner=runner)
+        reply_calls = []
+        message = "Public fixture reply for transport validation."
+        def reply_runner(argv, **kwargs):
+            if "exec" not in argv:
+                return runner(argv, **kwargs)
+            self.assertNotIn("--output-schema", argv)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            reply_calls.append(ordinal)
+            kwargs["started_callback"]()
+            raw = text_stream((message,))
+            for line in raw.splitlines(): kwargs["line_callback"](line)
+            Path(argv[argv.index("--output-last-message") + 1]).write_text(message)
+            return {"returncode": 0, "stdout": raw, "stderr": b"",
+                    "diagnostics": {**native._diagnostics(), "inputFullyDelivered": True}}
+        captured = replies.run(ROOT, reply_root, authorized=True, **flags, runner=reply_runner)
+        self.assertEqual(reply_calls, [12, 13, 14])
+        self.assertEqual((captured["attemptCount"], captured["cumulativeAttemptCount"]), (3, prior + 19))
+        self.assertEqual([x["status"] for x in captured["caseResults"]], ["CAPTURED"] * 3)
+        self.assertEqual(captured["semanticAssessment"], "separate-review-required")
+        self.assertEqual(captured["runMode"], "simulated")
+        with self.assertRaises(native.NativeObservationError):
+            replies.run(ROOT, reply_root, authorized=True, **flags, runner=reply_runner)
+        self.assertEqual(reply_calls, [12, 13, 14])
+
+    def test_fixed_acceptance_spawn_failure_consumes_and_blocks_later_handoff(self):
+        self._exercise_fixed_spawn_failure(False)
+
+    def test_revision_four_spawn_failure_consumes_and_blocks_all_later_handoff(self):
+        self._exercise_fixed_spawn_failure(True)
+
+    def _exercise_fixed_spawn_failure(self, revision_four, host_context=False):
+        from axiom_validation import no_hook_clarification as replies
+        run, _, runner, calls = self._fixed_acceptance_fixture(revision_four, host_context)
+        flags = {"host_context": True} if host_context else {"revision_four": True} if revision_four else {"fixed_acceptance": True}
+        def failed_spawn(argv, **kwargs):
+            if "exec" in argv: raise OSError("synthetic spawn failure")
+            return runner(argv, **kwargs)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, **flags, process_runner=failed_spawn)
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 0, 107 if host_context else 88 if revision_four else 77))
+        self.assertEqual([x["status"] for x in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
+        with patch.object(replies, "_login", side_effect=AssertionError("authentication continued")):
+            with self.assertRaises(native.NativeObservationError):
+                replies.prepare(ROOT, self.parent / native._fixed_contract(revision_four, host_context)["clarificationRunName"], run,
+                    bundle_root=self.parent / "bundle", authorized=True, **flags, runner=runner)
+        self.assertEqual(calls, [])
+
     def test_current_assessment_registered_result_reaches_protocol_validation(self):
         run, _, runner, _, _, _ = self._current_assessment_fixture()
         result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
@@ -5023,6 +5448,165 @@ class NativeObservationTests(unittest.TestCase):
             "pluginInstalled": True}
         history_path.write_bytes(native._bytes(history))
         self.assertEqual(native.validate_native_protocol(copied), [])
+
+    def _routing_tail_fixture(self):
+        from axiom_validation import no_hook_clarification as replies
+        actual_read = native._read
+        def synthetic_registration(path, *args, **kwargs):
+            data = actual_read(path, *args, **kwargs)
+            if path == ROOT / native.HISTORY_RELATIVE:
+                history = json.loads(data)
+                history["independentRoutingTail"]["results"] = []
+                return native._bytes(history)
+            return data
+        patcher = patch.object(native, "_read", side_effect=synthetic_registration)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        prepared, runner, calls = self._prepared_runner()
+        old = json.loads((prepared / native.STATE_NAME).read_bytes())
+        previous = self.parent / native.REVISION_FOUR_ACCEPTANCE["routingRunName"]
+        source = native._case_paths(previous, 10)
+        source["workspace"].mkdir(parents=True)
+        source["home"].mkdir()
+        auth = source["home"] / native.AUTH_FILE_NAME
+        auth.write_bytes(b"PUBLIC-SYNTHETIC-CLOSED-SOURCE")
+        auth.chmod(0o600)
+        meta = auth.stat()
+        native._exclusive(native._auth_owner(previous, 10), native._bytes({
+            "ordinal": 10, "device": meta.st_dev, "inode": meta.st_ino}))
+        run = self.parent / native.ROUTING_TAIL["runName"]
+        with patch.object(native, "_revision_four_auth_source", return_value=old) as source_check:
+            native.prepare_routing_tail(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, runner=runner)
+            source_check.assert_called_once_with(ROOT, previous, revision_four=True)
+        return run, previous, runner, calls
+
+    def _run_routing_tail(self, run, preparation_runner, *, rejected=None, mismatch=None, bad_final=False, host_context=False):
+        calls, messages = [], {}
+        def runner(argv, **kwargs):
+            if "exec" not in argv:
+                return preparation_runner(argv, **kwargs)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            calls.append(ordinal)
+            schema = json.loads(Path(argv[argv.index("--output-schema") + 1]).read_bytes())
+            token = schema["properties"]["opaqueCaseBinding"]["enum"][0]
+            answer = response(self.cases[ordinal - 1], token)
+            if mismatch == ordinal:
+                answer["usingAxiomFrontDoorObserved"] = not answer["usingAxiomFrontDoorObserved"]
+            text = json.dumps(answer)
+            raw = stream(answer, "cat /unbound/client/path" if rejected == ordinal else None)
+            events = [json.loads(x) for x in raw.splitlines()]
+            for event_doc in events:
+                if "item" in event_doc:
+                    number = int(event_doc["item"]["id"].split("_")[1])
+                    event_doc["item"]["id"] = f"item_{number + 1}"
+            events.insert(2, {"type": "item.completed", "item": {
+                "id": "item_0", "type": "agent_message", "text": "Reviewing the request."}})
+            raw = b"".join(event(x) for x in events)
+            messages[ordinal] = ["Reviewing the request.", text]
+            final = argv[argv.index("--output-last-message") + 1]
+            final_bytes = (text + (" " if bad_final else "")).encode()
+            program = ("import pathlib,sys;sys.stdin.buffer.read();pathlib.Path(sys.argv[1]).write_bytes(" +
+                       repr(final_bytes) + ");sys.stdout.buffer.write(" + repr(raw) + ")")
+            return native.bounded_process([sys.executable, "-I", "-B", "-c", program, final], **kwargs, timeout=10)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, routing_tail=not host_context, host_context=host_context, process_runner=runner)
+        return result, calls, messages
+
+    def test_routing_tail_prepares_only_five_original_inputs_after_101(self):
+        run, previous, runner, calls = self._routing_tail_fixture()
+        self.assertEqual(calls, [])
+        registration = native._routing_tail_registration(ROOT, run)
+        self.assertEqual(registration["attemptHistory"]["attempts"], 101)
+        self.assertEqual(registration["attemptHistory"]["cliLaunches"], 101)
+        p, state = native._state(ROOT, run, routing_tail=True)
+        self.assertEqual([x["ordinal"] for x in state["cases"]], [12,13,14,15,16])
+        for ordinal in range(1,12):
+            self.assertFalse(native._case_paths(run, ordinal)["case"].exists())
+        for ordinal in native.ROUTING_TAIL["ordinals"]:
+            material = native.materialize_native_case_contract(root=ROOT,
+                materialization_seed=bytes.fromhex(state["materializationSeed"]), ordinal=ordinal,
+                protocol_digest=p["protocolDigest"], model_schema=native._input(ROOT,p,"modelResponseSchema"),
+                prompt_envelope=native._input(ROOT,p,"promptEnvelope"), request=self.cases[ordinal-1]["request"])
+            self.assertEqual((native._case_paths(run,ordinal)["case"]/"response-schema.json").read_bytes(), material.schema_bytes)
+            self.assertIsNone(native._blank_case(self.cases[ordinal-1], material, bytes.fromhex(state["materializationSeed"]), p, native._definition(native._input(ROOT,p,"fixtureMatrix"),ordinal), root=ROOT)["explicitInvocation"])
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_routing_tail(ROOT,run,previous,self.parent/"bundle",authorize_install=True,authorize_copy=True,runner=runner)
+
+    def test_routing_tail_real_receiver_keeps_messages_final_output_and_five_case_handoff(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result, calls, messages = self._run_routing_tail(run,runner)
+        self.assertEqual(calls,[12,13,14,15,16])
+        self.assertEqual([x["status"] for x in result["caseResults"]],["PASS"]*5)
+        self.assertEqual((result["attemptCount"],result["cliLaunchCount"],result["cumulativeAttemptCount"]),(5,5,106))
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+        self.assertFalse(result["hostClaim"])
+        actual_shape = copy.deepcopy(result)
+        actual_shape.update(runMode="actual", status="PASS", executionSource={"commit":"1"*40,"tree":"2"*40})
+        self.assertEqual(native.validate_native_result(actual_shape,ROOT),[])
+        actual_shape["hostClaim"] = True
+        self.assertTrue(native.validate_native_result(actual_shape,ROOT))
+        for item in result["caseResults"]:
+            self.assertEqual(item["visibleReplies"]["messages"],messages[item["ordinal"]])
+            self.assertTrue(item["executionDiagnostics"]["finalOutputVerified"])
+        with self.assertRaises(native.NativeObservationError):
+            self._run_routing_tail(run,runner)
+        bad=copy.deepcopy(result);bad["caseResults"].pop()
+        self.assertTrue(native.validate_native_result(bad,ROOT))
+        bad=copy.deepcopy(result);bad["caseResults"][0]["visibleReplies"]["messages"].pop(0)
+        self.assertTrue(native.validate_native_result(bad,ROOT))
+
+    def test_routing_tail_semantic_failure_does_not_resample_or_stop_fixed_set(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result,calls,_=self._run_routing_tail(run,runner,mismatch=12)
+        self.assertEqual(calls,[12,13,14,15,16])
+        self.assertEqual([x["status"] for x in result["caseResults"]],["FAIL","PASS","PASS","PASS","PASS"])
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+
+    def test_routing_tail_read_stop_preserves_opening_and_prevents_next_auth_copy(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result,calls,_=self._run_routing_tail(run,runner,rejected=13)
+        self.assertEqual(calls,[12,13])
+        self.assertEqual([x["status"] for x in result["caseResults"]],["PASS","INCOMPLETE","NOT-RUN","NOT-RUN","NOT-RUN"])
+        self.assertEqual(result["cumulativeAttemptCount"],103)
+        self.assertEqual(result["caseResults"][1]["visibleReplies"]["messages"],["Reviewing the request."])
+        self.assertFalse((native._case_paths(run,14)["home"]/native.AUTH_FILE_NAME).exists())
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+
+    def test_routing_tail_exact_final_text_mismatch_stops_before_next_case(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result,calls,_=self._run_routing_tail(run,runner,bad_final=True)
+        self.assertEqual(calls,[12])
+        self.assertEqual(result["caseResults"][0]["status"],"INCOMPLETE")
+        self.assertFalse(result["caseResults"][0]["executionDiagnostics"]["finalOutputVerified"])
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+
+    def test_routing_tail_public_binding_collision_and_unknown_secret_are_bounded(self):
+        message = "<public-measurement-binding-0> " + legacy.PROFILE_SHA256
+        retained = native._assessment_public_replies([message], "public-binding")
+        self.assertEqual(retained["messages"], [message])
+        self.assertTrue(retained["retentionComplete"])
+        self.assertFalse(native._assessment_public_replies(["api_key=secret-example"],"public-binding")["retentionComplete"])
+        over = native._assessment_public_replies(["word " * 1700], "public-binding")
+        self.assertFalse(over["retentionComplete"])
+        self.assertEqual(over["originalVisibleMessageCount"], 1)
+        self.assertEqual(over["messages"], [])
+
+    def test_routing_tail_cannot_use_simulation_or_closed_old_windows(self):
+        from axiom_validation import no_hook_clarification as replies
+        run, previous, runner, _ = self._routing_tail_fixture()
+        with patch.object(native.subprocess,"Popen",side_effect=AssertionError("real client started")):
+            with self.assertRaisesRegex(native.NativeObservationError,"preparation mode"):
+                native.run_native_observation(ROOT,run,authorize_model_calls=True,reuse_test_auth=True,
+                    assessment_batch=True,routing_tail=True)
+            for fourth in (False,True):
+                with self.assertRaises(native.NativeObservationError):
+                    native.prepare_fixed_acceptance(ROOT,self.parent/"forbidden",previous,self.parent/"bundle",
+                        authorize_install=True,authorize_copy=True,revision_four=fourth)
+            with self.assertRaises(native.NativeObservationError):
+                replies._unrecorded(ROOT,replies.protocol(ROOT),independent=True)
+        self.assertFalse((run/"batch-started.json").exists())
+
 
 
 if __name__ == "__main__":

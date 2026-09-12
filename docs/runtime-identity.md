@@ -1,10 +1,198 @@
 # Runtime And Repository Identity
 
-## Current v0.10.1 source identity
+## Native empty discovery compatibility (policy 21)
+
+Policy 21 adds one bounded `skills/list` query through the frozen Codex 0.153.0
+app-server before dedicated authentication handoff. It uses the same binary,
+explicit cwd, discovery roots, environment and configuration overrides as the
+subsequent exec, with `forceReload=true`. Only an exact, complete response for
+that cwd with `skills=[]` and `errors=[]` adds a labeled compatibility fragment
+to the existing input. Nonempty results retain the previous input bytes. No
+case identifier, fixture installation flag, expected route or scored field
+decides the fragment. This is a native query result relayed by the compatibility
+layer, not a model tool call or automatic native exec context receipt.
+
+The registered normally completed source is user-confirmed **Pro**. Frozen
+host cloud-config eligibility excludes that plan; this operator fact is limited
+to the bound source and is not an independent account receipt. Queries run
+before authentication so app-server does not refresh the authenticated model
+catalog. Known public configuration, absence of alternate environment roots,
+fixed model metadata and discovery scope are checked before and after the query
+and again before exec. Errors, missing fields, another cwd, unexpected messages,
+timeout or scope drift stop before a model call; an exclusive marker prevents a
+second query of the same scope. Query starts are counted separately from
+observation CLI starts. There is no thread or turn API in the query path.
+
+The independent `native-empty-discovery-1` window starts from 117 historical
+attempts and observation CLI starts. It admits A11 first; only a valid A11 PASS
+allows A12-16 and then B12-14, once each, capped at 126. It prepares no A1-10
+states and does not reopen any earlier window. The original ten PASS results
+remain bound to their original execution and unchanged nonempty dependencies;
+the new six-case routing record cannot claim a newly run 16/16. Old protocols
+and result schema are preserved under
+`evals/no-hook-observation/historical-protocols/host-context-1`.
+
+Assessment revision 4, original requests/materials/scoring, read permissions,
+zero-install control, canonical Skills, Hooks, ordinary builder, product 0.10.1,
+full/profile runtime and source/bundle policies 13/14 remain unchanged. Both
+formal deterministic builds are reused. The actual signed execution and result
+identities are recorded separately after they exist; no-model checks cannot
+establish the required A11 behavior.
+
+## Supported native host context (policy 20)
+
+Policy 20 records the explicitly approved native configuration change:
+`include_environment_context=false` and `include_permissions_instructions=true`
+uniformly apply to all 16 routing inputs and three natural-language replies.
+Codex 0.153.0 supports these independent fields at its frozen public source
+`41e22fee981a63b3698df7ed36bad393cda24715`. The generated environment display is
+absent; actual cwd, permission policy, tools, Skill discovery, materials, original
+requests, scoring and assessment revision 4 definitions stay fixed. No substitute
+context or case-specific answer is supplied. This changes host input identity;
+it is not a canonical runtime repair or a claim of behavioral success.
+
+One new `host-context-fixed-1` window registers A1-16 followed by B12-14,
+one attempt each, before its first launch. It inherits all 106 historical
+attempts and observation CLI starts and permits at most 19 more, capped at 125.
+Every previous window stays closed. A registered normally completed routing-tail
+case 16 supplies opaque dedicated authentication; neither failed A11 is eligible.
+The actual execution commit/tree are bound after signing. Original routing-tail
+protocol and result-schema bytes are retained under
+`evals/no-hook-observation/historical-protocols/routing-tail-1`.
+
+Product 0.10.1, full/profile runtime bytes, source/bundle policies 13/14 and both
+matching formal builds are unchanged. The separate publication contract still
+requires its own exact-tag full-profile 17-case observation on the original
+Codex 0.149.1 / gpt-5.4 medium combination. That later set is outside this
+no-Hook window and cannot be synthesized from its outcomes.
+
+## Independent routing ordinals 12-16 (policy 19)
+
+Policy 19 registers one independent five-case window, in original order 12-16,
+after 101 historical attempts and observation CLI starts, capped at 106. It
+prepares only these five fresh states. All earlier stopped or consumed windows
+stay closed; their unstarted cases and original results remain unchanged.
+The same native receiver, read contract, assessment revision 4 inputs and scoring
+apply. Completed public messages are retained within the existing 8 KiB limit,
+including the exact final output; the generated public binding and three fixed
+contract digests are exempt from the conservative secret-text filter.
+
+Product 0.10.1, canonical Skills, Hooks, ordinary builder, full/profile runtime
+bytes and source/bundle policies 13/14 remain unchanged. Existing deterministic
+build evidence is reused. The previous independent reply protocols are retained
+in `evals/no-hook-observation/historical-protocols/independent-clarification-1`.
+Those replies keep their original execution and protocol, including the limited
+Case 13 PASS. This window cannot establish an independently run 16/16 batch or
+resolve the earlier Case 11 INCOMPLETE. Execution and result commits are distinct.
+
+## Independent clarification window (policy 18)
+
+Policy 18 registers only three natural-language replies, in order 12/13/14,
+from 98 historical attempts and CLI starts to a maximum of 101. This separate
+authorization does not reopen either stopped 16-plus-3 window or require a
+fabricated routing completion. It uses the existing receiver, read contract,
+original prompts and bounded public-message retention. A normally completed,
+registered Case 10 is the opaque authentication source; Case 11 is excluded.
+
+The observation implementation and protocol identities change. The exact
+assessment-revision-4 protocols are retained in
+[`historical-protocols/assessment-revision-4-fixed-1`](../evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1)
+for the original `5289943` execution and `50589ff` result. Product 0.10.1,
+canonical inputs, full/profile runtime digests and source/bundle policies 13/14
+are unchanged. Existing deterministic build evidence is reused. Execution is
+bound to its actual signed commit before preparation; results are recorded
+separately and cannot establish a full routing or installed-host PASS.
+
+## Assessment revision 4 finite observation window (policy 17)
+
+Policy 17 registers one ordered 16-case routing batch and three clarification
+replies, starting from 87 historical attempts and observation CLI starts. The
+new window has at most 19 attempts and a cumulative ceiling of 106. Every old
+consumed or stopped window stays closed, including the eight unused slots in
+the preceding 95-limit window. Assessment revision 4, canonical runtime inputs,
+ordinary builder, Golden Set, scoring, read permissions and product policies
+13/14 stay fixed. Existing deterministic bundle evidence is reused. Execution
+source is bound only after its signed commit; result commits are separate.
+
+## Measurement and historical test inputs (policy 16)
+
+Policy 16 fixes the legacy builder tests' hidden Git-object dependency with
+three byte-pinned historical public fixtures, and advances the native assessment
+to revision 4 with one uniform definition of `usingAxiomFrontDoorObserved`.
+The boolean reports the inner request's use of the `using-axiom` front door;
+a leaf workflow or catalog visibility alone does not establish that use.
+It remains a model report, not an independent native loading receipt.
+
+Original assessment inputs and protocols are preserved under
+[`historical-protocols/fixed-acceptance-1`](../evals/no-hook-observation/historical-protocols/fixed-acceptance-1).
+Historical results retain their actual execution, protocol and input bindings.
+All consumed or stopped windows remain unavailable for new observation; this
+revision grants no new window. There are zero new model starts and the total
+remains 87 attempts / 87 observation CLI starts. Product 0.10.1, full/profile
+runtime bytes, and frozen source/bundle policies 13/14 are unchanged. Test builder
+outputs are regression artifacts, not new formal deterministic-build evidence.
+
+## Fixed-candidate observation registration
+
+Repository policy 15 registers one fixed 16-case routing assessment followed by
+three actual clarification replies, inheriting all 76 previous attempts with a
+maximum cumulative count of 95. It changes only repository observation and
+evidence machinery. Plugin 0.10.1, all 61 canonical runtime inputs and the full
+runtime digest remain unchanged. The frozen source and bundle continue to use
+policies 13/14 and their existing byte-identical build evidence; this policy
+revision is not a new package or build. Execution and result commits are recorded
+separately from frozen product source.
+
+## Current unpublished v0.10.1 pending-choice clarification
+
+The assigned 0.10.1 candidate remains untagged and unreleased. Policy revision
+13 records a compatible clarification of the agent-plugin-architect discovery
+description and first entry step against `37b6cb63313425f2a802eead82401dfe1ff79a83`.
+The full runtime digest is
+`sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2` across the same 61 installed inputs.
+Policy revision 14 binds two identical actual builds from signed source
+`8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`, to the current
+[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
+
+The existing contract already required clarification. This revision explicitly
+keeps a material workflow choice unselected after asking until the user chooses;
+execution limits may be explained without defaulting to a feasible or lighter
+alternative. Explicit architecture, explicit installation, conceptual comparisons
+and unchanged selected workflows retain their distinct boundaries. No other
+Skill, using-axiom policy, Hook, original input or scoring contract changes.
+
+Both full and derived profiles receive the same canonical correction. This
+round performs zero model/client observation launches and creates no new attempt
+ledger. All 76 historical attempts, two separate 2 PASS / 1 FAIL reply rounds,
+and their original implementation/input bindings remain historical. Current
+behavior and installed-host acceptance are NOT-RUN; neither old 16/16 routing
+acceptance nor individual replies transfer to this runtime.
+
+## Historical v0.10.1 Git-entry correction
+
+The existing 0.10.1 candidate is not tagged or released; repository version policy
+keeps that assigned version while the candidate is revised. Policy revision 11
+records a compatible change to the canonical Git Skill entry, against
+`b99880298bc91fac582c7a06cfbaf7a31357c25a`. The full runtime digest changes to
+`sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d` across the
+same 61 installed inputs. The descriptions, using-axiom gate and explicit-only
+policy, Hooks, fixtures, original requests and scoring remain unchanged.
+
+The entry distinguishes unresolved material workflow choices from questions
+within an already selected workflow. It requires one clarification before a
+material choice, and limits subsequent questions to necessary missing input or
+material conflict. Read-only authority does not select a workflow. The shared
+canonical entry affects both full and derived profiles; neither has a new host
+PASS at this source stage. The original 0.10.1 artifacts and all 73 attempts retain
+their original identity. A separate frozen build and three-reply observation
+must use the revised runtime; the old 16/16 result does not transfer to it.
+
+## Historical v0.10.1 description-source identity
 
 This section preserves the source-creation record. The subsequently completed
 policy-revision-9 artifact is owned by the
-[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json);
+[revision-9 bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-9.json);
 current observation and acceptance are summarized in
 [Field Validation](field-validation.md#final-pr-acceptance-and-issue-remainder).
 Those records do not change the identities or outcomes of historical sections.
@@ -853,3 +1041,10 @@ runtime contract, but it never changes that observation's host, version, date,
 or lifecycle. Reuse is a reference to prior evidence, not a new run. The
 machine-readable release status keeps `NOT-RUN` and `UNAVAILABLE` current-host
 states separate from any prior record.
+
+
+Repository policy revision 10 adds the post-merge single-reply clarification
+supplement and its independent evidence checks. It preserves plugin 0.10.1,
+61 installed inputs, the full runtime digest and the existing derived bundle.
+The actual supplement implementation commit is recorded separately from its
+result commit; no future Git SHA is included in a self-referential identity.

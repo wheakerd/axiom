@@ -37,7 +37,7 @@
       "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
     },
     "repositoryPolicyRevision": {
-      "const": 9
+      "const": 14
     },
     "source": {
       "$ref": "#/$defs/source"
@@ -136,7 +136,7 @@
           "pattern": "^[0-9a-f]{40}$"
         },
         "repositoryPolicyRevision": {
-          "const": 8
+          "const": 13
         }
       }
     },
@@ -498,12 +498,12 @@
     }
   },
   "x-axiom-contract": {
-    "candidateRepositoryPolicyRevision": 9,
-    "sourceRepositoryPolicyRevision": 8,
+    "candidateRepositoryPolicyRevision": 14,
+    "sourceRepositoryPolicyRevision": 13,
     "runtimeInventory": {
       "directSkillRoots": 8,
       "runtimeFiles": 50,
-      "runtimeBytes": 231576,
+      "runtimeBytes": 232531,
       "allowedExtensions": [
         ".md",
         ".yaml"
@@ -539,6 +539,6 @@
         }
       ]
     },
-    "fullProfileRuntimeDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
+    "fullProfileRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
   }
 }

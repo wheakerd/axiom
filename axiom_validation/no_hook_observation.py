@@ -4054,10 +4054,19 @@ def _validate_repository_identity(documents: Mapping[Path, dict[str, Any]]) -> N
     # repository identity owner; it does not retrofit v1 execution evidence.
     migrated = runtime.get("pluginVersion") == "0.10.1"
     _expect(runtime.get("pluginVersion"), "0.10.1" if migrated else PLUGIN_VERSION, "runtime pluginVersion")
-    _expect(runtime.get("repositoryPolicyRevision"), 9 if migrated else CANDIDATE_POLICY_REVISION, "runtime policy revision")
+    revision = runtime.get("repositoryPolicyRevision")
+    if migrated and (type(revision) is not int or revision < 9):
+        raise ObservationError("current repository policy must retain revision 9 or later")
+    if not migrated:
+        _expect(revision, CANDIDATE_POLICY_REVISION, "runtime policy revision")
     contract = runtime.get("runtimeContract", {})
     _expect(contract.get("recordCount"), FULL_PROFILE_INPUT_COUNT, "full-profile input count")
-    _expect(contract.get("digest"), "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28" if migrated else FULL_PROFILE_DIGEST, "full-profile digest")
+    migrated_digest = ("sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+                       if migrated and revision >= 13 else
+                       "sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
+                       if migrated and revision >= 11 else
+                       "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28")
+    _expect(contract.get("digest"), migrated_digest if migrated else FULL_PROFILE_DIGEST, "full-profile digest")
 
     bundle = documents[STATIC_BUNDLE_EVIDENCE_RELATIVE]
     _expect(bundle.get("candidateRepositoryPolicyRevision"), 6, "bundle evidence policy revision")
@@ -4087,8 +4096,8 @@ def _validate_repository_identity(documents: Mapping[Path, dict[str, Any]]) -> N
         raise ObservationError("release-status Codex reason must distinguish protocol from observation")
 
     revisions = documents[POLICY_REVISIONS_RELATIVE].get("revisions")
-    if type(revisions) is not list or [item.get("revision") for item in revisions if type(item) is dict] != list(range(1, 10 if migrated else 8)):
-        raise ObservationError("repository policy revisions must remain contiguous through revision 7")
+    if type(revisions) is not list or [item.get("revision") for item in revisions if type(item) is dict] != list(range(1, revision + 1 if migrated else 8)):
+        raise ObservationError("repository policy revisions must remain contiguous through the current revision")
     last = revisions[6]
     _expect(last.get("baselineCommit"), SOURCE_COMMIT, "revision 7 baseline")
     _expect(last.get("sourceIssue"), 117, "revision 7 source issue")

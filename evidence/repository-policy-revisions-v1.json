@@ -72,6 +72,102 @@
       "sourceIssue": 117,
       "summary": "Bind the new canonical runtime source to a deterministic no-Hook bundle and uniform native assessment definitions; preserve historical observations and limits.",
       "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
+    },
+    {
+      "revision": 10,
+      "recordedOn": "2026-09-10",
+      "baselineCommit": "6719a8323a754f5c5dda5e18a2225ac324347fe3",
+      "sourceIssue": 117,
+      "summary": "Add three separately budgeted user-visible clarification observations using unchanged native protections, with independent reply evidence and historical accounting.",
+      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28"
+    },
+    {
+      "revision": 11,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "b99880298bc91fac582c7a06cfbaf7a31357c25a",
+      "sourceIssue": 117,
+      "summary": "Clarify unresolved material Git workflow choices before selection while preserving unchanged selected-envelope and host-native boundaries; revise the unpublished 0.10.1 candidate runtime.",
+      "runtimeContractDigest": "sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
+    },
+    {
+      "revision": 12,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "83ff44b1ecab526c70061ccb878dc1dd1e6b34f8",
+      "sourceIssue": 117,
+      "summary": "Bind the revised Git-entry runtime to two identical frozen no-Hook builds and one three-reply supplementary regression, preserving 73 historical attempts and original runtime records.",
+      "runtimeContractDigest": "sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d"
+    },
+    {
+      "revision": 13,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "37b6cb63313425f2a802eead82401dfe1ff79a83",
+      "sourceIssue": 117,
+      "summary": "Keep material plugin workflow choices pending after clarification; preserve explicit requests and the closed 76-attempt history while revising the unpublished candidate without model execution.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 14,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+      "sourceIssue": 117,
+      "summary": "Bind the pending-choice runtime to two identical frozen builds and static validation, preserving all 76 observed attempts and both historical reply protocols without new model execution.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 15,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "1f0362d18fc281b251387a357bb6ad4a7eb5c661",
+      "sourceIssue": 117,
+      "summary": "Register one fixed 16-routing plus three-reply window, inheriting 76 attempts and preserving consumed windows, canonical runtime, and source/bundle policies 13/14.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 16,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "81d35ae07a055a110dfcab434f12950aefe421ca",
+      "sourceIssue": 117,
+      "summary": "Pin legacy builder test inputs and define front-door measurement uniformly; retain original protocols, results and closed windows without changing runtime or starting observations.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 17,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "303e5b9e984d3647b06b84bf8ebc794887af698e",
+      "sourceIssue": 117,
+      "summary": "Register one assessment revision 4 fixed 16-plus-3 observation window after 87 retained attempts; preserve all stopped windows, frozen product inputs and historical results.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 18,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "f8c6eadb1c4401f02d6310dda57995544af2a45d",
+      "sourceIssue": 117,
+      "summary": "Register one independent three-reply clarification window after 98 retained attempts; preserve both stopped routing windows, original inputs and frozen product content.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 19,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "d39126fec4bf85cf899c380d5610188a6feead61",
+      "sourceIssue": 117,
+      "summary": "Register one independent five-case routing window after 101 attempts, preserving stopped windows, original assessment revision 4 inputs, all historical replies and frozen product content.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 20,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "459181b7b07fc72ea6b7ca2ca23fe4d75e075fbb",
+      "sourceIssue": 117,
+      "summary": "Register the finite 106+19 host-context acceptance window; preserve permission instructions and historical inputs, results and closed windows.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 21,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "ad5d54c7cf4aff110d618e9b44425f5ee8793c2b",
+      "sourceIssue": 117,
+      "summary": "Relay verified native empty skills/list results through the compatibility input layer; preserve nonempty inputs and register a closed-history 117+9 A11-first acceptance window.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

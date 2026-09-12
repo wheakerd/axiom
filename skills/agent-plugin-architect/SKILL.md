@@ -1,6 +1,6 @@
 ---
 name: agent-plugin-architect
-description: Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md or .agents/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing; delegated choice does not resolve the scope difference.
+description: Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md or .agents/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegated choice or current execution limits do not resolve the scope difference.
 ---
 
 # Agent Plugin Architect
@@ -11,7 +11,20 @@ shared Skill tree when both hosts can discover it without weakening Codex.
 
 ## Route The Work
 
-1. Confirm that the request explicitly concerns packaged agent-plugin
+1. For an unresolved choice between mutually exclusive workflows with material
+   differences in route ownership, write surfaces, persistent metadata or
+   authority, ask one clear question and keep the workflow unselected until the
+   user chooses. You may explain unavailable actions, but read-only authority,
+   lower risk, lighter work or current feasibility cannot justify defaulting to
+   one option, proceeding with it, or requiring the user to object to stop.
+   Explicit architecture requests continue below; explicit installation stays
+   with its owner, explaining unavailable authority without substituting an
+   architecture audit. Conceptual comparisons and choices without material
+   boundary differences do not require this gate. After selection, do not
+   reconfirm unchanged conditions; ask only for necessary missing input or a
+   material conflict.
+
+   Confirm that the selected request explicitly concerns packaged agent-plugin
    architecture. Repo-local `AGENTS.md` or `.agents/skills` work belongs to
    `agents-architect`; ordinary plugin code or documentation has no Axiom
    route solely because it lives in a plugin repository.

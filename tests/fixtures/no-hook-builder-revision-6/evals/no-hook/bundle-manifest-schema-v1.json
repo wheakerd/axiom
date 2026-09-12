@@ -1,0 +1,543 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:axiom:no-hook-bundle-manifest:v1",
+  "title": "Axiom deterministic Hook-independent bundle manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "profileId",
+    "pluginVersion",
+    "repositoryPolicyRevision",
+    "source",
+    "contractBindings",
+    "runtimeCanonicalization",
+    "derivedPluginManifest",
+    "runtimeFiles",
+    "profileRuntimeDigest",
+    "includedSurfaces",
+    "excludedSurfaces",
+    "builder",
+    "transport",
+    "bundleManifestDigest"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "kind": {
+      "const": "axiom-hook-independent-derived-bundle"
+    },
+    "profileId": {
+      "const": "openai-hook-independent-v1"
+    },
+    "pluginVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "repositoryPolicyRevision": {
+      "const": 6
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "contractBindings": {
+      "$ref": "#/$defs/contractBindings"
+    },
+    "runtimeCanonicalization": {
+      "$ref": "#/$defs/runtimeCanonicalization"
+    },
+    "derivedPluginManifest": {
+      "$ref": "#/$defs/derivedPluginManifest"
+    },
+    "runtimeFiles": {
+      "type": "array",
+      "minItems": 50,
+      "maxItems": 50,
+      "items": {
+        "$ref": "#/$defs/runtimeFile"
+      }
+    },
+    "profileRuntimeDigest": {
+      "$ref": "#/$defs/digestIdentity"
+    },
+    "includedSurfaces": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/surface"
+      }
+    },
+    "excludedSurfaces": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "$ref": "#/$defs/surface"
+      }
+    },
+    "builder": {
+      "$ref": "#/$defs/builder"
+    },
+    "transport": {
+      "$ref": "#/$defs/transport"
+    },
+    "bundleManifestDigest": {
+      "$ref": "#/$defs/digestIdentity"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "digestIdentity": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "artifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit",
+        "tree",
+        "repositoryPolicyRevision"
+      ],
+      "properties": {
+        "repository": {
+          "const": "wheakerd/axiom"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "repositoryPolicyRevision": {
+          "const": 5
+        }
+      }
+    },
+    "hostCaseSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "host",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "host": {
+          "enum": [
+            "codex",
+            "chatgpt"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "contractBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileContract",
+        "goldenSet",
+        "responseSchema",
+        "benchmark",
+        "hostCaseSets",
+        "bundleSchema"
+      ],
+      "properties": {
+        "profileContract": {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        "goldenSet": {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        "responseSchema": {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        "benchmark": {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        "hostCaseSets": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/hostCaseSet"
+          }
+        },
+        "bundleSchema": {
+          "$ref": "#/$defs/artifactBinding"
+        }
+      }
+    },
+    "runtimeCanonicalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "domainSeparator",
+        "pathOrder",
+        "pathNormalization",
+        "textEncoding",
+        "lineEndings",
+        "finalNewline",
+        "fileMode",
+        "directoryMode",
+        "serialization"
+      ],
+      "properties": {
+        "version": {
+          "const": "1"
+        },
+        "domainSeparator": {
+          "const": "axiom-profile-runtime"
+        },
+        "pathOrder": {
+          "const": "utf-8-bytewise"
+        },
+        "pathNormalization": {
+          "const": "utf-8-nfc-preserved"
+        },
+        "textEncoding": {
+          "const": "utf-8"
+        },
+        "lineEndings": {
+          "const": "lf"
+        },
+        "finalNewline": {
+          "const": "required"
+        },
+        "fileMode": {
+          "const": "100644"
+        },
+        "directoryMode": {
+          "const": "040755"
+        },
+        "serialization": {
+          "const": "canonical-json-sort-keys-v1"
+        }
+      }
+    },
+    "derivedPluginManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "size",
+        "sha256",
+        "fields"
+      ],
+      "properties": {
+        "path": {
+          "const": ".codex-plugin/plugin.json"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version",
+            "description",
+            "skills"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "skills": {
+              "const": "./skills/"
+            }
+          }
+        }
+      }
+    },
+    "runtimeFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "mode",
+        "size",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^skills/"
+        },
+        "kind": {
+          "enum": [
+            "skill",
+            "agent-metadata",
+            "reference",
+            "resource"
+          ]
+        },
+        "mode": {
+          "const": "100644"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface",
+        "rationale"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "behaviorDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "role",
+        "size",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "entrypoint",
+            "implementation",
+            "contract-schema"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "builder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "implementation",
+        "gitAccess",
+        "network",
+        "behaviorDependencies"
+      ],
+      "properties": {
+        "id": {
+          "const": "axiom-no-hook-bundle-builder"
+        },
+        "version": {
+          "const": "1"
+        },
+        "implementation": {
+          "const": "python-standard-library-only"
+        },
+        "gitAccess": {
+          "const": "read-only-commit-tree-blob"
+        },
+        "network": {
+          "const": "disabled"
+        },
+        "behaviorDependencies": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/behaviorDependency"
+          }
+        }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directoryRoot",
+        "archiveFilename",
+        "archiveContentRoot",
+        "format",
+        "compression",
+        "memberOrder",
+        "timestamp",
+        "fileMode",
+        "directoryMode",
+        "creatorSystem",
+        "explicitDirectoryMembers",
+        "extraFields",
+        "comments",
+        "uidGid",
+        "encryption",
+        "dataDescriptor",
+        "archiveDigestLocation"
+      ],
+      "properties": {
+        "directoryRoot": {
+          "const": "plugin/"
+        },
+        "archiveFilename": {
+          "type": "string",
+          "pattern": "^axiom-openai-hook-independent-v1-[0-9]+\\.[0-9]+\\.[0-9]+\\.zip$"
+        },
+        "archiveContentRoot": {
+          "const": "."
+        },
+        "format": {
+          "const": "zip"
+        },
+        "compression": {
+          "const": "stored"
+        },
+        "memberOrder": {
+          "const": "utf-8-bytewise"
+        },
+        "timestamp": {
+          "const": "1980-01-01T00:00:00"
+        },
+        "fileMode": {
+          "const": "100644"
+        },
+        "directoryMode": {
+          "const": "040755"
+        },
+        "creatorSystem": {
+          "const": "unix"
+        },
+        "explicitDirectoryMembers": {
+          "const": false
+        },
+        "extraFields": {
+          "const": "empty"
+        },
+        "comments": {
+          "const": "empty"
+        },
+        "uidGid": {
+          "const": "absent"
+        },
+        "encryption": {
+          "const": false
+        },
+        "dataDescriptor": {
+          "const": false
+        },
+        "archiveDigestLocation": {
+          "const": "BUNDLE-ENVELOPE.json"
+        }
+      }
+    }
+  },
+  "x-axiom-contract": {
+    "candidateRepositoryPolicyRevision": 6,
+    "sourceRepositoryPolicyRevision": 5,
+    "runtimeInventory": {
+      "directSkillRoots": 8,
+      "runtimeFiles": 50,
+      "runtimeBytes": 230826,
+      "allowedExtensions": [
+        ".md",
+        ".yaml"
+      ]
+    },
+    "contractBindings": {
+      "profileContract": {
+        "path": "evals/no-hook/profile-v1.json",
+        "sha256": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+      },
+      "goldenSet": {
+        "path": "evals/no-hook/golden-set-v1.jsonl",
+        "sha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+      },
+      "responseSchema": {
+        "path": "evals/no-hook/host-response-schema-v1.json",
+        "sha256": "e1010ee20daeef5dae801f34d689dff6c0b063f969e254331ceedb670dcd2db4"
+      },
+      "benchmark": {
+        "path": "evals/no-hook/benchmark-v1.json",
+        "sha256": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
+      },
+      "hostCaseSets": [
+        {
+          "id": "openai-hook-independent-codex-cases-v1",
+          "host": "codex",
+          "sha256": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
+        },
+        {
+          "id": "openai-hook-independent-chatgpt-cases-v1",
+          "host": "chatgpt",
+          "sha256": "7fc872ae3d72bfd6bc27129e7c81e7e4a44bc3b613fcab222046c4e9c9885f1f"
+        }
+      ]
+    }
+  }
+}

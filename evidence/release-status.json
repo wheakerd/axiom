@@ -8,9 +8,9 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.10.1",
-    "repositoryPolicyRevision": 9,
+    "repositoryPolicyRevision": 21,
     "runtimeContractSchemaVersion": "1",
-    "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
+    "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "history": "evidence/runtime-contract-history-v1.json"
   },
@@ -23,9 +23,9 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
       "status": "not-run",
-      "reason": "Offline protocol contract checks only; Combined implementation remains incomplete and actual execution disabled. Runtime and host observation NOT-RUN. No Codex calls, credential use, installation, Golden Set or host results. FCR-001/003/004 OPEN; FCR-002 STILL OPEN."
+      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Prior A1-10 PASS retained; native-empty A11 FAIL (no-route instead of unavailable); A12-16/B NOT-RUN. Totals 118/118. Protocol/Hook checks and reused builds do not establish installed-host or publication PASS."
     },
     {
       "host": "claude-code",
@@ -34,9 +34,9 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
-      "status": "unavailable",
-      "reason": "Axiom v0.10.1 changes shared canonical Skill descriptions. Claude Code no-Hook remains excluded; authenticated full-profile installed-host and lifecycle observation remain unavailable and not run."
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+      "status": "not-run",
+      "reason": "Current 0.10.1 full-profile installed behavior is NOT-RUN. Earlier authenticated availability was UNAVAILABLE; this round did not reassess authentication. Claude no-Hook remains excluded. CLI availability and Hook fixtures do not prove installed behavior."
     }
   ],
   "priorReleaseEvidence": [
