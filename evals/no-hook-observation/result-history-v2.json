@@ -166,6 +166,13 @@
   "hostContextAcceptance": {
     "windowId": "host-context-fixed-1",
     "protocolDigest": "sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73.json",
+        "sha256": "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73",
+        "implementationCommit": "c56d114c2e1338c8a15415c40301f77c448557a1",
+        "implementationTree": "96d37cdab95618f0ae4e1c9c781e122f1ec12af7"
+      }
+    ]
   }
 }

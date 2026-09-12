@@ -129,6 +129,19 @@ class NativeObservationTests(unittest.TestCase):
             with self.assertRaises(native.NativeObservationError):
                 replies._unrecorded(ROOT, replies.protocol(ROOT), independent=True)
 
+    def test_retained_host_context_stop_cannot_start_another_window(self):
+        binding = native._fixed_result_binding(ROOT, host_context=True)
+        self.assertIsNotNone(binding)
+        result = json.loads((ROOT / binding["path"]).read_bytes())
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (11, 11, 117))
+        self.assertEqual([c["status"] for c in result["caseResults"]], ["PASS"] * 10 + ["INCOMPLETE"] + ["NOT-RUN"] * 5)
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")), \
+             patch.object(native, "_revision_four_auth_source", side_effect=AssertionError("auth handoff continued")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True, host_context=True)
+
     def test_host_context_fixed_registration_has_19_fresh_cases_and_zero_install_control(self):
         run, _, _, calls = self._fixed_acceptance_fixture(host_context=True)
         registration = native._fixed_registration(ROOT, self.parent, host_context=True)

@@ -1,7 +1,7 @@
 # Field Validation
 
-The supported host-context candidate below is not yet a behavior result.
-The latest completed independently authorized reply observation is recorded in
+The supported host-context window below stopped at A11; integration and release
+remain blocked. The latest completed independently authorized reply observation is recorded in
 [Independent three-reply observation](#independent-three-reply-observation-after-98-attempts).
 Earlier execution sections retain their original identities and outcomes.
 
@@ -42,6 +42,78 @@ Actual execution/result identities and outcomes will be added only after the
 fixed authorized observation. PR integration and Issue closure require the real
 results, current checks and original required acceptance; no static PASS fills
 the A11 gap.
+
+### Actual host-context outcome and delivery stop
+
+The signed execution was `c56d114c2e1338c8a15415c40301f77c448557a1`, tree
+`96d37cdab95618f0ae4e1c9c781e122f1ec12af7`. Its independent public execution copy
+supplied both cwd and import root, with bytecode disabled. The original fixed
+16+3 set was registered before launch; the previous normally completed routing
+ordinal 16 supplied opaque dedicated authentication. No previous A11 source was
+used. New native protocol is
+`sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b`;
+reply protocol is
+`sha256:934851151f144b3d5bbabee478dc09a6f16fd780c149f519601442ec91b036e5`.
+
+The [complete normalized A record](../evals/no-hook-observation/results/codex-native-659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73.json)
+is 54,528 bytes with SHA-256
+`659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73`.
+
+| Fixed part | Actual result | Evidence and limit |
+| --- | --- | --- |
+| A1-10 | Ten PASS under the original route scorer | All ten official final outputs, valid streams and before/after input checks agree. Sixteen normal visible messages are retained without redaction or omission, including repeated and intermediate messages. |
+| A11 | INCOMPLETE | `read-target-unbound` at event 7, `policy-rejected`; full prompt delivery preceded observer termination, return code -9. No normal visible message or verified final reply was obtained. |
+| A12-16 | Five NOT-RUN | Prepared states remain, but there are no attempt markers or authentication copies for these five cases. |
+| B12-14 | Three NOT-RUN | No reply root, preparation, authentication handoff or model launch occurred after the A stop. |
+| Publication full-profile 17 | NOT-RUN | Its prerequisite acceptance and integration were not met; zero publication model calls, tag/controller dispatches, Draft or Release writes occurred. |
+
+A5 first emitted an unavailable assessment, then read the review Skill and its
+fixture and emitted the final selected route. Both messages are retained. Its
+PASS follows the original final structured scoring; it does not assert that all
+intermediate assessments were identical. A3 publicly read the 3,944-byte
+architect Skill; A5 read the 8,149-byte review Skill and 35-byte task ledger.
+Other public reads are not-observed. No independent native loading receipt or
+internal semantic-consumption evidence is inferred from these scores or reads.
+
+Exactly **11 new attempts and observation CLI starts** were consumed, bringing
+both historical totals to **117**. Internal model requests remain unknown.
+The entire new no-Hook window is stopped; its eight unstarted cases are closed.
+The conditional publication tranche did not become executable. No retry,
+substitute input, Skill edit, permission relaxation or authentication handoff
+followed the stop. The current A11 rejected target and any private diagnostic
+body were not inspected, so this record does not assume it was the earlier
+arg0 target. The supported environment-display change was applied but did not
+establish the required A11 behavior. This is an observed limitation of this
+candidate, not a claim about internal model causation.
+
+The two earlier stopped A batches, separate routing-tail and B batches, old
+16/16, both 2 PASS / 1 FAIL reply rounds, and B13's full guidance-selection then
+workflow-pending sequence retain their original bytes and limited conclusions.
+No evidence is combined into a new 16/16 or B PASS. The existing finite R4/FCR
+and current R5 dispositions still apply: conditional ChatGPT and native
+Windows limitations do not waive this required A11 response. Product runtime,
+source/bundle policies 13/14 and both formal build artifacts are unchanged.
+
+PR #121 remains Draft and unmerged; main is unchanged and Issue #117 remains
+open/BLOCKED. The single critical delivery blocker is an unmet original A11
+behavioral contract. Ready, squash merge, main synchronization, completion/
+closure and v0.10.1 publication did not become authorized executable steps.
+The externally prepared publication record adapter passed a synthetic-only
+17-row conversion through the existing external validator; it is not a host
+observation or release asset and is not uploaded.
+
+Final external discovery ran **622 tests: 620 passed, two existing skips**
+(191.146 s). Five Linux Hook regressions, distribution/publication checks and
+Claude strict validation passed. The generic plugin validator retains its
+three known unsupported-metadata NON-PASS findings; the ASCII scan retains
+16 historical line hits. Old builder commit/branch and alternate object storage
+were absent from the validation copy. Initial failed no-model checks and their
+corrections are retained separately; none consumed a model attempt. One existing
+independent reviewer found and rechecked the pre-execution B message-retention
+fix, then read all 16 actual normal messages and verified 46 frozen protocol/
+input/source files plus the 21 unchanged historical results. This is a bounded
+review, not a GitHub approval. Final-head CI is reported separately from these
+local statistics. No formal product builds were repeated.
 
 ## Independent three-reply observation after 98 attempts
 
