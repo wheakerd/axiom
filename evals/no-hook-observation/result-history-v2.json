@@ -174,5 +174,10 @@
         "implementationTree": "96d37cdab95618f0ae4e1c9c781e122f1ec12af7"
       }
     ]
+  },
+  "nativeEmptyDiscoveryAcceptance": {
+    "windowId": "native-empty-discovery-1",
+    "protocolDigest": "sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290",
+    "results": []
   }
 }

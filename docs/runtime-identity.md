@@ -1,5 +1,44 @@
 # Runtime And Repository Identity
 
+## Native empty discovery compatibility (policy 21)
+
+Policy 21 adds one bounded `skills/list` query through the frozen Codex 0.153.0
+app-server before dedicated authentication handoff. It uses the same binary,
+explicit cwd, discovery roots, environment and configuration overrides as the
+subsequent exec, with `forceReload=true`. Only an exact, complete response for
+that cwd with `skills=[]` and `errors=[]` adds a labeled compatibility fragment
+to the existing input. Nonempty results retain the previous input bytes. No
+case identifier, fixture installation flag, expected route or scored field
+decides the fragment. This is a native query result relayed by the compatibility
+layer, not a model tool call or automatic native exec context receipt.
+
+The registered normally completed source is user-confirmed **Pro**. Frozen
+host cloud-config eligibility excludes that plan; this operator fact is limited
+to the bound source and is not an independent account receipt. Queries run
+before authentication so app-server does not refresh the authenticated model
+catalog. Known public configuration, absence of alternate environment roots,
+fixed model metadata and discovery scope are checked before and after the query
+and again before exec. Errors, missing fields, another cwd, unexpected messages,
+timeout or scope drift stop before a model call; an exclusive marker prevents a
+second query of the same scope. Query starts are counted separately from
+observation CLI starts. There is no thread or turn API in the query path.
+
+The independent `native-empty-discovery-1` window starts from 117 historical
+attempts and observation CLI starts. It admits A11 first; only a valid A11 PASS
+allows A12-16 and then B12-14, once each, capped at 126. It prepares no A1-10
+states and does not reopen any earlier window. The original ten PASS results
+remain bound to their original execution and unchanged nonempty dependencies;
+the new six-case routing record cannot claim a newly run 16/16. Old protocols
+and result schema are preserved under
+`evals/no-hook-observation/historical-protocols/host-context-1`.
+
+Assessment revision 4, original requests/materials/scoring, read permissions,
+zero-install control, canonical Skills, Hooks, ordinary builder, product 0.10.1,
+full/profile runtime and source/bundle policies 13/14 remain unchanged. Both
+formal deterministic builds are reused. The actual signed execution and result
+identities are recorded separately after they exist; no-model checks cannot
+establish the required A11 behavior.
+
 ## Supported native host context (policy 20)
 
 Policy 20 records the explicitly approved native configuration change:

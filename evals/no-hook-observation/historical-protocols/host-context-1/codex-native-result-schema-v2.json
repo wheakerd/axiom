@@ -956,56 +956,6 @@
                 "type": "boolean"
               }
             }
-          },
-          "nativeDiscovery": {
-            "anyOf": [
-              {
-                "type": "null"
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "source",
-                  "queryStarts",
-                  "receiptSha256",
-                  "scopeSha256",
-                  "skillCount",
-                  "errorCount",
-                  "forceReload",
-                  "returnCode"
-                ],
-                "properties": {
-                  "source": {
-                    "const": "native-skills-list-via-compatibility-layer"
-                  },
-                  "queryStarts": {
-                    "const": 1
-                  },
-                  "receiptSha256": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{64}$"
-                  },
-                  "scopeSha256": {
-                    "type": "string",
-                    "pattern": "^[0-9a-f]{64}$"
-                  },
-                  "skillCount": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "errorCount": {
-                    "const": 0
-                  },
-                  "forceReload": {
-                    "const": true
-                  },
-                  "returnCode": {
-                    "const": 0
-                  }
-                }
-              }
-            ]
           }
         },
         "description": "New cases require publicReads and operatorReadCapture semantically; exact-hash historical prefixes retain their original representation."
@@ -1045,7 +995,7 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 123
+      "maximum": 122
     },
     "priorResultSha256s": {
       "type": "array",
@@ -1427,46 +1377,6 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 16
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "kind",
-            "priorPartialSha256",
-            "firstNewOrdinal",
-            "priorAttemptCount",
-            "authenticationSourceOrdinal",
-            "newAttemptCount",
-            "newCliLaunchCount"
-          ],
-          "properties": {
-            "kind": {
-              "const": "native-empty-discovery-1"
-            },
-            "priorPartialSha256": {
-              "const": "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73"
-            },
-            "firstNewOrdinal": {
-              "const": 11
-            },
-            "priorAttemptCount": {
-              "const": 117
-            },
-            "authenticationSourceOrdinal": {
-              "const": 10
-            },
-            "newAttemptCount": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 6
-            },
-            "newCliLaunchCount": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 6
             }
           }
         }

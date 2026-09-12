@@ -280,7 +280,10 @@ class ClarificationTests(unittest.TestCase):
                 "protocolDigest": p["protocolDigest"], "results": []}
             history["revisionFourAcceptance"] = {"windowId": native.REVISION_FOUR_ACCEPTANCE["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
+            archived_context = json.loads((ROOT/"evals/no-hook-observation/historical-protocols/host-context-1/clarification-protocol-v1.json").read_bytes())
             history["hostContextAcceptance"] = {"windowId": native.HOST_CONTEXT_ACCEPTANCE["windowId"],
+                "protocolDigest": archived_context["protocolDigest"], "results": []}
+            history["nativeEmptyDiscoveryAcceptance"] = {"windowId": native.EMPTY_DISCOVERY_ACCEPTANCE["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
             history["independentClarification"] = {"windowId": supplement.INDEPENDENT["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}

@@ -40,5 +40,10 @@
     "windowId": "host-context-fixed-1",
     "protocolDigest": "sha256:934851151f144b3d5bbabee478dc09a6f16fd780c149f519601442ec91b036e5",
     "results": []
+  },
+  "nativeEmptyDiscoveryAcceptance": {
+    "windowId": "native-empty-discovery-1",
+    "protocolDigest": "sha256:482945352d5d11e44acdb78f36240381a839da4632cce1b66f33f521891ffc23",
+    "results": []
   }
 }

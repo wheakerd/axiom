@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290",
+  "nativeProtocolDigest": "sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -20,7 +20,7 @@
   "bindings": [
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "dd550f8c7e96d0703480a06d03174fb08612057a431d4f4ddec06e8cfd89ebd9"
+      "sha256": "cb34da7d0b77a27ebdc2bfaf9434e3487fc6739b8fd50f34004a6bfb6077a4f2"
     },
     {
       "path": "scripts/run-no-hook-clarification.py",
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "591f67665266363dad78235d2acb9fe19effbf833568d2520903c3772c30f15b"
+      "sha256": "98ad36c9b7a39c0feab45817fff6f17e1804504efffec5ff1ff92ee759fb3645"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -101,10 +101,6 @@
     {
       "path": "evals/no-hook-observation/historical-protocols/independent-clarification-1/codex-native-protocol-v2.json",
       "sha256": "4e39d1013a9546737be3107d48a711ce62d0987fb8b7cdb85114bcad0302c193"
-    },
-    {
-      "path": "axiom_validation/no_hook_discovery.py",
-      "sha256": "3e5880f70f5945c604115248a42ce3dd1db6fb6a365de5dbb7dddbb63db66184"
     }
   ],
   "revision": 2,
@@ -157,14 +153,5 @@
       "replyBytesPerCase": 8192
     }
   },
-  "nativeEmptyDiscoveryAcceptance": {
-    "windowId": "native-empty-discovery-1",
-    "requires": "A11-PASS-and-completed-six-routing",
-    "limits": {
-      "newAttempts": 3,
-      "maximumCumulativeAttempts": 126,
-      "replyBytesPerCase": 8192
-    }
-  },
-  "protocolDigest": "sha256:482945352d5d11e44acdb78f36240381a839da4632cce1b66f33f521891ffc23"
+  "protocolDigest": "sha256:934851151f144b3d5bbabee478dc09a6f16fd780c149f519601442ec91b036e5"
 }

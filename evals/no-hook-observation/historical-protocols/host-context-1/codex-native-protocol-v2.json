@@ -56,11 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "dd550f8c7e96d0703480a06d03174fb08612057a431d4f4ddec06e8cfd89ebd9"
-    },
-    {
-      "path": "axiom_validation/no_hook_discovery.py",
-      "sha256": "3e5880f70f5945c604115248a42ce3dd1db6fb6a365de5dbb7dddbb63db66184"
+      "sha256": "cb34da7d0b77a27ebdc2bfaf9434e3487fc6739b8fd50f34004a6bfb6077a4f2"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -68,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "7aa83ca1c22354ac9df0c3f8ed62d3304b48a3c0b388d0a7bf0dd70c43ed7ab1"
+      "sha256": "8e022b6aad8c588e6275ee9ef7d2043aee99ced989e83a336c0b1c6be7cb1585"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -127,7 +123,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "9523228e0fc820e8992902fad63ea55a582965165b0132025c9079d084bc2062"
+    "sha256": "7f90fdaba8964eaf9a1b78640ba2d6d2b030d87c7cd0db3f80f9952f2520d5ff"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -449,7 +445,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290",
+  "protocolDigest": "sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
@@ -587,66 +583,5 @@
     "scope": "all routing and clarification inputs; no replacement environment text",
     "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
     "evidence": "native configuration and public source; behavior requires fresh observation"
-  },
-  "nativeEmptyDiscoveryAcceptance": {
-    "windowId": "native-empty-discovery-1",
-    "state": "authorized-once",
-    "candidateCommit": "ad5d54c7cf4aff110d618e9b44425f5ee8793c2b",
-    "candidateTree": "c917ffaa9a2503034827c090728ca40faf69aa35",
-    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
-    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
-    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
-    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
-    "priorResultSha256s": [
-      "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73"
-    ],
-    "priorAttempts": 117,
-    "priorCliLaunches": 117,
-    "routingOrdinals": [
-      11,
-      12,
-      13,
-      14,
-      15,
-      16
-    ],
-    "clarificationOrdinals": [
-      12,
-      13,
-      14
-    ],
-    "maximumNewAttempts": 9,
-    "maximumCumulativeAttempts": 126,
-    "routingRunName": "cases-native-empty-discovery-routing-1",
-    "clarificationRunName": "cases-native-empty-discovery-clarification-1",
-    "order": "A11 PASS first; A12-16 then B12-14; A1-10 evidence reused only under unchanged nonempty conditions",
-    "stop": "A11 non-PASS or any policy, identity, query or reliability failure closes all remaining slots",
-    "authenticationSourceOrdinal": 10,
-    "assessmentRevision": 4,
-    "hostEnvironmentContext": {
-      "revision": 1,
-      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
-      "includeEnvironmentContext": false,
-      "includePermissionsInstructions": true,
-      "scope": "all routing and clarification inputs; no replacement environment text",
-      "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
-      "evidence": "native configuration and public source; behavior requires fresh observation"
-    },
-    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
-    "authenticationPlan": {
-      "plan": "pro",
-      "source": "user-confirmed dedicated test source",
-      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
-    }
-  },
-  "nativeEmptyDiscovery": {
-    "revision": 1,
-    "method": "skills/list",
-    "forceReload": true,
-    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
-    "delivery": "verified native empty result relayed by compatibility layer; nonempty input unchanged",
-    "scope": "same binary, cwd, environment, discovery roots and relevant configuration; before authentication copy",
-    "evidence": "native query receipt; not a model tool call or automatic exec context-delivery receipt",
-    "stop": "errors, incomplete response, mismatched cwd, timeout, configuration or scope drift; no retry"
   }
 }

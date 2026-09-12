@@ -1,9 +1,85 @@
 # Field Validation
 
-The supported host-context window below stopped at A11; integration and release
-remain blocked. The latest completed independently authorized reply observation is recorded in
+The previous supported host-context window stopped at A11. A separately
+authorized native empty-discovery compatibility candidate is recorded below;
+integration remains conditional on its actual acceptance. The latest completed
+independently authorized reply observation is recorded in
 [Independent three-reply observation](#independent-three-reply-observation-after-98-attempts).
 Earlier execution sections retain their original identities and outcomes.
+
+## Native empty-discovery acceptance after 117 attempts
+
+The user supplied a separate command excerpt for execution
+`c56d114c2e1338c8a15415c40301f77c448557a1` and result
+`659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73`:
+a supported shell wrapper attempted a single, unregistered **relative Skill
+path** read. This supersedes no historical diagnosis: it is distinct from the
+earlier client temporary-helper targets. The excerpt came from the user, not
+an executor inspection of private diagnostics. It identifies the refusal class,
+not a discovered Skill, a load receipt, route choice, target content or internal
+model cause. Neither the target nor private original was accessed or replayed.
+The original INCOMPLETE, result bytes and stopped window remain unchanged.
+
+Public source/input inspection found no delivered native Skill metadata with a
+missing path binding in this zero-install scope. The frozen native renderer
+omits an empty catalog. The supported app-server `skills/list` interface can
+return the actual empty result, so policy 21 adds a narrow compatibility relay
+through the existing input layer. It queries exactly the current cwd with
+`forceReload=true`; only a complete, matching `skills=[]`, `errors=[]` response
+adds the labeled discovery fact. Nonempty input bytes remain unchanged. The
+query does not start a thread/turn, populate scored fields, expose a case answer,
+change the original request or authorize another read.
+
+Query and exec use the same frozen binary, public configuration, roots and
+overrides, retaining environment display off and permission instructions on.
+The dedicated normal source is user-confirmed Pro, excluded by frozen
+cloud-config eligibility. Queries run before opaque authentication handoff to
+avoid app-server's authenticated online model-catalog refresh. This plan fact
+is not a native account receipt. Alternate environment roots, public scope and
+fixed model metadata are checked without inspecting private state. Query errors,
+timeouts, incomplete/mismatched responses, unexpected messages and relevant
+drift stop before the model; no query is retried in the same scope.
+
+Two real invocations of the production query entry independently returned zero
+and eight Skills, both without errors and with normal exit and identical public
+scope before/after. The nonempty input retained object identity and exact bytes.
+Including development, **seven no-model query starts and one help CLI start**
+occurred before execution freeze. Three early notification-parser failures are
+retained; correcting the parser used fresh synthetic scopes and never launched
+a thread, turn or model. Native notification envelopes and optional unauthenticated
+updates were checked against the frozen public source. Query-created client
+metadata was inventoried without reading its contents and did not alter the
+bound configuration, package, materials or embedded model metadata.
+
+Offline reconstruction matched all 16 prior prompt/schema identities, and 13
+functions governing materialization, native selection, permissions, environment,
+discovery and package/fixture checks are byte-identical to `ad5d54c`. Applying
+the real nonempty response retained every reconstructed input. The original
+A1-10 PASS evidence is therefore reused only under those unchanged dependencies;
+it remains in its original `c56d114` execution/result. The 22 prior normalized
+result files and protected runtime/builder inputs remain byte-identical.
+
+The new fixed set is A11, A12-16, then B12-14, one fresh context each, with at
+most nine attempts/observation CLI starts and cumulative ceiling 126. A11 must
+produce a valid original-scored PASS and normal postchecks before any later
+model launch or authentication handoff. A failure, refusal or reliability stop
+closes all remaining slots. No A1-10 state is prepared. All older windows stay
+closed. The registered normally completed source is the previous A10, not A11.
+
+At implementation freeze, new behavior is NOT-RUN and totals remain 117/117;
+internal model requests are unknown. Native discovery, compatibility delivery,
+public reads, visible behavior and unobservable internal state remain separate
+claims. The new result will not rewrite an old INCOMPLETE or constitute an
+independently rerun 16-case batch. B13's earlier complete guidance-selection and
+workflow-pending sequence retains its original limited conclusion.
+
+One existing independent reviewer examined the query/configuration parity,
+nonempty reuse, bounded admission, result schema, historical bindings and tests.
+The Pro clarification resolved the specific managed-config parity question;
+the review neither ran a client/model nor supplied a GitHub approval. Local
+validation and actual execution/result identities are recorded separately below.
+Canonical product 0.10.1, full/profile runtime, source/bundle policies 13/14 and
+the two formal build artifacts are reused without rebuilding.
 
 ## Supported host-context acceptance after 106 attempts
 

@@ -160,6 +160,14 @@
       "sourceIssue": 117,
       "summary": "Register the finite 106+19 host-context acceptance window; preserve permission instructions and historical inputs, results and closed windows.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 21,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "ad5d54c7cf4aff110d618e9b44425f5ee8793c2b",
+      "sourceIssue": 117,
+      "summary": "Relay verified native empty skills/list results through the compatibility input layer; preserve nonempty inputs and register a closed-history 117+9 A11-first acceptance window.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }
