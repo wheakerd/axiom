@@ -404,6 +404,7 @@ class ClarificationTests(unittest.TestCase):
         actual_read = supplement._read
         history = json.loads((ROOT/supplement.HISTORY).read_bytes())
         history["independentClarification"]["results"] = []
+        history["independentClarification"]["protocolDigest"] = p["protocolDigest"]
         with ExitStack() as stack:
             stack.enter_context(patch.object(supplement,"_read",side_effect=lambda path,*a,**kw:
                 native._bytes(history) if path==ROOT/supplement.HISTORY else actual_read(path,*a,**kw)))

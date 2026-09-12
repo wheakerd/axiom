@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9",
+  "nativeProtocolDigest": "sha256:4f71ddc9c69dc6ab56bfd35e924e211bc481ce8b3c53d5100d0f3c23be067c76",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -20,7 +20,7 @@
   "bindings": [
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "eff6a95dc06784c85ddda7b276fd289b1f7c600edbf89e1d18a98540d68ec632"
+      "sha256": "348c6bfa8555e3991b07aed4e254cae31076d12eef388204336bed9a357a1730"
     },
     {
       "path": "scripts/run-no-hook-clarification.py",
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "58ff3bb5fc35d4be3c17d7752f95560d43b7a78a362ad5e38a4028f45e3da6af"
+      "sha256": "4e39d1013a9546737be3107d48a711ce62d0987fb8b7cdb85114bcad0302c193"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -93,14 +93,6 @@
     {
       "path": "evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1/codex-native-protocol-v2.json",
       "sha256": "0732cea5d3587f226454f7b3153405ae097d0ae67f758daf6ae5713969b7c97a"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/independent-clarification-1/clarification-protocol-v1.json",
-      "sha256": "63d9229687cb9be0f077bb902b810f94f5435d6fa46b052d184bf1a139981ad9"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/independent-clarification-1/codex-native-protocol-v2.json",
-      "sha256": "4e39d1013a9546737be3107d48a711ce62d0987fb8b7cdb85114bcad0302c193"
     }
   ],
   "revision": 2,
@@ -114,7 +106,7 @@
       "replyBytesPerCase": 8192
     }
   },
-  "protocolDigest": "sha256:bb1df1957d9f3ead244079a847eb0b7af8f0e44d3d6e9e2449bb5c94742c535d",
+  "protocolDigest": "sha256:084b7dc164ccf0fd5ecc1096c327cb915d7aa1c6581cac7af83b143aac6ff67f",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "requires": "completed-fixed-routing",

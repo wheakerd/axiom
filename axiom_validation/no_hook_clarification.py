@@ -618,9 +618,14 @@ def check(root: Path) -> list[str]:
                  type(fourth["results"]) is list and len(fourth["results"]) <= 1,
                  "revision 4 clarification registration changed")
         separate = history["independentClarification"]
+        separate_protocol = p
+        if separate["protocolDigest"] != p["protocolDigest"]:
+            data = _read(root / "evals/no-hook-observation/historical-protocols/independent-clarification-1/clarification-protocol-v1.json")
+            _require(digest(data) == "63d9229687cb9be0f077bb902b810f94f5435d6fa46b052d184bf1a139981ad9", "recorded independent clarification protocol bytes changed")
+            separate_protocol = _json(data)
         _require(set(separate) == {"windowId", "protocolDigest", "results"} and
                  separate["windowId"] == INDEPENDENT["windowId"] and
-                 separate["protocolDigest"] == p["protocolDigest"] and
+                 separate["protocolDigest"] == separate_protocol["protocolDigest"] and
                  type(separate["results"]) is list and len(separate["results"]) <= 1,
                  "independent clarification history changed")
         independent_attempt_history(root)
@@ -629,7 +634,7 @@ def check(root: Path) -> list[str]:
             revision_four = entry in fourth["results"]
             new_fixed = revision_four or entry in fixed["results"]
             historical = entry["sha256"] == PRIOR_SUPPLEMENT
-            active = p if independent else fourth_protocol if revision_four else fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
+            active = separate_protocol if independent else fourth_protocol if revision_four else fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
             prior_count = 98 if independent else 103 if revision_four else 92 if new_fixed else 70 if historical else chain["attempts"]
             prior_result = INDEPENDENT["priorResultSha256"] if independent else native._fixed_result_binding(root, revision_four=revision_four)["sha256"] if new_fixed else PRIOR
             data = _read(root / entry["path"])

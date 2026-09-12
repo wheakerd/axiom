@@ -150,5 +150,10 @@
         "implementationTree": "865707d35ba9956074d6a4e44719dec1b938e087"
       }
     ]
+  },
+  "independentRoutingTail": {
+    "windowId": "independent-routing-tail-1",
+    "protocolDigest": "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9",
+    "results": []
   }
 }

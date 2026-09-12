@@ -1,5 +1,24 @@
 # Runtime And Repository Identity
 
+## Independent routing ordinals 12-16 (policy 19)
+
+Policy 19 registers one independent five-case window, in original order 12-16,
+after 101 historical attempts and observation CLI starts, capped at 106. It
+prepares only these five fresh states. All earlier stopped or consumed windows
+stay closed; their unstarted cases and original results remain unchanged.
+The same native receiver, read contract, assessment revision 4 inputs and scoring
+apply. Completed public messages are retained within the existing 8 KiB limit,
+including the exact final output; the generated public binding and three fixed
+contract digests are exempt from the conservative secret-text filter.
+
+Product 0.10.1, canonical Skills, Hooks, ordinary builder, full/profile runtime
+bytes and source/bundle policies 13/14 remain unchanged. Existing deterministic
+build evidence is reused. The previous independent reply protocols are retained
+in `evals/no-hook-observation/historical-protocols/independent-clarification-1`.
+Those replies keep their original execution and protocol, including the limited
+Case 13 PASS. This window cannot establish an independently run 16/16 batch or
+resolve the earlier Case 11 INCOMPLETE. Execution and result commits are distinct.
+
 ## Independent clarification window (policy 18)
 
 Policy 18 registers only three natural-language replies, in order 12/13/14,

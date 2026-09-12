@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "eff6a95dc06784c85ddda7b276fd289b1f7c600edbf89e1d18a98540d68ec632"
+      "sha256": "348c6bfa8555e3991b07aed4e254cae31076d12eef388204336bed9a357a1730"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -64,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "10179f13e40db7555b59ba1efe8cc2f2e1f7ba8e754be6a39fc9fa8b50880d10"
+      "sha256": "b9af442f98c7853c437c9425b021a013f8655721fb8a7b22943adedf702c9a7e"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -123,7 +123,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "06afdfadc6cabb1f475f07071ae42cd4fc94385c1531b602a1f69080d6d09fe3"
+    "sha256": "00cbe679f600c452387b78e83297592e24ffc8ec455784b96eb7ecd694c009d6"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -445,7 +445,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9",
+  "protocolDigest": "sha256:4f71ddc9c69dc6ab56bfd35e924e211bc481ce8b3c53d5100d0f3c23be067c76",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
@@ -491,32 +491,5 @@
     "stop": "reliability, identity or policy failure stops all remaining observations",
     "authenticationSourceOrdinal": 10,
     "assessmentRevision": 4
-  },
-  "independentRoutingTail": {
-    "windowId": "independent-routing-tail-1",
-    "state": "authorized-once",
-    "runName": "cases-independent-routing-tail-1",
-    "candidateCommit": "d39126fec4bf85cf899c380d5610188a6feead61",
-    "candidateTree": "db2ae2901f7ff920b7ba6496612cbd8f4146e630",
-    "ordinals": [
-      12,
-      13,
-      14,
-      15,
-      16
-    ],
-    "assessmentRevision": 4,
-    "priorResultSha256s": [
-      "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe"
-    ],
-    "priorAttempts": 101,
-    "priorCliLaunches": 101,
-    "maximumNewAttempts": 5,
-    "maximumCumulativeAttempts": 106,
-    "authenticationSourceOrdinal": 10,
-    "sourceResultSha256": "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b",
-    "history": "independent five-case window; no inherited observations or sessions",
-    "stop": "any policy, identity or reliability failure stops remaining cases and authentication handoff",
-    "visibleMessages": "all completed agent messages, bounded by existing 8192-byte public reply retention; exact official final output"
   }
 }

@@ -3650,3 +3650,21 @@ one supplemental preservation grant before eventual active-branch cleanup.
 An exact local object inventory and proposed preservation scope are delivered
 separately; no new persistent bundle, deletion, logout or revocation occurs.
 This delivery does not complete Issue #117 or authorize another observation.
+
+
+### Independent diagnostic supplement for revision 4 A11
+
+The user supplied a sanitized command excerpt for execution
+`5289943861fac0673140992e96860784dc241239`, bound to the unchanged result
+`50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b`.
+Its structure is a supported `/bin/bash -lc` wrapper around a single-target
+`cat`, with no `..` component, naming an unregistered client `tmp/arg0` path.
+The frozen read contract rejects that target class; the existing task-material
+regression already covers client temporary and `arg0` reads.
+
+This is user-provided text, not an executor inspection of operator-only material.
+It explains the rejection category, without establishing the actual target's
+type, contents, underlying read result or zero leakage. No target was accessed
+or replayed; no private diagnostic was opened, searched or hashed. Original
+bytes, INCOMPLETE, stop and counts remain unchanged. A11 remains unmet required
+behavior; missing diagnostic material is no longer the stated blocker.

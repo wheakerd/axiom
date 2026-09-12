@@ -5348,6 +5348,165 @@ class NativeObservationTests(unittest.TestCase):
         history_path.write_bytes(native._bytes(history))
         self.assertEqual(native.validate_native_protocol(copied), [])
 
+    def _routing_tail_fixture(self):
+        from axiom_validation import no_hook_clarification as replies
+        actual_read = native._read
+        def synthetic_registration(path, *args, **kwargs):
+            data = actual_read(path, *args, **kwargs)
+            if path == ROOT / native.HISTORY_RELATIVE:
+                history = json.loads(data)
+                history["independentRoutingTail"]["results"] = []
+                return native._bytes(history)
+            return data
+        patcher = patch.object(native, "_read", side_effect=synthetic_registration)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        prepared, runner, calls = self._prepared_runner()
+        old = json.loads((prepared / native.STATE_NAME).read_bytes())
+        previous = self.parent / native.REVISION_FOUR_ACCEPTANCE["routingRunName"]
+        source = native._case_paths(previous, 10)
+        source["workspace"].mkdir(parents=True)
+        source["home"].mkdir()
+        auth = source["home"] / native.AUTH_FILE_NAME
+        auth.write_bytes(b"PUBLIC-SYNTHETIC-CLOSED-SOURCE")
+        auth.chmod(0o600)
+        meta = auth.stat()
+        native._exclusive(native._auth_owner(previous, 10), native._bytes({
+            "ordinal": 10, "device": meta.st_dev, "inode": meta.st_ino}))
+        run = self.parent / native.ROUTING_TAIL["runName"]
+        with patch.object(native, "_revision_four_auth_source", return_value=old) as source_check:
+            native.prepare_routing_tail(ROOT, run, previous, self.parent / "bundle",
+                authorize_install=True, authorize_copy=True, runner=runner)
+            source_check.assert_called_once_with(ROOT, previous, revision_four=True)
+        return run, previous, runner, calls
+
+    def _run_routing_tail(self, run, preparation_runner, *, rejected=None, mismatch=None, bad_final=False):
+        calls, messages = [], {}
+        def runner(argv, **kwargs):
+            if "exec" not in argv:
+                return preparation_runner(argv, **kwargs)
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            calls.append(ordinal)
+            schema = json.loads(Path(argv[argv.index("--output-schema") + 1]).read_bytes())
+            token = schema["properties"]["opaqueCaseBinding"]["enum"][0]
+            answer = response(self.cases[ordinal - 1], token)
+            if mismatch == ordinal:
+                answer["usingAxiomFrontDoorObserved"] = not answer["usingAxiomFrontDoorObserved"]
+            text = json.dumps(answer)
+            raw = stream(answer, "cat /unbound/client/path" if rejected == ordinal else None)
+            events = [json.loads(x) for x in raw.splitlines()]
+            for event_doc in events:
+                if "item" in event_doc:
+                    number = int(event_doc["item"]["id"].split("_")[1])
+                    event_doc["item"]["id"] = f"item_{number + 1}"
+            events.insert(2, {"type": "item.completed", "item": {
+                "id": "item_0", "type": "agent_message", "text": "Reviewing the request."}})
+            raw = b"".join(event(x) for x in events)
+            messages[ordinal] = ["Reviewing the request.", text]
+            final = argv[argv.index("--output-last-message") + 1]
+            final_bytes = (text + (" " if bad_final else "")).encode()
+            program = ("import pathlib,sys;sys.stdin.buffer.read();pathlib.Path(sys.argv[1]).write_bytes(" +
+                       repr(final_bytes) + ");sys.stdout.buffer.write(" + repr(raw) + ")")
+            return native.bounded_process([sys.executable, "-I", "-B", "-c", program, final], **kwargs, timeout=10)
+        result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
+            reuse_test_auth=True, assessment_batch=True, routing_tail=True, process_runner=runner)
+        return result, calls, messages
+
+    def test_routing_tail_prepares_only_five_original_inputs_after_101(self):
+        run, previous, runner, calls = self._routing_tail_fixture()
+        self.assertEqual(calls, [])
+        registration = native._routing_tail_registration(ROOT, run)
+        self.assertEqual(registration["attemptHistory"]["attempts"], 101)
+        self.assertEqual(registration["attemptHistory"]["cliLaunches"], 101)
+        p, state = native._state(ROOT, run, routing_tail=True)
+        self.assertEqual([x["ordinal"] for x in state["cases"]], [12,13,14,15,16])
+        for ordinal in range(1,12):
+            self.assertFalse(native._case_paths(run, ordinal)["case"].exists())
+        for ordinal in native.ROUTING_TAIL["ordinals"]:
+            material = native.materialize_native_case_contract(root=ROOT,
+                materialization_seed=bytes.fromhex(state["materializationSeed"]), ordinal=ordinal,
+                protocol_digest=p["protocolDigest"], model_schema=native._input(ROOT,p,"modelResponseSchema"),
+                prompt_envelope=native._input(ROOT,p,"promptEnvelope"), request=self.cases[ordinal-1]["request"])
+            self.assertEqual((native._case_paths(run,ordinal)["case"]/"response-schema.json").read_bytes(), material.schema_bytes)
+            self.assertIsNone(native._blank_case(self.cases[ordinal-1], material, bytes.fromhex(state["materializationSeed"]), p, native._definition(native._input(ROOT,p,"fixtureMatrix"),ordinal), root=ROOT)["explicitInvocation"])
+        with self.assertRaises(native.NativeObservationError):
+            native.prepare_routing_tail(ROOT,run,previous,self.parent/"bundle",authorize_install=True,authorize_copy=True,runner=runner)
+
+    def test_routing_tail_real_receiver_keeps_messages_final_output_and_five_case_handoff(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result, calls, messages = self._run_routing_tail(run,runner)
+        self.assertEqual(calls,[12,13,14,15,16])
+        self.assertEqual([x["status"] for x in result["caseResults"]],["PASS"]*5)
+        self.assertEqual((result["attemptCount"],result["cliLaunchCount"],result["cumulativeAttemptCount"]),(5,5,106))
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+        self.assertFalse(result["hostClaim"])
+        actual_shape = copy.deepcopy(result)
+        actual_shape.update(runMode="actual", status="PASS", executionSource={"commit":"1"*40,"tree":"2"*40})
+        self.assertEqual(native.validate_native_result(actual_shape,ROOT),[])
+        actual_shape["hostClaim"] = True
+        self.assertTrue(native.validate_native_result(actual_shape,ROOT))
+        for item in result["caseResults"]:
+            self.assertEqual(item["visibleReplies"]["messages"],messages[item["ordinal"]])
+            self.assertTrue(item["executionDiagnostics"]["finalOutputVerified"])
+        with self.assertRaises(native.NativeObservationError):
+            self._run_routing_tail(run,runner)
+        bad=copy.deepcopy(result);bad["caseResults"].pop()
+        self.assertTrue(native.validate_native_result(bad,ROOT))
+        bad=copy.deepcopy(result);bad["caseResults"][0]["visibleReplies"]["messages"].pop(0)
+        self.assertTrue(native.validate_native_result(bad,ROOT))
+
+    def test_routing_tail_semantic_failure_does_not_resample_or_stop_fixed_set(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result,calls,_=self._run_routing_tail(run,runner,mismatch=12)
+        self.assertEqual(calls,[12,13,14,15,16])
+        self.assertEqual([x["status"] for x in result["caseResults"]],["FAIL","PASS","PASS","PASS","PASS"])
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+
+    def test_routing_tail_read_stop_preserves_opening_and_prevents_next_auth_copy(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result,calls,_=self._run_routing_tail(run,runner,rejected=13)
+        self.assertEqual(calls,[12,13])
+        self.assertEqual([x["status"] for x in result["caseResults"]],["PASS","INCOMPLETE","NOT-RUN","NOT-RUN","NOT-RUN"])
+        self.assertEqual(result["cumulativeAttemptCount"],103)
+        self.assertEqual(result["caseResults"][1]["visibleReplies"]["messages"],["Reviewing the request."])
+        self.assertFalse((native._case_paths(run,14)["home"]/native.AUTH_FILE_NAME).exists())
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+
+    def test_routing_tail_exact_final_text_mismatch_stops_before_next_case(self):
+        run, previous, runner, _ = self._routing_tail_fixture()
+        result,calls,_=self._run_routing_tail(run,runner,bad_final=True)
+        self.assertEqual(calls,[12])
+        self.assertEqual(result["caseResults"][0]["status"],"INCOMPLETE")
+        self.assertFalse(result["caseResults"][0]["executionDiagnostics"]["finalOutputVerified"])
+        self.assertEqual(native.validate_native_result(result,ROOT),[])
+
+    def test_routing_tail_public_binding_collision_and_unknown_secret_are_bounded(self):
+        message = "<public-measurement-binding-0> " + legacy.PROFILE_SHA256
+        retained = native._assessment_public_replies([message], "public-binding")
+        self.assertEqual(retained["messages"], [message])
+        self.assertTrue(retained["retentionComplete"])
+        self.assertFalse(native._assessment_public_replies(["api_key=secret-example"],"public-binding")["retentionComplete"])
+        over = native._assessment_public_replies(["word " * 1700], "public-binding")
+        self.assertFalse(over["retentionComplete"])
+        self.assertEqual(over["originalVisibleMessageCount"], 1)
+        self.assertEqual(over["messages"], [])
+
+    def test_routing_tail_cannot_use_simulation_or_closed_old_windows(self):
+        from axiom_validation import no_hook_clarification as replies
+        run, previous, runner, _ = self._routing_tail_fixture()
+        with patch.object(native.subprocess,"Popen",side_effect=AssertionError("real client started")):
+            with self.assertRaisesRegex(native.NativeObservationError,"preparation mode"):
+                native.run_native_observation(ROOT,run,authorize_model_calls=True,reuse_test_auth=True,
+                    assessment_batch=True,routing_tail=True)
+            for fourth in (False,True):
+                with self.assertRaises(native.NativeObservationError):
+                    native.prepare_fixed_acceptance(ROOT,self.parent/"forbidden",previous,self.parent/"bundle",
+                        authorize_install=True,authorize_copy=True,revision_four=fourth)
+            with self.assertRaises(native.NativeObservationError):
+                replies._unrecorded(ROOT,replies.protocol(ROOT),independent=True)
+        self.assertFalse((run/"batch-started.json").exists())
+
+
 
 if __name__ == "__main__":
     unittest.main()
