@@ -18,5 +18,10 @@
     "windowId": "pending-choice-fixed-1",
     "protocolDigest": "sha256:aef166e67f3228eaea84436f8d4be75cb9037cd8c3d5080f9f46124438c45fa1",
     "results": []
+  },
+  "revisionFourAcceptance": {
+    "windowId": "assessment-revision-4-fixed-1",
+    "protocolDigest": "sha256:24e5a9202595cee17f15f73c80d1d475e8a50eb3196e9edaf79e696791804502",
+    "results": []
   }
 }

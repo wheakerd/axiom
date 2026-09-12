@@ -138,5 +138,10 @@
         "implementationTree": "4b16ee800b8d0bd6657383ddcc02062a1b6ffe20"
       }
     ]
+  },
+  "revisionFourAcceptance": {
+    "windowId": "assessment-revision-4-fixed-1",
+    "protocolDigest": "sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c",
+    "results": []
   }
 }

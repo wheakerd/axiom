@@ -964,7 +964,7 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 92
+      "maximum": 103
     },
     "priorResultSha256s": {
       "type": "array",
@@ -1216,6 +1216,46 @@
             },
             "authenticationSourceOrdinal": {
               "const": 14
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "assessment-revision-4-fixed-1"
+            },
+            "priorPartialSha256": {
+              "const": "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 87
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
             },
             "newAttemptCount": {
               "type": "integer",

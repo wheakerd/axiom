@@ -62,6 +62,10 @@ def protocol(root: Path) -> dict:
         _require(digest(_read(root / binding["path"])) == binding["sha256"], "supplement source binding changed")
     _require(p["priorResultSha256"] == PRIOR and digest(_read(root / PRIOR_PATH)) == PRIOR,
              "prior routing result changed")
+    _require(p.get("revisionFourAcceptance") == {
+        "windowId": native.REVISION_FOUR_ACCEPTANCE["windowId"], "requires": "completed-fixed-routing",
+        "limits": {"newAttempts": 3, "maximumCumulativeAttempts": 106, "replyBytesPerCase": REPLY_LIMIT}},
+        "revision 4 clarification window changed")
     _require(p["nativeProtocolDigest"] == native._protocol(root)["protocolDigest"], "native guard protocol changed")
     old = _json(_read(root / ARCHIVE / PROTOCOL.name))
     _require(all(p[k] == old[k] for k in ("instructions", "replyEvidence", "assessment", "loadingEvidence")),
@@ -75,11 +79,11 @@ def _prior_supplement(root: Path) -> dict:
     return _json(data)
 
 
-def _unrecorded(root: Path, p: dict, *, fixed_acceptance: bool = False) -> None:
+def _unrecorded(root: Path, p: dict, *, fixed_acceptance: bool = False, revision_four: bool = False) -> None:
     history = _json(_read(root / HISTORY))
     if fixed_acceptance:
-        _require(history.get("fixedAcceptance") == {
-            "windowId": native.FIXED_ACCEPTANCE["windowId"], "protocolDigest": p["protocolDigest"], "results": []},
+        _require(history.get(native._fixed_history_key(revision_four)) == {
+            "windowId": native._fixed_contract(revision_four)["windowId"], "protocolDigest": p["protocolDigest"], "results": []},
             "fixed clarification already recorded or registration changed")
         return
     old = _json(_read(root / ARCHIVE / HISTORY.name))
@@ -260,22 +264,24 @@ def _login(executable: Path, paths: dict, invoke) -> None:
 
 
 def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
-            authorized: bool = False, fixed_acceptance: bool = False, runner=None) -> dict:
+            authorized: bool = False, fixed_acceptance: bool = False, revision_four: bool = False, runner=None) -> dict:
+    _require(not (fixed_acceptance and revision_four), "select one fixed window")
+    fixed_acceptance = fixed_acceptance or revision_four
     _require(authorized, "explicit preparation and opaque auth-copy authorization required")
     p = protocol(root)
-    _unrecorded(root, p, fixed_acceptance=fixed_acceptance)
+    _unrecorded(root, p, fixed_acceptance=fixed_acceptance, revision_four=revision_four)
     if fixed_acceptance:
-        old, chain = native.completed_fixed_routing(root, previous, simulated=runner is not None)
+        old, chain = native.completed_fixed_routing(root, previous, simulated=runner is not None, revision_four=revision_four)
         source_ordinal = 16
     else:
         chain = attempt_history(root)
         old = _prior_state(root, previous)
         source_ordinal = 14
-    expected_name = native.FIXED_ACCEPTANCE["clarificationRunName"] if fixed_acceptance else RUN_NAME
+    expected_name = native._fixed_contract(revision_four)["clarificationRunName"] if fixed_acceptance else RUN_NAME
     _require(run_root.parent == previous.parent and run_root.name == expected_name and run_root != previous and
              not run_root.exists() and not run_root.is_symlink(), "fresh registered sibling required")
     if fixed_acceptance and runner is None:
-        _require(native._execution_source(root) == native._fixed_registration(root, run_root.parent)["executionSource"],
+        _require(native._execution_source(root) == native._fixed_registration(root, run_root.parent, revision_four=revision_four)["executionSource"],
                  "clarification execution commit differs from the fixed registration")
     executable = Path(old["executable"])
     legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
@@ -447,18 +453,20 @@ def _capture_case(root: Path, run_root: Path, ordinal: int, prepared: dict, exec
     return record
 
 
-def run(root: Path, run_root: Path, *, authorized: bool = False, fixed_acceptance: bool = False, runner=None) -> dict:
+def run(root: Path, run_root: Path, *, authorized: bool = False, fixed_acceptance: bool = False, revision_four: bool = False, runner=None) -> dict:
+    _require(not (fixed_acceptance and revision_four), "select one fixed window")
+    fixed_acceptance = fixed_acceptance or revision_four
     _require(authorized, "explicit three-call authorization required")
     p = protocol(root)
-    _require(run_root.name == (native.FIXED_ACCEPTANCE["clarificationRunName"] if fixed_acceptance else RUN_NAME),
+    _require(run_root.name == (native._fixed_contract(revision_four)["clarificationRunName"] if fixed_acceptance else RUN_NAME),
              "unregistered supplemental run root")
-    _unrecorded(root, p, fixed_acceptance=fixed_acceptance)
+    _unrecorded(root, p, fixed_acceptance=fixed_acceptance, revision_four=revision_four)
     state = _json(_read(run_root / STATE))
-    chain = native.completed_fixed_routing(root, Path(state["previousRunRoot"]), simulated=runner is not None)[1] if fixed_acceptance else attempt_history(root)
+    chain = native.completed_fixed_routing(root, Path(state["previousRunRoot"]), simulated=runner is not None, revision_four=revision_four)[1] if fixed_acceptance else attempt_history(root)
     _require(state["protocolDigest"] == p["protocolDigest"] and state["attemptHistory"] == chain and
              [r["ordinal"] for r in state["cases"]] == list(ORDINALS), "supplement preparation changed")
     _require(state["runMode"] == ("actual" if runner is None else "simulated"), "preparation mode mismatch")
-    limits = p["fixedAcceptance"]["limits"] if fixed_acceptance else p["limits"]
+    limits = p[native._fixed_history_key(revision_four)]["limits"] if fixed_acceptance else p["limits"]
     _require(chain["attempts"] + len(ORDINALS) <= limits["maximumCumulativeAttempts"], "budget exhausted")
     if fixed_acceptance:
         for name in ["batch-started.json", RESULT, *[f"attempt-{i:02d}.json" for i in ORDINALS]]:
@@ -469,7 +477,7 @@ def run(root: Path, run_root: Path, *, authorized: bool = False, fixed_acceptanc
     source = None
     if runner is None and fixed_acceptance:
         source = native._execution_source(root)
-        _require(source == native._fixed_registration(root, run_root.parent)["executionSource"],
+        _require(source == native._fixed_registration(root, run_root.parent, revision_four=revision_four)["executionSource"],
                  "fixed clarification execution changed after registration")
     elif runner is None:
         git_env = {"PATH": "/usr/bin:/bin", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null"}
@@ -497,7 +505,7 @@ def run(root: Path, run_root: Path, *, authorized: bool = False, fixed_acceptanc
     doc["cumulativeAttemptCount"] = chain["attempts"] + doc["attemptCount"]
     doc["cumulativeCliLaunchCount"] = chain["cliLaunches"] + doc["cliLaunchCount"]
     if fixed_acceptance:
-        doc["fixedAcceptanceWindow"] = native.FIXED_ACCEPTANCE["windowId"]
+        doc["fixedAcceptanceWindow"] = native._fixed_contract(revision_four)["windowId"]
     _exclusive(run_root / RESULT, _bytes(doc))
     return doc
 
@@ -531,12 +539,19 @@ def check(root: Path) -> list[str]:
                  fixed["protocolDigest"] == fixed_protocol["protocolDigest"] and
                  type(fixed["results"]) is list and len(fixed["results"]) <= 1,
                  "fixed clarification registration changed")
-        for entry in [*history["results"], *fixed["results"]]:
-            new_fixed = entry in fixed["results"]
+        fourth = history["revisionFourAcceptance"]
+        _require(set(fourth) == {"windowId", "protocolDigest", "results"} and
+                 fourth["windowId"] == native.REVISION_FOUR_ACCEPTANCE["windowId"] and
+                 fourth["protocolDigest"] == p["protocolDigest"] and
+                 type(fourth["results"]) is list and len(fourth["results"]) <= 1,
+                 "revision 4 clarification registration changed")
+        for entry in [*history["results"], *fixed["results"], *fourth["results"]]:
+            revision_four = entry in fourth["results"]
+            new_fixed = revision_four or entry in fixed["results"]
             historical = entry["sha256"] == PRIOR_SUPPLEMENT
-            active = fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
-            prior_count = 92 if new_fixed else 70 if historical else chain["attempts"]
-            prior_result = native._fixed_result_binding(root)["sha256"] if new_fixed else PRIOR
+            active = p if revision_four else fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
+            prior_count = 103 if revision_four else 92 if new_fixed else 70 if historical else chain["attempts"]
+            prior_result = native._fixed_result_binding(root, revision_four=revision_four)["sha256"] if new_fixed else PRIOR
             data = _read(root / entry["path"])
             _require(digest(data) == entry["sha256"], "supplement result digest changed")
             d = _json(data)
@@ -547,7 +562,7 @@ def check(root: Path) -> list[str]:
                 _require(d["priorSupplementSha256"] == (native.FIXED_REPLY_PRIORS[-1] if new_fixed else PRIOR_SUPPLEMENT),
                          "new result lost prior supplement")
             if new_fixed:
-                _require(d["fixedAcceptanceWindow"] == native.FIXED_ACCEPTANCE["windowId"] and
+                _require(d["fixedAcceptanceWindow"] == native._fixed_contract(revision_four)["windowId"] and
                          d["runMode"] == "actual" and d["executionSource"] == {
                              "commit": entry["implementationCommit"], "tree": entry["implementationTree"]},
                          "fixed clarification execution binding changed")
@@ -580,7 +595,7 @@ def check(root: Path) -> list[str]:
             _require(d["attemptCount"] == sum(c["attemptCount"] for c in d["caseResults"]) and
                      d["cliLaunchCount"] == sum(c["cliLaunchCount"] for c in d["caseResults"]) and
                      d["cumulativeAttemptCount"] == prior_count + d["attemptCount"] <=
-                     (active["fixedAcceptance"]["limits"] if new_fixed else active["limits"])["maximumCumulativeAttempts"] and
+                     (active[native._fixed_history_key(revision_four)]["limits"] if new_fixed else active["limits"])["maximumCumulativeAttempts"] and
                      d["cumulativeCliLaunchCount"] == prior_count + d["cliLaunchCount"] and d["modelRequestCount"] is None,
                      "supplement cumulative accounting mismatch")
     except (OSError, ValueError, KeyError, native.NativeObservationError):
@@ -596,6 +611,7 @@ def main(argv=None, *, root=REPOSITORY_ROOT) -> int:
     parser.add_argument("--bundle-root", type=Path)
     parser.add_argument("--authorize", action="store_true")
     parser.add_argument("--fixed-acceptance", action="store_true")
+    parser.add_argument("--revision-four-acceptance", action="store_true")
     args = parser.parse_args(argv)
     try:
         if args.mode == "check":
@@ -606,10 +622,10 @@ def main(argv=None, *, root=REPOSITORY_ROOT) -> int:
         if args.mode == "prepare":
             _require(args.previous is not None and args.bundle_root is not None, "registered predecessor and new bundle required")
             prepare(root, args.run_root, args.previous, bundle_root=args.bundle_root,
-                    authorized=args.authorize, fixed_acceptance=args.fixed_acceptance)
+                    authorized=args.authorize, fixed_acceptance=args.fixed_acceptance, revision_four=args.revision_four_acceptance)
             print("Prepared three dedicated clarification states; no models started.")
         else:
-            d = run(root, args.run_root, authorized=args.authorize, fixed_acceptance=args.fixed_acceptance)
+            d = run(root, args.run_root, authorized=args.authorize, fixed_acceptance=args.fixed_acceptance, revision_four=args.revision_four_acceptance)
             print(json.dumps({"attemptCount": d["attemptCount"], "cliLaunchCount": d["cliLaunchCount"],
                               "cumulativeAttemptCount": d["cumulativeAttemptCount"],
                               "cases": [{"ordinal": c["ordinal"], "status": c["status"],

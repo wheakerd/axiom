@@ -1,5 +1,16 @@
 # Runtime And Repository Identity
 
+## Assessment revision 4 finite observation window (policy 17)
+
+Policy 17 registers one ordered 16-case routing batch and three clarification
+replies, starting from 87 historical attempts and observation CLI starts. The
+new window has at most 19 attempts and a cumulative ceiling of 106. Every old
+consumed or stopped window stays closed, including the eight unused slots in
+the preceding 95-limit window. Assessment revision 4, canonical runtime inputs,
+ordinary builder, Golden Set, scoring, read permissions and product policies
+13/14 stay fixed. Existing deterministic bundle evidence is reused. Execution
+source is bound only after its signed commit; result commits are separate.
+
 ## Measurement and historical test inputs (policy 16)
 
 Policy 16 fixes the legacy builder tests' hidden Git-object dependency with

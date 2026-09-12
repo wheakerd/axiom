@@ -128,6 +128,14 @@
       "sourceIssue": 117,
       "summary": "Pin legacy builder test inputs and define front-door measurement uniformly; retain original protocols, results and closed windows without changing runtime or starting observations.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 17,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "303e5b9e984d3647b06b84bf8ebc794887af698e",
+      "sourceIssue": 117,
+      "summary": "Register one assessment revision 4 fixed 16-plus-3 observation window after 87 retained attempts; preserve all stopped windows, frozen product inputs and historical results.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

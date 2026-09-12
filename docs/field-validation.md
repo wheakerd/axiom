@@ -3438,3 +3438,56 @@ source/contract review, not model behavior approval. The generic plugin
 validator retains its three existing unsupported-metadata findings; the literal
 ASCII scan retains four historical documentation lines and two original reply
 records. Neither was hidden or changed to obtain a pass.
+
+
+## Assessment revision 4 fixed acceptance window
+
+The candidate starts at `303e5b9e984d3647b06b84bf8ebc794887af698e`, tree
+`2469367551b4ebe41d04a571ff162c3e77731edc`. Repository policy 17 registers
+`assessment-revision-4-fixed-1`: the original routing ordinals 1-16 followed by
+natural-language replies 12, 13 and 14. The prior 87 canonical attempts and
+87 observation CLI starts are preserved; this window permits at most 19 new
+attempts and starts, with a cumulative ceiling of 106. Internal model requests
+remain unknown. The preceding stopped window and its eight unused slots remain
+closed. Both parts, their order, source identities and budgets are registered
+before the first model starts. There is no retry or second evaluation.
+
+Canonical Skills, Hooks, ordinary builder, Golden Set, scoring, assessment
+revision 4 definitions and input-generation semantics are fixed. Product source
+`8a593026285d285d95f7a9e0c6ec0793738c3707`, unpublished 0.10.1, source/bundle
+policies 13/14, full/profile runtime digests and the two identical product builds
+retain their existing identities. Registration changes do not rebuild the
+product. The actual signed execution SHA/tree must precede preparation; result
+commits cannot stand in for execution identity.
+
+The combination remains Codex 0.153.0 / gpt-5.5 / medium / Direct, with Code Mode
+host and plugin runtime disabled. Every case uses an independent fresh context.
+The zero-install/discovery control, original read permissions and qualified
+mentions only for the three originally explicit invocations are unchanged.
+The recorded normally completed predecessor at routing ordinal 10 supplies
+only the existing opaque dedicated-auth handoff; the abnormal ordinal 11 is
+excluded. No authentication contents or operator-only raw diagnostics are read
+by the executor or reviewer. Semantic FAIL does not resample. Any policy,
+identity or reliability stop prevents all remaining launches and the B handoff.
+
+### Current R5 contract and environment disposition
+
+The [original required-validation clauses](https://github.com/wheakerd/axiom/issues/117#issuecomment-5620552657)
+allow precise unavailable/not-run proprietary-host evidence. The profile's
+`contractTargetMeaning` and [evaluation contract](../evals/README.md#hook-independent-profile-contract)
+make a contract target eligible only when its required host surfaces are present.
+These clauses allow the limitations below; they do not establish host PASS.
+
+| Target | Current evidence and status | Effect on bounded Issue closure |
+| --- | --- | --- |
+| ChatGPT ten-case contract target | NOT-RUN. Current supported tools expose independent cloud task creation and text prompts, but no frozen Skill installation/catalog selection or material-file mapping with the required fresh discovery binding. Actual project inventory contains local projects only; this does not exclude projectless cloud. No cloud task or webpage was used as a sample. | This precise current-interface limitation is allowed by the conditional target clause. It is not a global availability claim or a substitute for the ten cases when a qualified entry becomes available. |
+| Windows-native bundle validation | NOT-RUN on this Linux executor: no Windows-native command surface is available. Windows CI runs Hook tests, which do not prove this artifact-validation target. Linux/POSIX bundle construction remains the documented supported builder path. | The original host-limit reporting clause permits this explicit validation limitation. It does not add Windows construction support or convert Linux construction into Windows-native evidence. |
+| Current full-profile installed observation | NOT-RUN. Static identity, discovery and applicable Hook regressions support only their tested layers. A current candidate-bound full-profile installed host observation has not been performed; the no-Hook combination disables plugin runtime. | Goal 6's preservation requirement is covered at the unchanged product/static/Hook layers, with installed behavior explicitly bounded. No claim of a full-profile installed PASS, mandatory new 17-case batch or full lifecycle PASS is added. |
+
+The existing R4/FCR table remains applicable to its versioned paths. Public
+package identity, discovery configuration, transported selection, validated
+public reads and visible behavior remain separate claims. Missing native load
+receipts remain not-observed; neither a correct report nor an absent event
+proves internal semantic consumption. Current applicable data or permission
+harm would still block integration. These host dispositions cannot waive a
+failure of this window's required routing or actual clarification acceptance.

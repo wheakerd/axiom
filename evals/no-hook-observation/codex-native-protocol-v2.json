@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "f338274a665784ea029113f1c035af5b017c248a195570fb7d98c27054f3d185"
+      "sha256": "91a45457d34c8d7daa74a30087ab576d12b6042dc6afcdfb53aec62a264ad65c"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -64,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "6dff7d7533b784a939fedb50ed2c991d5a86625c9dfe5d2b8eea0b36b3c960d8"
+      "sha256": "23a5808b1fc76070a0c3ef4d068cd1b78e2b4200d9bca6a099868f18ce18f4da"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -123,7 +123,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "84543f57fc9c6da62b10d4bcbdf83bcee3a4d815f750cce244560d914a254f81"
+    "sha256": "00cbe679f600c452387b78e83297592e24ffc8ec455784b96eb7ecd694c009d6"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -445,5 +445,51 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:14efc97cc905337ec60390aea6ab481d4e8f4bbcdf353ee83fca3f43b5db7c1e"
+  "protocolDigest": "sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c",
+  "revisionFourAcceptance": {
+    "windowId": "assessment-revision-4-fixed-1",
+    "state": "authorized-once",
+    "candidateCommit": "303e5b9e984d3647b06b84bf8ebc794887af698e",
+    "candidateTree": "2469367551b4ebe41d04a571ff162c3e77731edc",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+    ],
+    "priorAttempts": 87,
+    "priorCliLaunches": 87,
+    "routingOrdinals": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 19,
+    "maximumCumulativeAttempts": 106,
+    "routingRunName": "cases-assessment-revision-4-fixed-1",
+    "clarificationRunName": "cases-assessment-revision-4-clarification-1",
+    "order": "complete routing before clarification; semantic failures do not resample",
+    "stop": "reliability, identity or policy failure stops all remaining observations",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 4
+  }
 }
