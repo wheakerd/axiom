@@ -3668,3 +3668,100 @@ type, contents, underlying read result or zero leakage. No target was accessed
 or replayed; no private diagnostic was opened, searched or hashed. Original
 bytes, INCOMPLETE, stop and counts remain unchanged. A11 remains unmet required
 behavior; missing diagnostic material is no longer the stated blocker.
+
+
+### Independent routing ordinals 12-16: policy 19
+
+This separately authorized window ran only the original five routing cases, in
+order 12/13/14/15/16, once each in independent fresh contexts. It did not prepare
+or rerun A1-11 or any B reply, and did not reopen either stopped window.
+Signed execution `0a520ec2b7cc1d06954b068d5e88d7c909dea51e`, tree
+`e73b1e4615e50a29fa8e4e0daa2e219291d855ea`, preceded preparation.
+The [complete normalized result](../evals/no-hook-observation/results/codex-native-548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521.json)
+is 20,594 bytes, SHA-256
+`548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521`.
+
+| Original ordinal | Original routing score | Retained public observation |
+| --- | --- | --- |
+| 12 | PASS | `clarification`, no selected routes, one reported clarification; two identical visible JSON messages retained. |
+| 13 | PASS | `clarification`, no selected routes, one reported clarification; one visible JSON message and an 8,179-byte package Skill read. |
+| 14 | PASS | `clarification`, no selected routes, one reported clarification; two identical visible JSON messages retained. |
+| 15 | PASS | `no-route`, no selected routes or clarification; one visible JSON message. |
+| 16 | PASS | `no-route`, no selected routes or clarification; one visible JSON message. |
+
+All seven normal visible messages are retained without redaction or omission,
+including both repeated messages. All five strict streams, exact official final
+outputs and input/postcondition checks agree; returns are zero, with no policy,
+identity or reliability stop. Each result reports no front-door use or mutation.
+These remain outer routing assessments: a JSON clarification count is not an
+actual natural-language question or a new B observation. No inner business
+operation or simulated user choice was performed.
+
+A13's public read is the complete frozen `skills/traceable-git-submit/SKILL.md`,
+8,179 bytes at event 4, from the installed package. The original scoring permits
+this candidate-guidance read and still applies its unchanged forbidden routes.
+The structured result does not retrospectively alter B13: that earlier reply
+first selected traceable Skill guidance, read it, then asked for a workflow
+choice and left the business workflow pending. Its limited PASS is preserved;
+no-Skill-selection-before-clarification remains unsatisfied. Neither reading nor
+correct structured fields establish an independent native loading receipt or
+unobservable semantic consumption. Other four cases have no observed public read.
+
+Exactly **five new canonical attempts and observation CLI starts** were consumed,
+**106/106 cumulative**; internal model requests remain unknown. This independent
+window is consumed. Its five-case status is PASS with `hostClaim=false`; it is
+not an independently executed 16-case batch or a 16/16 result. Current evidence
+coverage can list the prior revision-4 A1-10 scores and these separate A12-16
+scores, but `5289943`/`50589ff` remains its original INCOMPLETE batch with A11
+INCOMPLETE and its own A12-16 NOT-RUN. A11 is unmet required behavior, not missing
+diagnostic material. The previous independent B replies remain separately
+accepted within their stated limits; neither older 2 PASS / 1 FAIL batch changes.
+
+Product 0.10.1, frozen source `8a593026285d285d95f7a9e0c6ec0793738c3707`,
+canonical Skills, Hooks, ordinary builder, full/profile runtime and source/bundle
+policies 13/14 are unchanged. Two existing deterministic builds are reused.
+Assessment revision 4, original requests/materials/schema/field definitions and
+scoring are byte-identical to the candidate baseline. Repository policy 19
+binds only the finite window, result retention and compatible history checks.
+Native protocol: `sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9`.
+Clarification protocol: `sha256:bb1df1957d9f3ead244079a847eb0b7af8f0e44d3d6e9e2449bb5c94742c535d`.
+No observation implementation, input or protocol changed after execution.
+
+R4/FCR and R5 dispositions retain their prior scope; no additional host was
+observed. PR #121 remains Draft, main is unchanged, and Issue #117 remains
+BLOCKED/open. This round creates no persistent history bundle, resource
+deletion, credential retirement, publication or authorization for a third A11
+attempt. The pending preservation request is amended once to the actual final
+result head, with only this round's new objects added to the reviewed inventory.
+
+
+#### Verification of the independent five-case result
+
+Final external discovery ran **614 tests in 152.437 seconds: 612 passed and
+two skipped**, without failures or errors. The two unchanged skips require a
+real Windows shell or an explicitly authorized delegated-cgroup host probe.
+Cwd and import root were both the external full copy, with bytecode disabled.
+The old builder commit/branch and alternates were absent; the fixed historical
+fixtures still drove the real builder regressions. Five Linux Hook tests passed
+separately, as did distribution/publication and Claude strict validation.
+Formal product builds were not repeated. CI is reported separately against the
+actual final result head.
+
+The initial 240-test focused run retained four errors: the reused commitment
+aggregator required 16 entries. A subsequent seven-test run retained three
+errors from passing retained text to the byte-oriented JSON validator. Both
+were corrected before model execution, and all seven final targeted regressions
+passed. One independent reviewer also identified two pre-execution defects:
+a five-case result must retain `hostClaim=false`, and a literal public-binding
+placeholder must not throw from `finally`. Both were fixed and read back before
+the signed execution. The same reviewer then checked all public messages,
+original scoring, identities, history and claim limits, with no new finding.
+This review neither reads private state nor supplies GitHub approval.
+
+The generic plugin validator retains three existing NON-PASS fields (`hooks`,
+`interface.brandColorDark`, `interface.supportURL`). The literal ASCII scan of
+tracked Markdown/JSON/JSONL/YAML retains 16 existing line hits and introduces
+none; neither historical wording nor literal reply evidence was altered.
+All 20 earlier normalized result files keep their exact bytes and verdicts.
+Primary, the outer user file and diff, and the 82 existing cache metadata
+records match their protection baselines.

@@ -154,6 +154,13 @@
   "independentRoutingTail": {
     "windowId": "independent-routing-tail-1",
     "protocolDigest": "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521.json",
+        "sha256": "548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521",
+        "implementationCommit": "0a520ec2b7cc1d06954b068d5e88d7c909dea51e",
+        "implementationTree": "e73b1e4615e50a29fa8e4e0daa2e219291d855ea"
+      }
+    ]
   }
 }
