@@ -1,5 +1,23 @@
 # Runtime And Repository Identity
 
+## Independent clarification window (policy 18)
+
+Policy 18 registers only three natural-language replies, in order 12/13/14,
+from 98 historical attempts and CLI starts to a maximum of 101. This separate
+authorization does not reopen either stopped 16-plus-3 window or require a
+fabricated routing completion. It uses the existing receiver, read contract,
+original prompts and bounded public-message retention. A normally completed,
+registered Case 10 is the opaque authentication source; Case 11 is excluded.
+
+The observation implementation and protocol identities change. The exact
+assessment-revision-4 protocols are retained in
+[`historical-protocols/assessment-revision-4-fixed-1`](../evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1)
+for the original `5289943` execution and `50589ff` result. Product 0.10.1,
+canonical inputs, full/profile runtime digests and source/bundle policies 13/14
+are unchanged. Existing deterministic build evidence is reused. Execution is
+bound to its actual signed commit before preparation; results are recorded
+separately and cannot establish a full routing or installed-host PASS.
+
 ## Assessment revision 4 finite observation window (policy 17)
 
 Policy 17 registers one ordered 16-case routing batch and three clarification

@@ -846,6 +846,8 @@ MERGED_PROTOCOL_DIGEST = "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b78
 MERGED_PROTOCOL_FILE_SHA256 = "c6e29b80b64bf50aa7a0424ad99936e493254f3fff464e41b8ed90ca63f26feb"
 FIXED_PROTOCOL_FILE_SHA256 = "a3baaf529729f3da8d024536bfb29ef4e28363f17c68b1b75b9ee07cd7c4c674"
 FIXED_PROTOCOL_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/fixed-acceptance-1")
+REVISION_FOUR_PROTOCOL_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1")
+REVISION_FOUR_RESULT_SHA256 = "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b"
 
 
 def _merged_protocol(root: Path) -> dict[str, Any]:
@@ -859,6 +861,14 @@ def _fixed_protocol(root: Path) -> dict[str, Any]:
     data = _read(root / FIXED_PROTOCOL_ARCHIVE / PROTOCOL_RELATIVE.name)
     _require(hashlib.sha256(data).hexdigest() == FIXED_PROTOCOL_FILE_SHA256,
              "recorded fixed routing protocol bytes changed")
+    return _json(data)
+
+
+def _revision_four_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / REVISION_FOUR_PROTOCOL_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() ==
+             "0732cea5d3587f226454f7b3153405ae097d0ae67f758daf6ae5713969b7c97a",
+             "recorded revision 4 routing protocol bytes changed")
     return _json(data)
 
 
@@ -1180,9 +1190,12 @@ def _execution_source(root: Path) -> dict[str, str]:
 
 def _fixed_result_binding(root: Path, *, revision_four: bool = False) -> dict[str, Any] | None:
     history = _json(_read(root / HISTORY_RELATIVE))[_fixed_history_key(revision_four)]
+    recorded = _protocol(root) if revision_four else _fixed_protocol(root)
+    if revision_four and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _revision_four_protocol(root)
     _require(set(history) == {"windowId", "protocolDigest", "results"} and
              history["windowId"] == _fixed_contract(revision_four)["windowId"] and
-             history["protocolDigest"] == (_protocol(root) if revision_four else _fixed_protocol(root))["protocolDigest"] and
+             history["protocolDigest"] == recorded["protocolDigest"] and
              type(history["results"]) is list and len(history["results"]) <= 1,
              "fixed routing result registration changed")
     if not history["results"]:
@@ -1227,11 +1240,12 @@ def _fixed_attempt_history(root: Path, revision_four: bool) -> dict[str, Any]:
     return revision_four_attempt_history(root) if revision_four else fixed_attempt_history(root)
 
 
-def _revision_four_auth_source(root: Path, previous: Path) -> dict[str, Any]:
+def _revision_four_auth_source(root: Path, previous: Path, *, revision_four: bool = False) -> dict[str, Any]:
     """Verify only the registered, normally completed source; never inspect auth."""
-    binding = _fixed_result_binding(root)
-    _require(binding is not None and binding["sha256"] == FIXED_RESULT_SHA256 and
-             previous.name == FIXED_ACCEPTANCE["routingRunName"], "revision 4 authentication predecessor changed")
+    binding = _fixed_result_binding(root, revision_four=revision_four)
+    expected = REVISION_FOUR_RESULT_SHA256 if revision_four else FIXED_RESULT_SHA256
+    _require(binding is not None and binding["sha256"] == expected and
+             previous.name == _fixed_contract(revision_four)["routingRunName"], "revision 4 authentication predecessor changed")
     data = _read(root / binding["path"])
     _require(_read(previous / "normalized-result.json") == data, "authentication predecessor result changed")
     result, state = _json(data), _json(_read(previous / STATE_NAME))
@@ -3465,6 +3479,8 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             protocol = _merged_protocol(root)
         elif result_sha256 == FIXED_RESULT_SHA256:
             protocol = _fixed_protocol(root)
+        elif result_sha256 == REVISION_FOUR_RESULT_SHA256:
+            protocol = _revision_four_protocol(root)
         result_schema = _json(_read(root / RESULT_SCHEMA_RELATIVE))
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")

@@ -136,6 +136,14 @@
       "sourceIssue": 117,
       "summary": "Register one assessment revision 4 fixed 16-plus-3 observation window after 87 retained attempts; preserve all stopped windows, frozen product inputs and historical results.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 18,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "f8c6eadb1c4401f02d6310dda57995544af2a45d",
+      "sourceIssue": 117,
+      "summary": "Register one independent three-reply clarification window after 98 retained attempts; preserve both stopped routing windows, original inputs and frozen product content.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

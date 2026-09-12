@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "348c6bfa8555e3991b07aed4e254cae31076d12eef388204336bed9a357a1730"
+      "sha256": "91a45457d34c8d7daa74a30087ab576d12b6042dc6afcdfb53aec62a264ad65c"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -64,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "b9af442f98c7853c437c9425b021a013f8655721fb8a7b22943adedf702c9a7e"
+      "sha256": "23a5808b1fc76070a0c3ef4d068cd1b78e2b4200d9bca6a099868f18ce18f4da"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -445,7 +445,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:4f71ddc9c69dc6ab56bfd35e924e211bc481ce8b3c53d5100d0f3c23be067c76",
+  "protocolDigest": "sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",

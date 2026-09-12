@@ -23,5 +23,10 @@
     "windowId": "assessment-revision-4-fixed-1",
     "protocolDigest": "sha256:24e5a9202595cee17f15f73c80d1d475e8a50eb3196e9edaf79e696791804502",
     "results": []
+  },
+  "independentClarification": {
+    "windowId": "independent-clarification-1",
+    "protocolDigest": "sha256:084b7dc164ccf0fd5ecc1096c327cb915d7aa1c6581cac7af83b143aac6ff67f",
+    "results": []
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:4f71ddc9c69dc6ab56bfd35e924e211bc481ce8b3c53d5100d0f3c23be067c76",
+  "nativeProtocolDigest": "sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -20,7 +20,7 @@
   "bindings": [
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "348c6bfa8555e3991b07aed4e254cae31076d12eef388204336bed9a357a1730"
+      "sha256": "91a45457d34c8d7daa74a30087ab576d12b6042dc6afcdfb53aec62a264ad65c"
     },
     {
       "path": "scripts/run-no-hook-clarification.py",
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "4e39d1013a9546737be3107d48a711ce62d0987fb8b7cdb85114bcad0302c193"
+      "sha256": "0732cea5d3587f226454f7b3153405ae097d0ae67f758daf6ae5713969b7c97a"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -85,14 +85,6 @@
     {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-revision-12.json",
       "sha256": "c7cd240b8036fb0f02c25812e94f0d5a0a50f173eed13621d8d1db8ec1f96ffe"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1/clarification-protocol-v1.json",
-      "sha256": "83c4e48b6d3dffc162d6a35f5f036399df2b148f4afad32806d1c93fa10c40cd"
-    },
-    {
-      "path": "evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1/codex-native-protocol-v2.json",
-      "sha256": "0732cea5d3587f226454f7b3153405ae097d0ae67f758daf6ae5713969b7c97a"
     }
   ],
   "revision": 2,
@@ -106,34 +98,13 @@
       "replyBytesPerCase": 8192
     }
   },
-  "protocolDigest": "sha256:084b7dc164ccf0fd5ecc1096c327cb915d7aa1c6581cac7af83b143aac6ff67f",
+  "protocolDigest": "sha256:24e5a9202595cee17f15f73c80d1d475e8a50eb3196e9edaf79e696791804502",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "requires": "completed-fixed-routing",
     "limits": {
       "newAttempts": 3,
       "maximumCumulativeAttempts": 106,
-      "replyBytesPerCase": 8192
-    }
-  },
-  "independentClarification": {
-    "windowId": "independent-clarification-1",
-    "runName": "cases-independent-clarification-1",
-    "candidateCommit": "f8c6eadb1c4401f02d6310dda57995544af2a45d",
-    "candidateTree": "3c274e88ef7db7a50afe2c4c59594cafd011dda3",
-    "priorResultSha256": "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b",
-    "priorAttempts": 98,
-    "priorCliLaunches": 98,
-    "ordinals": [
-      12,
-      13,
-      14
-    ],
-    "authenticationSourceOrdinal": 10,
-    "requires": "independent explicit authorization; no routing continuation",
-    "limits": {
-      "newAttempts": 3,
-      "maximumCumulativeAttempts": 101,
       "replyBytesPerCase": 8192
     }
   }

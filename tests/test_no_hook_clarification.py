@@ -4,6 +4,7 @@ from contextlib import ExitStack
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -277,6 +278,8 @@ class ClarificationTests(unittest.TestCase):
                 "protocolDigest": p["protocolDigest"], "results": []}
             history["revisionFourAcceptance"] = {"windowId": native.REVISION_FOUR_ACCEPTANCE["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
+            history["independentClarification"] = {"windowId": supplement.INDEPENDENT["windowId"],
+                "protocolDigest": p["protocolDigest"], "results": []}
             def read(path,*args,**kw):
                 if path==ROOT/supplement.HISTORY:return native._bytes(history)
                 if path==ROOT/relative:return data
@@ -348,3 +351,150 @@ class ClarificationTests(unittest.TestCase):
                 supplement.prepare(ROOT, new_run, previous, bundle_root=package,
                                    authorized=True, runner=lambda: None)
         self.assertFalse(new_run.exists())
+
+    def test_independent_count_and_both_stopped_windows_remain_closed(self):
+        chain = supplement.independent_attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"]), (98, 98))
+        self.assertEqual(supplement.INDEPENDENT["limits"]["maximumCumulativeAttempts"], 101)
+        self.assertEqual(supplement.INDEPENDENT["ordinals"], [12, 13, 14])
+        self.assertEqual(supplement.INDEPENDENT["authenticationSourceOrdinal"], 10)
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            for fourth in (False, True):
+                with self.assertRaises(native.NativeObservationError):
+                    supplement._unrecorded(ROOT, supplement.protocol(ROOT), fixed_acceptance=True, revision_four=fourth)
+                with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                    native.prepare_fixed_acceptance(ROOT, self.run.parent/"never-created", self.run.parent/"old",
+                        self.run.parent/"bundle", authorize_install=True, authorize_copy=True, revision_four=fourth)
+        for fourth in (False, True):
+            binding = native._fixed_result_binding(ROOT, revision_four=fourth)
+            old = json.loads((ROOT/binding["path"]).read_bytes())
+            self.assertEqual(old["caseResults"][10]["status"], "INCOMPLETE")
+            self.assertEqual(native.validate_native_result(old, ROOT), [])
+
+    def independent_capture(self, rejected=False):
+        run = self.run.parent/supplement.INDEPENDENT["runName"]
+        run.mkdir()
+        p = supplement.protocol(ROOT)
+        cases = native.legacy.load_golden_cases(ROOT)
+        fixtures = native._input(ROOT, native._protocol(ROOT), "fixtureMatrix")
+        records = []
+        for ordinal in supplement.ORDINALS:
+            paths = native._case_paths(run, ordinal)
+            paths["workspace"].mkdir(parents=True)
+            paths["home"].mkdir()
+            prompt = supplement.reply_prompt(cases[ordinal-1]["request"], native._definition(fixtures, ordinal), p["instructions"])
+            (paths["case"]/"reply-prompt.txt").write_bytes(prompt)
+            records.append(dict(self.prepared, ordinal=ordinal, caseId=cases[ordinal-1]["id"],
+                requestSha256=supplement.digest(cases[ordinal-1]["request"].encode()), promptSha256=supplement.digest(prompt)))
+        state = {"protocolDigest":p["protocolDigest"], "attemptHistory":supplement.independent_attempt_history(ROOT),
+                 "runMode":"simulated", "executable":"/fixture/codex", "cases":records,
+                 "independentClarification":supplement.INDEPENDENT, "executionSource":None}
+        native._exclusive(run/supplement.STATE, native._bytes(state))
+        calls = []
+        messages = ["I choose installation.", QUESTION]
+        def runner(argv, **kwargs):
+            ordinal = int(Path(kwargs["cwd"]).parent.name.removeprefix("case-"))
+            calls.append(ordinal)
+            self.assertNotIn("--output-schema", argv)
+            data = text_stream(messages, command="cat /unbound/client/path" if rejected else None)
+            final = argv[argv.index("--output-last-message")+1]
+            program = ("import pathlib,sys;sys.stdin.buffer.read();pathlib.Path(sys.argv[1]).write_bytes(" +
+                repr(QUESTION.encode()) + ");sys.stdout.buffer.write(" + repr(data) + ")")
+            return native.bounded_process([sys.executable,"-I","-B","-c",program,final], **kwargs, timeout=10)
+        actual_read = supplement._read
+        history = json.loads((ROOT/supplement.HISTORY).read_bytes())
+        history["independentClarification"]["results"] = []
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(supplement,"_read",side_effect=lambda path,*a,**kw:
+                native._bytes(history) if path==ROOT/supplement.HISTORY else actual_read(path,*a,**kw)))
+            stack.enter_context(patch.object(native.legacy,"freeze_executable",return_value={}))
+            stack.enter_context(patch.object(native.legacy,"recheck_executable"))
+            stack.enter_context(patch.object(supplement,"_verify_inputs",return_value={"fixtureSha256":"1"*64,
+                "packageSha256":"2"*64,"modelMetadata":{"derivedEffectiveToolMode":"direct"}}))
+            stack.enter_context(patch.object(native,"_open_test_auth",side_effect=lambda *a:os.open(os.devnull,os.O_RDONLY)))
+            stack.enter_context(patch.object(native,"_readable",return_value={}))
+            stack.enter_context(patch.object(supplement,"_login"))
+            handoff = stack.enter_context(patch.object(native,"_copy_test_auth"))
+            stack.enter_context(patch.object(native,"completed_fixed_routing",side_effect=AssertionError("A continuation requested")))
+            d = supplement.run(ROOT,run,authorized=True,independent=True,runner=runner)
+            with self.assertRaisesRegex(native.NativeObservationError,"already attempted"):
+                supplement.run(ROOT,run,authorized=True,independent=True,runner=runner)
+        self.assertEqual(d["semanticAssessment"],"separate-review-required")
+        self.assertNotIn("fixedAcceptanceWindow",d)
+        self.assertEqual(d["independentClarificationWindow"],supplement.INDEPENDENT["windowId"])
+        return d,calls,handoff.call_count,messages
+
+    def test_independent_real_receiver_retains_whole_reply_and_does_not_grade(self):
+        d,calls,handoffs,messages = self.independent_capture()
+        self.assertEqual(calls,[12,13,14])
+        self.assertEqual(handoffs,2)
+        self.assertEqual([c["status"] for c in d["caseResults"]],["CAPTURED"]*3)
+        self.assertEqual((d["cumulativeAttemptCount"],d["cumulativeCliLaunchCount"]),(101,101))
+        self.assertTrue(all(c["replies"]["messages"]==messages and
+            c["executionDiagnostics"]["finalOutputVerified"] for c in d["caseResults"]))
+
+    def test_independent_read_rejection_stops_remaining_and_auth_handoff(self):
+        d,calls,handoffs,_ = self.independent_capture(rejected=True)
+        self.assertEqual(calls,[12])
+        self.assertEqual(handoffs,0)
+        self.assertEqual([c["status"] for c in d["caseResults"]],["INCOMPLETE","NOT-RUN","NOT-RUN"])
+        self.assertEqual(d["caseResults"][0]["executionDiagnostics"]["streamAssertion"],"read-target-unbound")
+        self.assertEqual((d["cumulativeAttemptCount"],d["cumulativeCliLaunchCount"]),(99,99))
+
+    def test_independent_source_cannot_use_abnormal_case_or_consume_preparation(self):
+        new = self.run.parent/supplement.INDEPENDENT["runName"]
+        with patch.object(native,"_revision_four_auth_source",side_effect=native.NativeObservationError("source did not close normally")), \
+                patch.object(supplement,"_login",side_effect=AssertionError("login started")), \
+                patch.object(native,"_copy_test_auth",side_effect=AssertionError("auth handed off")), \
+                patch.object(supplement,"_unrecorded"):
+            with self.assertRaisesRegex(native.NativeObservationError,"source did not close normally"):
+                supplement.prepare(ROOT,new,self.run.parent/"case-11",bundle_root=self.run.parent/"bundle",
+                    authorized=True,independent=True,runner=lambda:None)
+        self.assertFalse(new.exists())
+
+    def test_independent_preparation_delivers_only_three_original_inputs(self):
+        bundle = self.run.parent/"bundle"
+        manifest = json.loads((ROOT/native.STATIC_BUNDLE_EVIDENCE_RELATIVE).read_bytes())["bundleManifest"]
+        files = {x["path"]:(ROOT/x["path"]).read_bytes() for x in manifest["runtimeFiles"]}
+        files[".codex-plugin/plugin.json"] = (json.dumps(manifest["derivedPluginManifest"]["fields"],indent=2)+"\n").encode()
+        files["BUNDLE-MANIFEST.json"] = (json.dumps(manifest,indent=2)+"\n").encode()
+        for name,data in files.items():
+            target = bundle/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+        new = self.run.parent/supplement.INDEPENDENT["runName"]
+        previous = self.run.parent/native.REVISION_FOUR_ACCEPTANCE["routingRunName"]
+        calls = []
+        def install(argv,*,cwd,env,**kwargs):
+            ordinal = int(Path(cwd).parent.name.removeprefix("case-"));self.assertIn(ordinal,[12,13,14])
+            paths = native._case_paths(new,ordinal);marketplace = new/"marketplace"
+            calls.append((ordinal,"marketplace" if "marketplace" in argv else "plugin"))
+            if "marketplace" in argv:
+                (paths["home"]/"config.toml").write_text('[marketplaces."'+native.legacy.MARKETPLACE_NAME+'"]\nsource_type="local"\nsource='+json.dumps(str(marketplace))+'\n')
+                receipt = {"marketplaceName":native.legacy.MARKETPLACE_NAME,"installedRoot":str(marketplace),"alreadyAdded":False}
+            else:
+                self.assertIn("plugin",argv);self.assertNotIn("exec",argv)
+                shutil.copytree(marketplace/"plugin",paths["package"])
+                with (paths["home"]/"config.toml").open("a") as f:f.write('\n[plugins."'+native.legacy.PLUGIN_ID+'"]\nenabled=true\n')
+                receipt = {"pluginId":native.legacy.PLUGIN_ID,"name":native.legacy.PLUGIN_NAME,
+                    "marketplaceName":native.legacy.MARKETPLACE_NAME,"version":native.PLUGIN_VERSION,
+                    "installedPath":str(paths["package"]),"authPolicy":"ON_INSTALL"}
+            return {"returncode":0,"stdout":native._bytes(receipt),"stderr":b""}
+        with patch.object(supplement,"_unrecorded"), patch.object(supplement,"_login"), \
+                patch.object(native,"_revision_four_auth_source",return_value={"executable":"/fixture/codex"}) as source, \
+                patch.object(native.legacy,"freeze_executable"), patch.object(native,"_model_metadata",return_value={}), \
+                patch.object(native,"_copy_test_auth") as auth, \
+                patch.object(native,"completed_fixed_routing",side_effect=AssertionError("A requested")):
+            state = supplement.prepare(ROOT,new,previous,bundle_root=bundle,authorized=True,independent=True,runner=install)
+        source.assert_called_once_with(ROOT,previous,revision_four=True)
+        auth.assert_called_once_with(new,10,12,create=True,source_root=previous)
+        self.assertEqual(calls,[(i,action) for i in (12,13,14) for action in ("marketplace","plugin")])
+        self.assertEqual([c["ordinal"] for c in state["cases"]],[12,13,14])
+        self.assertEqual(state["independentClarification"],supplement.INDEPENDENT)
+        self.assertEqual(state["attemptHistory"]["attempts"],98)
+        self.assertFalse(list(new.glob("attempt-*")))
+        self.assertFalse(previous.exists())
+        old = json.loads((ROOT/supplement.ARCHIVE/supplement.PROTOCOL.name).read_bytes())
+        for c in state["cases"]:
+            i=c["ordinal"];case=native.legacy.load_golden_cases(ROOT)[i-1]
+            definition=native._definition(native._input(ROOT,native._protocol(ROOT),"fixtureMatrix"),i)
+            self.assertEqual((native._case_paths(new,i)["case"]/"reply-prompt.txt").read_bytes(),
+                supplement.reply_prompt(case["request"],definition,old["instructions"]))
