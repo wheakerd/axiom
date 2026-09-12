@@ -1,5 +1,32 @@
 # Runtime And Repository Identity
 
+## Supported native host context (policy 20)
+
+Policy 20 records the explicitly approved native configuration change:
+`include_environment_context=false` and `include_permissions_instructions=true`
+uniformly apply to all 16 routing inputs and three natural-language replies.
+Codex 0.153.0 supports these independent fields at its frozen public source
+`41e22fee981a63b3698df7ed36bad393cda24715`. The generated environment display is
+absent; actual cwd, permission policy, tools, Skill discovery, materials, original
+requests, scoring and assessment revision 4 definitions stay fixed. No substitute
+context or case-specific answer is supplied. This changes host input identity;
+it is not a canonical runtime repair or a claim of behavioral success.
+
+One new `host-context-fixed-1` window registers A1-16 followed by B12-14,
+one attempt each, before its first launch. It inherits all 106 historical
+attempts and observation CLI starts and permits at most 19 more, capped at 125.
+Every previous window stays closed. A registered normally completed routing-tail
+case 16 supplies opaque dedicated authentication; neither failed A11 is eligible.
+The actual execution commit/tree are bound after signing. Original routing-tail
+protocol and result-schema bytes are retained under
+`evals/no-hook-observation/historical-protocols/routing-tail-1`.
+
+Product 0.10.1, full/profile runtime bytes, source/bundle policies 13/14 and both
+matching formal builds are unchanged. The separate publication contract still
+requires its own exact-tag full-profile 17-case observation on the original
+Codex 0.149.1 / gpt-5.4 medium combination. That later set is outside this
+no-Hook window and cannot be synthesized from its outcomes.
+
 ## Independent routing ordinals 12-16 (policy 19)
 
 Policy 19 registers one independent five-case window, in original order 12-16,

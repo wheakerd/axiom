@@ -35,5 +35,10 @@
         "implementationTree": "f1aa78598537995c27aa9c4289dcb68faa7968fe"
       }
     ]
+  },
+  "hostContextAcceptance": {
+    "windowId": "host-context-fixed-1",
+    "protocolDigest": "sha256:934851151f144b3d5bbabee478dc09a6f16fd780c149f519601442ec91b036e5",
+    "results": []
   }
 }

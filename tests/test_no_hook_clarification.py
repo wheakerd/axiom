@@ -145,6 +145,8 @@ class ClarificationTests(unittest.TestCase):
         record = self.capture(mismatch=True)
         self.assertEqual(record["status"], "INCOMPLETE")
         self.assertFalse(record["executionDiagnostics"]["finalOutputVerified"])
+        self.assertEqual(record["replies"]["messages"], [QUESTION])
+        self.assertTrue(record["replies"]["retentionComplete"])
 
     def test_missing_terminal_is_not_json_response_exception(self):
         record = self.capture(text_stream(terminal=False))
@@ -278,6 +280,8 @@ class ClarificationTests(unittest.TestCase):
                 "protocolDigest": p["protocolDigest"], "results": []}
             history["revisionFourAcceptance"] = {"windowId": native.REVISION_FOUR_ACCEPTANCE["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
+            history["hostContextAcceptance"] = {"windowId": native.HOST_CONTEXT_ACCEPTANCE["windowId"],
+                "protocolDigest": p["protocolDigest"], "results": []}
             history["independentClarification"] = {"windowId": supplement.INDEPENDENT["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
             def read(path,*args,**kw):
@@ -371,7 +375,7 @@ class ClarificationTests(unittest.TestCase):
             self.assertEqual(old["caseResults"][10]["status"], "INCOMPLETE")
             self.assertEqual(native.validate_native_result(old, ROOT), [])
 
-    def independent_capture(self, rejected=False):
+    def independent_capture(self, rejected=False, after_visible=False):
         run = self.run.parent/supplement.INDEPENDENT["runName"]
         run.mkdir()
         p = supplement.protocol(ROOT)
@@ -397,6 +401,12 @@ class ClarificationTests(unittest.TestCase):
             calls.append(ordinal)
             self.assertNotIn("--output-schema", argv)
             data = text_stream(messages, command="cat /unbound/client/path" if rejected else None)
+            if rejected and after_visible:
+                events = [json.loads(raw) for raw in text_stream(messages).splitlines()]
+                events.insert(-1, {"type": "item.started", "item": {"id": "item_2",
+                    "type": "command_execution", "command": "cat /unbound/client/path",
+                    "aggregated_output": "", "exit_code": None, "status": "in_progress"}})
+                data = b"".join(event(item) for item in events)
             final = argv[argv.index("--output-last-message")+1]
             program = ("import pathlib,sys;sys.stdin.buffer.read();pathlib.Path(sys.argv[1]).write_bytes(" +
                 repr(QUESTION.encode()) + ");sys.stdout.buffer.write(" + repr(data) + ")")
@@ -441,6 +451,18 @@ class ClarificationTests(unittest.TestCase):
         self.assertEqual([c["status"] for c in d["caseResults"]],["INCOMPLETE","NOT-RUN","NOT-RUN"])
         self.assertEqual(d["caseResults"][0]["executionDiagnostics"]["streamAssertion"],"read-target-unbound")
         self.assertEqual((d["cumulativeAttemptCount"],d["cumulativeCliLaunchCount"]),(99,99))
+
+    def test_visible_replies_survive_later_read_rejection_without_handoff(self):
+        d, calls, handoffs, messages = self.independent_capture(rejected=True, after_visible=True)
+        self.assertEqual(calls, [12])
+        self.assertEqual(handoffs, 0)
+        self.assertEqual([c["status"] for c in d["caseResults"]], ["INCOMPLETE", "NOT-RUN", "NOT-RUN"])
+        first = d["caseResults"][0]
+        self.assertEqual(first["replies"]["messages"], messages)
+        self.assertEqual(first["replies"]["originalVisibleMessageCount"], len(messages))
+        self.assertTrue(first["replies"]["retentionComplete"])
+        self.assertEqual(first["executionDiagnostics"]["streamAssertion"], "read-target-unbound")
+        self.assertFalse(first["executionDiagnostics"]["finalOutputVerified"])
 
     def test_independent_source_cannot_use_abnormal_case_or_consume_preparation(self):
         new = self.run.parent/supplement.INDEPENDENT["runName"]

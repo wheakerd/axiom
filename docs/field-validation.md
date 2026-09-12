@@ -1,8 +1,47 @@
 # Field Validation
 
-The latest independently authorized reply observation is recorded in
+The supported host-context candidate below is not yet a behavior result.
+The latest completed independently authorized reply observation is recorded in
 [Independent three-reply observation](#independent-three-reply-observation-after-98-attempts).
 Earlier execution sections retain their original identities and outcomes.
+
+## Supported host-context acceptance after 106 attempts
+
+The user approved one uniform native configuration change after reviewing the
+frozen Codex 0.153.0 source and a 19-input offline argv comparison:
+`include_environment_context=false`, with
+`include_permissions_instructions=true`. The source's world-state builder
+gates environment and permission states independently. The permission renderer
+lists writable and denied paths, not all allowed read roots; Skill extension
+contributions remain independent of the environment flag. These public source
+facts support this concrete configuration candidate, not a model-causal claim.
+
+This removes the entire host environment display, including cwd/date/timezone
+and its filesystem entries, from all A/B contexts. Actual cwd, read restrictions,
+tools, discovery and original task material remain unchanged. There is no
+replacement environment message, empty-discovery assertion or expected answer.
+The earlier shell/arg0 diagnosis is not repeated and no refused target is read.
+
+Because shared host context changes, the new fixed set is A1-16 followed by
+B12-14, one fresh context and one attempt per case, capped at 19 additional
+attempts and observation CLI starts (125 cumulative). Old windows stay closed.
+Both stopped A11 results, independent A12-16 and complete B messages retain
+their original bytes and identities; none is rescored or transferred to this
+candidate. The separate publication contract adds no cases to this window.
+
+Repository policy 20 changes observation configuration, finite registration,
+historical protocol binding and focused validation. Product 0.10.1, canonical
+source, full/profile runtime and source/bundle policies 13/14 stay fixed; the
+two existing equal builds are reused. The routing result now retains all
+normally emitted public messages through the existing bounded retention and
+exact final-output checks. Public reading, guidance selection, workflow choice
+and unobservable internal state remain separate claims.
+
+At implementation freeze, new behavior is NOT-RUN and counts remain 106/106.
+Actual execution/result identities and outcomes will be added only after the
+fixed authorized observation. PR integration and Issue closure require the real
+results, current checks and original required acceptance; no static PASS fills
+the A11 gap.
 
 ## Independent three-reply observation after 98 attempts
 

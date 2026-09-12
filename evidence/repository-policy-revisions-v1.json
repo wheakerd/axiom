@@ -152,6 +152,14 @@
       "sourceIssue": 117,
       "summary": "Register one independent five-case routing window after 101 attempts, preserving stopped windows, original assessment revision 4 inputs, all historical replies and frozen product content.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 20,
+      "recordedOn": "2026-09-12",
+      "baselineCommit": "459181b7b07fc72ea6b7ca2ca23fe4d75e075fbb",
+      "sourceIssue": 117,
+      "summary": "Register the finite 106+19 host-context acceptance window; preserve permission instructions and historical inputs, results and closed windows.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

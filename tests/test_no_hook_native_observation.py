@@ -83,6 +83,94 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(env["HOME"], str(paths["user"]))
         self.assertEqual(env["CODEX_HOME"], str(paths["home"]))
 
+    def test_host_context_overrides_are_uniform_and_keep_permission_and_discovery_contract(self):
+        from axiom_validation import no_hook_clarification as replies
+        executable = Path("/synthetic/codex")
+        for mode, ordinals in (("routing", range(1, 17)), ("reply", (12, 13, 14))):
+            for ordinal in ordinals:
+                with self.subTest(mode=mode, ordinal=ordinal):
+                    argv = (native.build_native_argv(executable, self.parent, ordinal) if mode == "routing" else
+                            replies.reply_argv(executable, self.parent, ordinal, self.parent / "final.txt"))
+                    overrides = [argv[i+1] for i, value in enumerate(argv) if value == "-c"]
+                    config = tomllib.loads("\n".join(overrides))
+                    self.assertIs(config["include_environment_context"], False)
+                    self.assertIs(config["include_permissions_instructions"], True)
+                    self.assertFalse(config["features"]["code_mode_host"])
+                    self.assertFalse(config["features"]["plugins"])
+                    self.assertTrue(config["features"]["shell_tool"])
+                    self.assertFalse(config["features"]["skip_host_skill_discovery"])
+                    paths = native._case_paths(self.parent, ordinal)
+                    expected = {":root": "deny", ":minimal": "read", str(executable): "read",
+                                str(paths["workspace"]): "read"}
+                    if ordinal != 11:
+                        expected[str(paths["package"])] = "read"
+                    self.assertEqual(config["permissions"]["native-case"]["filesystem"], expected)
+                    self.assertEqual("--output-schema" in argv, mode == "routing")
+                    self.assertNotIn("developer_instructions", config)
+
+    def test_host_context_history_preserves_106_and_all_recorded_windows(self):
+        from axiom_validation import no_hook_clarification as replies
+        chain = native.host_context_attempt_history(ROOT)
+        self.assertEqual((chain["attempts"], chain["cliLaunches"], len(chain["identities"])), (106, 106, 106))
+        archived = ROOT / "evals/no-hook-observation/historical-protocols/routing-tail-1"
+        protocol = native._routing_tail_protocol(ROOT)
+        self.assertEqual(protocol["protocolDigest"], "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9")
+        self.assertEqual(hashlib.sha256((archived / native.RESULT_SCHEMA_RELATIVE.name).read_bytes()).hexdigest(),
+                         protocol["resultSchema"]["sha256"])
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")), \
+             patch.object(native, "_revision_four_auth_source", side_effect=AssertionError("auth source accessed")):
+            for flags in ({}, {"revision_four": True}):
+                with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                    native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                        self.parent / "bundle", authorize_install=True, authorize_copy=True, **flags)
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_routing_tail(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True)
+            with self.assertRaises(native.NativeObservationError):
+                replies._unrecorded(ROOT, replies.protocol(ROOT), independent=True)
+
+    def test_host_context_fixed_registration_has_19_fresh_cases_and_zero_install_control(self):
+        run, _, _, calls = self._fixed_acceptance_fixture(host_context=True)
+        registration = native._fixed_registration(ROOT, self.parent, host_context=True)
+        self.assertEqual(registration["contract"]["routingOrdinals"], list(range(1, 17)))
+        self.assertEqual(registration["contract"]["clarificationOrdinals"], [12, 13, 14])
+        self.assertEqual(registration["contract"]["maximumCumulativeAttempts"], 125)
+        self.assertEqual(registration["attemptHistory"]["attempts"], 106)
+        self.assertFalse(native._case_paths(run, 11)["package"].exists())
+        self.assertFalse(native._case_paths(run, 11)["discovery"].exists())
+        self.assertEqual([i for i in range(1, 17) if
+                          (native._case_paths(run, i)["home"] / native.AUTH_FILE_NAME).exists()], [1])
+        self.assertEqual(calls, [])
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("real client from simulation")):
+            with self.assertRaisesRegex(native.NativeObservationError, "preparation mode"):
+                native.run_native_observation(ROOT, run, authorize_model_calls=True,
+                    reuse_test_auth=True, assessment_batch=True, host_context=True)
+        self.assertFalse((run / "batch-started.json").exists())
+
+    def test_host_context_full_synthetic_handoff_keeps_failure_and_125_limit(self):
+        self._exercise_fixed_handoff(False, host_context=True)
+
+    def test_host_context_spawn_failure_consumes_without_refund_or_later_handoff(self):
+        self._exercise_fixed_spawn_failure(False, host_context=True)
+
+    def test_host_context_read_stop_preserves_messages_and_blocks_reply_handoff(self):
+        from axiom_validation import no_hook_clarification as replies
+        run, _, runner, _ = self._fixed_acceptance_fixture(host_context=True)
+        result, calls, messages = self._run_routing_tail(run, runner, rejected=11, host_context=True)
+        self.assertEqual(calls, list(range(1, 12)))
+        self.assertEqual(result["cumulativeAttemptCount"], 117)
+        self.assertEqual(result["caseResults"][10]["diagnostic"], "policy-rejected")
+        self.assertEqual([c["status"] for c in result["caseResults"]][11:], ["NOT-RUN"] * 5)
+        self.assertEqual(result["caseResults"][0]["visibleReplies"]["messages"], messages[1])
+        self.assertEqual(result["caseResults"][10]["visibleReplies"]["messages"], ["Reviewing the request."])
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        target = self.parent / native.HOST_CONTEXT_ACCEPTANCE["clarificationRunName"]
+        with patch.object(replies, "_login", side_effect=AssertionError("later authentication")):
+            with self.assertRaises(native.NativeObservationError):
+                replies.prepare(ROOT, target, run, bundle_root=self.parent / "bundle",
+                    authorized=True, host_context=True, runner=runner)
+        self.assertFalse(target.exists())
+
     def test_case_homes_workspaces_and_state_roots_are_distinct(self):
         for name in ("home", "user", "workspace", "state", "tmp"):
             self.assertEqual(len({native._case_paths(self.parent, ordinal)[name] for ordinal in range(1, 17)}), 16)
@@ -459,7 +547,7 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual(final_output.stat().st_mode & 0o777, 0o600)
                 self.assertEqual(final_output.read_bytes(), b"")
                 self.synthetic_final_outputs.append(final_output)
-                final_output.write_bytes(event(document))
+                final_output.write_text(json.dumps(document))
                 if failed_case == ordinal:
                     raw = stream(document, "touch unexpected", "")
                 elif ordinal == 1:
@@ -5060,7 +5148,7 @@ class NativeObservationTests(unittest.TestCase):
                 process_runner=failed_spawn)
         self.assertEqual(invoked, [1])
 
-    def _fixed_acceptance_fixture(self, revision_four=False):
+    def _fixed_acceptance_fixture(self, revision_four=False, host_context=False):
         from axiom_validation import no_hook_clarification as replies
         # Exercise preparation with a synthetic, unconsumed registration. The
         # checked-in actual result keeps the production window closed.
@@ -5069,11 +5157,11 @@ class NativeObservationTests(unittest.TestCase):
             data = actual_read(path, *args, **kwargs)
             if path == ROOT / native.HISTORY_RELATIVE:
                 history = json.loads(data)
-                history[native._fixed_history_key(revision_four)]["results"] = []
+                history[native._fixed_history_key(revision_four, host_context)]["results"] = []
                 return native._bytes(history)
             if path == ROOT / replies.HISTORY:
                 history = json.loads(data)
-                key = native._fixed_history_key(revision_four)
+                key = native._fixed_history_key(revision_four, host_context)
                 history[key]["protocolDigest"] = replies.protocol(ROOT)["protocolDigest"]
                 history[key]["results"] = []
                 return native._bytes(history)
@@ -5086,8 +5174,8 @@ class NativeObservationTests(unittest.TestCase):
         self.addCleanup(reply_registration.stop)
         prepared, runner, calls = self._prepared_runner()
         old = json.loads((prepared / native.STATE_NAME).read_bytes())
-        source_ordinal = 10 if revision_four else 14
-        previous = self.parent / (native.FIXED_ACCEPTANCE["routingRunName"] if revision_four else "cases-clarification-2")
+        source_ordinal = 16 if host_context else 10 if revision_four else 14
+        previous = self.parent / (native.ROUTING_TAIL["runName"] if host_context else native.FIXED_ACCEPTANCE["routingRunName"] if revision_four else "cases-clarification-2")
         paths = native._case_paths(previous, source_ordinal)
         paths["workspace"].mkdir(parents=True)
         paths["home"].mkdir()
@@ -5097,11 +5185,11 @@ class NativeObservationTests(unittest.TestCase):
         metadata = auth.stat()
         native._exclusive(native._auth_owner(previous, source_ordinal), native._bytes({
             "ordinal": source_ordinal, "device": metadata.st_dev, "inode": metadata.st_ino}))
-        run = self.parent / native._fixed_contract(revision_four)["routingRunName"]
-        owner, helper = (native, "_revision_four_auth_source") if revision_four else (replies, "_prior_state")
+        run = self.parent / native._fixed_contract(revision_four, host_context)["routingRunName"]
+        owner, helper = (native, "_revision_four_auth_source") if revision_four or host_context else (replies, "_prior_state")
         with patch.object(owner, helper, return_value=old):
             native.prepare_fixed_acceptance(ROOT, run, previous, self.parent / "bundle",
-                authorize_install=True, authorize_copy=True, revision_four=revision_four, runner=runner)
+                authorize_install=True, authorize_copy=True, revision_four=revision_four, host_context=host_context, runner=runner)
         return run, previous, runner, calls
 
     def test_fixed_acceptance_counts_all_76_and_keeps_consumed_windows_closed(self):
@@ -5243,12 +5331,12 @@ class NativeObservationTests(unittest.TestCase):
     def test_revision_four_full_synthetic_handoff_preserves_106_ceiling_and_no_host_claim(self):
         self._exercise_fixed_handoff(True)
 
-    def _exercise_fixed_handoff(self, revision_four):
+    def _exercise_fixed_handoff(self, revision_four, host_context=False):
         from axiom_validation import no_hook_clarification as replies
         from tests.test_no_hook_clarification import text_stream
-        run, _, runner, calls = self._fixed_acceptance_fixture(revision_four)
-        flags = {"revision_four": True} if revision_four else {"fixed_acceptance": True}
-        prior = 87 if revision_four else 76
+        run, _, runner, calls = self._fixed_acceptance_fixture(revision_four, host_context)
+        flags = {"host_context": True} if host_context else {"revision_four": True} if revision_four else {"fixed_acceptance": True}
+        prior = 106 if host_context else 87 if revision_four else 76
         def wrong_route(argv, **kwargs):
             if "exec" not in argv or Path(kwargs["cwd"]).parent.name != "case-01":
                 return runner(argv, **kwargs)
@@ -5256,7 +5344,7 @@ class NativeObservationTests(unittest.TestCase):
             final = Path(argv[argv.index("--output-last-message") + 1])
             document = json.loads(final.read_bytes())
             document.update(discoveryOutcome="no-route", selectedRoutes=[], usingAxiomFrontDoorObserved=False)
-            final.write_bytes(event(document))
+            final.write_text(json.dumps(document))
             raw = stream(document)
             for line in raw.splitlines(): kwargs["line_callback"](line)
             return {**captured, "stdout": raw}
@@ -5274,7 +5362,7 @@ class NativeObservationTests(unittest.TestCase):
         with self.assertRaises(native.NativeObservationError):
             native.run_native_observation(ROOT, run, authorize_model_calls=True,
                 reuse_test_auth=True, assessment_batch=True, **flags, process_runner=runner)
-        reply_root = self.parent / native._fixed_contract(revision_four)["clarificationRunName"]
+        reply_root = self.parent / native._fixed_contract(revision_four, host_context)["clarificationRunName"]
         replies.prepare(ROOT, reply_root, run, bundle_root=self.parent / "bundle",
             authorized=True, **flags, runner=runner)
         reply_calls = []
@@ -5307,20 +5395,20 @@ class NativeObservationTests(unittest.TestCase):
     def test_revision_four_spawn_failure_consumes_and_blocks_all_later_handoff(self):
         self._exercise_fixed_spawn_failure(True)
 
-    def _exercise_fixed_spawn_failure(self, revision_four):
+    def _exercise_fixed_spawn_failure(self, revision_four, host_context=False):
         from axiom_validation import no_hook_clarification as replies
-        run, _, runner, calls = self._fixed_acceptance_fixture(revision_four)
-        flags = {"revision_four": True} if revision_four else {"fixed_acceptance": True}
+        run, _, runner, calls = self._fixed_acceptance_fixture(revision_four, host_context)
+        flags = {"host_context": True} if host_context else {"revision_four": True} if revision_four else {"fixed_acceptance": True}
         def failed_spawn(argv, **kwargs):
             if "exec" in argv: raise OSError("synthetic spawn failure")
             return runner(argv, **kwargs)
         result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
             reuse_test_auth=True, assessment_batch=True, **flags, process_runner=failed_spawn)
-        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 0, 88 if revision_four else 77))
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (1, 0, 107 if host_context else 88 if revision_four else 77))
         self.assertEqual([x["status"] for x in result["caseResults"]], ["INCOMPLETE"] + ["NOT-RUN"] * 15)
         with patch.object(replies, "_login", side_effect=AssertionError("authentication continued")):
             with self.assertRaises(native.NativeObservationError):
-                replies.prepare(ROOT, self.parent / native._fixed_contract(revision_four)["clarificationRunName"], run,
+                replies.prepare(ROOT, self.parent / native._fixed_contract(revision_four, host_context)["clarificationRunName"], run,
                     bundle_root=self.parent / "bundle", authorized=True, **flags, runner=runner)
         self.assertEqual(calls, [])
 
@@ -5380,7 +5468,7 @@ class NativeObservationTests(unittest.TestCase):
             source_check.assert_called_once_with(ROOT, previous, revision_four=True)
         return run, previous, runner, calls
 
-    def _run_routing_tail(self, run, preparation_runner, *, rejected=None, mismatch=None, bad_final=False):
+    def _run_routing_tail(self, run, preparation_runner, *, rejected=None, mismatch=None, bad_final=False, host_context=False):
         calls, messages = [], {}
         def runner(argv, **kwargs):
             if "exec" not in argv:
@@ -5409,7 +5497,7 @@ class NativeObservationTests(unittest.TestCase):
                        repr(final_bytes) + ");sys.stdout.buffer.write(" + repr(raw) + ")")
             return native.bounded_process([sys.executable, "-I", "-B", "-c", program, final], **kwargs, timeout=10)
         result = native.run_native_observation(ROOT, run, authorize_model_calls=True,
-            reuse_test_auth=True, assessment_batch=True, routing_tail=True, process_runner=runner)
+            reuse_test_auth=True, assessment_batch=True, routing_tail=not host_context, host_context=host_context, process_runner=runner)
         return result, calls, messages
 
     def test_routing_tail_prepares_only_five_original_inputs_after_101(self):

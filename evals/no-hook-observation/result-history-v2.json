@@ -162,5 +162,10 @@
         "implementationTree": "e73b1e4615e50a29fa8e4e0daa2e219291d855ea"
       }
     ]
+  },
+  "hostContextAcceptance": {
+    "windowId": "host-context-fixed-1",
+    "protocolDigest": "sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b",
+    "results": []
   }
 }

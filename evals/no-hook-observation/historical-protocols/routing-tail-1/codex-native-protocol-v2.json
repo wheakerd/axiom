@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "cb34da7d0b77a27ebdc2bfaf9434e3487fc6739b8fd50f34004a6bfb6077a4f2"
+      "sha256": "eff6a95dc06784c85ddda7b276fd289b1f7c600edbf89e1d18a98540d68ec632"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -64,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "8e022b6aad8c588e6275ee9ef7d2043aee99ced989e83a336c0b1c6be7cb1585"
+      "sha256": "10179f13e40db7555b59ba1efe8cc2f2e1f7ba8e754be6a39fc9fa8b50880d10"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -123,7 +123,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "7f90fdaba8964eaf9a1b78640ba2d6d2b030d87c7cd0db3f80f9952f2520d5ff"
+    "sha256": "06afdfadc6cabb1f475f07071ae42cd4fc94385c1531b602a1f69080d6d09fe3"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -445,7 +445,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b",
+  "protocolDigest": "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
@@ -518,70 +518,5 @@
     "history": "independent five-case window; no inherited observations or sessions",
     "stop": "any policy, identity or reliability failure stops remaining cases and authentication handoff",
     "visibleMessages": "all completed agent messages, bounded by existing 8192-byte public reply retention; exact official final output"
-  },
-  "hostContextAcceptance": {
-    "windowId": "host-context-fixed-1",
-    "state": "authorized-once",
-    "candidateCommit": "459181b7b07fc72ea6b7ca2ca23fe4d75e075fbb",
-    "candidateTree": "a98c369038bcf25aed9c89c5c2af809b0811aec7",
-    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
-    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
-    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
-    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
-    "priorResultSha256s": [
-      "548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521"
-    ],
-    "priorAttempts": 106,
-    "priorCliLaunches": 106,
-    "routingOrdinals": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16
-    ],
-    "clarificationOrdinals": [
-      12,
-      13,
-      14
-    ],
-    "maximumNewAttempts": 19,
-    "maximumCumulativeAttempts": 125,
-    "routingRunName": "cases-host-context-routing-1",
-    "clarificationRunName": "cases-host-context-clarification-1",
-    "order": "complete routing before clarification; semantic failures do not resample",
-    "stop": "reliability, identity or policy failure stops all remaining observations",
-    "authenticationSourceOrdinal": 16,
-    "assessmentRevision": 4,
-    "hostEnvironmentContext": {
-      "revision": 1,
-      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
-      "includeEnvironmentContext": false,
-      "includePermissionsInstructions": true,
-      "scope": "all routing and clarification inputs; no replacement environment text",
-      "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
-      "evidence": "native configuration and public source; behavior requires fresh observation"
-    },
-    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check"
-  },
-  "hostEnvironmentContext": {
-    "revision": 1,
-    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
-    "includeEnvironmentContext": false,
-    "includePermissionsInstructions": true,
-    "scope": "all routing and clarification inputs; no replacement environment text",
-    "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
-    "evidence": "native configuration and public source; behavior requires fresh observation"
   }
 }
