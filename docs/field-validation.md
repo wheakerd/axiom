@@ -1,5 +1,9 @@
 # Field Validation
 
+The latest no-model maintenance is recorded in
+[Measurement definition and portable legacy builder tests](#measurement-definition-and-portable-legacy-builder-tests-policy-16).
+Earlier execution sections retain their original identities and outcomes.
+
 ## Current assessment and historical boundaries
 
 The post-merge [clarification supplement](#single-reply-clarification-supplement)
@@ -3344,3 +3348,93 @@ results were not changed. Additional tested-model starts are **0**; canonical
 attempts and observation CLI starts remain **87/87**. The stopped window's eight
 remaining items stay unconsumed, R2 stays **NOT-RUN**, and Issue #117 remains
 **BLOCKED** with PR #121 in Draft.
+
+
+## Measurement definition and portable legacy builder tests (policy 16)
+
+The diagnostic head `81d35ae07a055a110dfcab434f12950aefe421ca` had six of seven
+CI checks pass. Run `34580900979`, job `unit-and-integration-tests`, failed two
+real-builder regressions because `legacy_worker_repository` used `git show`
+on historical commit `2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223`, which the clean
+CI checkout could not obtain. That original CI failure is retained.
+
+The helper now reads three immutable public test fixtures under
+[`tests/fixtures/no-hook-builder-revision-6`](../tests/fixtures/no-hook-builder-revision-6).
+They are the original script, Python builder module and manifest schema blobs
+at that historical commit. Their exact paths, sizes and SHA-256 values remain
+bound by the unchanged
+[`bundle-revision-6.json`](../evidence/profiles/openai-hook-independent-v1/bundle-revision-6.json).
+The source was the independently verified public history bundle with SHA-256
+`55c1a995b4346a5719a2e44b6a4805d9711959d7d054407f4475cfca145626ab`;
+that fixed archive was only read, and no old branch was restored. Tests do not
+use the preservation path or retrieve history. Missing or altered fixtures
+fail explicitly. Git attributes preserve fixture bytes across checkout styles.
+These test-only blobs are outside the product builder and installed package.
+
+The existing independent worker construction and both real builder entrypoint
+regressions retain their artifact, hard-stop and cleanup-authorization assertions.
+A full, non-shallow external clone from the public remote was checked to lack
+the old commit, the old branch, alternates and shared object stores. Both real
+builder tests and two fixture checks passed there with Git network transports
+disallowed during testing. This is a regression result, not replacement evidence
+for the two formal deterministic product builds.
+
+Assessment revision 4 adds the same `usingAxiomFrontDoorObserved` definition to
+the [model schema](../evals/no-hook-observation/codex-model-response-schema-v2.json)
+and [prompt envelope](../evals/no-hook-observation/codex-native-prompt-envelope-v2.json).
+It reports the inner request's use of the `using-axiom` front door. A direct
+leaf workflow invocation or visible catalog entry alone does not establish that
+use; routing only for the outer assessment does not count. The boolean remains
+a model-reported observation, not an independent native loading receipt.
+
+The existing definition-delivery path checks that the schema and prompt agree
+before generating input. Actual offline materialization of all 16 original
+requests verifies uniform delivery, unchanged requests, no case-answer hints,
+and a plain boolean transport field without a prefilled value. Generic requests
+receive the same definition. No Golden Set, expected value, scorer, Case 7
+combination rule, Case 11 control or read allowlist changed.
+
+The exact preceding protocol, schema and envelope are preserved under
+[`historical-protocols/fixed-acceptance-1`](../evals/no-hook-observation/historical-protocols/fixed-acceptance-1).
+The old 16/16 and fixed-candidate result
+`3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d`
+continue to validate against their original inputs and execution identities,
+including `6f9c132e8088105347e602f1c43c8bc99ffe8c6b`. The current protocol digest
+binds the revised implementation and measurement; it is not a new observation
+registration. Existing history files, actual result bytes and their verdicts
+remain unchanged. The stopped fixed window and consumed earlier windows reject
+new launches; the eight unused slots cannot be consumed.
+
+Product 0.10.1, full/profile runtime content and source/bundle policies 13/14
+are unchanged; repository policy 16 owns these test and measurement fixes.
+New behavior remains NOT-RUN, with zero new model starts and cumulative
+attempts/observation CLI starts still 87/87. Case 6 is not upgraded to PASS;
+Case 7 FAIL, Case 11 INCOMPLETE and R2 NOT-RUN remain. Issue 117 is BLOCKED.
+The retained public history bundle ends at `f5f1248`; later commits need separate
+preservation before any final active-branch cleanup, which is not authorized here.
+
+
+Local final validation used an external public clone as both cwd and Python
+import root, with bytecode disabled. Discovery ran 596 tests in 131.573 seconds:
+594 passed, two skipped, zero failures/errors. The old commit was absent before
+and after testing. The publication aggregate passed; the separate Linux Hook
+runtime suite passed five tests, and Claude strict validation passed. These are
+local results, separate from the final-head CI reported on the PR.
+
+Initial local failures remain recorded: one new test used a cumulative CLI key
+absent from the original result; it was corrected to predecessor launches plus
+this batch's launches. A discovery invocation with operator-wide Git overrides
+had 20 failures and 36 errors: the unchanged builder rejected ambient
+`GIT_CONFIG_GLOBAL`, and the global file-only transport override blocked an
+intentional remote-helper negative fixture. Removing those wrapper overrides
+resolved both focused checks and the final discovery; no product guard changed.
+
+One independent read-only directed review found a stale schema digest inside the
+new prompt envelope. That binding and its dependencies were corrected; current
+protocol validation and generated-input tests now enforce agreement, with a
+negative test for a self-consistent envelope advertising the old schema. The
+reviewer rechecked the fix and marked the finding resolved. This was a bounded
+source/contract review, not model behavior approval. The generic plugin
+validator retains its three existing unsupported-metadata findings; the literal
+ASCII scan retains four historical documentation lines and two original reply
+records. Neither was hidden or changed to obtain a pass.

@@ -79,8 +79,7 @@
       "description": "In this assessment-only response, clarificationCount is the model-reported pending routing clarification count: 1 when selection is deferred for one clarifying question, otherwise 0. This decision is not evidence that a question was actually asked, delivered or answered."
     },
     "usingAxiomFrontDoorObserved": {
-      "type": "boolean",
-      "description": "usingAxiomFrontDoorObserved reports use of the using-axiom front door for the inner User request in this fresh session, not use of any Axiom Skill. Direct invocation of a leaf workflow or visibility of a Skill in the catalog does not by itself establish front-door use. Outer-assessment-only routing does not count. This is a model-reported observation, not an independent native Skill-loading receipt."
+      "type": "boolean"
     },
     "sessionStartObserved": {
       "type": "boolean"

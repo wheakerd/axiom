@@ -4124,13 +4124,16 @@ class NativeObservationTests(unittest.TestCase):
         envelope = native._input(ROOT, self.protocol, "promptEnvelope")
         order_rule = source["properties"]["selectedRoutes"]["description"]
         discovery_rule = source["properties"]["discoveryOutcome"]["description"]
+        front_door_rule = source["properties"]["usingAxiomFrontDoorObserved"]["description"]
+        self.assertEqual(envelope["contractBindings"]["modelResponseSchemaSha256"],
+                         self.protocol["inputs"]["modelResponseSchema"]["sha256"])
         self.assertIn("UTF-8 byte order", order_rule)
         self.assertIn("not the execution order", order_rule)
         self.assertIn("output vocabulary, not the host Skill catalog", discovery_rule)
         self.assertIn("training memory", discovery_rule)
         self.assertIn("fixture text", discovery_rule)
         self.assertIn("do not establish installation", discovery_rule)
-        for rule in (order_rule, discovery_rule):
+        for rule in (order_rule, discovery_rule, front_door_rule):
             self.assertEqual(envelope["fixedInstructions"].count(rule), 1)
         # Original measurement inputs remain separately frozen, not regenerated
         # from either the new descriptions or the observer's expected answers.
@@ -4148,6 +4151,8 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual([line[2:] for line in prefix.splitlines() if line.startswith("- ")],
                                  envelope["fixedInstructions"])
                 self.assertNotIn(case["id"], prefix)
+                self.assertIn("modelResponseSchemaSha256: " +
+                              self.protocol["inputs"]["modelResponseSchema"]["sha256"], prefix)
                 for field in ("expectedRoutes", "expectedOutcome", "expectedClarificationCount", "caseClass"):
                     self.assertNotIn(field, prefix)
                 argv = native.build_native_argv(Path("/fixture/client"), run, ordinal)
@@ -4155,9 +4160,11 @@ class NativeObservationTests(unittest.TestCase):
                 self.assertEqual(payload, material.schema_bytes)
                 schema = json.loads(payload)
                 native.validate_response_transport(schema)
-                fields = {name: schema["properties"][name] for name in ("selectedRoutes", "discoveryOutcome")}
+                fields = {name: schema["properties"][name] for name in
+                          ("selectedRoutes", "discoveryOutcome", "usingAxiomFrontDoorObserved")}
                 self.assertNotIn("description", fields["selectedRoutes"])
                 self.assertNotIn("description", fields["discoveryOutcome"])
+                self.assertEqual(fields["usingAxiomFrontDoorObserved"], {"type": "boolean"})
                 if uniform_fields is None:
                     uniform_fields = fields
                 self.assertEqual(fields, uniform_fields)
@@ -4683,7 +4690,7 @@ class NativeObservationTests(unittest.TestCase):
         envelope = native._input(ROOT, self.protocol, "promptEnvelope")
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
         self.assertIn("description", schema["properties"]["clarificationCount"])
-        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount", "usingAxiomFrontDoorObserved"):
             self.assertIn(schema["properties"][field]["description"], envelope["fixedInstructions"])
         self.assertIn("inner User request", schema["properties"]["selectedRoutes"]["description"])
         self.assertIn("pending routing clarification", schema["properties"]["clarificationCount"]["description"])
@@ -4704,7 +4711,7 @@ class NativeObservationTests(unittest.TestCase):
             self.assertEqual(transport["properties"]["selectedRoutes"]["items"]["enum"],
                              schema["properties"]["selectedRoutes"]["items"]["enum"])
             text = material.prompt_bytes.decode()
-            for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+            for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount", "usingAxiomFrontDoorObserved"):
                 self.assertEqual(text.count(schema["properties"][field]["description"]), 1)
             self.assertTrue(text.endswith("User request:\n" + request + "\n"))
             self.assertNotIn(original["id"], text)
@@ -4714,13 +4721,65 @@ class NativeObservationTests(unittest.TestCase):
     def test_assessment_definition_drift_rejects_before_material_delivery(self):
         envelope = native._input(ROOT, self.protocol, "promptEnvelope")
         schema = native._input(ROOT, self.protocol, "modelResponseSchema")
-        envelope["fixedInstructions"] = [value for value in envelope["fixedInstructions"]
-                                          if value != schema["properties"]["clarificationCount"]["description"]]
-        with self.assertRaisesRegex(native.NativeObservationError, "assessment field definitions"):
-            native.materialize_native_case_contract(root=ROOT,
-                materialization_seed=bytes(32), ordinal=1,
-                protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
-                prompt_envelope=envelope, request="A generic request.")
+        for field in ("clarificationCount", "usingAxiomFrontDoorObserved"):
+            for change in ("missing", "duplicate", "different"):
+                with self.subTest(field=field, change=change):
+                    altered = copy.deepcopy(envelope)
+                    definition = schema["properties"][field]["description"]
+                    altered["fixedInstructions"].remove(definition)
+                    altered["fixedInstructions"] += ([definition] * 2 if change == "duplicate" else
+                                                     [definition + " Changed."] if change == "different" else [])
+                    with self.assertRaisesRegex(native.NativeObservationError, "assessment field definitions"):
+                        native.materialize_native_case_contract(root=ROOT,
+                            materialization_seed=bytes(32), ordinal=1,
+                            protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
+                            prompt_envelope=altered, request="A generic request.")
+
+    def test_current_prompt_cannot_advertise_the_historical_schema(self):
+        envelope = native._input(ROOT, self.protocol, "promptEnvelope")
+        envelope["contractBindings"]["modelResponseSchemaSha256"] = (
+            native._fixed_protocol(ROOT)["inputs"]["modelResponseSchema"]["sha256"])
+        envelope["promptEnvelopeDigest"] = legacy.self_digest(envelope, "promptEnvelopeDigest")
+        data = native._bytes(envelope)
+        protocol = copy.deepcopy(self.protocol)
+        protocol["inputs"]["promptEnvelope"]["sha256"] = hashlib.sha256(data).hexdigest()
+        protocol["protocolDigest"] = legacy.self_digest(protocol, "protocolDigest")
+        overrides = {ROOT / native.PROTOCOL_RELATIVE: native._bytes(protocol),
+                     ROOT / protocol["inputs"]["promptEnvelope"]["path"]: data}
+        read = native._read
+        with patch.object(native, "_read", side_effect=lambda path, *a, **kw:
+                          overrides[path] if path in overrides else read(path, *a, **kw)):
+            with self.assertRaisesRegex(native.NativeObservationError, "material envelope binding"):
+                native._protocol(ROOT)
+
+    def test_front_door_measurement_keeps_fixed_result_inputs_and_stopped_window(self):
+        from axiom_validation import no_hook_clarification as replies
+        binding = native._fixed_result_binding(ROOT)
+        raw = (ROOT / binding["path"]).read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), native.FIXED_RESULT_SHA256)
+        result = json.loads(raw)
+        frozen = native._fixed_protocol(ROOT)
+        self.assertEqual(result["protocolDigest"], frozen["protocolDigest"])
+        self.assertNotEqual(result["protocolDigest"], self.protocol["protocolDigest"])
+        self.assertEqual(result["executionSource"]["commit"], "6f9c132e8088105347e602f1c43c8bc99ffe8c6b")
+        self.assertEqual([c["status"] for c in result["caseResults"]],
+                         ["PASS"] * 5 + ["FAIL", "FAIL"] + ["PASS"] * 3 + ["INCOMPLETE"] + ["NOT-RUN"] * 5)
+        self.assertEqual((result["cumulativeAttemptCount"],
+                          native.fixed_attempt_history(ROOT)["cliLaunches"] + result["cliLaunchCount"]), (87, 87))
+        schema = native._input(ROOT, frozen, "modelResponseSchema")
+        envelope = native._input(ROOT, frozen, "promptEnvelope")
+        self.assertEqual(schema["properties"]["usingAxiomFrontDoorObserved"], {"type": "boolean"})
+        self.assertEqual(envelope["assessmentRevision"], 3)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        changed = copy.deepcopy(result)
+        changed["protocolDigest"] = self.protocol["protocolDigest"]
+        self.assertTrue(native.validate_native_result(changed, ROOT))
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True)
+            with self.assertRaisesRegex(native.NativeObservationError, "registration changed"):
+                replies._unrecorded(ROOT, replies.protocol(ROOT), fixed_acceptance=True)
 
     def test_measurement_migration_preserves_history_and_does_not_regrade_contradictions(self):
         history = json.loads((ROOT / native.HISTORY_RELATIVE).read_bytes())
@@ -5012,10 +5071,17 @@ class NativeObservationTests(unittest.TestCase):
                 history = json.loads(data)
                 history["fixedAcceptance"]["results"] = []
                 return native._bytes(history)
+            if path == ROOT / replies.HISTORY:
+                history = json.loads(data)
+                history["fixedAcceptance"]["protocolDigest"] = replies.protocol(ROOT)["protocolDigest"]
+                return native._bytes(history)
             return data
         registration = patch.object(native, "_read", side_effect=synthetic_registration)
         registration.start()
         self.addCleanup(registration.stop)
+        reply_registration = patch.object(replies, "_read", side_effect=synthetic_registration)
+        reply_registration.start()
+        self.addCleanup(reply_registration.stop)
         prepared, runner, calls = self._prepared_runner()
         old = json.loads((prepared / native.STATE_NAME).read_bytes())
         previous = self.parent / "cases-clarification-2"

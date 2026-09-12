@@ -1,5 +1,23 @@
 # Runtime And Repository Identity
 
+## Measurement and historical test inputs (policy 16)
+
+Policy 16 fixes the legacy builder tests' hidden Git-object dependency with
+three byte-pinned historical public fixtures, and advances the native assessment
+to revision 4 with one uniform definition of `usingAxiomFrontDoorObserved`.
+The boolean reports the inner request's use of the `using-axiom` front door;
+a leaf workflow or catalog visibility alone does not establish that use.
+It remains a model report, not an independent native loading receipt.
+
+Original assessment inputs and protocols are preserved under
+[`historical-protocols/fixed-acceptance-1`](../evals/no-hook-observation/historical-protocols/fixed-acceptance-1).
+Historical results retain their actual execution, protocol and input bindings.
+All consumed or stopped windows remain unavailable for new observation; this
+revision grants no new window. There are zero new model starts and the total
+remains 87 attempts / 87 observation CLI starts. Product 0.10.1, full/profile
+runtime bytes, and frozen source/bundle policies 13/14 are unchanged. Test builder
+outputs are regression artifacts, not new formal deterministic-build evidence.
+
 ## Fixed-candidate observation registration
 
 Repository policy 15 registers one fixed 16-case routing assessment followed by

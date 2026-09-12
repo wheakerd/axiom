@@ -791,7 +791,9 @@ def _protocol(root: Path) -> dict[str, Any]:
         _require(hashlib.sha256(_read(root / relative)).hexdigest() == binding["sha256"],
                  "native bound input changed")
     envelope = _json(_read(root / inputs["promptEnvelope"]["path"]))
-    _require(envelope.get("assessmentRevision") == 3 and document.get("assessmentRevision") == 3 and
+    _require(envelope.get("assessmentRevision") == 4 and document.get("assessmentRevision") == 4 and
+             envelope.get("contractBindings", {}).get("modelResponseSchemaSha256") ==
+             inputs["modelResponseSchema"]["sha256"] and
              envelope.get("explicitInvocation") == EXPLICIT_INVOCATION and
              envelope.get("materialDelivery") == MATERIAL_DELIVERY and
              envelope.get("fixtureMatrix") == inputs["fixtureMatrix"] and
@@ -812,12 +814,22 @@ def _protocol(root: Path) -> dict[str, Any]:
 MERGED_ROUTING_SHA256 = "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a"
 MERGED_PROTOCOL_DIGEST = "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3"
 MERGED_PROTOCOL_FILE_SHA256 = "c6e29b80b64bf50aa7a0424ad99936e493254f3fff464e41b8ed90ca63f26feb"
+FIXED_RESULT_SHA256 = "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+FIXED_PROTOCOL_FILE_SHA256 = "a3baaf529729f3da8d024536bfb29ef4e28363f17c68b1b75b9ee07cd7c4c674"
+FIXED_PROTOCOL_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/fixed-acceptance-1")
 
 
 def _merged_protocol(root: Path) -> dict[str, Any]:
     data = _read(root / "evals/no-hook-observation/historical-protocols/codex-native-protocol-v2.json")
     _require(hashlib.sha256(data).hexdigest() == MERGED_PROTOCOL_FILE_SHA256,
              "merged routing protocol bytes changed")
+    return _json(data)
+
+
+def _fixed_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / FIXED_PROTOCOL_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == FIXED_PROTOCOL_FILE_SHA256,
+             "recorded fixed routing protocol bytes changed")
     return _json(data)
 
 
@@ -1140,7 +1152,7 @@ def _fixed_result_binding(root: Path) -> dict[str, Any] | None:
     history = _json(_read(root / HISTORY_RELATIVE))["fixedAcceptance"]
     _require(set(history) == {"windowId", "protocolDigest", "results"} and
              history["windowId"] == FIXED_ACCEPTANCE["windowId"] and
-             history["protocolDigest"] == _protocol(root)["protocolDigest"] and
+             history["protocolDigest"] == _fixed_protocol(root)["protocolDigest"] and
              type(history["results"]) is list and len(history["results"]) <= 1,
              "fixed routing result registration changed")
     if not history["results"]:
@@ -1417,7 +1429,17 @@ def _verify_material_segment(root: Path, run_root: Path) -> None:
 
 
 def _input(root: Path, protocol: Mapping[str, Any], name: str) -> Any:
-    return _json(_read(root / protocol["inputs"][name]["path"]))
+    binding = protocol["inputs"][name]
+    relative = Path(binding["path"])
+    # The retained assessment revision shares logical input names with the
+    # current measurement. Resolve only its exact, immutable input bindings.
+    if name in {"modelResponseSchema", "promptEnvelope"}:
+        frozen = _fixed_protocol(root)["inputs"][name]
+        if binding == frozen:
+            relative = FIXED_PROTOCOL_ARCHIVE / relative.name
+    data = _read(root / relative)
+    _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "native input bytes changed")
+    return _json(data)
 
 
 def _case_paths(run_root: Path, ordinal: int) -> dict[str, Path]:
@@ -1633,8 +1655,11 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     old envelopes without it retain their original prompt bytes.
     """
     envelope = arguments["prompt_envelope"]
-    if envelope.get("assessmentRevision") == 3:
-        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+    if envelope.get("assessmentRevision") in {3, 4}:
+        fields = ("selectedRoutes", "discoveryOutcome", "clarificationCount")
+        if envelope["assessmentRevision"] == 4:
+            fields += ("usingAxiomFrontDoorObserved",)
+        for field in fields:
             definition = arguments["model_schema"]["properties"][field].get("description")
             _require(type(definition) is str and definition and
                      envelope["fixedInstructions"].count(definition) == 1,
@@ -1642,7 +1667,7 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     material = legacy.materialize_case_contract(**arguments)
     delivery = envelope.get("materialDelivery")
     if delivery is not None:
-        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") in {2, 3},
+        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") in {2, 3, 4},
                  "unsupported material delivery revision")
         binding = envelope["fixtureMatrix"]
         _require(set(binding) == {"path", "sha256"} and
@@ -1692,7 +1717,7 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     _require(props["selectedRoutes"].pop("uniqueItems") is True, "local route uniqueness changed")
     # Model-side definitions are uniformly delivered by the bound envelope;
     # these local schema annotations are documentation, not API keywords.
-    for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+    for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount", "usingAxiomFrontDoorObserved"):
         props[field].pop("description", None)
     validate_response_transport(schema)
     data = _bytes(schema)
@@ -3336,8 +3361,11 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
     """Check retained evidence consistency, not authenticity of an editable file."""
     try:
         protocol = _protocol(root)
-        if hashlib.sha256(_bytes(document)).hexdigest() == MERGED_ROUTING_SHA256:
+        result_sha256 = hashlib.sha256(_bytes(document)).hexdigest()
+        if result_sha256 == MERGED_ROUTING_SHA256:
             protocol = _merged_protocol(root)
+        elif result_sha256 == FIXED_RESULT_SHA256:
+            protocol = _fixed_protocol(root)
         result_schema = _json(_read(root / RESULT_SCHEMA_RELATIVE))
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")

@@ -120,6 +120,14 @@
       "sourceIssue": 117,
       "summary": "Register one fixed 16-routing plus three-reply window, inheriting 76 attempts and preserving consumed windows, canonical runtime, and source/bundle policies 13/14.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 16,
+      "recordedOn": "2026-09-11",
+      "baselineCommit": "81d35ae07a055a110dfcab434f12950aefe421ca",
+      "sourceIssue": 117,
+      "summary": "Pin legacy builder test inputs and define front-door measurement uniformly; retain original protocols, results and closed windows without changing runtime or starting observations.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

@@ -520,15 +520,21 @@ def check(root: Path) -> list[str]:
         cases = legacy.load_golden_cases(root)
         fixtures = native._input(root, native._protocol(root), "fixtureMatrix")
         fixed = history["fixedAcceptance"]
+        fixed_protocol = p
+        if fixed["protocolDigest"] != p["protocolDigest"]:
+            data = _read(root / native.FIXED_PROTOCOL_ARCHIVE / PROTOCOL.name)
+            _require(digest(data) == "7585a36fb81f07a95f1fed58b8d3fba8689a096565990ab302a0068911b28e6f",
+                     "recorded fixed clarification protocol bytes changed")
+            fixed_protocol = _json(data)
         _require(set(fixed) == {"windowId", "protocolDigest", "results"} and
                  fixed["windowId"] == native.FIXED_ACCEPTANCE["windowId"] and
-                 fixed["protocolDigest"] == p["protocolDigest"] and
+                 fixed["protocolDigest"] == fixed_protocol["protocolDigest"] and
                  type(fixed["results"]) is list and len(fixed["results"]) <= 1,
                  "fixed clarification registration changed")
         for entry in [*history["results"], *fixed["results"]]:
             new_fixed = entry in fixed["results"]
             historical = entry["sha256"] == PRIOR_SUPPLEMENT
-            active = p if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
+            active = fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
             prior_count = 92 if new_fixed else 70 if historical else chain["attempts"]
             prior_result = native._fixed_result_binding(root)["sha256"] if new_fixed else PRIOR
             data = _read(root / entry["path"])

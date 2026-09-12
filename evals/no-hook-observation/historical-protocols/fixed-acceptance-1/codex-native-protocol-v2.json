@@ -14,11 +14,11 @@
     },
     "modelResponseSchema": {
       "path": "evals/no-hook-observation/codex-model-response-schema-v2.json",
-      "sha256": "6605c0ac40c6007082c9816b9977733175822af5ad0d6d59e4354dce56e1e519"
+      "sha256": "88c56b88253fc6bfb0a4dac519b0baa4e78be493568a5d51734f5b22db21f35d"
     },
     "promptEnvelope": {
       "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
-      "sha256": "bba14d205732571915050a3cdb5aa36435453a96eb8a64a4b0033a99e3dd140b"
+      "sha256": "d69a957f242a98bc96f70f380a045095298e6a54e2ee490e6cd17ce29e8270d7"
     },
     "taxonomy": {
       "path": "evals/codex-exec-jsonl-observer-v3.json",
@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "f338274a665784ea029113f1c035af5b017c248a195570fb7d98c27054f3d185"
+      "sha256": "6c20c21d387822414fbd3cbd94a743a1fe2f197e70dac5600ebc444104063978"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -64,7 +64,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "6dff7d7533b784a939fedb50ed2c991d5a86625c9dfe5d2b8eea0b36b3c960d8"
+      "sha256": "93a97bb5415faf6c2adf94660158f06249a12babb9b9f7b0d36a4f7ed02c5279"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -293,7 +293,7 @@
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
     "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
   },
-  "assessmentRevision": 4,
+  "assessmentRevision": 3,
   "assessmentReview": {
     "scope": "same attempt only; immutable original plus separate user-provided diagnostic supplement",
     "eligibleOnlyIf": [
@@ -445,5 +445,5 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:14efc97cc905337ec60390aea6ab481d4e8f4bbcdf353ee83fca3f43b5db7c1e"
+  "protocolDigest": "sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7"
 }
