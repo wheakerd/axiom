@@ -1779,8 +1779,10 @@ The fixture builder creates `document.txt` for Case 10 and
 creation alone does not deliver those paths. Working-directory context is not
 a file inventory. The frozen [environment renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/world_state/environment.rs#L239)
 includes cwd and [configured permission entries](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/environment_context.rs#L107),
-not a traversal of workspace files. Our permission entries bind the workspace,
-package (when present) and client binary, not individual fixture filenames.
+not a traversal of workspace files. Our configured permission entries bind the
+workspace, package (when present) and client binary, not individual fixture
+filenames. The host also adds runtime helper entries to its effective permission
+profile; see the later [bounded A11 source diagnosis](#bounded-a11-source-diagnosis-after-policy-19).
 Under the existing cat/sed-only contract, undisclosed names must be guessed;
 listing commands are not available. This gap is established,
 but its causal role in either historical `tmp/arg0` request remains unknown.
@@ -3765,3 +3767,100 @@ none; neither historical wording nor literal reply evidence was altered.
 All 20 earlier normalized result files keep their exact bytes and verdicts.
 Primary, the outer user file and diff, and the 82 existing cache metadata
 records match their protection baselines.
+
+
+### Bounded A11 source diagnosis after policy 19
+
+This follow-up compares public frozen implementations and retained inputs, not
+private sessions or operator-only text. It corrects the earlier permission-context
+description: configured task roots are not the whole effective host policy.
+No implementation correction meeting the fixed-input observation conditions was
+established; no new A11 window, state, authentication handoff or model call was
+created. Attempts and observation CLI starts remain **106/106**; internal model
+requests remain unknown.
+
+| Historical execution | Original normalized result SHA-256 | A11 retained outcome |
+| --- | --- | --- |
+| `efce8d3bd46c6bbd816c9052fba99636d769303b` | `0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a` | PASS; one final message, no public command read. Diagnostic comparison only. |
+| `6f9c132e8088105347e602f1c43c8bc99ffe8c6b` | `3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d` | INCOMPLETE; read-target-unbound, no valid final. |
+| `5289943861fac0673140992e96860784dc241239` | `50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b` | INCOMPLETE; read-target-unbound, no valid final. |
+
+Offline reconstruction through the existing materializer, using each public
+result seed and its original protocol/envelope/schema, exactly reproduced all
+three prompt and response-schema digests. The first two semantic prompts are
+identical after excluding only opaque binding and schema-digest lines. The third
+adds only the uniformly delivered assessment-revision-4 front-door definition.
+Both failure attempts had the same material filenames as the success; the prior
+material-delivery fix was already present. The fixture digest is identical.
+The complete function definitions for environment, config arguments, argv, config
+verification, discovery verification, fixture materialization, case definition
+and case paths, plus the feature-override constant, are identical across these
+three frozen implementations.
+Zero Axiom installation/discovery, separate client home and workspace, actual
+workspace cwd, fixed model and original request remain bound as recorded. These
+comparisons do not recover the full historical host-generated context.
+
+The frozen Codex 0.153.0 source at
+`41e22fee981a63b3698df7ed36bad393cda24715` establishes a second path-exposure
+mechanism beyond PATH. The [runtime helper-root function](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/config/permissions.rs#L484)
+returns the wrapper's parent when it is under the client temporary arg0 root.
+[Config assembly](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/config/mod.rs#L4035)
+adds this root to effective readable permissions. The
+[environment source](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/world_state/environment.rs#L63)
+uses that effective profile, and the
+[entry renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/environment_context.rs#L143)
+includes its path in the model-visible filesystem description. This explains
+how the submitted target class can become visible without making it cwd or task
+material. Native runtime access does not enlarge the observer's read contract.
+
+A no-model Rust reproduction compiled six unchanged pure function bodies from
+that source with minimal local type stand-ins. Four synthetic assertions passed:
+arg0 wrapper to parent, parent rendered as a read entry, an outside wrapper
+retained as a file, and no helper root when no wrapper is supplied. It accesses
+no target and is not a full native host, sandbox enforcement or behavior test.
+Effective-policy insertion was reviewed in source, not simulated as an actual
+host receipt. Separately, the [Skill catalog renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/render.rs#L497)
+returns no fragment for an empty visible catalog. Silence is not an explicit
+zero-Skill inventory. Both mechanisms belong to the same fixed host version
+used by the successful and failed runs.
+
+The precise unresolved factors are whether helper setup and the resulting
+visible effective entries differed between those individual startups, and why
+the model selected the helper target. The successful run's 429-byte
+known-nonfatal stderr classification covers several templates; it cannot identify
+one warning or prove helper creation failed. The failures' empty stderr and
+subsequent official metadata cache are recorded differences, not causal proof.
+Neither full private context nor the refused target is needed or authorized for
+this conclusion. The two user-supplied sanitized excerpts retain their separate
+provenance; no original target was inspected or replayed.
+
+There is therefore no demonstrated Axiom config, fixture-delivery or discovery
+regression to repair within the frozen conditions. Removing native helper
+exposure would change the fixed host/configuration contract; supplying an explicit
+empty-catalog statement would change model-visible measurement input. Neither is
+implemented or established as a behavioral remedy. A shared host-context change
+would affect A1-16 and B12-14, requiring a separately approved validation scope
+before transferring any of their evidence. This diagnosis does not justify an
+answer hint, wider read domain, model-filled unavailable result or another call.
+
+Only documentation changes. Product 0.10.1, source/bundle policies 13/14,
+repository policy 19, both runtime digests, assessment revision 4, protocols,
+Golden Set, scoring and all 21 normalized result files remain unchanged. Existing
+A1-10, independent A12-16 and limited B12-14 evidence keeps its original scope;
+A11 remains unmet required behavior. The one conditional observation is unused.
+PR integration, main synchronization and Issue closure remain blocked. No
+publication, resource cleanup or reopening of an old window follows.
+
+The external validation copy had its own object store, no alternates or legacy
+builder commit, and used its own cwd/import root with bytecode disabled. Three
+focused existing read-domain, historical-input and closed-window regressions
+passed. Final discovery ran **614 tests in 163.226 seconds: 612 passed, two
+existing skips, no failures/errors**. Five Linux Hook tests, publication and
+distribution checks, and Claude strict validation passed. The generic plugin
+validator retains its three known NON-PASS fields; ASCII scanning retains the
+same 16 historical line hits and adds none. Formal builds were not repeated.
+One independent reviewer checked the frozen source chain, exact pure function
+bodies, public input/config comparisons, document change and unchanged historical
+results. The reviewer found no correction satisfying the conditional observation
+gate; this is a bounded review, not GitHub approval or behavioral acceptance.
+CI is recorded separately against the actual documentation head.
