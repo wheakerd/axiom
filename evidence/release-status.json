@@ -25,7 +25,7 @@
       "pluginVersion": "0.10.1",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
       "status": "not-run",
-      "reason": "Current 0.10.1 full-profile installed behavior is NOT-RUN; protocol checks are static. The separate no-Hook history has 98 attempts/CLI starts with plugin runtime disabled; its assessment revision 4 batch stopped at a read-contract rejection. No extra full-profile observation was authorized."
+      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Separate no-Hook history totals 101 attempts/CLI starts: revision-4 routing is stopped; independent replies ask and keep choices pending. Case 13 selects a Skill before asking. Protocol/Hook checks are not installed-host PASS."
     },
     {
       "host": "claude-code",

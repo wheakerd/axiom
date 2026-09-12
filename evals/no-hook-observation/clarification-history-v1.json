@@ -27,6 +27,13 @@
   "independentClarification": {
     "windowId": "independent-clarification-1",
     "protocolDigest": "sha256:084b7dc164ccf0fd5ecc1096c327cb915d7aa1c6581cac7af83b143aac6ff67f",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/clarification-2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe.json",
+        "sha256": "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe",
+        "implementationCommit": "b7e30a03536f28581658d7358c5292827e2f3130",
+        "implementationTree": "f1aa78598537995c27aa9c4289dcb68faa7968fe"
+      }
+    ]
   }
 }

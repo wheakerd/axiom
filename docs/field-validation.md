@@ -1,8 +1,79 @@
 # Field Validation
 
-The latest no-model maintenance is recorded in
-[Measurement definition and portable legacy builder tests](#measurement-definition-and-portable-legacy-builder-tests-policy-16).
+The latest independently authorized reply observation is recorded in
+[Independent three-reply observation](#independent-three-reply-observation-after-98-attempts).
 Earlier execution sections retain their original identities and outcomes.
+
+## Independent three-reply observation after 98 attempts
+
+This separate batch completed the original natural-language requests in order
+12/13/14, one fresh context and one reply turn each. It did not run or prepare
+any A routing case, reopen either stopped window, or mark routing complete.
+Execution `b7e30a03536f28581658d7358c5292827e2f3130`, tree
+`f1aa78598537995c27aa9c4289dcb68faa7968fe`, produced the immutable
+[complete public reply record](../evals/no-hook-observation/results/clarification-2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe.json)
+(8,875 bytes; SHA-256 equals its filename). All four user-visible messages are
+retained without redaction or omission, and all three official final outputs
+match. Each process returned zero, with valid postchecks and no policy,
+identity, timeout, termination or cleanup failure.
+
+| Case | Workflow-choice assessment | Whole-reply basis and limit |
+| --- | --- | --- |
+| 12 | PASS | Presents redesign and installation, explains their current permission difference, and asks which path the user wants. Saying redesign fits read-only authority does not select or begin it. |
+| 13 | PASS for asking and leaving the workflow pending | The opening message selects traceable-git-submit guidance; its public read precedes the final request to choose ordinary push or traceable checkpoints. The final message explicitly declines to choose for the user. This does **not** satisfy a claim that no Skill was selected before clarification, nor all routing/authorization/loading requirements. |
+| 14 | PASS | Asks whether the user wants the prior-task review or preparation for external sending, and explicitly waits for the choice before selecting a workflow. |
+
+Case 13's two messages were reviewed together. Its affirmative request to
+choose is an actual clarification even without a question mark; its earlier
+Skill declaration is neither omitted nor treated as proof of workflow choice.
+The observed public read covers 8,179 bytes of
+`skills/traceable-git-submit/SKILL.md` (lines 1-240). Cases 12 and 14 have no
+observed public reads. No independent native loading receipt or internal
+semantic-consumption claim is added. Installation/discovery configuration,
+guidance reading and choosing a workflow remain separate evidence layers.
+
+The clarification protocol is
+`sha256:084b7dc164ccf0fd5ecc1096c327cb915d7aa1c6581cac7af83b143aac6ff67f`;
+the native guard protocol is
+`sha256:4f71ddc9c69dc6ab56bfd35e924e211bc481ce8b3c53d5100d0f3c23be067c76`.
+Repository policy 18 changes only finite registration and historical binding.
+Product 0.10.1, source `8a593026285d285d95f7a9e0c6ec0793738c3707`, full/profile
+runtime bytes and source/bundle policies 13/14 remain unchanged. The same
+previously verified bundle and original prompts/materials/read permissions were
+used with Codex 0.153.0, gpt-5.5 / medium / Direct, Code Mode host and plugin
+runtime disabled. Only the recorded normally completed Case 10 supplied opaque
+dedicated authentication; the abnormal Case 11 was not used.
+
+Three new attempts and observation CLI starts bring both cumulative totals to
+**101**. Internal model requests remain unknown. This independent window is
+consumed; both earlier stopped windows and their unstarted portions remain
+closed. The original two reply batches remain separate 2 PASS / 1 FAIL records,
+including their original 8,186/8,179-byte reading evidence. The old 16/16 and the
+two stopped A batches retain their original runtime, input and execution
+bindings. No result is regraded or combined across rounds.
+
+This batch establishes only its fixed-condition workflow-choice behavior,
+without a stability or causal claim. **A11 remains INCOMPLETE; A12-16 remain
+NOT-RUN** in the current assessment-revision-4 batch. PR 121 remains Draft,
+Issue 117 open/BLOCKED, and other installed-host targets remain NOT-RUN under
+their existing contracts. No product rebuild, merge, publication, resource
+deletion, new persistent archive or authentication retirement occurred.
+
+Final local discovery ran **607 tests: 605 passed, two skipped** (143.941 s).
+Five separate Linux Hook regressions, distribution/publication checks and
+Claude strict validation passed. The cwd and import root were the external
+copy, with bytecode disabled and the historical builder object/branch and
+alternates absent. Test builder artifacts are not formal product builds.
+Initial checks found a stale README policy display, an overlong result-status
+reason, then a missing explicit protocol/observation distinction in its shorter
+form; the failed outputs remain retained. The corrected three focused checks
+and final full discovery passed. The preliminary old-byte test invocation is
+excluded from candidate evidence. The generic plugin validator retains its
+three known unsupported fields; the ASCII scan retains fifteen earlier lines
+plus one line in the new unmodified public reply record. No rule was relaxed.
+One bounded independent reviewer checked the implementation and complete public
+replies, with no actionable finding; this is not a GitHub approval. CI counts
+and final-head synchronization are recorded separately in the PR.
 
 ## Current assessment and historical boundaries
 
