@@ -178,6 +178,13 @@
   "nativeEmptyDiscoveryAcceptance": {
     "windowId": "native-empty-discovery-1",
     "protocolDigest": "sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90.json",
+        "sha256": "4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90",
+        "implementationCommit": "86b572e29640003084c8733e01960086c8c314ca",
+        "implementationTree": "d8428661524c6fbf426c8121dba88e3f0c2d8955"
+      }
+    ]
   }
 }

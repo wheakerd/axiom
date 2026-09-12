@@ -25,7 +25,7 @@
       "pluginVersion": "0.10.1",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
       "status": "not-run",
-      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Host-context A1-10 PASS; A11 INCOMPLETE (read-contract rejection); A12-16/B NOT-RUN; totals 117/117. Protocol/Hook checks and reused builds do not establish installed behavior, native loading or publication PASS."
+      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Prior A1-10 PASS retained; native-empty A11 FAIL (no-route instead of unavailable); A12-16/B NOT-RUN. Totals 118/118. Protocol/Hook checks and reused builds do not establish installed-host or publication PASS."
     },
     {
       "host": "claude-code",

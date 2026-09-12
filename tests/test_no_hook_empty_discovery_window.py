@@ -22,6 +22,21 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
         self.parent = self.helper.parent
 
     def prepared(self):
+        # As in the existing fixed-window fixtures, only the synthetic reader
+        # sees an unconsumed registration. The checked-in actual result and
+        # production admission remain closed and are tested separately below.
+        actual_read = native._read
+        def synthetic_registration(path, *args, **kwargs):
+            data = actual_read(path, *args, **kwargs)
+            if path in (ROOT / native.HISTORY_RELATIVE, ROOT / replies.HISTORY):
+                history = json.loads(data)
+                history['nativeEmptyDiscoveryAcceptance']['results'] = []
+                return native._bytes(history)
+            return data
+        for module in (native, replies):
+            registration = patch.object(module, '_read', side_effect=synthetic_registration)
+            registration.start()
+            self.addCleanup(registration.stop)
         prior, runner, calls = self.helper._prepared_runner()
         old = json.loads((prior / native.STATE_NAME).read_bytes())
         previous = self.parent / native.HOST_CONTEXT_ACCEPTANCE['routingRunName']
@@ -136,3 +151,18 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
         self.assertEqual(result['attemptCount'],0)
         self.assertEqual(result['cumulativeAttemptCount'],117)
         self.assertEqual([x['status'] for x in result['caseResults']], ['INCOMPLETE']+['NOT-RUN']*5)
+
+    def test_recorded_actual_failure_keeps_the_window_closed_before_auth_or_client(self):
+        binding = native._fixed_result_binding(ROOT, empty_discovery=True)
+        self.assertIsNotNone(binding)
+        data = (ROOT / binding['path']).read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(), binding['sha256'])
+        result = json.loads(data)
+        self.assertEqual(native.validate_native_result(result, ROOT), [])
+        self.assertEqual(result['cumulativeAttemptCount'], 118)
+        self.assertEqual([x['status'] for x in result['caseResults']], ['FAIL']+['NOT-RUN']*5)
+        with patch.object(native.subprocess, 'Popen', side_effect=AssertionError('client started')), \
+             patch.object(native, '_revision_four_auth_source', side_effect=AssertionError('auth handoff')):
+            with self.assertRaisesRegex(native.NativeObservationError, 'already recorded'):
+                native.prepare_fixed_acceptance(ROOT, self.parent/'never', self.parent/'old',
+                    self.parent/'bundle', authorize_install=True, authorize_copy=True, empty_discovery=True)

@@ -1,8 +1,8 @@
 # Field Validation
 
-The previous supported host-context window stopped at A11. A separately
-authorized native empty-discovery compatibility candidate is recorded below;
-integration remains conditional on its actual acceptance. The latest completed
+The native empty-discovery window below obtained a normal A11 reply but failed
+the original outcome score, closing all eight remaining slots. Integration is
+blocked by that unmet requirement. The latest completed
 independently authorized reply observation is recorded in
 [Independent three-reply observation](#independent-three-reply-observation-after-98-attempts).
 Earlier execution sections retain their original identities and outcomes.
@@ -80,6 +80,92 @@ the review neither ran a client/model nor supplied a GitHub approval. Local
 validation and actual execution/result identities are recorded separately below.
 Canonical product 0.10.1, full/profile runtime, source/bundle policies 13/14 and
 the two formal build artifacts are reused without rebuilding.
+
+### Actual native-empty outcome and stop
+
+Signed execution `86b572e29640003084c8733e01960086c8c314ca`, tree
+`d8428661524c6fbf426c8121dba88e3f0c2d8955`, was frozen before preparation and
+observation. The independent public execution copy supplied cwd and import root
+with bytecode disabled. Native protocol is
+`sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290`;
+reply protocol is
+`sha256:482945352d5d11e44acdb78f36240381a839da4632cce1b66f33f521891ffc23`.
+All 43 bound implementation/protocol/input files remained identical to this
+execution through the observed result.
+
+The [complete normalized record](../evals/no-hook-observation/results/codex-native-4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90.json)
+is **14,509 bytes**, SHA-256
+`4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90`.
+Its single normal visible message is retained in full, with no omission or
+redaction, and agrees with the official final output.
+
+| Evidence segment | Actual result | Scope |
+| --- | --- | --- |
+| Prior A1-10 | Ten original PASS retained | Original `c56d114` execution/result; unchanged nonempty dependencies justify reuse, not a new ten-case run. |
+| New A11 | FAIL | Valid final JSON reports `discoveryOutcome="no-route"`; the unchanged Golden Set requires `unavailable`. Selected routes are empty, front-door/SessionStart and mutation fields are false, and clarification count is zero. |
+| New A12-16 | Five NOT-RUN | Fresh preparation and native queries completed, but no model attempt markers or authentication copies followed A11. |
+| New B12-14 | Three NOT-RUN | No reply root, preparation, query, authentication handoff or model launch occurred. |
+
+A11 received all **3,667 input bytes** and ended normally with return code zero,
+valid stream/response/postchecks and an exact official final-output match. It
+issued no command, and public reading is not-observed. No policy refusal,
+timeout, observer termination or cleanup failure occurred. The native query
+returned an exact empty Skill/error set for the bound cwd; its public receipt
+SHA-256 is `dbea9e136d7782c993f91fa6d19287763bc2c005b3262886fa91a24e2fad621f`.
+The labeled compatibility fragment was included in the reconstructed, fully
+delivered prompt. Fixed model metadata stayed frozen-embedded gpt-5.5 medium /
+Direct before and after execution. This establishes the query, compatibility
+delivery and this visible reply, not internal semantic consumption or a native
+model loading receipt. No private diagnostic body or refused target was read.
+
+This run consumed **one new canonical attempt and one observation CLI start**,
+bringing both totals to **118**; internal model requests remain unknown. Its
+aggregate is INCOMPLETE because the other five routing cases were never run.
+The A11 semantic-failure gate closed all eight remaining A/B slots. No retry,
+replacement state, post-observation input/implementation change or later
+authentication handoff followed. All older windows remain closed. The outcome
+is a concrete scoring mismatch after a normal reply, distinct from the earlier
+read-contract refusals; it is not reclassified as PASS or a causal/stability proof.
+
+Preparation made **six** no-model native queries, once per A11-16 state: zero
+Skills for A11 and eight each for A12-16, all without errors and with unchanged
+public scope. Together with the seven development queries, this round has
+**13 app-server query starts**, separately from the one observation. One help,
+five marketplace-add, five plugin-add and two login-status CLI starts are also
+separate no-model operations. The query code starts no thread or turn. No A1-10
+state or publication full-profile observation was created.
+
+Pre-execution external discovery passed **638 tests: 636 passed, two existing skips**
+(228.187 s). The then-current 16 query/window regressions and 19 corrected identity/
+documentation checks passed. Five Linux Hook tests, distribution, publication
+and Claude strict validation passed at their unchanged layers. The initial
+full run (618 tests, ten failures and 21 errors) exposed omitted README and
+release-status policy bindings; those and the preparation caption were corrected
+before signing, and the failed log is retained. Earlier synthetic-history and
+schema corrections are also retained. The generic plugin validator keeps its
+three known unsupported-metadata NON-PASS findings; ASCII keeps 16 historical
+line hits. No existing failure or rule was removed. CI statistics are separate.
+
+Registering the actual result correctly closed the window and exposed four
+synthetic-fixture errors. The existing in-memory unconsumed-registration pattern
+was applied only inside those tests, and an additional regression verifies that
+the real retained FAIL rejects preparation before authentication or a client
+start. All **five post-registration tests passed**. No production observer,
+protocol, input generator or scoring code changed after observation; the 638-test
+production check and unaffected Hook/build evidence are reused. The final result/
+documentation publication check passed separately. This fixture maintenance does
+not reopen a real window or alter the A11 verdict.
+
+Product 0.10.1, canonical Skills/Hooks/builder, full/profile runtime, source/bundle
+policies 13/14 and both formal build artifacts are unchanged. All 22 preceding
+normalized results retain their original bytes, execution/input identities and
+verdicts, including B13's complete guidance-selection/then-pending-workflow fact.
+The original R4/FCR and allowed R5 limitations remain within their prior scope;
+none waives A11's required outcome. PR #121 remains Draft/unmerged, main remains
+`6719a8323a754f5c5dda5e18a2225ac324347fe3`, and Issue #117 remains open/BLOCKED.
+Ready, merge, main synchronization, completion/closure and publication
+prerequisites are not met. No new archive, cleanup or authentication retirement
+was performed; this round's created objects are recorded as an increment only.
 
 ## Supported host-context acceptance after 106 attempts
 
