@@ -142,6 +142,13 @@
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "protocolDigest": "sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b.json",
+        "sha256": "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b",
+        "implementationCommit": "5289943861fac0673140992e96860784dc241239",
+        "implementationTree": "865707d35ba9956074d6a4e44719dec1b938e087"
+      }
+    ]
   }
 }

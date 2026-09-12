@@ -3472,7 +3472,7 @@ identity or reliability stop prevents all remaining launches and the B handoff.
 
 ### Current R5 contract and environment disposition
 
-The [original required-validation clauses](https://github.com/wheakerd/axiom/issues/117#issuecomment-5620552657)
+The [original required-validation clauses](https://github.com/wheakerd/axiom/issues/117)
 allow precise unavailable/not-run proprietary-host evidence. The profile's
 `contractTargetMeaning` and [evaluation contract](../evals/README.md#hook-independent-profile-contract)
 make a contract target eligible only when its required host surfaces are present.
@@ -3491,3 +3491,91 @@ receipts remain not-observed; neither a correct report nor an absent event
 proves internal semantic consumption. Current applicable data or permission
 harm would still block integration. These host dispositions cannot waive a
 failure of this window's required routing or actual clarification acceptance.
+
+
+### Actual R3 routing and R2 reply outcome
+
+Actual signed execution is `5289943861fac0673140992e96860784dc241239`, tree
+`865707d35ba9956074d6a4e44719dec1b938e087`; source, preparation cwd and Python
+import root were its clean independent external clone. Native protocol is
+`sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c`;
+clarification protocol is
+`sha256:24e5a9202595cee17f15f73c80d1d475e8a50eb3196e9edaf79e696791804502`.
+The [complete normalized A record](../evals/no-hook-observation/results/codex-native-50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b.json)
+is 41,962 bytes, SHA-256
+`50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b`.
+
+| Required part | Actual result | Scope |
+| --- | --- | --- |
+| A, original ordinals 1-10 | 10 PASS | Original route scoring for this execution and assessment revision 4 inputs. |
+| A, ordinal 11 | INCOMPLETE | `policy-rejected`, `read-target-unbound` at event 7; the existing read contract terminated the client. |
+| A, ordinals 12-16 | Five NOT-RUN | No launch after the read-contract stop. |
+| B, natural-language replies 12, 13, 14 | Three NOT-RUN | No reply state, authentication handoff, visible reply or official final output was created. |
+
+R3 is independently **INCOMPLETE**, with `hostClaim=false`; R2 remains
+**NOT-RUN**. Cases 6 and 7 pass this batch's original scoring, while their older
+FAIL results retain the original bytes, inputs and verdicts. No stable behavior,
+causal explanation, old-result upgrade or cross-round best-of result follows.
+Both old reply batches remain separately 2 PASS / 1 FAIL. There is no new Case
+13 opening announcement or pending-workflow reply to assess.
+
+The new stop has signal 9, `observerTerminated=true`, no timeout,
+`cleanupFailed=false`, valid fixture postcheck and no accepted response or
+verified final output. Case 11 installation/discovery remains absent. The
+normalized predicate alone does not identify its command target or establish
+whether a read succeeded. The earlier user-provided sanitized command excerpt
+belongs to execution `6f9c132`; it is not evidence of this attempt's target.
+No operator-only raw material was read, searched, hashed or replayed, and the
+read domain was not widened. All eight remaining items in this window are
+closed; the old stopped window's eight unused slots remain independently closed.
+
+Exactly **11 new canonical attempts and 11 observation CLI starts** were
+consumed: **98/98 cumulative**, with internal model requests unknown. There is
+no retry, B preparation or further authentication transfer after the stop.
+Neither Ready/merge nor Issue completion conditions are met: PR #121 remains
+Draft, main is unchanged, and Issue #117 remains **BLOCKED/open**.
+
+Current public reads are the 3,834-byte usage Skill in A4, and the 7,083-byte
+system-change Skill plus its 7,735-byte preflight reference in A9. The other
+accepted cases have no observed public read event. In particular, the selected
+front-door report in A1 and leaf report in A6 are not native loading receipts.
+The original 8,186/8,179-byte Git reads remain valuable in their original scope.
+Correct route fields, discovered catalog entries and public reads do not prove
+unobservable internal semantic consumption. No loader-interface search or
+forced read was added.
+
+
+### Verification and retention boundary
+
+Final external discovery ran 602 tests in 141.045 seconds: 600 passed, two
+skipped, with zero failures/errors. Both cwd and import source were the external
+copy; bytecode was disabled. The historical builder commit and old branch were
+absent before and after validation, with no alternates or shared object store.
+The original real-builder regressions still ran. Linux Hook integration passed
+five tests; distribution/publication checks and Claude strict validation passed.
+Product builds were not repeated. CI is a separate final-head observation.
+
+The initial focused suite ran 228 tests with one failure and one error. Both
+were synthetic test-fixture defects: a missing new history key and a callback
+fixture that skipped the real bounded-process capture path. The two corrected
+tests passed. A missing Markdown fragment was corrected before execution.
+The final test-only history adapter isolates each synthetic window after real
+results are retained; it neither reopens the actual registry nor changes the
+frozen execution. A new negative regression confirms the recorded stop rejects
+preparation before any client or authentication handoff.
+
+One independent read-only review covered registration, unchanged input/product
+bytes, result identity, history, permission/stop boundaries and host claims. Its
+one result-phase correction changed the R5 allowance link to the original Issue
+body. It did not supply native-host evidence or GitHub approval. All 18 earlier
+result files retain their exact bytes and original verdicts. The generic plugin
+validator retains the three known unsupported-metadata findings. The literal
+ASCII scan's broader tracked Markdown/JSON/JSONL scope reports 15 existing lines,
+all present in the baseline; it introduces no new non-ASCII content or waiver.
+
+The old durable public-history bundle remains the unchanged snapshot through
+`f5f1248`. Later diagnosis, measurement, execution and result commits still need
+one supplemental preservation grant before eventual active-branch cleanup.
+An exact local object inventory and proposed preservation scope are delivered
+separately; no new persistent bundle, deletion, logout or revocation occurs.
+This delivery does not complete Issue #117 or authorize another observation.

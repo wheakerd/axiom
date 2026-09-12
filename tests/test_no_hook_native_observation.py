@@ -5067,13 +5067,15 @@ class NativeObservationTests(unittest.TestCase):
         actual_read = native._read
         def synthetic_registration(path, *args, **kwargs):
             data = actual_read(path, *args, **kwargs)
-            if not revision_four and path == ROOT / native.HISTORY_RELATIVE:
+            if path == ROOT / native.HISTORY_RELATIVE:
                 history = json.loads(data)
-                history["fixedAcceptance"]["results"] = []
+                history[native._fixed_history_key(revision_four)]["results"] = []
                 return native._bytes(history)
-            if not revision_four and path == ROOT / replies.HISTORY:
+            if path == ROOT / replies.HISTORY:
                 history = json.loads(data)
-                history["fixedAcceptance"]["protocolDigest"] = replies.protocol(ROOT)["protocolDigest"]
+                key = native._fixed_history_key(revision_four)
+                history[key]["protocolDigest"] = replies.protocol(ROOT)["protocolDigest"]
+                history[key]["results"] = []
                 return native._bytes(history)
             return data
         registration = patch.object(native, "_read", side_effect=synthetic_registration)
@@ -5166,6 +5168,18 @@ class NativeObservationTests(unittest.TestCase):
                 assessment_batch=True, fixed_acceptance=True, process_runner=runner)
         self.assertEqual(calls, [])
         self.assertFalse((run / "batch-started.json").exists())
+
+    def test_retained_revision_four_stop_cannot_start_another_window(self):
+        binding = native._fixed_result_binding(ROOT, revision_four=True)
+        self.assertIsNotNone(binding)
+        result = json.loads((ROOT / binding["path"]).read_bytes())
+        self.assertEqual((result["attemptCount"], result["cliLaunchCount"], result["cumulativeAttemptCount"]), (11, 11, 98))
+        self.assertEqual(result["status"], "INCOMPLETE")
+        with patch.object(native.subprocess, "Popen", side_effect=AssertionError("client started")), \
+             patch.object(native, "_revision_four_auth_source", side_effect=AssertionError("handoff continued")):
+            with self.assertRaisesRegex(native.NativeObservationError, "already recorded"):
+                native.prepare_fixed_acceptance(ROOT, self.parent / "new", self.parent / "old",
+                    self.parent / "bundle", authorize_install=True, authorize_copy=True, revision_four=True)
 
     def test_revision_four_rejects_abnormal_auth_source_before_client_or_secret_access(self):
         from axiom_validation import no_hook_clarification as replies
