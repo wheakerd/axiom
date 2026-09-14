@@ -119,15 +119,7 @@ EXPECTED_DIRECT_SKILLS = (
 )
 INSTRUCTION_MAX_BYTES = 8192
 AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
-    "Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or "
-    "Claude Code plugin's shared Skills, route ownership, manifests, marketplace "
-    "wrappers, hooks, and version-bound compatibility evidence. Use only for explicit "
-    "packaged agent-plugin architecture work. Do not use for repository-local "
-    "AGENTS.md or .agents/skills systems, ordinary source-code or documentation work "
-    "merely because it is in a plugin repository, host installation, publication, "
-    "deployment, or Git submission. When architecture and installation or deployment "
-    "are mutually exclusive alternatives, ask one concise clarification before "
-    "routing; delegated choice does not resolve the scope difference."
+"Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md or .agents/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight."
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",

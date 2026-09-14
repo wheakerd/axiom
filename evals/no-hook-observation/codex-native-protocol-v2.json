@@ -14,11 +14,11 @@
     },
     "modelResponseSchema": {
       "path": "evals/no-hook-observation/codex-model-response-schema-v2.json",
-      "sha256": "88c56b88253fc6bfb0a4dac519b0baa4e78be493568a5d51734f5b22db21f35d"
+      "sha256": "004c96ef0d32eebd19ce4f70d7bf5ac266c8b0d44f587d060895391f6e535486"
     },
     "promptEnvelope": {
       "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
-      "sha256": "d69a957f242a98bc96f70f380a045095298e6a54e2ee490e6cd17ce29e8270d7"
+      "sha256": "44a375b3c827a177a3e61ef60927333d3f82aa388429e868d82c4ba719b3fd08"
     },
     "taxonomy": {
       "path": "evals/codex-exec-jsonl-observer-v3.json",
@@ -38,11 +38,11 @@
     },
     "bundleSchema": {
       "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-      "sha256": "0d3ee658e1c2e5b02047c39835f977ef9bb0141cae5421a6a59c2d3e765cdd50"
+      "sha256": "eabca74e9189f12d8498f2a6704f46e55a9648368ec9d414fcf402bcae4a6622"
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
-      "sha256": "6c393607dbb474fe412ff0c165c43ee0566ac6219aedf6adc1147acb95889ac3"
+      "sha256": "253d464f217b97f028a0d65bb1bd70128b4e93d2f0e8fb5155f062698f887908"
     }
   },
   "implementationBindings": [
@@ -52,7 +52,15 @@
     },
     {
       "path": "axiom_validation/no_hook_bundle.py",
-      "sha256": "203937bbbff1110b2256fb8e01bcd6dae07912b18b67f15c5e8d3090e61fa13a"
+      "sha256": "005c7708cbc5eceb54d0b7f8b54b1b79ce00c46df6e8ed4bd6caf10be12281ca"
+    },
+    {
+      "path": "axiom_validation/no_hook_clarification.py",
+      "sha256": "ede5a8ca9b992bb7d65b76e364a4777ac3c0c1cf519fb23fd06625885eba5389"
+    },
+    {
+      "path": "axiom_validation/no_hook_discovery.py",
+      "sha256": "3e5880f70f5945c604115248a42ce3dd1db6fb6a365de5dbb7dddbb63db66184"
     },
     {
       "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -60,11 +68,11 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "c300bc6577f9776fb94a627f8e4e053ee786226a5072da56a6d27fdbead68b62"
+      "sha256": "c51eacc92f5ee4eeca4dcb1af060933aac4f3b625b96a48e591a9c255f890575"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
-      "sha256": "3de5625a1cb775366aa23b2bface9059b77f1604e1a5901b4de137ef5f1c7e31"
+      "sha256": "542cb188c98f394aa50dd362f978cb4ffc216a975511285aa95aeff0b4f2ca2e"
     },
     {
       "path": "axiom_validation/no_hook_profile.py",
@@ -88,10 +96,10 @@
     }
   ],
   "bundle": {
-    "manifestDigest": "sha256:dd73e63ff790a3ca759f2bb12e2086f63c40af637846f907214901fda97970e8",
-    "archiveSha256": "9e53e1748f9db3f46defb1eb5bef026fd8bcdff49644e12a2275260461e97332",
-    "profileRuntimeDigest": "sha256:7c5451750c262343bb8bc142dc6af03c9b7ab86b35df1bf84b60162e353944ab",
-    "packageSha256": "d5697a3ce61f7d02e0ee729ef6ffeb1c15a3dd865729b453f664cea7db8fe081"
+    "manifestDigest": "sha256:77fd3eac4898d43078534571581559719d07330ee57d7d40c9b3746c2729cc2b",
+    "archiveSha256": "c8c06465f8bcf8b6e16578227968712b53394e6b1de3c42615ea0df9011b1ce8",
+    "profileRuntimeDigest": "sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf",
+    "packageSha256": "6b0e83c6dcffe98da4f1c0645a28f0412c3ab9545881ec8079d62bf5320e48ca"
   },
   "caseIds": [
     "no-hook-positive-explicit-using-axiom-001",
@@ -119,7 +127,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "828bdc283f383b863b1059d47e0764dddbf5689c6905df0c2e1feb82ff07b2a2"
+    "sha256": "cc49a1ccbae099780ba256abdd3fed3d1093124eed23678ff18691a24be9d6f8"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -281,15 +289,15 @@
     }
   },
   "executionWindow": {
-    "state": "authorized-once",
-    "lastResultSha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
-    "reason": "one fresh explicit-invocation batch; 16 new attempts, 70 cumulative maximum"
+    "state": "closed",
+    "lastResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
+    "reason": "the original explicit-invocation window is consumed; no reopening"
   },
   "sameAttemptReview": {
     "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
     "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
   },
-  "assessmentRevision": 3,
+  "assessmentRevision": 5,
   "assessmentReview": {
     "scope": "same attempt only; immutable original plus separate user-provided diagnostic supplement",
     "eligibleOnlyIf": [
@@ -331,7 +339,6 @@
     "priorStop": "preserved; independent unstarted cases only",
     "stderrReview": "same-attempt only; all existing eligibility conditions required"
   },
-  "protocolDigest": "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3",
   "materialDelivery": {
     "revision": 1,
     "source": "fixtureMatrix.files[].path",
@@ -395,5 +402,454 @@
     "noInstallation": "no-selection-added",
     "evidence": "selection-representation; not-observed-native-body-load",
     "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
+  },
+  "fixedAcceptance": {
+    "windowId": "pending-choice-fixed-1",
+    "state": "authorized-once",
+    "candidateCommit": "1f0362d18fc281b251387a357bb6ad4a7eb5c661",
+    "candidateTree": "795c08276f56f1096a1fe9878ecab53febfd24e6",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
+      "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae",
+      "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449"
+    ],
+    "priorAttempts": 76,
+    "priorCliLaunches": 76,
+    "routingOrdinals": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 19,
+    "maximumCumulativeAttempts": 95,
+    "routingRunName": "cases-pending-choice-routing-1",
+    "clarificationRunName": "cases-pending-choice-clarification-1",
+    "order": "complete routing before clarification; semantic failures do not resample",
+    "stop": "reliability, identity or policy failure stops all remaining observations"
+  },
+  "protocolDigest": "sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae",
+  "revisionFourAcceptance": {
+    "windowId": "assessment-revision-4-fixed-1",
+    "state": "authorized-once",
+    "candidateCommit": "303e5b9e984d3647b06b84bf8ebc794887af698e",
+    "candidateTree": "2469367551b4ebe41d04a571ff162c3e77731edc",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+    ],
+    "priorAttempts": 87,
+    "priorCliLaunches": 87,
+    "routingOrdinals": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 19,
+    "maximumCumulativeAttempts": 106,
+    "routingRunName": "cases-assessment-revision-4-fixed-1",
+    "clarificationRunName": "cases-assessment-revision-4-clarification-1",
+    "order": "complete routing before clarification; semantic failures do not resample",
+    "stop": "reliability, identity or policy failure stops all remaining observations",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 4
+  },
+  "independentRoutingTail": {
+    "windowId": "independent-routing-tail-1",
+    "state": "authorized-once",
+    "runName": "cases-independent-routing-tail-1",
+    "candidateCommit": "d39126fec4bf85cf899c380d5610188a6feead61",
+    "candidateTree": "db2ae2901f7ff920b7ba6496612cbd8f4146e630",
+    "ordinals": [
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "assessmentRevision": 4,
+    "priorResultSha256s": [
+      "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe"
+    ],
+    "priorAttempts": 101,
+    "priorCliLaunches": 101,
+    "maximumNewAttempts": 5,
+    "maximumCumulativeAttempts": 106,
+    "authenticationSourceOrdinal": 10,
+    "sourceResultSha256": "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b",
+    "history": "independent five-case window; no inherited observations or sessions",
+    "stop": "any policy, identity or reliability failure stops remaining cases and authentication handoff",
+    "visibleMessages": "all completed agent messages, bounded by existing 8192-byte public reply retention; exact official final output"
+  },
+  "hostContextAcceptance": {
+    "windowId": "host-context-fixed-1",
+    "state": "authorized-once",
+    "candidateCommit": "459181b7b07fc72ea6b7ca2ca23fe4d75e075fbb",
+    "candidateTree": "a98c369038bcf25aed9c89c5c2af809b0811aec7",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521"
+    ],
+    "priorAttempts": 106,
+    "priorCliLaunches": 106,
+    "routingOrdinals": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 19,
+    "maximumCumulativeAttempts": 125,
+    "routingRunName": "cases-host-context-routing-1",
+    "clarificationRunName": "cases-host-context-clarification-1",
+    "order": "complete routing before clarification; semantic failures do not resample",
+    "stop": "reliability, identity or policy failure stops all remaining observations",
+    "authenticationSourceOrdinal": 16,
+    "assessmentRevision": 4,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check"
+  },
+  "hostEnvironmentContext": {
+    "revision": 1,
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "includeEnvironmentContext": false,
+    "includePermissionsInstructions": true,
+    "scope": "all routing and clarification inputs; no replacement environment text",
+    "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
+    "evidence": "native configuration and public source; behavior requires fresh observation"
+  },
+  "nativeEmptyDiscoveryAcceptance": {
+    "windowId": "native-empty-discovery-1",
+    "state": "authorized-once",
+    "candidateCommit": "ad5d54c7cf4aff110d618e9b44425f5ee8793c2b",
+    "candidateTree": "c917ffaa9a2503034827c090728ca40faf69aa35",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73"
+    ],
+    "priorAttempts": 117,
+    "priorCliLaunches": 117,
+    "routingOrdinals": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 9,
+    "maximumCumulativeAttempts": 126,
+    "routingRunName": "cases-native-empty-discovery-routing-1",
+    "clarificationRunName": "cases-native-empty-discovery-clarification-1",
+    "order": "A11 PASS first; A12-16 then B12-14; A1-10 evidence reused only under unchanged nonempty conditions",
+    "stop": "A11 non-PASS or any policy, identity, query or reliability failure closes all remaining slots",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 4,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
+  },
+  "nativeEmptyDiscovery": {
+    "revision": 1,
+    "method": "skills/list",
+    "forceReload": true,
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "delivery": "verified native empty result relayed by compatibility layer; nonempty input unchanged",
+    "scope": "same binary, cwd, environment, discovery roots and relevant configuration; before authentication copy",
+    "evidence": "native query receipt; not a model tool call or automatic exec context-delivery receipt",
+    "stop": "errors, incomplete response, mismatched cwd, timeout, configuration or scope drift; no retry"
+  },
+  "discoveryOutcomeAcceptance": {
+    "windowId": "discovery-outcome-1",
+    "state": "authorized-once",
+    "candidateCommit": "35b1960629822b0e68af1fc2f4d8580ac21bab8c",
+    "candidateTree": "c36b7796520dbdb424c2ad4b13e6d45eefc67821",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90"
+    ],
+    "priorAttempts": 118,
+    "priorCliLaunches": 118,
+    "routingOrdinals": [
+      11
+    ],
+    "clarificationOrdinals": [],
+    "maximumNewAttempts": 1,
+    "maximumCumulativeAttempts": 119,
+    "routingRunName": "cases-discovery-outcome-1",
+    "clarificationRunName": null,
+    "order": "one independent A11 only; no other routing, reply or publication observation",
+    "stop": "one attempt only; any failure closes this window without retry or remainder",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
+  },
+  "acceptedRemainder": {
+    "windowId": "accepted-remainder-1",
+    "state": "authorized-once",
+    "candidateCommit": "ab2ead1817b59d32e114282c391e005f7887547a",
+    "candidateTree": "95940d7d6d7135a1d4946746a19cf0823904b000",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": [
+      "cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a"
+    ],
+    "priorAttempts": 119,
+    "priorCliLaunches": 119,
+    "routingOrdinals": [
+      10,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      12,
+      13,
+      14
+    ],
+    "maximumNewAttempts": 9,
+    "maximumCumulativeAttempts": 128,
+    "routingRunName": "cases-accepted-remainder-routing-1",
+    "clarificationRunName": "cases-accepted-remainder-clarification-1",
+    "order": "A10, A12-16, then B12-14; each once in a fresh scope",
+    "stop": "any new FAIL, INCOMPLETE, query, policy, identity or reliability failure closes all subsequent slots",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
+  },
+  "traceableConfirmation": {
+    "windowId": "traceable-confirmation-1",
+    "state": "authorized-once",
+    "candidateCommit": "c752e7b4f316e1f2224c233b326e97d6652d7638",
+    "candidateTree": "cf281d8802f354767ed4354907e90fa1ab4ef246",
+    "sourceCommit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
+    "sourceTree": "425182b4dbdd5fd549f16e38b4039d1eb09f526f",
+    "fullRuntimeDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
+    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
+    "priorResultSha256s": [
+      "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"
+    ],
+    "priorAttempts": 122,
+    "priorCliLaunches": 122,
+    "routingOrdinals": [
+      13,
+      6,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      13,
+      12,
+      14
+    ],
+    "maximumNewAttempts": 8,
+    "maximumCumulativeAttempts": 130,
+    "routingRunName": "cases-traceable-confirmation-routing-1",
+    "clarificationRunName": "cases-traceable-confirmation-replies-1",
+    "order": [
+      "A13",
+      "B13",
+      "A6",
+      "A14",
+      "A15",
+      "A16",
+      "B12",
+      "B14"
+    ],
+    "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
+  },
+  "goalPreservation": {
+    "windowId": "architect-goal-preservation-1",
+    "state": "authorized-once",
+    "candidateCommit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+    "candidateTree": "d9281b507721827034c27fdc1883161801bfbbf2",
+    "sourceCommit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+    "sourceTree": "d9281b507721827034c27fdc1883161801bfbbf2",
+    "fullRuntimeDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26",
+    "profileRuntimeDigest": "sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf",
+    "priorResultSha256s": [
+      "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c"
+    ],
+    "priorAttempts": 129,
+    "priorCliLaunches": 129,
+    "routingOrdinals": [
+      12,
+      3
+    ],
+    "clarificationOrdinals": [
+      12,
+      14
+    ],
+    "maximumNewAttempts": 4,
+    "maximumCumulativeAttempts": 133,
+    "routingRunName": "cases-architect-goal-routing-1",
+    "clarificationRunName": "cases-architect-goal-replies-1",
+    "order": [
+      "B12",
+      "A12",
+      "A3",
+      "B14"
+    ],
+    "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
   }
 }

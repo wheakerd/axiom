@@ -1,26 +1,33 @@
 ---
 name: traceable-git-submit
-description: Route explicit $traceable-git-submit; checkpoints/baselines, consolidation/recovery, hardened, multi-target or history-replacing Git; and combined commit, tag, and push of an already-prepared plugin release. Ordinary named-remote non-force Git without a tag or these triggers, status/diff and Git concepts stay host-native. Clarify mutually exclusive ordinary/traceable choices first.
+description: Clarify unresolved material either/or choices before routing; delegation or checkpoint options do not select. Route $traceable-git-submit, checkpoint/baseline, consolidation/recovery, hardened/multi-target/history-replacing Git; combined commit, tag, and push of an already-prepared plugin release. Ordinary named-remote non-force Git without a tag or such needs and concepts stay host-native.
 ---
 
 # Traceable Git Submit
 
-Keep checkpoints reviewable and Git submission phases explicit.
-
 ## Intent Gate
 
-Identify one active phase before Git inspection. Route selection never grants
-action authority. Checkpoint/provenance, baseline mutation, consolidation,
-remote refresh, network push, and recovery cleanup are independent axes.
+Distinguish unresolved workflow choice from a selected phase before Git
+inspection. If mutually exclusive options materially change route ownership,
+persistent metadata, write surfaces or authority, ask one concise
+clarification before selecting; do not choose for the user. Delegated choice,
+read-only scope or a lighter option cannot resolve it. Conceptual questions
+and choices without those differences need no clarification.
+
+After selection, never reconfirm an unchanged envelope. Ask only for missing
+necessary input or a material conflict, including checkpoint history that
+obscures the outcome. Resolve predictable push conflicts before commit.
+
+Route selection and reading guidance grant no Git action authority.
+Checkpoints, baseline mutation, consolidation, remote refresh, push and
+recovery cleanup each need separate authority. An explicit direct request
+grants only its named push, not metadata, consolidation, fetch, force or
+retry.
 
 A combined commit, tag, and push of an already-prepared plugin release selects
-the hardened phase; this never authorizes the commit, tag, or push. Ordinary
-named-remote non-force staging, commits, and pushes without a tag or another
-listed phase stay host-native; submit, publish, or push alone is insufficient.
-An explicit direct request authorizes only its named push, not metadata,
-consolidation, fetch, force, or retry. Resolve predictable push
-conflicts before commit. Ask once only when active checkpoint history obscures
-the outcome; never reconfirm an unchanged envelope.
+the hardened phase; this never authorizes the commit, tag, or push. Ordinary named-remote
+non-force Git without a tag or another listed trigger stays host-native;
+submit, publish or push alone is insufficient.
 
 ## Load Only The Active Phase
 
@@ -109,13 +116,8 @@ conceptual answer.
 
 ## Phase Outcomes
 
-For a simple direct history-preserving push, preserve the exact named-remote
-command, keep repository hooks active, and push once. Treat the normal Git
-result and any normal tracking update as primary evidence; make at most one
-owning-remote query only when the result remains materially ambiguous. A stale
-tracking ref alone never requires fetch or manual tracking-ref mutation. Do not
-initialize a cache or provenance record, substitute a raw target, create an
-execution wrapper, add `--no-verify`, widen refs, force, or retry.
+For a simple direct push, follow `references/direct-submit.md` for the exact
+named-remote command, normal hooks, one attempt and proportional verification.
 
 For a hardened or multi-target push, verify current branch/upstream identity,
 operation state, exact targets, and immediate remote drift through the loaded

@@ -753,7 +753,7 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
             skills / "agent-plugin-architect/SKILL.md",
             "packaged-plugin ownership and phase",
             (
-                "Confirm that the request explicitly concerns packaged agent-plugin architecture.",
+                "Confirm that the selected request explicitly concerns packaged agent-plugin architecture.",
                 "Repo-local `AGENTS.md` or `.agents/skills` work belongs to",
                 "references/release-readiness.md",
                 "Load only references needed for the active phase.",

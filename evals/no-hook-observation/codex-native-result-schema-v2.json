@@ -69,7 +69,7 @@
     },
     "caseResults": {
       "type": "array",
-      "minItems": 16,
+      "minItems": 1,
       "maxItems": 16,
       "items": {
         "type": "object",
@@ -925,6 +925,87 @@
                 }
               }
             ]
+          },
+          "visibleReplies": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "messages",
+              "redactionsApplied",
+              "originalVisibleMessageCount",
+              "retentionComplete"
+            ],
+            "properties": {
+              "messages": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                  "type": "string",
+                  "maxLength": 8192
+                }
+              },
+              "redactionsApplied": {
+                "type": "boolean"
+              },
+              "originalVisibleMessageCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "retentionComplete": {
+                "type": "boolean"
+              }
+            }
+          },
+          "nativeDiscovery": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "source",
+                  "queryStarts",
+                  "receiptSha256",
+                  "scopeSha256",
+                  "skillCount",
+                  "errorCount",
+                  "forceReload",
+                  "returnCode"
+                ],
+                "properties": {
+                  "source": {
+                    "const": "native-skills-list-via-compatibility-layer"
+                  },
+                  "queryStarts": {
+                    "const": 1
+                  },
+                  "receiptSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "scopeSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "skillCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "errorCount": {
+                    "const": 0
+                  },
+                  "forceReload": {
+                    "const": true
+                  },
+                  "returnCode": {
+                    "const": 0
+                  }
+                }
+              }
+            ]
           }
         },
         "description": "New cases require publicReads and operatorReadCapture semantically; exact-hash historical prefixes retain their original representation."
@@ -964,7 +1045,7 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 70
+      "maximum": 133
     },
     "priorResultSha256s": {
       "type": "array",
@@ -1188,8 +1269,399 @@
               "maximum": 16
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fixed-candidate-acceptance-1"
+            },
+            "priorPartialSha256": {
+              "const": "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 76
+            },
+            "authenticationSourceOrdinal": {
+              "const": 14
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "assessment-revision-4-fixed-1"
+            },
+            "priorPartialSha256": {
+              "const": "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 87
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "independent-routing-tail-1"
+            },
+            "priorPartialSha256": {
+              "const": "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe"
+            },
+            "firstNewOrdinal": {
+              "const": 12
+            },
+            "priorAttemptCount": {
+              "const": 101
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "host-context-fixed-1"
+            },
+            "priorPartialSha256": {
+              "const": "548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 106
+            },
+            "authenticationSourceOrdinal": {
+              "const": 16
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "native-empty-discovery-1"
+            },
+            "priorPartialSha256": {
+              "const": "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73"
+            },
+            "firstNewOrdinal": {
+              "const": 11
+            },
+            "priorAttemptCount": {
+              "const": 117
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "discovery-outcome-1"
+            },
+            "priorPartialSha256": {
+              "const": "4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90"
+            },
+            "firstNewOrdinal": {
+              "const": 11
+            },
+            "priorAttemptCount": {
+              "const": 118
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "accepted-remainder-1"
+            },
+            "priorPartialSha256": {
+              "const": "cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a"
+            },
+            "firstNewOrdinal": {
+              "const": 10
+            },
+            "priorAttemptCount": {
+              "const": 119
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "traceable-confirmation-1"
+            },
+            "priorPartialSha256": {
+              "const": "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"
+            },
+            "firstNewOrdinal": {
+              "const": 13
+            },
+            "priorAttemptCount": {
+              "const": 122
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "architect-goal-preservation-1"
+            },
+            "priorPartialSha256": {
+              "const": "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c"
+            },
+            "firstNewOrdinal": {
+              "const": 12
+            },
+            "priorAttemptCount": {
+              "const": 129
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            }
+          }
         }
       ]
+    },
+    "executionSource": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "tree"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "tree": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        }
+      ]
+    },
+    "traceableConfirmation": {
+      "type": "object"
+    },
+    "goalPreservation": {
+      "type": "object"
     }
   }
 }

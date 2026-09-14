@@ -126,5 +126,113 @@
     "implementationCommit": "1cb076f4d54cb63e24ae097ccb728d67c614e1fd",
     "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
     "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9"
+  },
+  "fixedAcceptance": {
+    "windowId": "pending-choice-fixed-1",
+    "protocolDigest": "sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d.json",
+        "sha256": "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d",
+        "implementationCommit": "6f9c132e8088105347e602f1c43c8bc99ffe8c6b",
+        "implementationTree": "4b16ee800b8d0bd6657383ddcc02062a1b6ffe20"
+      }
+    ]
+  },
+  "revisionFourAcceptance": {
+    "windowId": "assessment-revision-4-fixed-1",
+    "protocolDigest": "sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b.json",
+        "sha256": "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b",
+        "implementationCommit": "5289943861fac0673140992e96860784dc241239",
+        "implementationTree": "865707d35ba9956074d6a4e44719dec1b938e087"
+      }
+    ]
+  },
+  "independentRoutingTail": {
+    "windowId": "independent-routing-tail-1",
+    "protocolDigest": "sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521.json",
+        "sha256": "548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521",
+        "implementationCommit": "0a520ec2b7cc1d06954b068d5e88d7c909dea51e",
+        "implementationTree": "e73b1e4615e50a29fa8e4e0daa2e219291d855ea"
+      }
+    ]
+  },
+  "hostContextAcceptance": {
+    "windowId": "host-context-fixed-1",
+    "protocolDigest": "sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73.json",
+        "sha256": "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73",
+        "implementationCommit": "c56d114c2e1338c8a15415c40301f77c448557a1",
+        "implementationTree": "96d37cdab95618f0ae4e1c9c781e122f1ec12af7"
+      }
+    ]
+  },
+  "nativeEmptyDiscoveryAcceptance": {
+    "windowId": "native-empty-discovery-1",
+    "protocolDigest": "sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90.json",
+        "sha256": "4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90",
+        "implementationCommit": "86b572e29640003084c8733e01960086c8c314ca",
+        "implementationTree": "d8428661524c6fbf426c8121dba88e3f0c2d8955"
+      }
+    ]
+  },
+  "discoveryOutcomeAcceptance": {
+    "windowId": "discovery-outcome-1",
+    "protocolDigest": "sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a.json",
+        "sha256": "cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a",
+        "implementationCommit": "16c13a3056a463149d93080cdd9f6102f31b8a3f",
+        "implementationTree": "594902b7ae5757a8d2b9201e752a11f8bf4a0b65"
+      }
+    ]
+  },
+  "acceptedRemainder": {
+    "windowId": "accepted-remainder-1",
+    "protocolDigest": "sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b.json",
+        "sha256": "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b",
+        "implementationCommit": "c7644a34409e3dce4418b70cc1cb3c504e2524a6",
+        "implementationTree": "ea9f97e51656ff699b7a3d5a6461b919a75c5258"
+      }
+    ]
+  },
+  "traceableConfirmation": {
+    "windowId": "traceable-confirmation-1",
+    "protocolDigest": "sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c.json",
+        "sha256": "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c",
+        "implementationCommit": "0d1dd8e6dcc2b57f59e73d18dcd6ac117c18017c",
+        "implementationTree": "69bc03fbe69a12d7ad173fb40a37b2665be07f62"
+      }
+    ]
+  },
+  "goalPreservation": {
+    "windowId": "architect-goal-preservation-1",
+    "protocolDigest": "sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae",
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc.json",
+        "sha256": "23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc",
+        "implementationCommit": "4845505764d239a93618e38bbaed313c3121cac9",
+        "implementationTree": "6b4a2414efd2938450c0d4efac9a8a2102554959"
+      }
+    ]
   }
 }

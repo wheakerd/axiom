@@ -17,7 +17,7 @@ from axiom_validation.no_hook_observation import check_no_hook_observation
 
 EXPECTED_SUCCESS_SUMMARY = (
     "Publication validation passed: 118 required files, 6 JSON files, "
-    "118 Markdown files, 17 documentation negative fixtures, "
+    "119 Markdown files, 17 documentation negative fixtures, "
     "78 offline route contract fixtures, "
     "95 black-box routing cases, 30 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "

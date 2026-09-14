@@ -1,0 +1,399 @@
+{
+  "schemaVersion": "2",
+  "protocolId": "axiom-codex-native-observation-v2",
+  "cli": {
+    "version": "0.153.0",
+    "sha256": "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be",
+    "model": "gpt-5.5",
+    "reasoningEffort": "medium"
+  },
+  "inputs": {
+    "goldenSet": {
+      "path": "evals/no-hook/golden-set-v1.jsonl",
+      "sha256": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+    },
+    "modelResponseSchema": {
+      "path": "evals/no-hook-observation/codex-model-response-schema-v2.json",
+      "sha256": "88c56b88253fc6bfb0a4dac519b0baa4e78be493568a5d51734f5b22db21f35d"
+    },
+    "promptEnvelope": {
+      "path": "evals/no-hook-observation/codex-native-prompt-envelope-v2.json",
+      "sha256": "d69a957f242a98bc96f70f380a045095298e6a54e2ee490e6cd17ce29e8270d7"
+    },
+    "taxonomy": {
+      "path": "evals/codex-exec-jsonl-observer-v3.json",
+      "sha256": "f74f844fe477673229c7e7a3bc3a34181cd5e6727305eed9d9450b312edb6d1e"
+    },
+    "fixtureMatrix": {
+      "path": "evals/no-hook-observation/codex-fixtures-v1.json",
+      "sha256": "7808326bf8bdce94b43fd25c9c4711459457e5ec79697a4f5d13a4acc2863df6"
+    },
+    "profile": {
+      "path": "evals/no-hook/profile-v1.json",
+      "sha256": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+    },
+    "benchmark": {
+      "path": "evals/no-hook/benchmark-v1.json",
+      "sha256": "7e71f8d40f1cfa5c7c6d607ef70753655f9304d2675f08145e011884f87ae1fa"
+    },
+    "bundleSchema": {
+      "path": "evals/no-hook/bundle-manifest-schema-v1.json",
+      "sha256": "0d3ee658e1c2e5b02047c39835f977ef9bb0141cae5421a6a59c2d3e765cdd50"
+    },
+    "staticBundleEvidence": {
+      "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
+      "sha256": "6c393607dbb474fe412ff0c165c43ee0566ac6219aedf6adc1147acb95889ac3"
+    }
+  },
+  "implementationBindings": [
+    {
+      "path": "axiom_validation/context.py",
+      "sha256": "cef91c5c8a48f9acf66886db6f3beedb8bf01ee46dae4658f8d2392c2e3e0d39"
+    },
+    {
+      "path": "axiom_validation/no_hook_bundle.py",
+      "sha256": "203937bbbff1110b2256fb8e01bcd6dae07912b18b67f15c5e8d3090e61fa13a"
+    },
+    {
+      "path": "axiom_validation/no_hook_linux_isolation.py",
+      "sha256": "6ddae4cd0b7fcd64841b29a0e9386838c0f46adbed7fc81259543d36b0913907"
+    },
+    {
+      "path": "axiom_validation/no_hook_native_observation.py",
+      "sha256": "c300bc6577f9776fb94a627f8e4e053ee786226a5072da56a6d27fdbead68b62"
+    },
+    {
+      "path": "axiom_validation/no_hook_observation.py",
+      "sha256": "3de5625a1cb775366aa23b2bface9059b77f1604e1a5901b4de137ef5f1c7e31"
+    },
+    {
+      "path": "axiom_validation/no_hook_profile.py",
+      "sha256": "f9365d09c50d2646bbab3841d614d35e2d91e2d098662bc69eea5683e5a85187"
+    },
+    {
+      "path": "axiom_validation/release_versions.py",
+      "sha256": "4717df83691ac65ace1748978eab4f7927830eda5aa573e33d24430d7e019c24"
+    },
+    {
+      "path": "axiom_validation/routing_evals/jsonio.py",
+      "sha256": "8de0a31bcd0f4827ddc4e4c5abc7d11952b24e4d6cdc3a895084df1333d1b07a"
+    },
+    {
+      "path": "axiom_validation/yaml_subset.py",
+      "sha256": "2d3ae17152586431d170e97d4e0c21fc83d4b87ce133dd58046addba9877444c"
+    },
+    {
+      "path": "scripts/run-no-hook-native-observation.py",
+      "sha256": "aeace6ff9ea900c2e2ebe8dd08d9165d7cf33194171cce232bcc148abd92b968"
+    }
+  ],
+  "bundle": {
+    "manifestDigest": "sha256:dd73e63ff790a3ca759f2bb12e2086f63c40af637846f907214901fda97970e8",
+    "archiveSha256": "9e53e1748f9db3f46defb1eb5bef026fd8bcdff49644e12a2275260461e97332",
+    "profileRuntimeDigest": "sha256:7c5451750c262343bb8bc142dc6af03c9b7ab86b35df1bf84b60162e353944ab",
+    "packageSha256": "d5697a3ce61f7d02e0ee729ef6ffeb1c15a3dd865729b453f664cea7db8fe081"
+  },
+  "caseIds": [
+    "no-hook-positive-explicit-using-axiom-001",
+    "no-hook-positive-direct-agents-architect-001",
+    "no-hook-positive-native-agent-plugin-architect-001",
+    "no-hook-positive-indirect-optimize-usage-001",
+    "no-hook-positive-retrospective-review-001",
+    "no-hook-positive-direct-traceable-git-001",
+    "no-hook-positive-cross-route-external-system-001",
+    "no-hook-positive-confirm-external-action-001",
+    "no-hook-negative-plan-only-system-change-001",
+    "no-hook-negative-untrusted-credential-action-001",
+    "no-hook-negative-unavailable-discovery-001",
+    "no-hook-ambiguous-plugin-design-or-install-001",
+    "no-hook-ambiguous-ordinary-or-traceable-git-001",
+    "no-hook-ambiguous-review-or-external-action-001",
+    "no-hook-no-route-summary-001",
+    "no-hook-no-route-coding-001"
+  ],
+  "limits": {
+    "maxCaseLaunches": 16,
+    "timeoutSeconds": 120,
+    "stdoutBytes": 1048576,
+    "stderrBytes": 262144
+  },
+  "resultSchema": {
+    "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
+    "sha256": "828bdc283f383b863b1059d47e0764dddbf5689c6905df0c2e1feb82ff07b2a2"
+  },
+  "discovery": {
+    "mechanism": "host-user-skills-from-installed-package",
+    "pluginRuntimeEnabled": false,
+    "root": "HOME/.agents/skills",
+    "target": "installed-package/skills",
+    "noPluginControlOrdinal": 11
+  },
+  "authentication": {
+    "modes": [
+      "independent-official-login",
+      "serial-test-auth-copy"
+    ],
+    "fileName": "auth.json",
+    "sourceOrdinal": 1,
+    "refreshHandoff": "after-successful-client-exit",
+    "contentRecorded": false
+  },
+  "diagnosticRevision": 11,
+  "followup": {
+    "priorResultSha256s": [
+      "5a7b9965820612204138f140b404a9fb7fb018c7f07ada14e2e09ccc514ad4ef",
+      "8b6e4a93f6b2edd8c4f4c89f275e3ed023b47ea74b44835cfbf97d77f948c6df",
+      "bfdd8b8569750d5797caf3e19c1e1acb55e190043b8dbdfdd2f48f47bd93fc79",
+      "ef51fd26305e11ae7f844172326e5f4cf0b7c20f8701dafe34ea87778228ed0b",
+      "7edd7ab7068f85525074b10f874b325c066a35de183048b037f78f5a9286b018",
+      "b5c112f41836e34e869fd067cb18ae29f812e42dd1d933337fa6d64e912f202a",
+      "c66d47ac18377a2ff202c6dcbfa36f07c0e68ca2dbd200d8c8685e0c9f8b8ca0",
+      "e6c19c4324da9a40c074f2c0503a4b58a08fd6df6e58f747c7e41ba59248e64d"
+    ],
+    "priorAttempts": 20,
+    "maximumCumulativeAttempts": 36,
+    "maximumCaseOneAttempts": 9,
+    "remainingCaseAttempts": 1
+  },
+  "diagnostics": {
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "errorEvent": "not-terminal; will_retry unavailable",
+    "turnFailed": "failure terminal; public message discarded; explicitly authorized operator-only capture is separate",
+    "stderr": "exact source-backed notices or single-line warning prefixes; other content unknown",
+    "retention": "Closed public first-cause and partial evidence; independent human-only JSONL diagnostic and canonical-client stderr exceptions; no executor/model readback.",
+    "historicalFailure": "Seven immutable INCOMPLETE results retain original bytes and protocols: five Sol, two gpt-5.5. Revision 10 permits one further gpt-5.5 Case 1 attempt and unstarted cases; no refund or automatic retry.",
+    "errorItem": "completed-only diagnostic; shared item IDs; allowed after thread.started before or during turn; never discarded or translated",
+    "assessment": "observer-inferred finite template classes; CodeModeOnly with unavailable host fails closed; unknown or condition-changing diagnostics cannot pass; official error code remains unknown",
+    "privateSummary": {
+      "maximumBatchBytes": 16384,
+      "fileMode": "0600",
+      "retention": "private only; frozen template summaries; uncertain dynamic values omitted; no raw output or credential inspection"
+    },
+    "partialEvidence": "closed stream and last emitted response candidate are separate; official final output must agree before strict response acceptance; parser failures retain closed assertion code and event ordinal, not content",
+    "operatorOnlyCapture": {
+      "fields": [
+        "error.message",
+        "turn.failed.error.message",
+        "item.completed:error.message"
+      ],
+      "maximumBatchBytes": 16384,
+      "itemBudgetBytes": 4096,
+      "errorBudgetBytes": 6144,
+      "turnFailedBudgetBytes": 6144,
+      "directoryMode": "0700",
+      "fileMode": "0600",
+      "format": "JSON string records; exclusive creation; control characters escaped",
+      "access": "human operator only; no model read, search, hash, upload or attachment; excluded from Git, validation copies and CI",
+      "failure": "report truncation and write failure; preserve first cause; never upgrades acceptance",
+      "isolation": "operational no-read boundary for the executor; not a same-UID isolation claim"
+    },
+    "finalResponse": "bounded last emitted agent message; cross-check JSON value with private exclusive --output-last-message artifact; remove artifact after extraction; missing or different final output is INCOMPLETE",
+    "operatorOnlyStderr": {
+      "source": "captured canonical exec stderr only; never login or other process output",
+      "maximumBatchBytes": 16384,
+      "budget": "independent from JSONL message capture",
+      "directoryMode": "0700",
+      "fileMode": "0600",
+      "filePattern": "operator-only-diagnostics/case-NN-stderr.json",
+      "format": "exclusive JSON string; controls escaped; UTF-8 decoding faults explicitly recorded",
+      "access": "human operator only; no executor/model read, print, hash, parse, upload or attachment",
+      "exclusion": "Git, validation copies, fixtures, CI and archives",
+      "failure": "record actual written bytes, truncation, encoding and write status; never upgrades acceptance",
+      "isolation": "operational no-read boundary, not same-UID isolation"
+    },
+    "sameAttemptReview": {
+      "scope": "new seven-history read-contract-continuation only; seven historical results are immutable and ineligible, including the seventh policy rejection",
+      "record": "append-only supplement bound to original result SHA, protocol and execution implementation; never replace original INCOMPLETE",
+      "source": "human-provided sanitized contents from this attempt operator-only stderr; freeze public source/code basis separately; no executor raw-file access",
+      "eligibility": "only unknown-stderr; exit 0; complete input; turn.completed; valid stream, response, official final output and postcheck; no timeout, observer termination, cleanup failure, policy rejection or condition-changing diagnostic; complete UTF-8 stderr capture",
+      "decision": "no automatic approval from metadata; assess every diagnostic against frozen upstream and required conditions; unresolved or unsafe content remains INCOMPLETE",
+      "resume": "only previously NOT-RUN cases after supplement confirms no effect on required premises and non-model input/config/model/auth/ledger checks still pass; preserve batch and attempts; no Case 1 restart or budget refund",
+      "limits": "route agreement does not prove Skill-body consumption or invisible actions; missing observations cannot be supplied by human classification",
+      "continuation": "Specific source-bound Case 5 and 6 supplements; preserve both partial results and their original facts. Only unstarted Cases 7-16 under new implementation; same ledger and inherited 316-byte stderr use."
+    },
+    "readRejections": {
+      "codes": [
+        "event-shape",
+        "read-command-syntax",
+        "read-target-unbound",
+        "read-lifecycle",
+        "read-output-mismatch",
+        "read-prefix-mismatch",
+        "event-unsupported",
+        "item-unsupported",
+        "item-lifecycle"
+      ],
+      "location": "first rejecting predicate and one-based event ordinal; shared receiver/parser/result; later framing, missing terminal or cleanup cannot replace it",
+      "retention": "closed codes only; no command, target path or output; unknown target is not resolved or read",
+      "sedLines": "LF-delimited, preserving CR and final unterminated bytes",
+      "history": "seven original results remain immutable; seventh exact read predicate is unknown; revision 10 grants one explicitly linked continuation without changing read predicates"
+    },
+    "catalogRefreshTimeout": "Only the full frozen timestamped codex_models_manager::manager catalog Timeout line is known-nonfatal; all full-input, stream, final-output, fixed-model and postcheck conditions still apply. Extra/different stderr remains unknown. No retroactive classification of original results.",
+    "operatorReadRejection": {
+      "scope": "command field of first rejected command_execution only; human-only",
+      "maximumBytes": 4096,
+      "encoding": "JSON-escaped data",
+      "fileMode": "0600",
+      "directoryMode": "0700",
+      "exclusiveCreate": true,
+      "readByObserver": false,
+      "uploaded": false,
+      "targetAccess": false
+    }
+  },
+  "responseTransport": {
+    "revision": 1,
+    "stringConstants": "explicit-type-and-singleton-enum",
+    "uniqueRoutes": "local-strict-validation",
+    "annotations": "not-transmitted",
+    "preflight": "all-16-derived-files; not-server-acceptance"
+  },
+  "toolMode": {
+    "codeModeHost": false,
+    "inProcessFallbackDisabled": false,
+    "effectiveRoute": "requires-official-direct-mode; no-code-mode-only-fallback",
+    "acceptedNotice": "Code Mode is unavailable because code-mode host is disabled. Falling back to direct tools; enable `features.code_mode_host` and install `codex-code-mode-host`.",
+    "evidence": "bound-shell-reads; not-code-mode-or-plugin-runtime-observation",
+    "rejectedNotice": "Code Mode is unavailable because code-mode host is disabled. Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`."
+  },
+  "modelMetadata": {
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "embeddedPath": "codex-rs/models-manager/models.json",
+    "model": "gpt-5.5",
+    "embeddedToolMode": null,
+    "supportsMedium": true,
+    "cache": "registered CODEX_HOME/models_cache.json; read only; no explicit refresh",
+    "selection": "official cache when present; frozen embedded entry otherwise",
+    "checks": "before launch and after exit; inferred Direct under bound feature settings",
+    "scope": "new observation combination; not equivalent to historical Sol context"
+  },
+  "evidenceLayers": {
+    "caseSemantics": "unchanged Golden Set and benchmark route/clarification/front-door and authority fields",
+    "discoverySource": "bound installed package, standard user Skill directory and pre/post configuration; Case 11 absent",
+    "bodyConsumption": "publicReads binds receiver- and strict-stream-validated file identity, range and byte count; discovery/fixture/route facts remain separate; absent records are not proof of no access",
+    "issueAcceptance": "separate FCR and complete host-evidence requirements; neither route agreement nor diagnostic review closes findings",
+    "assessmentDefinitions": {
+      "revision": 1,
+      "routeOrder": "route ID UTF-8 lexical; report order only",
+      "discovery": "schema vocabulary does not establish installation",
+      "delivery": "uniform field definitions plus canonical discovery metadata",
+      "historicalResultsReinterpreted": false
+    }
+  },
+  "executionWindow": {
+    "state": "authorized-once",
+    "lastResultSha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
+    "reason": "one fresh explicit-invocation batch; 16 new attempts, 70 cumulative maximum"
+  },
+  "sameAttemptReview": {
+    "path": "evals/no-hook-observation/case-06-catalog-review-v2.json",
+    "sha256": "df6d8e7018967a1a54823e74d948f1f5b04a1d487d004bed52653bf1b5258244"
+  },
+  "assessmentRevision": 3,
+  "assessmentReview": {
+    "scope": "same attempt only; immutable original plus separate user-provided diagnostic supplement",
+    "eligibleOnlyIf": [
+      "unknown-stderr-only",
+      "full-input-delivered",
+      "exit-zero",
+      "turn-completed",
+      "strict-stream-valid",
+      "response-valid",
+      "official-final-output-equal",
+      "postcheck-valid",
+      "no-policy-rejection",
+      "no-timeout",
+      "no-observer-termination",
+      "no-cleanup-failure",
+      "no-model-or-config-change"
+    ],
+    "cannotSupply": [
+      "Skill consumption",
+      "unobserved actions",
+      "replacement result",
+      "refunded attempt"
+    ],
+    "continuation": "only unstarted cases after the exact supplementary assessment; no automatic review"
+  },
+  "assessmentRemainder": {
+    "priorResult": {
+      "path": "evals/no-hook-observation/results/codex-native-9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9.json",
+      "sha256": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9",
+      "implementationCommit": "a29b9503920a8798509407f40645a0efee14b474",
+      "implementationTree": "a5289b6a8e787b82bd1a73ba06a0447e619fb855"
+    },
+    "firstNewOrdinal": 11,
+    "lastOrdinal": 16,
+    "priorAttemptCount": 30,
+    "maximumNewAttempts": 6,
+    "maximumCumulativeAttempts": 36,
+    "authenticationSourceOrdinal": 9,
+    "priorStop": "preserved; independent unstarted cases only",
+    "stderrReview": "same-attempt only; all existing eligibility conditions required"
+  },
+  "protocolDigest": "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3",
+  "materialDelivery": {
+    "revision": 1,
+    "source": "fixtureMatrix.files[].path",
+    "pathBase": "case-workspace",
+    "order": "utf8-byte-order",
+    "scope": "task-data-only; not-installed-skills; empty-list-is-not-discovery-evidence"
+  },
+  "materialSegment": {
+    "priorResult": {
+      "path": "evals/no-hook-observation/results/codex-native-e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3.json",
+      "sha256": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3",
+      "implementationCommit": "34376415079fc59c5caf6614fd85e18e3beea030",
+      "implementationTree": "a73078150ac03b91db99dc04657d13fc5e757074"
+    },
+    "firstNewOrdinal": 10,
+    "lastOrdinal": 16,
+    "priorAttemptCount": 31,
+    "maximumNewAttempts": 7,
+    "maximumCumulativeAttempts": 38,
+    "authenticationSourceOrdinal": 9,
+    "inputRevision": 2,
+    "history": "references only; no inherited observations or sessions",
+    "stop": "any policy rejection or reliability failure stops remaining cases"
+  },
+  "currentAssessment": {
+    "priorResult": {
+      "path": "evals/no-hook-observation/results/codex-native-c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1.json",
+      "sha256": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1",
+      "implementationCommit": "1cb076f4d54cb63e24ae097ccb728d67c614e1fd",
+      "implementationTree": "5438670d41b75c88779f6749f652746f544e9cc9",
+      "protocolDigest": "sha256:80e8de41f54ca3a3316dc17f1f2857ac980c8979c808bf8143e06a2cdb9824e9"
+    },
+    "firstNewOrdinal": 1,
+    "lastOrdinal": 16,
+    "maximumNewAttempts": 16,
+    "maximumCumulativeAttempts": 70,
+    "authenticationSourceOrdinal": 16,
+    "assessmentRevision": 3,
+    "history": "deduplicate ordinal and materialization commitment; no inherited sessions",
+    "stop": "any policy rejection or reliability failure stops remaining cases",
+    "stderrReview": "same-attempt only; all existing eligibility conditions required",
+    "explicitInvocationRevision": 1
+  },
+  "explicitInvocation": {
+    "revision": 1,
+    "transport": "codex-exec-stdin-namespaced-dollar-mention",
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "sourcePaths": [
+      "codex-rs/exec/src/lib.rs",
+      "codex-rs/ext/skills/src/provider/host.rs",
+      "codex-rs/ext/skills/src/loader/host.rs",
+      "codex-rs/ext/skills/src/loader/namespace.rs",
+      "codex-rs/ext/skills/src/selection.rs",
+      "codex-rs/skills/src/mentions.rs",
+      "codex-rs/skills/src/selection.rs"
+    ],
+    "source": "inner-request-leading-Invoke-name-to-or-explicitly-to; Use-the-name-Skill-to",
+    "catalog": "bound-package-frontmatter-and-nearest-plugin-namespace",
+    "matching": "exact-case-sensitive-unique-enabled-name; no-display-name-or-route-inference",
+    "connectorCondition": "existing apps=false and mcp_servers={} configuration; no connector-name collision",
+    "noInstallation": "no-selection-added",
+    "evidence": "selection-representation; not-observed-native-body-load",
+    "supportChange": "explicit-invocation-adaptation; not-unchanged-natural-language-discovery"
+  }
+}

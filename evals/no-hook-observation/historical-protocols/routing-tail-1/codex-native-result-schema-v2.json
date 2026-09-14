@@ -1,0 +1,1371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wheakerd/axiom/blob/main/evals/no-hook-observation/codex-native-result-schema-v2.json",
+  "title": "Codex native no-Hook bounded compatibility observation v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "protocolId",
+    "protocolDigest",
+    "runMode",
+    "hostClaim",
+    "status",
+    "materializationSeed",
+    "cliLaunchCount",
+    "modelRequestCount",
+    "caseResults",
+    "materializationCommitmentRoot",
+    "cleanup",
+    "descendantClosure",
+    "discoveryMechanism",
+    "pluginRuntimeEnabled",
+    "authenticationMode",
+    "diagnosticRevision",
+    "priorResultSha256s",
+    "attemptCount",
+    "cumulativeAttemptCount",
+    "executionModel"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2"
+    },
+    "protocolId": {
+      "const": "axiom-codex-native-observation-v2"
+    },
+    "protocolDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "runMode": {
+      "enum": [
+        "actual",
+        "simulated"
+      ]
+    },
+    "hostClaim": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCOMPLETE",
+        "NOT-RUN"
+      ]
+    },
+    "materializationSeed": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "cliLaunchCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16
+    },
+    "modelRequestCount": {
+      "type": "null"
+    },
+    "caseResults": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ordinal",
+          "caseId",
+          "status",
+          "diagnostic",
+          "cliLaunchCount",
+          "modelRequestCount",
+          "installation",
+          "authentication",
+          "fixtureBeforeSha256",
+          "fixtureAfterSha256",
+          "packageBeforeSha256",
+          "packageAfterSha256",
+          "opaqueBindingSha256",
+          "modelResponseSchemaSha256",
+          "casePromptSha256",
+          "materializationCommitmentSha256",
+          "readonlyCommandCount",
+          "observed",
+          "terminal",
+          "attemptCount",
+          "executionDiagnostics",
+          "evidenceExtraction",
+          "privateCapture",
+          "modelMetadataBefore",
+          "modelMetadataAfter",
+          "operatorStderrCapture"
+        ],
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "caseId": {
+            "enum": [
+              "no-hook-positive-explicit-using-axiom-001",
+              "no-hook-positive-direct-agents-architect-001",
+              "no-hook-positive-native-agent-plugin-architect-001",
+              "no-hook-positive-indirect-optimize-usage-001",
+              "no-hook-positive-retrospective-review-001",
+              "no-hook-positive-direct-traceable-git-001",
+              "no-hook-positive-cross-route-external-system-001",
+              "no-hook-positive-confirm-external-action-001",
+              "no-hook-negative-plan-only-system-change-001",
+              "no-hook-negative-untrusted-credential-action-001",
+              "no-hook-negative-unavailable-discovery-001",
+              "no-hook-ambiguous-plugin-design-or-install-001",
+              "no-hook-ambiguous-ordinary-or-traceable-git-001",
+              "no-hook-ambiguous-review-or-external-action-001",
+              "no-hook-no-route-summary-001",
+              "no-hook-no-route-coding-001"
+            ]
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "INCOMPLETE",
+              "NOT-RUN"
+            ]
+          },
+          "diagnostic": {
+            "enum": [
+              "not-run",
+              "none",
+              "authentication-unavailable",
+              "execution-failed",
+              "stream-invalid",
+              "semantic-mismatch",
+              "input-changed",
+              "already-attempted",
+              "process-start",
+              "process-exit",
+              "host-failure",
+              "policy-rejected",
+              "event-invalid",
+              "timeout",
+              "output-limit",
+              "input-incomplete",
+              "io-failed",
+              "response-invalid",
+              "cleanup-failed",
+              "unknown-stderr",
+              "diagnostic-unknown",
+              "model-mismatch",
+              "configuration-unverified",
+              "evidence-incomplete",
+              "tool-mode-unavailable"
+            ]
+          },
+          "cliLaunchCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "modelRequestCount": {
+            "type": "null"
+          },
+          "installation": {
+            "enum": [
+              "verified",
+              "absent",
+              "not-checked"
+            ]
+          },
+          "authentication": {
+            "enum": [
+              "chatgpt",
+              "not-checked",
+              "unavailable"
+            ]
+          },
+          "fixtureBeforeSha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fixtureAfterSha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "packageBeforeSha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "packageAfterSha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "opaqueBindingSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "modelResponseSchemaSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "casePromptSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "materializationCommitmentSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "readonlyCommandCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "profileId",
+                  "contractBindings",
+                  "discoveryOutcome",
+                  "selectedRoutes",
+                  "clarificationCount",
+                  "usingAxiomFrontDoorObserved",
+                  "sessionStartObserved",
+                  "mutationAttempted",
+                  "mutationObserved"
+                ],
+                "properties": {
+                  "profileId": {
+                    "const": "openai-hook-independent-v1"
+                  },
+                  "contractBindings": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "profileContractSha256",
+                      "goldenSetSha256",
+                      "hostCaseSetSha256"
+                    ],
+                    "properties": {
+                      "profileContractSha256": {
+                        "const": "b693580201a51fb5ecc5058b2e6ee8e63ddb948580f7fee7ce6042215ec07a88"
+                      },
+                      "goldenSetSha256": {
+                        "const": "05febacecdf36ac05ae95d55e835c4d207c4a24dc2bb68a44cb62aa3e108a40c"
+                      },
+                      "hostCaseSetSha256": {
+                        "const": "cceafef1e178bf46d145e86fb0a1768be86a5e47856c8bd6d4fa03f3ac3da13a"
+                      }
+                    }
+                  },
+                  "discoveryOutcome": {
+                    "enum": [
+                      "selected",
+                      "clarification",
+                      "no-route",
+                      "unavailable"
+                    ]
+                  },
+                  "selectedRoutes": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 2,
+                    "uniqueItems": true,
+                    "items": {
+                      "enum": [
+                        "using-axiom",
+                        "agents-architect",
+                        "agent-plugin-architect",
+                        "confirm-external-action",
+                        "optimize-codex-usage",
+                        "reversible-system-change",
+                        "review-axiom-task",
+                        "traceable-git-submit"
+                      ]
+                    }
+                  },
+                  "clarificationCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "usingAxiomFrontDoorObserved": {
+                    "type": "boolean"
+                  },
+                  "sessionStartObserved": {
+                    "type": "boolean"
+                  },
+                  "mutationAttempted": {
+                    "type": "boolean"
+                  },
+                  "mutationObserved": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "terminal": {
+            "enum": [
+              "turn.completed",
+              "turn.failed",
+              "not-observed"
+            ]
+          },
+          "attemptCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "executionDiagnostics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "phase",
+              "category",
+              "returnCode",
+              "signal",
+              "timedOut",
+              "observerTerminated",
+              "cleanupFailed",
+              "inputBytesSent",
+              "inputFullyDelivered",
+              "stdoutBytes",
+              "stderrBytes",
+              "eventCount",
+              "eventTypes",
+              "stderrClassification",
+              "officialErrorCode",
+              "itemTypes",
+              "policyReason",
+              "diagnosticItemCount",
+              "preTurnDiagnosticCount",
+              "hostDiagnosticClasses",
+              "streamAssertion",
+              "streamEventOrdinal",
+              "finalOutputVerified"
+            ],
+            "properties": {
+              "phase": {
+                "enum": [
+                  "none",
+                  "precheck",
+                  "login",
+                  "launch",
+                  "io",
+                  "event",
+                  "exit",
+                  "stream",
+                  "response",
+                  "postcheck",
+                  "cleanup"
+                ]
+              },
+              "category": {
+                "enum": [
+                  "none",
+                  "process-start",
+                  "process-exit",
+                  "host-failure",
+                  "policy-rejected",
+                  "event-invalid",
+                  "timeout",
+                  "output-limit",
+                  "input-incomplete",
+                  "io-failed",
+                  "stream-invalid",
+                  "response-invalid",
+                  "input-changed",
+                  "authentication-unavailable",
+                  "already-attempted",
+                  "cleanup-failed",
+                  "unknown-stderr",
+                  "execution-failed",
+                  "diagnostic-unknown",
+                  "model-mismatch",
+                  "configuration-unverified",
+                  "evidence-incomplete",
+                  "tool-mode-unavailable"
+                ]
+              },
+              "returnCode": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -2147483648,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "signal": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "timedOut": {
+                "type": "boolean"
+              },
+              "observerTerminated": {
+                "type": "boolean"
+              },
+              "cleanupFailed": {
+                "type": "boolean"
+              },
+              "inputBytesSent": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1048576
+              },
+              "inputFullyDelivered": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "stdoutBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1056768
+              },
+              "stderrBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 270336
+              },
+              "eventCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4097
+              },
+              "eventTypes": {
+                "type": "array",
+                "maxItems": 9,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "thread.started",
+                    "turn.started",
+                    "turn.completed",
+                    "turn.failed",
+                    "error",
+                    "item.started",
+                    "item.updated",
+                    "item.completed",
+                    "unknown"
+                  ]
+                }
+              },
+              "stderrClassification": {
+                "enum": [
+                  "not-observed",
+                  "empty",
+                  "known-nonfatal",
+                  "unknown"
+                ]
+              },
+              "officialErrorCode": {
+                "const": "unknown"
+              },
+              "itemTypes": {
+                "type": "array",
+                "maxItems": 5,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "reasoning",
+                    "agent_message",
+                    "command_execution",
+                    "error",
+                    "unsupported"
+                  ]
+                }
+              },
+              "policyReason": {
+                "enum": [
+                  "none",
+                  "unknown-event",
+                  "read-contract-rejected",
+                  "unsupported-item",
+                  "event-shape-rejected",
+                  "item-lifecycle-rejected"
+                ]
+              },
+              "diagnosticItemCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "preTurnDiagnosticCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "hostDiagnosticClasses": {
+                "type": "array",
+                "maxItems": 7,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "model-rerouted",
+                    "configuration-unverified",
+                    "evidence-incomplete",
+                    "unknown",
+                    "upstream-error",
+                    "code-mode-direct-fallback",
+                    "code-mode-fail-closed"
+                  ]
+                }
+              },
+              "streamAssertion": {
+                "enum": [
+                  "none",
+                  "framing-or-size",
+                  "event-count",
+                  "event-after-terminal",
+                  "event-shape",
+                  "thread-start-order",
+                  "turn-start-order",
+                  "terminal-active-items",
+                  "error-before-thread",
+                  "item-outside-lifecycle",
+                  "item-id-sequence",
+                  "item-id-reused",
+                  "command-start-duplicate",
+                  "command-start-mismatch",
+                  "content-id-reused",
+                  "agent-message-size",
+                  "missing-terminal",
+                  "final-message-missing",
+                  "final-message-invalid-json",
+                  "final-message-not-object",
+                  "final-output-unavailable",
+                  "final-output-mismatch",
+                  "read-command-syntax",
+                  "read-target-unbound",
+                  "read-lifecycle",
+                  "read-output-mismatch",
+                  "read-prefix-mismatch",
+                  "event-unsupported",
+                  "item-unsupported",
+                  "item-lifecycle"
+                ]
+              },
+              "streamEventOrdinal": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4097
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "finalOutputVerified": {
+                "type": "boolean"
+              }
+            }
+          },
+          "evidenceExtraction": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "stream",
+              "response",
+              "postcheck"
+            ],
+            "properties": {
+              "stream": {
+                "enum": [
+                  "not-checked",
+                  "valid",
+                  "invalid"
+                ]
+              },
+              "response": {
+                "enum": [
+                  "not-checked",
+                  "valid",
+                  "invalid"
+                ]
+              },
+              "postcheck": {
+                "enum": [
+                  "not-checked",
+                  "valid",
+                  "invalid"
+                ]
+              }
+            }
+          },
+          "privateCapture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "bytes",
+              "truncated"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "not-requested",
+                  "no-diagnostics",
+                  "saved",
+                  "omitted",
+                  "write-failed"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16384
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
+          },
+          "modelMetadataBefore": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "metadataSource",
+                  "toolMode",
+                  "supportsMedium",
+                  "derivedEffectiveToolMode"
+                ],
+                "properties": {
+                  "model": {
+                    "const": "gpt-5.5",
+                    "type": "string"
+                  },
+                  "metadataSource": {
+                    "enum": [
+                      "official-cache",
+                      "frozen-embedded"
+                    ]
+                  },
+                  "toolMode": {
+                    "enum": [
+                      null,
+                      "direct"
+                    ]
+                  },
+                  "supportsMedium": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "derivedEffectiveToolMode": {
+                    "const": "direct",
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "modelMetadataAfter": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "metadataSource",
+                  "toolMode",
+                  "supportsMedium",
+                  "derivedEffectiveToolMode"
+                ],
+                "properties": {
+                  "model": {
+                    "const": "gpt-5.5",
+                    "type": "string"
+                  },
+                  "metadataSource": {
+                    "enum": [
+                      "official-cache",
+                      "frozen-embedded"
+                    ]
+                  },
+                  "toolMode": {
+                    "enum": [
+                      null,
+                      "direct"
+                    ]
+                  },
+                  "supportsMedium": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "derivedEffectiveToolMode": {
+                    "const": "direct",
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "operatorStderrCapture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "bytes",
+              "truncated",
+              "encoding"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "not-requested",
+                  "empty",
+                  "saved",
+                  "omitted",
+                  "write-failed"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16384
+              },
+              "truncated": {
+                "type": "boolean"
+              },
+              "encoding": {
+                "enum": [
+                  "not-observed",
+                  "utf-8",
+                  "invalid-utf-8"
+                ]
+              }
+            }
+          },
+          "operatorReadCapture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "bytes",
+              "truncated"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "not-requested",
+                  "saved",
+                  "write-failed"
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            }
+          },
+          "publicReads": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "eventOrdinal",
+                "source",
+                "path",
+                "bytes",
+                "range"
+              ],
+              "properties": {
+                "eventOrdinal": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "source": {
+                  "enum": [
+                    "fixture",
+                    "package",
+                    "discovery"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "range": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100000
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "explicitInvocation": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "revision",
+                  "requestSha256",
+                  "hostName",
+                  "skillPath",
+                  "skillSha256",
+                  "mentionSha256"
+                ],
+                "properties": {
+                  "revision": {
+                    "const": 1
+                  },
+                  "requestSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "hostName": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+:[a-z0-9-]+$"
+                  },
+                  "skillPath": {
+                    "type": "string",
+                    "pattern": "^skills/[a-z0-9-]+/SKILL\\.md$"
+                  },
+                  "skillSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "mentionSha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
+          },
+          "visibleReplies": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "messages",
+              "redactionsApplied",
+              "originalVisibleMessageCount",
+              "retentionComplete"
+            ],
+            "properties": {
+              "messages": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                  "type": "string",
+                  "maxLength": 8192
+                }
+              },
+              "redactionsApplied": {
+                "type": "boolean"
+              },
+              "originalVisibleMessageCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4096
+              },
+              "retentionComplete": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "description": "New cases require publicReads and operatorReadCapture semantically; exact-hash historical prefixes retain their original representation."
+      }
+    },
+    "materializationCommitmentRoot": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "cleanup": {
+      "const": "retained-test-state"
+    },
+    "descendantClosure": {
+      "const": "not-observed"
+    },
+    "discoveryMechanism": {
+      "const": "host-user-skills-from-installed-package"
+    },
+    "pluginRuntimeEnabled": {
+      "const": false
+    },
+    "authenticationMode": {
+      "type": "string",
+      "enum": [
+        "independent-official-login",
+        "serial-test-auth-copy"
+      ]
+    },
+    "diagnosticRevision": {
+      "const": 11
+    },
+    "attemptCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16
+    },
+    "cumulativeAttemptCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 106
+    },
+    "priorResultSha256s": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 8,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "executionModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "reasoningEffort",
+        "requiredToolMode"
+      ],
+      "properties": {
+        "model": {
+          "const": "gpt-5.5",
+          "type": "string"
+        },
+        "reasoningEffort": {
+          "const": "medium",
+          "type": "string"
+        },
+        "requiredToolMode": {
+          "const": "direct",
+          "type": "string"
+        }
+      }
+    },
+    "executionSegment": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "priorPartialSha256",
+            "reviewSha256",
+            "firstNewOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "priorPartialSha256": {
+              "const": "72ab78c4eae4ff40a99098480033ffa98966991028316730a19d84f37545c3dd"
+            },
+            "reviewSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "firstNewOrdinal": {
+              "const": 7
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "priorPartialSha256": {
+              "const": "9880ebdd844f2469ab07c136d75e1561b4553cc4ff99cfe6b4de564d05f48fd9"
+            },
+            "firstNewOrdinal": {
+              "const": 11
+            },
+            "priorAttemptCount": {
+              "const": 30
+            },
+            "authenticationSourceOrdinal": {
+              "const": 9
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "material-delivery"
+            },
+            "priorPartialSha256": {
+              "const": "e1504982697cc3a20f93a66245983362d2ecc7ddb60534681f9bdc53b65f29b3"
+            },
+            "firstNewOrdinal": {
+              "const": 10
+            },
+            "priorAttemptCount": {
+              "const": 31
+            },
+            "authenticationSourceOrdinal": {
+              "const": 9
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 7
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 7
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "assessment-revision-3"
+            },
+            "priorPartialSha256": {
+              "const": "3b10da277aea213ba5bcecc8bfeac486a5a1fdb0339c3a4fd2d7aef066a32360"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 38
+            },
+            "authenticationSourceOrdinal": {
+              "const": 16
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "explicit-invocation-revision-1"
+            },
+            "priorPartialSha256": {
+              "const": "c74da98c54d0f4dae9fda4252fcff5ed7b341f3c3b56f38c71c1a4feb0477ff1"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 54
+            },
+            "authenticationSourceOrdinal": {
+              "const": 16
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fixed-candidate-acceptance-1"
+            },
+            "priorPartialSha256": {
+              "const": "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 76
+            },
+            "authenticationSourceOrdinal": {
+              "const": 14
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "assessment-revision-4-fixed-1"
+            },
+            "priorPartialSha256": {
+              "const": "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+            },
+            "firstNewOrdinal": {
+              "const": 1
+            },
+            "priorAttemptCount": {
+              "const": 87
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "independent-routing-tail-1"
+            },
+            "priorPartialSha256": {
+              "const": "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe"
+            },
+            "firstNewOrdinal": {
+              "const": 12
+            },
+            "priorAttemptCount": {
+              "const": 101
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        }
+      ]
+    },
+    "executionSource": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commit",
+            "tree"
+          ],
+          "properties": {
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "tree": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

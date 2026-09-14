@@ -40,6 +40,7 @@ BUILDER_SOURCE_REPOSITORY = Path(
     os.environ.get("AXIOM_TEST_BUNDLE_SOURCE_REPOSITORY", REPOSITORY_ROOT)
 ).resolve()
 LEGACY_BUILDER_COMMIT = "2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223"
+LEGACY_BUILDER_FIXTURES = REPOSITORY_ROOT / "tests/fixtures/no-hook-builder-revision-6"
 PROTECTED_REPOSITORY_SENTINEL = b"axiom protected repository sentinel v1\n"
 
 
@@ -118,12 +119,40 @@ def happy_stream(response: dict[str, object], *, reasoning: bool = False) -> byt
     return b"".join(records)
 
 
-def legacy_worker_repository(parent: Path, source: Path, environment: dict[str, str]) -> Path:
+def legacy_builder_inputs() -> dict[str, bytes]:
+    """Exact public blobs from LEGACY_BUILDER_COMMIT, pinned by revision 6.
+
+    These immutable test inputs are not product builder sources. No Git object
+    lookup, network retrieval or local preservation archive is used at runtime.
+    """
+    evidence = load_json(REPOSITORY_ROOT / observer.STATIC_BUNDLE_EVIDENCE_RELATIVE)
+    dependencies = evidence["bundleManifest"]["builder"]["behaviorDependencies"]
+    expected_paths = {
+        "scripts/build-no-hook-bundle.py", "axiom_validation/no_hook_bundle.py",
+        "evals/no-hook/bundle-manifest-schema-v1.json",
+    }
+    if len(dependencies) != 3 or {item["path"] for item in dependencies} != expected_paths:
+        raise AssertionError("legacy worker behavior dependency inventory changed")
+    result = {}
+    for binding in dependencies:
+        path = LEGACY_BUILDER_FIXTURES / binding["path"]
+        if path.is_symlink() or not path.is_file():
+            raise AssertionError("legacy builder fixture missing or not a regular file: " + binding["path"])
+        data = path.read_bytes()
+        if (len(data) != binding["size"]
+                or hashlib.sha256(data).hexdigest() != binding["sha256"]):
+            raise AssertionError("legacy worker dependency differs from archived evidence")
+        result[binding["path"]] = data
+    return result
+
+
+def legacy_worker_repository(parent: Path, environment: dict[str, str]) -> Path:
     """Current observer/helper with the archived lifecycle-v2 producer inputs.
 
     The legacy source/receipt contract is revision 5/6, not the current 8/9
     ordinary builder contract. No production constants or return values change.
     """
+    inputs = legacy_builder_inputs()
     destination = parent / "legacy-worker"
     destination.mkdir()
     paths = subprocess.check_output(
@@ -137,23 +166,8 @@ def legacy_worker_repository(parent: Path, source: Path, environment: dict[str, 
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPOSITORY_ROOT / relative, target)
-    evidence = load_json(REPOSITORY_ROOT / observer.STATIC_BUNDLE_EVIDENCE_RELATIVE)
-    dependencies = evidence["bundleManifest"]["builder"]["behaviorDependencies"]
-    expected_paths = {
-        "scripts/build-no-hook-bundle.py", "axiom_validation/no_hook_bundle.py",
-        "evals/no-hook/bundle-manifest-schema-v1.json",
-    }
-    if {item["path"] for item in dependencies} != expected_paths:
-        raise AssertionError("legacy worker behavior dependency inventory changed")
-    for binding in dependencies:
-        data = subprocess.check_output(
-            [str(GIT_EXECUTABLE), "show", f"{LEGACY_BUILDER_COMMIT}:{binding['path']}"],
-            cwd=source, env=environment,
-        )
-        if (len(data) != binding["size"]
-                or hashlib.sha256(data).hexdigest() != binding["sha256"]):
-            raise AssertionError("legacy worker dependency differs from archived evidence")
-        (destination / binding["path"]).write_bytes(data)
+    for relative, data in inputs.items():
+        (destination / relative).write_bytes(data)
     return destination
 
 
@@ -177,6 +191,7 @@ def fake_run(
             "GIT_CONFIG_GLOBAL": os.devnull,
             "GIT_CONFIG_NOSYSTEM": "1",
             "GIT_TERMINAL_PROMPT": "0",
+            "GIT_ALLOW_PROTOCOL": "file",
         }
         subprocess.run(
             [
@@ -203,7 +218,7 @@ def fake_run(
             cwd=source_repository,
         )
         worker_repository = legacy_worker_repository(
-            test_parent, source_repository, clone_environment,
+            test_parent, clone_environment,
         )
     run_root = test_parent / "run"
     run_root.mkdir(mode=0o700)
@@ -407,6 +422,51 @@ def find_objects_by_identity(
                 if stat.S_ISDIR(metadata.st_mode):
                     pending.append(candidate)
     return matches
+
+
+class LegacyBuilderFixtureTests(unittest.TestCase):
+    def test_worker_construction_needs_only_current_file_inventory_from_git(self):
+        original = subprocess.check_output
+        calls = []
+
+        def inventory_only(argv, **kwargs):
+            self.assertEqual(argv, [str(GIT_EXECUTABLE), "ls-files", "-z"])
+            calls.append(argv)
+            return original(argv, **kwargs)
+
+        with tempfile.TemporaryDirectory(prefix="axiom-legacy-fixture-") as directory:
+            with mock.patch.object(subprocess, "check_output", side_effect=inventory_only):
+                worker = legacy_worker_repository(Path(directory), {
+                    "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
+                    "GIT_ALLOW_PROTOCOL": "file", "GIT_TERMINAL_PROMPT": "0",
+                })
+            self.assertEqual(len(calls), 1)
+            for relative, data in legacy_builder_inputs().items():
+                self.assertEqual((worker / relative).read_bytes(), data)
+            self.assertFalse((worker / ".git").exists())
+
+    def test_missing_or_changed_historical_fixture_fails_without_retrieval(self):
+        inputs = legacy_builder_inputs()
+        with tempfile.TemporaryDirectory(prefix="axiom-legacy-fixture-") as directory:
+            root = Path(directory)
+            for relative, data in inputs.items():
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+            with mock.patch(__name__ + ".LEGACY_BUILDER_FIXTURES", root), \
+                    mock.patch.object(subprocess, "check_output", side_effect=AssertionError("no retrieval")):
+                for relative, data in inputs.items():
+                    target = root / relative
+                    with self.subTest(path=relative, change="missing"):
+                        target.unlink()
+                        with self.assertRaisesRegex(AssertionError, "fixture missing"):
+                            legacy_builder_inputs()
+                        target.write_bytes(data)
+                    with self.subTest(path=relative, change="same-size corruption"):
+                        target.write_bytes(bytes([data[0] ^ 1]) + data[1:])
+                        with self.assertRaisesRegex(AssertionError, "differs from archived evidence"):
+                            legacy_builder_inputs()
+                        target.write_bytes(data)
 
 
 class ProtocolContractTests(unittest.TestCase):

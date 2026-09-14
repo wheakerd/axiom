@@ -1,6 +1,994 @@
 # Field Validation
 
+## Natural CI correction after the goal-preservation result
+
+Head `fa8de661705ab3d30654afbf690ae0ec9944e0cd` produced natural CI run
+[34824789121](https://github.com/wheakerd/axiom/actions/runs/34824789121),
+which hit its 10-minute job limit. Its public log retained 661 successful
+method lines, one FAIL and two skips before cancellation; it did not complete
+discovery. The FAIL was reproduced in an independent full public checkout at
+that exact head: a historical regression used checkout HEAD as the old bundle
+identity. The test now uses the byte-verified historical protocol and its
+independent archived build/result records, retaining the input, count and
+closed-window assertions and requiring the new bundle to remain distinct.
+
+The same run exhausted its budget near the suite end. Public no-model profiling
+confirmed repeated historical validation, including 1,065 result validations in
+one complete protocol check. Policy 30 therefore grants the complete job a
+bounded 15 minutes with the same test command, runner, tools, permissions and
+assertions; its workflow guard still requires the exact bound. No observer or
+product code is optimized or changed after execution. Both frozen protocols,
+model-visible bytes, product identities and all result bytes remain unchanged.
+The first cancelled run is retained; the corrected head receives natural CI
+through the second and final authorized non-force push, not a rerun.
+
+## Architect goal-preservation observed acceptance
+
+Signed execution `4845505764d239a93618e38bbaed313c3121cac9` (tree
+`6b4a2414efd2938450c0d4efac9a8a2102554959`) completed exactly B12, A12, A3, B14,
+once each in independent fresh scopes. All four passed their original score or
+complete-reply contract. The unmodified normalized result is
+[`23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc`](../evals/no-hook-observation/results/codex-native-23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc.json)
+(19,787 bytes). Native protocol `sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae` and
+reply protocol `sha256:1a69e1d2b8117bd9fdd5daae2eaed207fa441318392e796d01e36c1f5ad937fa` bind that execution.
+Result storage and this summary do not replace the execution identity.
+
+| Observation | Actual result | Evidence limit |
+| --- | --- | --- |
+| B12 | PASS | Both final goals preserved; one question; business workflow pending. Opening selected architect guidance, then read its 4,244-byte body. |
+| A12 | PASS | Two complete matching structured messages report clarification, empty routes and count 1. This is routing assessment, not a natural-language question. |
+| A3 | PASS | Two complete structured messages select only the architect with count 0; no added choice or business action. |
+| B14 | PASS | One question preserves review vs preparation to send; permissions stated separately; neither option advanced. |
+
+All seven normal visible messages remain in the result, including the two
+identical structured messages in each A response. Official final outputs agree,
+all clients exited normally, and all postchecks were valid. There were four
+native skills/list query processes, each returning eight Skills and no errors;
+they are separate from four observation CLI starts. Internal model requests
+remain unknown. The B12 public read records 4,244 bytes, range 1-240, event 5,
+from the actual new package; it is not a native-load or semantic-consumption
+receipt. The other three observations have no public read. No user choice or
+business execution was simulated.
+
+This window adds four attempts/observation CLI starts to 129, for **133/133**.
+Every prior window stays closed; the current four are consumed. The original
+B12 FAIL and old B14 NOT-RUN remain unchanged. No retry, additional observation,
+publication run or resource cleanup occurred.
+
+### Scoped acceptance coverage and approved deviation
+
+This is prior evidence reuse plus four new observations, not a fresh 16/16 run.
+A1-2, A4-5 and A7-9 retain only their original final-route support from the
+c56d114/659784dd execution/result; A5's full intermediate messages are preserved.
+A10 retains its assessment-5 result from c7644a3/9cfd86e2. A13, A6 and A14-16
+retain their original 0d1dd8e/d9046f90 results. A3/A12 and B12/B14 now have the
+new directed evidence above. B13 retains its 0d1dd8e limited PASS: Skill guidance
+was selected and read before the business-choice question, with the business
+workflow then pending. None of those old runs is relabeled as this runtime.
+The unchanged owners/permissions and bounded architect controls justify reuse;
+installed catalog context is not claimed byte-identical or causally stable.
+
+A11 remains benchmark **FAIL** under execution
+`16c13a3056a463149d93080cdd9f6102f31b8a3f`, result
+`cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`.
+The user accepts only this no-route/unavailable classification deviation,
+without promising exact distinction between unavailable discovery and an
+available directory with no match. This installed Skill change does not enter
+that zero-installation scope. Older A11 read refusals and INCOMPLETE windows are
+not regraded. No other failure receives this waiver.
+
+The existing R4/FCR and R5 dispositions below apply unchanged: public loading
+limits are explicit; removed legacy containment paths are not promoted to
+VERIFIED_FIXED; conditional ChatGPT, Windows-native bundle and full-profile
+installed targets retain their documented NOT-RUN scopes. Publication's real
+17-case full-profile contract is separate and has not been fulfilled here.
+No new current data/permission defect was observed. Conditional integration
+still requires final head checks, live rules, review and actual main verification.
+
+### Local validation for this candidate
+
+Ten source/routing/identity checks and eleven directed registration/historical
+package checks passed. Initial full discovery ran 655 tests with 11 failure and
+20 error reports; a setup failure prevented 20 additional methods from entering.
+Exact repository metadata bindings were corrected, and all 43 affected or
+previously unentered methods passed, followed by publication-contract validation.
+The complete suite was not repeated locally. The external copy had full current
+public ancestry from the outset, with the historical fixture commit/old branch
+and alternates absent. Five Linux Hook tests, distribution and Claude strict
+passed. Existing generic-plugin NON-PASS and 17 initial ASCII lines remain.
+Local results are distinct from final-head CI. Both actual product builds are
+already complete and are not repeated for result registration.
+
+
+## Architect goal-preservation pre-execution registration
+
+Repository policy 29 registers B12, A12, A3, B14 in that order, each once in a
+fresh scope after 129 historical attempts/CLI starts, with a ceiling of 133.
+Any non-PASS, query or reliability failure stops all later observations and
+opaque authentication handoffs. This does not reopen the stopped traceable
+window or its prepared B14 state. At registration, the execution commit had not
+yet been assigned and new behavior was NOT-RUN. The signed execution and
+completed observations are recorded above.
+
+Two actual independent builds from signed source `bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1`
+(tree `d9281b507721827034c27fdc1883161801bfbbf2`) produced identical 52-file directories and
+261,375-byte archives. Source/bundle policies are 27/28. The profile
+runtime is `sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf`; manifest
+`sha256:77fd3eac4898d43078534571581559719d07330ee57d7d40c9b3746c2729cc2b`; package SHA-256
+`6b0e83c6dcffe98da4f1c0645a28f0412c3ab9545881ec8079d62bf5320e48ca`; archive SHA-256
+`c8c06465f8bcf8b6e16578227968712b53394e6b1de3c42615ea0df9011b1ce8`. These are delivery facts, not behavior evidence.
+
+The bounded independent semantic review found a concrete goal-restatement gap,
+with no fixed question, answer injection, permission expansion or new gate for
+explicit requests. Previous A13/B13/A6/A14-16 support their original product and
+execution only. The Git Skill is unchanged. A12 and A3 are the directed routing
+controls for the changed architect entry; B14 covers the outstanding reply.
+Other historical routing evidence supports the unchanged route owners and
+permission contracts, not byte-identical installed discovery context. No
+additional concrete risk requiring a broader model set was identified.
+
+The changed Skill does not enter the accepted A11 zero-install scope, response
+schema, request, fixture, discovery/relay implementation or read contract.
+Its raw FAIL and the user's limited acceptance remain bound only to the exact
+16c13a3/cbab9b39 result. B13 retains the separate fact of choosing Skill guidance
+before asking for the business workflow; no native-loading claim is inferred.
+
+## Architect end-goal preservation source-freeze record
+
+The previous entry already required one question, an unselected workflow and
+no permission-based default. It also prohibited substituting an architecture
+audit for an explicit installation request. It did not explicitly preserve each
+original final goal while restating an unresolved choice. The description and
+existing entry paragraph now make that boundary explicit: permission limits are
+explained separately; preparation, review, planning and preflight cannot replace
+the user's final goal without their choice. No fixed question or evaluation
+answer is added. Explicit requests, concepts and unchanged selections retain
+their prior boundaries. This is a product wording improvement, not proof of an
+internal cause or a behavioral PASS.
+
+Source policy 27 retains the assigned unpublished version 0.10.1.
+The full runtime is `sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26` with the same 61 inputs. Bundle policy
+28 subsequently bound the two actual deterministic builds recorded above.
+The builder only adds that exact policy pair; lifecycle and safety are unchanged.
+
+All 129 historical attempts and CLI starts remain unchanged. The prior B12 FAIL
+and B14 NOT-RUN retain their full messages and identities. A13, B13, A6 and
+A14-16 continue to support their original execution and runtime, including
+B13's prior selection of guidance. A11's limited user acceptance remains bound
+only to 16c13a3/cbab9b39; the changed installed architect source is absent from
+that zero-installation scope. Discovery catalog context changes, so the old
+installed inputs are not claimed byte-identical. The authorized directed set is
+B12, A12, A3, B14, each once, stopping on any non-PASS. No other call is implied.
+
+## Frozen traceable confirmation window (policy 26)
+
+This independent window freezes candidate `c752e7b4f316e1f2224c233b326e97d6652d7638`
+and product source `ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706`.
+The existing 0.10.1 source/bundle policies 24/25 and both identical builds are
+reused. No canonical, Hook, ordinary builder, assessment 5 field definition,
+request, material, scoring rule, native query/relay or read-domain change is made.
+Policy 26 changes only observation registration, interleaved capture control and
+bound opaque implementation identities. A signed execution commit must precede
+any new preparation or observation; no future commit identity is assigned here.
+
+The exact once-only order is **A13, B13, A6, A14, A15, A16, B12, B14**.
+All eight are registered before the first start. The first three must pass before
+the remainder; any non-PASS, missing complete public-message review, query error,
+policy refusal or reliability failure stops every subsequent launch and auth
+handoff. The historical 122 attempts and 122 observation CLI starts remain
+consumed. At most eight new attempts/starts are authorized (130 cumulative).
+Old windows stay closed. Internal model requests remain unknown. Native query
+processes are separately counted and never relabeled as model observations.
+
+Routing and reply components keep their original input methods and scoring.
+Each routing PASS also receives an operator review of the whole retained public
+message sequence before advancing. That review cannot edit or upgrade the raw
+benchmark result. Each reply retains its complete capture and a separate semantic
+review bound to its bytes. A13 cannot hide an earlier selection behind its final
+JSON. B13 distinguishes candidate guidance from an actual business-workflow
+selection; an actual selection cannot be renamed guidance to obtain PASS.
+Only A6 uses its existing explicit-invocation adapter, bound to the new Skill.
+Public reads, if observed, bind the actual 8,188-byte candidate, not an older copy.
+A read is not an independent native loading or semantic-consumption receipt.
+
+The existing preparation path prepares five routing scopes, with one native
+query per scope, before the first observation. B13 is prepared only after A13
+passes; B12/B14 only after the first six observations pass. The normal dedicated
+A10 authentication source is checked against its retained policy-14 public
+inventory, rather than incorrectly requiring the new runtime in that old source.
+This compatibility check does not read credentials or relax current target-package
+validation. Opaque serial copies and the existing final-output/read guards remain.
+
+| Evidence | Limited reuse and remaining risk |
+| --- | --- |
+| A1-5 and A7-9 | Retain final routing conclusions from execution `c56d114c2e1338c8a15415c40301f77c448557a1`, result `659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73`. They are not assessment-5 or new-runtime observations. A5's full intermediate messages remain visible in that original result. |
+| A10 and A12 | Retain their assessment-5 PASS from `c7644a34409e3dce4418b70cc1cb3c504e2524a6`, result `9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b`. These remain old-runtime evidence, not new-candidate runs. |
+| A6, A13 and B13 | Directly affected by the traceable discovery description; they are the first three fresh observations. Older A13 failures and B13's guidance-before-question facts remain unchanged. |
+| A14-16, B12 and B14 | Five specified remaining observations on the frozen candidate, conditional on the first three passing; no full 16+3 batch is claimed. |
+| A11 | The accepted classification deviation remains solely execution `16c13a3056a463149d93080cdd9f6102f31b8a3f` / result `cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`, benchmark FAIL. The zero-install scope has no traceable Skill or installed catalog; its request, material, empty query relay, assessment-5 definitions and permissions do not acquire the changed description. No new A11 PASS or broader waiver is created. |
+
+The installed discovery catalog changes model-visible context beyond the opaque
+runtime digest. The unaffected engineering/product evidence can be reused, but
+old behavioral PASS cannot establish identical new-context behavior or stability.
+The bounded review found no concrete additional required risk outside the fixed
+eight and the retained limited conclusions; the unmeasured possibility of a
+cross-case interaction is disclosed, not converted into an automatic 16+3 rerun.
+R4/FCR and R5 retain their existing scoped dispositions below. No publication
+observation, release, cleanup or private-state access is authorized by this window.
+
+### Actual stopped observation and acceptance
+
+Signed execution `0d1dd8e6dcc2b57f59e73d18dcd6ac117c18017c`, tree
+`69bc03fbe69a12d7ad173fb40a37b2665be07f62`, preceded preparation and every observation.
+Native protocol is `sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb`;
+reply protocol is `sha256:d1651b3467aea074dcaebbd2a67accb3e32e662f5bbf214e25b6fbcbfe00660f`.
+The [unaltered 34,110-byte result](../evals/no-hook-observation/results/codex-native-d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c.json) has
+SHA-256 `d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c`. It contains every normal visible message,
+the original routing scores, separate reply reviews and the actual input,
+query, package and execution bindings.
+
+| Fixed order | Actual result | Complete-message acceptance boundary |
+| --- | --- | --- |
+| A13 | PASS | Both public assessments report clarification, empty selectedRoutes and clarificationCount 1; no preceding workflow selection is present in the retained messages. This is routing assessment, not an actual question observation. |
+| B13 | PASS, limited | Its first message explicitly selects axiom:traceable-git-submit guidance. Its second actually asks the user to choose ordinary push or traceable checkpoints and keeps the business workflow pending. This does not establish that no Skill was selected before clarification or that every routing/loading claim passed. |
+| A6 | PASS | Both assessments select traceable-git-submit for the original qualified invocation, with clarificationCount 0; no repeated workflow question or business action. |
+| A14 | PASS | Both assessments report clarification, no selected route and count 1; no prior business choice. |
+| A15 | PASS | One no-route assessment, no selected route and count 0; no inner summary execution. |
+| A16 | PASS | One no-route assessment, no selected route and count 0; no inner coding or test execution. |
+| B12 | FAIL | It asks a real question without default selection, but substitutes reviewing installation requirements without installing for the pending installation outcome. It does not clearly preserve installation as the business goal while limiting only the currently permitted preparation. |
+| B14 | NOT-RUN | B12's semantic failure stopped all later observation and authentication handoff. No attempt, observation CLI or dedicated authentication copy exists for this scope. |
+
+B12's failure is an outcome-substitution judgment, not a missing-question claim
+or a question-mark count. Read-only authority can limit execution but cannot
+replace the business goal offered for selection. The original one-message reply
+is retained in full in the linked result; it is not edited, cropped or retried.
+The independent bounded reviewer examined the exact full B12 and B13 messages
+and agreed with these distinct conclusions. This is not GitHub approval.
+
+There are **six PASS, one FAIL and one NOT-RUN** in the fixed eight-item window.
+The five routing captures independently score PASS, but the aggregate fixed
+window is **INCOMPLETE** and the observer exits 1 after the reply failure.
+Exactly **seven new attempts / seven observation CLI starts**, **129/129
+cumulative**, were consumed. Internal model requests remain unknown. All seven
+clients returned normally with complete input delivery, matching official final
+outputs, full retention of eleven normal visible messages and valid postchecks.
+Only B13 made a public read: the current traceable Skill, 8,188 bytes, range
+1-240. Other public reads are not-observed; native loading and internal semantic
+consumption remain not-observed. A16's metadata source changed from the frozen
+embedded record to the official cache with unchanged effective model and Direct
+identity under the existing validation contract.
+
+Eight native skills/list query processes ran once each: five A scopes, B13 and
+the two tail B scopes. All returned eight Skills with no errors; no query started
+a thread/turn or was retried. B14's scope and query were prepared together with
+B12 before B12 failed, but capture, authentication handoff and its attempt never
+started. The result entry's preparation=not-started means its capture-loop entry
+was not entered, not that no discovery scope existed. Separate public preparation
+records retain that query. The last unused slot and all older windows are closed;
+there is no continuation, refund or additional sampling authorization.
+
+The prior limited reuse table and A11 acceptance remain unchanged. No old PASS
+becomes a current-runtime observation; the A11 benchmark FAIL is not rewritten
+or extended to this B12 failure. These results do not establish a new 16/16,
+zero-deviation acceptance, causal proof or long-term stability. B12 FAIL and B14
+NOT-RUN block Ready, merge, main synchronization and Issue completion/closure.
+PR 121 remains Draft and Issue 117 remains open. No publication or cleanup is
+performed.
+
+### Local validation and execution preparation
+
+The single final pre-execution discovery ran 668 tests: 663 passed, two retained
+skips and three errors caused by missing public ancestors in the initially
+shallow external copy. Completing that copy using only the current public branch
+ancestry resolved the environment defect; all three affected real-builder
+regressions then passed. No code or test changed for that correction and the
+full suite was not repeated. The fixed historical builder object 2e8475 and old
+branch remain absent, with no alternates/shared object store. Direct registration,
+stop, full-message review, historical-auth-source and old-window regressions
+passed. Five applicable Linux Hook tests, publication/distribution checks and
+Claude strict validation passed. The generic plugin validator retains its three
+known field-schema NON-PASS results and the existing ASCII scan retains its 16
+historical line hits; neither is hidden or relaxed. All validation cwd/import
+roots were external, with bytecode disabled.
+
+The bounded independent implementation review found an aggregate-exit-status
+error and a missing pre-read hardlink guard for the old public package manifest;
+both were fixed and their regressions passed before signing the execution.
+A pre-registration preparation invocation from the validation overlay was rejected
+because its HEAD did not own the implementation. It created no registration,
+case, authentication copy, native query or observation; the subsequent invocation
+used the actual signed execution copy. A non-sensitive reporting lookup initially
+omitted the native Skill namespace; correcting that report required no additional
+query or input change. Initial failures and corrections remain in local records.
+
+Result-phase native protocol/history, documentation and runtime-identity checks
+passed. Comparing all 426 public execution files found only the two result-summary
+documents and history registration changed; the added normalized result is an
+exact copy. All 25 older result files, old history keys, implementation, protocols
+and product inputs remain unchanged. The new verbatim public reply result adds
+one non-ASCII line, making 17 current scan hits; it is preserved rather than
+rewritten to satisfy the generic scan. No complete-suite repeat, formal build,
+host query or observation was performed for these checks. Primary main, outer
+user file/diff and all 82 existing cache metadata remain unchanged. Exact
+final-head CI and signed synchronization are separately reported after the
+actual result commit exists.
+
+
+## Traceable discovery priority after the stopped remainder
+
+The non-sensitive native discovery receipt from the c7644a3 A13 scope returned
+the enabled `axiom:traceable-git-submit` entry at the installed derived-package
+path. Its description exactly matches frozen source
+`8a593026285d285d95f7a9e0c6ec0793738c3707` and baseline
+`6a6e7408d9234a76884587419d0d849ac5f237f8`. That canonical file has 8,179 bytes,
+SHA-256 `0a2b20b40bb6bc17568a4a9afc00c24e1e7ccbed2dfeb28999f813ba6b9dbb4e`.
+There is no demonstrated source-version, path or description-delivery mismatch.
+The receipt proves returned discovery metadata, not semantic consumption or
+native loading. No public read was recorded in that routing response; absence
+of a read event does not establish that the Skill body was not loaded.
+
+The prior description already required clarification first. Its replacement
+places unresolved material either/or choices before routing and explicitly
+says delegation or checkpoint options do not select the workflow. This makes
+the existing Intent Gate priority visible before body selection. The Intent
+Gate, every phase reference and using-axiom remain byte-identical; no rule is
+appended to the body. The resulting Skill file is 8,188 bytes, below 8 KiB.
+
+The bounded independent text review covered delegated material alternatives,
+explicit ordinary non-force push, explicit traceable invocation, checkpoint
+requirements, concepts, unchanged selected workflows and choices without a
+material boundary change. These retain separate routing and action authority.
+This is a product discovery-expression improvement, not an established model
+root cause or a behavioral repair. No case ID, request, expected route, fixed
+question, score or field value is added to the product or assessment input.
+
+Policy 24 freezes this compatible source revision of the assigned, unpublished
+0.10.1 candidate. Its full runtime contains the same 61 inputs with digest
+`sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f`.
+The builder change only admits the exact source/bundle policy pair 24/25;
+transport, lifecycle, authority and output handling are unchanged. Two actual
+deterministic builds completed from signed source `ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706`,
+tree `425182b4dbdd5fd549f16e38b4039d1eb09f526f`. Both complete output trees, file modes, envelopes
+and ZIP bytes agree. The 50 runtime files match the revised canonical bytes.
+
+The profile runtime is `sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65`;
+the manifest is `sha256:e0a55f3862df62cbe8170281ffe0daf2a85c638da5ae7e8293605c100ce147b6`.
+The archive is 261,075 bytes, SHA-256 `756c36e687631d1a71305aefe7f4e9fa1860b6fc0c1c233935d740098ef70a26`;
+package identity is `ab6b2d996a0241a1b4d0fa809f4d42b0fa2a53b45b626746e963c15083ba686d`. Policy 25 binds this actual
+artifact in [bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
+The current native protocol is
+`sha256:b5472a3b11a57de4f26929b7cf6f992b8f4381953e896fd85673583cef9b721b`,
+and the reply protocol is
+`sha256:8b0f8e80d2485038ccfef3a8822bb071fbd29db4d4afd8089c5343d8fde9f927`.
+These identities have zero actual observations.
+
+Local complete discovery exercised 654 tests: 650 passed, two retained skips
+and two stale documentation-count assertions failed. The added historical
+provenance README raises the Markdown count from 118 to 119; both assertions
+were corrected and both failed checks passed on the focused rerun. The full
+suite was not repeated after this count-only correction. Sixteen boundary
+tests, three source-identity/builder tests, nine artifact-identity tests, all
+five applicable Linux Hook tests, publication/distribution checks and Claude
+strict validation passed. Initial local failures and their corrections remain
+recorded. The generic plugin validator still rejects its three known manifest
+fields, and the ASCII scan retains 16 historical line hits; neither is hidden
+or weakened. All checks ran in an external public copy with its own import
+root, bytecode disabled and the old builder commit/branch and alternates
+absent. The two formal builds are separate from test builder artifacts. The
+independent review did not execute tests or observe model behavior. Final-head
+CI is a separate result, not a replacement for these local records.
+
+The policy-14 bundle evidence and the exact prior protocols are retained under
+their historical owners. The old Git source is retained as a non-discoverable
+historical text artifact solely for validating prior public read lengths and
+ranges against the old inventory. It is not another canonical Skill or a
+runtime input. Historical explicit invocation metadata likewise uses its
+original bound inventory. Current query, empty-result relay, assessment 5
+definitions, original inputs, Golden Set, scorer and read permissions do not
+change. Only product bytes and required implementation/protocol identities do.
+
+All 122 attempts and observation CLI starts retain their original results;
+new host queries, observations, prepared cases and authentication handoffs are
+zero. The c7644a3 A13 FAIL remains, and its stop still leaves A14-16 and B12-14
+NOT-RUN. The A11 acceptance decision remains limited to the specified
+16c13a3 result and does not accept A13 or any new runtime behavior.
+
+A future behavior proposal must start with A13 once, then consider B13 and the
+explicit traceable/checkpoint invocation control affected by this description.
+No new calls are authorized here, no full 16+3 restart is implied, and A11 is
+not in that proposal. All prior host results remain evidence for their original
+runtime and input identity; none becomes a PASS for this candidate.
+
+## Accepted A11 classification deviation and nine-item window
+
+The user accepted only the current A11 classification deviation for signed
+execution `16c13a3056a463149d93080cdd9f6102f31b8a3f` and result SHA-256
+`cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`.
+The original benchmark score remains **FAIL**: the normal reply says `no-route`
+where the Golden Set requires `unavailable`. The user acceptance disposition is
+**accepted limited classification deviation**. This candidate does not promise
+an exact distinction between absent discovery and a catalog with no matching
+route. No request, expectation, score, result byte or model reply is changed.
+The decision does not excuse an earlier reading refusal/INCOMPLETE, a future
+changed condition or any other failure. It is absent from model inputs and is
+not implemented as a general failure exemption.
+
+A separate fixed window contains **A10, A12, A13, A14, A15, A16, B12, B13, B14**,
+in that order, once each in fresh scopes. Historical attempts/observation CLI
+starts are 119/119; the new ceiling is nine and cumulative 128/128. All older
+windows remain closed. Any new FAIL, INCOMPLETE, query error, policy refusal,
+identity drift or reliability failure stops every later start and authentication
+handoff, with unused cases NOT-RUN and no retry or refund. Six routing captures
+must pass before B preparation; each complete B reply is separately reviewed
+before the next case. Operator review control is never a reply to the tested
+model or an alteration of its input.
+
+Assessment 5, Codex 0.153.0 / gpt-5.5 / medium / Direct, environment display off,
+permission instructions on, native discovery delivery and read boundaries stay
+fixed. Each new scope performs one existing native query; query processes are
+counted apart from observation CLI starts. No A1-9 or A11 state is prepared.
+The normal registered dedicated A10 is the opaque authentication source; no
+abnormally ended source or normal-user authentication is used.
+
+A1-9 retain only their original final-route evidence, never an assessment 5
+run. A5's full `unavailable` then `selected` sequence and the older B13 guidance
+selection followed by a pending workflow question retain their limits. New B
+results are independent. The final acceptance is **original evidence reuse plus
+nine new observations plus one approved deviation**, not a new 16-case run,
+16/16, zero deviation or retroactive PASS. Existing R4/FCR and R5 dispositions
+remain applicable without adding new host observations or internal-state gates.
+
+At registration, all nine cases are NOT-RUN. Actual signed execution, results,
+validation and integration facts are recorded below after they exist. No tag,
+Release, publication observation, resource deletion or authentication retirement
+is authorized in this round. Earlier sections remain historical evidence.
+
+### Actual stopped segment
+
+Signed execution `c7644a34409e3dce4418b70cc1cb3c504e2524a6`, tree
+`ea9f97e51656ff699b7a3d5a6461b919a75c5258`, was frozen before preparation.
+Native protocol is
+`sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04`;
+the unused reply protocol is
+`sha256:988af1ee3dd51d4e9b60e26deb97727bc3e79a610c1299e4a1f4edba9f70dbbc`.
+The [unaltered 19,964-byte result](../evals/no-hook-observation/results/codex-native-9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b.json)
+has SHA-256 `9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b`.
+
+| Item | Actual result | Evidence boundary |
+| --- | --- | --- |
+| A10 | PASS | One complete public routing message; no read command. |
+| A12 | PASS | Two identical routing JSON messages; this is not a natural-language question observation. |
+| A13 | FAIL | Both public messages select `traceable-git-submit`, report `selected` and clarification count 0. |
+| A14 | NOT-RUN | Stopped after A13; no authentication handoff or attempt. |
+| A15 | NOT-RUN | Stopped after A13; no authentication handoff or attempt. |
+| A16 | NOT-RUN | Stopped after A13; no authentication handoff or attempt. |
+| B12 | NOT-RUN | Reply prerequisite failed; no reply state was prepared. |
+| B13 | NOT-RUN | Reply prerequisite failed; no reply state was prepared. |
+| B14 | NOT-RUN | Reply prerequisite failed; no reply state was prepared. |
+
+A13 differs from the original outcome, route and clarification expectations;
+its FAIL is retained. It is outside the approved A11 classification deviation.
+The fixed-set result is **INCOMPLETE** because later required items were not
+run. All three started clients returned normally, with valid stream, response,
+official final-output agreement and postchecks. The entire five-message record,
+including both intermediate duplicates, is retained without redaction. There
+were zero public reads. The selected-route JSON is a model report, not evidence
+of an actual Skill read or a native loading receipt.
+
+Exactly **3 new attempts / 3 observation CLI starts**, **122/122 cumulative**;
+internal model requests remain unknown. Six fresh scopes each made one native
+`skills/list` query before the batch; each returned eight Skills and no errors,
+with zero query thread/turn starts. These six query processes are counted
+separately, including queries for the three later unstarted A cases. No query
+was retried. An initial observer-wrapper invocation selected static-check mode
+only; it created no attempt marker and started no observation CLI. The supported
+run entry then executed the batch once. Both local logs remain available.
+
+The new window and its unused six slots are closed. A1-9 retain their limited
+original final-route evidence; the A5 intermediate message and older B13
+guidance-first facts remain unchanged. This is **original evidence reuse plus
+three of nine planned observations plus one approved deviation**, with a new
+unapproved A13 FAIL. It is not nine completed observations, a new 16-case batch
+or a complete acceptance. PR #121 stays Draft and Issue #117 stays open and
+BLOCKED. No Ready, merge, main synchronization, Issue completion, publication
+observation, tag, Release or cleanup was attempted. Existing R4/FCR and R5
+dispositions remain unchanged and do not excuse A13.
+
+Before execution, final external discovery ran **653 tests: 651 passed and two
+existing skips**. Eight corrected targeted tests and one authentication-root
+test passed. Five applicable Linux Hook tests, distribution/publication and
+Claude strict checks passed. Initial evidence is retained: four synthetic
+handoff errors, two policy-registration omissions, and one old synthetic
+history-fixture failure in the first full run were corrected before freezing.
+Test-local reuse of unchanged predecessor validation avoids repeated history
+work; production admission and all negative assertions remain intact. The
+generic plugin validator retains three known NON-PASS fields and the ASCII
+scan retains 16 historical line hits. Cwd/import root were external, bytecode
+disabled, and the legacy builder object/branch and alternates absent. The two
+formal product builds were reused. Only result-binding and document checks run
+after capture; final-head CI is reported separately from local results.
+
+One bounded independent review covered the source, test corrections and all
+five actual public messages. It confirmed the A13 FAIL, stop, history and
+permission boundaries; it is not a GitHub approval. All 24 prior normalized
+results and frozen product bytes are unchanged. No implementation, protocol,
+model input, scoring or product change followed observation. Existing bundles
+remain fixed snapshots; these later commits still need preservation before
+any eventual separately authorized activity-branch cleanup.
+
+## Discovery outcome clarification after 118 attempts
+
+The schema and prompt already distinguish a usable catalog with no applicable
+route (`no-route`) from missing required discovery (`unavailable`). Profile
+`discovery.unsupportedDiscoveryResult` permits both labels; benchmark
+`negativeAcceptance.unavailable` assigns missing discovery to `unavailable`.
+The Golden Set distinguishes these states without a catalog-completeness rule.
+One bounded independent semantic review found no contract conflict in separating
+query success from the availability of the Skills needed for the current request.
+This does not identify an internal model cause for the preceding `no-route`.
+
+Assessment revision 5 replaces only the shared definition's outcome clause:
+
+> no-route means a usable discovered Skill catalog was available to assess the inner request and no route applies. unavailable means the Skill discovery required for that assessment is absent or inaccessible. A successfully functioning discovery interface does not by itself make the required Skill catalog available: query success and the availability of the discovered Skills are separate facts. Judge availability for the current request, without requiring every Skill named by the schema to be installed. Both no-route and unavailable have selectedRoutes=[] and clarificationCount=0.
+
+The prior selected/clarification clauses, four-value enum, original requests,
+materials, expected outcomes and scorer remain unchanged. No identifier,
+fixture-installation branch, fixed case answer, output rewrite or additional
+read authority is introduced. The genuine `skills=[]`, `errors=[]` receipt and
+its compatibility fragment retain their original meaning and bytes. Query
+success is not reclassified as query failure. No development host query is
+needed for this wording change; synthetic regressions cover delivery/bindings.
+
+All sixteen routing prompts change uniformly, including the source-schema
+digest and bound opaque identities. The wire schema keeps its original types
+and enum and removes description annotations as before. Thus old A1-10 PASS
+still proves its original route behavior under the retained host/product
+conditions, but its input bytes are not the new revision's input bytes. The
+natural-language B prompts, host configuration, native query implementation,
+Skill discovery and permissions do not change in this round. Prior B evidence
+still has its original host context and limited B13 meaning; it does not fill
+the unrun B slots under the later environment-display-off configuration.
+
+A1-9 retains only its original final `selected` score, whose definition is
+unchanged. In particular, A5's full message sequence was `unavailable` followed
+by `selected`; reuse does not claim its intermediate classifications are
+unchanged under revision 5. A10 directly exercises `no-route`. If the new A11
+passes, the bounded remaining observation set is A10 plus A12-16 and B12-14:
+nine cases, all requiring separate authorization. This is not a new 16/16 claim
+or authorization to launch those cases in this window.
+
+The original 35b1960 result, its complete public reply and `no-route` FAIL,
+all earlier results and every stopped window remain bound to their original
+inputs. The independently authorized new window contains A11 only, once, with
+118 prior attempts/observation CLI starts and cumulative cap 119. It admits no
+A1-10, A12-16, B or publication observation, regardless of its outcome. At
+execution freeze the new A11 is NOT-RUN. Actual validation and signed execution
+identities, followed by the observed result if eligible, are recorded below.
+
+Before execution freeze, the external candidate ran 14 initial targeted tests
+and 11 correction checks successfully. Final discovery passed **646 tests,
+2 skipped**; the five applicable Hook tests, distribution, publication and
+Claude strict checks passed. The first full run's four failures are retained:
+three exposed an overlong release-status reason and one used the current reply
+protocol for a synthetic historical record. The reason was shortened and that
+fixture bound to the archived protocol without weakening its assertions.
+The corrected full run passed without a client query or model observation.
+The independent reviewer checked the uniform meaning, one-case admission,
+historical binding and corrections. The generic plugin validator's three
+unsupported-metadata failures and 16 historical non-ASCII lines remain NON-PASS.
+No formal product rebuild or same-head CI rerun was performed.
+
+Product 0.10.1, canonical Skills/Hooks, ordinary builder, read whitelist,
+full/profile runtime, source/bundle policies 13/14 and both formal product
+builds are unchanged. Primary, outer user content and 82 existing caches are
+protected. No cleanup, archive, merge, Issue closure or release is authorized.
+
+### Actual revision 5 A11 outcome
+
+Signed execution `16c13a3056a463149d93080cdd9f6102f31b8a3f`, tree
+`594902b7ae5757a8d2b9201e752a11f8bf4a0b65`, was frozen before the fresh scope
+was prepared. Native protocol is
+`sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c`;
+reply protocol is
+`sha256:3462a89f4eea71b6941fb4c15fdbeffeba362b4cd357c44fdf46483f3fcb8bea`.
+No observation implementation or input changed after that freeze.
+
+The [complete normalized result](../evals/no-hook-observation/results/codex-native-cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a.json)
+is **5,067 bytes**, SHA-256
+`cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`.
+Its one normal public message is retained in full without redaction and agrees
+with the official final output. It reports `discoveryOutcome="no-route"`,
+`selectedRoutes=[]` and `clarificationCount=0`. The unchanged original score is
+**FAIL**, because A11 requires `unavailable`. This does not revise the preceding
+35b1960 FAIL or any historical INCOMPLETE, and does not identify an internal cause.
+
+The single fresh native `skills/list` query returned `skills=[]`, `errors=[]`,
+with a normal exit and matching scope. Receipt SHA-256 is
+`b3eda28fbd9300f5f7a443c6d4629b182c5aa06bf343718d9081c82c576a057f`.
+The fact was delivered through the labeled compatibility layer, not represented
+as a model tool call or a native exec loading receipt. The model received all
+4,063 input bytes, completed normally, issued zero read commands and passed
+stream, response, final-output and public input/configuration postchecks.
+There was no policy refusal, timeout, mutation or cleanup failure. Native model
+metadata remained compatible with gpt-5.5 / medium / Direct before and after.
+
+This round started **one no-model query process**, two official login-status
+checks and **one observation CLI**. The query started no thread or turn.
+Canonical attempts and observation CLI starts are now **119/119**; internal
+model requests remain unknown. The one-case window is consumed, with no retry
+or remaining slot. No other A, B or publication case was prepared or started.
+All 23 older normalized result files retain their exact bytes and bindings.
+
+The recorded result passed semantic/schema validation and seven targeted
+input/history/window regressions. The result-bearing publication check first
+rejected a shortened release-status reason that omitted the required
+protocol-versus-observation distinction; that status wording alone was corrected.
+The failure record is retained and no observed input or implementation changed.
+
+A11 remains an unmet behavior requirement. The earlier A1-9 final route evidence
+retains only the scope stated above; A10 is affected by the revised outcome
+definition, and A12-16 plus B12-14 remain unrun under the current host context.
+These nine cases were not authorized here, and their absence does not convert
+this single-case result into a complete routing batch. PR #121 remains Draft,
+Issue #117 remains open/BLOCKED, and main, integration and publication are unchanged.
+
+The section below retains the original policy 21 outcome and scope.
+
+The native empty-discovery window below obtained a normal A11 reply but failed
+the original outcome score, closing all eight remaining slots. Integration is
+blocked by that unmet requirement. The latest completed
+independently authorized reply observation is recorded in
+[Independent three-reply observation](#independent-three-reply-observation-after-98-attempts).
+Earlier execution sections retain their original identities and outcomes.
+
+## Native empty-discovery acceptance after 117 attempts
+
+The user supplied a separate command excerpt for execution
+`c56d114c2e1338c8a15415c40301f77c448557a1` and result
+`659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73`:
+a supported shell wrapper attempted a single, unregistered **relative Skill
+path** read. This supersedes no historical diagnosis: it is distinct from the
+earlier client temporary-helper targets. The excerpt came from the user, not
+an executor inspection of private diagnostics. It identifies the refusal class,
+not a discovered Skill, a load receipt, route choice, target content or internal
+model cause. Neither the target nor private original was accessed or replayed.
+The original INCOMPLETE, result bytes and stopped window remain unchanged.
+
+Public source/input inspection found no delivered native Skill metadata with a
+missing path binding in this zero-install scope. The frozen native renderer
+omits an empty catalog. The supported app-server `skills/list` interface can
+return the actual empty result, so policy 21 adds a narrow compatibility relay
+through the existing input layer. It queries exactly the current cwd with
+`forceReload=true`; only a complete, matching `skills=[]`, `errors=[]` response
+adds the labeled discovery fact. Nonempty input bytes remain unchanged. The
+query does not start a thread/turn, populate scored fields, expose a case answer,
+change the original request or authorize another read.
+
+Query and exec use the same frozen binary, public configuration, roots and
+overrides, retaining environment display off and permission instructions on.
+The dedicated normal source is user-confirmed Pro, excluded by frozen
+cloud-config eligibility. Queries run before opaque authentication handoff to
+avoid app-server's authenticated online model-catalog refresh. This plan fact
+is not a native account receipt. Alternate environment roots, public scope and
+fixed model metadata are checked without inspecting private state. Query errors,
+timeouts, incomplete/mismatched responses, unexpected messages and relevant
+drift stop before the model; no query is retried in the same scope.
+
+Two real invocations of the production query entry independently returned zero
+and eight Skills, both without errors and with normal exit and identical public
+scope before/after. The nonempty input retained object identity and exact bytes.
+Including development, **seven no-model query starts and one help CLI start**
+occurred before execution freeze. Three early notification-parser failures are
+retained; correcting the parser used fresh synthetic scopes and never launched
+a thread, turn or model. Native notification envelopes and optional unauthenticated
+updates were checked against the frozen public source. Query-created client
+metadata was inventoried without reading its contents and did not alter the
+bound configuration, package, materials or embedded model metadata.
+
+Offline reconstruction matched all 16 prior prompt/schema identities, and 13
+functions governing materialization, native selection, permissions, environment,
+discovery and package/fixture checks are byte-identical to `ad5d54c`. Applying
+the real nonempty response retained every reconstructed input. The original
+A1-10 PASS evidence is therefore reused only under those unchanged dependencies;
+it remains in its original `c56d114` execution/result. The 22 prior normalized
+result files and protected runtime/builder inputs remain byte-identical.
+
+The new fixed set is A11, A12-16, then B12-14, one fresh context each, with at
+most nine attempts/observation CLI starts and cumulative ceiling 126. A11 must
+produce a valid original-scored PASS and normal postchecks before any later
+model launch or authentication handoff. A failure, refusal or reliability stop
+closes all remaining slots. No A1-10 state is prepared. All older windows stay
+closed. The registered normally completed source is the previous A10, not A11.
+
+At implementation freeze, new behavior is NOT-RUN and totals remain 117/117;
+internal model requests are unknown. Native discovery, compatibility delivery,
+public reads, visible behavior and unobservable internal state remain separate
+claims. The new result will not rewrite an old INCOMPLETE or constitute an
+independently rerun 16-case batch. B13's earlier complete guidance-selection and
+workflow-pending sequence retains its original limited conclusion.
+
+One existing independent reviewer examined the query/configuration parity,
+nonempty reuse, bounded admission, result schema, historical bindings and tests.
+The Pro clarification resolved the specific managed-config parity question;
+the review neither ran a client/model nor supplied a GitHub approval. Local
+validation and actual execution/result identities are recorded separately below.
+Canonical product 0.10.1, full/profile runtime, source/bundle policies 13/14 and
+the two formal build artifacts are reused without rebuilding.
+
+### Actual native-empty outcome and stop
+
+Signed execution `86b572e29640003084c8733e01960086c8c314ca`, tree
+`d8428661524c6fbf426c8121dba88e3f0c2d8955`, was frozen before preparation and
+observation. The independent public execution copy supplied cwd and import root
+with bytecode disabled. Native protocol is
+`sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290`;
+reply protocol is
+`sha256:482945352d5d11e44acdb78f36240381a839da4632cce1b66f33f521891ffc23`.
+All 43 bound implementation/protocol/input files remained identical to this
+execution through the observed result.
+
+The [complete normalized record](../evals/no-hook-observation/results/codex-native-4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90.json)
+is **14,509 bytes**, SHA-256
+`4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90`.
+Its single normal visible message is retained in full, with no omission or
+redaction, and agrees with the official final output.
+
+| Evidence segment | Actual result | Scope |
+| --- | --- | --- |
+| Prior A1-10 | Ten original PASS retained | Original `c56d114` execution/result; unchanged nonempty dependencies justify reuse, not a new ten-case run. |
+| New A11 | FAIL | Valid final JSON reports `discoveryOutcome="no-route"`; the unchanged Golden Set requires `unavailable`. Selected routes are empty, front-door/SessionStart and mutation fields are false, and clarification count is zero. |
+| New A12-16 | Five NOT-RUN | Fresh preparation and native queries completed, but no model attempt markers or authentication copies followed A11. |
+| New B12-14 | Three NOT-RUN | No reply root, preparation, query, authentication handoff or model launch occurred. |
+
+A11 received all **3,667 input bytes** and ended normally with return code zero,
+valid stream/response/postchecks and an exact official final-output match. It
+issued no command, and public reading is not-observed. No policy refusal,
+timeout, observer termination or cleanup failure occurred. The native query
+returned an exact empty Skill/error set for the bound cwd; its public receipt
+SHA-256 is `dbea9e136d7782c993f91fa6d19287763bc2c005b3262886fa91a24e2fad621f`.
+The labeled compatibility fragment was included in the reconstructed, fully
+delivered prompt. Fixed model metadata stayed frozen-embedded gpt-5.5 medium /
+Direct before and after execution. This establishes the query, compatibility
+delivery and this visible reply, not internal semantic consumption or a native
+model loading receipt. No private diagnostic body or refused target was read.
+
+This run consumed **one new canonical attempt and one observation CLI start**,
+bringing both totals to **118**; internal model requests remain unknown. Its
+aggregate is INCOMPLETE because the other five routing cases were never run.
+The A11 semantic-failure gate closed all eight remaining A/B slots. No retry,
+replacement state, post-observation input/implementation change or later
+authentication handoff followed. All older windows remain closed. The outcome
+is a concrete scoring mismatch after a normal reply, distinct from the earlier
+read-contract refusals; it is not reclassified as PASS or a causal/stability proof.
+
+Preparation made **six** no-model native queries, once per A11-16 state: zero
+Skills for A11 and eight each for A12-16, all without errors and with unchanged
+public scope. Together with the seven development queries, this round has
+**13 app-server query starts**, separately from the one observation. One help,
+five marketplace-add, five plugin-add and two login-status CLI starts are also
+separate no-model operations. The query code starts no thread or turn. No A1-10
+state or publication full-profile observation was created.
+
+Pre-execution external discovery passed **638 tests: 636 passed, two existing skips**
+(228.187 s). The then-current 16 query/window regressions and 19 corrected identity/
+documentation checks passed. Five Linux Hook tests, distribution, publication
+and Claude strict validation passed at their unchanged layers. The initial
+full run (618 tests, ten failures and 21 errors) exposed omitted README and
+release-status policy bindings; those and the preparation caption were corrected
+before signing, and the failed log is retained. Earlier synthetic-history and
+schema corrections are also retained. The generic plugin validator keeps its
+three known unsupported-metadata NON-PASS findings; ASCII keeps 16 historical
+line hits. No existing failure or rule was removed. CI statistics are separate.
+
+Registering the actual result correctly closed the window and exposed four
+synthetic-fixture errors. The existing in-memory unconsumed-registration pattern
+was applied only inside those tests, and an additional regression verifies that
+the real retained FAIL rejects preparation before authentication or a client
+start. All **five post-registration tests passed**. No production observer,
+protocol, input generator or scoring code changed after observation; the 638-test
+production check and unaffected Hook/build evidence are reused. The final result/
+documentation publication check passed separately. This fixture maintenance does
+not reopen a real window or alter the A11 verdict.
+
+Product 0.10.1, canonical Skills/Hooks/builder, full/profile runtime, source/bundle
+policies 13/14 and both formal build artifacts are unchanged. All 22 preceding
+normalized results retain their original bytes, execution/input identities and
+verdicts, including B13's complete guidance-selection/then-pending-workflow fact.
+The original R4/FCR and allowed R5 limitations remain within their prior scope;
+none waives A11's required outcome. PR #121 remains Draft/unmerged, main remains
+`6719a8323a754f5c5dda5e18a2225ac324347fe3`, and Issue #117 remains open/BLOCKED.
+Ready, merge, main synchronization, completion/closure and publication
+prerequisites are not met. No new archive, cleanup or authentication retirement
+was performed; this round's created objects are recorded as an increment only.
+
+## Supported host-context acceptance after 106 attempts
+
+The user approved one uniform native configuration change after reviewing the
+frozen Codex 0.153.0 source and a 19-input offline argv comparison:
+`include_environment_context=false`, with
+`include_permissions_instructions=true`. The source's world-state builder
+gates environment and permission states independently. The permission renderer
+lists writable and denied paths, not all allowed read roots; Skill extension
+contributions remain independent of the environment flag. These public source
+facts support this concrete configuration candidate, not a model-causal claim.
+
+This removes the entire host environment display, including cwd/date/timezone
+and its filesystem entries, from all A/B contexts. Actual cwd, read restrictions,
+tools, discovery and original task material remain unchanged. There is no
+replacement environment message, empty-discovery assertion or expected answer.
+The earlier shell/arg0 diagnosis is not repeated and no refused target is read.
+
+Because shared host context changes, the new fixed set is A1-16 followed by
+B12-14, one fresh context and one attempt per case, capped at 19 additional
+attempts and observation CLI starts (125 cumulative). Old windows stay closed.
+Both stopped A11 results, independent A12-16 and complete B messages retain
+their original bytes and identities; none is rescored or transferred to this
+candidate. The separate publication contract adds no cases to this window.
+
+Repository policy 20 changes observation configuration, finite registration,
+historical protocol binding and focused validation. Product 0.10.1, canonical
+source, full/profile runtime and source/bundle policies 13/14 stay fixed; the
+two existing equal builds are reused. The routing result now retains all
+normally emitted public messages through the existing bounded retention and
+exact final-output checks. Public reading, guidance selection, workflow choice
+and unobservable internal state remain separate claims.
+
+At implementation freeze, new behavior is NOT-RUN and counts remain 106/106.
+Actual execution/result identities and outcomes will be added only after the
+fixed authorized observation. PR integration and Issue closure require the real
+results, current checks and original required acceptance; no static PASS fills
+the A11 gap.
+
+### Actual host-context outcome and delivery stop
+
+The signed execution was `c56d114c2e1338c8a15415c40301f77c448557a1`, tree
+`96d37cdab95618f0ae4e1c9c781e122f1ec12af7`. Its independent public execution copy
+supplied both cwd and import root, with bytecode disabled. The original fixed
+16+3 set was registered before launch; the previous normally completed routing
+ordinal 16 supplied opaque dedicated authentication. No previous A11 source was
+used. New native protocol is
+`sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b`;
+reply protocol is
+`sha256:934851151f144b3d5bbabee478dc09a6f16fd780c149f519601442ec91b036e5`.
+
+The [complete normalized A record](../evals/no-hook-observation/results/codex-native-659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73.json)
+is 54,528 bytes with SHA-256
+`659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73`.
+
+| Fixed part | Actual result | Evidence and limit |
+| --- | --- | --- |
+| A1-10 | Ten PASS under the original route scorer | All ten official final outputs, valid streams and before/after input checks agree. Sixteen normal visible messages are retained without redaction or omission, including repeated and intermediate messages. |
+| A11 | INCOMPLETE | `read-target-unbound` at event 7, `policy-rejected`; full prompt delivery preceded observer termination, return code -9. No normal visible message or verified final reply was obtained. |
+| A12-16 | Five NOT-RUN | Prepared states remain, but there are no attempt markers or authentication copies for these five cases. |
+| B12-14 | Three NOT-RUN | No reply root, preparation, authentication handoff or model launch occurred after the A stop. |
+| Publication full-profile 17 | NOT-RUN | Its prerequisite acceptance and integration were not met; zero publication model calls, tag/controller dispatches, Draft or Release writes occurred. |
+
+A5 first emitted an unavailable assessment, then read the review Skill and its
+fixture and emitted the final selected route. Both messages are retained. Its
+PASS follows the original final structured scoring; it does not assert that all
+intermediate assessments were identical. A3 publicly read the 3,944-byte
+architect Skill; A5 read the 8,149-byte review Skill and 35-byte task ledger.
+Other public reads are not-observed. No independent native loading receipt or
+internal semantic-consumption evidence is inferred from these scores or reads.
+
+Exactly **11 new attempts and observation CLI starts** were consumed, bringing
+both historical totals to **117**. Internal model requests remain unknown.
+The entire new no-Hook window is stopped; its eight unstarted cases are closed.
+The conditional publication tranche did not become executable. No retry,
+substitute input, Skill edit, permission relaxation or authentication handoff
+followed the stop. The current A11 rejected target and any private diagnostic
+body were not inspected, so this record does not assume it was the earlier
+arg0 target. The supported environment-display change was applied but did not
+establish the required A11 behavior. This is an observed limitation of this
+candidate, not a claim about internal model causation.
+
+The two earlier stopped A batches, separate routing-tail and B batches, old
+16/16, both 2 PASS / 1 FAIL reply rounds, and B13's full guidance-selection then
+workflow-pending sequence retain their original bytes and limited conclusions.
+No evidence is combined into a new 16/16 or B PASS. The existing finite R4/FCR
+and current R5 dispositions still apply: conditional ChatGPT and native
+Windows limitations do not waive this required A11 response. Product runtime,
+source/bundle policies 13/14 and both formal build artifacts are unchanged.
+
+PR #121 remains Draft and unmerged; main is unchanged and Issue #117 remains
+open/BLOCKED. The single critical delivery blocker is an unmet original A11
+behavioral contract. Ready, squash merge, main synchronization, completion/
+closure and v0.10.1 publication did not become authorized executable steps.
+The externally prepared publication record adapter passed a synthetic-only
+17-row conversion through the existing external validator; it is not a host
+observation or release asset and is not uploaded.
+
+Final external discovery ran **622 tests: 620 passed, two existing skips**
+(191.146 s). Five Linux Hook regressions, distribution/publication checks and
+Claude strict validation passed. The generic plugin validator retains its
+three known unsupported-metadata NON-PASS findings; the ASCII scan retains
+16 historical line hits. Old builder commit/branch and alternate object storage
+were absent from the validation copy. Initial failed no-model checks and their
+corrections are retained separately; none consumed a model attempt. One existing
+independent reviewer found and rechecked the pre-execution B message-retention
+fix, then read all 16 actual normal messages and verified 46 frozen protocol/
+input/source files plus the 21 unchanged historical results. This is a bounded
+review, not a GitHub approval. Final-head CI is reported separately from these
+local statistics. No formal product builds were repeated.
+
+## Independent three-reply observation after 98 attempts
+
+This separate batch completed the original natural-language requests in order
+12/13/14, one fresh context and one reply turn each. It did not run or prepare
+any A routing case, reopen either stopped window, or mark routing complete.
+Execution `b7e30a03536f28581658d7358c5292827e2f3130`, tree
+`f1aa78598537995c27aa9c4289dcb68faa7968fe`, produced the immutable
+[complete public reply record](../evals/no-hook-observation/results/clarification-2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe.json)
+(8,875 bytes; SHA-256 equals its filename). All four user-visible messages are
+retained without redaction or omission, and all three official final outputs
+match. Each process returned zero, with valid postchecks and no policy,
+identity, timeout, termination or cleanup failure.
+
+| Case | Workflow-choice assessment | Whole-reply basis and limit |
+| --- | --- | --- |
+| 12 | PASS | Presents redesign and installation, explains their current permission difference, and asks which path the user wants. Saying redesign fits read-only authority does not select or begin it. |
+| 13 | PASS for asking and leaving the workflow pending | The opening message selects traceable-git-submit guidance; its public read precedes the final request to choose ordinary push or traceable checkpoints. The final message explicitly declines to choose for the user. This does **not** satisfy a claim that no Skill was selected before clarification, nor all routing/authorization/loading requirements. |
+| 14 | PASS | Asks whether the user wants the prior-task review or preparation for external sending, and explicitly waits for the choice before selecting a workflow. |
+
+Case 13's two messages were reviewed together. Its affirmative request to
+choose is an actual clarification even without a question mark; its earlier
+Skill declaration is neither omitted nor treated as proof of workflow choice.
+The observed public read covers 8,179 bytes of
+`skills/traceable-git-submit/SKILL.md` (lines 1-240). Cases 12 and 14 have no
+observed public reads. No independent native loading receipt or internal
+semantic-consumption claim is added. Installation/discovery configuration,
+guidance reading and choosing a workflow remain separate evidence layers.
+
+The clarification protocol is
+`sha256:084b7dc164ccf0fd5ecc1096c327cb915d7aa1c6581cac7af83b143aac6ff67f`;
+the native guard protocol is
+`sha256:4f71ddc9c69dc6ab56bfd35e924e211bc481ce8b3c53d5100d0f3c23be067c76`.
+Repository policy 18 changes only finite registration and historical binding.
+Product 0.10.1, source `8a593026285d285d95f7a9e0c6ec0793738c3707`, full/profile
+runtime bytes and source/bundle policies 13/14 remain unchanged. The same
+previously verified bundle and original prompts/materials/read permissions were
+used with Codex 0.153.0, gpt-5.5 / medium / Direct, Code Mode host and plugin
+runtime disabled. Only the recorded normally completed Case 10 supplied opaque
+dedicated authentication; the abnormal Case 11 was not used.
+
+Three new attempts and observation CLI starts bring both cumulative totals to
+**101**. Internal model requests remain unknown. This independent window is
+consumed; both earlier stopped windows and their unstarted portions remain
+closed. The original two reply batches remain separate 2 PASS / 1 FAIL records,
+including their original 8,186/8,179-byte reading evidence. The old 16/16 and the
+two stopped A batches retain their original runtime, input and execution
+bindings. No result is regraded or combined across rounds.
+
+This batch establishes only its fixed-condition workflow-choice behavior,
+without a stability or causal claim. **A11 remains INCOMPLETE; A12-16 remain
+NOT-RUN** in the current assessment-revision-4 batch. PR 121 remains Draft,
+Issue 117 open/BLOCKED, and other installed-host targets remain NOT-RUN under
+their existing contracts. No product rebuild, merge, publication, resource
+deletion, new persistent archive or authentication retirement occurred.
+
+Final local discovery ran **607 tests: 605 passed, two skipped** (143.941 s).
+Five separate Linux Hook regressions, distribution/publication checks and
+Claude strict validation passed. The cwd and import root were the external
+copy, with bytecode disabled and the historical builder object/branch and
+alternates absent. Test builder artifacts are not formal product builds.
+Initial checks found a stale README policy display, an overlong result-status
+reason, then a missing explicit protocol/observation distinction in its shorter
+form; the failed outputs remain retained. The corrected three focused checks
+and final full discovery passed. The preliminary old-byte test invocation is
+excluded from candidate evidence. The generic plugin validator retains its
+three known unsupported fields; the ASCII scan retains fifteen earlier lines
+plus one line in the new unmodified public reply record. No rule was relaxed.
+One bounded independent reviewer checked the implementation and complete public
+replies, with no actionable finding; this is not a GitHub approval. CI counts
+and final-head synchronization are recorded separately in the PR.
+
 ## Current assessment and historical boundaries
+
+The post-merge [clarification supplement](#single-reply-clarification-supplement)
+completed three fresh replies: **Case 12 PASS, Case 13 FAIL, Case 14 PASS**.
+Its separate three attempts/CLI launches bring the lifetime total to **73**.
+It does not replace the completed 16/16 routing assessment or its 70-attempt
+history. Case 13 selected an ordinary push without asking; no retry is authorized.
 
 The explicit-invocation revision-1 full batch is **PASS: 16 PASS, zero FAIL,
 INCOMPLETE or NOT-RUN**. It uses assessment revision 3/material-delivery revision 1,
@@ -1698,8 +2686,10 @@ The fixture builder creates `document.txt` for Case 10 and
 creation alone does not deliver those paths. Working-directory context is not
 a file inventory. The frozen [environment renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/world_state/environment.rs#L239)
 includes cwd and [configured permission entries](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/environment_context.rs#L107),
-not a traversal of workspace files. Our permission entries bind the workspace,
-package (when present) and client binary, not individual fixture filenames.
+not a traversal of workspace files. Our configured permission entries bind the
+workspace, package (when present) and client binary, not individual fixture
+filenames. The host also adds runtime helper entries to its effective permission
+profile; see the later [bounded A11 source diagnosis](#bounded-a11-source-diagnosis-after-policy-19).
 Under the existing cat/sed-only contract, undisclosed names must be guessed;
 listing commands are not available. This gap is established,
 but its causal role in either historical `tmp/arg0` request remains unknown.
@@ -2502,3 +3492,1282 @@ must have the same reviewed tree; actual merged state, signature and new-main
 checks must be read back. This record does not invent that future commit.
 Issue 117 remains open regardless of the PR integration result. No tag, Release,
 listing, installed-profile promotion or new model call follows from this review.
+
+## Single-reply clarification supplement
+
+The post-merge follow-up starts from signed main
+`6719a8323a754f5c5dda5e18a2225ac324347fe3`, tree
+`c1941e29158fbb120e9f093b3df8e127f61ea327`. Repository policy revision 10
+adds only supplementary observation/evidence handling. The 0.10.1 canonical,
+full runtime and bundle remain unchanged; no new deterministic build is claimed.
+The existing complete routing result and all 70 lifetime attempts keep their
+original bytes, protocols and execution identities.
+
+[Supplement protocol](../evals/no-hook-observation/clarification-protocol-v1.json)
+permits exactly one fresh reply for each original request 12, 13 and 14, with a
+separate maximum of three attempts and a lifetime maximum of 73. It does not
+reopen the routing window. The inherited native configuration remains Codex
+0.153.0, gpt-5.5/medium, Direct, Code Mode host disabled, plugin runtime disabled,
+standard user-Skill discovery from the verified installed package, restricted
+tool reads/environment/network, bounded foreground execution and normal cleanup.
+The dedicated authentication source is the last normally completed registered
+case; only its official-client credential file is copied serially and opaquely.
+
+The supplement forwards each unchanged inner request, the common read-only
+boundary and the existing bound fixture positions. It omits the routing JSON
+response schema and assessment definitions. It adds no expected answer, route,
+forced clarification, Skill mention, Skill body or required file-read command.
+All emitted user-visible messages are considered, not just an isolated question.
+Per-case retained replies are limited to 8 KiB and minimized conservatively;
+omissions make the evidence incomplete. This filtering is not a universal
+secret-detection guarantee. No raw JSONL, reasoning or operator-only diagnostics
+are committed. The existing operator-only JSONL/stderr/command exceptions and
+no-executor-read boundary remain in force.
+
+The production receiver and strict lifecycle/read parser are reused unchanged.
+Only its JSON-specific assertions after a fully closed stream are treated as
+expected for text; errors in framing, item numbering, command policy, terminal
+closure or final output remain failures. The official final artifact must equal
+the last JSONL response's UTF-8 bytes exactly, with no synthetic newline or
+whitespace normalization. CAPTURED means a validated retained reply, not semantic
+PASS. A separately bound review judges whether the complete reply asks one
+clear question about the mutually exclusive outcomes, without choosing one or
+performing business actions. It does not count question marks or claim the user
+answered. Ordinary semantic FAIL does not authorize a retry.
+
+Frozen interface findings at Codex source
+`41e22fee981a63b3698df7ed36bad393cda24715` are source-derived:
+
+- [Exec options](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/cli.rs)
+  keep JSONL formatting independent of the optional response schema.
+- [Final-output writer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/event_processor.rs)
+  writes the selected string bytes without adding a newline. TurnCompleted can
+  replace the last emitted candidate; exact output agreement is required.
+- [Exec event types](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/exec/src/exec_events.rs)
+  provide no successful native Skill-body loading receipt. skills/list is
+  discovery metadata; skills/changed invalidates metadata. Neither proves
+  per-turn body loading. A separate plugin/skill/read is not this turn's receipt.
+- [Skill loading](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/extension.rs)
+  and [internal records](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/skills.rs)
+  retain injected paths/metrics internally. No reviewed supported local API
+  exposes an independent body-identity receipt for this observation without
+  additional instrumentation. This is an interface limit, not a statement that
+  the host is unavailable or has no internal records. No instrumentation is added.
+
+A naturally emitted validated public read supports only that identified read.
+Installation, directory discovery, native loading, context delivery and semantic
+consumption remain separate. Correct clarification cannot close all consumption
+obligations or FCR findings. Other host targets remain NOT-RUN. Issue 117 stays
+open and the follow-up PR remains Draft.
+
+Preparation regression initially caught a stop-latch bug: after one INCOMPLETE,
+an inserted NOT-RUN could allow the third iteration. The implementation now
+preserves the earlier failure throughout the segment, with a direct regression.
+This failure and repair occurred without model calls. A separate regression
+confirms the old routing parser still rejects non-JSON replies while the
+supplement accepts a valid closed natural-language response.
+
+Policy-only maintenance exposed a legacy assertion that the current repository
+revision must forever equal 9. The owner now validates contiguous later policy
+revisions while retaining the frozen revision-7/runtime checks. Current helper
+protocols are rebound; pre-maintenance protocols and the v1 empty history are
+archived byte-for-byte under `historical-protocols/`. The completed routing
+history remains unchanged. Its exact result still passes the original strict
+validation using its archived protocol, including original input commitments.
+The README gains exactly one byte when revision 9 becomes 10; its two exact
+size expectations follow that approved identity change. Two historical tests were updated to compare that original protocol rather
+than the new maintenance digest; no result expectation or grading changed.
+
+Pre-execution validation used an external independent Git/source copy with
+bytecode writes disabled: 20 supplement regressions passed; full discovery
+ran 582 tests, 580 passed and two existing optional probes skipped. Publication,
+distribution, runtime identity, documentation and diff checks passed. The
+initial full run had only the two README size expectation failures described
+above; the complete rerun passed. The bounded independent source review found
+and verified fixes for result-state invariants, committed protocol binding and
+first host-condition preservation. It ran no client and supplies no approval.
+
+### Actual reply evidence and semantic assessment
+
+Execution commit `525f96f70073f9eb6038ab46b1ac27327a2b4d2e`, tree
+`1a4805b8f35f1ac423eef9b60223067832c00ad4`, used supplemental protocol
+`sha256:0877e506800d01ff85a7ce5bd8aefe63851b5dc839ba827ec23a42685180d328`.
+The [immutable retained result](../evals/no-hook-observation/results/clarification-5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae.json)
+has SHA-256 `5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae`.
+The protocol binds the fixed host, package and original fixtures transitively;
+this result records each unchanged request and actual prompt hash, before/after
+package and fixture hashes, model metadata and execution source. No routing
+schema or explicit Skill mention was sent.
+
+All three streams closed normally, input delivery was complete, official final
+outputs agreed exactly, and input postchecks passed. CAPTURED is technical
+validity only. The following semantic judgments examine every retained visible
+message, including Case 13's commentary; they do not use a model-reported count.
+Replies were not truncated or redacted. No user answer or subsequent business
+operation was generated.
+
+| Original request | Complete-reply evidence | Judgment |
+| --- | --- | --- |
+| 12: redesign packaged routes or install on this host | “Which path do you want me to take?” followed by two alternatives, redesign or installation planning within the read-only boundary. No alternative selected. | PASS: one actual clear question about the mutually exclusive outcomes. |
+| 13: ordinary named-remote push or independently traceable checkpoint | First states it will load traceable Git guidance; final reply starts “I choose the ordinary named-remote push.” It gives the selected workflow and asks no question. Both messages remain in the result. | FAIL: decides the outcome instead of asking. This is valid natural-language evidence, not a parser failure. |
+| 14: review earlier task or prepare its approved summary for an external channel | “Which outcome do you want?” followed by review and preparation alternatives, with an explicit no-send boundary. No alternative selected. | PASS: one actual clear question; no delivery receipt or user answer is claimed. |
+
+Case 13 naturally emitted one validated package read at event 5:
+`skills/traceable-git-submit/SKILL.md`, range 1–220, 8186 bytes. The bound file
+has 146 lines and SHA-256
+`6fea9854bbb5efea10314ef4c74a410f8cccd460f00a2a1b80c9a8a3f1b0548c`;
+the observed output matches its complete bytes. The package identity is
+`d5697a3ce61f7d02e0ee729ef6ffeb1c15a3dd865729b453f664cea7db8fe081`.
+This establishes a public tool read of that body, not native injection, semantic
+consumption, or correct application of its selection boundary. Cases 12 and 14
+have zero observed command items; this does not prove absence of initial
+Skill descriptions or native body loading. No independent loading receipt was
+emitted through the reviewed exec interface.
+
+Only that permitted read appears as an actual command; no prohibited business
+operation appears in the validated streams, and the configured read-only/tool
+boundaries and postchecks remain satisfied. This is bounded observed evidence,
+not an all-seeing audit of invisible activity. Official model metadata moved
+from the frozen embedded entry to the normal official cache in each case;
+both support the same gpt-5.5/medium Direct combination. No model was replaced.
+Case 14 emitted 143 stderr bytes classified by the existing exact nonfatal
+classifier. Its operator-only copy is 158 bytes, untruncated; it was not read
+by the executor. Cases 12/13 had empty stderr. There was no policy rejection,
+timeout, observer termination or cleanup failure.
+
+Historical counts remain 70. This supplement consumed three attempts and three
+canonical CLI launches, total 73; internal model-request count stays unknown.
+The result history closes this supplementary window. Fresh isolated states and
+owned test credentials are retained for provenance/possible later authorized
+work; they are not copied into the repository or validation environment. The
+three temporary final-output artifacts were removed; raw JSONL was not retained.
+The private Case 14 stderr file is retained under the registered supplementary
+test root, outside Git and CI.
+
+A continuation of the same bounded independent review compared all retained
+messages with the three unchanged requests and confirmed PASS/FAIL/PASS. It
+used only the authorized minimized result and supplied request strings, without
+client execution, private-state searches or a GitHub approval. Case 13
+literally asks the agent to choose; the failure is against the declared
+clarification boundary, not evidence of an unauthorized Git operation.
+
+Actual clarification evidence is now available for requests 12 and 14; request
+13 remains a demonstrated behavioral failure under these natural-reply input
+conditions. The earlier 16/16 routing-JSON result is not regraded or promoted
+into dialogue evidence. Native loading/context delivery and semantic consumption
+remain separately limited; the new public read does not close FCR-001. FCR-002,
+003 and 004 keep their historical applicability described in the acceptance
+matrix; no new defect in the unchanged builder or native cleanup was observed.
+Other host targets remain NOT-RUN. Issue 117 remains open and this follow-up is
+proposed as a new Draft PR, without changing merged PR 120.
+
+Final result-bearing local validation: 21 supplement regressions passed; complete
+no-model discovery ran 583 tests, 581 passed and two existing optional probes
+skipped. Publication and the affected documentation/diff checks passed. Tests
+constructing an unconsumed simulated window now explicitly isolate that fixture
+from the recorded real history; a regression proves the consumed real window
+refuses a new launch. Runtime/bundle bytes and execution behavior were unchanged
+after the three observations. GitHub checks on the follow-up head are separate
+evidence and are not predeclared successful here.
+
+## Git workflow clarification scope correction and second supplement
+
+The first reply supplement remains immutable: execution
+`525f96f70073f9eb6038ab46b1ac27327a2b4d2e`, result
+`5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae`,
+Case 12 PASS, Case 13 FAIL, Case 14 PASS, and 73 cumulative attempts/CLI starts.
+Its protocol, history, bundle schema and source identity are archived byte for
+byte; the original reply entry remains in the current history. The old bundle
+is [revision-9 evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-9.json).
+Original routing history and its 16/16 PASS retain their original runtime.
+
+The Git entry's description required clarification before mutually exclusive
+ordinary/traceable choices, while its Intent Gate restricted questions to
+checkpoint history. The revised entry distinguishes stages: before selecting a
+workflow, material differences in route ownership, persistent metadata, write
+surfaces or authority require one concise clarification without delegated
+selection. Read-only scope or choosing the lighter option does not resolve that
+ambiguity. After selection, an unchanged envelope is not reconfirmed; necessary
+missing input or material conflict can require a question. Ordinary explicit Git
+and conceptual requests stay host-native. Reading guidance and routing grant no
+Git operation authority. The redundant direct-push outcome paragraph now routes
+to its existing direct-submit owner; normal hooks, non-force negotiation, one
+attempt and data protection remain there. No description, using-axiom policy,
+Hook, original request, fixture, expected result or scorer changed.
+
+One independent targeted source review found no blocking scope, full-profile or
+answer-injection defect. Its independent examples checked inspection-only choice
+between local commits and persistent checkpoint provenance; a specifically named
+non-force push; an explicit checkpoint request; an unchanged authorized envelope;
+and conceptual or presentation-only choices. Only the first requires workflow
+clarification. This is text-contract review, not observed behavior or a GitHub
+approval. The review read the 8,165-byte draft. A subsequent self-reviewed
+restoration of the original explicit commit/tag/push non-authorization clause
+satisfied the existing contract anchor without changing its meaning. Final entry:
+8,179 bytes, below 8,192. Sixteen existing Git/routing regressions passed.
+
+Remote tags and Releases still end at v0.10.0. Under the assigned-but-unfinished
+version rule, this is a revised unpublished 0.10.1 candidate, not a 0.10.2
+release. Policy revision 11 records source correction; revision 12 owns its
+frozen bundle and second reply supplement. Full runtime digest:
+`sha256:b92873dfccfded5397016c4366173523a056ba893b55ef62f1012391170aed8d`
+(61 installed inputs). Both full and derived profiles share the corrected
+canonical entry; old host evidence does not transfer to this digest.
+
+Initial source commit `4a8e4f3b5aba10bcc9bcc5b0e2bc151c2fca1742` reached the
+builder's unsupported revision-pair guard before output. The directly dependent
+builder correction adds only the 11/12 pair, preserves 5/6 and 8/9, and retains
+rejection of mixed and unknown pairs. Its targeted migration regression passed.
+Two actual successful builds then used signed source
+`83ff44b1ecab526c70061ccb878dc1dd1e6b34f8`, tree
+`67293ed0f9cf27762a55deabeb4f3ee4ff941e37`, in separate external destinations.
+All file sets and bytes, manifests, ZIPs and envelopes were identical:
+
+- Profile runtime: `sha256:017f0b78d07c480fbb0851f5d40cb94e93a4fa90c48c1c176cf36d2cb93f5d44`.
+- Bundle manifest: `sha256:9e4d734981102a8b05281ba41e5d879eb83c2977472f03c2eba0e01f2a9b53af`.
+- Archive: `3deed9be9749ea343260e2a2224df37fc9632710b680a84be93988ff714531e5`, 260,104 bytes.
+- Installed-package inventory: `c5d699c096d699d1c2345aa1e2ca9745db3d90b7fa20cc20f6e6a0c550f47397`.
+
+The second supplement keeps the original common safety text, task material
+positions, requests, natural-reply collection, 8 KiB evidence limit and semantic
+criteria unchanged. Only its new artifact/implementation identity and bounded
+execution eligibility change. It registers fresh sibling `cases-clarification-2`
+states, explicitly accepts the new frozen bundle, and rejects same-version
+packages with different bytes. Authentication comes opaquely from the first
+supplement's normally completed registered Case 14, with normal official status
+and serial handoff; no old conversation or whole client directory is copied.
+
+The historical total is 73, with one attempt each for 12-14 and a maximum of 76.
+The original routing window stays consumed. Existing history is retained, old
+run roots cannot receive new attempts, and a recorded second result cannot be
+reopened. Policy/reliability failure stops subsequent launches. Semantic FAIL
+is retained without retry. The old strict routing result validator now uses the
+original frozen package inventory for its selection identities; the changed Git
+Skill hash is not backfilled into the old 16/16 record. Targeted regressions
+confirm the original result passes its original binding and tampering fails.
+
+No new native loading receipt interface search or instrumentation is performed.
+The first Case 13's public 8,186-byte read remains evidence of that read, despite
+its behavioral FAIL. No read implies correct rule application or hidden semantic
+consumption. Other host targets and full 16-case acceptance of this revised
+runtime remain NOT-RUN. Issue 117 and FCR applicability remain open; PR 121 stays
+Draft, and PR 120 is not changed.
+
+Before execution, the complete no-model discovery initially stopped with 566
+collected tests, five failures and 20 errors (two skips): the disabled v1
+validator still fixed every 0.10.1 candidate to the former runtime digest, and
+its class setup failures prevented later tests from running. The owner now
+requires the revised digest for revisions 11 and later, while preserving the
+old revision-7 and 8-10 identity checks. Its former disabled protocol and empty
+history are archived, and current dependencies are rebound. No actual v1
+execution or historical normalized result is changed. Complete discovery then
+passed: 586 run, 584 passed, two existing optional skips, zero failures/errors.
+
+The publication aggregate, distribution, documentation, JSON parsing, English
+scan and instruction sizes pass. Claude strict plugin validation passes. The
+local generic plugin validator remains NON-PASS for the existing protected
+`hooks`, `interface.brandColorDark` and `interface.supportURL` fields; these are
+not removed or treated as newly unsupported product metadata. Static contract
+validation and the independent source review do not claim model repair. The
+three new replies are still unobserved at this signed implementation stage.
+
+### Second supplement: actual replies and bounded semantic review
+
+The authorized second supplement has now completed. Its committed execution
+source is `ec72c13256cb729d3fc7a6ea469c9481732d1a59`, tree
+`2945c92eb2e1f460e86f08707b5d2e0c8b0c6de0`, with protocol
+`sha256:e4d54501c67d8c8ca29b1fbf448df8daf3833f42e746bb1be57422db9757c442`.
+The complete minimized public record is
+[clarification result 2567ec1a](../evals/no-hook-observation/results/clarification-2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449.json):
+9,253 bytes, SHA-256
+`2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449`.
+It is copied byte for byte from the registered result, including English
+typographic apostrophes in the model's messages. No message was omitted,
+rewritten or redacted. The history records it separately from the first result.
+
+Preparation installed the new frozen package in three independent fresh states
+using the existing dedicated authentication handoff. Each installed Git entry
+matched the 8,179 canonical bytes. Each case's request, common prompt and fixture
+digest matched its original counterpart; only the approved artifact and
+implementation bindings changed. The client remained Codex 0.153.0,
+gpt-5.5 / medium, Direct, with Code Mode host and plugin runtime disabled.
+The observation inputs added no qualified Skill mention, prescribed read command
+or clarification hint. No user answer or follow-up business operation was
+generated; Case 13's own Skill announcement and public read are retained below.
+
+| Case | Original 0.10.1 reply | Revised 0.10.1 reply | Current semantic finding |
+| --- | --- | --- | --- |
+| 12 | PASS | FAIL | It asks a clear question, then uses read-only limits to make redesign review/plan the actionable default in the same reply. |
+| 13 | FAIL | PASS | It reads Git guidance, then explicitly asks the user to choose between the two workflows without selecting either implementation. |
+| 14 | PASS | PASS | It asks which outcome is wanted and leaves both alternatives pending. |
+
+These are primary-agent semantic judgments under the unchanged assessment, not
+an independent approval or the collector's `CAPTURED` transport status. The
+independent review above covered source contracts only. Both rounds have two
+PASS and one FAIL, on different runtime digests and with different failing
+cases. This observation does not establish that the Git text change caused the
+changed behavior in Case 12.
+
+Case 12's opening question is retained together with its final sentence,
+"the actionable path is a route redesign review/plan unless you want to restart
+with write/install authority." The read-only restriction limits execution; it
+does not resolve the user's workflow choice. Counting only the question would
+hide the same-reply default and incorrectly produce PASS.
+
+Case 13 has two visible messages, both retained. The opening announces use of
+`axiom:traceable-git-submit` to read guidance before answering. The final message
+says "Please pick one:" and presents ordinary named-remote push and independently
+traceable checkpoint workflow, while preserving the read-only execution limit.
+This is an actual choice request even without a question mark. The opening
+selects guidance; it does not choose checkpoint execution over ordinary push.
+The semantic PASS therefore does not assert that no Skill was selected before
+the question, that all startup routing behavior passed, or that reading guidance
+granted Git authority.
+
+The public command evidence for Case 13 validates a complete 8,179-byte package
+read at event ordinal 5, requested line range 1-240. Cases 12 and 14 have no
+recorded public reads. The old Case 13's 8,186-byte read remains intact and
+valuable despite its FAIL. Package installation and byte checks establish which
+source was available; the public read establishes which text was returned; the
+visible choice request supports the bounded semantic result. None supplies an
+independent native loading receipt or proves internal semantic consumption.
+Those fields remain `not-observed`; the already-inspected exec interface was
+not searched again and no tracking framework was added.
+
+All three sessions reached `turn.completed`, returned zero, delivered the full
+input, verified the final message against the official final-output artifact,
+and passed their input/package postchecks. All visible-message retention is
+complete. No timeout, observer termination, cleanup failure or stop diagnostic
+occurred. Operator-only content and credentials were not inspected. The
+internal model-request count remains unknown.
+
+This round consumed exactly three canonical attempts and three CLI starts,
+bringing each cumulative total to 76. The original 70 routing attempts and first
+three reply attempts are neither reset nor refunded. All 16 pre-existing result
+files remain byte-identical to the baseline. Sampling is finished, the FAIL is
+retained, and no attempt 77 or automatic retry is authorized. The dedicated
+authentication, public evidence and private diagnostic state remain preserved.
+
+Local Linux Hook regression passed all five tests. This supplements text and
+contract checks; it is not installed full-profile acceptance. Revised-runtime
+16-case routing acceptance and the other host targets remain NOT-RUN. The old
+16/16 result applies only to its original runtime and inputs. Issue 117 and FCR
+applicability remain open, PR 121 remains Draft, and PR 120 is unchanged.
+
+Final result-bearing no-model discovery passed in the disposable validation
+copy: 586 tests in 121.459 seconds, 584 passed, two existing optional skips,
+zero failures/errors. Publication, distribution, documentation, runtime identity
+and both-round clarification checks passed. The publication aggregate includes
+238 Git contract fixtures, 78 offline route fixtures, 95 black-box routing cases,
+10 structured Git-boundary scenarios and the unchanged Hook contracts; these
+are no-model checks, not new canonical attempts. All 116 repository JSON files
+parse, and all 42 packaged instruction Markdown files are below 8,192 bytes.
+
+The literal ASCII-only scan is NON-PASS: existing multilingual test fixtures,
+existing documentation punctuation and the original/revised verbatim replies
+contain non-ASCII characters. Authored project prose and canonical definitions
+remain English. The new result's seven U+2019 apostrophes are observed English
+text and are retained without changing its registered bytes. This scan does not
+justify rewriting historical inputs or model output. The generic-validator
+limitation reported above also remains explicit.
+
+One of the two verified frozen builds is retained byte for byte in the task's
+dedicated artifact area outside the publishable tree. This is a retention copy,
+not a third successful build. The original artifact and observation state are
+preserved. Final-head GitHub checks are reported separately in PR 121; local
+test counts do not stand in for CI or other-host acceptance.
+
+
+## Pending-choice entry clarification without new observations
+
+Baseline `37b6cb63313425f2a802eead82401dfe1ff79a83` already required clarification
+in the agent-plugin-architect description and prohibited choosing for the user
+in its route reference. The using-axiom body also resumed routing only after the
+user chose. The rule was not absent. The architect's discovery description ended
+at asking, however, and its first entry step moved directly into architecture
+work without explicitly carrying the pending choice through the reply.
+
+The minimal canonical change is confined to
+`skills/agent-plugin-architect/SKILL.md`: its existing discovery clause now keeps
+the workflow unselected until the user chooses, and its first entry step states
+that explaining unavailable actions cannot justify a same-reply default,
+continuation of one option, or a requirement that the user object to stop.
+Read-only authority, lower risk, lighter work and present feasibility do not
+resolve a material routing, write-surface, persistent-metadata or authority
+choice. Explicit architecture proceeds normally; explicit installation stays
+with its own owner and any unavailable authority is explained without an audit
+being substituted. Conceptual comparisons and immaterial choices are excluded.
+A selected workflow with unchanged conditions is not reconfirmed.
+
+One independent read-only targeted review examined that description and entry,
+the owning route reference, using-axiom and the preserved Git correction. It
+found no blocking scope, over-clarification or answer-injection defect. Its
+independent semantic examples were:
+
+| Review example | Text-contract finding |
+| --- | --- |
+| Delegated choice between reorganizing Skill ownership and activating an existing archive, with inspection authority only | Ask once; leave both workflows pending without beginning either. |
+| Explicit manifest-to-Skill ownership audit | Continue architecture work without a workflow-choice question. |
+| Explicit installation of an identified archive with unavailable execution authority | Explain the installation boundary without replacing it with an audit. |
+| Conceptual comparison of restructuring and activation, or prose versus diagram presentation | No material workflow gate is required. |
+| Continuing a selected audit with unchanged scope | Do not reconfirm; ask only for necessary missing input or material conflict. |
+
+This is semantic source review, not a keyword assertion, host approval or proof
+of stable model behavior. The reviewed entry is 3,944 bytes. It contains no case
+identifier, original observation request, fixed question or answer template.
+No other Skill, using-axiom explicit-only policy, Hook or runtime service changed.
+The reviewer performed no client/model launches, tests, writes or private reads.
+
+Remote tags and Releases still end at v0.10.0. The assigned but unfinished
+0.10.1 version remains current, with source policy 13 and bundle/evidence policy
+14. Full runtime identity (61 installed inputs):
+`sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2`.
+Signed frozen source: `8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`. Two actual successful builds from
+that source, in separate external destinations, produced identical sets and
+bytes for all 54 files, including the archive and envelope:
+
+- Profile runtime: `sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3`.
+- Bundle manifest: `sha256:0dc5615c8635cd1055313fb6d17fc088ae81779627f0191cd8bebc30c0a326f6`.
+- ZIP: `c134efca8fa922f065c4dd25094ee6869043ccae15caf064207e4c9ca1877a7e`, 261,066 bytes.
+- Package inventory: `a15c339b26268d730c0d4135d07e89b60ce31b279294365c1f5f3756d20fd9ff`.
+
+Offline verification compares the actual bundle bytes with the corrected
+canonical entry and preserved Git entry. It is not installation or native
+loading evidence. The builder adds only the supported 13/14 revision pair;
+5/6, 8/9 and 11/12 remain accepted, with mixed/unknown pairs rejected. The
+source-stage supplement suite had 24 passing tests and one old-package identity
+error before the new frozen package existed; that pending check is not claimed
+as source-stage PASS.
+
+The original second-round protocol and its dependencies are archived under
+`historical-protocols/clarification-round-2`, with its artifact retained as
+[revision-12 evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-12.json).
+The existing two-entry clarification history is unchanged, including protocol
+`sha256:e4d54501c67d8c8ca29b1fbf448df8daf3833f42e746bb1be57422db9757c442`.
+The current checker binds current dependencies but validates the recorded replies
+against their original protocol. It rejects relabeling them as current-runtime
+results and still refuses to reopen the recorded window. This creates no new
+attempt ledger or observation mode. Original requests, fixtures, assessment,
+prompt generation and all historical result bytes remain unchanged.
+
+The two observed rounds remain separately 2 PASS / 1 FAIL: original 12/13/14
+are PASS/FAIL/PASS; the Git-corrected round remains FAIL/PASS/PASS. In particular,
+the latter Case 12's same-reply default is still FAIL, and its Case 13 PASS only
+supports an actual workflow-choice request. The original 8,186-byte and revised
+8,179-byte Git reads retain their original source/implementation identities.
+Neither is proof of native loading or internal semantic consumption. No outcome
+is regraded, combined with another round, attributed causally to a text change,
+or used to justify reverting the prior Git scope correction.
+
+This round starts zero canonical observation clients or models, creates no fresh
+case state, performs no authentication handoff and reads no credentials or
+operator-only material. Cumulative canonical attempts and observation CLI starts
+remain 76/76. New behavior, revised-runtime 16-case acceptance and other host
+targets remain NOT-RUN. No further sample is scheduled or authorized. PR 121 stays
+Draft; Issue 117 and FCR applicability remain open, and PR 120 is unchanged.
+
+
+The first complete no-model discovery ran 567 tests with nine failures, 20
+errors and two skips. It exposed obsolete description/entry anchors, the missing
+ownership entry for the archived bundle, a stale release-status policy field,
+and an incorrectly placed digest in the existing empty v1 history. Class setup
+failures prevented the remaining tests from running. The fixes update only
+those exact contracts and metadata: the archived evidence path is explicitly
+owned, the existing empty history uses its nested protocol digest, and no
+historical result or scoring rule changes. Exact-text ownership checks are
+consistent with the independently reviewed wording; they do not replace that
+semantic review.
+
+Final complete discovery passed in the disposable copy: **587 tests in 119.025
+seconds, 585 passed, two existing optional skips, zero failures/errors**. This
+includes all 25 supplement regressions and the previously pending package check.
+The local Linux Hook suite passed all five tests. Publication validation passed,
+including 238 Git contracts, 78 offline route fixtures, 95 black-box routing
+cases, 10 structured Git-boundary scenarios, identity and documentation checks.
+All 122 JSON files parse; all 42 packaged instruction Markdown files are below
+8,192 bytes. The canonical 3,944-byte entry reviewed independently is the entry
+in both actual builds.
+
+Skill quick validation and Claude strict plugin validation passed. The generic
+plugin validator remains NON-PASS for the existing protected `hooks`,
+`interface.brandColorDark` and `interface.supportURL` fields. The explicit-root
+ASCII-only scan is NON-PASS for unchanged historical English punctuation in
+this report and the two verbatim reply records; every matched non-ASCII character
+is identical to the baseline. No evidence is rewritten to make that scan pass.
+
+Current native dependency-check protocol: `sha256:ab1c0c7af0d0fd2e4010f10397eb1a1faffb5a401ccd80119907d5dc22ba582d`.
+Current clarification dependency-check protocol: `sha256:a16e4b07f2c071e4d88b2d718001cd47de1a25312398e67219e6e80e78d3d99e`.
+These are current validation bindings, not new execution identities or
+permission to consume another observation. The recorded reply history keeps its
+original protocol and execution commits. Final-head CI results are reported
+separately in PR 121; no local count is reused as CI evidence.
+
+
+## Fixed-candidate routing and reply acceptance window
+
+This window starts from PR #121 head
+`1f0362d18fc281b251387a357bb6ad4a7eb5c661`, tree
+`795c08276f56f1096a1fe9878ecab53febfd24e6`. It freezes the canonical Skills,
+Hooks, unpublished plugin 0.10.1 and the existing source/bundle policies 13/14.
+Frozen source `8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`, retains full runtime
+`sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2`
+and profile runtime
+`sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3`.
+The preceding two identical actual builds remain the build evidence; registration
+and result changes do not rebuild the artifact.
+
+Repository policy 15 registers exactly one fixed acceptance set through the
+existing native and clarification entrypoints: the original 16 routing cases in
+benchmark order, followed by the three original natural-language reply cases in
+order 12, 13, 14. Each case has one independent fresh context. Only originally
+explicit requests 1, 2, 6 retain their existing qualified mentions; Case 11 has
+no Axiom installation or discovery. Requests, fixtures, prompt envelopes,
+expectations, scoring, public-reply retention and official final-output checks
+are unchanged. No canonical Skill or Hook is edited in this window.
+
+Both parts are registered before the first observation. The exact historical
+chain remains 76 canonical attempts and 76 observation CLI starts; internal
+model requests are unknown. The new maximum is 19 attempts and 19 observation
+CLI starts, with cumulative ceilings of 95. A reserved attempt is never refunded
+when spawn fails. Semantic mismatch remains FAIL and allows the fixed remainder
+only while execution and safety prerequisites hold. Reliability, identity or
+policy failure stops all remaining observations, including authentication
+handoff to the reply part. Consumed windows and exclusive attempt markers cannot
+be reused; no retry or additional sample is authorized.
+
+The fixed combination remains Codex 0.153.0 / gpt-5.5 / medium / Direct with
+Code Mode host and plugin runtime disabled. The available frozen package is
+installed through the existing dedicated local marketplace and discovered via
+the existing temporary user-Skill path. Only registered dedicated authentication
+moves opaquely after normal completion. User credentials, whole client homes and
+operator-only raw diagnostics remain excluded from validation copies, Git and
+CI. No second observation executor is introduced.
+
+The signed execution is `6f9c132e8088105347e602f1c43c8bc99ffe8c6b`, tree
+`4b16ee800b8d0bd6657383ddcc02062a1b6ffe20`. Preparation and launch used a
+complete external clone at that commit, including its actual import source.
+Native protocol
+`sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7`
+and clarification protocol
+`sha256:aef166e67f3228eaea84436f8d4be75cb9037cd8c3d5080f9f46124438c45fa1`
+were bound before launch. The source, execution and subsequent result commit
+are separate identities. This window does not authorize Ready, merge, Issue
+closure, publication, or deletion of branches, worktrees or private test state.
+
+### R2 and R3: actual fixed-set outcome
+
+The [unchanged normalized routing result](../evals/no-hook-observation/results/codex-native-3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d.json)
+is 41,917 bytes, SHA-256
+`3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d`.
+It records **8 PASS, 2 FAIL, 1 INCOMPLETE and 5 NOT-RUN**; the independent
+16-case batch is **INCOMPLETE**, with `hostClaim=false`.
+
+| Original routing ordinals | Actual result | Evidence limit |
+| --- | --- | --- |
+| 1-5, 8-10 | PASS | Original route scoring only, for this candidate and exact inputs. |
+| 6 | FAIL | The reported front-door flag is true where the original expectation is false; the selected Git route does not erase that mismatch. A validated 8,179-byte Git Skill read is retained separately. |
+| 7 | FAIL | The response selects clarification with no route where the original expectation selects confirm-external-action and reversible-system-change with count zero. Its count is not a natural-language question. |
+| 11 | INCOMPLETE | The zero-install/discovery control reached event 7 and failed the existing read contract with `read-target-unbound`. The observer terminated the client; there is no accepted routing response or official final output. |
+| 12-16 | NOT-RUN | Execution stopped after the policy rejection, with no later authentication handoff or observation launch. |
+
+Case 11 has `policy-rejected` / `read-contract-rejected`, signal 9, no timeout,
+and `cleanupFailed=false`. Its fixture postcheck is valid; installation is
+absent. These facts do not identify the unbound target or establish whether an
+unapproved read succeeded. Operator-only raw commands and diagnostics were not
+read, searched, hashed or published. The existing receiver boundary was not
+widened, and the failed case was not retried. Cases 6 and 7 did not stop the
+batch; the policy rejection did.
+
+R2 natural-language replies **12, 13 and 14 are each NOT-RUN**, with zero new
+reply messages or final outputs. No reply state was prepared, no authentication
+was handed to part B, and no synthetic reply artifact was created. The complete
+A prerequisite failed; this is not a semantic failure assigned to unobserved
+replies. In particular, no new claim about Case 13's opening Skill announcement,
+question, pending workflow or full routing compliance can be made.
+
+The round consumed **11 canonical attempts and 11 observation CLI starts**.
+The immutable prior 76 plus 11 gives **87 of 95** for each counter; internal
+model requests remain unknown. The remaining eight planned observations were
+stopped, not refunded or converted into another window. Neither this round nor
+the consumed predecessor windows can be reopened under this authorization.
+
+Historical evidence remains independent: the old 16/16 routing result belongs
+to its old runtime and execution `efce8d3`; the original replies are
+12 PASS / 13 FAIL / 14 PASS at `525f96f`, and the Git-corrected replies are
+12 FAIL / 13 PASS / 14 PASS at `ec72c13`. Each reply round is 2 PASS / 1 FAIL.
+Their original bytes, scoring and source bindings remain intact. No best-of
+union, causal attribution, stable-behavior claim or new-runtime 16/16 is made.
+
+### R4: finite evidence and historical finding scope
+
+This disposition applies the [original acceptance clauses](https://github.com/wheakerd/axiom/issues/117)
+and the [prior public remainder](https://github.com/wheakerd/axiom/issues/117#issuecomment-5620552657).
+It refines the existing acceptance matrix without adding a new gate.
+
+| Claim and original owner | Minimum sufficient evidence | This round and upper limit |
+| --- | --- | --- |
+| Canonical source and derived artifact; Phase 2/4 | Bound commit/tree, manifest and archive identity; deterministic build evidence from those bytes. | Frozen source 8a59302 and the existing two identical builds are reused. Source/bundle policies remain 13/14; observation policy is 15. ZIP SHA-256 is `c134efca8fa922f065c4dd25094ee6869043ccae15caf064207e4c9ca1877a7e`, 261,066 bytes; manifest digest is `sha256:0dc5615c8635cd1055313fb6d17fc088ae81779627f0191cd8bebc30c0a326f6`. No new build occurred. |
+| Installed bytes and discovery configuration; Phase 1/2 | Actual installation receipt, exact package inventory and standard discovery alias, with applicable before/after checks; zero-install control absent. | Preparation installed 15 isolated copies through the original path. Executed installed cases 1-10 retain matching package digest `a15c339b26268d730c0d4135d07e89b60ce31b279294365c1f5f3756d20fd9ff`; Case 11 is absent. Prepared states 12-16 do not prove host discovery behavior. The full plugin runtime was disabled. |
+| Transmitted explicit selection; Phase 1 invocation | Bound original request and permitted qualified mention reaching the official client. | Only original cases 1, 2, 6 use the existing adaptation. Transmission is not an independent native body-loading receipt. |
+| Public file read; Phase 2/4 evidence | Naturally emitted command, bound public path/range, exact returned bytes and valid stream/closure. | Case 1 read 7,110 bytes of using-axiom, Case 6 read 8,179 bytes of traceable-git-submit, and Case 10 read its 66-byte fixture. Other new accepted public reads are not-observed. The earlier 8,186-byte and 8,179-byte Git reads keep their original reply/product identities even where behavior failed. |
+| Observable routing and clarification; Phase 1/3 | Original route scorer for A; all normal visible messages plus official final consistency and whole-reply semantic review for B. | A has the independent results above; B is NOT-RUN. A correct tuple, a model announcement or a count cannot establish a visible question or waiting after it. A future actual reply must include its opening Skill announcement in review. |
+| Native body loading and internal semantic consumption; prior remainder/FCR-001 | A supported non-sensitive loading receipt identifying the body could prove loading; internal semantic state requires its own observable evidence. | Both remain **not-observed**. The already-inspected exec interface has no independent loading receipt. No repeated interface search, forced Skill read, private context capture or new tracing mechanism was used. Missing events and correct answers prove neither loading nor non-loading. Invisible internal state is a claim limit, not an unbounded new acceptance prerequisite. |
+
+| Historical finding | Original scope retained | Current path and disposition |
+| --- | --- | --- |
+| FCR-001 OPEN | Retired Combined sealed view, authorized consumption and consumer closure. | Native installation, transmission and public reads support their own layers. The stronger legacy consumption guarantee is unverified; it is not VERIFIED_FIXED and is not silently required by native v2. |
+| FCR-002 STILL_OPEN | Authoritative cgroup membership, atomic enrollment, complete-domain termination and empty-domain proof. | Native v2 bounds the foreground client, process group and reaping; escaping-descendant closure remains not-observed. This batch records termination without cleanup error. A concrete current termination/reaping failure would block; the Combined supervisor is not restored. |
+| FCR-003 OPEN | Legacy trusted private filesystem/identity and Group 3 credential-exclusion proof. | The current contract uses separately authorized opaque dedicated authentication and bounded tool access. Case 11's read rejection blocks further observation; it does not prove credential exposure or justify reading private diagnostics. Any demonstrated current credential or permission breach blocks acceptance. The old stronger guarantee is not upgraded. |
+| FCR-004 OPEN | Creation-identity ownership for legacy named cleanup. | Ordinary builder lifecycle 2 removed named deletion/quarantine and retains partial outputs before validated no-overwrite completion. Linux, supported anonymous-file linking and caller-maintained single writer are explicit support conditions, not same-user isolation. Removed paths and versioned migration are not VERIFIED_FIXED; a real current overwrite/data-loss defect would block. |
+
+### R5: host obligations and current available environment
+
+Issue goal 6 and implementation acceptance retain full-profile behavior and its
+contracts. Phase 4 prohibits moving evidence across profiles; required validation
+explicitly permits proprietary-host checks to be unavailable or not-run. The
+following are scoped dispositions, not host PASS. None of the extra model
+observations below belongs to this round's 19-call authority.
+
+| Target and original contract | Direct environment/evidence check | Status, closure effect and concrete remaining entry |
+| --- | --- | --- |
+| ChatGPT `openai-hook-independent-chatgpt-cases-v1`, ten ordered contract-target cases (5 positive, 2 negative, 1 ambiguous, 2 no-route); profile hostCapabilities and benchmark hostCaseSets | Chrome is available, but the existing ChatGPT handoff page is not a fresh case. No qualifying Skill discovery/project/history/action surface was established, and no page was used as an observation. | **NOT-RUN; qualifying host availability unestablished.** Lack of call authority is not UNAVAILABLE. This remains an unresolved conditional Issue target, blocking an unqualified claim that all declared host targets are validated. Before Issue closure it needs either the existing ten-case contract on a qualified host or a directly supported availability disposition. Candidate: the same 0.10.1 profile runtime `6965d7c3...`; maximum ten fresh responses, once per original host subset. Entry: shared Golden Set, host-result schema and documented observer-owned host binding; no checked-in ChatGPT runner or new platform is implied. |
+| Windows-native compatibility artifact validation; runtime-identity logical-mode contract and Phase 2 evidence | Current executor is Linux x86_64; no PowerShell/WSL or connected Windows execution surface was found. Existing CI Windows jobs run Hook fixtures only. Linux bundle/manifest and negative regressions remain applicable and are run below. | **Native validation NOT-RUN; Windows execution unavailable in this environment.** Original required validation permits this explicit limitation; it does not alone block scoped Linux implementation acceptance or require a port. Windows validation cannot be claimed. On an available native Windows host, validate the exact existing 261,066-byte ZIP and manifest through the existing no-model manifest/archive/static-replay checks: ordinary files, no reparse/junction traversal, exact paths/bytes, logical ZIP modes, zero model calls. |
+| Windows construction | Lifecycle 2 explicitly supports Linux anonymous-file creation and no-overwrite linking with a single writer. | **Outside the current construction support contract**, not a failed Windows port and not a new closure blocker. This does not remove the separate Windows artifact-validation target. |
+| Current Codex full-profile installed routing and lifecycle; Issue goal 6 and field method | Canonical full runtime remains `88060c3c...`, unchanged in this round. Linux CLI 0.149.1 and 0.153.0 binaries exist; the no-Hook experiment disables the subsystem required for full-profile delivery. Current full-profile installed discovery/trust conditions have not been exercised. | **NOT-RUN; no additional model authority**, not UNAVAILABLE. Existing Hook and contract regressions preserve the defined implementation surfaces but do not prove current installed behavior. The original allowance for explicit NOT-RUN does not require fabricating 17 or six-slot PASS before scoped acceptance; claims of current full-profile host validation remain blocked. Existing candidate-capable entry: `codex-core-v2`, 17 original cases once, gpt-5.4/medium, 120-second limit and stop on first failure, CLI 0.149.1 observer method with fresh local marketplace and native Hook trust handshake. A separately bounded lifecycle entry begins with two fresh startup cases (routed/no-route); manual and naturally occurring automatic compaction are separate paired slots, with no forced load. No such calls were made. |
+| Claude full profile and no-Hook exclusion | The full-profile recorded authenticated status is UNAVAILABLE/NOT-RUN; this round did not inspect or refresh authentication. Claude CLI availability alone does not change that record. | **Current installed behavior NOT-RUN**, with the older availability label retained at its original scope. No-Hook Claude is explicitly excluded. Full-profile contracts and applicable Hooks remain regression obligations; no extra model observations were authorized. |
+
+General routing schema v2 permits an exact commit/tree `candidate-unreleased`
+with a null tag, so publication is not invented as a universal host-test
+prerequisite. The separate compatibility-record/post-tag asset paths still
+require their real tag. No tag, Release, installation into the primary client,
+new host runner or extra model budget was created to reconcile these targets.
+
+R2 is unobserved on the fixed candidate and R3 stopped with policy rejection
+and two semantic failures. They remain concrete Issue acceptance blockers,
+independently of the finite R4 limits and the R5 host dispositions. This round's
+status is **BLOCKED** for the requested fixed-set acceptance; the evidence and
+maintenance delivery do not mark Issue #117 complete.
+
+### Retained objects and source recovery
+
+The original executor inspected both Issue #117 local/remote branch tips,
+worktree registrations, visible/untracked/ignored state, registered validation
+and build copies, dedicated state metadata and scoped process dependencies.
+PR #120's e3639d0 tree equals its 6719a83 squash tree, but its historical
+execution and frozen commits are not retained by main ancestry. PR #121 and
+its worktree remain active and unintegrated. Neither clean state nor squash
+integration grants deletion authority.
+
+An independent complete Git clone, with no alternate object store, passed
+`git fsck --full --no-reflogs`; all 30 inspected source/execution/result commits
+and their exact trees are present. Twenty-nine signatures verified with the
+existing local public signer; the older Phase 1 squash is not asserted to
+verify under that SSH trust file. Standard Git archives restored the exact
+PR #120 tree (354 files), current execution tree (378 files) and frozen source
+tree (378 files) into external validation destinations. Every restored blob
+and file mode was checked against its Git tree. Temporary copies and present
+GitHub links are not a durable-retention guarantee.
+
+The private delivery inventory lists exact local paths, device/inode metadata,
+owners, dependency state, proposed actions, release conditions and read-back
+methods. It covers eight dedicated run roots and 88 retained authentication
+copy paths, not 88 attempts or independent provider credentials. Secret and
+operator-only contents were not accessed. Unknown-owner objects remain
+excluded. All 17 prior normalized results and the new result remain retained;
+removing a temporary ledger would never refund its attempts. Primary, the
+outer user diff and 82 existing primary caches were preserved. Issue #91 and
+unrelated worktrees are outside cleanup scope.
+
+No deletion or revocation occurred. Existing branch refs and complete clones
+must remain until accepted integration and durable public-history recovery are
+verified. One precisely scoped standard Git bundle of the two Issue #117
+branch ancestries is proposed in the private inventory, but was not created;
+new persistent preservation requires the later limited authorization. Such a
+bundle must exclude authentication, sessions and operator-only diagnostics.
+
+### Validation for the fixed-set registration and result
+
+All local execution and validation used external complete copies, with actual
+cwd and Python import source in those copies and bytecode disabled at the
+invoked Python entrypoints. No model credentials were supplied to CI. The
+canonical Skills, Hooks, original requests/fixtures/expectations and 17 prior
+result files remain byte-identical to the starting head. Repository observation
+policy 15 and the separate product source/bundle policies 13/14 remain distinct.
+
+Initial focused validation ran 230 tests with three failures and two errors:
+old window metadata assertions and a synthetic history registration needed
+alignment, and linked operator capture needed the exact new predecessor
+triplet. Follow-up failures exposed the synthetic-only handoff mode and an
+already-consumed reply marker check; those were corrected without widening
+actual admission, disclosure or scoring. The final pre-execution focused run
+passed all 230 tests. An initial publication check rejected a policy summary
+over its 200-character limit; the shortened summary passed before execution.
+These failures remain in the local validation record and are not model attempts.
+
+Final full discovery and applicable Hook counts are reported from their actual
+logs, separately from final-head CI. The current publication aggregate passes
+identity, distribution, documentation, original route/authority contracts,
+parser, provenance and compatibility regressions. The native protocol check
+and clarification history check pass statically and start no client. Both
+manifests, both marketplaces and both Hook JSON files parse; Claude strict
+plugin validation passes. The generic plugin validator retains NON-PASS for
+`hooks`, `interface.brandColorDark` and `interface.supportURL`. The literal
+ASCII-only scan retains NON-PASS for historical punctuation in this document
+and the two original complete reply files; those bytes are not rewritten to
+make the scan pass. These limitations are distinct from the current native
+batch's policy stop and semantic failures.
+
+The single independent final review covered registration/admission, historical
+counting and identity/input bindings, the original normalized result, R4/R5
+scope, pending reply status and the non-sensitive retention/recovery records.
+It found no concrete current defect, contract widening, answer injection or
+false PASS. It ran no tests, models or clients and supplies no GitHub approval.
+The unknown-owner review directory remains excluded from cleanup. Ordinary
+review findings did not require another approval round.
+
+The later R5 status-text edit initially exceeded the existing 300-character
+reason limit and omitted the validator-required explicit protocol/observation
+distinction. Those checks failed and their logs remain retained; both reasons
+were shortened, with the static-protocol boundary restored. The validator and
+its constraints were not weakened. Final validation below applies to the
+corrected metadata; earlier passing runs do not substitute for that recheck.
+
+The intermediate R5 metadata discovery ran 572 tests with six failures, 20
+errors and two skips because the rejected protocol/status input prevented
+some fixtures from initializing. After the text correction, final complete
+no-model discovery ran **592 tests: 590 passed, two skipped, no failures or
+errors**, in 131.320 seconds. The retained skips require a real Windows command
+shell and an explicitly authorized current-host delegated-cgroup probe.
+The separate local Linux Hook suite passed **5/5** in 0.526 seconds. Final
+publication passed on the corrected status and documentation; its checks include
+238 Git contract, 155 external-action and 127 rollback fixtures without changing
+normal hooks, non-force or data-preservation boundaries. Final-head CI is
+reported separately in PR #121 and the delivery report; local counts are not
+reused as unread CI statistics.
+
+### Bounded diagnostic follow-up: Cases 6, 7 and 11
+
+This separate no-model review binds to execution
+`6f9c132e8088105347e602f1c43c8bc99ffe8c6b` and the unchanged
+[original normalized result](../evals/no-hook-observation/results/codex-native-3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d.json),
+SHA-256 `3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d`.
+Its evidence is limited to frozen public source, registered inputs, normalized
+outputs and a later user-provided redacted command excerpt. It does not extend
+the reviewed execution or claim access to private reasoning or diagnostics.
+
+**Case 11: the excerpt identifies an unbound target category.** The user supplied
+the first rejected command's structure; the executor did not read operator-only
+raw text. Interpreting its placeholders as redactions, the command uses a
+supported `bash -lc` wrapper and single-target `cat`, with no `..` path component.
+The target is a client temporary `arg0` helper, outside the registered readable
+set. The frozen [reader and exact-target check](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/axiom_validation/no_hook_native_observation.py#L2542-L2579)
+accept that syntax but reject an unbound target; the
+[readable-set constructor](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/axiom_validation/no_hook_native_observation.py#L2900-L2914)
+admits supplied task files and, when installed, verified public package files,
+not arbitrary client temporary paths. The existing
+[`test_task_material_delivery_does_not_authorize_client_tmp_or_arg0_reads`](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/tests/test_no_hook_native_observation.py#L928-L951)
+already covers this rejection category; it was neither duplicated nor rerun.
+This source reconstruction explains the recorded `read-target-unbound` category,
+not the target's contents or whether the client accessed them before termination.
+The target was not opened or replayed. Case 11 remains **INCOMPLETE**; its
+`read-contract-rejected` stop, absent official final output and original bytes
+remain unchanged. No readable boundary or admission rule was widened.
+
+**Case 6: the assessment field lacks a semantic definition.** The frozen
+[response schema](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/evals/no-hook-observation/codex-model-response-schema-v2.json#L73-L83)
+defines `usingAxiomFrontDoorObserved` only as a boolean. The
+[prompt envelope](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/evals/no-hook-observation/codex-native-prompt-envelope-v2.json#L27-L35)
+does not define it or distinguish an explicit leaf invocation from the
+`using-axiom` front door. The existing
+[definition-delivery logic](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/axiom_validation/no_hook_native_observation.py#L1627-L1699)
+covers only `selectedRoutes`, `discoveryOutcome` and `clarificationCount`.
+Read-only, in-memory reconstruction from the retained public seed matched both
+recorded prompt/schema digests for Cases 6 and 7, including their 3,135 and 2,973
+prompt bytes. Both records report full input delivery and official-final
+agreement. The missing definition is present at the input source; no transport
+loss of an existing definition was found.
+
+The original [profile](../evals/no-hook/profile-v1.json) keeps the front door
+explicit-only, and the [Golden Set](../evals/no-hook/golden-set-v1.jsonl) expects
+`false` for the explicit Git leaf request. The observed Git route and 8,179-byte
+public leaf read do not erase the incorrect `true` field. That field proves only
+what the model reported; front-door invocation or native loading is not observed
+by it. The minimal future correction belongs to the assessment schema/envelope,
+their existing uniform definition-delivery logic and corresponding protocol
+bindings and focused input regression. It does not require a Git Skill change or
+a changed expected answer. No such correction was applied here, and the field
+gap does not establish why the model returned `true`. Case 6 remains **FAIL**.
+
+**Case 7: composition is specified; the reason for deferral is unavailable.** The
+original request combines a persistent migration with external publication.
+The frozen [cross-route rule](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/skills/using-axiom/SKILL.md#L59-L84)
+selects both `confirm-external-action` and `reversible-system-change`; both leaf
+descriptions also specify that pairing. These are combined effects, not mutually
+exclusive alternatives. The external action's
+[execution envelope](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/skills/confirm-external-action/SKILL.md#L32-L66)
+and the persistent change's
+[mutation authority](https://github.com/wheakerd/axiom/blob/6f9c132e8088105347e602f1c43c8bc99ffe8c6b/skills/reversible-system-change/SKILL.md#L37-L49)
+remain separate gates. Missing execution details or permission can block actions
+without turning selection of both workflows into an either/or decision. The
+assessment envelope already limits this observation to routing and forbids
+requesting execution approval.
+
+The normalized answer instead records `clarification`, no selected routes and
+count `1`, with no public Skill read. That count does not establish an actual
+question or its subject. Public evidence therefore establishes the mismatch,
+but not whether execution gating, mutual-exclusion rules or another factor
+caused it. No definite source or delivery defect was located for Case 7, and no
+causal claim about the architect revision or corrective patch follows. Its
+original combined expectation and **FAIL** remain intact.
+
+This was a bounded self-review, not an independent approval or behavioral
+retest. Canonical content, model inputs, scoring, implementation and historical
+results were not changed. Additional tested-model starts are **0**; canonical
+attempts and observation CLI starts remain **87/87**. The stopped window's eight
+remaining items stay unconsumed, R2 stays **NOT-RUN**, and Issue #117 remains
+**BLOCKED** with PR #121 in Draft.
+
+
+## Measurement definition and portable legacy builder tests (policy 16)
+
+The diagnostic head `81d35ae07a055a110dfcab434f12950aefe421ca` had six of seven
+CI checks pass. Run `34580900979`, job `unit-and-integration-tests`, failed two
+real-builder regressions because `legacy_worker_repository` used `git show`
+on historical commit `2e8475fc7cf95cbcf245e0cba9e1a99ac8acf223`, which the clean
+CI checkout could not obtain. That original CI failure is retained.
+
+The helper now reads three immutable public test fixtures under
+[`tests/fixtures/no-hook-builder-revision-6`](../tests/fixtures/no-hook-builder-revision-6).
+They are the original script, Python builder module and manifest schema blobs
+at that historical commit. Their exact paths, sizes and SHA-256 values remain
+bound by the unchanged
+[`bundle-revision-6.json`](../evidence/profiles/openai-hook-independent-v1/bundle-revision-6.json).
+The source was the independently verified public history bundle with SHA-256
+`55c1a995b4346a5719a2e44b6a4805d9711959d7d054407f4475cfca145626ab`;
+that fixed archive was only read, and no old branch was restored. Tests do not
+use the preservation path or retrieve history. Missing or altered fixtures
+fail explicitly. Git attributes preserve fixture bytes across checkout styles.
+These test-only blobs are outside the product builder and installed package.
+
+The existing independent worker construction and both real builder entrypoint
+regressions retain their artifact, hard-stop and cleanup-authorization assertions.
+A full, non-shallow external clone from the public remote was checked to lack
+the old commit, the old branch, alternates and shared object stores. Both real
+builder tests and two fixture checks passed there with Git network transports
+disallowed during testing. This is a regression result, not replacement evidence
+for the two formal deterministic product builds.
+
+Assessment revision 4 adds the same `usingAxiomFrontDoorObserved` definition to
+the [model schema](../evals/no-hook-observation/codex-model-response-schema-v2.json)
+and [prompt envelope](../evals/no-hook-observation/codex-native-prompt-envelope-v2.json).
+It reports the inner request's use of the `using-axiom` front door. A direct
+leaf workflow invocation or visible catalog entry alone does not establish that
+use; routing only for the outer assessment does not count. The boolean remains
+a model-reported observation, not an independent native loading receipt.
+
+The existing definition-delivery path checks that the schema and prompt agree
+before generating input. Actual offline materialization of all 16 original
+requests verifies uniform delivery, unchanged requests, no case-answer hints,
+and a plain boolean transport field without a prefilled value. Generic requests
+receive the same definition. No Golden Set, expected value, scorer, Case 7
+combination rule, Case 11 control or read allowlist changed.
+
+The exact preceding protocol, schema and envelope are preserved under
+[`historical-protocols/fixed-acceptance-1`](../evals/no-hook-observation/historical-protocols/fixed-acceptance-1).
+The old 16/16 and fixed-candidate result
+`3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d`
+continue to validate against their original inputs and execution identities,
+including `6f9c132e8088105347e602f1c43c8bc99ffe8c6b`. The current protocol digest
+binds the revised implementation and measurement; it is not a new observation
+registration. Existing history files, actual result bytes and their verdicts
+remain unchanged. The stopped fixed window and consumed earlier windows reject
+new launches; the eight unused slots cannot be consumed.
+
+Product 0.10.1, full/profile runtime content and source/bundle policies 13/14
+are unchanged; repository policy 16 owns these test and measurement fixes.
+New behavior remains NOT-RUN, with zero new model starts and cumulative
+attempts/observation CLI starts still 87/87. Case 6 is not upgraded to PASS;
+Case 7 FAIL, Case 11 INCOMPLETE and R2 NOT-RUN remain. Issue 117 is BLOCKED.
+The retained public history bundle ends at `f5f1248`; later commits need separate
+preservation before any final active-branch cleanup, which is not authorized here.
+
+
+Local final validation used an external public clone as both cwd and Python
+import root, with bytecode disabled. Discovery ran 596 tests in 131.573 seconds:
+594 passed, two skipped, zero failures/errors. The old commit was absent before
+and after testing. The publication aggregate passed; the separate Linux Hook
+runtime suite passed five tests, and Claude strict validation passed. These are
+local results, separate from the final-head CI reported on the PR.
+
+Initial local failures remain recorded: one new test used a cumulative CLI key
+absent from the original result; it was corrected to predecessor launches plus
+this batch's launches. A discovery invocation with operator-wide Git overrides
+had 20 failures and 36 errors: the unchanged builder rejected ambient
+`GIT_CONFIG_GLOBAL`, and the global file-only transport override blocked an
+intentional remote-helper negative fixture. Removing those wrapper overrides
+resolved both focused checks and the final discovery; no product guard changed.
+
+One independent read-only directed review found a stale schema digest inside the
+new prompt envelope. That binding and its dependencies were corrected; current
+protocol validation and generated-input tests now enforce agreement, with a
+negative test for a self-consistent envelope advertising the old schema. The
+reviewer rechecked the fix and marked the finding resolved. This was a bounded
+source/contract review, not model behavior approval. The generic plugin
+validator retains its three existing unsupported-metadata findings; the literal
+ASCII scan retains four historical documentation lines and two original reply
+records. Neither was hidden or changed to obtain a pass.
+
+
+## Assessment revision 4 fixed acceptance window
+
+The candidate starts at `303e5b9e984d3647b06b84bf8ebc794887af698e`, tree
+`2469367551b4ebe41d04a571ff162c3e77731edc`. Repository policy 17 registers
+`assessment-revision-4-fixed-1`: the original routing ordinals 1-16 followed by
+natural-language replies 12, 13 and 14. The prior 87 canonical attempts and
+87 observation CLI starts are preserved; this window permits at most 19 new
+attempts and starts, with a cumulative ceiling of 106. Internal model requests
+remain unknown. The preceding stopped window and its eight unused slots remain
+closed. Both parts, their order, source identities and budgets are registered
+before the first model starts. There is no retry or second evaluation.
+
+Canonical Skills, Hooks, ordinary builder, Golden Set, scoring, assessment
+revision 4 definitions and input-generation semantics are fixed. Product source
+`8a593026285d285d95f7a9e0c6ec0793738c3707`, unpublished 0.10.1, source/bundle
+policies 13/14, full/profile runtime digests and the two identical product builds
+retain their existing identities. Registration changes do not rebuild the
+product. The actual signed execution SHA/tree must precede preparation; result
+commits cannot stand in for execution identity.
+
+The combination remains Codex 0.153.0 / gpt-5.5 / medium / Direct, with Code Mode
+host and plugin runtime disabled. Every case uses an independent fresh context.
+The zero-install/discovery control, original read permissions and qualified
+mentions only for the three originally explicit invocations are unchanged.
+The recorded normally completed predecessor at routing ordinal 10 supplies
+only the existing opaque dedicated-auth handoff; the abnormal ordinal 11 is
+excluded. No authentication contents or operator-only raw diagnostics are read
+by the executor or reviewer. Semantic FAIL does not resample. Any policy,
+identity or reliability stop prevents all remaining launches and the B handoff.
+
+### Current R5 contract and environment disposition
+
+The [original required-validation clauses](https://github.com/wheakerd/axiom/issues/117)
+allow precise unavailable/not-run proprietary-host evidence. The profile's
+`contractTargetMeaning` and [evaluation contract](../evals/README.md#hook-independent-profile-contract)
+make a contract target eligible only when its required host surfaces are present.
+These clauses allow the limitations below; they do not establish host PASS.
+
+| Target | Current evidence and status | Effect on bounded Issue closure |
+| --- | --- | --- |
+| ChatGPT ten-case contract target | NOT-RUN. Current supported tools expose independent cloud task creation and text prompts, but no frozen Skill installation/catalog selection or material-file mapping with the required fresh discovery binding. Actual project inventory contains local projects only; this does not exclude projectless cloud. No cloud task or webpage was used as a sample. | This precise current-interface limitation is allowed by the conditional target clause. It is not a global availability claim or a substitute for the ten cases when a qualified entry becomes available. |
+| Windows-native bundle validation | NOT-RUN on this Linux executor: no Windows-native command surface is available. Windows CI runs Hook tests, which do not prove this artifact-validation target. Linux/POSIX bundle construction remains the documented supported builder path. | The original host-limit reporting clause permits this explicit validation limitation. It does not add Windows construction support or convert Linux construction into Windows-native evidence. |
+| Current full-profile installed observation | NOT-RUN. Static identity, discovery and applicable Hook regressions support only their tested layers. A current candidate-bound full-profile installed host observation has not been performed; the no-Hook combination disables plugin runtime. | Goal 6's preservation requirement is covered at the unchanged product/static/Hook layers, with installed behavior explicitly bounded. No claim of a full-profile installed PASS, mandatory new 17-case batch or full lifecycle PASS is added. |
+
+The existing R4/FCR table remains applicable to its versioned paths. Public
+package identity, discovery configuration, transported selection, validated
+public reads and visible behavior remain separate claims. Missing native load
+receipts remain not-observed; neither a correct report nor an absent event
+proves internal semantic consumption. Current applicable data or permission
+harm would still block integration. These host dispositions cannot waive a
+failure of this window's required routing or actual clarification acceptance.
+
+
+### Actual R3 routing and R2 reply outcome
+
+Actual signed execution is `5289943861fac0673140992e96860784dc241239`, tree
+`865707d35ba9956074d6a4e44719dec1b938e087`; source, preparation cwd and Python
+import root were its clean independent external clone. Native protocol is
+`sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c`;
+clarification protocol is
+`sha256:24e5a9202595cee17f15f73c80d1d475e8a50eb3196e9edaf79e696791804502`.
+The [complete normalized A record](../evals/no-hook-observation/results/codex-native-50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b.json)
+is 41,962 bytes, SHA-256
+`50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b`.
+
+| Required part | Actual result | Scope |
+| --- | --- | --- |
+| A, original ordinals 1-10 | 10 PASS | Original route scoring for this execution and assessment revision 4 inputs. |
+| A, ordinal 11 | INCOMPLETE | `policy-rejected`, `read-target-unbound` at event 7; the existing read contract terminated the client. |
+| A, ordinals 12-16 | Five NOT-RUN | No launch after the read-contract stop. |
+| B, natural-language replies 12, 13, 14 | Three NOT-RUN | No reply state, authentication handoff, visible reply or official final output was created. |
+
+R3 is independently **INCOMPLETE**, with `hostClaim=false`; R2 remains
+**NOT-RUN**. Cases 6 and 7 pass this batch's original scoring, while their older
+FAIL results retain the original bytes, inputs and verdicts. No stable behavior,
+causal explanation, old-result upgrade or cross-round best-of result follows.
+Both old reply batches remain separately 2 PASS / 1 FAIL. There is no new Case
+13 opening announcement or pending-workflow reply to assess.
+
+The new stop has signal 9, `observerTerminated=true`, no timeout,
+`cleanupFailed=false`, valid fixture postcheck and no accepted response or
+verified final output. Case 11 installation/discovery remains absent. The
+normalized predicate alone does not identify its command target or establish
+whether a read succeeded. The earlier user-provided sanitized command excerpt
+belongs to execution `6f9c132`; it is not evidence of this attempt's target.
+No operator-only raw material was read, searched, hashed or replayed, and the
+read domain was not widened. All eight remaining items in this window are
+closed; the old stopped window's eight unused slots remain independently closed.
+
+Exactly **11 new canonical attempts and 11 observation CLI starts** were
+consumed: **98/98 cumulative**, with internal model requests unknown. There is
+no retry, B preparation or further authentication transfer after the stop.
+Neither Ready/merge nor Issue completion conditions are met: PR #121 remains
+Draft, main is unchanged, and Issue #117 remains **BLOCKED/open**.
+
+Current public reads are the 3,834-byte usage Skill in A4, and the 7,083-byte
+system-change Skill plus its 7,735-byte preflight reference in A9. The other
+accepted cases have no observed public read event. In particular, the selected
+front-door report in A1 and leaf report in A6 are not native loading receipts.
+The original 8,186/8,179-byte Git reads remain valuable in their original scope.
+Correct route fields, discovered catalog entries and public reads do not prove
+unobservable internal semantic consumption. No loader-interface search or
+forced read was added.
+
+
+### Verification and retention boundary
+
+Final external discovery ran 602 tests in 141.045 seconds: 600 passed, two
+skipped, with zero failures/errors. Both cwd and import source were the external
+copy; bytecode was disabled. The historical builder commit and old branch were
+absent before and after validation, with no alternates or shared object store.
+The original real-builder regressions still ran. Linux Hook integration passed
+five tests; distribution/publication checks and Claude strict validation passed.
+Product builds were not repeated. CI is a separate final-head observation.
+
+The initial focused suite ran 228 tests with one failure and one error. Both
+were synthetic test-fixture defects: a missing new history key and a callback
+fixture that skipped the real bounded-process capture path. The two corrected
+tests passed. A missing Markdown fragment was corrected before execution.
+The final test-only history adapter isolates each synthetic window after real
+results are retained; it neither reopens the actual registry nor changes the
+frozen execution. A new negative regression confirms the recorded stop rejects
+preparation before any client or authentication handoff.
+
+One independent read-only review covered registration, unchanged input/product
+bytes, result identity, history, permission/stop boundaries and host claims. Its
+one result-phase correction changed the R5 allowance link to the original Issue
+body. It did not supply native-host evidence or GitHub approval. All 18 earlier
+result files retain their exact bytes and original verdicts. The generic plugin
+validator retains the three known unsupported-metadata findings. The literal
+ASCII scan's broader tracked Markdown/JSON/JSONL scope reports 15 existing lines,
+all present in the baseline; it introduces no new non-ASCII content or waiver.
+
+The old durable public-history bundle remains the unchanged snapshot through
+`f5f1248`. Later diagnosis, measurement, execution and result commits still need
+one supplemental preservation grant before eventual active-branch cleanup.
+An exact local object inventory and proposed preservation scope are delivered
+separately; no new persistent bundle, deletion, logout or revocation occurs.
+This delivery does not complete Issue #117 or authorize another observation.
+
+
+### Independent diagnostic supplement for revision 4 A11
+
+The user supplied a sanitized command excerpt for execution
+`5289943861fac0673140992e96860784dc241239`, bound to the unchanged result
+`50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b`.
+Its structure is a supported `/bin/bash -lc` wrapper around a single-target
+`cat`, with no `..` component, naming an unregistered client `tmp/arg0` path.
+The frozen read contract rejects that target class; the existing task-material
+regression already covers client temporary and `arg0` reads.
+
+This is user-provided text, not an executor inspection of operator-only material.
+It explains the rejection category, without establishing the actual target's
+type, contents, underlying read result or zero leakage. No target was accessed
+or replayed; no private diagnostic was opened, searched or hashed. Original
+bytes, INCOMPLETE, stop and counts remain unchanged. A11 remains unmet required
+behavior; missing diagnostic material is no longer the stated blocker.
+
+
+### Independent routing ordinals 12-16: policy 19
+
+This separately authorized window ran only the original five routing cases, in
+order 12/13/14/15/16, once each in independent fresh contexts. It did not prepare
+or rerun A1-11 or any B reply, and did not reopen either stopped window.
+Signed execution `0a520ec2b7cc1d06954b068d5e88d7c909dea51e`, tree
+`e73b1e4615e50a29fa8e4e0daa2e219291d855ea`, preceded preparation.
+The [complete normalized result](../evals/no-hook-observation/results/codex-native-548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521.json)
+is 20,594 bytes, SHA-256
+`548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521`.
+
+| Original ordinal | Original routing score | Retained public observation |
+| --- | --- | --- |
+| 12 | PASS | `clarification`, no selected routes, one reported clarification; two identical visible JSON messages retained. |
+| 13 | PASS | `clarification`, no selected routes, one reported clarification; one visible JSON message and an 8,179-byte package Skill read. |
+| 14 | PASS | `clarification`, no selected routes, one reported clarification; two identical visible JSON messages retained. |
+| 15 | PASS | `no-route`, no selected routes or clarification; one visible JSON message. |
+| 16 | PASS | `no-route`, no selected routes or clarification; one visible JSON message. |
+
+All seven normal visible messages are retained without redaction or omission,
+including both repeated messages. All five strict streams, exact official final
+outputs and input/postcondition checks agree; returns are zero, with no policy,
+identity or reliability stop. Each result reports no front-door use or mutation.
+These remain outer routing assessments: a JSON clarification count is not an
+actual natural-language question or a new B observation. No inner business
+operation or simulated user choice was performed.
+
+A13's public read is the complete frozen `skills/traceable-git-submit/SKILL.md`,
+8,179 bytes at event 4, from the installed package. The original scoring permits
+this candidate-guidance read and still applies its unchanged forbidden routes.
+The structured result does not retrospectively alter B13: that earlier reply
+first selected traceable Skill guidance, read it, then asked for a workflow
+choice and left the business workflow pending. Its limited PASS is preserved;
+no-Skill-selection-before-clarification remains unsatisfied. Neither reading nor
+correct structured fields establish an independent native loading receipt or
+unobservable semantic consumption. Other four cases have no observed public read.
+
+Exactly **five new canonical attempts and observation CLI starts** were consumed,
+**106/106 cumulative**; internal model requests remain unknown. This independent
+window is consumed. Its five-case status is PASS with `hostClaim=false`; it is
+not an independently executed 16-case batch or a 16/16 result. Current evidence
+coverage can list the prior revision-4 A1-10 scores and these separate A12-16
+scores, but `5289943`/`50589ff` remains its original INCOMPLETE batch with A11
+INCOMPLETE and its own A12-16 NOT-RUN. A11 is unmet required behavior, not missing
+diagnostic material. The previous independent B replies remain separately
+accepted within their stated limits; neither older 2 PASS / 1 FAIL batch changes.
+
+Product 0.10.1, frozen source `8a593026285d285d95f7a9e0c6ec0793738c3707`,
+canonical Skills, Hooks, ordinary builder, full/profile runtime and source/bundle
+policies 13/14 are unchanged. Two existing deterministic builds are reused.
+Assessment revision 4, original requests/materials/schema/field definitions and
+scoring are byte-identical to the candidate baseline. Repository policy 19
+binds only the finite window, result retention and compatible history checks.
+Native protocol: `sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9`.
+Clarification protocol: `sha256:bb1df1957d9f3ead244079a847eb0b7af8f0e44d3d6e9e2449bb5c94742c535d`.
+No observation implementation, input or protocol changed after execution.
+
+R4/FCR and R5 dispositions retain their prior scope; no additional host was
+observed. PR #121 remains Draft, main is unchanged, and Issue #117 remains
+BLOCKED/open. This round creates no persistent history bundle, resource
+deletion, credential retirement, publication or authorization for a third A11
+attempt. The pending preservation request is amended once to the actual final
+result head, with only this round's new objects added to the reviewed inventory.
+
+
+#### Verification of the independent five-case result
+
+Final external discovery ran **614 tests in 152.437 seconds: 612 passed and
+two skipped**, without failures or errors. The two unchanged skips require a
+real Windows shell or an explicitly authorized delegated-cgroup host probe.
+Cwd and import root were both the external full copy, with bytecode disabled.
+The old builder commit/branch and alternates were absent; the fixed historical
+fixtures still drove the real builder regressions. Five Linux Hook tests passed
+separately, as did distribution/publication and Claude strict validation.
+Formal product builds were not repeated. CI is reported separately against the
+actual final result head.
+
+The initial 240-test focused run retained four errors: the reused commitment
+aggregator required 16 entries. A subsequent seven-test run retained three
+errors from passing retained text to the byte-oriented JSON validator. Both
+were corrected before model execution, and all seven final targeted regressions
+passed. One independent reviewer also identified two pre-execution defects:
+a five-case result must retain `hostClaim=false`, and a literal public-binding
+placeholder must not throw from `finally`. Both were fixed and read back before
+the signed execution. The same reviewer then checked all public messages,
+original scoring, identities, history and claim limits, with no new finding.
+This review neither reads private state nor supplies GitHub approval.
+
+The generic plugin validator retains three existing NON-PASS fields (`hooks`,
+`interface.brandColorDark`, `interface.supportURL`). The literal ASCII scan of
+tracked Markdown/JSON/JSONL/YAML retains 16 existing line hits and introduces
+none; neither historical wording nor literal reply evidence was altered.
+All 20 earlier normalized result files keep their exact bytes and verdicts.
+Primary, the outer user file and diff, and the 82 existing cache metadata
+records match their protection baselines.
+
+
+### Bounded A11 source diagnosis after policy 19
+
+This follow-up compares public frozen implementations and retained inputs, not
+private sessions or operator-only text. It corrects the earlier permission-context
+description: configured task roots are not the whole effective host policy.
+No implementation correction meeting the fixed-input observation conditions was
+established; no new A11 window, state, authentication handoff or model call was
+created. Attempts and observation CLI starts remain **106/106**; internal model
+requests remain unknown.
+
+| Historical execution | Original normalized result SHA-256 | A11 retained outcome |
+| --- | --- | --- |
+| `efce8d3bd46c6bbd816c9052fba99636d769303b` | `0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a` | PASS; one final message, no public command read. Diagnostic comparison only. |
+| `6f9c132e8088105347e602f1c43c8bc99ffe8c6b` | `3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d` | INCOMPLETE; read-target-unbound, no valid final. |
+| `5289943861fac0673140992e96860784dc241239` | `50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b` | INCOMPLETE; read-target-unbound, no valid final. |
+
+Offline reconstruction through the existing materializer, using each public
+result seed and its original protocol/envelope/schema, exactly reproduced all
+three prompt and response-schema digests. The first two semantic prompts are
+identical after excluding only opaque binding and schema-digest lines. The third
+adds only the uniformly delivered assessment-revision-4 front-door definition.
+Both failure attempts had the same material filenames as the success; the prior
+material-delivery fix was already present. The fixture digest is identical.
+The complete function definitions for environment, config arguments, argv, config
+verification, discovery verification, fixture materialization, case definition
+and case paths, plus the feature-override constant, are identical across these
+three frozen implementations.
+Zero Axiom installation/discovery, separate client home and workspace, actual
+workspace cwd, fixed model and original request remain bound as recorded. These
+comparisons do not recover the full historical host-generated context.
+
+The frozen Codex 0.153.0 source at
+`41e22fee981a63b3698df7ed36bad393cda24715` establishes a second path-exposure
+mechanism beyond PATH. The [runtime helper-root function](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/config/permissions.rs#L484)
+returns the wrapper's parent when it is under the client temporary arg0 root.
+[Config assembly](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/config/mod.rs#L4035)
+adds this root to effective readable permissions. The
+[environment source](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/world_state/environment.rs#L63)
+uses that effective profile, and the
+[entry renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/core/src/context/environment_context.rs#L143)
+includes its path in the model-visible filesystem description. This explains
+how the submitted target class can become visible without making it cwd or task
+material. Native runtime access does not enlarge the observer's read contract.
+
+A no-model Rust reproduction compiled six unchanged pure function bodies from
+that source with minimal local type stand-ins. Four synthetic assertions passed:
+arg0 wrapper to parent, parent rendered as a read entry, an outside wrapper
+retained as a file, and no helper root when no wrapper is supplied. It accesses
+no target and is not a full native host, sandbox enforcement or behavior test.
+Effective-policy insertion was reviewed in source, not simulated as an actual
+host receipt. Separately, the [Skill catalog renderer](https://github.com/openai/codex/blob/41e22fee981a63b3698df7ed36bad393cda24715/codex-rs/ext/skills/src/render.rs#L497)
+returns no fragment for an empty visible catalog. Silence is not an explicit
+zero-Skill inventory. Both mechanisms belong to the same fixed host version
+used by the successful and failed runs.
+
+The precise unresolved factors are whether helper setup and the resulting
+visible effective entries differed between those individual startups, and why
+the model selected the helper target. The successful run's 429-byte
+known-nonfatal stderr classification covers several templates; it cannot identify
+one warning or prove helper creation failed. The failures' empty stderr and
+subsequent official metadata cache are recorded differences, not causal proof.
+Neither full private context nor the refused target is needed or authorized for
+this conclusion. The two user-supplied sanitized excerpts retain their separate
+provenance; no original target was inspected or replayed.
+
+There is therefore no demonstrated Axiom config, fixture-delivery or discovery
+regression to repair within the frozen conditions. Removing native helper
+exposure would change the fixed host/configuration contract; supplying an explicit
+empty-catalog statement would change model-visible measurement input. Neither is
+implemented or established as a behavioral remedy. A shared host-context change
+would affect A1-16 and B12-14, requiring a separately approved validation scope
+before transferring any of their evidence. This diagnosis does not justify an
+answer hint, wider read domain, model-filled unavailable result or another call.
+
+Only documentation changes. Product 0.10.1, source/bundle policies 13/14,
+repository policy 19, both runtime digests, assessment revision 4, protocols,
+Golden Set, scoring and all 21 normalized result files remain unchanged. Existing
+A1-10, independent A12-16 and limited B12-14 evidence keeps its original scope;
+A11 remains unmet required behavior. The one conditional observation is unused.
+PR integration, main synchronization and Issue closure remain blocked. No
+publication, resource cleanup or reopening of an old window follows.
+
+The external validation copy had its own object store, no alternates or legacy
+builder commit, and used its own cwd/import root with bytecode disabled. Three
+focused existing read-domain, historical-input and closed-window regressions
+passed. Final discovery ran **614 tests in 163.226 seconds: 612 passed, two
+existing skips, no failures/errors**. Five Linux Hook tests, publication and
+distribution checks, and Claude strict validation passed. The generic plugin
+validator retains its three known NON-PASS fields; ASCII scanning retains the
+same 16 historical line hits and adds none. Formal builds were not repeated.
+One independent reviewer checked the frozen source chain, exact pure function
+bodies, public input/config comparisons, document change and unchanged historical
+results. The reviewer found no correction satisfying the conditional observation
+gate; this is a bounded review, not GitHub approval or behavioral acceptance.
+CI is recorded separately against the actual documentation head.

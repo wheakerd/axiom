@@ -19,6 +19,14 @@ entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 - Advanced both manifests and the full-profile runtime identity for this compatible
   correction. Derived no-Hook packages bind the corrected canonical source;
   prior packages and observations retain their original identities and outcomes.
+- Separated clarification before a material Git workflow choice from necessary
+  questions after that workflow is selected. Plugin architecture or installation
+  choices remain pending after asking, without a same-reply default based on
+  read-only authority or current feasibility.
+- Pinned historical builder regression inputs and clarified the shared
+  front-door measurement definition. The no-Hook observer uses a supported
+  native environment-context setting with unchanged read permissions and
+  separately bound observations.
 
 ### Behavioral impact
 

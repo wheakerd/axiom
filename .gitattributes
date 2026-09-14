@@ -1,0 +1,2 @@
+# Historical test blobs must retain the bytes bound by archived evidence.
+tests/fixtures/no-hook-builder-revision-6/** -text

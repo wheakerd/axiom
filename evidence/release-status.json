@@ -8,9 +8,9 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.10.1",
-    "repositoryPolicyRevision": 9,
+    "repositoryPolicyRevision": 30,
     "runtimeContractSchemaVersion": "1",
-    "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
+    "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "history": "evidence/runtime-contract-history-v1.json"
   },
@@ -23,9 +23,9 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
+      "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26",
       "status": "not-run",
-      "reason": "Offline protocol contract checks only; Combined implementation remains incomplete and actual execution disabled. Runtime and host observation NOT-RUN. No Codex calls, credential use, installation, Golden Set or host results. FCR-001/003/004 OPEN; FCR-002 STILL OPEN."
+      "reason": "Current architect goal-preservation runtime is NOT-RUN. Historical observations retain their original protocol and runtime identities, complete messages and judgments. Static/Hook checks do not establish installed host or publication PASS."
     },
     {
       "host": "claude-code",
@@ -34,9 +34,9 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:3f7dc67b0aafd06e6630b36f9be7074f276625d18501e2dc278b02ccc4b8df28",
-      "status": "unavailable",
-      "reason": "Axiom v0.10.1 changes shared canonical Skill descriptions. Claude Code no-Hook remains excluded; authenticated full-profile installed-host and lifecycle observation remain unavailable and not run."
+      "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26",
+      "status": "not-run",
+      "reason": "Current architect goal-preservation runtime is NOT-RUN. Historical observations retain their original protocol and runtime identities, complete messages and judgments. Static/Hook checks do not establish installed host or publication PASS."
     }
   ],
   "priorReleaseEvidence": [

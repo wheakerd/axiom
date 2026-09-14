@@ -104,6 +104,214 @@ CURRENT_ASSESSMENT = {
     "stderrReview": "same-attempt only; all existing eligibility conditions required",
 }
 CURRENT_PRIOR_RESULTS = [ASSESSMENT_REVISION_THREE["sha256"]]
+FIXED_ROUTING_PRIOR = "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a"
+FIXED_REPLY_PRIORS = [
+    "5b6c943d2b68be63d2b6a08cbc29783935efa57cab818ba08d2da4015e4e37ae",
+    "2567ec1a73043a0275f8574928ca875950515a1f356af83ca8cff05d79248449",
+]
+FIXED_PRIOR_RESULTS = [FIXED_ROUTING_PRIOR, *FIXED_REPLY_PRIORS]
+FIXED_ACCEPTANCE = {
+    "windowId": "pending-choice-fixed-1", "state": "authorized-once",
+    "candidateCommit": "1f0362d18fc281b251387a357bb6ad4a7eb5c661",
+    "candidateTree": "795c08276f56f1096a1fe9878ecab53febfd24e6",
+    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
+    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
+    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
+    "priorResultSha256s": FIXED_PRIOR_RESULTS, "priorAttempts": 76, "priorCliLaunches": 76,
+    "routingOrdinals": list(range(1, 17)), "clarificationOrdinals": [12, 13, 14],
+    "maximumNewAttempts": 19, "maximumCumulativeAttempts": 95,
+    "routingRunName": "cases-pending-choice-routing-1",
+    "clarificationRunName": "cases-pending-choice-clarification-1",
+    "order": "complete routing before clarification; semantic failures do not resample",
+    "stop": "reliability, identity or policy failure stops all remaining observations",
+}
+FIXED_REGISTRATION = "pending-choice-fixed-1.json"
+FIXED_RESULT_SHA256 = "3cf0c1c795cac5db32d39ecc1d1932b83e49c6ade902db3f4603b850c7ab648d"
+REVISION_FOUR_PRIOR_RESULTS = [FIXED_RESULT_SHA256]
+REVISION_FOUR_ACCEPTANCE = {
+    **FIXED_ACCEPTANCE,
+    "windowId": "assessment-revision-4-fixed-1",
+    "candidateCommit": "303e5b9e984d3647b06b84bf8ebc794887af698e",
+    "candidateTree": "2469367551b4ebe41d04a571ff162c3e77731edc",
+    "priorResultSha256s": REVISION_FOUR_PRIOR_RESULTS,
+    "priorAttempts": 87, "priorCliLaunches": 87,
+    "maximumCumulativeAttempts": 106,
+    "routingRunName": "cases-assessment-revision-4-fixed-1",
+    "clarificationRunName": "cases-assessment-revision-4-clarification-1",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 4,
+}
+
+
+HOST_CONTEXT_PRIOR = "548f5ae38267c04ff25422ef2f20095fd08b411a5af371f7f3d33cbf3d160521"
+HOST_CONTEXT_PRIORS = [HOST_CONTEXT_PRIOR]
+HOST_CONTEXT = {
+    "revision": 1,
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "includeEnvironmentContext": False,
+    "includePermissionsInstructions": True,
+    "scope": "all routing and clarification inputs; no replacement environment text",
+    "unchanged": "actual cwd, permissions, tools, discovery, materials, requests and assessment revision 4",
+    "evidence": "native configuration and public source; behavior requires fresh observation",
+}
+HOST_CONTEXT_ACCEPTANCE = {
+    **REVISION_FOUR_ACCEPTANCE,
+    "windowId": "host-context-fixed-1",
+    "candidateCommit": "459181b7b07fc72ea6b7ca2ca23fe4d75e075fbb",
+    "candidateTree": "a98c369038bcf25aed9c89c5c2af809b0811aec7",
+    "priorResultSha256s": HOST_CONTEXT_PRIORS,
+    "priorAttempts": 106, "priorCliLaunches": 106,
+    "maximumCumulativeAttempts": 125,
+    "routingRunName": "cases-host-context-routing-1",
+    "clarificationRunName": "cases-host-context-clarification-1",
+    "authenticationSourceOrdinal": 16,
+    "hostEnvironmentContext": HOST_CONTEXT,
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+}
+
+
+EMPTY_DISCOVERY_PRIOR = "659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73"
+EMPTY_DISCOVERY_PRIORS = [EMPTY_DISCOVERY_PRIOR]
+EMPTY_DISCOVERY_ACCEPTANCE = {
+    **HOST_CONTEXT_ACCEPTANCE,
+    "windowId": "native-empty-discovery-1",
+    "candidateCommit": "ad5d54c7cf4aff110d618e9b44425f5ee8793c2b",
+    "candidateTree": "c917ffaa9a2503034827c090728ca40faf69aa35",
+    "priorResultSha256s": EMPTY_DISCOVERY_PRIORS,
+    "priorAttempts": 117, "priorCliLaunches": 117,
+    "routingOrdinals": [11, 12, 13, 14, 15, 16],
+    "maximumNewAttempts": 9, "maximumCumulativeAttempts": 126,
+    "authenticationPlan": {"plan": "pro", "source": "user-confirmed dedicated test source",
+                           "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"},
+    "routingRunName": "cases-native-empty-discovery-routing-1",
+    "clarificationRunName": "cases-native-empty-discovery-clarification-1",
+    "authenticationSourceOrdinal": 10,
+    "order": "A11 PASS first; A12-16 then B12-14; A1-10 evidence reused only under unchanged nonempty conditions",
+    "stop": "A11 non-PASS or any policy, identity, query or reliability failure closes all remaining slots",
+}
+NATIVE_EMPTY_DISCOVERY = {
+    "revision": 1, "method": "skills/list", "forceReload": True,
+    "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+    "delivery": "verified native empty result relayed by compatibility layer; nonempty input unchanged",
+    "scope": "same binary, cwd, environment, discovery roots and relevant configuration; before authentication copy",
+    "evidence": "native query receipt; not a model tool call or automatic exec context-delivery receipt",
+    "stop": "errors, incomplete response, mismatched cwd, timeout, configuration or scope drift; no retry",
+}
+
+
+OUTCOME_PRIOR = "4de585f867e2fffc4d92fd3acbba74f386f730c7e4ee6100346235d02614eb90"
+OUTCOME_PRIORS = [OUTCOME_PRIOR]
+OUTCOME_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/discovery-outcome-revision-4")
+OUTCOME_ACCEPTANCE = {
+    **EMPTY_DISCOVERY_ACCEPTANCE,
+    "windowId": "discovery-outcome-1",
+    "candidateCommit": "35b1960629822b0e68af1fc2f4d8580ac21bab8c",
+    "candidateTree": "c36b7796520dbdb424c2ad4b13e6d45eefc67821",
+    "priorResultSha256s": OUTCOME_PRIORS,
+    "priorAttempts": 118, "priorCliLaunches": 118,
+    "routingOrdinals": [11], "clarificationOrdinals": [],
+    "maximumNewAttempts": 1, "maximumCumulativeAttempts": 119,
+    "routingRunName": "cases-discovery-outcome-1", "clarificationRunName": None,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {**HOST_CONTEXT,
+        "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned"},
+    "order": "one independent A11 only; no other routing, reply or publication observation",
+    "stop": "one attempt only; any failure closes this window without retry or remainder",
+}
+
+
+REMAINDER_PRIOR = "cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a"
+REMAINDER_PRIORS = [REMAINDER_PRIOR]
+REMAINDER_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/accepted-remainder-revision-5")
+ACCEPTED_REMAINDER = {
+    **OUTCOME_ACCEPTANCE,
+    "windowId": "accepted-remainder-1",
+    "candidateCommit": "ab2ead1817b59d32e114282c391e005f7887547a",
+    "candidateTree": "95940d7d6d7135a1d4946746a19cf0823904b000",
+    "priorResultSha256s": REMAINDER_PRIORS,
+    "priorAttempts": 119, "priorCliLaunches": 119,
+    "routingOrdinals": [10, 12, 13, 14, 15, 16], "clarificationOrdinals": [12, 13, 14],
+    "maximumNewAttempts": 9, "maximumCumulativeAttempts": 128,
+    "routingRunName": "cases-accepted-remainder-routing-1",
+    "clarificationRunName": "cases-accepted-remainder-clarification-1",
+    "order": "A10, A12-16, then B12-14; each once in a fresh scope",
+    "stop": "any new FAIL, INCOMPLETE, query, policy, identity or reliability failure closes all subsequent slots",
+}
+
+
+TRACEABLE_CONFIRMATION = {
+    **ACCEPTED_REMAINDER,
+    "windowId": "traceable-confirmation-1",
+    "candidateCommit": "c752e7b4f316e1f2224c233b326e97d6652d7638",
+    "candidateTree": "cf281d8802f354767ed4354907e90fa1ab4ef246",
+    "sourceCommit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
+    "sourceTree": "425182b4dbdd5fd549f16e38b4039d1eb09f526f",
+    "fullRuntimeDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
+    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
+    "priorResultSha256s": ["9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"],
+    "priorAttempts": 122, "priorCliLaunches": 122,
+    "routingOrdinals": [13, 6, 14, 15, 16], "clarificationOrdinals": [13, 12, 14],
+    "maximumNewAttempts": 8, "maximumCumulativeAttempts": 130,
+    "routingRunName": "cases-traceable-confirmation-routing-1",
+    "clarificationRunName": "cases-traceable-confirmation-replies-1",
+    "order": ["A13", "B13", "A6", "A14", "A15", "A16", "B12", "B14"],
+    "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",
+}
+
+
+GOAL_PRESERVATION = {
+    **TRACEABLE_CONFIRMATION,
+    'windowId': 'architect-goal-preservation-1',
+    'candidateCommit': 'bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1',
+    'candidateTree': 'd9281b507721827034c27fdc1883161801bfbbf2',
+    'sourceCommit': 'bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1',
+    'sourceTree': 'd9281b507721827034c27fdc1883161801bfbbf2',
+    'fullRuntimeDigest': 'sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26',
+    'profileRuntimeDigest': 'sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf',
+    'priorResultSha256s': ['d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c'],
+    'priorAttempts': 129,
+    'priorCliLaunches': 129,
+    'routingOrdinals': [12, 3],
+    'clarificationOrdinals': [12, 14],
+    'maximumNewAttempts': 4,
+    'maximumCumulativeAttempts': 133,
+    'routingRunName': 'cases-architect-goal-routing-1',
+    'clarificationRunName': 'cases-architect-goal-replies-1',
+    'order': ['B12', 'A12', 'A3', 'B14'],
+}
+
+
+def _fixed_contract(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any]:
+    _require(sum((revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)) <= 1, "select one fixed window")
+    return GOAL_PRESERVATION if goal_preservation else TRACEABLE_CONFIRMATION if traceable_confirmation else ACCEPTED_REMAINDER if accepted_remainder else OUTCOME_ACCEPTANCE if outcome_semantics else EMPTY_DISCOVERY_ACCEPTANCE if empty_discovery else HOST_CONTEXT_ACCEPTANCE if host_context else REVISION_FOUR_ACCEPTANCE if revision_four else FIXED_ACCEPTANCE
+
+
+def _fixed_history_key(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> str:
+    return "goalPreservation" if goal_preservation else "traceableConfirmation" if traceable_confirmation else "acceptedRemainder" if accepted_remainder else "discoveryOutcomeAcceptance" if outcome_semantics else "nativeEmptyDiscoveryAcceptance" if empty_discovery else "hostContextAcceptance" if host_context else "revisionFourAcceptance" if revision_four else "fixedAcceptance"
+
+
+def _fixed_kind(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> str:
+    return "architect-goal-preservation-1" if goal_preservation else "traceable-confirmation-1" if traceable_confirmation else "accepted-remainder-1" if accepted_remainder else "discovery-outcome-1" if outcome_semantics else "native-empty-discovery-1" if empty_discovery else "host-context-fixed-1" if host_context else "assessment-revision-4-fixed-1" if revision_four else "fixed-candidate-acceptance-1"
+
+ROUTING_TAIL_PRIOR = "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe"
+ROUTING_TAIL_PRIORS = [ROUTING_TAIL_PRIOR]
+ROUTING_TAIL = {
+    "windowId": "independent-routing-tail-1", "state": "authorized-once",
+    "runName": "cases-independent-routing-tail-1",
+    "candidateCommit": "d39126fec4bf85cf899c380d5610188a6feead61",
+    "candidateTree": "db2ae2901f7ff920b7ba6496612cbd8f4146e630",
+    "ordinals": [12, 13, 14, 15, 16], "assessmentRevision": 4,
+    "priorResultSha256s": ROUTING_TAIL_PRIORS,
+    "priorAttempts": 101, "priorCliLaunches": 101,
+    "maximumNewAttempts": 5, "maximumCumulativeAttempts": 106,
+    "authenticationSourceOrdinal": 10,
+    "sourceResultSha256": "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b",
+    "history": "independent five-case window; no inherited observations or sessions",
+    "stop": "any policy, identity or reliability failure stops remaining cases and authentication handoff",
+    "visibleMessages": "all completed agent messages, bounded by existing 8192-byte public reply retention; exact official final output",
+}
+
 EXPLICIT_INVOCATION = {
     "revision": 1, "transport": "codex-exec-stdin-namespaced-dollar-mention",
     "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
@@ -617,6 +825,8 @@ def _capture_facts(capture: Mapping[str, Any]) -> dict[str, Any]:
     return facts
 IMPLEMENTATION_PATHS = (
     "axiom_validation/context.py", "axiom_validation/no_hook_bundle.py",
+    "axiom_validation/no_hook_clarification.py",
+    "axiom_validation/no_hook_discovery.py",
     "axiom_validation/no_hook_linux_isolation.py", "axiom_validation/no_hook_native_observation.py",
     "axiom_validation/no_hook_observation.py", "axiom_validation/no_hook_profile.py",
     "axiom_validation/release_versions.py", "axiom_validation/routing_evals/jsonio.py",
@@ -732,9 +942,23 @@ def _protocol(root: Path) -> dict[str, Any]:
         "scope": "new observation combination; not equivalent to historical Sol context",
     }, "native model metadata contract mismatch")
     _require(document.get("executionWindow") == {
-        "state": "authorized-once", "lastResultSha256": ASSESSMENT_REVISION_THREE["sha256"],
-        "reason": "one fresh explicit-invocation batch; 16 new attempts, 70 cumulative maximum",
+        "state": "closed", "lastResultSha256": FIXED_ROUTING_PRIOR,
+        "reason": "the original explicit-invocation window is consumed; no reopening",
     }, "native execution window differs from consumed attempt evidence")
+    _require(document.get("fixedAcceptance") == FIXED_ACCEPTANCE,
+             "fixed candidate acceptance window changed")
+    _require(document.get("revisionFourAcceptance") == REVISION_FOUR_ACCEPTANCE,
+             "assessment revision 4 acceptance window changed")
+    _require(document.get("independentRoutingTail") == ROUTING_TAIL, "independent routing window changed")
+    _require(document.get("nativeEmptyDiscoveryAcceptance") == EMPTY_DISCOVERY_ACCEPTANCE and
+             document.get("nativeEmptyDiscovery") == NATIVE_EMPTY_DISCOVERY, "native empty discovery contract changed")
+    _require(document.get("hostContextAcceptance") == HOST_CONTEXT_ACCEPTANCE and
+             document.get("hostEnvironmentContext") == HOST_CONTEXT, "host context contract changed")
+    _require(document.get("goalPreservation") == GOAL_PRESERVATION, "architect goal window changed")
+    _require(document.get("traceableConfirmation") == TRACEABLE_CONFIRMATION, "traceable confirmation contract changed")
+    _require(document.get("acceptedRemainder") == ACCEPTED_REMAINDER, "accepted remainder window changed")
+    _require(document.get("discoveryOutcomeAcceptance") == OUTCOME_ACCEPTANCE,
+             "outcome-definition single-case window changed")
     _require(document.get("explicitInvocation") == EXPLICIT_INVOCATION,
              "native explicit invocation contract mismatch")
     _require(document.get("currentAssessment") == CURRENT_ASSESSMENT,
@@ -765,7 +989,9 @@ def _protocol(root: Path) -> dict[str, Any]:
         _require(hashlib.sha256(_read(root / relative)).hexdigest() == binding["sha256"],
                  "native bound input changed")
     envelope = _json(_read(root / inputs["promptEnvelope"]["path"]))
-    _require(envelope.get("assessmentRevision") == 3 and document.get("assessmentRevision") == 3 and
+    _require(envelope.get("assessmentRevision") == 5 and document.get("assessmentRevision") == 5 and
+             envelope.get("contractBindings", {}).get("modelResponseSchemaSha256") ==
+             inputs["modelResponseSchema"]["sha256"] and
              envelope.get("explicitInvocation") == EXPLICIT_INVOCATION and
              envelope.get("materialDelivery") == MATERIAL_DELIVERY and
              envelope.get("fixtureMatrix") == inputs["fixtureMatrix"] and
@@ -781,6 +1007,37 @@ def _protocol(root: Path) -> dict[str, Any]:
              legacy.SHA256_PATTERN.fullmatch(bundle["packageSha256"]) is not None,
              "native package identity is invalid")
     return document
+
+
+MERGED_ROUTING_SHA256 = "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a"
+MERGED_PROTOCOL_DIGEST = "sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3"
+MERGED_PROTOCOL_FILE_SHA256 = "c6e29b80b64bf50aa7a0424ad99936e493254f3fff464e41b8ed90ca63f26feb"
+FIXED_PROTOCOL_FILE_SHA256 = "a3baaf529729f3da8d024536bfb29ef4e28363f17c68b1b75b9ee07cd7c4c674"
+FIXED_PROTOCOL_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/fixed-acceptance-1")
+REVISION_FOUR_PROTOCOL_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/assessment-revision-4-fixed-1")
+REVISION_FOUR_RESULT_SHA256 = "50589ff34c708f77ec119ba456100aa0cbfcfe965f7d85eddfe785c7ee5c023b"
+
+
+def _merged_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / "evals/no-hook-observation/historical-protocols/codex-native-protocol-v2.json")
+    _require(hashlib.sha256(data).hexdigest() == MERGED_PROTOCOL_FILE_SHA256,
+             "merged routing protocol bytes changed")
+    return _json(data)
+
+
+def _fixed_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / FIXED_PROTOCOL_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == FIXED_PROTOCOL_FILE_SHA256,
+             "recorded fixed routing protocol bytes changed")
+    return _json(data)
+
+
+def _revision_four_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / REVISION_FOUR_PROTOCOL_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() ==
+             "0732cea5d3587f226454f7b3153405ae097d0ae67f758daf6ae5713969b7c97a",
+             "recorded revision 4 routing protocol bytes changed")
+    return _json(data)
 
 
 def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
@@ -800,9 +1057,9 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                 protocol_digest=protocol["protocolDigest"], model_schema=_input(root, protocol, "modelResponseSchema"),
                 prompt_envelope=_input(root, protocol, "promptEnvelope"), request=case["request"])
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation", "assessmentRevision3"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation", "assessmentRevision3", "fixedAcceptance", "revisionFourAcceptance", "independentRoutingTail", "hostContextAcceptance", "nativeEmptyDiscoveryAcceptance", "discoveryOutcomeAcceptance", "acceptedRemainder", "traceableConfirmation", "goalPreservation"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
-                 history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": protocol["protocolDigest"]},
+                 history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": MERGED_PROTOCOL_DIGEST},
                  "native history identity is inconsistent")
         historical = history["historicalResults"]
         expected_historical = {"path": "evals/no-hook-observation/results/codex-native-" + HISTORICAL_RESULT_SHA256 + ".json",
@@ -877,6 +1134,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                  prior["attemptCount"] == prior["cliLaunchCount"] == 16 and
                  prior["cumulativeAttemptCount"] == _attempt_history(root)["attempts"] == 54,
                  "historical revision-three attempt accounting changed")
+        _routing_tail_binding(root)
         # Accepted historical bytes retain their own input meanings and scoring;
         # this no-model wording migration cannot regrade or refund any attempt.
         records = history["results"]
@@ -909,6 +1167,19 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                        "modelRequestCount": None, "pluginInstalled": any(
                            item["installation"] == "verified" for item in result["caseResults"])}
         _require(history["current"] == current, "native history summary differs from its result")
+        _fixed_result_binding(root)
+        _fixed_result_binding(root, revision_four=True)
+        _fixed_result_binding(root, host_context=True)
+        host_context_attempt_history(root)
+        _fixed_result_binding(root, empty_discovery=True)
+        empty_discovery_attempt_history(root)
+        _fixed_result_binding(root, outcome_semantics=True)
+        _fixed_result_binding(root, accepted_remainder=True)
+        outcome_attempt_history(root)
+        _fixed_result_binding(root, traceable_confirmation=True)
+        traceable_attempt_history(root)
+        _fixed_result_binding(root, goal_preservation=True)
+        goal_attempt_history(root)
         return []
     except (OSError, ValueError, KeyError, TypeError, NativeObservationError) as error:
         return [str(error)]
@@ -1050,6 +1321,700 @@ def _attempt_history(root: Path) -> dict[str, Any]:
     return {"attempts": sum(item[0] for item in identities.values()),
             "cliLaunches": sum(item[1] for item in identities.values()),
             "identities": [list(key) for key in sorted(identities)], "resultSha256s": shas}
+
+
+def fixed_attempt_history(root: Path) -> dict[str, Any]:
+    """The fixed window inherits every historical attempt, including both replies."""
+    old = _attempt_history(root)
+    identities = {tuple(key): (1, 1) for key in old["identities"]}
+    _require(old["attempts"] == old["cliLaunches"] == len(identities) == 54,
+             "routing predecessor accounting changed")
+    for index, sha in enumerate(FIXED_PRIOR_RESULTS):
+        stem = "codex-native-" if index == 0 else "clarification-"
+        data = _read(root / ("evals/no-hook-observation/results/" + stem + sha + ".json"))
+        _require(hashlib.sha256(data).hexdigest() == sha, "fixed predecessor bytes changed")
+        document = _json(data)
+        expected = 16 if index == 0 else 3
+        _require(document["attemptCount"] == document["cliLaunchCount"] == expected and
+                 document["cumulativeAttemptCount"] == 70 + 3 * index,
+                 "fixed predecessor totals changed")
+        for item in document["caseResults"]:
+            key = (item["ordinal"], item["materializationCommitmentSha256"] if index == 0 else sha)
+            _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                     "fixed predecessor overlaps or is incomplete")
+            identities[key] = (1, 1)
+    _require(len(identities) == FIXED_ACCEPTANCE["priorAttempts"] == 76,
+             "fixed acceptance historical count is not 76")
+    return {"attempts": 76, "cliLaunches": 76, "identities": [list(k) for k in sorted(identities)],
+            "resultSha256s": FIXED_PRIOR_RESULTS}
+
+
+def _execution_source(root: Path) -> dict[str, str]:
+    """Bind actual committed implementation bytes; never assign a future SHA."""
+    env = {"PATH": "/usr/bin:/bin", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null"}
+    def git(*args):
+        owner = subprocess.check_output(["git", "-C", str(root), "rev-parse", "--show-toplevel"], env=env).decode().strip()
+        _require(Path(owner).resolve() == root.resolve(), "execution Git owner changed")
+        return subprocess.check_output(["git", "-C", str(root), *args], env=env)
+    values = git("rev-parse", "HEAD", "HEAD^{tree}").decode().splitlines()
+    protocol = _protocol(root)
+    bindings = [*protocol["implementationBindings"], *protocol["inputs"].values(), protocol["resultSchema"]]
+    for binding in bindings:
+        _require(hashlib.sha256(git("show", values[0] + ":" + binding["path"])).hexdigest() == binding["sha256"],
+                 "fixed execution implementation is not committed")
+    for relative in (PROTOCOL_RELATIVE, Path("evals/no-hook-observation/clarification-protocol-v1.json")):
+        _require(git("show", values[0] + ":" + relative.as_posix()) == _read(root / relative),
+                 "fixed execution protocol is not committed")
+    return {"commit": values[0], "tree": values[1]}
+
+
+def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any] | None:
+    history = _json(_read(root / HISTORY_RELATIVE))[_fixed_history_key(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)]
+    recorded = _protocol(root) if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation else _fixed_protocol(root)
+    if revision_four and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _revision_four_protocol(root)
+    if host_context and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _host_context_protocol(root)
+    if empty_discovery and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _outcome_prior_protocol(root)
+    if outcome_semantics and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _remainder_prior_protocol(root)
+    if accepted_remainder and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _accepted_remainder_protocol(root)
+    if traceable_confirmation and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _traceable_protocol(root)
+    _require(set(history) == {"windowId", "protocolDigest", "results"} and
+             history["windowId"] == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)["windowId"] and
+             history["protocolDigest"] == recorded["protocolDigest"] and
+             type(history["results"]) is list and len(history["results"]) <= 1,
+             "fixed routing result registration changed")
+    if not history["results"]:
+        return None
+    binding = history["results"][0]
+    _require(set(binding) == {"path", "sha256", "implementationCommit", "implementationTree"} and
+             binding["path"] == "evals/no-hook-observation/results/codex-native-" + binding["sha256"] + ".json",
+             "fixed routing result owner changed")
+    data = _read(root / binding["path"])
+    _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "fixed routing result bytes changed")
+    result = _json(data)
+    _require(not validate_native_result(result, root) and result["runMode"] == "actual" and
+             result.get("executionSegment", {}).get("kind") == _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation) and
+             result["executionSource"] == {"commit": binding["implementationCommit"], "tree": binding["implementationTree"]},
+             "fixed routing result is not its actual execution")
+    return binding
+
+
+def revision_four_attempt_history(root: Path) -> dict[str, Any]:
+    """Count the stopped eleven-case batch once; its unused slots stay closed."""
+    old = fixed_attempt_history(root)
+    binding = _fixed_result_binding(root)
+    _require(binding is not None and binding["sha256"] == FIXED_RESULT_SHA256,
+             "revision 4 predecessor must be the retained stopped batch")
+    result = _json(_read(root / binding["path"]))
+    identities = {tuple(k): (1, 1) for k in old["identities"]}
+    for item in result["caseResults"]:
+        if not item["attemptCount"]:
+            _require(item["cliLaunchCount"] == 0, "unattempted predecessor launched")
+            continue
+        key = (item["ordinal"], item["materializationCommitmentSha256"])
+        _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                 "revision 4 predecessor overlaps or changed counts")
+        identities[key] = (1, 1)
+    _require(len(identities) == result["cumulativeAttemptCount"] == 87,
+             "revision 4 historical total is not 87")
+    return {"attempts": 87, "cliLaunches": 87, "identities": [list(k) for k in sorted(identities)],
+            "resultSha256s": REVISION_FOUR_PRIOR_RESULTS}
+
+
+def traceable_attempt_history(root: Path) -> dict[str, Any]:
+    old = remainder_attempt_history(root)
+    binding = _fixed_result_binding(root, accepted_remainder=True)
+    _require(binding is not None and binding["sha256"] == TRACEABLE_CONFIRMATION["priorResultSha256s"][0],
+             "traceable confirmation predecessor changed")
+    result = _json(_read(root / binding["path"]))
+    identities = {tuple(x) for x in old["identities"]}
+    for item in result["caseResults"]:
+        if not item["attemptCount"]:
+            _require(item["cliLaunchCount"] == 0, "unstarted predecessor launched")
+            continue
+        key = (item["ordinal"], item["materializationCommitmentSha256"])
+        _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                 "traceable predecessor overlaps history")
+        identities.add(key)
+    _require(len(identities) == result["cumulativeAttemptCount"] == 122 and
+             result["attemptCount"] == result["cliLaunchCount"] == 3,
+             "traceable confirmation must retain all 122 attempts")
+    return {"attempts": 122, "cliLaunches": 122, "identities": [list(x) for x in sorted(identities)],
+            "resultSha256s": TRACEABLE_CONFIRMATION["priorResultSha256s"]}
+
+
+def _new_traceable_results(root: Path, *, goal_preservation: bool = False) -> dict:
+    from . import no_hook_clarification as replies
+    cases = legacy.load_golden_cases(root)
+    return {"clarificationProtocolDigest": replies.protocol(root)["protocolDigest"],
+            "clarificationResults": [{"ordinal": i, "caseId": cases[i-1]["id"], "status": "NOT-RUN",
+                "attemptCount": 0, "cliLaunchCount": 0, "capture": None, "review": None,
+                "preparation": "not-started"} for i in (GOAL_PRESERVATION if goal_preservation else TRACEABLE_CONFIRMATION)["clarificationOrdinals"]],
+            "routingMessageReviews": []}
+
+
+def _review_public_case(record: dict, semantic_review) -> dict:
+    captured = _bytes(record)
+    try:
+        review = semantic_review(_json(captured))
+        _require(type(review) is dict and set(review) == {"verdict", "reason"} and
+                 review["verdict"] in {"PASS", "FAIL"} and type(review["reason"]) is str and
+                 0 < len(review["reason"]) <= 2000, "invalid public-message review")
+    except (EOFError, OSError, ValueError, TypeError, NativeObservationError):
+        review = {"verdict": "INCOMPLETE", "reason": "Public-message review unavailable; all later observations stopped."}
+    _require(_bytes(record) == captured, "review changed the retained capture")
+    return {"ordinal": record["ordinal"], "caseResultSha256": hashlib.sha256(captured).hexdigest(), **review}
+
+
+def _traceable_stage_source(root: Path, previous: Path, stage: int, *, simulated: bool) -> tuple[dict, dict]:
+    _require(stage in (13, 16) and previous.name == TRACEABLE_CONFIRMATION["routingRunName"],
+             "unregistered traceable reply stage")
+    registration = _fixed_registration(root, previous.parent, traceable_confirmation=True)
+    p, state = _state(root, previous, traceable_confirmation=True)
+    _require(state["runMode"] == ("simulated" if simulated else "actual") and
+             registration["executionSource"] == (None if simulated else _execution_source(root)) and
+             _json(_read(previous / "batch-started.json")) == {"protocolDigest": p["protocolDigest"]} and
+             not (previous / "normalized-result.json").exists(), "traceable reply window is not active")
+    gate = _json(_read(previous / f"reply-gate-{stage}.json"))
+    _require(set(gate) == {"executionSource", "protocolDigest", "caseResults", "traceableConfirmation"} and
+             gate["executionSource"] == registration["executionSource"] and gate["protocolDigest"] == p["protocolDigest"],
+             "traceable reply gate identity changed")
+    passed = [13] if stage == 13 else TRACEABLE_CONFIRMATION["routingOrdinals"]
+    records = gate["caseResults"]
+    _require([x["ordinal"] for x in records] == TRACEABLE_CONFIRMATION["routingOrdinals"], "routing gate set changed")
+    reviews = gate["traceableConfirmation"]["routingMessageReviews"]
+    _require([x["ordinal"] for x in reviews] == passed, "routing gate review coverage changed")
+    for item, review in zip(records, reviews):
+        _validate_public_review(item, review)
+        facts = item["executionDiagnostics"]
+        _require(item["status"] == "PASS" and review["verdict"] == "PASS" and facts["category"] == "none" and
+                 facts["returnCode"] == 0 and facts["finalOutputVerified"] and facts["inputFullyDelivered"] and
+                 not any(facts[k] for k in ("timedOut", "cleanupFailed", "observerTerminated")) and
+                 item["evidenceExtraction"]["postcheck"] == "valid", "routing gate did not complete and pass")
+        _require(_json(_read(previous / f"attempt-{item['ordinal']:02d}.json")) == {
+            "ordinal": item["ordinal"], "caseId": item["caseId"], "protocolDigest": p["protocolDigest"]},
+            "routing gate attempt changed")
+    if stage == 16:
+        from . import no_hook_clarification as replies
+        entry = gate["traceableConfirmation"]["clarificationResults"][0]
+        replies.validate_confirmation_entry(root, entry)
+        _require(entry["status"] == "PASS", "B13 must pass before the reply tail")
+    item = next(x for x in records if x["ordinal"] == stage)
+    paths = _case_paths(previous, stage)
+    definition = _definition(_input(root, p, "fixtureMatrix"), stage)
+    _verify_config(paths, previous / "marketplace", True)
+    _verify_discovery(paths, True)
+    _require(fixture_identity(paths["workspace"], definition) == item["fixtureAfterSha256"] and
+             package_identity(paths["package"]) == item["packageAfterSha256"] and
+             not (previous / f"final-message-{stage:02d}.json").exists(), "routing gate public state changed")
+    _model_metadata(paths)
+    count = 123 if stage == 13 else 128
+    return state, {"attempts": count, "cliLaunches": count}
+
+
+def _validate_public_review(record: dict, review: dict) -> None:
+    _require(type(review) is dict and set(review) == {"ordinal", "caseResultSha256", "verdict", "reason"} and
+             review["ordinal"] == record["ordinal"] and
+             review["caseResultSha256"] == hashlib.sha256(_bytes(record)).hexdigest() and
+             review["verdict"] in {"PASS", "FAIL", "INCOMPLETE"} and type(review["reason"]) is str and
+             0 < len(review["reason"]) <= 2000, "public review does not bind the whole capture")
+
+
+def _finish_traceable_counts(document: dict, *, goal_preservation: bool = False) -> None:
+    contract = GOAL_PRESERVATION if goal_preservation else TRACEABLE_CONFIRMATION
+    extra = document["goalPreservation" if goal_preservation else "traceableConfirmation"]
+    replies = extra["clarificationResults"]
+    extra["attemptCount"] = document["attemptCount"] + sum(x["attemptCount"] for x in replies)
+    extra["cliLaunchCount"] = document["cliLaunchCount"] + sum(x["cliLaunchCount"] for x in replies)
+    document["cumulativeAttemptCount"] = contract["priorAttempts"] + extra["attemptCount"]
+    extra["cumulativeCliLaunchCount"] = contract["priorCliLaunches"] + extra["cliLaunchCount"]
+    statuses = [x["status"] for x in document["caseResults"] + replies]
+    verdicts = [x["verdict"] for x in extra["routingMessageReviews"]]
+    extra["status"] = "INCOMPLETE" if any(x in {"NOT-RUN", "INCOMPLETE"} for x in statuses + verdicts) else (
+        "FAIL" if "FAIL" in statuses + verdicts else "PASS")
+    if document["runMode"] == "simulated":
+        extra["status"] = "INCOMPLETE"
+
+
+def _validate_traceable_results(document: dict, root: Path, protocol_override=None, *, goal_preservation: bool = False) -> None:
+    from . import no_hook_clarification as replies
+    contract = GOAL_PRESERVATION if goal_preservation else TRACEABLE_CONFIRMATION
+    extra = document["goalPreservation" if goal_preservation else "traceableConfirmation"]
+    rp = _traceable_reply_protocol(root) if protocol_override else replies.protocol(root)
+    _require(set(extra) == {"clarificationProtocolDigest", "clarificationResults", "routingMessageReviews",
+                           "attemptCount", "cliLaunchCount", "cumulativeCliLaunchCount", "status"} and
+             extra["clarificationProtocolDigest"] == rp["protocolDigest"],
+             "traceable result protocol or fields changed")
+    a = {x["ordinal"]: x for x in document["caseResults"]}
+    b = extra["clarificationResults"]
+    _require([x["ordinal"] for x in b] == contract["clarificationOrdinals"], "reply set changed")
+    for entry in b:
+        replies.validate_confirmation_entry(root, entry, protocol_override=rp, native_override=protocol_override)
+    reviews = extra["routingMessageReviews"]
+    _require([x["ordinal"] for x in reviews] == [x["ordinal"] for x in document["caseResults"] if x["status"] == "PASS"],
+             "routing public-message review coverage changed")
+    for review in reviews:
+        _validate_public_review(a[review["ordinal"]], review)
+    by_review = {x["ordinal"]: x for x in reviews}
+    b = {x["ordinal"]: x for x in b}
+    stopped = False
+    for label in contract["order"]:
+        ordinal = int(label[1:])
+        record = (a if label[0] == "A" else b)[ordinal]
+        _require(not stopped or record["status"] == "NOT-RUN", "traceable window continued after a non-PASS")
+        verdict = by_review[ordinal]["verdict"] if label[0] == "A" and record["status"] == "PASS" else record["status"]
+        stopped |= verdict != "PASS"
+    copied = _json(_bytes(document))
+    _finish_traceable_counts(copied, goal_preservation=goal_preservation)
+    _require(copied == document and 0 <= extra["cliLaunchCount"] <= extra["attemptCount"] <= contract["maximumNewAttempts"] and
+             document["cumulativeAttemptCount"] <= contract["maximumCumulativeAttempts"] and extra["cumulativeCliLaunchCount"] <= contract["maximumCumulativeAttempts"],
+             "traceable window accounting changed")
+
+
+def goal_attempt_history(root: Path) -> dict[str, Any]:
+    old = traceable_attempt_history(root)
+    binding = _fixed_result_binding(root, traceable_confirmation=True)
+    _require(binding is not None and binding["sha256"] == TRACEABLE_RESULT_SHA256,
+             "architect goal predecessor changed")
+    result = _json(_read(root / binding["path"]))
+    identities = {tuple(x) for x in old["identities"]}
+    rows = [(x, x["materializationCommitmentSha256"]) for x in result["caseResults"]]
+    rows += [(x, binding["sha256"]) for x in result["traceableConfirmation"]["clarificationResults"]]
+    for item, discriminator in rows:
+        if not item["attemptCount"]:
+            _require(item["cliLaunchCount"] == 0, "unstarted predecessor launched")
+            continue
+        key = (item["ordinal"], discriminator)
+        _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                 "architect goal predecessor overlaps")
+        identities.add(key)
+    extra = result["traceableConfirmation"]
+    _require(len(identities) == result["cumulativeAttemptCount"] == extra["cumulativeCliLaunchCount"] == 129 and
+             extra["attemptCount"] == extra["cliLaunchCount"] == 7,
+             "architect goal must preserve all 129 attempts")
+    return {"attempts": 129, "cliLaunches": 129, "identities": [list(x) for x in sorted(identities)],
+            "resultSha256s": [TRACEABLE_RESULT_SHA256]}
+
+
+def _goal_stage_source(root: Path, previous: Path, stage: int, *, simulated: bool) -> tuple:
+    _require(stage in (12, 14) and previous.name == GOAL_PRESERVATION["routingRunName"],
+             "unregistered architect goal reply stage")
+    registration = _fixed_registration(root, previous.parent, goal_preservation=True)
+    p, state = _state(root, previous, goal_preservation=True)
+    _require(state["runMode"] == ("simulated" if simulated else "actual") and
+             registration["executionSource"] == (None if simulated else _execution_source(root)) and
+             _json(_read(previous / "batch-started.json")) == {"protocolDigest": p["protocolDigest"]} and
+             not (previous / "normalized-result.json").exists(), "architect goal reply window is not active")
+    gate = _json(_read(previous / f"reply-gate-{stage}.json"))
+    _require(set(gate) == {"executionSource", "protocolDigest", "caseResults", "goalPreservation"} and
+             gate["executionSource"] == registration["executionSource"] and gate["protocolDigest"] == p["protocolDigest"],
+             "architect goal reply gate identity changed")
+    records = gate["caseResults"]
+    _require([x["ordinal"] for x in records] == GOAL_PRESERVATION["routingOrdinals"], "architect goal routing set changed")
+    replies = gate["goalPreservation"]
+    if stage == 12:
+        _require(replies == _new_traceable_results(root, goal_preservation=True) and
+                 all(x["status"] == "NOT-RUN" and x["attemptCount"] == x["cliLaunchCount"] == 0 for x in records),
+                 "B12 must precede every new observation")
+        _require(all(not (previous / f"attempt-{x['ordinal']:02d}.json").exists() for x in records),
+                 "routing attempt preceded B12")
+        source = Path(registration["previousRunRoot"])
+        old = _revision_four_auth_source(root, source, goal_preservation=True)
+        return old, {"attempts": 129, "cliLaunches": 129}, source, 10
+    from . import no_hook_clarification as clarification
+    entry = replies["clarificationResults"][0]
+    clarification.validate_confirmation_entry(root, entry)
+    _require(entry["ordinal"] == 12 and entry["status"] == "PASS", "B12 did not pass")
+    reviews = replies["routingMessageReviews"]
+    _require([x["ordinal"] for x in reviews] == GOAL_PRESERVATION["routingOrdinals"], "architect goal review coverage changed")
+    for item, review in zip(records, reviews):
+        _validate_public_review(item, review)
+        facts = item["executionDiagnostics"]
+        _require(item["status"] == review["verdict"] == "PASS" and facts["category"] == "none" and
+                 facts["returnCode"] == 0 and facts["inputFullyDelivered"] and facts["finalOutputVerified"] and
+                 not any(facts[k] for k in ("cleanupFailed", "timedOut", "observerTerminated")) and
+                 item["evidenceExtraction"]["postcheck"] == "valid", "routing did not pass normally before B14")
+        _require(_json(_read(previous / f"attempt-{item['ordinal']:02d}.json")) == {
+            "ordinal": item["ordinal"], "caseId": item["caseId"], "protocolDigest": p["protocolDigest"]},
+            "architect goal attempt identity changed")
+    item = records[-1]
+    paths = _case_paths(previous, 3)
+    definition = _definition(_input(root, p, "fixtureMatrix"), 3)
+    _verify_config(paths, previous / "marketplace", True)
+    _verify_discovery(paths, True)
+    _require(fixture_identity(paths["workspace"], definition) == item["fixtureAfterSha256"] and
+             package_identity(paths["package"]) == item["packageAfterSha256"] and
+             not (previous / "final-message-03.json").exists(), "B14 source public state changed")
+    _model_metadata(paths)
+    return state, {"attempts": 132, "cliLaunches": 132}, previous, 3
+
+
+def _fixed_attempt_history(root: Path, revision_four: bool, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any]:
+    return goal_attempt_history(root) if goal_preservation else traceable_attempt_history(root) if traceable_confirmation else remainder_attempt_history(root) if accepted_remainder else outcome_attempt_history(root) if outcome_semantics else empty_discovery_attempt_history(root) if empty_discovery else host_context_attempt_history(root) if host_context else revision_four_attempt_history(root) if revision_four else fixed_attempt_history(root)
+
+
+def _revision_four_auth_source(root: Path, previous: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any]:
+    """Verify only the registered, normally completed source; never inspect auth."""
+    binding = _fixed_result_binding(root, host_context=True) if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation) else _routing_tail_binding(root) if host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation else _fixed_result_binding(root, revision_four=revision_four)
+    expected = EMPTY_DISCOVERY_PRIOR if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation) else HOST_CONTEXT_PRIOR if host_context else REVISION_FOUR_RESULT_SHA256 if revision_four else FIXED_RESULT_SHA256
+    _require(binding is not None and binding["sha256"] == expected and
+             previous.name == (HOST_CONTEXT_ACCEPTANCE["routingRunName"] if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation) else ROUTING_TAIL["runName"] if host_context else _fixed_contract(revision_four)["routingRunName"]), "revision 4 authentication predecessor changed")
+    data = _read(root / binding["path"])
+    _require(_read(previous / "normalized-result.json") == data, "authentication predecessor result changed")
+    result, state = _json(data), _json(_read(previous / STATE_NAME))
+    _require(state["protocolDigest"] == result["protocolDigest"] and state["runMode"] == "actual" and
+             state["materializationSeed"] == result["materializationSeed"] and
+             _json(_read(previous / "batch-started.json")) == {"protocolDigest": result["protocolDigest"]},
+             "authentication predecessor preparation changed")
+    ordinal = EMPTY_DISCOVERY_ACCEPTANCE["authenticationSourceOrdinal"] if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation) else HOST_CONTEXT_ACCEPTANCE["authenticationSourceOrdinal"] if host_context else REVISION_FOUR_ACCEPTANCE["authenticationSourceOrdinal"]
+    item = next(c for c in result["caseResults"] if c["ordinal"] == ordinal)
+    _require(_json(_read(previous / f"attempt-{ordinal:02d}.json")) == {
+        "ordinal": ordinal, "caseId": item["caseId"], "protocolDigest": result["protocolDigest"]},
+        "authentication predecessor attempt changed")
+    facts = item["executionDiagnostics"]
+    _require(item["status"] in {"PASS", "FAIL"} and facts["category"] == "none" and facts["returnCode"] == 0 and
+             facts["inputFullyDelivered"] and facts["finalOutputVerified"] and
+             not any(facts[k] for k in ("cleanupFailed", "timedOut", "observerTerminated")) and
+             item["evidenceExtraction"]["postcheck"] == "valid", "authentication source did not close normally")
+    paths = _case_paths(previous, ordinal)
+    _verify_config(paths, previous / "marketplace", True)
+    _verify_discovery(paths, True)
+    fixtures = _input(root, _protocol(root), "fixtureMatrix")
+    _require(fixture_identity(paths["workspace"], _definition(fixtures, ordinal)) == item["fixtureAfterSha256"] and
+             (_auth_source_package_identity(root, paths["package"], result) if traceable_confirmation or goal_preservation else package_identity(paths["package"])) == item["packageAfterSha256"], "authentication source public inputs changed")
+    _require(not (previous / f"final-message-{ordinal:02d}.json").exists(), "authentication source output remains")
+    _model_metadata(paths)
+    return state
+
+
+def _fixed_registration(root: Path, parent: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any]:
+    from . import no_hook_clarification as replies
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)
+    record = _json(_read(parent / (contract["windowId"] + ".json")))
+    _require(set(record) == {"contract", "nativeProtocolDigest", "clarificationProtocolDigest",
+                            "attemptHistory", "executionSource", "previousRunRoot"} and
+             record["contract"] == contract and record["attemptHistory"] == _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation) and
+             record["nativeProtocolDigest"] == _protocol(root)["protocolDigest"] and
+             record["clarificationProtocolDigest"] == replies.protocol(root)["protocolDigest"] and
+             Path(record["previousRunRoot"]).parent == parent and
+             Path(record["previousRunRoot"]).name == (HOST_CONTEXT_ACCEPTANCE["routingRunName"] if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation) else ROUTING_TAIL["runName"] if host_context else FIXED_ACCEPTANCE["routingRunName"] if revision_four else "cases-clarification-2"),
+             "fixed observation registration changed")
+    return record
+
+
+def prepare_fixed_acceptance(root: Path, run_root: Path, previous: Path, bundle_root: Path, *,
+                             authorize_install: bool = False, authorize_copy: bool = False,
+                             revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False, runner=None) -> None:
+    from . import no_hook_clarification as replies
+    _require(authorize_install and authorize_copy, "fixed preparation and test-auth copy require authorization")
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)
+    _require(_fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation) is None, "fixed routing window already recorded")
+    if not (outcome_semantics or traceable_confirmation or goal_preservation):
+        replies._unrecorded(root, replies.protocol(root), fixed_acceptance=True, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder)
+    chain = _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)
+    old = (_revision_four_auth_source(root, previous, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation) if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation else
+           replies._prior_state(root, previous, fixed_acceptance=True))
+    _require(run_root.parent == previous.parent and run_root.name == contract["routingRunName"] and
+             not run_root.exists() and not run_root.is_symlink(), "fixed routing requires its fresh registered sibling")
+    source = _execution_source(root) if runner is None else None
+    executable = Path(old["executable"])
+    legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
+    _require(package_identity(bundle_root) == _protocol(root)["bundle"]["packageSha256"], "fixed package differs")
+    invoke = bounded_process if runner is None else runner
+    source_ordinal = contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation else 14
+    replies._login(executable, _case_paths(previous, source_ordinal), invoke)
+    _exclusive(run_root.parent / (contract["windowId"] + ".json"), _bytes({
+        "contract": contract, "nativeProtocolDigest": _protocol(root)["protocolDigest"],
+        "clarificationProtocolDigest": replies.protocol(root)["protocolDigest"],
+        "attemptHistory": chain, "executionSource": source, "previousRunRoot": str(previous)}))
+    prepare_native_run(root, run_root, bundle_root, executable, authorize_install=True, runner=runner, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)
+    _exclusive(run_root / "fixed-acceptance-preparation.json", _bytes(_fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)))
+    if not goal_preservation:
+        _copy_test_auth(run_root, source_ordinal, contract["routingOrdinals"][0], create=True, source_root=previous)
+
+
+def _verify_fixed_acceptance(root: Path, run_root: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any]:
+    record = _fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)
+    _require(run_root.name == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)["routingRunName"] and
+             _json(_read(run_root / "fixed-acceptance-preparation.json")) == record and
+             _fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation) is None, "fixed routing preparation changed or window consumed")
+    for name in ["batch-started.json", "normalized-result.json", *[f"attempt-{i:02d}.json" for i in range(1, 17)]]:
+        _require(not (run_root / name).exists() and not (run_root / name).is_symlink(),
+                 "fixed routing already attempted")
+    return record["attemptHistory"]
+
+
+def routing_tail_attempt_history(root: Path) -> dict[str, Any]:
+    """Inherit the two stopped routing batches and the completed reply batch once."""
+    from . import no_hook_clarification as replies
+    old = replies.independent_attempt_history(root)
+    data = _read(root / ("evals/no-hook-observation/results/clarification-" + ROUTING_TAIL_PRIOR + ".json"))
+    _require(hashlib.sha256(data).hexdigest() == ROUTING_TAIL_PRIOR, "routing tail predecessor bytes changed")
+    result = _json(data)
+    _require(old["attempts"] == old["cliLaunches"] == result["priorAttemptCount"] == 98 and
+             result["attemptCount"] == result["cliLaunchCount"] == 3 and
+             result["cumulativeAttemptCount"] == result["cumulativeCliLaunchCount"] == 101 and
+             [c["ordinal"] for c in result["caseResults"]] == [12, 13, 14] and
+             all(c["attemptCount"] == c["cliLaunchCount"] == 1 for c in result["caseResults"]),
+             "routing tail historical total is not 101")
+    return {"attempts": 101, "cliLaunches": 101, "historical": old,
+            "replyResultSha256": ROUTING_TAIL_PRIOR}
+
+
+def host_context_attempt_history(root: Path) -> dict[str, Any]:
+    """Count all 106 consumed attempts without importing any old session."""
+    history = routing_tail_attempt_history(root)
+    _require(_routing_tail_binding(root)["sha256"] == HOST_CONTEXT_PRIOR,
+             "host-context predecessor must be the retained routing tail")
+    identities = {tuple(k) for k in revision_four_attempt_history(root)["identities"]}
+    for sha, stem, count, prior in ((REVISION_FOUR_RESULT_SHA256, "codex-native-", 11, 87),
+                                    (ROUTING_TAIL_PRIOR, "clarification-", 3, 98),
+                                    (HOST_CONTEXT_PRIOR, "codex-native-", 5, 101)):
+        data = _read(root / ("evals/no-hook-observation/results/" + stem + sha + ".json"))
+        _require(hashlib.sha256(data).hexdigest() == sha, "host-context historical bytes changed")
+        result = _json(data)
+        _require(result["attemptCount"] == result["cliLaunchCount"] == count and
+                 result["cumulativeAttemptCount"] == prior + count, "host-context historical counts changed")
+        for item in result["caseResults"]:
+            if not item["attemptCount"]:
+                _require(item["cliLaunchCount"] == 0, "unstarted historical case launched")
+                continue
+            key = (item["ordinal"], item["materializationCommitmentSha256"] if stem == "codex-native-" else sha)
+            _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                     "host-context historical attempt overlap")
+            identities.add(key)
+    _require(history["attempts"] == 101 and len(identities) == 106, "host-context total is not 106")
+    return {"attempts": 106, "cliLaunches": 106, "identities": [list(k) for k in sorted(identities)],
+            "resultSha256s": HOST_CONTEXT_PRIORS}
+
+
+def _host_context_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / "evals/no-hook-observation/historical-protocols/host-context-1/codex-native-protocol-v2.json")
+    _require(hashlib.sha256(data).hexdigest() == "98ad36c9b7a39c0feab45817fff6f17e1804504efffec5ff1ff92ee759fb3645", "host-context protocol bytes changed")
+    return _json(data)
+
+
+def empty_discovery_attempt_history(root: Path) -> dict[str, Any]:
+    old = host_context_attempt_history(root)
+    binding = _fixed_result_binding(root, host_context=True)
+    _require(binding is not None and binding["sha256"] == EMPTY_DISCOVERY_PRIOR,
+             "empty-discovery predecessor changed")
+    result = _json(_read(root / binding["path"]))
+    identities = {tuple(x) for x in old["identities"]}
+    _require(result["attemptCount"] == result["cliLaunchCount"] == 11 and
+             result["cumulativeAttemptCount"] == 117, "predecessor count changed")
+    for item in result["caseResults"]:
+        if not item["attemptCount"]:
+            _require(item["cliLaunchCount"] == 0, "unstarted predecessor launched")
+            continue
+        key = (item["ordinal"], item["materializationCommitmentSha256"])
+        _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                 "predecessor overlaps history")
+        identities.add(key)
+    _require(len(identities) == 117, "history is not 117 consumed attempts")
+    return {"attempts": 117, "cliLaunches": 117, "identities": [list(k) for k in sorted(identities)],
+            "resultSha256s": EMPTY_DISCOVERY_PRIORS}
+
+
+def _outcome_prior_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / OUTCOME_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == "591f67665266363dad78235d2acb9fe19effbf833568d2520903c3772c30f15b",
+             "recorded native-empty protocol bytes changed")
+    return _json(data)
+
+
+ACCEPTED_REMAINDER_RESULT_SHA256 = "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"
+TRACEABLE_DISCOVERY_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/traceable-discovery-priority")
+
+
+GOAL_PRESERVATION_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/architect-goal-preservation")
+TRACEABLE_RESULT_SHA256 = "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c"
+
+
+def _traceable_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / GOAL_PRESERVATION_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == "ee9700e2ba8bb92b0ba618263452813bee03837a18167f66fa2789ecfd4aa1c7", "historical traceable protocol changed")
+    return _json(data)
+
+
+def _traceable_reply_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / GOAL_PRESERVATION_ARCHIVE / "clarification-protocol-v1.json")
+    _require(hashlib.sha256(data).hexdigest() == "fdede5f767389e70e9cf1376cf1b3406232b7876d871a2d3060a42fae7bacc8c", "historical traceable reply protocol changed")
+    return _json(data)
+
+
+def _accepted_remainder_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / TRACEABLE_DISCOVERY_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == "6dc5d81a50f3630de09f5a3763ee8f32bf2ec116f9abc3200fefa0718250b1c3",
+             "recorded accepted remainder protocol bytes changed")
+    return _json(data)
+
+
+def _remainder_prior_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / REMAINDER_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == "a0ea0b035dbc32d601871b22a8c54a4f4c2ef05df9ccc29a4d11d19273be363d", "recorded revision 5 protocol changed")
+    return _json(data)
+
+
+def remainder_attempt_history(root: Path) -> dict[str, Any]:
+    old = outcome_attempt_history(root)
+    binding = _fixed_result_binding(root, outcome_semantics=True)
+    _require(binding is not None and binding["sha256"] == REMAINDER_PRIOR, "accepted remainder predecessor changed")
+    result = _json(_read(root / binding["path"]))
+    _require(old["attempts"] == old["cliLaunches"] == 118 and
+             result["attemptCount"] == result["cliLaunchCount"] == 1 and result["cumulativeAttemptCount"] == 119,
+             "accepted remainder history must total 119")
+    identities = [*old["identities"], *[[c["ordinal"], c["materializationCommitmentSha256"]] for c in result["caseResults"]]]
+    _require(len(identities) == 119 and len({tuple(x) for x in identities}) == 119, "accepted remainder history overlaps")
+    return {"attempts": 119, "cliLaunches": 119, "identities": identities,
+            "historical": old, "resultSha256s": REMAINDER_PRIORS}
+
+
+def outcome_attempt_history(root: Path) -> dict[str, Any]:
+    old = empty_discovery_attempt_history(root)
+    binding = _fixed_result_binding(root, empty_discovery=True)
+    _require(binding is not None and binding["sha256"] == OUTCOME_PRIOR,
+             "outcome-definition predecessor changed")
+    result = _json(_read(root / binding["path"]))
+    _require(result["attemptCount"] == result["cliLaunchCount"] == 1 and
+             result["cumulativeAttemptCount"] == 118 and
+             [x["status"] for x in result["caseResults"]] == ["FAIL"] + ["NOT-RUN"] * 5,
+             "stopped native-empty history changed")
+    identities = {tuple(x) for x in old["identities"]}
+    item = result["caseResults"][0]
+    key = (item["ordinal"], item["materializationCommitmentSha256"])
+    _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+             "native-empty attempt overlaps history")
+    identities.add(key)
+    _require(len(identities) == 118, "outcome-definition history must retain 118 attempts")
+    return {"attempts": 118, "cliLaunches": 118, "identities": [list(k) for k in sorted(identities)],
+            "resultSha256s": OUTCOME_PRIORS}
+
+
+def _routing_tail_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / "evals/no-hook-observation/historical-protocols/routing-tail-1/codex-native-protocol-v2.json")
+    _require(hashlib.sha256(data).hexdigest() == "58ff3bb5fc35d4be3c17d7752f95560d43b7a78a362ad5e38a4028f45e3da6af", "recorded routing-tail protocol bytes changed")
+    return _json(data)
+
+
+def _routing_tail_binding(root: Path) -> dict[str, Any] | None:
+    entry = _json(_read(root / HISTORY_RELATIVE))["independentRoutingTail"]
+    _require(set(entry) == {"windowId", "protocolDigest", "results"} and
+             entry["windowId"] == ROUTING_TAIL["windowId"] and
+             entry["protocolDigest"] == (_protocol(root) if entry["protocolDigest"] == _protocol(root)["protocolDigest"] else _routing_tail_protocol(root))["protocolDigest"] and
+             type(entry["results"]) is list and len(entry["results"]) <= 1,
+             "independent routing registration changed")
+    if not entry["results"]:
+        return None
+    binding = entry["results"][0]
+    _require(set(binding) == {"path", "sha256", "implementationCommit", "implementationTree"} and
+             binding["path"] == "evals/no-hook-observation/results/codex-native-" + binding["sha256"] + ".json",
+             "independent routing result owner changed")
+    data = _read(root / binding["path"])
+    result = _json(data)
+    _require(hashlib.sha256(data).hexdigest() == binding["sha256"] and
+             not validate_native_result(result, root) and result["runMode"] == "actual" and
+             result.get("executionSegment", {}).get("kind") == ROUTING_TAIL["windowId"] and
+             result["executionSource"] == {"commit": binding["implementationCommit"], "tree": binding["implementationTree"]},
+             "independent routing result identity changed")
+    return binding
+
+
+def _routing_tail_registration(root: Path, run_root: Path) -> dict[str, Any]:
+    record = _json(_read(run_root.parent / (ROUTING_TAIL["windowId"] + ".json")))
+    _require(set(record) == {"contract", "protocolDigest", "attemptHistory", "executionSource", "previousRunRoot"} and
+             record["contract"] == ROUTING_TAIL and record["protocolDigest"] == _protocol(root)["protocolDigest"] and
+             record["attemptHistory"] == routing_tail_attempt_history(root) and
+             Path(record["previousRunRoot"]).parent == run_root.parent and
+             Path(record["previousRunRoot"]).name == REVISION_FOUR_ACCEPTANCE["routingRunName"] and
+             run_root.name == ROUTING_TAIL["runName"], "independent routing preparation registration changed")
+    return record
+
+
+def prepare_routing_tail(root: Path, run_root: Path, previous: Path, bundle_root: Path, *,
+                         authorize_install: bool = False, authorize_copy: bool = False, runner=None) -> None:
+    from . import no_hook_clarification as replies
+    _require(authorize_install and authorize_copy, "independent routing preparation requires explicit authorization")
+    _require(_routing_tail_binding(root) is None, "independent routing window already recorded")
+    chain = routing_tail_attempt_history(root)
+    old = _revision_four_auth_source(root, previous, revision_four=True)
+    _require(run_root.parent == previous.parent and run_root.name == ROUTING_TAIL["runName"] and
+             not run_root.exists() and not run_root.is_symlink(), "independent routing requires its fresh sibling")
+    source = _execution_source(root) if runner is None else None
+    executable = Path(old["executable"])
+    legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
+    _require(package_identity(bundle_root) == _protocol(root)["bundle"]["packageSha256"], "routing tail package changed")
+    replies._login(executable, _case_paths(previous, 10), bounded_process if runner is None else runner)
+    _exclusive(run_root.parent / (ROUTING_TAIL["windowId"] + ".json"), _bytes({
+        "contract": ROUTING_TAIL, "protocolDigest": _protocol(root)["protocolDigest"],
+        "attemptHistory": chain, "executionSource": source, "previousRunRoot": str(previous)}))
+    prepare_native_run(root, run_root, bundle_root, executable, authorize_install=True, runner=runner, routing_tail=True)
+    _exclusive(run_root / "independent-routing-preparation.json", _bytes(_routing_tail_registration(root, run_root)))
+    _copy_test_auth(run_root, 10, 12, create=True, source_root=previous)
+
+
+def _verify_routing_tail(root: Path, run_root: Path) -> dict[str, Any]:
+    record = _routing_tail_registration(root, run_root)
+    _require(_routing_tail_binding(root) is None and
+             _json(_read(run_root / "independent-routing-preparation.json")) == record,
+             "independent routing preparation changed or window consumed")
+    for name in ["batch-started.json", "normalized-result.json", *[f"attempt-{i:02d}.json" for i in ROUTING_TAIL["ordinals"]]]:
+        _require(not (run_root / name).exists() and not (run_root / name).is_symlink(), "independent routing already attempted")
+    for ordinal in range(1, 12):
+        paths = _case_paths(run_root, ordinal)
+        _require(not paths["case"].exists() and not paths["case"].is_symlink(), "out-of-scope routing state exists")
+    return record["attemptHistory"]
+
+
+def completed_fixed_routing(root: Path, previous: Path, *, simulated: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> tuple[dict, dict]:
+    """Only a fully closed A batch may transfer authentication to B."""
+    registration = _fixed_registration(root, previous.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)
+    _require(previous.name == contract["routingRunName"], "clarification predecessor is not fixed routing")
+    data = _read(previous / "normalized-result.json")
+    result = _json(data)
+    _require(not validate_native_result(result, root) and
+             result["runMode"] == ("simulated" if simulated else "actual") and
+             result["status"] in ({"INCOMPLETE"} if simulated else {"PASS", "FAIL"}) and
+             result.get("executionSegment", {}).get("kind") == _fixed_kind(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation) and
+             result["attemptCount"] == result["cliLaunchCount"] == len(contract["routingOrdinals"]) and result["cumulativeAttemptCount"] == contract["priorAttempts"] + len(contract["routingOrdinals"]) and
+             result["executionSource"] == registration["executionSource"],
+             "routing reliability or complete-set prerequisite failed")
+    _require(not empty_discovery or result["caseResults"][0]["status"] == "PASS", "A11 did not pass; reply window closed")
+    _require(not accepted_remainder or all(c["status"] == "PASS" for c in result["caseResults"]),
+             "new routing non-PASS closes reply handoff")
+    state = _json(_read(previous / STATE_NAME))
+    _require(state["protocolDigest"] == result["protocolDigest"] and
+             state["materializationSeed"] == result["materializationSeed"] and state["runMode"] == result["runMode"] and
+             _json(_read(previous / "batch-started.json")) == {"protocolDigest": result["protocolDigest"]},
+             "fixed routing execution markers changed")
+    fixtures = _input(root, _protocol(root), "fixtureMatrix")
+    for item in result["caseResults"]:
+        ordinal = item["ordinal"]
+        _require(_json(_read(previous / f"attempt-{ordinal:02d}.json")) == {
+            "ordinal": ordinal, "caseId": item["caseId"], "protocolDigest": result["protocolDigest"]},
+            "fixed routing attempt marker changed")
+        facts = item["executionDiagnostics"]
+        _require(item["status"] in {"PASS", "FAIL"} and facts["returnCode"] == 0 and
+                 facts["inputFullyDelivered"] and facts["finalOutputVerified"] and
+                 not any(facts[k] for k in ("cleanupFailed", "timedOut", "observerTerminated")) and
+                 item["evidenceExtraction"]["postcheck"] == "valid", "routing did not close normally")
+        paths = _case_paths(previous, ordinal)
+        _verify_config(paths, previous / "marketplace", ordinal != 11)
+        _verify_discovery(paths, ordinal != 11)
+        _require(fixture_identity(paths["workspace"], _definition(fixtures, ordinal)) == item["fixtureAfterSha256"] and
+                 (package_identity(paths["package"]) if ordinal != 11 else None) == item["packageAfterSha256"],
+                 "fixed predecessor public inputs changed")
+        _require(not (previous / f"final-message-{ordinal:02d}.json").exists(), "routing final output remains")
+    chain = {"attempts": contract["priorAttempts"] + len(contract["routingOrdinals"]), "cliLaunches": contract["priorCliLaunches"] + len(contract["routingOrdinals"]),
+             "historical": _fixed_attempt_history(root, revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation),
+             "routingResultSha256": hashlib.sha256(data).hexdigest()}
+    return state, chain
 
 
 def _current_assessment_history(root: Path, previous: Path) -> dict[str, Any]:
@@ -1218,7 +2183,19 @@ def _verify_material_segment(root: Path, run_root: Path) -> None:
 
 
 def _input(root: Path, protocol: Mapping[str, Any], name: str) -> Any:
-    return _json(_read(root / protocol["inputs"][name]["path"]))
+    binding = protocol["inputs"][name]
+    relative = Path(binding["path"])
+    # The retained assessment revision shares logical input names with the
+    # current measurement. Resolve only its exact, immutable input bindings.
+    if name in {"modelResponseSchema", "promptEnvelope"}:
+        frozen = _fixed_protocol(root)["inputs"][name]
+        if binding == frozen:
+            relative = FIXED_PROTOCOL_ARCHIVE / relative.name
+        if binding == _outcome_prior_protocol(root)["inputs"][name]:
+            relative = OUTCOME_ARCHIVE / relative.name
+    data = _read(root / relative)
+    _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "native input bytes changed")
+    return _json(data)
 
 
 def _case_paths(run_root: Path, ordinal: int) -> dict[str, Path]:
@@ -1287,6 +2264,7 @@ def _config_args(paths: Mapping[str, Path], executable: Path, marketplace: Path,
         f'sqlite_home={quote(str(paths["state"]))}', f'log_dir={quote(str(paths["state"]))}',
         'model_reasoning_effort="medium"', 'web_search="disabled"', 'mcp_servers={}',
         'skills.bundled.enabled=false',
+        'include_environment_context=false', 'include_permissions_instructions=true',
         'shell_environment_policy.inherit="none"',
         'shell_environment_policy.set={PATH="/usr/bin:/bin",LANG="C.UTF-8",LC_ALL="C.UTF-8"}',
         f'permissions={{native-case={{filesystem={{{fs_table}}},network={{enabled=false}}}}}}',
@@ -1400,13 +2378,40 @@ def explicit_skill_selection(request: str, catalog: Sequence[Mapping[str, Any]])
             "mentionSha256": hashlib.sha256(mention.encode("utf-8")).hexdigest()}
 
 
-def _case_explicit_selection(root: Path, request: str, ordinal: int) -> dict[str, Any] | None:
+def _case_explicit_selection(root: Path, request: str, ordinal: int, *,
+                             protocol_digest: str | None = None) -> dict[str, Any] | None:
     # Availability comes from the independently bound fixture/discovery mode,
     # not the ordinal, expected route or expected discovery outcome.
     fixtures = _json(_read(root / legacy.FIXTURES_RELATIVE))
     _definition(fixtures, ordinal)  # Validate the same bound fixture/discovery record as production.
     installed = fixtures["cases"][ordinal - 1]["pluginState"] == "installed-derived-profile"
-    catalog = bound_native_skill_catalog(root) if installed else []
+    # Recorded selection identities use their original immutable inventory.
+    # This table changes no current discovery, invocation grammar or route.
+    recorded_sources = {
+        'sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3': (_merged_protocol, 9),
+        'sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7': (_fixed_protocol, 14),
+        'sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c': (_revision_four_protocol, 14),
+        'sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9': (_routing_tail_protocol, 14),
+        'sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b': (_host_context_protocol, 14),
+        'sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290': (_outcome_prior_protocol, 14),
+        'sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c': (_remainder_prior_protocol, 14),
+        'sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04': (_accepted_remainder_protocol, 14),
+    }
+    if installed and protocol_digest in recorded_sources:
+        read_protocol, revision = recorded_sources[protocol_digest]
+        prior = read_protocol(root)
+        _require(prior["protocolDigest"] == protocol_digest, "historical selection protocol changed")
+        data = _read(root / f"evidence/profiles/openai-hook-independent-v1/bundle-revision-{revision}.json")
+        _require(hashlib.sha256(data).hexdigest() == prior["inputs"]["staticBundleEvidence"]["sha256"],
+                 "historical selection package evidence changed")
+        manifest = _json(data)["bundleManifest"]
+        namespace = manifest["derivedPluginManifest"]["fields"]["name"]
+        catalog = [{"name": namespace + ":" + Path(item["path"]).parent.name,
+                    "localName": Path(item["path"]).parent.name, "path": item["path"],
+                    "sha256": item["sha256"], "enabled": True}
+                   for item in manifest["runtimeFiles"] if item["kind"] == "skill"]
+    else:
+        catalog = bound_native_skill_catalog(root) if installed else []
     return explicit_skill_selection(request, catalog)
 
 
@@ -1419,8 +2424,11 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     old envelopes without it retain their original prompt bytes.
     """
     envelope = arguments["prompt_envelope"]
-    if envelope.get("assessmentRevision") == 3:
-        for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+    if envelope.get("assessmentRevision") in {3, 4, 5}:
+        fields = ("selectedRoutes", "discoveryOutcome", "clarificationCount")
+        if envelope["assessmentRevision"] in {4, 5}:
+            fields += ("usingAxiomFrontDoorObserved",)
+        for field in fields:
             definition = arguments["model_schema"]["properties"][field].get("description")
             _require(type(definition) is str and definition and
                      envelope["fixedInstructions"].count(definition) == 1,
@@ -1428,7 +2436,7 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     material = legacy.materialize_case_contract(**arguments)
     delivery = envelope.get("materialDelivery")
     if delivery is not None:
-        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") in {2, 3},
+        _require(delivery == MATERIAL_DELIVERY and envelope.get("assessmentRevision") in {2, 3, 4, 5},
                  "unsupported material delivery revision")
         binding = envelope["fixtureMatrix"]
         _require(set(binding) == {"path", "sha256"} and
@@ -1452,7 +2460,8 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     invocation = envelope.get("explicitInvocation")
     if invocation is not None:
         _require(invocation == EXPLICIT_INVOCATION, "unsupported explicit invocation transport")
-        selection = _case_explicit_selection(root, arguments["request"], arguments["ordinal"])
+        selection = _case_explicit_selection(root, arguments["request"], arguments["ordinal"],
+                                             protocol_digest=arguments["protocol_digest"])
         if selection is not None:
             prefix, marker, request = material.prompt_bytes.partition(b"\nUser request:\n")
             _require(bool(marker), "native request boundary missing")
@@ -1477,7 +2486,7 @@ def materialize_native_case_contract(*, root: Path = REPOSITORY_ROOT, **argument
     _require(props["selectedRoutes"].pop("uniqueItems") is True, "local route uniqueness changed")
     # Model-side definitions are uniformly delivered by the bound envelope;
     # these local schema annotations are documentation, not API keywords.
-    for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount"):
+    for field in ("selectedRoutes", "discoveryOutcome", "clarificationCount", "usingAxiomFrontDoorObserved"):
         props[field].pop("description", None)
     validate_response_transport(schema)
     data = _bytes(schema)
@@ -1683,6 +2692,39 @@ def package_identity(package: Path) -> str:
     return hashlib.sha256(legacy._canonical_json(records)).hexdigest()
 
 
+def _auth_source_package_identity(root: Path, package: Path, result: dict) -> str:
+    recorded = _host_context_protocol(root)
+    _require(result["protocolDigest"] == recorded["protocolDigest"], "authentication source protocol changed")
+    evidence = _read(root / "evidence/profiles/openai-hook-independent-v1/bundle-revision-14.json")
+    _require(hashlib.sha256(evidence).hexdigest() == "0e34cb8c805b301343e989453f20e2b82ed0474e33fdc68f7502b393dbe1012a",
+             "authentication source public inventory changed")
+    manifest = _json(evidence)["bundleManifest"]
+    _ordinary_directory(package)
+    allowed = {item["path"] for item in manifest["runtimeFiles"]} | {"BUNDLE-MANIFEST.json", ".codex-plugin/plugin.json"}
+    directories = {parent.as_posix() for name in allowed for parent in Path(name).parents if parent != Path(".")}
+    seen = set()
+    # Check names/types before reading any package file, including unknown extras.
+    stack = [package]
+    while stack:
+        directory = stack.pop()
+        for entry in directory.iterdir():
+            relative = entry.relative_to(package).as_posix()
+            meta = entry.lstat()
+            if stat.S_ISDIR(meta.st_mode):
+                _require(relative in directories, "unknown authentication-source package directory")
+                stack.append(entry)
+            else:
+                _require(relative in allowed and stat.S_ISREG(meta.st_mode) and meta.st_nlink == 1, "unknown authentication-source package file")
+                seen.add(relative)
+    _require(seen == allowed and _json(_read(package / "BUNDLE-MANIFEST.json")) == manifest,
+             "authentication-source package inventory changed")
+    records = legacy.snapshot_tree(package)
+    identity = hashlib.sha256(legacy._canonical_json(records)).hexdigest()
+    _require(identity == recorded["bundle"]["packageSha256"], "authentication-source public package bytes changed")
+    return identity
+
+
+
 def _successful(capture: Mapping[str, Any], purpose: str) -> bytes:
     facts = _capture_facts(capture)
     if facts["category"] != "none":
@@ -1723,7 +2765,7 @@ def _verify_discovery(paths: Mapping[str, Path], installed: bool) -> None:
 def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable: Path, *,
                        authorize_install: bool = False,
                        runner: Callable[..., Mapping[str, Any]] | None = None,
-                       material_segment: bool = False) -> dict[str, Any]:
+                       material_segment: bool = False, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> dict[str, Any]:
     """Prepare once, before login. Failed preparations are retained, never retried."""
     _require(authorize_install is True, "explicit local-install authorization is required")
     protocol = _protocol(root)
@@ -1735,6 +2777,7 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     _require(not run_root.is_relative_to(root.resolve()), "native test root must be repository-external")
     run_root.mkdir(mode=0o700)
     actual = runner is None
+    _require(not routing_tail or not material_segment, "independent routing cannot reuse a material segment")
     invoke = bounded_process if runner is None else runner
     _exclusive(run_root / "preparation-started.json", _bytes({"protocolDigest": protocol["protocolDigest"]}))
     marketplace = run_root / "marketplace"
@@ -1758,6 +2801,8 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     envelope = _input(root, protocol, "promptEnvelope")
     prepared = []
     for ordinal, case in enumerate(cases, 1):
+        if (routing_tail and ordinal not in ROUTING_TAIL["ordinals"]) or (empty_discovery and ordinal not in EMPTY_DISCOVERY_ACCEPTANCE["routingOrdinals"]) or (outcome_semantics and ordinal not in OUTCOME_ACCEPTANCE["routingOrdinals"]) or (accepted_remainder and ordinal not in ACCEPTED_REMAINDER["routingOrdinals"]) or (traceable_confirmation and ordinal not in TRACEABLE_CONFIRMATION["routingOrdinals"]) or (goal_preservation and ordinal not in GOAL_PRESERVATION["routingOrdinals"]):
+            continue
         paths = _case_paths(run_root, ordinal)
         for name in ("case", "home", "user", "workspace", "state", "tmp"):
             paths[name].mkdir(mode=0o700)
@@ -1792,8 +2837,14 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
             paths["discovery"].symlink_to(paths["package"] / "skills", target_is_directory=True)
         _verify_config(paths, marketplace, installed)
         _verify_discovery(paths, installed)
+        if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+            from .no_hook_discovery import query_once
+            query_once(paths, executable, marketplace, installed, _definition(fixtures, ordinal))
         prepared.append({"ordinal": ordinal, "fixtureSha256": fixture,
                          "packageSha256": expected_package if installed else None})
+    if traceable_confirmation or goal_preservation:
+        order = (GOAL_PRESERVATION if goal_preservation else TRACEABLE_CONFIRMATION)["routingOrdinals"]
+        prepared.sort(key=lambda item: order.index(item["ordinal"]))
     state = {"schemaVersion": "2", "protocolDigest": protocol["protocolDigest"],
              "runMode": "actual" if actual else "simulated", "executable": str(executable),
              "materializationSeed": seed.hex(), "cases": prepared}
@@ -1801,7 +2852,7 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     return state
 
 
-def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False, assessment_remainder: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False, assessment_remainder: bool = False, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
     state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup) / ("catalog-preparation.json" if resume_stderr_review else "preparation.json")
@@ -1811,8 +2862,9 @@ def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: 
     _require(state["schemaVersion"] == "2" and state["protocolDigest"] == protocol["protocolDigest"],
              "prepared input identity changed")
     _require(state["runMode"] in {"actual", "simulated"}, "unknown preparation source")
-    _require(type(state["cases"]) is list and len(state["cases"]) == 16, "incomplete preparation")
-    for ordinal, item in enumerate(state["cases"], 1):
+    ordinals = GOAL_PRESERVATION["routingOrdinals"] if goal_preservation else TRACEABLE_CONFIRMATION["routingOrdinals"] if traceable_confirmation else ACCEPTED_REMAINDER["routingOrdinals"] if accepted_remainder else OUTCOME_ACCEPTANCE["routingOrdinals"] if outcome_semantics else EMPTY_DISCOVERY_ACCEPTANCE["routingOrdinals"] if empty_discovery else ROUTING_TAIL["ordinals"] if routing_tail else list(range(1, 17))
+    _require(type(state["cases"]) is list and len(state["cases"]) == len(ordinals), "incomplete preparation")
+    for ordinal, item in zip(ordinals, state["cases"]):
         _require(set(item) == {"ordinal", "fixtureSha256", "packageSha256"} and item["ordinal"] == ordinal,
                  "prepared case records are not canonical")
     _require(len(bytes.fromhex(state["materializationSeed"])) == 32, "invalid materialization seed")
@@ -2220,7 +3272,10 @@ def _copy_test_auth(run_root: Path, source_ordinal: int, target_ordinal: int, *,
     this file in place. After abnormal client termination the batch stops, so no
     subsequent case receives a possibly partial refresh.
     """
-    _require(1 <= source_ordinal <= CASE_COUNT and source_ordinal != target_ordinal and
+    separate_source = (create and source_root is not None and not os.path.samefile(
+                       _ordinary_directory(source_root), _ordinary_directory(run_root)))
+    _require(1 <= source_ordinal <= CASE_COUNT and
+             (source_ordinal != target_ordinal or separate_source) and
              (2 <= target_ordinal <= CASE_COUNT or
               (target_ordinal == 1 and create and source_root is not None and source_root != run_root)),
              "invalid test-auth handoff")
@@ -2710,7 +3765,8 @@ def _blank_case(case: Mapping[str, Any], materialized: legacy.CaseMaterializatio
             "diagnostic": "not-run", "cliLaunchCount": 0, "attemptCount": 0, "modelRequestCount": None,
             "privateCapture": _private_capture(), "operatorStderrCapture": _stderr_capture(),
             "operatorReadCapture": _private_capture(), "publicReads": [],
-            "explicitInvocation": _case_explicit_selection(root, case["request"], materialized.ordinal),
+            "explicitInvocation": _case_explicit_selection(root, case["request"], materialized.ordinal,
+                                                          protocol_digest=protocol["protocolDigest"]),
             "executionDiagnostics": _diagnostics(),
             "evidenceExtraction": {"stream": "not-checked", "response": "not-checked", "postcheck": "not-checked"},
             "installation": "not-checked", "authentication": "not-checked",
@@ -2726,9 +3782,16 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                            continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False,
                            assessment_batch: bool = False, assessment_remainder: bool = False,
                            material_segment: bool = False, current_assessment: bool = False,
+                           fixed_acceptance: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False, routing_tail: bool = False,
+                           semantic_review=None,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
+    _require(sum((fixed_acceptance, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation, routing_tail)) <= 1, "select one fixed window")
+    fixed_acceptance = fixed_acceptance or revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
+    _require(callable(semantic_review) if traceable_confirmation or goal_preservation else semantic_review is None,
+             "traceable confirmation requires public-message review between observations")
     _require(not ((operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup) and private_diagnostics), "select one private capture format")
     _require(not resume_stderr_review or read_followup, "review resume requires the same read ledger")
     if assessment_batch:
@@ -2739,15 +3802,21 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     _require(not material_segment or (assessment_batch and not assessment_remainder), "material segment requires its own assessment mode")
     _require(not current_assessment or (assessment_batch and not material_segment and not assessment_remainder),
              "current assessment cannot reuse a historical segment")
-    current_chain = _verify_current_assessment(root, run_root) if current_assessment else None
+    _require(not fixed_acceptance or (assessment_batch and not any((current_assessment, material_segment, assessment_remainder))),
+             "fixed acceptance cannot reuse a historical segment")
+    _require(not routing_tail or (assessment_batch and not any((current_assessment, material_segment, assessment_remainder))),
+             "independent routing cannot reuse a historical segment")
+    current_chain = (_verify_routing_tail(root, run_root) if routing_tail else
+                     _verify_fixed_acceptance(root, run_root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation) if fixed_acceptance else
+                     _verify_current_assessment(root, run_root) if current_assessment else None)
     if material_segment:
         _verify_material_segment(root, run_root)
     _require(not assessment_remainder or assessment_batch, "assessment remainder requires assessment mode")
     partial = _verify_assessment_remainder(root, run_root)[0] if assessment_remainder else (_verify_review_resume(root, run_root)[0] if resume_stderr_review else None)
     prefix_count = 10 if assessment_remainder else REVIEWED_PREFIX_COUNT
-    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup, stderr_followup=stderr_followup, read_followup=read_followup, resume_stderr_review=resume_stderr_review, assessment_remainder=assessment_remainder)
+    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup, stderr_followup=stderr_followup, read_followup=read_followup, resume_stderr_review=resume_stderr_review, assessment_remainder=assessment_remainder, routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)
     ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup)
-    prior_count = current_chain["attempts"] if current_assessment else 31 if material_segment else 20 if assessment_batch else 7 if read_followup else 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
+    prior_count = current_chain["attempts"] if current_assessment or fixed_acceptance or routing_tail else 31 if material_segment else 20 if assessment_batch else 7 if read_followup else 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
     if read_followup:
         _verify_seven_prior_attempts(run_root)
     elif stderr_followup:
@@ -2765,12 +3834,22 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     executable = Path(state["executable"])
     frozen = legacy.freeze_executable(executable, protocol["cli"]["sha256"])
     actual = process_runner is None and state["runMode"] == "actual"
+    if fixed_acceptance or routing_tail:
+        _require(state["runMode"] == ("actual" if process_runner is None else "simulated") and reuse_test_auth,
+                 "fixed preparation mode or serial authentication changed")
     _require(not actual or assessment_batch, "actual execution requires the authorized assessment candidate")
-    _require(not actual or current_assessment, "actual execution requires the fixed revision-3 assessment")
-    _require(not actual or protocol["executionWindow"]["state"] != "closed",
+    _require(not actual or fixed_acceptance or routing_tail, "actual execution requires the newly authorized fixed acceptance")
+    _require(not actual or protocol["independentRoutingTail" if routing_tail else _fixed_history_key(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation) if fixed_acceptance else "executionWindow"]["state"] != "closed",
              "actual execution window closed")
-    _require(not actual or not _json(_read(root / HISTORY_RELATIVE))["results"],
+    _require(not actual or fixed_acceptance or routing_tail or not _json(_read(root / HISTORY_RELATIVE))["results"],
              "current assessment already recorded; execution window consumed")
+    execution_source = _execution_source(root) if actual else None
+    if routing_tail:
+        _require(_routing_tail_registration(root, run_root)["executionSource"] == execution_source,
+                 "independent routing execution commit changed after preparation")
+    if fixed_acceptance:
+        _require(_fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation)["executionSource"] == execution_source,
+                 "fixed execution commit changed after preparation")
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
     operator = OperatorDiagnostics(ledger, reviewed_prefix=partial["caseResults"][:prefix_count] if partial else ()) if operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup or assessment_batch else None
     invoke = bounded_process if process_runner is None else process_runner
@@ -2780,21 +3859,39 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     envelope = _input(root, protocol, "promptEnvelope")
     taxonomy = _input(root, protocol, "taxonomy")
     seed = bytes.fromhex(state["materializationSeed"])
+    ordinals = contract["routingOrdinals"] if fixed_acceptance else ROUTING_TAIL["ordinals"] if routing_tail else list(range(1, 17))
+    selected_cases = [cases[i - 1] for i in ordinals]
     materials = [materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=i,
         protocol_digest=protocol["protocolDigest"], model_schema=schema,
-        prompt_envelope=envelope, request=case["request"]) for i, case in enumerate(cases, 1)]
+        prompt_envelope=envelope, request=case["request"]) for i, case in zip(ordinals, selected_cases)]
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i), root=root)
-               for i, (case, material) in enumerate(zip(cases, materials), 1)]
+               for i, case, material in zip(ordinals, selected_cases, materials)]
+    if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+        for record in results:
+            record["visibleReplies"] = _assessment_public_replies([], "")
+    if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+        for record in results:
+            record["nativeDiscovery"] = None
     if partial:
         results[:prefix_count] = partial["caseResults"][:prefix_count]
         _require(assessment_remainder or _read(ledger / "catalog-case-06-review.json") == _read(root / REVIEW_RELATIVE),
                  "prepared same-attempt review changed")
     schema_prefix = "assessment-remainder-response-schema" if assessment_remainder else "catalog-response-schema" if partial else "response-schema"
-    if reuse_test_auth and not (material_segment or current_assessment):
+    if reuse_test_auth and not (material_segment or current_assessment or fixed_acceptance or routing_tail):
         _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else {"protocolDigest": ASSESSMENT_PROTOCOL_DIGEST} if assessment_remainder else protocol)
     _exclusive(ledger / ("assessment-remainder-started.json" if assessment_remainder else "catalog-remainder-started.json" if partial else "batch-started.json"),
                _bytes({"protocolDigest": protocol["protocolDigest"]}))
-    for ordinal, (case, material, record) in enumerate(zip(cases, materials, results), 1):
+    confirmation = _new_traceable_results(root, goal_preservation=goal_preservation) if traceable_confirmation or goal_preservation else None
+    if goal_preservation:
+        _exclusive(run_root / "reply-gate-12.json", _bytes({"executionSource": execution_source,
+            "protocolDigest": protocol["protocolDigest"], "caseResults": results, "goalPreservation": confirmation}))
+        from . import no_hook_clarification as replies
+        confirmation["clarificationResults"][0] = replies.confirmation_replies(
+            root, run_root, 12, semantic_review, goal_preservation=True, runner=process_runner)[0]
+    prepared_by_ordinal = {item["ordinal"]: item for item in state["cases"]}
+    for ordinal, case, material, record in zip(ordinals, selected_cases, materials, results):
+        if goal_preservation and confirmation["clarificationResults"][0]["status"] != "PASS":
+            break
         if (material_segment and ordinal < 10) or (partial and ordinal <= prefix_count):
             continue
         paths = _case_paths(run_root, ordinal)
@@ -2803,6 +3900,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         diagnostic = "input-changed"
         phase = "precheck"
         events = _diagnostics()
+        visible_messages = []
         final_output = ledger / f"final-message-{ordinal:02d}.json"
         final_output_identity = None
         try:
@@ -2812,22 +3910,39 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             _verify_config(paths, run_root / "marketplace", installed)
             _verify_discovery(paths, installed)
             record["fixtureBeforeSha256"] = fixture_identity(paths["workspace"], definition)
-            _require(record["fixtureBeforeSha256"] == state["cases"][ordinal - 1]["fixtureSha256"], "prepared fixture changed")
+            _require(record["fixtureBeforeSha256"] == prepared_by_ordinal[ordinal]["fixtureSha256"], "prepared fixture changed")
             if installed:
                 record["packageBeforeSha256"] = package_identity(paths["package"])
-                _require(record["packageBeforeSha256"] == state["cases"][ordinal - 1]["packageSha256"] ==
+                _require(record["packageBeforeSha256"] == prepared_by_ordinal[ordinal]["packageSha256"] ==
                          protocol["bundle"]["packageSha256"], "prepared plugin changed")
             record["installation"] = "verified" if installed else "absent"
             record["modelMetadataBefore"] = _model_metadata(paths)
             _require(_read((ledger / f"{schema_prefix}-{ordinal:02d}.json") if assessment_remainder or followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else
                            paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
+            if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                from .no_hook_discovery import prepared_discovery, relay_empty_discovery
+                entry, summary = prepared_discovery(paths, executable, run_root / "marketplace", installed, definition)
+                material = relay_empty_discovery(material, entry)
+                fields = _blank_case(case, material, seed, protocol, definition, root=root)
+                for field in ("casePromptSha256", "materializationCommitmentSha256"):
+                    record[field] = fields[field]
+                record["nativeDiscovery"] = summary
             diagnostic = "authentication-unavailable"
             phase = "login"
-            if reuse_test_auth and ordinal > 1 and not (material_segment and ordinal == 10):
+            if goal_preservation and ordinal == 12:
+                source_root = run_root.parent / (GOAL_PRESERVATION["clarificationRunName"] + "-stage-12")
+                _require(confirmation["clarificationResults"][0]["status"] == "PASS", "B12 must pass before A12 handoff")
+                _copy_test_auth(run_root, 12, 12, create=True, source_root=source_root)
+            if reuse_test_auth and (ordinals.index(ordinal) > 0 if traceable_confirmation or goal_preservation else ordinal > ordinals[0]) and not (material_segment and ordinal == 10):
                 # The prior iteration only advances after normal exit and closed
                 # output/input validation. Never refill from the initial stale copy.
-                _copy_test_auth(run_root, 9 if assessment_remainder and ordinal == 11 else ordinal - 1, ordinal, create=material_segment or current_assessment)
+                if traceable_confirmation and ordinal == 6:
+                    source_root = run_root.parent / (TRACEABLE_CONFIRMATION["clarificationRunName"] + "-after-13")
+                    _require(confirmation["clarificationResults"][0]["status"] == "PASS", "B13 must pass before A6 handoff")
+                    _copy_test_auth(run_root, 13, ordinal, create=True, source_root=source_root)
+                else:
+                    _copy_test_auth(run_root, 9 if assessment_remainder and ordinal == 11 else ordinals[ordinals.index(ordinal)-1] if accepted_remainder or traceable_confirmation or goal_preservation else ordinal - 1, ordinal, create=material_segment or current_assessment or fixed_acceptance or routing_tail)
             if reuse_test_auth:
                 # Validate Case 1 as well as copied destinations before handing
                 # the path to the official client; never inspect credential bytes.
@@ -2863,6 +3978,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                     summaries.event(ordinal, raw)
                 try:
                     _observe_line(raw, readable, paths["workspace"], events)
+                    if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                        event = legacy._parse_json_line(raw)
+                        if event.get("type") == "item.completed" and event.get("item", {}).get("type") == "agent_message":
+                            visible_messages.append(event["item"]["text"])
                 except NativeDiagnosticError:
                     if assessment_batch and operator is not None and events["streamAssertion"] in READ_REJECTIONS:
                         operator.rejected_command(raw)
@@ -2911,6 +4030,12 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             record["evidenceExtraction"]["response"] = "invalid"
             _require(type(stream.structured_result) is dict, "closed stream has no structured response")
             _check_final_output(final_output, final_output_identity, stream.structured_result)
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                from . import no_hook_clarification as replies
+                _require(visible_messages, "visible routing response missing")
+                replies._final_output(final_output, final_output_identity, visible_messages[-1])
+                retained = _assessment_public_replies(visible_messages, material.token)
+                _require(retained["retentionComplete"], "visible routing retention incomplete")
             facts["finalOutputVerified"] = True
             observed = dict(stream.structured_result)
             _validate_native_response(observed, schema, material.token)
@@ -2969,6 +4094,8 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             del error
             break
         finally:
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                record["visibleReplies"] = _assessment_public_replies(visible_messages, material.token)
             if final_output_identity is not None:
                 try:
                     metadata = final_output.lstat()
@@ -3018,26 +4145,55 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                     facts["cleanupFailed"] = True
                     _first_failure(facts, "cleanup", "cleanup-failed")
                     record.update(status="INCOMPLETE", diagnostic=facts["category"])
-        if record["status"] == "INCOMPLETE":
+        if traceable_confirmation or goal_preservation:
+            if record["status"] != "PASS":
+                break
+            review = _review_public_case(record, semantic_review)
+            confirmation["routingMessageReviews"].append(review)
+            if review["verdict"] != "PASS":
+                break
+            if ordinal in ([3] if goal_preservation else [13, 16]):
+                checkpoint = {"executionSource": execution_source, "protocolDigest": protocol["protocolDigest"],
+                              "caseResults": results, ("goalPreservation" if goal_preservation else "traceableConfirmation"): confirmation}
+                _exclusive(run_root / f"reply-gate-{14 if goal_preservation else ordinal}.json", _bytes(checkpoint))
+                from . import no_hook_clarification as replies
+                captured = replies.confirmation_replies(root, run_root, 14 if goal_preservation else ordinal, semantic_review, goal_preservation=goal_preservation, runner=process_runner)
+                for entry in captured:
+                    index = contract["clarificationOrdinals"].index(entry["ordinal"])
+                    confirmation["clarificationResults"][index] = entry
+                if any(entry["status"] != "PASS" for entry in captured):
+                    break
+        if record["status"] == "INCOMPLETE" or (accepted_remainder and record["status"] != "PASS") or (empty_discovery and ordinal == 11 and record["status"] != "PASS"):
             break
     statuses = [item["status"] for item in results]
     status = "INCOMPLETE" if not actual or any(value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else (
         "FAIL" if "FAIL" in statuses else "PASS")
     result = {"schemaVersion": "2", "diagnosticRevision": 11, "protocolId": PROTOCOL_ID,
               "executionModel": {"model": MODEL, "reasoningEffort": REASONING_EFFORT, "requiredToolMode": "direct"},
-              "priorResultSha256s": CURRENT_PRIOR_RESULTS if current_assessment else ASSESSMENT_PRIOR_RESULTS if assessment_batch else READ_PRIOR_RESULTS[:prior_count],
+              "priorResultSha256s": ROUTING_TAIL_PRIORS if routing_tail else contract["priorResultSha256s"] if fixed_acceptance else CURRENT_PRIOR_RESULTS if current_assessment else ASSESSMENT_PRIOR_RESULTS if assessment_batch else READ_PRIOR_RESULTS[:prior_count],
               "attemptCount": sum(item["attemptCount"] for item in results),
               "cumulativeAttemptCount": prior_count + sum(item["attemptCount"] for item in results),
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
               "authenticationMode": "serial-test-auth-copy" if reuse_test_auth else "independent-official-login",
               "protocolDigest": protocol["protocolDigest"], "runMode": "actual" if actual else "simulated",
-              "hostClaim": actual and status == "PASS", "status": status,
+              "hostClaim": actual and status == "PASS" and not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation), "status": status,
               "materializationSeed": seed.hex(), "cliLaunchCount": sum(item["cliLaunchCount"] for item in results),
               "modelRequestCount": None, "caseResults": results,
-              "materializationCommitmentRoot": legacy._materialization_commitment_root(
-                  [item["materializationCommitmentSha256"] for item in results]),
+              "materializationCommitmentRoot": _native_commitment_root(
+                  [item["materializationCommitmentSha256"] for item in results], routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation),
               "cleanup": "retained-test-state", "descendantClosure": "not-observed"}
-    if current_assessment:
+    if routing_tail:
+        result["executionSource"] = execution_source
+        result["executionSegment"] = _routing_tail_segment(result)
+    elif fixed_acceptance:
+        result["executionSource"] = execution_source
+        result["executionSegment"] = {
+            "kind": _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation), "priorPartialSha256": GOAL_PRESERVATION["priorResultSha256s"][0] if goal_preservation else TRACEABLE_CONFIRMATION["priorResultSha256s"][0] if traceable_confirmation else REMAINDER_PRIOR if accepted_remainder else OUTCOME_PRIOR if outcome_semantics else EMPTY_DISCOVERY_PRIOR if empty_discovery else HOST_CONTEXT_PRIOR if host_context else FIXED_RESULT_SHA256 if revision_four else FIXED_REPLY_PRIORS[-1],
+            "firstNewOrdinal": contract["routingOrdinals"][0], "priorAttemptCount": contract["priorAttempts"],
+            "authenticationSourceOrdinal": contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation else 14,
+            "newAttemptCount": result["attemptCount"], "newCliLaunchCount": result["cliLaunchCount"],
+        }
+    elif current_assessment:
         result["executionSegment"] = {
             "kind": "explicit-invocation-revision-1", "priorPartialSha256": ASSESSMENT_REVISION_THREE["sha256"],
             "firstNewOrdinal": 1, "priorAttemptCount": current_chain["attempts"],
@@ -3064,6 +4220,9 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             "newAttemptCount": sum(item["attemptCount"] for item in results[REVIEWED_PREFIX_COUNT:]),
             "newCliLaunchCount": sum(item["cliLaunchCount"] for item in results[REVIEWED_PREFIX_COUNT:]),
         }
+    if traceable_confirmation or goal_preservation:
+        result["goalPreservation" if goal_preservation else "traceableConfirmation"] = confirmation
+        _finish_traceable_counts(result, goal_preservation=goal_preservation)
     failures = validate_native_result(result, root)
     _require(not failures, "native normalized result failed semantic validation")
     _exclusive(ledger / ("normalized-assessment-remainder-result.json" if assessment_remainder else "normalized-catalog-remainder-result.json" if partial else "normalized-result.json"), _bytes(result))
@@ -3098,24 +4257,96 @@ def _validate_native_schema(value: Any, node: Mapping[str, Any], schema: Mapping
             _validate_native_schema(child, node["items"], schema)
 
 
+def _native_commitment_root(commitments: Sequence[str], *, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, goal_preservation: bool = False) -> str:
+    if not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation):
+        return legacy._materialization_commitment_root(commitments)
+    _require(len(commitments) == (2 if goal_preservation else 5 if traceable_confirmation else 6 if accepted_remainder else 1 if outcome_semantics else 6 if empty_discovery else 5) and all(legacy.SHA256_PATTERN.fullmatch(v) for v in commitments),
+             "independent routing commitment root does not match its registered set")
+    return hashlib.sha256(legacy._canonical_json({"schemaVersion": "1", "scheme": legacy.MATERIALIZATION_SCHEME,
+        "commitments": list(commitments)})).hexdigest()
+
+
+def _routing_tail_segment(document: Mapping[str, Any]) -> dict[str, Any]:
+    return {"kind": ROUTING_TAIL["windowId"], "priorPartialSha256": ROUTING_TAIL_PRIOR,
+            "firstNewOrdinal": 12, "priorAttemptCount": 101, "authenticationSourceOrdinal": 10,
+            "newAttemptCount": document["attemptCount"], "newCliLaunchCount": document["cliLaunchCount"]}
+
+
+def _assessment_public_replies(messages: list[str], token: str) -> dict[str, Any]:
+    from . import no_hook_clarification as replies
+    # The opaque binding is generated public input, not a credential. Exempt
+    # only those exact known bytes from the existing conservative text filter.
+    public_bindings = [token, legacy.PROFILE_SHA256, legacy.GOLDEN_SET_SHA256, legacy.HOST_CASE_SET_SHA256]
+    safe = list(messages)
+    markers = []
+    for i, value in enumerate(public_bindings):
+        marker = f"<public-measurement-binding-{i}>"
+        while any(marker in m for m in messages):
+            marker = "<" + marker + ">"
+        markers.append(marker)
+        if value:
+            safe = [m.replace(value, marker) for m in safe]
+    retained = replies.public_replies(safe)
+    for marker, value in zip(markers, public_bindings):
+        if value:
+            retained["messages"] = [m.replace(marker, value) for m in retained["messages"]]
+    within = sum(len(m.encode("utf-8")) for m in messages) <= replies.REPLY_LIMIT
+    if not within:
+        retained["messages"] = []
+        retained["retentionComplete"] = False
+    return retained
+
+
 def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[str]:
     """Check retained evidence consistency, not authenticity of an editable file."""
     try:
         protocol = _protocol(root)
+        result_sha256 = hashlib.sha256(_bytes(document)).hexdigest()
+        if result_sha256 == MERGED_ROUTING_SHA256:
+            protocol = _merged_protocol(root)
+        elif result_sha256 == FIXED_RESULT_SHA256:
+            protocol = _fixed_protocol(root)
+        elif result_sha256 == REVISION_FOUR_RESULT_SHA256:
+            protocol = _revision_four_protocol(root)
+        elif result_sha256 == HOST_CONTEXT_PRIOR:
+            protocol = _routing_tail_protocol(root)
+        elif result_sha256 == EMPTY_DISCOVERY_PRIOR:
+            protocol = _host_context_protocol(root)
+        elif result_sha256 == REMAINDER_PRIOR:
+            protocol = _remainder_prior_protocol(root)
+        elif result_sha256 == ACCEPTED_REMAINDER_RESULT_SHA256:
+            protocol = _accepted_remainder_protocol(root)
+        elif result_sha256 == TRACEABLE_RESULT_SHA256:
+            protocol = _traceable_protocol(root)
+        elif result_sha256 == OUTCOME_PRIOR:
+            protocol = _outcome_prior_protocol(root)
         result_schema = _json(_read(root / RESULT_SCHEMA_RELATIVE))
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
         prior_results = document["priorResultSha256s"]
-        _require(prior_results in [*[READ_PRIOR_RESULTS[:i] for i in range(8)], ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS], "invalid historical prefix")
+        _require(prior_results in [*[READ_PRIOR_RESULTS[:i] for i in range(8)], ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"], GOAL_PRESERVATION["priorResultSha256s"]], "invalid historical prefix")
         segment = document.get("executionSegment")
+        routing_tail = segment is not None and segment.get("kind") == ROUTING_TAIL["windowId"]
         material_segment = segment is not None and segment.get("kind") == "material-delivery"
         current_assessment = segment is not None and segment.get("kind") == "explicit-invocation-revision-1"
-        chain = _attempt_history(root) if current_assessment else None
+        goal_preservation = segment is not None and segment.get("kind") == _fixed_kind(goal_preservation=True)
+        traceable_confirmation = segment is not None and segment.get("kind") == _fixed_kind(traceable_confirmation=True)
+        accepted_remainder = segment is not None and segment.get("kind") == _fixed_kind(accepted_remainder=True)
+        outcome_semantics = segment is not None and segment.get("kind") == _fixed_kind(outcome_semantics=True)
+        empty_discovery = segment is not None and segment.get("kind") == _fixed_kind(empty_discovery=True)
+        host_context = segment is not None and segment.get("kind") == _fixed_kind(host_context=True)
+        revision_four = segment is not None and segment.get("kind") == _fixed_kind(True)
+        fixed_acceptance = goal_preservation or traceable_confirmation or accepted_remainder or outcome_semantics or empty_discovery or host_context or revision_four or (segment is not None and segment.get("kind") == _fixed_kind())
+        contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation)
+        chain = routing_tail_attempt_history(root) if routing_tail else _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation) if fixed_acceptance else _attempt_history(root) if current_assessment else None
         _require((prior_results == CURRENT_PRIOR_RESULTS) == current_assessment, "current history requires its execution segment")
-        prior_count = chain["attempts"] if current_assessment else 31 if material_segment else 20 if prior_results == ASSESSMENT_PRIOR_RESULTS else len(prior_results)
+        _require((prior_results == contract["priorResultSha256s"]) == fixed_acceptance, "fixed history requires its execution segment")
+        _require((prior_results == ROUTING_TAIL_PRIORS) == routing_tail, "independent routing history requires its segment")
+        prior_count = chain["attempts"] if current_assessment or fixed_acceptance or routing_tail else 31 if material_segment else 20 if prior_results == ASSESSMENT_PRIOR_RESULTS else len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
-        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= (CURRENT_ASSESSMENT["maximumCumulativeAttempts"] if current_assessment else 38 if material_segment else 16 + prior_count),
+        reply_attempts = sum(c["attemptCount"] for c in document["goalPreservation" if goal_preservation else "traceableConfirmation"]["clarificationResults"]) if traceable_confirmation or goal_preservation else 0
+        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] + reply_attempts <= (133 if goal_preservation else 130 if traceable_confirmation else 106 if routing_tail else contract["priorAttempts"] + len(contract["routingOrdinals"]) if fixed_acceptance else CURRENT_ASSESSMENT["maximumCumulativeAttempts"] if current_assessment else 38 if material_segment else 16 + prior_count),
                  "native cumulative attempt budget mismatch")
         _require(sum(item["privateCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
                  "private capture batch limit exceeded")
@@ -3127,10 +4358,26 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         envelope = _input(root, protocol, "promptEnvelope")
         seed = bytes.fromhex(document["materializationSeed"])
         segment = document.get("executionSegment")
-        remainder = segment is not None and segment.get("firstNewOrdinal") == 11
-        partial = _assessment_partial(root) if remainder else _reviewed_partial(root) if segment is not None and not (material_segment or current_assessment) else None
+        remainder = segment is not None and segment.get("firstNewOrdinal") == 11 and not (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation)
+        partial = _assessment_partial(root) if remainder else _reviewed_partial(root) if segment is not None and not (material_segment or current_assessment or fixed_acceptance or routing_tail) else None
         prefix_count = 10 if remainder else REVIEWED_PREFIX_COUNT
-        if current_assessment:
+        if routing_tail:
+            _require(segment == _routing_tail_segment(document) and document["attemptCount"] <= 5 and
+                     document["authenticationMode"] == "serial-test-auth-copy" and
+                     ((document.get("executionSource") is not None) == (document["runMode"] == "actual")),
+                     "independent routing provenance or budget changed")
+        elif fixed_acceptance:
+            _require(segment == {
+                "kind": _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, goal_preservation), "priorPartialSha256": GOAL_PRESERVATION["priorResultSha256s"][0] if goal_preservation else TRACEABLE_CONFIRMATION["priorResultSha256s"][0] if traceable_confirmation else REMAINDER_PRIOR if accepted_remainder else OUTCOME_PRIOR if outcome_semantics else EMPTY_DISCOVERY_PRIOR if empty_discovery else HOST_CONTEXT_PRIOR if host_context else FIXED_RESULT_SHA256 if revision_four else FIXED_REPLY_PRIORS[-1],
+                "firstNewOrdinal": contract["routingOrdinals"][0], "priorAttemptCount": contract["priorAttempts"],
+                "authenticationSourceOrdinal": contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation else 14,
+                "newAttemptCount": document["attemptCount"], "newCliLaunchCount": document["cliLaunchCount"]
+            }, "fixed acceptance provenance changed")
+            _require(not any([r["ordinal"], r["materializationCommitmentSha256"]] in chain["identities"]
+                             for r in document["caseResults"]), "fixed acceptance reused a historical case")
+            _require((document["executionSource"] is not None) == (document["runMode"] == "actual"),
+                     "fixed execution source and mode differ")
+        elif current_assessment:
             _require(segment == {
                 "kind": "explicit-invocation-revision-1", "priorPartialSha256": ASSESSMENT_REVISION_THREE["sha256"],
                 "firstNewOrdinal": 1, "priorAttemptCount": chain["attempts"], "authenticationSourceOrdinal": 16,
@@ -3165,7 +4412,10 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                          "newCliLaunchCount": sum(item["cliLaunchCount"] for item in document["caseResults"][REVIEWED_PREFIX_COUNT:])},
                      "remainder provenance or budget mismatch")
         stopped = False
-        for ordinal, (case, record) in enumerate(zip(cases, document["caseResults"]), 1):
+        ordinals = contract["routingOrdinals"] if fixed_acceptance else ROUTING_TAIL["ordinals"] if routing_tail else list(range(1, 17))
+        _require(len(document["caseResults"]) == len(ordinals), "native result set size changed")
+        for ordinal, record in zip(ordinals, document["caseResults"]):
+            case = cases[ordinal - 1]
             _require(record["ordinal"] == ordinal and record["caseId"] == case["id"], "native result case order mismatch")
             if partial and ordinal <= prefix_count:
                 _require(record == partial["caseResults"][ordinal - 1], "reviewed prefix facts changed")
@@ -3174,7 +4424,15 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             material = materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=ordinal,
                 protocol_digest=protocol["protocolDigest"], model_schema=model_schema,
                 prompt_envelope=envelope, request=case["request"])
+            if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation) and record.get("nativeDiscovery") is not None:
+                from .no_hook_discovery import relay_recorded
+                material = relay_recorded(material, record["nativeDiscovery"])
             expected = _blank_case(case, material, seed, protocol, definition, root=root)
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                expected["visibleReplies"] = _assessment_public_replies([], "")
+            if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                expected["nativeDiscovery"] = None
+                _require(not record["cliLaunchCount"] or record["nativeDiscovery"] is not None, "model launch lacks native query")
             _require(set(record) == set(expected), "current case record fields are not closed")
             _require(record["explicitInvocation"] == expected["explicitInvocation"],
                      "native explicit invocation binding mismatch")
@@ -3186,10 +4444,22 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 continue
             if stopped:
                 _require(status == "NOT-RUN", "native result continued after unreliable failure")
+            if ((accepted_remainder or traceable_confirmation or goal_preservation) and status != "PASS") or (empty_discovery and ordinal == 11 and status != "PASS"):
+                stopped = True
             if status == "NOT-RUN":
                 _require(record == expected, "unstarted native case carries observed facts")
                 stopped = True
                 continue
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation:
+                retained = record["visibleReplies"]
+                messages = retained["messages"]
+                _require(retained == _assessment_public_replies(messages, material.token) or
+                         (status == "INCOMPLETE" and not retained["retentionComplete"]),
+                         "public routing retention facts changed")
+                if status in {"PASS", "FAIL"}:
+                    _require(messages and retained["retentionComplete"] and
+                             _json(messages[-1].encode("utf-8")) == {**record["observed"], "opaqueCaseBinding": material.token},
+                             "retained final routing message differs from observed response")
             reads = record["publicReads"]
             _require((len(reads) == record["readonlyCommandCount"]) if record["evidenceExtraction"]["stream"] == "valid"
                      else not reads, "public reads lack strict stream provenance")
@@ -3205,7 +4475,17 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                     _require(read["path"] in public_paths, "unbound public fixture read")
                     source_bytes = public_paths[read["path"]]
                 else:
-                    evidence = _json(_read(root / STATIC_BUNDLE_EVIDENCE_RELATIVE))
+                    evidence_bytes = _read(root / STATIC_BUNDLE_EVIDENCE_RELATIVE)
+                    expected_evidence = protocol["inputs"]["staticBundleEvidence"]["sha256"]
+                    if hashlib.sha256(evidence_bytes).hexdigest() != expected_evidence:
+                        # Historical read lengths belong to that protocol's package.
+                        candidates = [root / f"evidence/profiles/openai-hook-independent-v1/bundle-revision-{v}.json"
+                                      for v in (9, 14, 25)]
+                        matches = [data for path in candidates if
+                                   hashlib.sha256(data := _read(path)).hexdigest() == expected_evidence]
+                        _require(len(matches) == 1, "historical public read package evidence changed")
+                        evidence_bytes = matches[0]
+                    evidence = _json(evidence_bytes)
                     manifest = evidence["bundleManifest"]
                     inventory = {entry["path"] for entry in manifest["runtimeFiles"]} | {".codex-plugin/plugin.json", "BUNDLE-MANIFEST.json"}
                     _require(ordinal != 11 and read["path"] in inventory and
@@ -3217,6 +4497,19 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                         source_bytes = (json.dumps(manifest, ensure_ascii=True, indent=2) + "\n").encode("ascii")
                     else:
                         source_bytes = _read(root / relative)
+                        source_record = next(item for item in manifest["runtimeFiles"] if item["path"] == read["path"])
+                        if hashlib.sha256(source_bytes).hexdigest() != source_record["sha256"]:
+                            historical_sources = {
+                                ("skills/traceable-git-submit/SKILL.md", "0a2b20b40bb6bc17568a4a9afc00c24e1e7ccbed2dfeb28999f813ba6b9dbb4e"):
+                                    TRACEABLE_DISCOVERY_ARCHIVE / "traceable-git-submit-source.txt",
+                                ("skills/agent-plugin-architect/SKILL.md", "ddcfc8aab6c9348c86a851d8b623f2493079a54a4c374f7ed61bbc2f15eb4db3"):
+                                    GOAL_PRESERVATION_ARCHIVE / "agent-plugin-architect-source.txt",
+                            }
+                            historical_path = historical_sources.get((read["path"], source_record["sha256"]))
+                            _require(historical_path is not None, "historical public read source is unavailable")
+                            source_bytes = _read(root / historical_path)
+                        _require(hashlib.sha256(source_bytes).hexdigest() == source_record["sha256"],
+                                 "public read source bytes differ from bound inventory")
                 if read["range"] is not None:
                     first, last = read["range"]
                     _require(1 <= first <= last <= 100000, "public read line range invalid")
@@ -3225,7 +4518,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                     source_bytes = b"".join(lines[first - 1:last])
                 _require(read["bytes"] == len(source_bytes), "public read length differs from bound source")
             command = record["operatorReadCapture"]
-            _require(command == _private_capture() or (prior_results in (ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS) and
+            _require(command == _private_capture() or (prior_results in (ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"], GOAL_PRESERVATION["priorResultSha256s"]) and
                      status == "INCOMPLETE" and record["executionDiagnostics"]["streamAssertion"] in READ_REJECTIONS),
                      "operator command retention lacks a read rejection")
             _require(command["status"] != "saved" or command["bytes"] > 0, "empty command capture")
@@ -3240,13 +4533,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(private["status"] != "write-failed" or
                      (status == "INCOMPLETE" and record["executionDiagnostics"]["cleanupFailed"]),
                      "failed private capture was accepted")
-            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS, STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS],
+            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS, STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"], GOAL_PRESERVATION["priorResultSha256s"]],
                      "operator capture lacks linked history authorization")
             facts = record["executionDiagnostics"]
             stderr = record["operatorStderrCapture"]
-            _require(stderr == _stderr_capture() or prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS),
+            _require(stderr == _stderr_capture() or prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"], GOAL_PRESERVATION["priorResultSha256s"]),
                      "operator stderr capture lacks linked continuation authorization")
-            if prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS) and record["cliLaunchCount"]:
+            if prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"], GOAL_PRESERVATION["priorResultSha256s"]) and record["cliLaunchCount"]:
                 _require(stderr["status"] != "not-requested", "captured client stderr was not retained")
             if stderr["status"] == "not-requested":
                 _require(stderr == _stderr_capture(), "unrequested stderr capture has facts")
@@ -3382,13 +4675,17 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                          record["readonlyCommandCount"] == 0, "unlaunched case has model observations")
         _require(document["cliLaunchCount"] == sum(item["cliLaunchCount"] for item in document["caseResults"]),
                  "native launch count mismatch")
-        _require(document["materializationCommitmentRoot"] == legacy._materialization_commitment_root(
-            [item["materializationCommitmentSha256"] for item in document["caseResults"]]), "native commitment root mismatch")
+        _require(document["materializationCommitmentRoot"] == _native_commitment_root(
+            [item["materializationCommitmentSha256"] for item in document["caseResults"]], routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation, goal_preservation=goal_preservation), "native commitment root mismatch")
         statuses = [item["status"] for item in document["caseResults"]]
         expected_status = "INCOMPLETE" if document["runMode"] == "simulated" or any(
             value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else ("FAIL" if "FAIL" in statuses else "PASS")
+        if traceable_confirmation or goal_preservation:
+            _validate_traceable_results(document, root, protocol if result_sha256 == TRACEABLE_RESULT_SHA256 else None, goal_preservation=goal_preservation)
+        else:
+            _require("traceableConfirmation" not in document and "goalPreservation" not in document, "unexpected interleaved reply evidence")
         _require(document["status"] == expected_status, "native overall status mismatch")
-        _require(document["hostClaim"] == (document["runMode"] == "actual" and expected_status == "PASS"),
+        _require(document["hostClaim"] == (document["runMode"] == "actual" and expected_status == "PASS" and not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation or goal_preservation)),
                  "simulated or incomplete result cannot claim host PASS")
         return []
     except (OSError, ValueError, KeyError, TypeError, NativeObservationError) as error:
@@ -3414,6 +4711,25 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--prepare-assessment-remainder", action="store_true")
     group.add_argument("--prepare-material-segment", action="store_true")
     group.add_argument("--prepare-current-assessment", action="store_true")
+    group.add_argument("--prepare-fixed-acceptance", action="store_true")
+    group.add_argument("--prepare-revision-four-acceptance", action="store_true")
+    group.add_argument("--prepare-independent-routing-tail", action="store_true")
+    group.add_argument("--prepare-accepted-remainder", action="store_true")
+    group.add_argument("--prepare-traceable-confirmation", action="store_true")
+    group.add_argument("--prepare-goal-preservation", action="store_true")
+    parser.add_argument("--accepted-remainder", action="store_true")
+    parser.add_argument("--traceable-confirmation", action="store_true")
+    parser.add_argument("--goal-preservation", action="store_true")
+    parser.add_argument("--review-public-messages-stdin", action="store_true")
+    group.add_argument("--prepare-discovery-outcome", action="store_true")
+    parser.add_argument("--discovery-outcome", action="store_true")
+    group.add_argument("--prepare-native-empty-discovery", action="store_true")
+    parser.add_argument("--native-empty-discovery", action="store_true")
+    group.add_argument("--prepare-host-context-acceptance", action="store_true")
+    parser.add_argument("--host-context-acceptance", action="store_true")
+    parser.add_argument("--independent-routing-tail", action="store_true")
+    parser.add_argument("--revision-four-acceptance", action="store_true")
+    parser.add_argument("--fixed-acceptance", action="store_true")
     parser.add_argument("--current-assessment", action="store_true")
     parser.add_argument("--previous-run-root", type=Path)
     parser.add_argument("--material-segment", action="store_true")
@@ -3438,7 +4754,30 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     parser.add_argument("--preserve-existing-test-auth", type=int, nargs="*", default=[])
     args = parser.parse_args(argv)
     try:
-        if args.prepare_current_assessment:
+        if args.prepare_independent_routing_tail:
+            _require(all(x is not None for x in (args.run_root, args.previous_run_root, args.bundle_root)),
+                     "independent routing requires its registered roots and frozen package")
+            prepare_routing_tail(root, args.run_root, args.previous_run_root, args.bundle_root,
+                                 authorize_install=args.authorize_local_install, authorize_copy=args.authorize_test_auth_copy)
+            print("Five independent routing states prepared; no model started.")
+        elif args.prepare_fixed_acceptance or args.prepare_revision_four_acceptance or args.prepare_host_context_acceptance or args.prepare_native_empty_discovery or args.prepare_discovery_outcome or args.prepare_accepted_remainder or args.prepare_traceable_confirmation or args.prepare_goal_preservation:
+            _require(all(x is not None for x in (args.run_root, args.previous_run_root, args.bundle_root)),
+                     "fixed preparation requires registered roots and the frozen package")
+            prepare_fixed_acceptance(root, args.run_root, args.previous_run_root, args.bundle_root,
+                                     authorize_install=args.authorize_local_install,
+                                     authorize_copy=args.authorize_test_auth_copy, revision_four=args.prepare_revision_four_acceptance, host_context=args.prepare_host_context_acceptance, empty_discovery=args.prepare_native_empty_discovery, outcome_semantics=args.prepare_discovery_outcome, accepted_remainder=args.prepare_accepted_remainder, traceable_confirmation=args.prepare_traceable_confirmation, goal_preservation=args.prepare_goal_preservation)
+            print("Four-item B-first window registered; two routing scopes prepared; no model started."
+                  if args.prepare_goal_preservation else
+                  "Eight-item interleaved window registered; five routing states prepared; no model started."
+                  if args.prepare_traceable_confirmation else
+                  "Nine-item window registered; six routing states prepared; no model started."
+                  if args.prepare_accepted_remainder else
+                  "Single A11 window registered; one routing state prepared; no model started."
+                  if args.prepare_discovery_outcome else
+                  "Fixed A11-16 plus B12-14 window registered; six routing states prepared; no model started."
+                  if args.prepare_native_empty_discovery else
+                  "Fixed 16-plus-3 window registered; routing states prepared; no model started.")
+        elif args.prepare_current_assessment:
             _require(args.run_root is not None and args.previous_run_root is not None, "assessment requires both registered roots")
             prepare_current_assessment(root, args.run_root, args.previous_run_root,
                                        authorize_install=args.authorize_local_install,
@@ -3478,13 +4817,15 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             _require(args.run_root is not None, "login commands require a prepared run root")
             print(json.dumps(login_commands(root, args.run_root), indent=2))
         elif args.run:
+            from .no_hook_clarification import _stdin_semantic_review
+            _require(args.review_public_messages_stdin == (args.traceable_confirmation or args.goal_preservation), "public review flag requires traceable confirmation")
             _require(args.run_root is not None, "run requires a prepared run root")
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
                                             reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup,
                                             continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics,
-                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup, read_followup=args.read_followup, resume_stderr_review=args.resume_stderr_review, assessment_batch=args.assessment_batch, assessment_remainder=args.assessment_remainder, material_segment=args.material_segment, current_assessment=args.current_assessment)
+                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup, read_followup=args.read_followup, resume_stderr_review=args.resume_stderr_review, assessment_batch=args.assessment_batch, assessment_remainder=args.assessment_remainder, material_segment=args.material_segment, current_assessment=args.current_assessment, fixed_acceptance=args.fixed_acceptance, revision_four=args.revision_four_acceptance, host_context=args.host_context_acceptance, empty_discovery=args.native_empty_discovery, outcome_semantics=args.discovery_outcome, accepted_remainder=args.accepted_remainder, traceable_confirmation=args.traceable_confirmation, goal_preservation=args.goal_preservation, semantic_review=_stdin_semantic_review if args.review_public_messages_stdin else None, routing_tail=args.independent_routing_tail)
             print(json.dumps(result, sort_keys=True))
-            return 0 if result["status"] == "PASS" else 1
+            return 0 if result.get("goalPreservation", result.get("traceableConfirmation", result))["status"] == "PASS" else 1
         else:
             failures = validate_native_protocol(root)
             if failures:
