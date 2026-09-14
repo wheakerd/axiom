@@ -42,7 +42,7 @@
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
-      "sha256": "b738ea2714cad44d6b4e25b14105bfc1af8f2c7de7d74edfe1072fd703751b0f"
+      "sha256": "253d464f217b97f028a0d65bb1bd70128b4e93d2f0e8fb5155f062698f887908"
     }
   },
   "implementationBindings": [
@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "2100018e651d4d4b3b21c6a961eb99ed1bf25fdf08233400e8b953aa34c4653b"
+      "sha256": "ede5a8ca9b992bb7d65b76e364a4777ac3c0c1cf519fb23fd06625885eba5389"
     },
     {
       "path": "axiom_validation/no_hook_discovery.py",
@@ -68,7 +68,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "d43d591b2387a3da039172bd5f1b5f5a735cc5f8a1c24ab4a47d323b598e0420"
+      "sha256": "c51eacc92f5ee4eeca4dcb1af060933aac4f3b625b96a48e591a9c255f890575"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -96,10 +96,10 @@
     }
   ],
   "bundle": {
-    "manifestDigest": "sha256:e0a55f3862df62cbe8170281ffe0daf2a85c638da5ae7e8293605c100ce147b6",
-    "archiveSha256": "756c36e687631d1a71305aefe7f4e9fa1860b6fc0c1c233935d740098ef70a26",
-    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
-    "packageSha256": "ab6b2d996a0241a1b4d0fa809f4d42b0fa2a53b45b626746e963c15083ba686d"
+    "manifestDigest": "sha256:77fd3eac4898d43078534571581559719d07330ee57d7d40c9b3746c2729cc2b",
+    "archiveSha256": "c8c06465f8bcf8b6e16578227968712b53394e6b1de3c42615ea0df9011b1ce8",
+    "profileRuntimeDigest": "sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf",
+    "packageSha256": "6b0e83c6dcffe98da4f1c0645a28f0412c3ab9545881ec8079d62bf5320e48ca"
   },
   "caseIds": [
     "no-hook-positive-explicit-using-axiom-001",
@@ -127,7 +127,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "898bdfd6192d38c01a37d5ddb41b1391de10cdc711fe136e9c3ee2cd3e7477c5"
+    "sha256": "cc49a1ccbae099780ba256abdd3fed3d1093124eed23678ff18691a24be9d6f8"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -449,7 +449,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:4b3c81cbaa12861588d1fc09b4851b87d84bc94b660795ed2c49c878cf5e5abf",
+  "protocolDigest": "sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
@@ -780,6 +780,57 @@
       "A15",
       "A16",
       "B12",
+      "B14"
+    ],
+    "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
+  },
+  "goalPreservation": {
+    "windowId": "architect-goal-preservation-1",
+    "state": "authorized-once",
+    "candidateCommit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+    "candidateTree": "d9281b507721827034c27fdc1883161801bfbbf2",
+    "sourceCommit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+    "sourceTree": "d9281b507721827034c27fdc1883161801bfbbf2",
+    "fullRuntimeDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26",
+    "profileRuntimeDigest": "sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf",
+    "priorResultSha256s": [
+      "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c"
+    ],
+    "priorAttempts": 129,
+    "priorCliLaunches": 129,
+    "routingOrdinals": [
+      12,
+      3
+    ],
+    "clarificationOrdinals": [
+      12,
+      14
+    ],
+    "maximumNewAttempts": 4,
+    "maximumCumulativeAttempts": 133,
+    "routingRunName": "cases-architect-goal-routing-1",
+    "clarificationRunName": "cases-architect-goal-replies-1",
+    "order": [
+      "B12",
+      "A12",
+      "A3",
       "B14"
     ],
     "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",

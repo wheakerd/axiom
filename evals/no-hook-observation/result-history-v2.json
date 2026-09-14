@@ -222,5 +222,10 @@
         "implementationTree": "69bc03fbe69a12d7ad173fb40a37b2665be07f62"
       }
     ]
+  },
+  "goalPreservation": {
+    "windowId": "architect-goal-preservation-1",
+    "protocolDigest": "sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae",
+    "results": []
   }
 }

@@ -216,6 +216,22 @@
       "sourceIssue": 117,
       "summary": "Preserve original end goals when the architect entry restates material alternatives; separate permission limits from goal selection. Historical results and product boundaries remain unchanged.",
       "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
+    },
+    {
+      "revision": 28,
+      "recordedOn": "2026-09-14",
+      "baselineCommit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+      "sourceIssue": 117,
+      "summary": "Bind two independently built identical architect end-goal preservation bundles to source policy 27; no model behavior is inferred from deterministic delivery.",
+      "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
+    },
+    {
+      "revision": 29,
+      "recordedOn": "2026-09-14",
+      "baselineCommit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+      "sourceIssue": 117,
+      "summary": "Register only B12, A12, A3, B14, stopping on any non-PASS; keep all old windows closed, assessment 5 and source/bundle policy 27/28 fixed.",
+      "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
     }
   ]
 }

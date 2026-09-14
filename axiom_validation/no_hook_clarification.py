@@ -328,14 +328,17 @@ def _login(executable: Path, paths: dict, invoke) -> None:
 
 def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
             authorized: bool = False, fixed_acceptance: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, accepted_remainder: bool = False,
-            independent: bool = False, confirmation_stage: int | None = None, runner=None) -> dict:
-    _require(sum((fixed_acceptance, revision_four, host_context, empty_discovery, accepted_remainder, independent, confirmation_stage is not None)) <= 1, "select one observation window")
+            independent: bool = False, confirmation_stage: int | None = None, goal_stage: int | None = None, runner=None) -> dict:
+    _require(sum((fixed_acceptance, revision_four, host_context, empty_discovery, accepted_remainder, independent, confirmation_stage is not None, goal_stage is not None)) <= 1, "select one observation window")
     fixed_acceptance = fixed_acceptance or revision_four or host_context or empty_discovery or accepted_remainder
     _require(authorized, "explicit preparation and opaque auth-copy authorization required")
     p = protocol(root)
-    if confirmation_stage is None:
+    auth_previous = previous
+    if confirmation_stage is None and goal_stage is None:
         _unrecorded(root, p, fixed_acceptance=fixed_acceptance, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder, independent=independent)
-    if confirmation_stage is not None:
+    if goal_stage is not None:
+        old, chain, auth_previous, source_ordinal = native._goal_stage_source(root, previous, goal_stage, simulated=runner is not None)
+    elif confirmation_stage is not None:
         old, chain = native._traceable_stage_source(root, previous, confirmation_stage, simulated=runner is not None)
         source_ordinal = confirmation_stage
     elif independent:
@@ -349,8 +352,8 @@ def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
         chain = attempt_history(root)
         old = _prior_state(root, previous)
         source_ordinal = 14
-    ordinals = ([13] if confirmation_stage == 13 else [12, 14]) if confirmation_stage is not None else ORDINALS
-    expected_name = (native.TRACEABLE_CONFIRMATION["clarificationRunName"] + f"-after-{confirmation_stage}") if confirmation_stage is not None else INDEPENDENT["runName"] if independent else native._fixed_contract(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder)["clarificationRunName"] if fixed_acceptance else RUN_NAME
+    ordinals = [goal_stage] if goal_stage is not None else ([13] if confirmation_stage == 13 else [12, 14]) if confirmation_stage is not None else ORDINALS
+    expected_name = (native.GOAL_PRESERVATION["clarificationRunName"] + f"-stage-{goal_stage}") if goal_stage is not None else (native.TRACEABLE_CONFIRMATION["clarificationRunName"] + f"-after-{confirmation_stage}") if confirmation_stage is not None else INDEPENDENT["runName"] if independent else native._fixed_contract(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder)["clarificationRunName"] if fixed_acceptance else RUN_NAME
     _require(run_root.parent == previous.parent and run_root.name == expected_name and run_root != previous and
              not run_root.exists() and not run_root.is_symlink(), "fresh registered sibling required")
     if fixed_acceptance and runner is None:
@@ -360,7 +363,7 @@ def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
     executable = Path(old["executable"])
     legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
     invoke = native.bounded_process if runner is None else runner
-    _login(executable, native._case_paths(previous, source_ordinal), invoke)
+    _login(executable, native._case_paths(auth_previous, source_ordinal), invoke)
     bundle = bundle_root
     np = native._protocol(root)
     _require(native.package_identity(bundle) == np["bundle"]["packageSha256"], "new frozen bundle mismatch")
@@ -400,7 +403,7 @@ def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
         paths["discovery"].symlink_to(paths["package"] / "skills", target_is_directory=True)
         prompt = reply_prompt(cases[ordinal - 1]["request"], definition, p["instructions"])
         summary = None
-        if empty_discovery or accepted_remainder or confirmation_stage is not None:
+        if empty_discovery or accepted_remainder or confirmation_stage is not None or goal_stage is not None:
             from .no_hook_discovery import query_once, prepared_discovery, relay_prompt
             query_once(paths, executable, marketplace, True, definition)
             entry, summary = prepared_discovery(paths, executable, marketplace, True, definition)
@@ -409,7 +412,7 @@ def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
         record = {"ordinal": ordinal, "caseId": cases[ordinal - 1]["id"], "promptSha256": digest(prompt),
                   "requestSha256": digest(cases[ordinal - 1]["request"].encode()), "fixtureSha256": fixture,
                   "packageSha256": np["bundle"]["packageSha256"]}
-        if empty_discovery or accepted_remainder or confirmation_stage is not None:
+        if empty_discovery or accepted_remainder or confirmation_stage is not None or goal_stage is not None:
             record["nativeDiscovery"] = summary
         _verify_inputs(root, run_root, ordinal, record)
         records.append(record)
@@ -417,10 +420,12 @@ def prepare(root: Path, run_root: Path, previous: Path, *, bundle_root: Path,
              "previousRunRoot": str(previous), "executable": str(executable), "attemptHistory": chain, "cases": records}
     if independent:
         state.update(independentClarification=INDEPENDENT, executionSource=source)
+    if goal_stage is not None:
+        state["goalStage"] = goal_stage
     if confirmation_stage is not None:
         state["traceableStage"] = confirmation_stage
     _exclusive(run_root / STATE, _bytes(state))
-    native._copy_test_auth(run_root, source_ordinal, ordinals[0], create=True, source_root=previous)
+    native._copy_test_auth(run_root, source_ordinal, ordinals[0], create=True, source_root=auth_previous)
     return state
 
 
@@ -553,22 +558,23 @@ def _capture_case(root: Path, run_root: Path, ordinal: int, prepared: dict, exec
     return record
 
 
-def confirmation_replies(root: Path, routing: Path, stage: int, semantic_review, *, runner=None) -> list[dict]:
-    """The two fixed reply positions inside the authorized eight-item window."""
-    _require(stage in (13, 16) and callable(semantic_review), "invalid traceable reply stage")
-    target = routing.parent / (native.TRACEABLE_CONFIRMATION["clarificationRunName"] + f"-after-{stage}")
-    ordinals = [13] if stage == 13 else [12, 14]
-    entries = [x for x in native._new_traceable_results(root)["clarificationResults"] if x["ordinal"] in ordinals]
+def confirmation_replies(root: Path, routing: Path, stage: int, semantic_review, *, goal_preservation: bool = False, runner=None) -> list[dict]:
+    """The fixed reply positions inside each explicitly registered interleaved window."""
+    contract = native.GOAL_PRESERVATION if goal_preservation else native.TRACEABLE_CONFIRMATION
+    _require(stage in ((12, 14) if goal_preservation else (13, 16)) and callable(semantic_review), "invalid traceable reply stage")
+    target = routing.parent / (contract["clarificationRunName"] + (f"-stage-{stage}" if goal_preservation else f"-after-{stage}"))
+    ordinals = [stage] if goal_preservation else [13] if stage == 13 else [12, 14]
+    entries = [x for x in native._new_traceable_results(root, goal_preservation=goal_preservation)["clarificationResults"] if x["ordinal"] in ordinals]
     try:
         state = prepare(root, target, routing, bundle_root=routing / "marketplace/plugin", authorized=True,
-                        confirmation_stage=stage, runner=runner)
+                        confirmation_stage=None if goal_preservation else stage, goal_stage=stage if goal_preservation else None, runner=runner)
     except (OSError, ValueError, KeyError, native.NativeObservationError, subprocess.SubprocessError):
         entries[0].update(status="INCOMPLETE", preparation="failed-before-observation")
         # Public closed category only; never expose exception or private buffers.
         return entries
     _require([x["ordinal"] for x in state["cases"]] == ordinals, "traceable reply order changed")
     _exclusive(target / "batch-started.json", _bytes({"protocolDigest": protocol(root)["protocolDigest"],
-               "traceableStage": stage, "priorAttempts": state["attemptHistory"]["attempts"]}))
+               ("goalStage" if goal_preservation else "traceableStage"): stage, "priorAttempts": state["attemptHistory"]["attempts"]}))
     operator = native.OperatorDiagnostics(target)
     invoke = native.bounded_process if runner is None else runner
     for index, prepared in enumerate(state["cases"]):
@@ -583,7 +589,7 @@ def confirmation_replies(root: Path, routing: Path, stage: int, semantic_review,
         if entry["status"] != "PASS":
             break
     _exclusive(target / RESULT, _bytes({"protocolDigest": protocol(root)["protocolDigest"],
-        "windowId": native.TRACEABLE_CONFIRMATION["windowId"], "stage": stage, "caseResults": entries}))
+        "windowId": contract["windowId"], "stage": stage, "caseResults": entries}))
     return entries
 
 

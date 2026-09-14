@@ -4,22 +4,22 @@
   "profileId": "openai-hook-independent-v1",
   "source": {
     "repository": "wheakerd/axiom",
-    "commit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
-    "tree": "425182b4dbdd5fd549f16e38b4039d1eb09f526f",
-    "repositoryPolicyRevision": 24
+    "commit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+    "tree": "d9281b507721827034c27fdc1883161801bfbbf2",
+    "repositoryPolicyRevision": 27
   },
-  "candidateRepositoryPolicyRevision": 25,
+  "candidateRepositoryPolicyRevision": 28,
   "bundleManifest": {
     "schemaVersion": "1",
     "kind": "axiom-hook-independent-derived-bundle",
     "profileId": "openai-hook-independent-v1",
     "pluginVersion": "0.10.1",
-    "repositoryPolicyRevision": 25,
+    "repositoryPolicyRevision": 28,
     "source": {
       "repository": "wheakerd/axiom",
-      "commit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
-      "tree": "425182b4dbdd5fd549f16e38b4039d1eb09f526f",
-      "repositoryPolicyRevision": 24
+      "commit": "bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1",
+      "tree": "d9281b507721827034c27fdc1883161801bfbbf2",
+      "repositoryPolicyRevision": 27
     },
     "contractBindings": {
       "profileContract": {
@@ -52,7 +52,7 @@
       ],
       "bundleSchema": {
         "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-        "sha256": "c25263502b739393bb8d88b1359636f19a64fccade8d484b235d8c562fc22c96"
+        "sha256": "eabca74e9189f12d8498f2a6704f46e55a9648368ec9d414fcf402bcae4a6622"
       }
     },
     "runtimeCanonicalization": {
@@ -83,8 +83,8 @@
         "path": "skills/agent-plugin-architect/SKILL.md",
         "kind": "skill",
         "mode": "100644",
-        "size": 3944,
-        "sha256": "ddcfc8aab6c9348c86a851d8b623f2493079a54a4c374f7ed61bbc2f15eb4db3"
+        "size": 4244,
+        "sha256": "3852c839b471b77b849cb352e299671c67931740d617a624e87e3a451e6e9e17"
       },
       {
         "path": "skills/agent-plugin-architect/agents/openai.yaml",
@@ -430,7 +430,7 @@
         "sha256": "e99a497b2415d4069abc69ec714fca8d89d17529f8bc464b014c3b19dd305a8d"
       }
     ],
-    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
+    "profileRuntimeDigest": "sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf",
     "includedSurfaces": [
       {
         "surface": ".codex-plugin/plugin.json",
@@ -515,14 +515,14 @@
         {
           "path": "axiom_validation/no_hook_bundle.py",
           "role": "implementation",
-          "size": 173901,
-          "sha256": "860e109903480818dea3903966aa3faa5faa36d57e350a161d8c6e3a4c5fa47b"
+          "size": 173919,
+          "sha256": "005c7708cbc5eceb54d0b7f8b54b1b79ce00c46df6e8ed4bd6caf10be12281ca"
         },
         {
           "path": "evals/no-hook/bundle-manifest-schema-v1.json",
           "role": "contract-schema",
           "size": 12537,
-          "sha256": "c25263502b739393bb8d88b1359636f19a64fccade8d484b235d8c562fc22c96"
+          "sha256": "eabca74e9189f12d8498f2a6704f46e55a9648368ec9d414fcf402bcae4a6622"
         }
       ]
     },
@@ -545,16 +545,16 @@
       "dataDescriptor": false,
       "archiveDigestLocation": "BUNDLE-ENVELOPE.json"
     },
-    "bundleManifestDigest": "sha256:e0a55f3862df62cbe8170281ffe0daf2a85c638da5ae7e8293605c100ce147b6"
+    "bundleManifestDigest": "sha256:77fd3eac4898d43078534571581559719d07330ee57d7d40c9b3746c2729cc2b"
   },
   "builds": {
     "independentBuildCount": 2,
     "repositoryOutsideDestinations": true,
     "directoryFileSetsEqual": true,
     "directoryBytesEqual": true,
-    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
-    "bundleManifestDigest": "sha256:e0a55f3862df62cbe8170281ffe0daf2a85c638da5ae7e8293605c100ce147b6",
-    "archiveSha256": "756c36e687631d1a71305aefe7f4e9fa1860b6fc0c1c233935d740098ef70a26",
+    "profileRuntimeDigest": "sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf",
+    "bundleManifestDigest": "sha256:77fd3eac4898d43078534571581559719d07330ee57d7d40c9b3746c2729cc2b",
+    "archiveSha256": "c8c06465f8bcf8b6e16578227968712b53394e6b1de3c42615ea0df9011b1ce8",
     "archiveBytesEqual": true,
     "envelopeSemanticFieldsEqual": true
   },

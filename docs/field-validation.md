@@ -1,5 +1,37 @@
 # Field Validation
 
+## Architect goal-preservation fixed confirmation
+
+Repository policy 29 registers B12, A12, A3, B14 in that order, each once in a
+fresh scope after 129 historical attempts/CLI starts, with a ceiling of 133.
+Any non-PASS, query or reliability failure stops all later observations and
+opaque authentication handoffs. This does not reopen the stopped traceable
+window or its prepared B14 state. The execution commit is assigned only after
+signed freezing; all new behavior is currently NOT-RUN.
+
+Two actual independent builds from signed source `bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1`
+(tree `d9281b507721827034c27fdc1883161801bfbbf2`) produced identical 52-file directories and
+261,375-byte archives. Source/bundle policies are 27/28. The profile
+runtime is `sha256:a0e8f86446cff4e43b1123650a5e9f1b6b226f40ed092c4f4ca23147da0067bf`; manifest
+`sha256:77fd3eac4898d43078534571581559719d07330ee57d7d40c9b3746c2729cc2b`; package SHA-256
+`6b0e83c6dcffe98da4f1c0645a28f0412c3ab9545881ec8079d62bf5320e48ca`; archive SHA-256
+`c8c06465f8bcf8b6e16578227968712b53394e6b1de3c42615ea0df9011b1ce8`. These are delivery facts, not behavior evidence.
+
+The bounded independent semantic review found a concrete goal-restatement gap,
+with no fixed question, answer injection, permission expansion or new gate for
+explicit requests. Previous A13/B13/A6/A14-16 support their original product and
+execution only. The Git Skill is unchanged. A12 and A3 are the directed routing
+controls for the changed architect entry; B14 covers the outstanding reply.
+Other historical routing evidence supports the unchanged route owners and
+permission contracts, not byte-identical installed discovery context. No
+additional concrete risk requiring a broader model set was identified.
+
+The changed Skill does not enter the accepted A11 zero-install scope, response
+schema, request, fixture, discovery/relay implementation or read contract.
+Its raw FAIL and the user's limited acceptance remain bound only to the exact
+16c13a3/cbab9b39 result. B13 retains the separate fact of choosing Skill guidance
+before asking for the business workflow; no native-loading claim is inferred.
+
 ## Architect end-goal preservation
 
 The previous entry already required one question, an unselected workflow and

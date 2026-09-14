@@ -1045,7 +1045,7 @@
     "cumulativeAttemptCount": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 130
+      "maximum": 133
     },
     "priorResultSha256s": {
       "type": "array",
@@ -1589,6 +1589,46 @@
               "maximum": 5
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "priorPartialSha256",
+            "firstNewOrdinal",
+            "priorAttemptCount",
+            "authenticationSourceOrdinal",
+            "newAttemptCount",
+            "newCliLaunchCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "architect-goal-preservation-1"
+            },
+            "priorPartialSha256": {
+              "const": "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c"
+            },
+            "firstNewOrdinal": {
+              "const": 12
+            },
+            "priorAttemptCount": {
+              "const": 129
+            },
+            "authenticationSourceOrdinal": {
+              "const": 10
+            },
+            "newAttemptCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "newCliLaunchCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2
+            }
+          }
         }
       ]
     },
@@ -1618,6 +1658,9 @@
       ]
     },
     "traceableConfirmation": {
+      "type": "object"
+    },
+    "goalPreservation": {
       "type": "object"
     }
   }

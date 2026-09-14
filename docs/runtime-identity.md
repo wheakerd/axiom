@@ -1,5 +1,14 @@
 # Runtime And Repository Identity
 
+## Architect goal-preservation artifact and execution registration
+
+Source/bundle policies 27/28 bind the two actual identical builds from
+`bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1`. Repository policy 29 adds only the
+fixed B12, A12, A3, B14 observation window, not another runtime change.
+Assessment 5, native discovery/relay, original requests and permissions remain
+unchanged. The changed installed catalog retains distinct runtime identity;
+old results are neither rewritten nor promoted to this candidate.
+
 ## Architect end-goal preservation source (policy 27)
 
 The assigned unpublished 0.10.1 receives a compatible entry clarification.
