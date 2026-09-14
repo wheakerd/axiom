@@ -1,5 +1,12 @@
 # Runtime And Repository Identity
 
+## CI history-baseline correction (policy 30)
+
+Policy 30 fixes a test-only checkout-HEAD assumption and gives the unchanged
+complete CI suite a bounded 15-minute job budget. Runtime, product policies
+27/28, assessment 5, both observation protocols, execution 4845505 and all
+results remain unchanged. No observation or product build is repeated.
+
 ## Architect goal-preservation actual observation
 
 Execution `4845505764d239a93618e38bbaed313c3121cac9` completed the four authorized

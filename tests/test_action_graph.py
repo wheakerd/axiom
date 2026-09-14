@@ -240,6 +240,16 @@ class ActionGraphTests(unittest.TestCase):
         self.assertEqual([], failures)
         scenarios = (
             (
+                "insufficient historical-validation budget",
+                original.replace("timeout-minutes: 15", "timeout-minutes: 10", 1),
+                "stable check name, runner, or timeout changed",
+            ),
+            (
+                "unbounded test job",
+                original.replace("timeout-minutes: 15", "timeout-minutes: 0", 1),
+                "stable check name, runner, or timeout changed",
+            ),
+            (
                 "write permission",
                 original.replace("contents: read", "contents: write", 1),
                 "read-only",

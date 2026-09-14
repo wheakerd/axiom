@@ -1448,7 +1448,7 @@ def check_unit_test_workflow_text(
     elif (
         scalar(job.get("name")) != "unit-and-integration-tests"
         or scalar(job.get("runs-on")) != "ubuntu-24.04"
-        or scalar(job.get("timeout-minutes")) != "10"
+        or scalar(job.get("timeout-minutes")) != "15"
     ):
         failures.append(f"{label} stable check name, runner, or timeout changed")
 

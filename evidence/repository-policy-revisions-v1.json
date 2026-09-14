@@ -232,6 +232,14 @@
       "sourceIssue": 117,
       "summary": "Register only B12, A12, A3, B14, stopping on any non-PASS; keep all old windows closed, assessment 5 and source/bundle policy 27/28 fixed.",
       "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
+    },
+    {
+      "revision": 30,
+      "recordedOn": "2026-09-14",
+      "baselineCommit": "fa8de661705ab3d30654afbf690ae0ec9944e0cd",
+      "sourceIssue": 117,
+      "summary": "Use frozen traceable test history instead of checkout HEAD and a 15-minute complete CI budget. Preserve every test, runtime, observation protocol, input, result and closed window.",
+      "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
     }
   ]
 }

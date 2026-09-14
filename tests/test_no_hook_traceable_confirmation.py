@@ -148,14 +148,26 @@ class TraceableConfirmationTests(unittest.TestCase):
 
     def test_history_and_uniform_input_semantics_are_preserved(self):
         self.assertEqual(n.traceable_attempt_history(ROOT)['attempts'],122)
-        baseline=json.loads(__import__('subprocess').check_output(['git','show',
-            'HEAD:evals/no-hook-observation/codex-native-protocol-v2.json'],cwd=ROOT))
+        # HEAD is the current candidate in CI, not the historical traceable
+        # execution. Its immutable protocol and independent archived build/result
+        # records remain the baseline after a later product revision.
+        baseline=n._traceable_protocol(ROOT)
+        evidence=json.loads((ROOT / 'evidence/profiles/openai-hook-independent-v1' /
+                             'bundle-revision-25.json').read_bytes())
+        prior=json.loads((ROOT / 'evals/no-hook-observation/results' /
+                          ('codex-native-' + n.TRACEABLE_RESULT_SHA256 + '.json')).read_bytes())
         current=n._protocol(ROOT)
         for key in ['assessmentRevision','hostEnvironmentContext','nativeEmptyDiscovery']:
             self.assertEqual(baseline[key],current[key])
         for key in ['modelResponseSchema','promptEnvelope','fixtureMatrix','goldenSet']:
             self.assertEqual(baseline['inputs'][key],current['inputs'][key])
-        self.assertEqual(baseline['bundle'],n._traceable_protocol(ROOT)['bundle'])
+        self.assertEqual(baseline['bundle'], {
+            'manifestDigest': evidence['builds']['bundleManifestDigest'],
+            'archiveSha256': evidence['builds']['archiveSha256'],
+            'profileRuntimeDigest': evidence['builds']['profileRuntimeDigest'],
+            'packageSha256': prior['caseResults'][0]['packageBeforeSha256'],
+        })
+        self.assertNotEqual(baseline['bundle'], current['bundle'])
         for flags in ({},{'revision_four':True},{'host_context':True},{'empty_discovery':True},
                       {'outcome_semantics':True},{'accepted_remainder':True}):
             with patch.object(n,'_revision_four_auth_source',side_effect=AssertionError('old source reached')):

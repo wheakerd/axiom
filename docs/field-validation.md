@@ -1,5 +1,27 @@
 # Field Validation
 
+## Natural CI correction after the goal-preservation result
+
+Head `fa8de661705ab3d30654afbf690ae0ec9944e0cd` produced natural CI run
+[34824789121](https://github.com/wheakerd/axiom/actions/runs/34824789121),
+which hit its 10-minute job limit. Its public log retained 661 successful
+method lines, one FAIL and two skips before cancellation; it did not complete
+discovery. The FAIL was reproduced in an independent full public checkout at
+that exact head: a historical regression used checkout HEAD as the old bundle
+identity. The test now uses the byte-verified historical protocol and its
+independent archived build/result records, retaining the input, count and
+closed-window assertions and requiring the new bundle to remain distinct.
+
+The same run exhausted its budget near the suite end. Public no-model profiling
+confirmed repeated historical validation, including 1,065 result validations in
+one complete protocol check. Policy 30 therefore grants the complete job a
+bounded 15 minutes with the same test command, runner, tools, permissions and
+assertions; its workflow guard still requires the exact bound. No observer or
+product code is optimized or changed after execution. Both frozen protocols,
+model-visible bytes, product identities and all result bytes remain unchanged.
+The first cancelled run is retained; the corrected head receives natural CI
+through the second and final authorized non-force push, not a rerun.
+
 ## Architect goal-preservation observed acceptance
 
 Signed execution `4845505764d239a93618e38bbaed313c3121cac9` (tree
