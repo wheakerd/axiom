@@ -44,6 +44,79 @@ validation and integration facts are recorded below after they exist. No tag,
 Release, publication observation, resource deletion or authentication retirement
 is authorized in this round. Earlier sections remain historical evidence.
 
+### Actual stopped segment
+
+Signed execution `c7644a34409e3dce4418b70cc1cb3c504e2524a6`, tree
+`ea9f97e51656ff699b7a3d5a6461b919a75c5258`, was frozen before preparation.
+Native protocol is
+`sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04`;
+the unused reply protocol is
+`sha256:988af1ee3dd51d4e9b60e26deb97727bc3e79a610c1299e4a1f4edba9f70dbbc`.
+The [unaltered 19,964-byte result](../evals/no-hook-observation/results/codex-native-9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b.json)
+has SHA-256 `9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b`.
+
+| Item | Actual result | Evidence boundary |
+| --- | --- | --- |
+| A10 | PASS | One complete public routing message; no read command. |
+| A12 | PASS | Two identical routing JSON messages; this is not a natural-language question observation. |
+| A13 | FAIL | Both public messages select `traceable-git-submit`, report `selected` and clarification count 0. |
+| A14 | NOT-RUN | Stopped after A13; no authentication handoff or attempt. |
+| A15 | NOT-RUN | Stopped after A13; no authentication handoff or attempt. |
+| A16 | NOT-RUN | Stopped after A13; no authentication handoff or attempt. |
+| B12 | NOT-RUN | Reply prerequisite failed; no reply state was prepared. |
+| B13 | NOT-RUN | Reply prerequisite failed; no reply state was prepared. |
+| B14 | NOT-RUN | Reply prerequisite failed; no reply state was prepared. |
+
+A13 differs from the original outcome, route and clarification expectations;
+its FAIL is retained. It is outside the approved A11 classification deviation.
+The fixed-set result is **INCOMPLETE** because later required items were not
+run. All three started clients returned normally, with valid stream, response,
+official final-output agreement and postchecks. The entire five-message record,
+including both intermediate duplicates, is retained without redaction. There
+were zero public reads. The selected-route JSON is a model report, not evidence
+of an actual Skill read or a native loading receipt.
+
+Exactly **3 new attempts / 3 observation CLI starts**, **122/122 cumulative**;
+internal model requests remain unknown. Six fresh scopes each made one native
+`skills/list` query before the batch; each returned eight Skills and no errors,
+with zero query thread/turn starts. These six query processes are counted
+separately, including queries for the three later unstarted A cases. No query
+was retried. An initial observer-wrapper invocation selected static-check mode
+only; it created no attempt marker and started no observation CLI. The supported
+run entry then executed the batch once. Both local logs remain available.
+
+The new window and its unused six slots are closed. A1-9 retain their limited
+original final-route evidence; the A5 intermediate message and older B13
+guidance-first facts remain unchanged. This is **original evidence reuse plus
+three of nine planned observations plus one approved deviation**, with a new
+unapproved A13 FAIL. It is not nine completed observations, a new 16-case batch
+or a complete acceptance. PR #121 stays Draft and Issue #117 stays open and
+BLOCKED. No Ready, merge, main synchronization, Issue completion, publication
+observation, tag, Release or cleanup was attempted. Existing R4/FCR and R5
+dispositions remain unchanged and do not excuse A13.
+
+Before execution, final external discovery ran **653 tests: 651 passed and two
+existing skips**. Eight corrected targeted tests and one authentication-root
+test passed. Five applicable Linux Hook tests, distribution/publication and
+Claude strict checks passed. Initial evidence is retained: four synthetic
+handoff errors, two policy-registration omissions, and one old synthetic
+history-fixture failure in the first full run were corrected before freezing.
+Test-local reuse of unchanged predecessor validation avoids repeated history
+work; production admission and all negative assertions remain intact. The
+generic plugin validator retains three known NON-PASS fields and the ASCII
+scan retains 16 historical line hits. Cwd/import root were external, bytecode
+disabled, and the legacy builder object/branch and alternates absent. The two
+formal product builds were reused. Only result-binding and document checks run
+after capture; final-head CI is reported separately from local results.
+
+One bounded independent review covered the source, test corrections and all
+five actual public messages. It confirmed the A13 FAIL, stop, history and
+permission boundaries; it is not a GitHub approval. All 24 prior normalized
+results and frozen product bytes are unchanged. No implementation, protocol,
+model input, scoring or product change followed observation. Existing bundles
+remain fixed snapshots; these later commits still need preservation before
+any eventual separately authorized activity-branch cleanup.
+
 ## Discovery outcome clarification after 118 attempts
 
 The schema and prompt already distinguish a usable catalog with no applicable

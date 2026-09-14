@@ -17,6 +17,11 @@ does not change its benchmark FAIL or any future acceptance condition.
 Product 0.10.1, full/profile runtime, frozen source/bundle policies 13/14 and
 both formal builds remain unchanged. Publication and cleanup are not authorized.
 
+The actual c7644a3 segment stopped after A10/A12 PASS and A13 FAIL, at 122/122.
+A14-16 and B12-14 remain NOT-RUN; the unused slots are closed. Result 9cfd86e
+binds the signed execution and unchanged protocol. It does not satisfy the
+nine-item acceptance or expand the separate A11 waiver.
+
 ## Discovery outcome measurement (policy 22)
 
 Assessment revision 5 clarifies only the existing `discoveryOutcome` definition:
