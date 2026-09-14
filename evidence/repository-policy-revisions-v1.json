@@ -184,6 +184,14 @@
       "sourceIssue": 117,
       "summary": "Register the fixed nine-item remainder with per-case failure stops and complete reply review; retain assessment 5, all historical scores and the documented A11 acceptance limit.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 24,
+      "recordedOn": "2026-09-13",
+      "baselineCommit": "6a6e7408d9234a76884587419d0d849ac5f237f8",
+      "sourceIssue": 117,
+      "summary": "Clarify discovery priority for unresolved traceable Git alternatives; preserve body, explicit requests, ordinary Git and all historical observations. No new observation window.",
+      "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f"
     }
   ]
 }

@@ -15,6 +15,30 @@ from tests.test_no_hook_native_observation import stream
 
 ROOT = Path(__file__).resolve().parents[1]
 
+class TraceableDiscoveryHistoryTests(unittest.TestCase):
+    def test_new_runtime_keeps_recorded_remainder_protocol_and_closed_window(self):
+        recorded = n._accepted_remainder_protocol(ROOT)
+        current = n._protocol(ROOT)
+        self.assertNotEqual(recorded['protocolDigest'], current['protocolDigest'])
+        self.assertEqual(recorded['assessmentRevision'], current['assessmentRevision'])
+        self.assertEqual(recorded['acceptedRemainder'], current['acceptedRemainder'])
+        self.assertEqual(recorded['nativeEmptyDiscovery'], current['nativeEmptyDiscovery'])
+        binding = n._fixed_result_binding(ROOT, accepted_remainder=True)
+        self.assertEqual(binding['sha256'], n.ACCEPTED_REMAINDER_RESULT_SHA256)
+        data = (ROOT / binding['path']).read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(), binding['sha256'])
+        result = json.loads(data)
+        self.assertEqual(result['protocolDigest'], recorded['protocolDigest'])
+        self.assertEqual(result['cumulativeAttemptCount'], 122)
+        self.assertEqual([c['status'] for c in result['caseResults']],
+                         ['PASS', 'PASS', 'FAIL', 'NOT-RUN', 'NOT-RUN', 'NOT-RUN'])
+        with patch.object(n, '_revision_four_auth_source',
+                          side_effect=AssertionError('recorded window reached authentication')):
+            with self.assertRaisesRegex(n.NativeObservationError, 'already recorded'):
+                n.prepare_fixed_acceptance(ROOT, ROOT / 'never-create-a-run',
+                    ROOT / 'never-read-private-state', ROOT / 'never-copy-a-package',
+                    authorize_install=True, authorize_copy=True, accepted_remainder=True)
+
 class AcceptedRemainderTests(unittest.TestCase):
     def setUp(self):
         self.support = empty_window.EmptyDiscoveryWindowTests()

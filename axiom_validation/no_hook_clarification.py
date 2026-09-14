@@ -695,8 +695,14 @@ def check(root: Path) -> list[str]:
                  type(empty["results"]) is list and len(empty["results"]) <= 1,
                  "empty discovery reply history changed")
         accepted = history["acceptedRemainder"]
+        accepted_protocol = p
+        if accepted["protocolDigest"] != p["protocolDigest"]:
+            data = _read(root / native.TRACEABLE_DISCOVERY_ARCHIVE / PROTOCOL.name)
+            _require(digest(data) == "d9bfd49dd94516d6935be50597eeaa87100eb2a58c103e7fc5fb5f098142a6c5",
+                     "recorded accepted remainder reply protocol bytes changed")
+            accepted_protocol = _json(data)
         _require(accepted == {"windowId": native.ACCEPTED_REMAINDER["windowId"],
-                             "protocolDigest": p["protocolDigest"], "results": accepted["results"]} and
+                             "protocolDigest": accepted_protocol["protocolDigest"], "results": accepted["results"]} and
                  type(accepted["results"]) is list and len(accepted["results"]) <= 1,
                  "accepted remainder reply history changed")
         for entry in [*history["results"], *fixed["results"], *fourth["results"], *separate["results"], *context["results"], *empty["results"], *accepted["results"]]:
@@ -707,7 +713,7 @@ def check(root: Path) -> list[str]:
             revision_four = entry in fourth["results"]
             new_fixed = accepted_remainder or empty_discovery or host_context or revision_four or entry in fixed["results"]
             historical = entry["sha256"] == PRIOR_SUPPLEMENT
-            active = p if accepted_remainder else empty_protocol if empty_discovery else context_protocol if host_context else separate_protocol if independent else fourth_protocol if revision_four else fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
+            active = accepted_protocol if accepted_remainder else empty_protocol if empty_discovery else context_protocol if host_context else separate_protocol if independent else fourth_protocol if revision_four else fixed_protocol if new_fixed else _json(_read(root / ARCHIVE / PROTOCOL.name)) if historical else recorded
             prior_count = 125 if accepted_remainder else 123 if empty_discovery else 122 if host_context else 98 if independent else 103 if revision_four else 92 if new_fixed else 70 if historical else chain["attempts"]
             prior_result = INDEPENDENT["priorResultSha256"] if independent else native._fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder)["sha256"] if new_fixed else PRIOR
             data = _read(root / entry["path"])

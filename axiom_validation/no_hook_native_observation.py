@@ -1331,6 +1331,8 @@ def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_conte
         recorded = _outcome_prior_protocol(root)
     if outcome_semantics and history["protocolDigest"] != recorded["protocolDigest"]:
         recorded = _remainder_prior_protocol(root)
+    if accepted_remainder and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _accepted_remainder_protocol(root)
     _require(set(history) == {"windowId", "protocolDigest", "results"} and
              history["windowId"] == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)["windowId"] and
              history["protocolDigest"] == recorded["protocolDigest"] and
@@ -1544,6 +1546,17 @@ def _outcome_prior_protocol(root: Path) -> dict[str, Any]:
     data = _read(root / OUTCOME_ARCHIVE / PROTOCOL_RELATIVE.name)
     _require(hashlib.sha256(data).hexdigest() == "591f67665266363dad78235d2acb9fe19effbf833568d2520903c3772c30f15b",
              "recorded native-empty protocol bytes changed")
+    return _json(data)
+
+
+ACCEPTED_REMAINDER_RESULT_SHA256 = "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"
+TRACEABLE_DISCOVERY_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/traceable-discovery-priority")
+
+
+def _accepted_remainder_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / TRACEABLE_DISCOVERY_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == "6dc5d81a50f3630de09f5a3763ee8f32bf2ec116f9abc3200fefa0718250b1c3",
+             "recorded accepted remainder protocol bytes changed")
     return _json(data)
 
 
@@ -2077,11 +2090,23 @@ def _case_explicit_selection(root: Path, request: str, ordinal: int, *,
     fixtures = _json(_read(root / legacy.FIXTURES_RELATIVE))
     _definition(fixtures, ordinal)  # Validate the same bound fixture/discovery record as production.
     installed = fixtures["cases"][ordinal - 1]["pluginState"] == "installed-derived-profile"
-    if installed and protocol_digest == MERGED_PROTOCOL_DIGEST:
-        # Reconstruct the completed assessment's selection identity from its
-        # immutable package inventory, never the revised candidate's Skill hash.
-        prior = _merged_protocol(root)
-        data = _read(root / "evidence/profiles/openai-hook-independent-v1/bundle-revision-9.json")
+    # Recorded selection identities use their original immutable inventory.
+    # This table changes no current discovery, invocation grammar or route.
+    recorded_sources = {
+        'sha256:756bca702e0ae300407df30324636d27cada3f46c4d9b780661b0eeb171b6bb3': (_merged_protocol, 9),
+        'sha256:e9f79ab4b9e7f2c2505fbef08f81810cbdbdb08ad96b975c289da55b0f05b6a7': (_fixed_protocol, 14),
+        'sha256:29267a410488d5348d912ddbde1c89e18da51afae5699847881cdbd6bcea235c': (_revision_four_protocol, 14),
+        'sha256:be71aae68744e501a4a7cdd746208fb88165270550e0dd2960cce857cd6bf2d9': (_routing_tail_protocol, 14),
+        'sha256:4c3cceff501df514a0b456bc840e3e4733d8161cfdc6d2e45e55185c9422c66b': (_host_context_protocol, 14),
+        'sha256:6fcddc71a743dd563783b38995d1074d94aac070eedb10c425efada472906290': (_outcome_prior_protocol, 14),
+        'sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c': (_remainder_prior_protocol, 14),
+        'sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04': (_accepted_remainder_protocol, 14),
+    }
+    if installed and protocol_digest in recorded_sources:
+        read_protocol, revision = recorded_sources[protocol_digest]
+        prior = read_protocol(root)
+        _require(prior["protocolDigest"] == protocol_digest, "historical selection protocol changed")
+        data = _read(root / f"evidence/profiles/openai-hook-independent-v1/bundle-revision-{revision}.json")
         _require(hashlib.sha256(data).hexdigest() == prior["inputs"]["staticBundleEvidence"]["sha256"],
                  "historical selection package evidence changed")
         manifest = _json(data)["bundleManifest"]
@@ -3916,6 +3941,8 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             protocol = _host_context_protocol(root)
         elif result_sha256 == REMAINDER_PRIOR:
             protocol = _remainder_prior_protocol(root)
+        elif result_sha256 == ACCEPTED_REMAINDER_RESULT_SHA256:
+            protocol = _accepted_remainder_protocol(root)
         elif result_sha256 == OUTCOME_PRIOR:
             protocol = _outcome_prior_protocol(root)
         result_schema = _json(_read(root / RESULT_SCHEMA_RELATIVE))
@@ -4070,7 +4097,17 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                     _require(read["path"] in public_paths, "unbound public fixture read")
                     source_bytes = public_paths[read["path"]]
                 else:
-                    evidence = _json(_read(root / STATIC_BUNDLE_EVIDENCE_RELATIVE))
+                    evidence_bytes = _read(root / STATIC_BUNDLE_EVIDENCE_RELATIVE)
+                    expected_evidence = protocol["inputs"]["staticBundleEvidence"]["sha256"]
+                    if hashlib.sha256(evidence_bytes).hexdigest() != expected_evidence:
+                        # Historical read lengths belong to that protocol's package.
+                        candidates = [root / f"evidence/profiles/openai-hook-independent-v1/bundle-revision-{v}.json"
+                                      for v in (9, 14)]
+                        matches = [data for path in candidates if
+                                   hashlib.sha256(data := _read(path)).hexdigest() == expected_evidence]
+                        _require(len(matches) == 1, "historical public read package evidence changed")
+                        evidence_bytes = matches[0]
+                    evidence = _json(evidence_bytes)
                     manifest = evidence["bundleManifest"]
                     inventory = {entry["path"] for entry in manifest["runtimeFiles"]} | {".codex-plugin/plugin.json", "BUNDLE-MANIFEST.json"}
                     _require(ordinal != 11 and read["path"] in inventory and
@@ -4082,6 +4119,14 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                         source_bytes = (json.dumps(manifest, ensure_ascii=True, indent=2) + "\n").encode("ascii")
                     else:
                         source_bytes = _read(root / relative)
+                        source_record = next(item for item in manifest["runtimeFiles"] if item["path"] == read["path"])
+                        if hashlib.sha256(source_bytes).hexdigest() != source_record["sha256"]:
+                            _require(read["path"] == "skills/traceable-git-submit/SKILL.md" and
+                                     source_record["sha256"] == "0a2b20b40bb6bc17568a4a9afc00c24e1e7ccbed2dfeb28999f813ba6b9dbb4e",
+                                     "historical public read source is unavailable")
+                            source_bytes = _read(root / TRACEABLE_DISCOVERY_ARCHIVE / "traceable-git-submit-source.txt")
+                        _require(hashlib.sha256(source_bytes).hexdigest() == source_record["sha256"],
+                                 "public read source bytes differ from bound inventory")
                 if read["range"] is not None:
                     first, last = read["range"]
                     _require(1 <= first <= last <= 100000, "public read line range invalid")

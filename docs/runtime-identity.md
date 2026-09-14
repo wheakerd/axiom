@@ -1,5 +1,26 @@
 # Runtime And Repository Identity
 
+## Traceable discovery priority source (policy 24)
+
+The assigned and still unpublished 0.10.1 candidate receives a compatible
+discovery-description clarification, not a new route. The existing requirement
+to clarify unresolved material workflow alternatives precedes positive triggers;
+delegation and checkpoint options do not select a workflow. Only the traceable
+Skill description changes. The body, using-axiom and Hooks remain identical.
+
+The same 61 runtime inputs now hash to
+`sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f`.
+Policy 24 is the new frozen-source policy and policy 25 owns its required
+derived bundle. The prior 13/14 artifact and all 122 historical observations
+retain their original identities. Current behavior is NOT-RUN, with zero
+queries, new attempts, authentication handoffs or reopened windows.
+
+The required protocol rebinding changes opaque implementation identities,
+not assessment 5 field definitions, prompt instructions, query/relay semantics,
+read permissions or scoring. Historical selection and read validation use
+their original inventory and exact archived public source. See
+[Field Validation](field-validation.md#traceable-discovery-priority-after-the-stopped-remainder).
+
 ## Accepted remaining observations (policy 23)
 
 Policy 23 registers one independent window for A10, A12-16, then B12-14,
@@ -193,7 +214,7 @@ policies 13/14 and their existing byte-identical build evidence; this policy
 revision is not a new package or build. Execution and result commits are recorded
 separately from frozen product source.
 
-## Current unpublished v0.10.1 pending-choice clarification
+## Historical unpublished v0.10.1 pending-choice clarification
 
 The assigned 0.10.1 candidate remains untagged and unreleased. Policy revision
 13 records a compatible clarification of the agent-plugin-architect discovery
@@ -202,8 +223,8 @@ The full runtime digest is
 `sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2` across the same 61 installed inputs.
 Policy revision 14 binds two identical actual builds from signed source
 `8a593026285d285d95f7a9e0c6ec0793738c3707`, tree
-`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`, to the current
-[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
+`fb1ecd9b605f3e928fd958da2333f66d3018c0f3`, to the preserved
+[bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-revision-14.json).
 
 The existing contract already required clarification. This revision explicitly
 keeps a material workflow choice unselected after asking until the user chooses;

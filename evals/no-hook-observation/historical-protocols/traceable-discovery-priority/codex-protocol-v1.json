@@ -461,7 +461,7 @@
       {
         "path": "axiom_validation/no_hook_observation.py",
         "role": "implementation-validator",
-        "sha256": "5d33cc97152ddfc1d263aa292bbb0c6400e4f70d4ec6642dd2630b8e94b92c46"
+        "sha256": "d98e782f101bee723ffa3ba13bfa15f1a51be4a5527960fb5f6a893878fb2c60"
       },
       {
         "path": "axiom_validation/no_hook_linux_isolation.py",
@@ -611,5 +611,5 @@
     "unknownObjects": "preserve-incomplete-no-invented-residual",
     "modelCallAuthority": "external-unchanged-sixteen-call-capability"
   },
-  "protocolDigest": "sha256:5ad2428c867a7926eba8f92225a41a9d2e58543b4e636f4ece90cb7dcb1b06b5"
+  "protocolDigest": "sha256:98b07983233d2b19c31f0cf04b989ca17a1fe3ea7d3a01d209b72db032e654a1"
 }

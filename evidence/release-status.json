@@ -8,9 +8,9 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.10.1",
-    "repositoryPolicyRevision": 23,
+    "repositoryPolicyRevision": 24,
     "runtimeContractSchemaVersion": "1",
-    "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+    "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
     "history": "evidence/runtime-contract-history-v1.json"
   },
@@ -23,9 +23,9 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+      "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
       "status": "not-run",
-      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. No-Hook A10/A12 PASS; A13 FAIL stops A14-16 and B12-14 at 122/122. Only the specified A11 classification deviation is user-accepted; its original FAIL remains. Protocol/Hook checks and reused builds do not establish publication PASS."
+      "reason": "Current discovery-description runtime is NOT-RUN. Historical no-Hook results retain their original protocol/product identities, including the A13 FAIL and the separately accepted limited A11 classification deviation. Static and Hook checks do not establish host behavior or publication PASS."
     },
     {
       "host": "claude-code",
@@ -34,9 +34,9 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.10.1",
-      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
+      "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
       "status": "not-run",
-      "reason": "Current 0.10.1 full-profile installed behavior is NOT-RUN. Earlier authenticated availability was UNAVAILABLE; this round did not reassess authentication. Claude no-Hook remains excluded. CLI availability and Hook fixtures do not prove installed behavior."
+      "reason": "Current discovery-description runtime is NOT-RUN. Historical no-Hook results retain their original protocol/product identities, including the A13 FAIL and the separately accepted limited A11 classification deviation. Static and Hook checks do not establish host behavior or publication PASS."
     }
   ],
   "priorReleaseEvidence": [

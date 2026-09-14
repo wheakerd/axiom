@@ -1,5 +1,61 @@
 # Field Validation
 
+## Traceable discovery priority after the stopped remainder
+
+The non-sensitive native discovery receipt from the c7644a3 A13 scope returned
+the enabled `axiom:traceable-git-submit` entry at the installed derived-package
+path. Its description exactly matches frozen source
+`8a593026285d285d95f7a9e0c6ec0793738c3707` and baseline
+`6a6e7408d9234a76884587419d0d849ac5f237f8`. That canonical file has 8,179 bytes,
+SHA-256 `0a2b20b40bb6bc17568a4a9afc00c24e1e7ccbed2dfeb28999f813ba6b9dbb4e`.
+There is no demonstrated source-version, path or description-delivery mismatch.
+The receipt proves returned discovery metadata, not semantic consumption or
+native loading. No public read was recorded in that routing response; absence
+of a read event does not establish that the Skill body was not loaded.
+
+The prior description already required clarification first. Its replacement
+places unresolved material either/or choices before routing and explicitly
+says delegation or checkpoint options do not select the workflow. This makes
+the existing Intent Gate priority visible before body selection. The Intent
+Gate, every phase reference and using-axiom remain byte-identical; no rule is
+appended to the body. The resulting Skill file is 8,188 bytes, below 8 KiB.
+
+The bounded independent text review covered delegated material alternatives,
+explicit ordinary non-force push, explicit traceable invocation, checkpoint
+requirements, concepts, unchanged selected workflows and choices without a
+material boundary change. These retain separate routing and action authority.
+This is a product discovery-expression improvement, not an established model
+root cause or a behavioral repair. No case ID, request, expected route, fixed
+question, score or field value is added to the product or assessment input.
+
+Policy 24 freezes this compatible source revision of the assigned, unpublished
+0.10.1 candidate. Its full runtime contains the same 61 inputs with digest
+`sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f`.
+The builder change only admits the exact source/bundle policy pair 24/25;
+transport, lifecycle, authority and output handling are unchanged. Two actual
+deterministic builds and their signed source binding follow this source freeze.
+
+The policy-14 bundle evidence and the exact prior protocols are retained under
+their historical owners. The old Git source is retained as a non-discoverable
+historical text artifact solely for validating prior public read lengths and
+ranges against the old inventory. It is not another canonical Skill or a
+runtime input. Historical explicit invocation metadata likewise uses its
+original bound inventory. Current query, empty-result relay, assessment 5
+definitions, original inputs, Golden Set, scorer and read permissions do not
+change. Only product bytes and required implementation/protocol identities do.
+
+All 122 attempts and observation CLI starts retain their original results;
+new host queries, observations, prepared cases and authentication handoffs are
+zero. The c7644a3 A13 FAIL remains, and its stop still leaves A14-16 and B12-14
+NOT-RUN. The A11 acceptance decision remains limited to the specified
+16c13a3 result and does not accept A13 or any new runtime behavior.
+
+A future behavior proposal must start with A13 once, then consider B13 and the
+explicit traceable/checkpoint invocation control affected by this description.
+No new calls are authorized here, no full 16+3 restart is implied, and A11 is
+not in that proposal. All prior host results remain evidence for their original
+runtime and input identity; none becomes a PASS for this candidate.
+
 ## Accepted A11 classification deviation and nine-item window
 
 The user accepted only the current A11 classification deviation for signed
