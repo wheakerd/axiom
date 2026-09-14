@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "d53404295c648c5e779e9e7ec15be449df5b1497213911ce9af83b701ba967bc"
+      "sha256": "69dc0dbece6fe6af1167b180f6e4866d323b87525a3284b4990d99b9eb2c6f51"
     },
     {
       "path": "axiom_validation/no_hook_discovery.py",
@@ -68,7 +68,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "d2f825e2ac1563478698e5a449f663d7a80c7494da6c4a4a0f334d080263c977"
+      "sha256": "3ee695c04e0a6bc1d676dbf3f022e7b43fbb49f7ef0b129a792059569c7889ca"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -127,7 +127,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "c962a7a913cfb1cad25871adf470b2f4e66767d13bcba20062a83a70d9baf0da"
+    "sha256": "898bdfd6192d38c01a37d5ddb41b1391de10cdc711fe136e9c3ee2cd3e7477c5"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -449,7 +449,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:b5472a3b11a57de4f26929b7cf6f992b8f4381953e896fd85673583cef9b721b",
+  "protocolDigest": "sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
@@ -724,6 +724,65 @@
     "clarificationRunName": "cases-accepted-remainder-clarification-1",
     "order": "A10, A12-16, then B12-14; each once in a fresh scope",
     "stop": "any new FAIL, INCOMPLETE, query, policy, identity or reliability failure closes all subsequent slots",
+    "authenticationSourceOrdinal": 10,
+    "assessmentRevision": 5,
+    "hostEnvironmentContext": {
+      "revision": 1,
+      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
+      "includeEnvironmentContext": false,
+      "includePermissionsInstructions": true,
+      "scope": "all routing and clarification inputs; no replacement environment text",
+      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
+      "evidence": "native configuration and public source; behavior requires fresh observation"
+    },
+    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
+    "authenticationPlan": {
+      "plan": "pro",
+      "source": "user-confirmed dedicated test source",
+      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
+    }
+  },
+  "traceableConfirmation": {
+    "windowId": "traceable-confirmation-1",
+    "state": "authorized-once",
+    "candidateCommit": "c752e7b4f316e1f2224c233b326e97d6652d7638",
+    "candidateTree": "cf281d8802f354767ed4354907e90fa1ab4ef246",
+    "sourceCommit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
+    "sourceTree": "425182b4dbdd5fd549f16e38b4039d1eb09f526f",
+    "fullRuntimeDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
+    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
+    "priorResultSha256s": [
+      "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"
+    ],
+    "priorAttempts": 122,
+    "priorCliLaunches": 122,
+    "routingOrdinals": [
+      13,
+      6,
+      14,
+      15,
+      16
+    ],
+    "clarificationOrdinals": [
+      13,
+      12,
+      14
+    ],
+    "maximumNewAttempts": 8,
+    "maximumCumulativeAttempts": 130,
+    "routingRunName": "cases-traceable-confirmation-routing-1",
+    "clarificationRunName": "cases-traceable-confirmation-replies-1",
+    "order": [
+      "A13",
+      "B13",
+      "A6",
+      "A14",
+      "A15",
+      "A16",
+      "B12",
+      "B14"
+    ],
+    "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",
     "authenticationSourceOrdinal": 10,
     "assessmentRevision": 5,
     "hostEnvironmentContext": {

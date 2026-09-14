@@ -1,5 +1,15 @@
 # Runtime And Repository Identity
 
+## Interleaved traceable confirmation (policy 26)
+
+Policy 26 registers eight observations in the explicitly authorized order and
+retains the source/bundle policies 24/25, both existing builds and the unchanged
+61-input runtime. Assessment 5, query/relay semantics and permission boundaries
+remain fixed; only execution registration/control and opaque protocol bindings
+change. The old normal authentication source retains its original public package
+identity. No old window is reopened. The complete evidence reuse boundary is in
+[Field Validation](field-validation.md#frozen-traceable-confirmation-window-policy-26).
+
 ## Traceable discovery priority source (policy 24)
 
 The assigned and still unpublished 0.10.1 candidate receives a compatible

@@ -210,5 +210,10 @@
         "implementationTree": "ea9f97e51656ff699b7a3d5a6461b919a75c5258"
       }
     ]
+  },
+  "traceableConfirmation": {
+    "windowId": "traceable-confirmation-1",
+    "protocolDigest": "sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb",
+    "results": []
   }
 }

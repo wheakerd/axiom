@@ -240,17 +240,37 @@ ACCEPTED_REMAINDER = {
 }
 
 
-def _fixed_contract(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any]:
-    _require(sum((revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)) <= 1, "select one fixed window")
-    return ACCEPTED_REMAINDER if accepted_remainder else OUTCOME_ACCEPTANCE if outcome_semantics else EMPTY_DISCOVERY_ACCEPTANCE if empty_discovery else HOST_CONTEXT_ACCEPTANCE if host_context else REVISION_FOUR_ACCEPTANCE if revision_four else FIXED_ACCEPTANCE
+TRACEABLE_CONFIRMATION = {
+    **ACCEPTED_REMAINDER,
+    "windowId": "traceable-confirmation-1",
+    "candidateCommit": "c752e7b4f316e1f2224c233b326e97d6652d7638",
+    "candidateTree": "cf281d8802f354767ed4354907e90fa1ab4ef246",
+    "sourceCommit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
+    "sourceTree": "425182b4dbdd5fd549f16e38b4039d1eb09f526f",
+    "fullRuntimeDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f",
+    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
+    "priorResultSha256s": ["9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"],
+    "priorAttempts": 122, "priorCliLaunches": 122,
+    "routingOrdinals": [13, 6, 14, 15, 16], "clarificationOrdinals": [13, 12, 14],
+    "maximumNewAttempts": 8, "maximumCumulativeAttempts": 130,
+    "routingRunName": "cases-traceable-confirmation-routing-1",
+    "clarificationRunName": "cases-traceable-confirmation-replies-1",
+    "order": ["A13", "B13", "A6", "A14", "A15", "A16", "B12", "B14"],
+    "stop": "any non-PASS or failed public-message review stops every later launch and authentication handoff",
+}
 
 
-def _fixed_history_key(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> str:
-    return "acceptedRemainder" if accepted_remainder else "discoveryOutcomeAcceptance" if outcome_semantics else "nativeEmptyDiscoveryAcceptance" if empty_discovery else "hostContextAcceptance" if host_context else "revisionFourAcceptance" if revision_four else "fixedAcceptance"
+def _fixed_contract(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any]:
+    _require(sum((revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)) <= 1, "select one fixed window")
+    return TRACEABLE_CONFIRMATION if traceable_confirmation else ACCEPTED_REMAINDER if accepted_remainder else OUTCOME_ACCEPTANCE if outcome_semantics else EMPTY_DISCOVERY_ACCEPTANCE if empty_discovery else HOST_CONTEXT_ACCEPTANCE if host_context else REVISION_FOUR_ACCEPTANCE if revision_four else FIXED_ACCEPTANCE
 
 
-def _fixed_kind(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> str:
-    return "accepted-remainder-1" if accepted_remainder else "discovery-outcome-1" if outcome_semantics else "native-empty-discovery-1" if empty_discovery else "host-context-fixed-1" if host_context else "assessment-revision-4-fixed-1" if revision_four else "fixed-candidate-acceptance-1"
+def _fixed_history_key(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> str:
+    return "traceableConfirmation" if traceable_confirmation else "acceptedRemainder" if accepted_remainder else "discoveryOutcomeAcceptance" if outcome_semantics else "nativeEmptyDiscoveryAcceptance" if empty_discovery else "hostContextAcceptance" if host_context else "revisionFourAcceptance" if revision_four else "fixedAcceptance"
+
+
+def _fixed_kind(revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> str:
+    return "traceable-confirmation-1" if traceable_confirmation else "accepted-remainder-1" if accepted_remainder else "discovery-outcome-1" if outcome_semantics else "native-empty-discovery-1" if empty_discovery else "host-context-fixed-1" if host_context else "assessment-revision-4-fixed-1" if revision_four else "fixed-candidate-acceptance-1"
 
 ROUTING_TAIL_PRIOR = "2a3e3a5ed4f7c86306169fa8eaebfd7382af8e2cc9705be43aea5454eba257fe"
 ROUTING_TAIL_PRIORS = [ROUTING_TAIL_PRIOR]
@@ -912,6 +932,7 @@ def _protocol(root: Path) -> dict[str, Any]:
              document.get("nativeEmptyDiscovery") == NATIVE_EMPTY_DISCOVERY, "native empty discovery contract changed")
     _require(document.get("hostContextAcceptance") == HOST_CONTEXT_ACCEPTANCE and
              document.get("hostEnvironmentContext") == HOST_CONTEXT, "host context contract changed")
+    _require(document.get("traceableConfirmation") == TRACEABLE_CONFIRMATION, "traceable confirmation contract changed")
     _require(document.get("acceptedRemainder") == ACCEPTED_REMAINDER, "accepted remainder window changed")
     _require(document.get("discoveryOutcomeAcceptance") == OUTCOME_ACCEPTANCE,
              "outcome-definition single-case window changed")
@@ -1013,7 +1034,7 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
                 protocol_digest=protocol["protocolDigest"], model_schema=_input(root, protocol, "modelResponseSchema"),
                 prompt_envelope=_input(root, protocol, "promptEnvelope"), request=case["request"])
         history = _json(_read(root / HISTORY_RELATIVE))
-        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation", "assessmentRevision3", "fixedAcceptance", "revisionFourAcceptance", "independentRoutingTail", "hostContextAcceptance", "nativeEmptyDiscoveryAcceptance", "discoveryOutcomeAcceptance", "acceptedRemainder"} and
+        _require(set(history) == {"schemaVersion", "kind", "protocol", "results", "current", "historicalResults", "reviewedPartial", "previousPartial", "historicalBatch", "assessmentPartial", "assessmentRemainder", "materialObservation", "assessmentRevision3", "fixedAcceptance", "revisionFourAcceptance", "independentRoutingTail", "hostContextAcceptance", "nativeEmptyDiscoveryAcceptance", "discoveryOutcomeAcceptance", "acceptedRemainder", "traceableConfirmation"} and
                  history["schemaVersion"] == "2" and history["kind"] == "axiom-codex-native-result-history" and
                  history["protocol"] == {"path": PROTOCOL_RELATIVE.as_posix(), "digest": MERGED_PROTOCOL_DIGEST},
                  "native history identity is inconsistent")
@@ -1132,6 +1153,8 @@ def validate_native_protocol(root: Path = REPOSITORY_ROOT) -> list[str]:
         _fixed_result_binding(root, outcome_semantics=True)
         _fixed_result_binding(root, accepted_remainder=True)
         outcome_attempt_history(root)
+        _fixed_result_binding(root, traceable_confirmation=True)
+        traceable_attempt_history(root)
         return []
     except (OSError, ValueError, KeyError, TypeError, NativeObservationError) as error:
         return [str(error)]
@@ -1320,9 +1343,9 @@ def _execution_source(root: Path) -> dict[str, str]:
     return {"commit": values[0], "tree": values[1]}
 
 
-def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any] | None:
-    history = _json(_read(root / HISTORY_RELATIVE))[_fixed_history_key(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)]
-    recorded = _protocol(root) if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder else _fixed_protocol(root)
+def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any] | None:
+    history = _json(_read(root / HISTORY_RELATIVE))[_fixed_history_key(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)]
+    recorded = _protocol(root) if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation else _fixed_protocol(root)
     if revision_four and history["protocolDigest"] != recorded["protocolDigest"]:
         recorded = _revision_four_protocol(root)
     if host_context and history["protocolDigest"] != recorded["protocolDigest"]:
@@ -1334,7 +1357,7 @@ def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_conte
     if accepted_remainder and history["protocolDigest"] != recorded["protocolDigest"]:
         recorded = _accepted_remainder_protocol(root)
     _require(set(history) == {"windowId", "protocolDigest", "results"} and
-             history["windowId"] == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)["windowId"] and
+             history["windowId"] == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)["windowId"] and
              history["protocolDigest"] == recorded["protocolDigest"] and
              type(history["results"]) is list and len(history["results"]) <= 1,
              "fixed routing result registration changed")
@@ -1348,7 +1371,7 @@ def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_conte
     _require(hashlib.sha256(data).hexdigest() == binding["sha256"], "fixed routing result bytes changed")
     result = _json(data)
     _require(not validate_native_result(result, root) and result["runMode"] == "actual" and
-             result.get("executionSegment", {}).get("kind") == _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder) and
+             result.get("executionSegment", {}).get("kind") == _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation) and
              result["executionSource"] == {"commit": binding["implementationCommit"], "tree": binding["implementationTree"]},
              "fixed routing result is not its actual execution")
     return binding
@@ -1376,16 +1399,163 @@ def revision_four_attempt_history(root: Path) -> dict[str, Any]:
             "resultSha256s": REVISION_FOUR_PRIOR_RESULTS}
 
 
-def _fixed_attempt_history(root: Path, revision_four: bool, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any]:
-    return remainder_attempt_history(root) if accepted_remainder else outcome_attempt_history(root) if outcome_semantics else empty_discovery_attempt_history(root) if empty_discovery else host_context_attempt_history(root) if host_context else revision_four_attempt_history(root) if revision_four else fixed_attempt_history(root)
+def traceable_attempt_history(root: Path) -> dict[str, Any]:
+    old = remainder_attempt_history(root)
+    binding = _fixed_result_binding(root, accepted_remainder=True)
+    _require(binding is not None and binding["sha256"] == TRACEABLE_CONFIRMATION["priorResultSha256s"][0],
+             "traceable confirmation predecessor changed")
+    result = _json(_read(root / binding["path"]))
+    identities = {tuple(x) for x in old["identities"]}
+    for item in result["caseResults"]:
+        if not item["attemptCount"]:
+            _require(item["cliLaunchCount"] == 0, "unstarted predecessor launched")
+            continue
+        key = (item["ordinal"], item["materializationCommitmentSha256"])
+        _require(key not in identities and item["attemptCount"] == item["cliLaunchCount"] == 1,
+                 "traceable predecessor overlaps history")
+        identities.add(key)
+    _require(len(identities) == result["cumulativeAttemptCount"] == 122 and
+             result["attemptCount"] == result["cliLaunchCount"] == 3,
+             "traceable confirmation must retain all 122 attempts")
+    return {"attempts": 122, "cliLaunches": 122, "identities": [list(x) for x in sorted(identities)],
+            "resultSha256s": TRACEABLE_CONFIRMATION["priorResultSha256s"]}
 
 
-def _revision_four_auth_source(root: Path, previous: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any]:
+def _new_traceable_results(root: Path) -> dict:
+    from . import no_hook_clarification as replies
+    cases = legacy.load_golden_cases(root)
+    return {"clarificationProtocolDigest": replies.protocol(root)["protocolDigest"],
+            "clarificationResults": [{"ordinal": i, "caseId": cases[i-1]["id"], "status": "NOT-RUN",
+                "attemptCount": 0, "cliLaunchCount": 0, "capture": None, "review": None,
+                "preparation": "not-started"} for i in TRACEABLE_CONFIRMATION["clarificationOrdinals"]],
+            "routingMessageReviews": []}
+
+
+def _review_public_case(record: dict, semantic_review) -> dict:
+    captured = _bytes(record)
+    try:
+        review = semantic_review(_json(captured))
+        _require(type(review) is dict and set(review) == {"verdict", "reason"} and
+                 review["verdict"] in {"PASS", "FAIL"} and type(review["reason"]) is str and
+                 0 < len(review["reason"]) <= 2000, "invalid public-message review")
+    except (EOFError, OSError, ValueError, TypeError, NativeObservationError):
+        review = {"verdict": "INCOMPLETE", "reason": "Public-message review unavailable; all later observations stopped."}
+    _require(_bytes(record) == captured, "review changed the retained capture")
+    return {"ordinal": record["ordinal"], "caseResultSha256": hashlib.sha256(captured).hexdigest(), **review}
+
+
+def _traceable_stage_source(root: Path, previous: Path, stage: int, *, simulated: bool) -> tuple[dict, dict]:
+    _require(stage in (13, 16) and previous.name == TRACEABLE_CONFIRMATION["routingRunName"],
+             "unregistered traceable reply stage")
+    registration = _fixed_registration(root, previous.parent, traceable_confirmation=True)
+    p, state = _state(root, previous, traceable_confirmation=True)
+    _require(state["runMode"] == ("simulated" if simulated else "actual") and
+             registration["executionSource"] == (None if simulated else _execution_source(root)) and
+             _json(_read(previous / "batch-started.json")) == {"protocolDigest": p["protocolDigest"]} and
+             not (previous / "normalized-result.json").exists(), "traceable reply window is not active")
+    gate = _json(_read(previous / f"reply-gate-{stage}.json"))
+    _require(set(gate) == {"executionSource", "protocolDigest", "caseResults", "traceableConfirmation"} and
+             gate["executionSource"] == registration["executionSource"] and gate["protocolDigest"] == p["protocolDigest"],
+             "traceable reply gate identity changed")
+    passed = [13] if stage == 13 else TRACEABLE_CONFIRMATION["routingOrdinals"]
+    records = gate["caseResults"]
+    _require([x["ordinal"] for x in records] == TRACEABLE_CONFIRMATION["routingOrdinals"], "routing gate set changed")
+    reviews = gate["traceableConfirmation"]["routingMessageReviews"]
+    _require([x["ordinal"] for x in reviews] == passed, "routing gate review coverage changed")
+    for item, review in zip(records, reviews):
+        _validate_public_review(item, review)
+        facts = item["executionDiagnostics"]
+        _require(item["status"] == "PASS" and review["verdict"] == "PASS" and facts["category"] == "none" and
+                 facts["returnCode"] == 0 and facts["finalOutputVerified"] and facts["inputFullyDelivered"] and
+                 not any(facts[k] for k in ("timedOut", "cleanupFailed", "observerTerminated")) and
+                 item["evidenceExtraction"]["postcheck"] == "valid", "routing gate did not complete and pass")
+        _require(_json(_read(previous / f"attempt-{item['ordinal']:02d}.json")) == {
+            "ordinal": item["ordinal"], "caseId": item["caseId"], "protocolDigest": p["protocolDigest"]},
+            "routing gate attempt changed")
+    if stage == 16:
+        from . import no_hook_clarification as replies
+        entry = gate["traceableConfirmation"]["clarificationResults"][0]
+        replies.validate_confirmation_entry(root, entry)
+        _require(entry["status"] == "PASS", "B13 must pass before the reply tail")
+    item = next(x for x in records if x["ordinal"] == stage)
+    paths = _case_paths(previous, stage)
+    definition = _definition(_input(root, p, "fixtureMatrix"), stage)
+    _verify_config(paths, previous / "marketplace", True)
+    _verify_discovery(paths, True)
+    _require(fixture_identity(paths["workspace"], definition) == item["fixtureAfterSha256"] and
+             package_identity(paths["package"]) == item["packageAfterSha256"] and
+             not (previous / f"final-message-{stage:02d}.json").exists(), "routing gate public state changed")
+    _model_metadata(paths)
+    count = 123 if stage == 13 else 128
+    return state, {"attempts": count, "cliLaunches": count}
+
+
+def _validate_public_review(record: dict, review: dict) -> None:
+    _require(type(review) is dict and set(review) == {"ordinal", "caseResultSha256", "verdict", "reason"} and
+             review["ordinal"] == record["ordinal"] and
+             review["caseResultSha256"] == hashlib.sha256(_bytes(record)).hexdigest() and
+             review["verdict"] in {"PASS", "FAIL", "INCOMPLETE"} and type(review["reason"]) is str and
+             0 < len(review["reason"]) <= 2000, "public review does not bind the whole capture")
+
+
+def _finish_traceable_counts(document: dict) -> None:
+    extra = document["traceableConfirmation"]
+    replies = extra["clarificationResults"]
+    extra["attemptCount"] = document["attemptCount"] + sum(x["attemptCount"] for x in replies)
+    extra["cliLaunchCount"] = document["cliLaunchCount"] + sum(x["cliLaunchCount"] for x in replies)
+    document["cumulativeAttemptCount"] = 122 + extra["attemptCount"]
+    extra["cumulativeCliLaunchCount"] = 122 + extra["cliLaunchCount"]
+    statuses = [x["status"] for x in document["caseResults"] + replies]
+    verdicts = [x["verdict"] for x in extra["routingMessageReviews"]]
+    extra["status"] = "INCOMPLETE" if any(x in {"NOT-RUN", "INCOMPLETE"} for x in statuses + verdicts) else (
+        "FAIL" if "FAIL" in statuses + verdicts else "PASS")
+    if document["runMode"] == "simulated":
+        extra["status"] = "INCOMPLETE"
+
+
+def _validate_traceable_results(document: dict, root: Path) -> None:
+    from . import no_hook_clarification as replies
+    extra = document["traceableConfirmation"]
+    _require(set(extra) == {"clarificationProtocolDigest", "clarificationResults", "routingMessageReviews",
+                           "attemptCount", "cliLaunchCount", "cumulativeCliLaunchCount", "status"} and
+             extra["clarificationProtocolDigest"] == replies.protocol(root)["protocolDigest"],
+             "traceable result protocol or fields changed")
+    a = {x["ordinal"]: x for x in document["caseResults"]}
+    b = extra["clarificationResults"]
+    _require([x["ordinal"] for x in b] == TRACEABLE_CONFIRMATION["clarificationOrdinals"], "reply set changed")
+    for entry in b:
+        replies.validate_confirmation_entry(root, entry)
+    reviews = extra["routingMessageReviews"]
+    _require([x["ordinal"] for x in reviews] == [x["ordinal"] for x in document["caseResults"] if x["status"] == "PASS"],
+             "routing public-message review coverage changed")
+    for review in reviews:
+        _validate_public_review(a[review["ordinal"]], review)
+    by_review = {x["ordinal"]: x for x in reviews}
+    b = {x["ordinal"]: x for x in b}
+    stopped = False
+    for label in TRACEABLE_CONFIRMATION["order"]:
+        ordinal = int(label[1:])
+        record = (a if label[0] == "A" else b)[ordinal]
+        _require(not stopped or record["status"] == "NOT-RUN", "traceable window continued after a non-PASS")
+        verdict = by_review[ordinal]["verdict"] if label[0] == "A" and record["status"] == "PASS" else record["status"]
+        stopped |= verdict != "PASS"
+    copied = _json(_bytes(document))
+    _finish_traceable_counts(copied)
+    _require(copied == document and 0 <= extra["cliLaunchCount"] <= extra["attemptCount"] <= 8 and
+             document["cumulativeAttemptCount"] <= 130 and extra["cumulativeCliLaunchCount"] <= 130,
+             "traceable window accounting changed")
+
+
+def _fixed_attempt_history(root: Path, revision_four: bool, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any]:
+    return traceable_attempt_history(root) if traceable_confirmation else remainder_attempt_history(root) if accepted_remainder else outcome_attempt_history(root) if outcome_semantics else empty_discovery_attempt_history(root) if empty_discovery else host_context_attempt_history(root) if host_context else revision_four_attempt_history(root) if revision_four else fixed_attempt_history(root)
+
+
+def _revision_four_auth_source(root: Path, previous: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any]:
     """Verify only the registered, normally completed source; never inspect auth."""
-    binding = _fixed_result_binding(root, host_context=True) if (empty_discovery or outcome_semantics or accepted_remainder) else _routing_tail_binding(root) if host_context or empty_discovery or outcome_semantics or accepted_remainder else _fixed_result_binding(root, revision_four=revision_four)
-    expected = EMPTY_DISCOVERY_PRIOR if (empty_discovery or outcome_semantics or accepted_remainder) else HOST_CONTEXT_PRIOR if host_context else REVISION_FOUR_RESULT_SHA256 if revision_four else FIXED_RESULT_SHA256
+    binding = _fixed_result_binding(root, host_context=True) if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation) else _routing_tail_binding(root) if host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation else _fixed_result_binding(root, revision_four=revision_four)
+    expected = EMPTY_DISCOVERY_PRIOR if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation) else HOST_CONTEXT_PRIOR if host_context else REVISION_FOUR_RESULT_SHA256 if revision_four else FIXED_RESULT_SHA256
     _require(binding is not None and binding["sha256"] == expected and
-             previous.name == (HOST_CONTEXT_ACCEPTANCE["routingRunName"] if (empty_discovery or outcome_semantics or accepted_remainder) else ROUTING_TAIL["runName"] if host_context else _fixed_contract(revision_four)["routingRunName"]), "revision 4 authentication predecessor changed")
+             previous.name == (HOST_CONTEXT_ACCEPTANCE["routingRunName"] if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation) else ROUTING_TAIL["runName"] if host_context else _fixed_contract(revision_four)["routingRunName"]), "revision 4 authentication predecessor changed")
     data = _read(root / binding["path"])
     _require(_read(previous / "normalized-result.json") == data, "authentication predecessor result changed")
     result, state = _json(data), _json(_read(previous / STATE_NAME))
@@ -1393,7 +1563,7 @@ def _revision_four_auth_source(root: Path, previous: Path, *, revision_four: boo
              state["materializationSeed"] == result["materializationSeed"] and
              _json(_read(previous / "batch-started.json")) == {"protocolDigest": result["protocolDigest"]},
              "authentication predecessor preparation changed")
-    ordinal = EMPTY_DISCOVERY_ACCEPTANCE["authenticationSourceOrdinal"] if (empty_discovery or outcome_semantics or accepted_remainder) else HOST_CONTEXT_ACCEPTANCE["authenticationSourceOrdinal"] if host_context else REVISION_FOUR_ACCEPTANCE["authenticationSourceOrdinal"]
+    ordinal = EMPTY_DISCOVERY_ACCEPTANCE["authenticationSourceOrdinal"] if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation) else HOST_CONTEXT_ACCEPTANCE["authenticationSourceOrdinal"] if host_context else REVISION_FOUR_ACCEPTANCE["authenticationSourceOrdinal"]
     item = next(c for c in result["caseResults"] if c["ordinal"] == ordinal)
     _require(_json(_read(previous / f"attempt-{ordinal:02d}.json")) == {
         "ordinal": ordinal, "caseId": item["caseId"], "protocolDigest": result["protocolDigest"]},
@@ -1408,38 +1578,38 @@ def _revision_four_auth_source(root: Path, previous: Path, *, revision_four: boo
     _verify_discovery(paths, True)
     fixtures = _input(root, _protocol(root), "fixtureMatrix")
     _require(fixture_identity(paths["workspace"], _definition(fixtures, ordinal)) == item["fixtureAfterSha256"] and
-             package_identity(paths["package"]) == item["packageAfterSha256"], "authentication source public inputs changed")
+             (_auth_source_package_identity(root, paths["package"], result) if traceable_confirmation else package_identity(paths["package"])) == item["packageAfterSha256"], "authentication source public inputs changed")
     _require(not (previous / f"final-message-{ordinal:02d}.json").exists(), "authentication source output remains")
     _model_metadata(paths)
     return state
 
 
-def _fixed_registration(root: Path, parent: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any]:
+def _fixed_registration(root: Path, parent: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any]:
     from . import no_hook_clarification as replies
-    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)
     record = _json(_read(parent / (contract["windowId"] + ".json")))
     _require(set(record) == {"contract", "nativeProtocolDigest", "clarificationProtocolDigest",
                             "attemptHistory", "executionSource", "previousRunRoot"} and
-             record["contract"] == contract and record["attemptHistory"] == _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder) and
+             record["contract"] == contract and record["attemptHistory"] == _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation) and
              record["nativeProtocolDigest"] == _protocol(root)["protocolDigest"] and
              record["clarificationProtocolDigest"] == replies.protocol(root)["protocolDigest"] and
              Path(record["previousRunRoot"]).parent == parent and
-             Path(record["previousRunRoot"]).name == (HOST_CONTEXT_ACCEPTANCE["routingRunName"] if (empty_discovery or outcome_semantics or accepted_remainder) else ROUTING_TAIL["runName"] if host_context else FIXED_ACCEPTANCE["routingRunName"] if revision_four else "cases-clarification-2"),
+             Path(record["previousRunRoot"]).name == (HOST_CONTEXT_ACCEPTANCE["routingRunName"] if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation) else ROUTING_TAIL["runName"] if host_context else FIXED_ACCEPTANCE["routingRunName"] if revision_four else "cases-clarification-2"),
              "fixed observation registration changed")
     return record
 
 
 def prepare_fixed_acceptance(root: Path, run_root: Path, previous: Path, bundle_root: Path, *,
                              authorize_install: bool = False, authorize_copy: bool = False,
-                             revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, runner=None) -> None:
+                             revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, runner=None) -> None:
     from . import no_hook_clarification as replies
     _require(authorize_install and authorize_copy, "fixed preparation and test-auth copy require authorization")
-    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)
-    _require(_fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder) is None, "fixed routing window already recorded")
-    if not outcome_semantics:
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)
+    _require(_fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation) is None, "fixed routing window already recorded")
+    if not (outcome_semantics or traceable_confirmation):
         replies._unrecorded(root, replies.protocol(root), fixed_acceptance=True, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder)
-    chain = _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)
-    old = (_revision_four_auth_source(root, previous, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder) if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder else
+    chain = _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)
+    old = (_revision_four_auth_source(root, previous, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation) if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation else
            replies._prior_state(root, previous, fixed_acceptance=True))
     _require(run_root.parent == previous.parent and run_root.name == contract["routingRunName"] and
              not run_root.exists() and not run_root.is_symlink(), "fixed routing requires its fresh registered sibling")
@@ -1448,22 +1618,22 @@ def prepare_fixed_acceptance(root: Path, run_root: Path, previous: Path, bundle_
     legacy.freeze_executable(executable, legacy.CODEX_BINARY_SHA256)
     _require(package_identity(bundle_root) == _protocol(root)["bundle"]["packageSha256"], "fixed package differs")
     invoke = bounded_process if runner is None else runner
-    source_ordinal = contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder else 14
+    source_ordinal = contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation else 14
     replies._login(executable, _case_paths(previous, source_ordinal), invoke)
     _exclusive(run_root.parent / (contract["windowId"] + ".json"), _bytes({
         "contract": contract, "nativeProtocolDigest": _protocol(root)["protocolDigest"],
         "clarificationProtocolDigest": replies.protocol(root)["protocolDigest"],
         "attemptHistory": chain, "executionSource": source, "previousRunRoot": str(previous)}))
-    prepare_native_run(root, run_root, bundle_root, executable, authorize_install=True, runner=runner, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder)
-    _exclusive(run_root / "fixed-acceptance-preparation.json", _bytes(_fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder)))
+    prepare_native_run(root, run_root, bundle_root, executable, authorize_install=True, runner=runner, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)
+    _exclusive(run_root / "fixed-acceptance-preparation.json", _bytes(_fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)))
     _copy_test_auth(run_root, source_ordinal, contract["routingOrdinals"][0], create=True, source_root=previous)
 
 
-def _verify_fixed_acceptance(root: Path, run_root: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any]:
-    record = _fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder)
-    _require(run_root.name == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)["routingRunName"] and
+def _verify_fixed_acceptance(root: Path, run_root: Path, *, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any]:
+    record = _fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)
+    _require(run_root.name == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)["routingRunName"] and
              _json(_read(run_root / "fixed-acceptance-preparation.json")) == record and
-             _fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder) is None, "fixed routing preparation changed or window consumed")
+             _fixed_result_binding(root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation) is None, "fixed routing preparation changed or window consumed")
     for name in ["batch-started.json", "normalized-result.json", *[f"attempt-{i:02d}.json" for i in range(1, 17)]]:
         _require(not (run_root / name).exists() and not (run_root / name).is_symlink(),
                  "fixed routing already attempted")
@@ -1676,17 +1846,17 @@ def _verify_routing_tail(root: Path, run_root: Path) -> dict[str, Any]:
     return record["attemptHistory"]
 
 
-def completed_fixed_routing(root: Path, previous: Path, *, simulated: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, accepted_remainder: bool = False) -> tuple[dict, dict]:
+def completed_fixed_routing(root: Path, previous: Path, *, simulated: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> tuple[dict, dict]:
     """Only a fully closed A batch may transfer authentication to B."""
-    registration = _fixed_registration(root, previous.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder)
-    contract = _fixed_contract(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder)
+    registration = _fixed_registration(root, previous.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)
     _require(previous.name == contract["routingRunName"], "clarification predecessor is not fixed routing")
     data = _read(previous / "normalized-result.json")
     result = _json(data)
     _require(not validate_native_result(result, root) and
              result["runMode"] == ("simulated" if simulated else "actual") and
              result["status"] in ({"INCOMPLETE"} if simulated else {"PASS", "FAIL"}) and
-             result.get("executionSegment", {}).get("kind") == _fixed_kind(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder) and
+             result.get("executionSegment", {}).get("kind") == _fixed_kind(revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation) and
              result["attemptCount"] == result["cliLaunchCount"] == len(contract["routingOrdinals"]) and result["cumulativeAttemptCount"] == contract["priorAttempts"] + len(contract["routingOrdinals"]) and
              result["executionSource"] == registration["executionSource"],
              "routing reliability or complete-set prerequisite failed")
@@ -1717,7 +1887,7 @@ def completed_fixed_routing(root: Path, previous: Path, *, simulated: bool = Fal
                  "fixed predecessor public inputs changed")
         _require(not (previous / f"final-message-{ordinal:02d}.json").exists(), "routing final output remains")
     chain = {"attempts": contract["priorAttempts"] + len(contract["routingOrdinals"]), "cliLaunches": contract["priorCliLaunches"] + len(contract["routingOrdinals"]),
-             "historical": _fixed_attempt_history(root, revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder),
+             "historical": _fixed_attempt_history(root, revision_four, host_context, empty_discovery, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation),
              "routingResultSha256": hashlib.sha256(data).hexdigest()}
     return state, chain
 
@@ -2397,6 +2567,39 @@ def package_identity(package: Path) -> str:
     return hashlib.sha256(legacy._canonical_json(records)).hexdigest()
 
 
+def _auth_source_package_identity(root: Path, package: Path, result: dict) -> str:
+    recorded = _host_context_protocol(root)
+    _require(result["protocolDigest"] == recorded["protocolDigest"], "authentication source protocol changed")
+    evidence = _read(root / "evidence/profiles/openai-hook-independent-v1/bundle-revision-14.json")
+    _require(hashlib.sha256(evidence).hexdigest() == "0e34cb8c805b301343e989453f20e2b82ed0474e33fdc68f7502b393dbe1012a",
+             "authentication source public inventory changed")
+    manifest = _json(evidence)["bundleManifest"]
+    _ordinary_directory(package)
+    allowed = {item["path"] for item in manifest["runtimeFiles"]} | {"BUNDLE-MANIFEST.json", ".codex-plugin/plugin.json"}
+    directories = {parent.as_posix() for name in allowed for parent in Path(name).parents if parent != Path(".")}
+    seen = set()
+    # Check names/types before reading any package file, including unknown extras.
+    stack = [package]
+    while stack:
+        directory = stack.pop()
+        for entry in directory.iterdir():
+            relative = entry.relative_to(package).as_posix()
+            meta = entry.lstat()
+            if stat.S_ISDIR(meta.st_mode):
+                _require(relative in directories, "unknown authentication-source package directory")
+                stack.append(entry)
+            else:
+                _require(relative in allowed and stat.S_ISREG(meta.st_mode) and meta.st_nlink == 1, "unknown authentication-source package file")
+                seen.add(relative)
+    _require(seen == allowed and _json(_read(package / "BUNDLE-MANIFEST.json")) == manifest,
+             "authentication-source package inventory changed")
+    records = legacy.snapshot_tree(package)
+    identity = hashlib.sha256(legacy._canonical_json(records)).hexdigest()
+    _require(identity == recorded["bundle"]["packageSha256"], "authentication-source public package bytes changed")
+    return identity
+
+
+
 def _successful(capture: Mapping[str, Any], purpose: str) -> bytes:
     facts = _capture_facts(capture)
     if facts["category"] != "none":
@@ -2437,7 +2640,7 @@ def _verify_discovery(paths: Mapping[str, Path], installed: bool) -> None:
 def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable: Path, *,
                        authorize_install: bool = False,
                        runner: Callable[..., Mapping[str, Any]] | None = None,
-                       material_segment: bool = False, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> dict[str, Any]:
+                       material_segment: bool = False, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> dict[str, Any]:
     """Prepare once, before login. Failed preparations are retained, never retried."""
     _require(authorize_install is True, "explicit local-install authorization is required")
     protocol = _protocol(root)
@@ -2473,7 +2676,7 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     envelope = _input(root, protocol, "promptEnvelope")
     prepared = []
     for ordinal, case in enumerate(cases, 1):
-        if (routing_tail and ordinal not in ROUTING_TAIL["ordinals"]) or (empty_discovery and ordinal not in EMPTY_DISCOVERY_ACCEPTANCE["routingOrdinals"]) or (outcome_semantics and ordinal not in OUTCOME_ACCEPTANCE["routingOrdinals"]) or (accepted_remainder and ordinal not in ACCEPTED_REMAINDER["routingOrdinals"]):
+        if (routing_tail and ordinal not in ROUTING_TAIL["ordinals"]) or (empty_discovery and ordinal not in EMPTY_DISCOVERY_ACCEPTANCE["routingOrdinals"]) or (outcome_semantics and ordinal not in OUTCOME_ACCEPTANCE["routingOrdinals"]) or (accepted_remainder and ordinal not in ACCEPTED_REMAINDER["routingOrdinals"]) or (traceable_confirmation and ordinal not in TRACEABLE_CONFIRMATION["routingOrdinals"]):
             continue
         paths = _case_paths(run_root, ordinal)
         for name in ("case", "home", "user", "workspace", "state", "tmp"):
@@ -2509,11 +2712,13 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
             paths["discovery"].symlink_to(paths["package"] / "skills", target_is_directory=True)
         _verify_config(paths, marketplace, installed)
         _verify_discovery(paths, installed)
-        if empty_discovery or outcome_semantics or accepted_remainder:
+        if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
             from .no_hook_discovery import query_once
             query_once(paths, executable, marketplace, installed, _definition(fixtures, ordinal))
         prepared.append({"ordinal": ordinal, "fixtureSha256": fixture,
                          "packageSha256": expected_package if installed else None})
+    if traceable_confirmation:
+        prepared.sort(key=lambda item: TRACEABLE_CONFIRMATION["routingOrdinals"].index(item["ordinal"]))
     state = {"schemaVersion": "2", "protocolDigest": protocol["protocolDigest"],
              "runMode": "actual" if actual else "simulated", "executable": str(executable),
              "materializationSeed": seed.hex(), "cases": prepared}
@@ -2521,7 +2726,7 @@ def prepare_native_run(root: Path, run_root: Path, bundle_root: Path, executable
     return state
 
 
-def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False, assessment_remainder: bool = False, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False, assessment_remainder: bool = False, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
     _ordinary_directory(run_root)
     protocol = _protocol(root)
     state = _json(_read(_ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup) / ("catalog-preparation.json" if resume_stderr_review else "preparation.json")
@@ -2531,7 +2736,7 @@ def _state(root: Path, run_root: Path, *, followup: bool = False, continuation: 
     _require(state["schemaVersion"] == "2" and state["protocolDigest"] == protocol["protocolDigest"],
              "prepared input identity changed")
     _require(state["runMode"] in {"actual", "simulated"}, "unknown preparation source")
-    ordinals = ACCEPTED_REMAINDER["routingOrdinals"] if accepted_remainder else OUTCOME_ACCEPTANCE["routingOrdinals"] if outcome_semantics else EMPTY_DISCOVERY_ACCEPTANCE["routingOrdinals"] if empty_discovery else ROUTING_TAIL["ordinals"] if routing_tail else list(range(1, 17))
+    ordinals = TRACEABLE_CONFIRMATION["routingOrdinals"] if traceable_confirmation else ACCEPTED_REMAINDER["routingOrdinals"] if accepted_remainder else OUTCOME_ACCEPTANCE["routingOrdinals"] if outcome_semantics else EMPTY_DISCOVERY_ACCEPTANCE["routingOrdinals"] if empty_discovery else ROUTING_TAIL["ordinals"] if routing_tail else list(range(1, 17))
     _require(type(state["cases"]) is list and len(state["cases"]) == len(ordinals), "incomplete preparation")
     for ordinal, item in zip(ordinals, state["cases"]):
         _require(set(item) == {"ordinal", "fixtureSha256", "packageSha256"} and item["ordinal"] == ordinal,
@@ -3451,13 +3656,16 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                            continuation: bool = False, private_diagnostics: bool = False, operator_diagnostics: bool = False, schema_followup: bool = False, model_followup: bool = False, stderr_followup: bool = False, read_followup: bool = False, resume_stderr_review: bool = False,
                            assessment_batch: bool = False, assessment_remainder: bool = False,
                            material_segment: bool = False, current_assessment: bool = False,
-                           fixed_acceptance: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, routing_tail: bool = False,
+                           fixed_acceptance: bool = False, revision_four: bool = False, host_context: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False, routing_tail: bool = False,
+                           semantic_review=None,
                            process_runner: Callable[..., Mapping[str, Any]] | None = None) -> dict[str, Any]:
     """One foreground batch; exclusive markers consume each case before spawn."""
-    _require(sum((fixed_acceptance, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, routing_tail)) <= 1, "select one fixed window")
-    fixed_acceptance = fixed_acceptance or revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder
-    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)
+    _require(sum((fixed_acceptance, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation, routing_tail)) <= 1, "select one fixed window")
+    fixed_acceptance = fixed_acceptance or revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation
+    contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)
     _require(authorize_model_calls is True, "explicit model-call authorization is required")
+    _require(callable(semantic_review) if traceable_confirmation else semantic_review is None,
+             "traceable confirmation requires public-message review between observations")
     _require(not ((operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup) and private_diagnostics), "select one private capture format")
     _require(not resume_stderr_review or read_followup, "review resume requires the same read ledger")
     if assessment_batch:
@@ -3473,14 +3681,14 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     _require(not routing_tail or (assessment_batch and not any((current_assessment, material_segment, assessment_remainder))),
              "independent routing cannot reuse a historical segment")
     current_chain = (_verify_routing_tail(root, run_root) if routing_tail else
-                     _verify_fixed_acceptance(root, run_root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder) if fixed_acceptance else
+                     _verify_fixed_acceptance(root, run_root, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation) if fixed_acceptance else
                      _verify_current_assessment(root, run_root) if current_assessment else None)
     if material_segment:
         _verify_material_segment(root, run_root)
     _require(not assessment_remainder or assessment_batch, "assessment remainder requires assessment mode")
     partial = _verify_assessment_remainder(root, run_root)[0] if assessment_remainder else (_verify_review_resume(root, run_root)[0] if resume_stderr_review else None)
     prefix_count = 10 if assessment_remainder else REVIEWED_PREFIX_COUNT
-    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup, stderr_followup=stderr_followup, read_followup=read_followup, resume_stderr_review=resume_stderr_review, assessment_remainder=assessment_remainder, routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder)
+    protocol, state = _state(root, run_root, followup=followup, continuation=continuation, operator_diagnostics=operator_diagnostics, schema_followup=schema_followup, model_followup=model_followup, stderr_followup=stderr_followup, read_followup=read_followup, resume_stderr_review=resume_stderr_review, assessment_remainder=assessment_remainder, routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)
     ledger = _ledger(run_root, followup, continuation, operator_diagnostics, schema_followup, model_followup, stderr_followup, read_followup)
     prior_count = current_chain["attempts"] if current_assessment or fixed_acceptance or routing_tail else 31 if material_segment else 20 if assessment_batch else 7 if read_followup else 6 if stderr_followup else 5 if model_followup else 4 if schema_followup else 3 if operator_diagnostics else 2 if continuation else int(followup)
     if read_followup:
@@ -3505,7 +3713,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                  "fixed preparation mode or serial authentication changed")
     _require(not actual or assessment_batch, "actual execution requires the authorized assessment candidate")
     _require(not actual or fixed_acceptance or routing_tail, "actual execution requires the newly authorized fixed acceptance")
-    _require(not actual or protocol["independentRoutingTail" if routing_tail else _fixed_history_key(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder) if fixed_acceptance else "executionWindow"]["state"] != "closed",
+    _require(not actual or protocol["independentRoutingTail" if routing_tail else _fixed_history_key(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation) if fixed_acceptance else "executionWindow"]["state"] != "closed",
              "actual execution window closed")
     _require(not actual or fixed_acceptance or routing_tail or not _json(_read(root / HISTORY_RELATIVE))["results"],
              "current assessment already recorded; execution window consumed")
@@ -3514,7 +3722,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         _require(_routing_tail_registration(root, run_root)["executionSource"] == execution_source,
                  "independent routing execution commit changed after preparation")
     if fixed_acceptance:
-        _require(_fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder)["executionSource"] == execution_source,
+        _require(_fixed_registration(root, run_root.parent, revision_four=revision_four, host_context=host_context, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation)["executionSource"] == execution_source,
                  "fixed execution commit changed after preparation")
     summaries = PrivateDiagnostics(ledger) if private_diagnostics else None
     operator = OperatorDiagnostics(ledger, reviewed_prefix=partial["caseResults"][:prefix_count] if partial else ()) if operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup or assessment_batch else None
@@ -3532,10 +3740,10 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         prompt_envelope=envelope, request=case["request"]) for i, case in zip(ordinals, selected_cases)]
     results = [_blank_case(case, material, seed, protocol, _definition(fixtures, i), root=root)
                for i, case, material in zip(ordinals, selected_cases, materials)]
-    if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder:
+    if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
         for record in results:
             record["visibleReplies"] = _assessment_public_replies([], "")
-    if empty_discovery or outcome_semantics or accepted_remainder:
+    if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
         for record in results:
             record["nativeDiscovery"] = None
     if partial:
@@ -3547,6 +3755,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
         _require_test_auth_copy_state(run_root, {"protocolDigest": HISTORICAL_PROTOCOL_DIGEST} if followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else {"protocolDigest": ASSESSMENT_PROTOCOL_DIGEST} if assessment_remainder else protocol)
     _exclusive(ledger / ("assessment-remainder-started.json" if assessment_remainder else "catalog-remainder-started.json" if partial else "batch-started.json"),
                _bytes({"protocolDigest": protocol["protocolDigest"]}))
+    confirmation = _new_traceable_results(root) if traceable_confirmation else None
     prepared_by_ordinal = {item["ordinal"]: item for item in state["cases"]}
     for ordinal, case, material, record in zip(ordinals, selected_cases, materials, results):
         if (material_segment and ordinal < 10) or (partial and ordinal <= prefix_count):
@@ -3577,7 +3786,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             _require(_read((ledger / f"{schema_prefix}-{ordinal:02d}.json") if assessment_remainder or followup or continuation or operator_diagnostics or schema_followup or model_followup or stderr_followup or read_followup else
                            paths["case"] / "response-schema.json") == material.schema_bytes,
                      "prepared response schema changed")
-            if empty_discovery or outcome_semantics or accepted_remainder:
+            if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                 from .no_hook_discovery import prepared_discovery, relay_empty_discovery
                 entry, summary = prepared_discovery(paths, executable, run_root / "marketplace", installed, definition)
                 material = relay_empty_discovery(material, entry)
@@ -3587,10 +3796,15 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                 record["nativeDiscovery"] = summary
             diagnostic = "authentication-unavailable"
             phase = "login"
-            if reuse_test_auth and ordinal > ordinals[0] and not (material_segment and ordinal == 10):
+            if reuse_test_auth and (ordinals.index(ordinal) > 0 if traceable_confirmation else ordinal > ordinals[0]) and not (material_segment and ordinal == 10):
                 # The prior iteration only advances after normal exit and closed
                 # output/input validation. Never refill from the initial stale copy.
-                _copy_test_auth(run_root, 9 if assessment_remainder and ordinal == 11 else ordinals[ordinals.index(ordinal)-1] if accepted_remainder else ordinal - 1, ordinal, create=material_segment or current_assessment or fixed_acceptance or routing_tail)
+                if traceable_confirmation and ordinal == 6:
+                    source_root = run_root.parent / (TRACEABLE_CONFIRMATION["clarificationRunName"] + "-after-13")
+                    _require(confirmation["clarificationResults"][0]["status"] == "PASS", "B13 must pass before A6 handoff")
+                    _copy_test_auth(run_root, 13, ordinal, create=True, source_root=source_root)
+                else:
+                    _copy_test_auth(run_root, 9 if assessment_remainder and ordinal == 11 else ordinals[ordinals.index(ordinal)-1] if accepted_remainder or traceable_confirmation else ordinal - 1, ordinal, create=material_segment or current_assessment or fixed_acceptance or routing_tail)
             if reuse_test_auth:
                 # Validate Case 1 as well as copied destinations before handing
                 # the path to the official client; never inspect credential bytes.
@@ -3626,7 +3840,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                     summaries.event(ordinal, raw)
                 try:
                     _observe_line(raw, readable, paths["workspace"], events)
-                    if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder:
+                    if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                         event = legacy._parse_json_line(raw)
                         if event.get("type") == "item.completed" and event.get("item", {}).get("type") == "agent_message":
                             visible_messages.append(event["item"]["text"])
@@ -3678,7 +3892,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             record["evidenceExtraction"]["response"] = "invalid"
             _require(type(stream.structured_result) is dict, "closed stream has no structured response")
             _check_final_output(final_output, final_output_identity, stream.structured_result)
-            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder:
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                 from . import no_hook_clarification as replies
                 _require(visible_messages, "visible routing response missing")
                 replies._final_output(final_output, final_output_identity, visible_messages[-1])
@@ -3742,7 +3956,7 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             del error
             break
         finally:
-            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder:
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                 record["visibleReplies"] = _assessment_public_replies(visible_messages, material.token)
             if final_output_identity is not None:
                 try:
@@ -3793,6 +4007,24 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
                     facts["cleanupFailed"] = True
                     _first_failure(facts, "cleanup", "cleanup-failed")
                     record.update(status="INCOMPLETE", diagnostic=facts["category"])
+        if traceable_confirmation:
+            if record["status"] != "PASS":
+                break
+            review = _review_public_case(record, semantic_review)
+            confirmation["routingMessageReviews"].append(review)
+            if review["verdict"] != "PASS":
+                break
+            if ordinal in (13, 16):
+                checkpoint = {"executionSource": execution_source, "protocolDigest": protocol["protocolDigest"],
+                              "caseResults": results, "traceableConfirmation": confirmation}
+                _exclusive(run_root / f"reply-gate-{ordinal}.json", _bytes(checkpoint))
+                from . import no_hook_clarification as replies
+                captured = replies.confirmation_replies(root, run_root, ordinal, semantic_review, runner=process_runner)
+                for entry in captured:
+                    index = TRACEABLE_CONFIRMATION["clarificationOrdinals"].index(entry["ordinal"])
+                    confirmation["clarificationResults"][index] = entry
+                if any(entry["status"] != "PASS" for entry in captured):
+                    break
         if record["status"] == "INCOMPLETE" or (accepted_remainder and record["status"] != "PASS") or (empty_discovery and ordinal == 11 and record["status"] != "PASS"):
             break
     statuses = [item["status"] for item in results]
@@ -3806,11 +4038,11 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
               "discoveryMechanism": DISCOVERY_MECHANISM, "pluginRuntimeEnabled": False,
               "authenticationMode": "serial-test-auth-copy" if reuse_test_auth else "independent-official-login",
               "protocolDigest": protocol["protocolDigest"], "runMode": "actual" if actual else "simulated",
-              "hostClaim": actual and status == "PASS" and not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder), "status": status,
+              "hostClaim": actual and status == "PASS" and not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation), "status": status,
               "materializationSeed": seed.hex(), "cliLaunchCount": sum(item["cliLaunchCount"] for item in results),
               "modelRequestCount": None, "caseResults": results,
               "materializationCommitmentRoot": _native_commitment_root(
-                  [item["materializationCommitmentSha256"] for item in results], routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder),
+                  [item["materializationCommitmentSha256"] for item in results], routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation),
               "cleanup": "retained-test-state", "descendantClosure": "not-observed"}
     if routing_tail:
         result["executionSource"] = execution_source
@@ -3818,9 +4050,9 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
     elif fixed_acceptance:
         result["executionSource"] = execution_source
         result["executionSegment"] = {
-            "kind": _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder), "priorPartialSha256": REMAINDER_PRIOR if accepted_remainder else OUTCOME_PRIOR if outcome_semantics else EMPTY_DISCOVERY_PRIOR if empty_discovery else HOST_CONTEXT_PRIOR if host_context else FIXED_RESULT_SHA256 if revision_four else FIXED_REPLY_PRIORS[-1],
+            "kind": _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation), "priorPartialSha256": TRACEABLE_CONFIRMATION["priorResultSha256s"][0] if traceable_confirmation else REMAINDER_PRIOR if accepted_remainder else OUTCOME_PRIOR if outcome_semantics else EMPTY_DISCOVERY_PRIOR if empty_discovery else HOST_CONTEXT_PRIOR if host_context else FIXED_RESULT_SHA256 if revision_four else FIXED_REPLY_PRIORS[-1],
             "firstNewOrdinal": contract["routingOrdinals"][0], "priorAttemptCount": contract["priorAttempts"],
-            "authenticationSourceOrdinal": contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder else 14,
+            "authenticationSourceOrdinal": contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation else 14,
             "newAttemptCount": result["attemptCount"], "newCliLaunchCount": result["cliLaunchCount"],
         }
     elif current_assessment:
@@ -3850,6 +4082,9 @@ def run_native_observation(root: Path, run_root: Path, *, authorize_model_calls:
             "newAttemptCount": sum(item["attemptCount"] for item in results[REVIEWED_PREFIX_COUNT:]),
             "newCliLaunchCount": sum(item["cliLaunchCount"] for item in results[REVIEWED_PREFIX_COUNT:]),
         }
+    if traceable_confirmation:
+        result["traceableConfirmation"] = confirmation
+        _finish_traceable_counts(result)
     failures = validate_native_result(result, root)
     _require(not failures, "native normalized result failed semantic validation")
     _exclusive(ledger / ("normalized-assessment-remainder-result.json" if assessment_remainder else "normalized-catalog-remainder-result.json" if partial else "normalized-result.json"), _bytes(result))
@@ -3884,10 +4119,10 @@ def _validate_native_schema(value: Any, node: Mapping[str, Any], schema: Mapping
             _validate_native_schema(child, node["items"], schema)
 
 
-def _native_commitment_root(commitments: Sequence[str], *, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False) -> str:
-    if not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder):
+def _native_commitment_root(commitments: Sequence[str], *, routing_tail: bool = False, empty_discovery: bool = False, outcome_semantics: bool = False, accepted_remainder: bool = False, traceable_confirmation: bool = False) -> str:
+    if not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation):
         return legacy._materialization_commitment_root(commitments)
-    _require(len(commitments) == (6 if accepted_remainder else 1 if outcome_semantics else 6 if empty_discovery else 5) and all(legacy.SHA256_PATTERN.fullmatch(v) for v in commitments),
+    _require(len(commitments) == (5 if traceable_confirmation else 6 if accepted_remainder else 1 if outcome_semantics else 6 if empty_discovery else 5) and all(legacy.SHA256_PATTERN.fullmatch(v) for v in commitments),
              "independent routing commitment root does not match its registered set")
     return hashlib.sha256(legacy._canonical_json({"schemaVersion": "1", "scheme": legacy.MATERIALIZATION_SCHEME,
         "commitments": list(commitments)})).hexdigest()
@@ -3949,26 +4184,28 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _validate_native_schema(document, result_schema, result_schema)
         _require(document["protocolDigest"] == protocol["protocolDigest"], "native result protocol mismatch")
         prior_results = document["priorResultSha256s"]
-        _require(prior_results in [*[READ_PRIOR_RESULTS[:i] for i in range(8)], ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS], "invalid historical prefix")
+        _require(prior_results in [*[READ_PRIOR_RESULTS[:i] for i in range(8)], ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"]], "invalid historical prefix")
         segment = document.get("executionSegment")
         routing_tail = segment is not None and segment.get("kind") == ROUTING_TAIL["windowId"]
         material_segment = segment is not None and segment.get("kind") == "material-delivery"
         current_assessment = segment is not None and segment.get("kind") == "explicit-invocation-revision-1"
+        traceable_confirmation = segment is not None and segment.get("kind") == _fixed_kind(traceable_confirmation=True)
         accepted_remainder = segment is not None and segment.get("kind") == _fixed_kind(accepted_remainder=True)
         outcome_semantics = segment is not None and segment.get("kind") == _fixed_kind(outcome_semantics=True)
         empty_discovery = segment is not None and segment.get("kind") == _fixed_kind(empty_discovery=True)
         host_context = segment is not None and segment.get("kind") == _fixed_kind(host_context=True)
         revision_four = segment is not None and segment.get("kind") == _fixed_kind(True)
-        fixed_acceptance = accepted_remainder or outcome_semantics or empty_discovery or host_context or revision_four or (segment is not None and segment.get("kind") == _fixed_kind())
-        contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder)
-        chain = routing_tail_attempt_history(root) if routing_tail else _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder) if fixed_acceptance else _attempt_history(root) if current_assessment else None
+        fixed_acceptance = traceable_confirmation or accepted_remainder or outcome_semantics or empty_discovery or host_context or revision_four or (segment is not None and segment.get("kind") == _fixed_kind())
+        contract = _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)
+        chain = routing_tail_attempt_history(root) if routing_tail else _fixed_attempt_history(root, revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation) if fixed_acceptance else _attempt_history(root) if current_assessment else None
         _require((prior_results == CURRENT_PRIOR_RESULTS) == current_assessment, "current history requires its execution segment")
         _require((prior_results == contract["priorResultSha256s"]) == fixed_acceptance, "fixed history requires its execution segment")
         _require((prior_results == ROUTING_TAIL_PRIORS) == routing_tail, "independent routing history requires its segment")
         prior_count = chain["attempts"] if current_assessment or fixed_acceptance or routing_tail else 31 if material_segment else 20 if prior_results == ASSESSMENT_PRIOR_RESULTS else len(prior_results)
         _require(document["attemptCount"] == sum(item["attemptCount"] for item in document["caseResults"]),
                  "native attempt count mismatch")
-        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] <= (106 if routing_tail else contract["priorAttempts"] + len(contract["routingOrdinals"]) if fixed_acceptance else CURRENT_ASSESSMENT["maximumCumulativeAttempts"] if current_assessment else 38 if material_segment else 16 + prior_count),
+        reply_attempts = sum(c["attemptCount"] for c in document["traceableConfirmation"]["clarificationResults"]) if traceable_confirmation else 0
+        _require(document["cumulativeAttemptCount"] == prior_count + document["attemptCount"] + reply_attempts <= (130 if traceable_confirmation else 106 if routing_tail else contract["priorAttempts"] + len(contract["routingOrdinals"]) if fixed_acceptance else CURRENT_ASSESSMENT["maximumCumulativeAttempts"] if current_assessment else 38 if material_segment else 16 + prior_count),
                  "native cumulative attempt budget mismatch")
         _require(sum(item["privateCapture"]["bytes"] for item in document["caseResults"]) <= PRIVATE_DIAGNOSTIC_LIMIT,
                  "private capture batch limit exceeded")
@@ -3980,7 +4217,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         envelope = _input(root, protocol, "promptEnvelope")
         seed = bytes.fromhex(document["materializationSeed"])
         segment = document.get("executionSegment")
-        remainder = segment is not None and segment.get("firstNewOrdinal") == 11 and not (empty_discovery or outcome_semantics or accepted_remainder)
+        remainder = segment is not None and segment.get("firstNewOrdinal") == 11 and not (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation)
         partial = _assessment_partial(root) if remainder else _reviewed_partial(root) if segment is not None and not (material_segment or current_assessment or fixed_acceptance or routing_tail) else None
         prefix_count = 10 if remainder else REVIEWED_PREFIX_COUNT
         if routing_tail:
@@ -3990,9 +4227,9 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                      "independent routing provenance or budget changed")
         elif fixed_acceptance:
             _require(segment == {
-                "kind": _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder), "priorPartialSha256": REMAINDER_PRIOR if accepted_remainder else OUTCOME_PRIOR if outcome_semantics else EMPTY_DISCOVERY_PRIOR if empty_discovery else HOST_CONTEXT_PRIOR if host_context else FIXED_RESULT_SHA256 if revision_four else FIXED_REPLY_PRIORS[-1],
+                "kind": _fixed_kind(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation), "priorPartialSha256": TRACEABLE_CONFIRMATION["priorResultSha256s"][0] if traceable_confirmation else REMAINDER_PRIOR if accepted_remainder else OUTCOME_PRIOR if outcome_semantics else EMPTY_DISCOVERY_PRIOR if empty_discovery else HOST_CONTEXT_PRIOR if host_context else FIXED_RESULT_SHA256 if revision_four else FIXED_REPLY_PRIORS[-1],
                 "firstNewOrdinal": contract["routingOrdinals"][0], "priorAttemptCount": contract["priorAttempts"],
-                "authenticationSourceOrdinal": contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder else 14,
+                "authenticationSourceOrdinal": contract["authenticationSourceOrdinal"] if revision_four or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation else 14,
                 "newAttemptCount": document["attemptCount"], "newCliLaunchCount": document["cliLaunchCount"]
             }, "fixed acceptance provenance changed")
             _require(not any([r["ordinal"], r["materializationCommitmentSha256"]] in chain["identities"]
@@ -4046,13 +4283,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             material = materialize_native_case_contract(root=root, materialization_seed=seed, ordinal=ordinal,
                 protocol_digest=protocol["protocolDigest"], model_schema=model_schema,
                 prompt_envelope=envelope, request=case["request"])
-            if (empty_discovery or outcome_semantics or accepted_remainder) and record.get("nativeDiscovery") is not None:
+            if (empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation) and record.get("nativeDiscovery") is not None:
                 from .no_hook_discovery import relay_recorded
                 material = relay_recorded(material, record["nativeDiscovery"])
             expected = _blank_case(case, material, seed, protocol, definition, root=root)
-            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder:
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                 expected["visibleReplies"] = _assessment_public_replies([], "")
-            if empty_discovery or outcome_semantics or accepted_remainder:
+            if empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                 expected["nativeDiscovery"] = None
                 _require(not record["cliLaunchCount"] or record["nativeDiscovery"] is not None, "model launch lacks native query")
             _require(set(record) == set(expected), "current case record fields are not closed")
@@ -4066,13 +4303,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                 continue
             if stopped:
                 _require(status == "NOT-RUN", "native result continued after unreliable failure")
-            if (accepted_remainder and status != "PASS") or (empty_discovery and ordinal == 11 and status != "PASS"):
+            if ((accepted_remainder or traceable_confirmation) and status != "PASS") or (empty_discovery and ordinal == 11 and status != "PASS"):
                 stopped = True
             if status == "NOT-RUN":
                 _require(record == expected, "unstarted native case carries observed facts")
                 stopped = True
                 continue
-            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder:
+            if routing_tail or host_context or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation:
                 retained = record["visibleReplies"]
                 messages = retained["messages"]
                 _require(retained == _assessment_public_replies(messages, material.token) or
@@ -4135,7 +4372,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                     source_bytes = b"".join(lines[first - 1:last])
                 _require(read["bytes"] == len(source_bytes), "public read length differs from bound source")
             command = record["operatorReadCapture"]
-            _require(command == _private_capture() or (prior_results in (ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS) and
+            _require(command == _private_capture() or (prior_results in (ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"]) and
                      status == "INCOMPLETE" and record["executionDiagnostics"]["streamAssertion"] in READ_REJECTIONS),
                      "operator command retention lacks a read rejection")
             _require(command["status"] != "saved" or command["bytes"] > 0, "empty command capture")
@@ -4150,13 +4387,13 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             _require(private["status"] != "write-failed" or
                      (status == "INCOMPLETE" and record["executionDiagnostics"]["cleanupFailed"]),
                      "failed private capture was accepted")
-            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS, STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS],
+            _require(private["status"] == "not-requested" or prior_results in [PRIOR_RESULTS[:3], PRIOR_RESULTS, MODEL_PRIOR_RESULTS, STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"]],
                      "operator capture lacks linked history authorization")
             facts = record["executionDiagnostics"]
             stderr = record["operatorStderrCapture"]
-            _require(stderr == _stderr_capture() or prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS),
+            _require(stderr == _stderr_capture() or prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"]),
                      "operator stderr capture lacks linked continuation authorization")
-            if prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS) and record["cliLaunchCount"]:
+            if prior_results in (STDERR_PRIOR_RESULTS, READ_PRIOR_RESULTS, ASSESSMENT_PRIOR_RESULTS, CURRENT_PRIOR_RESULTS, FIXED_PRIOR_RESULTS, REVISION_FOUR_PRIOR_RESULTS, ROUTING_TAIL_PRIORS, HOST_CONTEXT_PRIORS, EMPTY_DISCOVERY_PRIORS, OUTCOME_PRIORS, REMAINDER_PRIORS, TRACEABLE_CONFIRMATION["priorResultSha256s"]) and record["cliLaunchCount"]:
                 _require(stderr["status"] != "not-requested", "captured client stderr was not retained")
             if stderr["status"] == "not-requested":
                 _require(stderr == _stderr_capture(), "unrequested stderr capture has facts")
@@ -4293,12 +4530,16 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         _require(document["cliLaunchCount"] == sum(item["cliLaunchCount"] for item in document["caseResults"]),
                  "native launch count mismatch")
         _require(document["materializationCommitmentRoot"] == _native_commitment_root(
-            [item["materializationCommitmentSha256"] for item in document["caseResults"]], routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder), "native commitment root mismatch")
+            [item["materializationCommitmentSha256"] for item in document["caseResults"]], routing_tail=routing_tail, empty_discovery=empty_discovery, outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, traceable_confirmation=traceable_confirmation), "native commitment root mismatch")
         statuses = [item["status"] for item in document["caseResults"]]
         expected_status = "INCOMPLETE" if document["runMode"] == "simulated" or any(
             value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else ("FAIL" if "FAIL" in statuses else "PASS")
+        if traceable_confirmation:
+            _validate_traceable_results(document, root)
+        else:
+            _require("traceableConfirmation" not in document, "unexpected interleaved reply evidence")
         _require(document["status"] == expected_status, "native overall status mismatch")
-        _require(document["hostClaim"] == (document["runMode"] == "actual" and expected_status == "PASS" and not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder)),
+        _require(document["hostClaim"] == (document["runMode"] == "actual" and expected_status == "PASS" and not (routing_tail or empty_discovery or outcome_semantics or accepted_remainder or traceable_confirmation)),
                  "simulated or incomplete result cannot claim host PASS")
         return []
     except (OSError, ValueError, KeyError, TypeError, NativeObservationError) as error:
@@ -4328,7 +4569,10 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
     group.add_argument("--prepare-revision-four-acceptance", action="store_true")
     group.add_argument("--prepare-independent-routing-tail", action="store_true")
     group.add_argument("--prepare-accepted-remainder", action="store_true")
+    group.add_argument("--prepare-traceable-confirmation", action="store_true")
     parser.add_argument("--accepted-remainder", action="store_true")
+    parser.add_argument("--traceable-confirmation", action="store_true")
+    parser.add_argument("--review-public-messages-stdin", action="store_true")
     group.add_argument("--prepare-discovery-outcome", action="store_true")
     parser.add_argument("--discovery-outcome", action="store_true")
     group.add_argument("--prepare-native-empty-discovery", action="store_true")
@@ -4368,13 +4612,15 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             prepare_routing_tail(root, args.run_root, args.previous_run_root, args.bundle_root,
                                  authorize_install=args.authorize_local_install, authorize_copy=args.authorize_test_auth_copy)
             print("Five independent routing states prepared; no model started.")
-        elif args.prepare_fixed_acceptance or args.prepare_revision_four_acceptance or args.prepare_host_context_acceptance or args.prepare_native_empty_discovery or args.prepare_discovery_outcome or args.prepare_accepted_remainder:
+        elif args.prepare_fixed_acceptance or args.prepare_revision_four_acceptance or args.prepare_host_context_acceptance or args.prepare_native_empty_discovery or args.prepare_discovery_outcome or args.prepare_accepted_remainder or args.prepare_traceable_confirmation:
             _require(all(x is not None for x in (args.run_root, args.previous_run_root, args.bundle_root)),
                      "fixed preparation requires registered roots and the frozen package")
             prepare_fixed_acceptance(root, args.run_root, args.previous_run_root, args.bundle_root,
                                      authorize_install=args.authorize_local_install,
-                                     authorize_copy=args.authorize_test_auth_copy, revision_four=args.prepare_revision_four_acceptance, host_context=args.prepare_host_context_acceptance, empty_discovery=args.prepare_native_empty_discovery, outcome_semantics=args.prepare_discovery_outcome, accepted_remainder=args.prepare_accepted_remainder)
-            print("Nine-item window registered; six routing states prepared; no model started."
+                                     authorize_copy=args.authorize_test_auth_copy, revision_four=args.prepare_revision_four_acceptance, host_context=args.prepare_host_context_acceptance, empty_discovery=args.prepare_native_empty_discovery, outcome_semantics=args.prepare_discovery_outcome, accepted_remainder=args.prepare_accepted_remainder, traceable_confirmation=args.prepare_traceable_confirmation)
+            print("Eight-item interleaved window registered; five routing states prepared; no model started."
+                  if args.prepare_traceable_confirmation else
+                  "Nine-item window registered; six routing states prepared; no model started."
                   if args.prepare_accepted_remainder else
                   "Single A11 window registered; one routing state prepared; no model started."
                   if args.prepare_discovery_outcome else
@@ -4421,13 +4667,15 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPOSITORY_ROOT) -> 
             _require(args.run_root is not None, "login commands require a prepared run root")
             print(json.dumps(login_commands(root, args.run_root), indent=2))
         elif args.run:
+            from .no_hook_clarification import _stdin_semantic_review
+            _require(args.review_public_messages_stdin == args.traceable_confirmation, "public review flag requires traceable confirmation")
             _require(args.run_root is not None, "run requires a prepared run root")
             result = run_native_observation(root, args.run_root, authorize_model_calls=args.authorize_model_calls,
                                             reuse_test_auth=args.reuse_test_auth, followup=args.diagnostic_followup,
                                             continuation=args.diagnostic_continuation, private_diagnostics=args.private_diagnostics,
-                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup, read_followup=args.read_followup, resume_stderr_review=args.resume_stderr_review, assessment_batch=args.assessment_batch, assessment_remainder=args.assessment_remainder, material_segment=args.material_segment, current_assessment=args.current_assessment, fixed_acceptance=args.fixed_acceptance, revision_four=args.revision_four_acceptance, host_context=args.host_context_acceptance, empty_discovery=args.native_empty_discovery, outcome_semantics=args.discovery_outcome, accepted_remainder=args.accepted_remainder, routing_tail=args.independent_routing_tail)
+                                            operator_diagnostics=args.operator_diagnostics, schema_followup=args.schema_followup, model_followup=args.model_followup, stderr_followup=args.stderr_followup, read_followup=args.read_followup, resume_stderr_review=args.resume_stderr_review, assessment_batch=args.assessment_batch, assessment_remainder=args.assessment_remainder, material_segment=args.material_segment, current_assessment=args.current_assessment, fixed_acceptance=args.fixed_acceptance, revision_four=args.revision_four_acceptance, host_context=args.host_context_acceptance, empty_discovery=args.native_empty_discovery, outcome_semantics=args.discovery_outcome, accepted_remainder=args.accepted_remainder, traceable_confirmation=args.traceable_confirmation, semantic_review=_stdin_semantic_review if args.review_public_messages_stdin else None, routing_tail=args.independent_routing_tail)
             print(json.dumps(result, sort_keys=True))
-            return 0 if result["status"] == "PASS" else 1
+            return 0 if result.get("traceableConfirmation", result)["status"] == "PASS" else 1
         else:
             failures = validate_native_protocol(root)
             if failures:

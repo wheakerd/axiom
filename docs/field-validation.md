@@ -1,5 +1,64 @@
 # Field Validation
 
+## Frozen traceable confirmation window (policy 26)
+
+This independent window freezes candidate `c752e7b4f316e1f2224c233b326e97d6652d7638`
+and product source `ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706`.
+The existing 0.10.1 source/bundle policies 24/25 and both identical builds are
+reused. No canonical, Hook, ordinary builder, assessment 5 field definition,
+request, material, scoring rule, native query/relay or read-domain change is made.
+Policy 26 changes only observation registration, interleaved capture control and
+bound opaque implementation identities. A signed execution commit must precede
+any new preparation or observation; no future commit identity is assigned here.
+
+The exact once-only order is **A13, B13, A6, A14, A15, A16, B12, B14**.
+All eight are registered before the first start. The first three must pass before
+the remainder; any non-PASS, missing complete public-message review, query error,
+policy refusal or reliability failure stops every subsequent launch and auth
+handoff. The historical 122 attempts and 122 observation CLI starts remain
+consumed. At most eight new attempts/starts are authorized (130 cumulative).
+Old windows stay closed. Internal model requests remain unknown. Native query
+processes are separately counted and never relabeled as model observations.
+
+Routing and reply components keep their original input methods and scoring.
+Each routing PASS also receives an operator review of the whole retained public
+message sequence before advancing. That review cannot edit or upgrade the raw
+benchmark result. Each reply retains its complete capture and a separate semantic
+review bound to its bytes. A13 cannot hide an earlier selection behind its final
+JSON. B13 distinguishes candidate guidance from an actual business-workflow
+selection; an actual selection cannot be renamed guidance to obtain PASS.
+Only A6 uses its existing explicit-invocation adapter, bound to the new Skill.
+Public reads, if observed, bind the actual 8,188-byte candidate, not an older copy.
+A read is not an independent native loading or semantic-consumption receipt.
+
+The existing preparation path prepares five routing scopes, with one native
+query per scope, before the first observation. B13 is prepared only after A13
+passes; B12/B14 only after the first six observations pass. The normal dedicated
+A10 authentication source is checked against its retained policy-14 public
+inventory, rather than incorrectly requiring the new runtime in that old source.
+This compatibility check does not read credentials or relax current target-package
+validation. Opaque serial copies and the existing final-output/read guards remain.
+
+| Evidence | Limited reuse and remaining risk |
+| --- | --- |
+| A1-5 and A7-9 | Retain final routing conclusions from execution `c56d114c2e1338c8a15415c40301f77c448557a1`, result `659784dd93e59a6f5958cc7deace21af3524db9e951e7aef14af8bea72547d73`. They are not assessment-5 or new-runtime observations. A5's full intermediate messages remain visible in that original result. |
+| A10 and A12 | Retain their assessment-5 PASS from `c7644a34409e3dce4418b70cc1cb3c504e2524a6`, result `9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b`. These remain old-runtime evidence, not new-candidate runs. |
+| A6, A13 and B13 | Directly affected by the traceable discovery description; they are the first three fresh observations. Older A13 failures and B13's guidance-before-question facts remain unchanged. |
+| A14-16, B12 and B14 | Five specified remaining observations on the frozen candidate, conditional on the first three passing; no full 16+3 batch is claimed. |
+| A11 | The accepted classification deviation remains solely execution `16c13a3056a463149d93080cdd9f6102f31b8a3f` / result `cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`, benchmark FAIL. The zero-install scope has no traceable Skill or installed catalog; its request, material, empty query relay, assessment-5 definitions and permissions do not acquire the changed description. No new A11 PASS or broader waiver is created. |
+
+The installed discovery catalog changes model-visible context beyond the opaque
+runtime digest. The unaffected engineering/product evidence can be reused, but
+old behavioral PASS cannot establish identical new-context behavior or stability.
+The bounded review found no concrete additional required risk outside the fixed
+eight and the retained limited conclusions; the unmeasured possibility of a
+cross-case interaction is disclosed, not converted into an automatic 16+3 rerun.
+R4/FCR and R5 retain their existing scoped dispositions below. No publication
+observation, release, cleanup or private-state access is authorized by this window.
+
+Preparation, actual execution identity, observations and final verification are
+pending; this registration is not a host PASS or an Issue completion claim.
+
 ## Traceable discovery priority after the stopped remainder
 
 The non-sensitive native discovery receipt from the c7644a3 A13 scope returned

@@ -200,6 +200,14 @@
       "sourceIssue": 117,
       "summary": "Bind two identical builds of the traceable discovery source; retain historical protocols, original scores, closed windows and zero new model observations.",
       "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f"
+    },
+    {
+      "revision": 26,
+      "recordedOn": "2026-09-13",
+      "baselineCommit": "c752e7b4f316e1f2224c233b326e97d6652d7638",
+      "sourceIssue": 117,
+      "summary": "Register eight interleaved traceable observations with whole-message review and failure stops; preserve product policy 24/25, assessment 5, historical scores and the limited A11 disposition.",
+      "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f"
     }
   ]
 }
