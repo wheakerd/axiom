@@ -1,5 +1,15 @@
 # Runtime And Repository Identity
 
+## Architect goal-preservation actual observation
+
+Execution `4845505764d239a93618e38bbaed313c3121cac9` completed the four authorized
+observations; result SHA-256 `23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc` retains all seven
+normal visible messages. Cumulative attempts/observation CLI starts are 133/133;
+four native queries are counted separately. Product 0.10.1 and source/bundle
+policies 27/28 remain frozen, repository policy 29 records the bounded window.
+Old results keep their identities and the exact A11 accepted deviation.
+See [Field Validation](field-validation.md#architect-goal-preservation-observed-acceptance).
+
 ## Architect goal-preservation artifact and execution registration
 
 Source/bundle policies 27/28 bind the two actual identical builds from
@@ -15,7 +25,8 @@ The assigned unpublished 0.10.1 receives a compatible entry clarification.
 Only agent-plugin-architect description and entry wording change. Runtime
 `sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26` covers the same 61 inputs. Source/bundle policies are
 27/28. Previous protocols, product inventories and all
-129 observations remain historical. Current candidate behavior is NOT-RUN.
+129 observations remain historical. At this source-freeze stage, candidate
+behavior was NOT-RUN; the later execution and result are recorded above.
 
 ## Interleaved traceable confirmation (policy 26)
 

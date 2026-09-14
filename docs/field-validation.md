@@ -1,13 +1,92 @@
 # Field Validation
 
-## Architect goal-preservation fixed confirmation
+## Architect goal-preservation observed acceptance
+
+Signed execution `4845505764d239a93618e38bbaed313c3121cac9` (tree
+`6b4a2414efd2938450c0d4efac9a8a2102554959`) completed exactly B12, A12, A3, B14,
+once each in independent fresh scopes. All four passed their original score or
+complete-reply contract. The unmodified normalized result is
+[`23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc`](../evals/no-hook-observation/results/codex-native-23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc.json)
+(19,787 bytes). Native protocol `sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae` and
+reply protocol `sha256:1a69e1d2b8117bd9fdd5daae2eaed207fa441318392e796d01e36c1f5ad937fa` bind that execution.
+Result storage and this summary do not replace the execution identity.
+
+| Observation | Actual result | Evidence limit |
+| --- | --- | --- |
+| B12 | PASS | Both final goals preserved; one question; business workflow pending. Opening selected architect guidance, then read its 4,244-byte body. |
+| A12 | PASS | Two complete matching structured messages report clarification, empty routes and count 1. This is routing assessment, not a natural-language question. |
+| A3 | PASS | Two complete structured messages select only the architect with count 0; no added choice or business action. |
+| B14 | PASS | One question preserves review vs preparation to send; permissions stated separately; neither option advanced. |
+
+All seven normal visible messages remain in the result, including the two
+identical structured messages in each A response. Official final outputs agree,
+all clients exited normally, and all postchecks were valid. There were four
+native skills/list query processes, each returning eight Skills and no errors;
+they are separate from four observation CLI starts. Internal model requests
+remain unknown. The B12 public read records 4,244 bytes, range 1-240, event 5,
+from the actual new package; it is not a native-load or semantic-consumption
+receipt. The other three observations have no public read. No user choice or
+business execution was simulated.
+
+This window adds four attempts/observation CLI starts to 129, for **133/133**.
+Every prior window stays closed; the current four are consumed. The original
+B12 FAIL and old B14 NOT-RUN remain unchanged. No retry, additional observation,
+publication run or resource cleanup occurred.
+
+### Scoped acceptance coverage and approved deviation
+
+This is prior evidence reuse plus four new observations, not a fresh 16/16 run.
+A1-2, A4-5 and A7-9 retain only their original final-route support from the
+c56d114/659784dd execution/result; A5's full intermediate messages are preserved.
+A10 retains its assessment-5 result from c7644a3/9cfd86e2. A13, A6 and A14-16
+retain their original 0d1dd8e/d9046f90 results. A3/A12 and B12/B14 now have the
+new directed evidence above. B13 retains its 0d1dd8e limited PASS: Skill guidance
+was selected and read before the business-choice question, with the business
+workflow then pending. None of those old runs is relabeled as this runtime.
+The unchanged owners/permissions and bounded architect controls justify reuse;
+installed catalog context is not claimed byte-identical or causally stable.
+
+A11 remains benchmark **FAIL** under execution
+`16c13a3056a463149d93080cdd9f6102f31b8a3f`, result
+`cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`.
+The user accepts only this no-route/unavailable classification deviation,
+without promising exact distinction between unavailable discovery and an
+available directory with no match. This installed Skill change does not enter
+that zero-installation scope. Older A11 read refusals and INCOMPLETE windows are
+not regraded. No other failure receives this waiver.
+
+The existing R4/FCR and R5 dispositions below apply unchanged: public loading
+limits are explicit; removed legacy containment paths are not promoted to
+VERIFIED_FIXED; conditional ChatGPT, Windows-native bundle and full-profile
+installed targets retain their documented NOT-RUN scopes. Publication's real
+17-case full-profile contract is separate and has not been fulfilled here.
+No new current data/permission defect was observed. Conditional integration
+still requires final head checks, live rules, review and actual main verification.
+
+### Local validation for this candidate
+
+Ten source/routing/identity checks and eleven directed registration/historical
+package checks passed. Initial full discovery ran 655 tests with 11 failure and
+20 error reports; a setup failure prevented 20 additional methods from entering.
+Exact repository metadata bindings were corrected, and all 43 affected or
+previously unentered methods passed, followed by publication-contract validation.
+The complete suite was not repeated locally. The external copy had full current
+public ancestry from the outset, with the historical fixture commit/old branch
+and alternates absent. Five Linux Hook tests, distribution and Claude strict
+passed. Existing generic-plugin NON-PASS and 17 initial ASCII lines remain.
+Local results are distinct from final-head CI. Both actual product builds are
+already complete and are not repeated for result registration.
+
+
+## Architect goal-preservation pre-execution registration
 
 Repository policy 29 registers B12, A12, A3, B14 in that order, each once in a
 fresh scope after 129 historical attempts/CLI starts, with a ceiling of 133.
 Any non-PASS, query or reliability failure stops all later observations and
 opaque authentication handoffs. This does not reopen the stopped traceable
-window or its prepared B14 state. The execution commit is assigned only after
-signed freezing; all new behavior is currently NOT-RUN.
+window or its prepared B14 state. At registration, the execution commit had not
+yet been assigned and new behavior was NOT-RUN. The signed execution and
+completed observations are recorded above.
 
 Two actual independent builds from signed source `bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1`
 (tree `d9281b507721827034c27fdc1883161801bfbbf2`) produced identical 52-file directories and
@@ -32,7 +111,7 @@ Its raw FAIL and the user's limited acceptance remain bound only to the exact
 16c13a3/cbab9b39 result. B13 retains the separate fact of choosing Skill guidance
 before asking for the business workflow; no native-loading claim is inferred.
 
-## Architect end-goal preservation
+## Architect end-goal preservation source-freeze record
 
 The previous entry already required one question, an unselected workflow and
 no permission-based default. It also prohibited substituting an architecture
@@ -47,7 +126,7 @@ internal cause or a behavioral PASS.
 
 Source policy 27 retains the assigned unpublished version 0.10.1.
 The full runtime is `sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26` with the same 61 inputs. Bundle policy
-28 will bind two actual deterministic builds from the signed source.
+28 subsequently bound the two actual deterministic builds recorded above.
 The builder only adds that exact policy pair; lifecycle and safety are unchanged.
 
 All 129 historical attempts and CLI starts remain unchanged. The prior B12 FAIL

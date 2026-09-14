@@ -226,6 +226,13 @@
   "goalPreservation": {
     "windowId": "architect-goal-preservation-1",
     "protocolDigest": "sha256:ff9e84310f705f22233f9c6e0fa83121b8ba5fa0cc3254885ee21275e3f500ae",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc.json",
+        "sha256": "23ea83ffdcb2108cd3b6477e5a5e0957a20336904c09b742505e3b4c4ac743dc",
+        "implementationCommit": "4845505764d239a93618e38bbaed313c3121cac9",
+        "implementationTree": "6b4a2414efd2938450c0d4efac9a8a2102554959"
+      }
+    ]
   }
 }
