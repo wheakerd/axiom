@@ -208,6 +208,14 @@
       "sourceIssue": 117,
       "summary": "Register eight interleaved traceable observations with whole-message review and failure stops; preserve product policy 24/25, assessment 5, historical scores and the limited A11 disposition.",
       "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f"
+    },
+    {
+      "revision": 27,
+      "recordedOn": "2026-09-14",
+      "baselineCommit": "ddc83faf5c6662585bbbd9f5707ade0c9a94d74a",
+      "sourceIssue": 117,
+      "summary": "Preserve original end goals when the architect entry restates material alternatives; separate permission limits from goal selection. Historical results and product boundaries remain unchanged.",
+      "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
     }
   ]
 }

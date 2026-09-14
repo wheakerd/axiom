@@ -155,7 +155,7 @@ class TraceableConfirmationTests(unittest.TestCase):
             self.assertEqual(baseline[key],current[key])
         for key in ['modelResponseSchema','promptEnvelope','fixtureMatrix','goldenSet']:
             self.assertEqual(baseline['inputs'][key],current['inputs'][key])
-        self.assertEqual(baseline['bundle'],current['bundle'])
+        self.assertEqual(baseline['bundle'],n._traceable_protocol(ROOT)['bundle'])
         for flags in ({},{'revision_four':True},{'host_context':True},{'empty_discovery':True},
                       {'outcome_semantics':True},{'accepted_remainder':True}):
             with patch.object(n,'_revision_four_auth_source',side_effect=AssertionError('old source reached')):
@@ -177,6 +177,8 @@ class HistoricalAuthenticationPackageTests(unittest.TestCase):
         for entry in manifest['runtimeFiles']:
             name = entry['path']
             data = (ROOT / n.TRACEABLE_DISCOVERY_ARCHIVE / 'traceable-git-submit-source.txt').read_bytes() if name == 'skills/traceable-git-submit/SKILL.md' else (ROOT / name).read_bytes()
+            if name == 'skills/agent-plugin-architect/SKILL.md':
+                data = (ROOT / n.GOAL_PRESERVATION_ARCHIVE / 'agent-plugin-architect-source.txt').read_bytes()
             path = self.package / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data);path.chmod(0o644)

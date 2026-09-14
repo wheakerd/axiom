@@ -1356,6 +1356,8 @@ def _fixed_result_binding(root: Path, *, revision_four: bool = False, host_conte
         recorded = _remainder_prior_protocol(root)
     if accepted_remainder and history["protocolDigest"] != recorded["protocolDigest"]:
         recorded = _accepted_remainder_protocol(root)
+    if traceable_confirmation and history["protocolDigest"] != recorded["protocolDigest"]:
+        recorded = _traceable_protocol(root)
     _require(set(history) == {"windowId", "protocolDigest", "results"} and
              history["windowId"] == _fixed_contract(revision_four, host_context, empty_discovery, outcome_semantics, accepted_remainder, traceable_confirmation)["windowId"] and
              history["protocolDigest"] == recorded["protocolDigest"] and
@@ -1513,18 +1515,19 @@ def _finish_traceable_counts(document: dict) -> None:
         extra["status"] = "INCOMPLETE"
 
 
-def _validate_traceable_results(document: dict, root: Path) -> None:
+def _validate_traceable_results(document: dict, root: Path, protocol_override=None) -> None:
     from . import no_hook_clarification as replies
     extra = document["traceableConfirmation"]
+    rp = _traceable_reply_protocol(root) if protocol_override else replies.protocol(root)
     _require(set(extra) == {"clarificationProtocolDigest", "clarificationResults", "routingMessageReviews",
                            "attemptCount", "cliLaunchCount", "cumulativeCliLaunchCount", "status"} and
-             extra["clarificationProtocolDigest"] == replies.protocol(root)["protocolDigest"],
+             extra["clarificationProtocolDigest"] == rp["protocolDigest"],
              "traceable result protocol or fields changed")
     a = {x["ordinal"]: x for x in document["caseResults"]}
     b = extra["clarificationResults"]
     _require([x["ordinal"] for x in b] == TRACEABLE_CONFIRMATION["clarificationOrdinals"], "reply set changed")
     for entry in b:
-        replies.validate_confirmation_entry(root, entry)
+        replies.validate_confirmation_entry(root, entry, protocol_override=rp, native_override=protocol_override)
     reviews = extra["routingMessageReviews"]
     _require([x["ordinal"] for x in reviews] == [x["ordinal"] for x in document["caseResults"] if x["status"] == "PASS"],
              "routing public-message review coverage changed")
@@ -1721,6 +1724,22 @@ def _outcome_prior_protocol(root: Path) -> dict[str, Any]:
 
 ACCEPTED_REMAINDER_RESULT_SHA256 = "9cfd86e242e9784bd77d785fb5c362b76a9e4190ae62266923d204d8e31d1b1b"
 TRACEABLE_DISCOVERY_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/traceable-discovery-priority")
+
+
+GOAL_PRESERVATION_ARCHIVE = Path("evals/no-hook-observation/historical-protocols/architect-goal-preservation")
+TRACEABLE_RESULT_SHA256 = "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c"
+
+
+def _traceable_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / GOAL_PRESERVATION_ARCHIVE / PROTOCOL_RELATIVE.name)
+    _require(hashlib.sha256(data).hexdigest() == "ee9700e2ba8bb92b0ba618263452813bee03837a18167f66fa2789ecfd4aa1c7", "historical traceable protocol changed")
+    return _json(data)
+
+
+def _traceable_reply_protocol(root: Path) -> dict[str, Any]:
+    data = _read(root / GOAL_PRESERVATION_ARCHIVE / "clarification-protocol-v1.json")
+    _require(hashlib.sha256(data).hexdigest() == "fdede5f767389e70e9cf1376cf1b3406232b7876d871a2d3060a42fae7bacc8c", "historical traceable reply protocol changed")
+    return _json(data)
 
 
 def _accepted_remainder_protocol(root: Path) -> dict[str, Any]:
@@ -4178,6 +4197,8 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
             protocol = _remainder_prior_protocol(root)
         elif result_sha256 == ACCEPTED_REMAINDER_RESULT_SHA256:
             protocol = _accepted_remainder_protocol(root)
+        elif result_sha256 == TRACEABLE_RESULT_SHA256:
+            protocol = _traceable_protocol(root)
         elif result_sha256 == OUTCOME_PRIOR:
             protocol = _outcome_prior_protocol(root)
         result_schema = _json(_read(root / RESULT_SCHEMA_RELATIVE))
@@ -4339,7 +4360,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                     if hashlib.sha256(evidence_bytes).hexdigest() != expected_evidence:
                         # Historical read lengths belong to that protocol's package.
                         candidates = [root / f"evidence/profiles/openai-hook-independent-v1/bundle-revision-{v}.json"
-                                      for v in (9, 14)]
+                                      for v in (9, 14, 25)]
                         matches = [data for path in candidates if
                                    hashlib.sha256(data := _read(path)).hexdigest() == expected_evidence]
                         _require(len(matches) == 1, "historical public read package evidence changed")
@@ -4358,10 +4379,15 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
                         source_bytes = _read(root / relative)
                         source_record = next(item for item in manifest["runtimeFiles"] if item["path"] == read["path"])
                         if hashlib.sha256(source_bytes).hexdigest() != source_record["sha256"]:
-                            _require(read["path"] == "skills/traceable-git-submit/SKILL.md" and
-                                     source_record["sha256"] == "0a2b20b40bb6bc17568a4a9afc00c24e1e7ccbed2dfeb28999f813ba6b9dbb4e",
-                                     "historical public read source is unavailable")
-                            source_bytes = _read(root / TRACEABLE_DISCOVERY_ARCHIVE / "traceable-git-submit-source.txt")
+                            historical_sources = {
+                                ("skills/traceable-git-submit/SKILL.md", "0a2b20b40bb6bc17568a4a9afc00c24e1e7ccbed2dfeb28999f813ba6b9dbb4e"):
+                                    TRACEABLE_DISCOVERY_ARCHIVE / "traceable-git-submit-source.txt",
+                                ("skills/agent-plugin-architect/SKILL.md", "ddcfc8aab6c9348c86a851d8b623f2493079a54a4c374f7ed61bbc2f15eb4db3"):
+                                    GOAL_PRESERVATION_ARCHIVE / "agent-plugin-architect-source.txt",
+                            }
+                            historical_path = historical_sources.get((read["path"], source_record["sha256"]))
+                            _require(historical_path is not None, "historical public read source is unavailable")
+                            source_bytes = _read(root / historical_path)
                         _require(hashlib.sha256(source_bytes).hexdigest() == source_record["sha256"],
                                  "public read source bytes differ from bound inventory")
                 if read["range"] is not None:
@@ -4535,7 +4561,7 @@ def validate_native_result(document: Any, root: Path = REPOSITORY_ROOT) -> list[
         expected_status = "INCOMPLETE" if document["runMode"] == "simulated" or any(
             value in {"NOT-RUN", "INCOMPLETE"} for value in statuses) else ("FAIL" if "FAIL" in statuses else "PASS")
         if traceable_confirmation:
-            _validate_traceable_results(document, root)
+            _validate_traceable_results(document, root, protocol if result_sha256 == TRACEABLE_RESULT_SHA256 else None)
         else:
             _require("traceableConfirmation" not in document, "unexpected interleaved reply evidence")
         _require(document["status"] == expected_status, "native overall status mismatch")

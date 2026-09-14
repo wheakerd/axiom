@@ -1,5 +1,13 @@
 # Runtime And Repository Identity
 
+## Architect end-goal preservation source (policy 27)
+
+The assigned unpublished 0.10.1 receives a compatible entry clarification.
+Only agent-plugin-architect description and entry wording change. Runtime
+`sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26` covers the same 61 inputs. Source/bundle policies are
+27/28. Previous protocols, product inventories and all
+129 observations remain historical. Current candidate behavior is NOT-RUN.
+
 ## Interleaved traceable confirmation (policy 26)
 
 Policy 26 registers eight observations in the explicitly authorized order and

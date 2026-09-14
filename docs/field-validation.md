@@ -1,5 +1,32 @@
 # Field Validation
 
+## Architect end-goal preservation
+
+The previous entry already required one question, an unselected workflow and
+no permission-based default. It also prohibited substituting an architecture
+audit for an explicit installation request. It did not explicitly preserve each
+original final goal while restating an unresolved choice. The description and
+existing entry paragraph now make that boundary explicit: permission limits are
+explained separately; preparation, review, planning and preflight cannot replace
+the user's final goal without their choice. No fixed question or evaluation
+answer is added. Explicit requests, concepts and unchanged selections retain
+their prior boundaries. This is a product wording improvement, not proof of an
+internal cause or a behavioral PASS.
+
+Source policy 27 retains the assigned unpublished version 0.10.1.
+The full runtime is `sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26` with the same 61 inputs. Bundle policy
+28 will bind two actual deterministic builds from the signed source.
+The builder only adds that exact policy pair; lifecycle and safety are unchanged.
+
+All 129 historical attempts and CLI starts remain unchanged. The prior B12 FAIL
+and B14 NOT-RUN retain their full messages and identities. A13, B13, A6 and
+A14-16 continue to support their original execution and runtime, including
+B13's prior selection of guidance. A11's limited user acceptance remains bound
+only to 16c13a3/cbab9b39; the changed installed architect source is absent from
+that zero-installation scope. Discovery catalog context changes, so the old
+installed inputs are not claimed byte-identical. The authorized directed set is
+B12, A12, A3, B14, each once, stopping on any non-PASS. No other call is implied.
+
 ## Frozen traceable confirmation window (policy 26)
 
 This independent window freezes candidate `c752e7b4f316e1f2224c233b326e97d6652d7638`

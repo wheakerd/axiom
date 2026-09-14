@@ -587,7 +587,7 @@ def confirmation_replies(root: Path, routing: Path, stage: int, semantic_review,
     return entries
 
 
-def validate_confirmation_entry(root: Path, entry: dict) -> None:
+def validate_confirmation_entry(root: Path, entry: dict, *, protocol_override=None, native_override=None) -> None:
     _require(type(entry) is dict and set(entry) == {"ordinal", "caseId", "status", "attemptCount", "cliLaunchCount",
              "capture", "review", "preparation"}, "traceable reply fields changed")
     blank = next((x for x in native._new_traceable_results(root)["clarificationResults"] if x["ordinal"] == entry["ordinal"]), None)
@@ -597,8 +597,8 @@ def validate_confirmation_entry(root: Path, entry: dict) -> None:
                  "uncaptured reply has observed facts")
         return
     c = entry["capture"]
-    p = protocol(root)
-    np = native._protocol(root)
+    p = protocol_override or protocol(root)
+    np = native_override or native._protocol(root)
     ordinal = entry["ordinal"]
     case = legacy.load_golden_cases(root)[ordinal-1]
     definition = native._definition(native._input(root, np, "fixtureMatrix"), ordinal)

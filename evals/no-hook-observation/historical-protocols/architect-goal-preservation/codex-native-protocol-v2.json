@@ -38,7 +38,7 @@
     },
     "bundleSchema": {
       "path": "evals/no-hook/bundle-manifest-schema-v1.json",
-      "sha256": "eabca74e9189f12d8498f2a6704f46e55a9648368ec9d414fcf402bcae4a6622"
+      "sha256": "c25263502b739393bb8d88b1359636f19a64fccade8d484b235d8c562fc22c96"
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
@@ -52,11 +52,11 @@
     },
     {
       "path": "axiom_validation/no_hook_bundle.py",
-      "sha256": "005c7708cbc5eceb54d0b7f8b54b1b79ce00c46df6e8ed4bd6caf10be12281ca"
+      "sha256": "860e109903480818dea3903966aa3faa5faa36d57e350a161d8c6e3a4c5fa47b"
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "2100018e651d4d4b3b21c6a961eb99ed1bf25fdf08233400e8b953aa34c4653b"
+      "sha256": "69dc0dbece6fe6af1167b180f6e4866d323b87525a3284b4990d99b9eb2c6f51"
     },
     {
       "path": "axiom_validation/no_hook_discovery.py",
@@ -68,11 +68,11 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "d43d591b2387a3da039172bd5f1b5f5a735cc5f8a1c24ab4a47d323b598e0420"
+      "sha256": "3ee695c04e0a6bc1d676dbf3f022e7b43fbb49f7ef0b129a792059569c7889ca"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
-      "sha256": "542cb188c98f394aa50dd362f978cb4ffc216a975511285aa95aeff0b4f2ca2e"
+      "sha256": "5d33cc97152ddfc1d263aa292bbb0c6400e4f70d4ec6642dd2630b8e94b92c46"
     },
     {
       "path": "axiom_validation/no_hook_profile.py",
@@ -449,7 +449,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:4b3c81cbaa12861588d1fc09b4851b87d84bc94b660795ed2c49c878cf5e5abf",
+  "protocolDigest": "sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
