@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:b0f8cae7aef18d94480b743044f418197efc273322a7e891a09f58be51d9e0d6",
+  "nativeProtocolDigest": "sha256:b5472a3b11a57de4f26929b7cf6f992b8f4381953e896fd85673583cef9b721b",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "d1dcc8de77db87d7e25edf9d787b262ccce1ccd2002eccb333dea95ec8c9c8f5"
+      "sha256": "784aa9b062ced7dd4bf467132ff5d6322879320191a5c00f9402f0a6fb09ce10"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -175,5 +175,5 @@
       "replyBytesPerCase": 8192
     }
   },
-  "protocolDigest": "sha256:dd06504de509dd1e72422da2d4a0f0d8d8ccb027f5caa38d760b92be156f93b0"
+  "protocolDigest": "sha256:8b0f8e80d2485038ccfef3a8822bb071fbd29db4d4afd8089c5343d8fde9f927"
 }

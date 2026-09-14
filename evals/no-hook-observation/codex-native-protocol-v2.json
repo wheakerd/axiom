@@ -42,7 +42,7 @@
     },
     "staticBundleEvidence": {
       "path": "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
-      "sha256": "0e34cb8c805b301343e989453f20e2b82ed0474e33fdc68f7502b393dbe1012a"
+      "sha256": "b738ea2714cad44d6b4e25b14105bfc1af8f2c7de7d74edfe1072fd703751b0f"
     }
   },
   "implementationBindings": [
@@ -96,10 +96,10 @@
     }
   ],
   "bundle": {
-    "manifestDigest": "sha256:0dc5615c8635cd1055313fb6d17fc088ae81779627f0191cd8bebc30c0a326f6",
-    "archiveSha256": "c134efca8fa922f065c4dd25094ee6869043ccae15caf064207e4c9ca1877a7e",
-    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
-    "packageSha256": "a15c339b26268d730c0d4135d07e89b60ce31b279294365c1f5f3756d20fd9ff"
+    "manifestDigest": "sha256:e0a55f3862df62cbe8170281ffe0daf2a85c638da5ae7e8293605c100ce147b6",
+    "archiveSha256": "756c36e687631d1a71305aefe7f4e9fa1860b6fc0c1c233935d740098ef70a26",
+    "profileRuntimeDigest": "sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65",
+    "packageSha256": "ab6b2d996a0241a1b4d0fa809f4d42b0fa2a53b45b626746e963c15083ba686d"
   },
   "caseIds": [
     "no-hook-positive-explicit-using-axiom-001",
@@ -449,7 +449,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:b0f8cae7aef18d94480b743044f418197efc273322a7e891a09f58be51d9e0d6",
+  "protocolDigest": "sha256:b5472a3b11a57de4f26929b7cf6f992b8f4381953e896fd85673583cef9b721b",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",

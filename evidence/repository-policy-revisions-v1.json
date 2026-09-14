@@ -192,6 +192,14 @@
       "sourceIssue": 117,
       "summary": "Clarify discovery priority for unresolved traceable Git alternatives; preserve body, explicit requests, ordinary Git and all historical observations. No new observation window.",
       "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f"
+    },
+    {
+      "revision": 25,
+      "recordedOn": "2026-09-13",
+      "baselineCommit": "ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706",
+      "sourceIssue": 117,
+      "summary": "Bind two identical builds of the traceable discovery source; retain historical protocols, original scores, closed windows and zero new model observations.",
+      "runtimeContractDigest": "sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f"
     }
   ]
 }

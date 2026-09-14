@@ -33,7 +33,36 @@ Policy 24 freezes this compatible source revision of the assigned, unpublished
 `sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f`.
 The builder change only admits the exact source/bundle policy pair 24/25;
 transport, lifecycle, authority and output handling are unchanged. Two actual
-deterministic builds and their signed source binding follow this source freeze.
+deterministic builds completed from signed source `ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706`,
+tree `425182b4dbdd5fd549f16e38b4039d1eb09f526f`. Both complete output trees, file modes, envelopes
+and ZIP bytes agree. The 50 runtime files match the revised canonical bytes.
+
+The profile runtime is `sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65`;
+the manifest is `sha256:e0a55f3862df62cbe8170281ffe0daf2a85c638da5ae7e8293605c100ce147b6`.
+The archive is 261,075 bytes, SHA-256 `756c36e687631d1a71305aefe7f4e9fa1860b6fc0c1c233935d740098ef70a26`;
+package identity is `ab6b2d996a0241a1b4d0fa809f4d42b0fa2a53b45b626746e963c15083ba686d`. Policy 25 binds this actual
+artifact in [bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json).
+The current native protocol is
+`sha256:b5472a3b11a57de4f26929b7cf6f992b8f4381953e896fd85673583cef9b721b`,
+and the reply protocol is
+`sha256:8b0f8e80d2485038ccfef3a8822bb071fbd29db4d4afd8089c5343d8fde9f927`.
+These identities have zero actual observations.
+
+Local complete discovery exercised 654 tests: 650 passed, two retained skips
+and two stale documentation-count assertions failed. The added historical
+provenance README raises the Markdown count from 118 to 119; both assertions
+were corrected and both failed checks passed on the focused rerun. The full
+suite was not repeated after this count-only correction. Sixteen boundary
+tests, three source-identity/builder tests, nine artifact-identity tests, all
+five applicable Linux Hook tests, publication/distribution checks and Claude
+strict validation passed. Initial local failures and their corrections remain
+recorded. The generic plugin validator still rejects its three known manifest
+fields, and the ASCII scan retains 16 historical line hits; neither is hidden
+or weakened. All checks ran in an external public copy with its own import
+root, bytecode disabled and the old builder commit/branch and alternates
+absent. The two formal builds are separate from test builder artifacts. The
+independent review did not execute tests or observe model behavior. Final-head
+CI is a separate result, not a replacement for these local records.
 
 The policy-14 bundle evidence and the exact prior protocols are retained under
 their historical owners. The old Git source is retained as a non-discoverable

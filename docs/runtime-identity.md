@@ -11,7 +11,12 @@ Skill description changes. The body, using-axiom and Hooks remain identical.
 The same 61 runtime inputs now hash to
 `sha256:f48ee69ab05c3eaa25121b8f5c30431e42dca87188e23e19e621b6e8c4b2c64f`.
 Policy 24 is the new frozen-source policy and policy 25 owns its required
-derived bundle. The prior 13/14 artifact and all 122 historical observations
+derived bundle. Two actual identical builds bind signed source
+`ba1b423f7d8c7f6a1ca36d5c4b5d1c566aa0c706`, tree
+`425182b4dbdd5fd549f16e38b4039d1eb09f526f`, with profile digest
+`sha256:09fd1dfb9d065a8cebbe84a0a6b0cd9c74e23ea2fbede9ae630e75a23eb37a65`.
+The current [bundle evidence](../evidence/profiles/openai-hook-independent-v1/bundle-v1.json)
+records the exact manifest and archive identities. The prior 13/14 artifact and all 122 historical observations
 retain their original identities. Current behavior is NOT-RUN, with zero
 queries, new attempts, authentication handoffs or reopened windows.
 
