@@ -1,5 +1,33 @@
 # Runtime And Repository Identity
 
+## Discovery outcome measurement (policy 22)
+
+Assessment revision 5 clarifies only the existing `discoveryOutcome` definition:
+query-interface success is distinct from availability of the discovered Skill
+catalog needed to assess the inner request. `no-route` still requires a usable
+catalog with no applicable route; `unavailable` still means required discovery
+is absent or inaccessible. Availability is assessed for the current request,
+without requiring every schema-listed Skill. All four outcome values remain.
+
+The source schema annotation and the uniformly delivered prompt definition
+change for all sixteen routing inputs. The response transport still omits
+annotations; its vocabulary and field types do not change. The bound schema
+digest and opaque input identities change. Original requests, task materials,
+expected results, scoring, query facts, empty-result fragment, read permissions
+and all natural-language reply wording remain unchanged. Historical revision 4
+inputs and protocols are retained under
+`evals/no-hook-observation/historical-protocols/discovery-outcome-revision-4`.
+Earlier PASS and FAIL results are not relabeled as revision 5 observations.
+
+The independent `discovery-outcome-1` window permits only one original A11,
+from 118 historical attempts/observation CLI starts to a ceiling of 119. A fresh
+native query must succeed first under the existing rules; no previous receipt
+stands in for the new scope. The registered normal Pro A10 remains the opaque
+authentication source. No other routing, reply or publication case is admitted,
+and every consumed or stopped window remains closed. Signing freezes actual
+execution identity before preparation. Runtime 0.10.1, source/bundle policies
+13/14 and both existing formal builds are unchanged.
+
 ## Native empty discovery compatibility (policy 21)
 
 Policy 21 adds one bounded `skills/list` query through the frozen Codex 0.153.0

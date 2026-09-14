@@ -21,7 +21,7 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
         self.addCleanup(self.helper.doCleanups)
         self.parent = self.helper.parent
 
-    def prepared(self):
+    def prepared(self, *, outcome_semantics=False, query_error=False):
         # As in the existing fixed-window fixtures, only the synthetic reader
         # sees an unconsumed registration. The checked-in actual result and
         # production admission remain closed and are tested separately below.
@@ -30,7 +30,12 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
             data = actual_read(path, *args, **kwargs)
             if path in (ROOT / native.HISTORY_RELATIVE, ROOT / replies.HISTORY):
                 history = json.loads(data)
-                history['nativeEmptyDiscoveryAcceptance']['results'] = []
+                key = 'discoveryOutcomeAcceptance' if outcome_semantics else 'nativeEmptyDiscoveryAcceptance'
+                if key in history:
+                    history[key]['results'] = []
+                    if not outcome_semantics:
+                        history[key]['protocolDigest'] = (native._protocol(ROOT)['protocolDigest']
+                            if path == ROOT / native.HISTORY_RELATIVE else replies.protocol(ROOT)['protocolDigest'])
                 return native._bytes(history)
             return data
         for module in (native, replies):
@@ -56,6 +61,8 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
             scope = discovery.query_scope(paths, executable, marketplace, installed, definition)
             self.assertFalse((paths['home'] / native.AUTH_FILE_NAME).exists())
             queried.append(paths['workspace'])
+            if query_error:
+                raise discovery.DiscoveryQueryError('synthetic incomplete query')
             skills = ([{'name': 'synthetic-public-helper', 'description': 'Test metadata.',
                        'path': str(paths['discovery'] / 'helper/SKILL.md'),
                        'scope': 'user', 'enabled': True}] if paths['discovery'].exists() else [])
@@ -66,11 +73,13 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
             native._exclusive(paths['case'] / 'discovery-query.json', native._bytes(receipt))
             return receipt
         self.query = query
-        run = self.parent / native.EMPTY_DISCOVERY_ACCEPTANCE['routingRunName']
+        contract = native.OUTCOME_ACCEPTANCE if outcome_semantics else native.EMPTY_DISCOVERY_ACCEPTANCE
+        run = self.parent / contract['routingRunName']
         with patch.object(native, '_revision_four_auth_source', return_value=old), \
              patch.object(discovery, 'query_once', side_effect=query):
             native.prepare_fixed_acceptance(ROOT, run, previous, self.parent/'bundle',
-                authorize_install=True, authorize_copy=True, empty_discovery=True, runner=runner)
+                authorize_install=True, authorize_copy=True,
+                empty_discovery=not outcome_semantics, outcome_semantics=outcome_semantics, runner=runner)
         return run, runner, calls, queried
 
     def test_only_six_routing_states_are_prepared_and_history_stays_closed(self):

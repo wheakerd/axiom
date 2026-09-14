@@ -283,8 +283,9 @@ class ClarificationTests(unittest.TestCase):
             archived_context = json.loads((ROOT/"evals/no-hook-observation/historical-protocols/host-context-1/clarification-protocol-v1.json").read_bytes())
             history["hostContextAcceptance"] = {"windowId": native.HOST_CONTEXT_ACCEPTANCE["windowId"],
                 "protocolDigest": archived_context["protocolDigest"], "results": []}
+            archived_empty = json.loads((ROOT/native.OUTCOME_ARCHIVE/supplement.PROTOCOL.name).read_bytes())
             history["nativeEmptyDiscoveryAcceptance"] = {"windowId": native.EMPTY_DISCOVERY_ACCEPTANCE["windowId"],
-                "protocolDigest": p["protocolDigest"], "results": []}
+                "protocolDigest": archived_empty["protocolDigest"], "results": []}
             history["independentClarification"] = {"windowId": supplement.INDEPENDENT["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
             def read(path,*args,**kw):

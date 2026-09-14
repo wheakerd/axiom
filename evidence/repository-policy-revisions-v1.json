@@ -168,6 +168,14 @@
       "sourceIssue": 117,
       "summary": "Relay verified native empty skills/list results through the compatibility input layer; preserve nonempty inputs and register a closed-history 117+9 A11-first acceptance window.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 22,
+      "recordedOn": "2026-09-13",
+      "baselineCommit": "35b1960629822b0e68af1fc2f4d8580ac21bab8c",
+      "sourceIssue": 117,
+      "summary": "Clarify discoveryOutcome catalog availability separately from query success for all assessment inputs; preserve native query facts and admit one independent A11 after 118 attempts.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

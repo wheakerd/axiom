@@ -186,5 +186,10 @@
         "implementationTree": "d8428661524c6fbf426c8121dba88e3f0c2d8955"
       }
     ]
+  },
+  "discoveryOutcomeAcceptance": {
+    "windowId": "discovery-outcome-1",
+    "protocolDigest": "sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c",
+    "results": []
   }
 }

@@ -1,5 +1,74 @@
 # Field Validation
 
+## Discovery outcome clarification after 118 attempts
+
+The schema and prompt already distinguish a usable catalog with no applicable
+route (`no-route`) from missing required discovery (`unavailable`). Profile
+`discovery.unsupportedDiscoveryResult` permits both labels; benchmark
+`negativeAcceptance.unavailable` assigns missing discovery to `unavailable`.
+The Golden Set distinguishes these states without a catalog-completeness rule.
+One bounded independent semantic review found no contract conflict in separating
+query success from the availability of the Skills needed for the current request.
+This does not identify an internal model cause for the preceding `no-route`.
+
+Assessment revision 5 replaces only the shared definition's outcome clause:
+
+> no-route means a usable discovered Skill catalog was available to assess the inner request and no route applies. unavailable means the Skill discovery required for that assessment is absent or inaccessible. A successfully functioning discovery interface does not by itself make the required Skill catalog available: query success and the availability of the discovered Skills are separate facts. Judge availability for the current request, without requiring every Skill named by the schema to be installed. Both no-route and unavailable have selectedRoutes=[] and clarificationCount=0.
+
+The prior selected/clarification clauses, four-value enum, original requests,
+materials, expected outcomes and scorer remain unchanged. No identifier,
+fixture-installation branch, fixed case answer, output rewrite or additional
+read authority is introduced. The genuine `skills=[]`, `errors=[]` receipt and
+its compatibility fragment retain their original meaning and bytes. Query
+success is not reclassified as query failure. No development host query is
+needed for this wording change; synthetic regressions cover delivery/bindings.
+
+All sixteen routing prompts change uniformly, including the source-schema
+digest and bound opaque identities. The wire schema keeps its original types
+and enum and removes description annotations as before. Thus old A1-10 PASS
+still proves its original route behavior under the retained host/product
+conditions, but its input bytes are not the new revision's input bytes. The
+natural-language B prompts, host configuration, native query implementation,
+Skill discovery and permissions do not change in this round. Prior B evidence
+still has its original host context and limited B13 meaning; it does not fill
+the unrun B slots under the later environment-display-off configuration.
+
+A1-9 retains only its original final `selected` score, whose definition is
+unchanged. In particular, A5's full message sequence was `unavailable` followed
+by `selected`; reuse does not claim its intermediate classifications are
+unchanged under revision 5. A10 directly exercises `no-route`. If the new A11
+passes, the bounded remaining observation set is A10 plus A12-16 and B12-14:
+nine cases, all requiring separate authorization. This is not a new 16/16 claim
+or authorization to launch those cases in this window.
+
+The original 35b1960 result, its complete public reply and `no-route` FAIL,
+all earlier results and every stopped window remain bound to their original
+inputs. The independently authorized new window contains A11 only, once, with
+118 prior attempts/observation CLI starts and cumulative cap 119. It admits no
+A1-10, A12-16, B or publication observation, regardless of its outcome. At
+execution freeze the new A11 is NOT-RUN. Actual validation and signed execution
+identities, followed by the observed result if eligible, are recorded below.
+
+Before execution freeze, the external candidate ran 14 initial targeted tests
+and 11 correction checks successfully. Final discovery passed **646 tests,
+2 skipped**; the five applicable Hook tests, distribution, publication and
+Claude strict checks passed. The first full run's four failures are retained:
+three exposed an overlong release-status reason and one used the current reply
+protocol for a synthetic historical record. The reason was shortened and that
+fixture bound to the archived protocol without weakening its assertions.
+The corrected full run passed without a client query or model observation.
+The independent reviewer checked the uniform meaning, one-case admission,
+historical binding and corrections. The generic plugin validator's three
+unsupported-metadata failures and 16 historical non-ASCII lines remain NON-PASS.
+No formal product rebuild or same-head CI rerun was performed.
+
+Product 0.10.1, canonical Skills/Hooks, ordinary builder, read whitelist,
+full/profile runtime, source/bundle policies 13/14 and both formal product
+builds are unchanged. Primary, outer user content and 82 existing caches are
+protected. No cleanup, archive, merge, Issue closure or release is authorized.
+
+The section below retains the original policy 21 outcome and scope.
+
 The native empty-discovery window below obtained a normal A11 reply but failed
 the original outcome score, closing all eight remaining slots. Integration is
 blocked by that unmet requirement. The latest completed
