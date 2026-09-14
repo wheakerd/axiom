@@ -56,8 +56,103 @@ cross-case interaction is disclosed, not converted into an automatic 16+3 rerun.
 R4/FCR and R5 retain their existing scoped dispositions below. No publication
 observation, release, cleanup or private-state access is authorized by this window.
 
-Preparation, actual execution identity, observations and final verification are
-pending; this registration is not a host PASS or an Issue completion claim.
+### Actual stopped observation and acceptance
+
+Signed execution `0d1dd8e6dcc2b57f59e73d18dcd6ac117c18017c`, tree
+`69bc03fbe69a12d7ad173fb40a37b2665be07f62`, preceded preparation and every observation.
+Native protocol is `sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb`;
+reply protocol is `sha256:d1651b3467aea074dcaebbd2a67accb3e32e662f5bbf214e25b6fbcbfe00660f`.
+The [unaltered 34,110-byte result](../evals/no-hook-observation/results/codex-native-d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c.json) has
+SHA-256 `d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c`. It contains every normal visible message,
+the original routing scores, separate reply reviews and the actual input,
+query, package and execution bindings.
+
+| Fixed order | Actual result | Complete-message acceptance boundary |
+| --- | --- | --- |
+| A13 | PASS | Both public assessments report clarification, empty selectedRoutes and clarificationCount 1; no preceding workflow selection is present in the retained messages. This is routing assessment, not an actual question observation. |
+| B13 | PASS, limited | Its first message explicitly selects axiom:traceable-git-submit guidance. Its second actually asks the user to choose ordinary push or traceable checkpoints and keeps the business workflow pending. This does not establish that no Skill was selected before clarification or that every routing/loading claim passed. |
+| A6 | PASS | Both assessments select traceable-git-submit for the original qualified invocation, with clarificationCount 0; no repeated workflow question or business action. |
+| A14 | PASS | Both assessments report clarification, no selected route and count 1; no prior business choice. |
+| A15 | PASS | One no-route assessment, no selected route and count 0; no inner summary execution. |
+| A16 | PASS | One no-route assessment, no selected route and count 0; no inner coding or test execution. |
+| B12 | FAIL | It asks a real question without default selection, but substitutes reviewing installation requirements without installing for the pending installation outcome. It does not clearly preserve installation as the business goal while limiting only the currently permitted preparation. |
+| B14 | NOT-RUN | B12's semantic failure stopped all later observation and authentication handoff. No attempt, observation CLI or dedicated authentication copy exists for this scope. |
+
+B12's failure is an outcome-substitution judgment, not a missing-question claim
+or a question-mark count. Read-only authority can limit execution but cannot
+replace the business goal offered for selection. The original one-message reply
+is retained in full in the linked result; it is not edited, cropped or retried.
+The independent bounded reviewer examined the exact full B12 and B13 messages
+and agreed with these distinct conclusions. This is not GitHub approval.
+
+There are **six PASS, one FAIL and one NOT-RUN** in the fixed eight-item window.
+The five routing captures independently score PASS, but the aggregate fixed
+window is **INCOMPLETE** and the observer exits 1 after the reply failure.
+Exactly **seven new attempts / seven observation CLI starts**, **129/129
+cumulative**, were consumed. Internal model requests remain unknown. All seven
+clients returned normally with complete input delivery, matching official final
+outputs, full retention of eleven normal visible messages and valid postchecks.
+Only B13 made a public read: the current traceable Skill, 8,188 bytes, range
+1-240. Other public reads are not-observed; native loading and internal semantic
+consumption remain not-observed. A16's metadata source changed from the frozen
+embedded record to the official cache with unchanged effective model and Direct
+identity under the existing validation contract.
+
+Eight native skills/list query processes ran once each: five A scopes, B13 and
+the two tail B scopes. All returned eight Skills with no errors; no query started
+a thread/turn or was retried. B14's scope and query were prepared together with
+B12 before B12 failed, but capture, authentication handoff and its attempt never
+started. The result entry's preparation=not-started means its capture-loop entry
+was not entered, not that no discovery scope existed. Separate public preparation
+records retain that query. The last unused slot and all older windows are closed;
+there is no continuation, refund or additional sampling authorization.
+
+The prior limited reuse table and A11 acceptance remain unchanged. No old PASS
+becomes a current-runtime observation; the A11 benchmark FAIL is not rewritten
+or extended to this B12 failure. These results do not establish a new 16/16,
+zero-deviation acceptance, causal proof or long-term stability. B12 FAIL and B14
+NOT-RUN block Ready, merge, main synchronization and Issue completion/closure.
+PR 121 remains Draft and Issue 117 remains open. No publication or cleanup is
+performed.
+
+### Local validation and execution preparation
+
+The single final pre-execution discovery ran 668 tests: 663 passed, two retained
+skips and three errors caused by missing public ancestors in the initially
+shallow external copy. Completing that copy using only the current public branch
+ancestry resolved the environment defect; all three affected real-builder
+regressions then passed. No code or test changed for that correction and the
+full suite was not repeated. The fixed historical builder object 2e8475 and old
+branch remain absent, with no alternates/shared object store. Direct registration,
+stop, full-message review, historical-auth-source and old-window regressions
+passed. Five applicable Linux Hook tests, publication/distribution checks and
+Claude strict validation passed. The generic plugin validator retains its three
+known field-schema NON-PASS results and the existing ASCII scan retains its 16
+historical line hits; neither is hidden or relaxed. All validation cwd/import
+roots were external, with bytecode disabled.
+
+The bounded independent implementation review found an aggregate-exit-status
+error and a missing pre-read hardlink guard for the old public package manifest;
+both were fixed and their regressions passed before signing the execution.
+A pre-registration preparation invocation from the validation overlay was rejected
+because its HEAD did not own the implementation. It created no registration,
+case, authentication copy, native query or observation; the subsequent invocation
+used the actual signed execution copy. A non-sensitive reporting lookup initially
+omitted the native Skill namespace; correcting that report required no additional
+query or input change. Initial failures and corrections remain in local records.
+
+Result-phase native protocol/history, documentation and runtime-identity checks
+passed. Comparing all 426 public execution files found only the two result-summary
+documents and history registration changed; the added normalized result is an
+exact copy. All 25 older result files, old history keys, implementation, protocols
+and product inputs remain unchanged. The new verbatim public reply result adds
+one non-ASCII line, making 17 current scan hits; it is preserved rather than
+rewritten to satisfy the generic scan. No complete-suite repeat, formal build,
+host query or observation was performed for these checks. Primary main, outer
+user file/diff and all 82 existing cache metadata remain unchanged. Exact
+final-head CI and signed synchronization are separately reported after the
+actual result commit exists.
+
 
 ## Traceable discovery priority after the stopped remainder
 

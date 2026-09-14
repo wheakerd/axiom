@@ -214,6 +214,13 @@
   "traceableConfirmation": {
     "windowId": "traceable-confirmation-1",
     "protocolDigest": "sha256:00c74b3e9491f6d4a6d7e1d5bbae44b91d5e74ba38ced45008da49bc1284a4fb",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c.json",
+        "sha256": "d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c",
+        "implementationCommit": "0d1dd8e6dcc2b57f59e73d18dcd6ac117c18017c",
+        "implementationTree": "69bc03fbe69a12d7ad173fb40a37b2665be07f62"
+      }
+    ]
   }
 }

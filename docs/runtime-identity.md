@@ -10,6 +10,14 @@ change. The old normal authentication source retains its original public package
 identity. No old window is reopened. The complete evidence reuse boundary is in
 [Field Validation](field-validation.md#frozen-traceable-confirmation-window-policy-26).
 
+Signed execution `0d1dd8e6dcc2b57f59e73d18dcd6ac117c18017c` produced result
+`d9046f909856cd9a6bd8d2ac5e66705b381d0bf6854db14ab20ba51f868b794c`: A13/B13/A6/A14/A15/A16 pass within their separate
+contracts, B12 fails outcome preservation and B14 is not run. Seven new
+attempts/observation CLI starts bring the count to 129/129; eight native query
+processes are separate. The window is stopped and cannot continue. Product
+identities and every old result remain unchanged; integration remains blocked.
+
+
 ## Traceable discovery priority source (policy 24)
 
 The assigned and still unpublished 0.10.1 candidate receives a compatible
