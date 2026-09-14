@@ -67,6 +67,55 @@ full/profile runtime, source/bundle policies 13/14 and both formal product
 builds are unchanged. Primary, outer user content and 82 existing caches are
 protected. No cleanup, archive, merge, Issue closure or release is authorized.
 
+### Actual revision 5 A11 outcome
+
+Signed execution `16c13a3056a463149d93080cdd9f6102f31b8a3f`, tree
+`594902b7ae5757a8d2b9201e752a11f8bf4a0b65`, was frozen before the fresh scope
+was prepared. Native protocol is
+`sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c`;
+reply protocol is
+`sha256:3462a89f4eea71b6941fb4c15fdbeffeba362b4cd357c44fdf46483f3fcb8bea`.
+No observation implementation or input changed after that freeze.
+
+The [complete normalized result](../evals/no-hook-observation/results/codex-native-cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a.json)
+is **5,067 bytes**, SHA-256
+`cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`.
+Its one normal public message is retained in full without redaction and agrees
+with the official final output. It reports `discoveryOutcome="no-route"`,
+`selectedRoutes=[]` and `clarificationCount=0`. The unchanged original score is
+**FAIL**, because A11 requires `unavailable`. This does not revise the preceding
+35b1960 FAIL or any historical INCOMPLETE, and does not identify an internal cause.
+
+The single fresh native `skills/list` query returned `skills=[]`, `errors=[]`,
+with a normal exit and matching scope. Receipt SHA-256 is
+`b3eda28fbd9300f5f7a443c6d4629b182c5aa06bf343718d9081c82c576a057f`.
+The fact was delivered through the labeled compatibility layer, not represented
+as a model tool call or a native exec loading receipt. The model received all
+4,063 input bytes, completed normally, issued zero read commands and passed
+stream, response, final-output and public input/configuration postchecks.
+There was no policy refusal, timeout, mutation or cleanup failure. Native model
+metadata remained compatible with gpt-5.5 / medium / Direct before and after.
+
+This round started **one no-model query process**, two official login-status
+checks and **one observation CLI**. The query started no thread or turn.
+Canonical attempts and observation CLI starts are now **119/119**; internal
+model requests remain unknown. The one-case window is consumed, with no retry
+or remaining slot. No other A, B or publication case was prepared or started.
+All 23 older normalized result files retain their exact bytes and bindings.
+
+The recorded result passed semantic/schema validation and seven targeted
+input/history/window regressions. The result-bearing publication check first
+rejected a shortened release-status reason that omitted the required
+protocol-versus-observation distinction; that status wording alone was corrected.
+The failure record is retained and no observed input or implementation changed.
+
+A11 remains an unmet behavior requirement. The earlier A1-9 final route evidence
+retains only the scope stated above; A10 is affected by the revised outcome
+definition, and A12-16 plus B12-14 remain unrun under the current host context.
+These nine cases were not authorized here, and their absence does not convert
+this single-case result into a complete routing batch. PR #121 remains Draft,
+Issue #117 remains open/BLOCKED, and main, integration and publication are unchanged.
+
 The section below retains the original policy 21 outcome and scope.
 
 The native empty-discovery window below obtained a normal A11 reply but failed

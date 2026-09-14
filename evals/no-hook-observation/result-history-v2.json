@@ -190,6 +190,13 @@
   "discoveryOutcomeAcceptance": {
     "windowId": "discovery-outcome-1",
     "protocolDigest": "sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c",
-    "results": []
+    "results": [
+      {
+        "path": "evals/no-hook-observation/results/codex-native-cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a.json",
+        "sha256": "cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a",
+        "implementationCommit": "16c13a3056a463149d93080cdd9f6102f31b8a3f",
+        "implementationTree": "594902b7ae5757a8d2b9201e752a11f8bf4a0b65"
+      }
+    ]
   }
 }

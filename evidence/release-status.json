@@ -25,7 +25,7 @@
       "pluginVersion": "0.10.1",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
       "status": "not-run",
-      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Revision 5 A11 is NOT-RUN; earlier PASS/FAIL retain old inputs. Totals 118/118. Protocol/Hook checks and reused builds do not establish installed-host or publication PASS."
+      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Revision 5 A11 returned no-route: FAIL; old evidence retains old inputs. Totals 119/119. Protocol/Hook checks and reused builds do not establish installed-host or publication PASS; nine other A/B checks remain affected or unrun."
     },
     {
       "host": "claude-code",
