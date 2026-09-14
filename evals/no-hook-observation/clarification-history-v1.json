@@ -45,5 +45,10 @@
     "windowId": "native-empty-discovery-1",
     "protocolDigest": "sha256:482945352d5d11e44acdb78f36240381a839da4632cce1b66f33f521891ffc23",
     "results": []
+  },
+  "acceptedRemainder": {
+    "windowId": "accepted-remainder-1",
+    "protocolDigest": "sha256:988af1ee3dd51d4e9b60e26deb97727bc3e79a610c1299e4a1f4edba9f70dbbc",
+    "results": []
   }
 }

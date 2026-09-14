@@ -21,7 +21,7 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
         self.addCleanup(self.helper.doCleanups)
         self.parent = self.helper.parent
 
-    def prepared(self, *, outcome_semantics=False, query_error=False):
+    def prepared(self, *, outcome_semantics=False, accepted_remainder=False, query_error=False):
         # As in the existing fixed-window fixtures, only the synthetic reader
         # sees an unconsumed registration. The checked-in actual result and
         # production admission remain closed and are tested separately below.
@@ -30,12 +30,11 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
             data = actual_read(path, *args, **kwargs)
             if path in (ROOT / native.HISTORY_RELATIVE, ROOT / replies.HISTORY):
                 history = json.loads(data)
-                key = 'discoveryOutcomeAcceptance' if outcome_semantics else 'nativeEmptyDiscoveryAcceptance'
+                key = 'acceptedRemainder' if accepted_remainder else 'discoveryOutcomeAcceptance' if outcome_semantics else 'nativeEmptyDiscoveryAcceptance'
                 if key in history:
                     history[key]['results'] = []
-                    if not outcome_semantics:
-                        history[key]['protocolDigest'] = (native._protocol(ROOT)['protocolDigest']
-                            if path == ROOT / native.HISTORY_RELATIVE else replies.protocol(ROOT)['protocolDigest'])
+                    history[key]['protocolDigest'] = (native._protocol(ROOT)['protocolDigest']
+                        if path == ROOT / native.HISTORY_RELATIVE else replies.protocol(ROOT)['protocolDigest'])
                 return native._bytes(history)
             return data
         for module in (native, replies):
@@ -73,13 +72,13 @@ class EmptyDiscoveryWindowTests(unittest.TestCase):
             native._exclusive(paths['case'] / 'discovery-query.json', native._bytes(receipt))
             return receipt
         self.query = query
-        contract = native.OUTCOME_ACCEPTANCE if outcome_semantics else native.EMPTY_DISCOVERY_ACCEPTANCE
+        contract = native.ACCEPTED_REMAINDER if accepted_remainder else native.OUTCOME_ACCEPTANCE if outcome_semantics else native.EMPTY_DISCOVERY_ACCEPTANCE
         run = self.parent / contract['routingRunName']
         with patch.object(native, '_revision_four_auth_source', return_value=old), \
              patch.object(discovery, 'query_once', side_effect=query):
             native.prepare_fixed_acceptance(ROOT, run, previous, self.parent/'bundle',
                 authorize_install=True, authorize_copy=True,
-                empty_discovery=not outcome_semantics, outcome_semantics=outcome_semantics, runner=runner)
+                empty_discovery=not (outcome_semantics or accepted_remainder), outcome_semantics=outcome_semantics, accepted_remainder=accepted_remainder, runner=runner)
         return run, runner, calls, queried
 
     def test_only_six_routing_states_are_prepared_and_history_stays_closed(self):

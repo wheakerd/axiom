@@ -1,5 +1,49 @@
 # Field Validation
 
+## Accepted A11 classification deviation and nine-item window
+
+The user accepted only the current A11 classification deviation for signed
+execution `16c13a3056a463149d93080cdd9f6102f31b8a3f` and result SHA-256
+`cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a`.
+The original benchmark score remains **FAIL**: the normal reply says `no-route`
+where the Golden Set requires `unavailable`. The user acceptance disposition is
+**accepted limited classification deviation**. This candidate does not promise
+an exact distinction between absent discovery and a catalog with no matching
+route. No request, expectation, score, result byte or model reply is changed.
+The decision does not excuse an earlier reading refusal/INCOMPLETE, a future
+changed condition or any other failure. It is absent from model inputs and is
+not implemented as a general failure exemption.
+
+A separate fixed window contains **A10, A12, A13, A14, A15, A16, B12, B13, B14**,
+in that order, once each in fresh scopes. Historical attempts/observation CLI
+starts are 119/119; the new ceiling is nine and cumulative 128/128. All older
+windows remain closed. Any new FAIL, INCOMPLETE, query error, policy refusal,
+identity drift or reliability failure stops every later start and authentication
+handoff, with unused cases NOT-RUN and no retry or refund. Six routing captures
+must pass before B preparation; each complete B reply is separately reviewed
+before the next case. Operator review control is never a reply to the tested
+model or an alteration of its input.
+
+Assessment 5, Codex 0.153.0 / gpt-5.5 / medium / Direct, environment display off,
+permission instructions on, native discovery delivery and read boundaries stay
+fixed. Each new scope performs one existing native query; query processes are
+counted apart from observation CLI starts. No A1-9 or A11 state is prepared.
+The normal registered dedicated A10 is the opaque authentication source; no
+abnormally ended source or normal-user authentication is used.
+
+A1-9 retain only their original final-route evidence, never an assessment 5
+run. A5's full `unavailable` then `selected` sequence and the older B13 guidance
+selection followed by a pending workflow question retain their limits. New B
+results are independent. The final acceptance is **original evidence reuse plus
+nine new observations plus one approved deviation**, not a new 16-case run,
+16/16, zero deviation or retroactive PASS. Existing R4/FCR and R5 dispositions
+remain applicable without adding new host observations or internal-state gates.
+
+At registration, all nine cases are NOT-RUN. Actual signed execution, results,
+validation and integration facts are recorded below after they exist. No tag,
+Release, publication observation, resource deletion or authentication retirement
+is authorized in this round. Earlier sections remain historical evidence.
+
 ## Discovery outcome clarification after 118 attempts
 
 The schema and prompt already distinguish a usable catalog with no applicable

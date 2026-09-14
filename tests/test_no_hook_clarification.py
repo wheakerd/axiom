@@ -288,6 +288,8 @@ class ClarificationTests(unittest.TestCase):
                 "protocolDigest": archived_empty["protocolDigest"], "results": []}
             history["independentClarification"] = {"windowId": supplement.INDEPENDENT["windowId"],
                 "protocolDigest": p["protocolDigest"], "results": []}
+            history["acceptedRemainder"] = {"windowId": native.ACCEPTED_REMAINDER["windowId"],
+                "protocolDigest": p["protocolDigest"], "results": []}
             def read(path,*args,**kw):
                 if path==ROOT/supplement.HISTORY:return native._bytes(history)
                 if path==ROOT/relative:return data

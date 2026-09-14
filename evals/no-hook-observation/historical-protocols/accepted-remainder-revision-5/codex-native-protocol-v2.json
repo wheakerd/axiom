@@ -56,7 +56,7 @@
     },
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "b2be91f9867f4c4fba86d9d29cba006f8734c3270d5b10ff9a3bfb5543339cc3"
+      "sha256": "4100e825f2d8a28c8da7355e620c0bfe3a548c914c73423a913923b4287adf24"
     },
     {
       "path": "axiom_validation/no_hook_discovery.py",
@@ -68,7 +68,7 @@
     },
     {
       "path": "axiom_validation/no_hook_native_observation.py",
-      "sha256": "b9c4a667dd85aac5dd72bce953386e515414b59577f0bb1bd990c3ca4cde601f"
+      "sha256": "59b7b1d6f2d4104b9e541ec8cf2d6ee58c12859d5e8c596d21e6ff386f356c2c"
     },
     {
       "path": "axiom_validation/no_hook_observation.py",
@@ -127,7 +127,7 @@
   },
   "resultSchema": {
     "path": "evals/no-hook-observation/codex-native-result-schema-v2.json",
-    "sha256": "c962a7a913cfb1cad25871adf470b2f4e66767d13bcba20062a83a70d9baf0da"
+    "sha256": "ffd5694366346a68b1483450c831aeb1c75929e275d83879f4e6672c9e302981"
   },
   "discovery": {
     "mechanism": "host-user-skills-from-installed-package",
@@ -449,7 +449,7 @@
     "order": "complete routing before clarification; semantic failures do not resample",
     "stop": "reliability, identity or policy failure stops all remaining observations"
   },
-  "protocolDigest": "sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04",
+  "protocolDigest": "sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c",
   "revisionFourAcceptance": {
     "windowId": "assessment-revision-4-fixed-1",
     "state": "authorized-once",
@@ -673,57 +673,6 @@
     "clarificationRunName": null,
     "order": "one independent A11 only; no other routing, reply or publication observation",
     "stop": "one attempt only; any failure closes this window without retry or remainder",
-    "authenticationSourceOrdinal": 10,
-    "assessmentRevision": 5,
-    "hostEnvironmentContext": {
-      "revision": 1,
-      "sourceCommit": "41e22fee981a63b3698df7ed36bad393cda24715",
-      "includeEnvironmentContext": false,
-      "includePermissionsInstructions": true,
-      "scope": "all routing and clarification inputs; no replacement environment text",
-      "unchanged": "actual cwd, permissions, tools, discovery, materials and requests; assessment definitions are separately versioned",
-      "evidence": "native configuration and public source; behavior requires fresh observation"
-    },
-    "visibleMessages": "all completed user-visible messages; existing bounded retention and exact final-output check",
-    "authenticationPlan": {
-      "plan": "pro",
-      "source": "user-confirmed dedicated test source",
-      "managedConfigEligibility": "excluded by frozen host source; not a native account receipt"
-    }
-  },
-  "acceptedRemainder": {
-    "windowId": "accepted-remainder-1",
-    "state": "authorized-once",
-    "candidateCommit": "ab2ead1817b59d32e114282c391e005f7887547a",
-    "candidateTree": "95940d7d6d7135a1d4946746a19cf0823904b000",
-    "sourceCommit": "8a593026285d285d95f7a9e0c6ec0793738c3707",
-    "sourceTree": "fb1ecd9b605f3e928fd958da2333f66d3018c0f3",
-    "fullRuntimeDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
-    "profileRuntimeDigest": "sha256:6965d7c3590f3f3b03cf800d8b5ec638446a9b260b3f55e10d2565d754ac75e3",
-    "priorResultSha256s": [
-      "cbab9b393bc19801d4ceaae7bbf29b4669509d2064bc206e9c5bff9b5267477a"
-    ],
-    "priorAttempts": 119,
-    "priorCliLaunches": 119,
-    "routingOrdinals": [
-      10,
-      12,
-      13,
-      14,
-      15,
-      16
-    ],
-    "clarificationOrdinals": [
-      12,
-      13,
-      14
-    ],
-    "maximumNewAttempts": 9,
-    "maximumCumulativeAttempts": 128,
-    "routingRunName": "cases-accepted-remainder-routing-1",
-    "clarificationRunName": "cases-accepted-remainder-clarification-1",
-    "order": "A10, A12-16, then B12-14; each once in a fresh scope",
-    "stop": "any new FAIL, INCOMPLETE, query, policy, identity or reliability failure closes all subsequent slots",
     "authenticationSourceOrdinal": 10,
     "assessmentRevision": 5,
     "hostEnvironmentContext": {

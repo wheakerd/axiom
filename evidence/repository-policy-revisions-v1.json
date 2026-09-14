@@ -176,6 +176,14 @@
       "sourceIssue": 117,
       "summary": "Clarify discoveryOutcome catalog availability separately from query success for all assessment inputs; preserve native query facts and admit one independent A11 after 118 attempts.",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
+    },
+    {
+      "revision": 23,
+      "recordedOn": "2026-09-13",
+      "baselineCommit": "ab2ead1817b59d32e114282c391e005f7887547a",
+      "sourceIssue": 117,
+      "summary": "Register the fixed nine-item remainder with per-case failure stops and complete reply review; retain assessment 5, all historical scores and the documented A11 acceptance limit.",
+      "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2"
     }
   ]
 }

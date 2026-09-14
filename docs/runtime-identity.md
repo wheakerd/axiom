@@ -1,5 +1,22 @@
 # Runtime And Repository Identity
 
+## Accepted remaining observations (policy 23)
+
+Policy 23 registers one independent window for A10, A12-16, then B12-14,
+119 prior attempts and at most nine new attempts (128 cumulative). Every new
+non-PASS closes all later starts and authentication handoffs. Replies pause for
+operator semantic review of the complete capture before the next case.
+
+Assessment 5, source schema, prompt envelope, reply instructions, native query
+delivery and permissions remain unchanged. Only execution registration,
+capture control and bound opaque identities change. The prior protocol is
+archived to preserve the 16c13a3 result. The user's limited A11 disposition in
+[Field Validation](field-validation.md#accepted-a11-classification-deviation-and-nine-item-window)
+does not change its benchmark FAIL or any future acceptance condition.
+
+Product 0.10.1, full/profile runtime, frozen source/bundle policies 13/14 and
+both formal builds remain unchanged. Publication and cleanup are not authorized.
+
 ## Discovery outcome measurement (policy 22)
 
 Assessment revision 5 clarifies only the existing `discoveryOutcome` definition:

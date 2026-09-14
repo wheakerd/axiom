@@ -8,7 +8,7 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.10.1",
-    "repositoryPolicyRevision": 22,
+    "repositoryPolicyRevision": 23,
     "runtimeContractSchemaVersion": "1",
     "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v1.json",
@@ -25,7 +25,7 @@
       "pluginVersion": "0.10.1",
       "runtimeContractDigest": "sha256:88060c3c90ed3a4b3c2d603afc6bd06d441dbae186c5a6f5886b7f3764c9e5f2",
       "status": "not-run",
-      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. Revision 5 A11 returned no-route: FAIL; old evidence retains old inputs. Totals 119/119. Protocol/Hook checks and reused builds do not establish installed-host or publication PASS; nine other A/B checks remain affected or unrun."
+      "reason": "Full-profile 0.10.1 installed behavior is NOT-RUN. A11 benchmark FAIL remains; its specified classification deviation is user-accepted. New nine-item observation is NOT-RUN; totals 119/119. Protocol/Hook checks and reused builds do not establish publication PASS."
     },
     {
       "host": "claude-code",

@@ -198,5 +198,10 @@
         "implementationTree": "594902b7ae5757a8d2b9201e752a11f8bf4a0b65"
       }
     ]
+  },
+  "acceptedRemainder": {
+    "windowId": "accepted-remainder-1",
+    "protocolDigest": "sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04",
+    "results": []
   }
 }

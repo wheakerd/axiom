@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1",
   "protocolId": "axiom-no-hook-clarification-v1",
-  "nativeProtocolDigest": "sha256:9b72f6ca038f2a859bf2353845af4e3c6a18a867809fddde671d99de9d735e04",
+  "nativeProtocolDigest": "sha256:d1c79bf6bc471fdf03d05f03f9d1ae50ab691f501fdc27366f21d17b8458042c",
   "priorResultSha256": "0307ab9a45698a3f4176f21bd30113307c9d3867c0bad069abd87e1c1a98c43a",
   "ordinals": [
     12,
@@ -20,7 +20,7 @@
   "bindings": [
     {
       "path": "axiom_validation/no_hook_clarification.py",
-      "sha256": "b2be91f9867f4c4fba86d9d29cba006f8734c3270d5b10ff9a3bfb5543339cc3"
+      "sha256": "4100e825f2d8a28c8da7355e620c0bfe3a548c914c73423a913923b4287adf24"
     },
     {
       "path": "scripts/run-no-hook-clarification.py",
@@ -28,7 +28,7 @@
     },
     {
       "path": "evals/no-hook-observation/codex-native-protocol-v2.json",
-      "sha256": "6dc5d81a50f3630de09f5a3763ee8f32bf2ec116f9abc3200fefa0718250b1c3"
+      "sha256": "a0ea0b035dbc32d601871b22a8c54a4f4c2ef05df9ccc29a4d11d19273be363d"
     },
     {
       "path": "evals/no-hook-observation/historical-protocols/clarification-round-1/bundle-manifest-schema-v1.json",
@@ -166,14 +166,5 @@
       "replyBytesPerCase": 8192
     }
   },
-  "acceptedRemainder": {
-    "windowId": "accepted-remainder-1",
-    "requires": "all-six-new-routing-PASS-and-prior-reply-semantic-PASS",
-    "limits": {
-      "newAttempts": 3,
-      "maximumCumulativeAttempts": 128,
-      "replyBytesPerCase": 8192
-    }
-  },
-  "protocolDigest": "sha256:988af1ee3dd51d4e9b60e26deb97727bc3e79a610c1299e4a1f4edba9f70dbbc"
+  "protocolDigest": "sha256:3462a89f4eea71b6941fb4c15fdbeffeba362b4cd357c44fdf46483f3fcb8bea"
 }
