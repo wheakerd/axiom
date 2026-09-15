@@ -2511,20 +2511,23 @@ class NoHookBundleTests(unittest.TestCase):
     def test_compatibility_scanner_owns_profile_evidence_without_legacy_drift(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self._copy_repository(Path(directory), historical=False)
+            version = json.loads(
+                (root / ".codex-plugin/plugin.json").read_text(encoding="utf-8")
+            )["version"]
             before = _directory_files(root)
 
             result = self._run_compatibility_scanner(root)
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "current release v0.11.0 STATIC-ONLY.\n",
+                f"current release v{version} STATIC-ONLY.\n",
                 result.stdout,
             )
             self_test = self._run_compatibility_scanner(root, "--self-test")
             self.assertEqual(0, self_test.returncode, self_test.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "12 negative fixtures, current release v0.11.0 STATIC-ONLY.\n",
+                f"12 negative fixtures, current release v{version} STATIC-ONLY.\n",
                 self_test.stdout,
             )
 
