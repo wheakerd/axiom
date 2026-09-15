@@ -13,8 +13,7 @@ entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
 ### Removed
 
-- Removed Axiom's Claude Code plugin and marketplace descriptors, SessionStart
-  hook, and installation, update and removal guidance.
+- Removed Axiom's Claude Code plugin and marketplace descriptors, SessionStart hook, and installation, update and removal guidance.
 - Updated package validation and release automation to use the Codex manifest.
 
 ### Changed
@@ -23,17 +22,11 @@ entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
 ### Behavioral impact
 
-Axiom installs and runs in Codex. The plugin architecture skill retains guidance
-for designing Claude Code plugins in other projects. Runtime-contract schema v2
-and repository policy revision 31 identify the Codex-only runtime. Historical
-experiment inputs and outcomes remain bound to their original versions.
+Axiom installs and runs in Codex. The plugin architecture skill retains guidance for designing Claude Code plugins in other projects. Runtime-contract schema v2 and repository policy revision 31 identify the Codex-only runtime. Historical experiment inputs and outcomes remain bound to their original versions.
 
 ### Required action
 
-Existing Claude Code users must disable or uninstall their old Axiom installation
-in that host; cached installations are not removed by a repository update.
-For continued Axiom use, follow the [Codex installation guide](docs/guides/getting-started.md)
-and start a new session. See [v0.11.0 notes](docs/releases/v0.11.0.md) for details.
+Existing Claude Code users must disable or uninstall their old Axiom installation in that host; cached installations are not removed by a repository update. For continued Axiom use, follow the [Codex installation guide](docs/guides/getting-started.md) and start a new session. See [v0.11.0 notes](docs/releases/v0.11.0.md) for details.
 
 ## 0.10.1 - unreleased candidate
 
