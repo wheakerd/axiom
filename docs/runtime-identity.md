@@ -1,5 +1,30 @@
 # Runtime And Repository Identity
 
+## Codex-only candidate (policy 31)
+
+Version `0.11.0` removes Axiom's Claude Code installation and runtime wrapper.
+The current [schema v2 input policy](../axiom_validation/runtime-contract-inputs-v2.json)
+classifies 57 installed inputs. It retains v1 canonicalization while removing
+the Claude manifest from installed roots; the schema identifier changes the
+digest namespace. The [v2 history](../evidence/runtime-contract-history-v2.json)
+starts with v0.10.1 derived from immutable commit
+`79be4a893549c9b8e390f416cb5f8dad1739493e` under that same v2 policy.
+The v1 policy and history remain unchanged historical records. New runtime-v2
+observations use [evidence schema v3](../evidence/schema-v3.json); the v1 and v2
+evidence schemas retain their original definitions.
+
+Current identity is in [runtime-identity.json](../evidence/runtime-identity.json).
+Current Codex installed-host observation is `NOT-RUN`. Five exact v0.10.1 inputs
+in `tests/fixtures/no-hook-v0.10.1/` allow the frozen no-Hook bundle and offline
+protocol checks to replay in a disposable tree. The frozen observer context and experiment implementations,
+protocols and results retain their original bytes; all other inspected inputs
+still come from the candidate and undergo the original drift checks. This replay
+is historical validation and supplies no v0.11.0 host acceptance.
+
+Policy revision 31 records the direct maintenance request with `sourceIssue: null`;
+an Issue number is recorded only when the change is actually tied to an Issue.
+Older sections below describe their original versions and evidence boundaries.
+
 ## CI history-baseline correction (policy 30)
 
 Policy 30 fixes a test-only checkout-HEAD assumption and gives the unchanged
@@ -1011,7 +1036,7 @@ build. Concurrent same-user path substitution is outside this v1 construction
 contract; if destination identity becomes uncertain, the caller must retain
 the output for manual inspection rather than treat it as accepted evidence.
 
-## Runtime Contract V1
+## Runtime Contract V1 (Historical)
 
 [`runtime-contract-inputs-v1.json`](../axiom_validation/runtime-contract-inputs-v1.json)
 is the complete v1 classification of installed package surfaces. It includes:
@@ -1157,7 +1182,7 @@ The in-flight revision 7 owns this observer work; revision 5 still owns the
 profile source and revision 6 still owns the derived bundle. No host claim is
 created by maintaining a protocol or empty result history.
 
-New host observations use `evidence/schema-v2.json` and bind:
+New host observations use `evidence/schema-v3.json` and bind:
 
 - `pluginVersion` and `runtimeContractDigest`;
 - exact host identity and version;

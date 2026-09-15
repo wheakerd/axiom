@@ -38,7 +38,7 @@ def parser() -> argparse.ArgumentParser:
         "--manifest",
         type=Path,
         default=REPOSITORY_ROOT / INPUT_MANIFEST_RELATIVE,
-        help="input manifest used with --digest-root (defaults to the checked-in v1 manifest)",
+        help="input manifest used with --digest-root (defaults to the checked-in current manifest)",
     )
     argument_parser.add_argument(
         "--historical",

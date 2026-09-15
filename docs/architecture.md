@@ -6,7 +6,7 @@ network service, watcher, automatic updater, or hidden persistent component.
 
 ```mermaid
 flowchart TD
-    A["Codex or Claude Code wrapper"] --> B["SessionStart hook"]
+    A["Codex wrapper"] --> B["SessionStart hook"]
     B --> C["Read using-axiom routing gate"]
     C --> D{"Does the request clearly match a route?"}
     D -- "No" --> E["Continue through the host normally"]
@@ -15,20 +15,16 @@ flowchart TD
     G --> H["Act within existing instructions and authorization"]
 ```
 
-## 1. Platform Wrappers
+## 1. Codex Wrapper
 
-The wrappers describe the same plugin to two hosts while keeping host-specific
-interfaces separate.
+The Codex wrapper declares the plugin, marketplace source, and startup Hook.
 
 | Host | Marketplace | Manifest | Hook definition |
 | --- | --- | --- | --- |
 | Codex | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | `hooks/codex-hooks.json` |
-| Claude Code | `.claude-plugin/marketplace.json` | `.claude-plugin/plugin.json` | `hooks/claude-hooks.json` |
 
-Both manifests declare `./skills/`. There is one checked-in skill tree, not a
-copied Codex tree and a copied Claude Code tree. The distribution drift guard
-compares that tree with both manifests, both marketplace wrappers, and the
-README shared-skill list.
+The Codex manifest declares `./skills/`. The distribution guard compares that
+tree with the manifest, marketplace wrapper, and README shared-skill list.
 
 ### Installed Runtime Versus Repository Policy
 
@@ -53,13 +49,6 @@ select a task route themselves.
 | Host event | Checked-in matcher | Action |
 | --- | --- | --- |
 | Codex `SessionStart` | `startup`, `resume`, `clear`, `compact` | Print a short loading message and read the routing gate from `PLUGIN_ROOT` |
-| Claude Code `SessionStart` | `startup`, `resume`, `clear`, `compact` | Print a short loading message and read the routing gate from `CLAUDE_PLUGIN_ROOT` |
-
-Claude Code emits the `compact` `SessionStart` source after either manual or
-automatic compaction and adds successful `SessionStart` stdout to model
-context. Axiom therefore uses that one post-compaction path and declares no
-`PreCompact` handler; ordinary successful stdout from `PreCompact` is not a
-context-injection path.
 
 The exact commands are published for independent review in the
 [Hook Reference](reference/hooks.md). Each invocation is
@@ -146,7 +135,7 @@ weaken a parent prohibition.
 
 ## 5. Execution Remains Host-Native
 
-After a route is selected, the active Codex or Claude Code agent continues to
+After a route is selected, the active Codex agent continues to
 use the host's normal tools, instruction hierarchy, and approval boundaries.
 Axiom does not add an execution service or bypass host controls.
 
@@ -169,13 +158,10 @@ host's normal workflow.
 
 Axiom has no long-running state manager or updater of its own. The host loads
 the installed snapshot at its configured lifecycle events and controls how that
-snapshot changes. A refresh may be manually requested, or Claude Code may
-refresh a marketplace and update installed plugins on disk after startup when
-auto-update is enabled. The running Claude Code session keeps the version it
-loaded at launch until plugins are reloaded or a new session starts. In every
-case, review any changed hook before trusting the new snapshot. See
+snapshot changes. Use the Codex refresh flow, then start a new session.
+Review any changed hook before trusting the new snapshot. See
 [Managing an Installation](guides/managing-installation.md#updating) for the
-host-specific lifecycle.
+supported lifecycle.
 
 For the checked-in support boundary and evidence categories, see
 [Compatibility](compatibility.md).

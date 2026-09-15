@@ -71,6 +71,26 @@ final body to the same rendering. The existing `notesSha256` attestation field
 is retained for compatibility; it binds the GitHub Release body digest, not the
 version-note file.
 
+## Release Verification
+
+From `0.11.0`, release verification consists of `repository-guards`,
+`unit-and-integration-tests`, the exact signed-main and created-tag checks,
+and immutable Release verification. The protected tag controller enforces
+the required checks against the exact release commit.
+
+The draft starts with one `axiom-v<version>-release-policy-<sha256>.json`
+asset. Render it with `scripts/check-release-evidence.py render-policy` and
+the exact version, tag, commit and tree arguments. Its closed schema records
+the required repository checks and binds the release subject. The publisher
+validates the downloaded bytes, uploads an integrity attestation, and verifies
+both assets after publication. This record describes verification policy;
+actual check results remain bound to their GitHub Actions runs. The attestation
+states its `release-policy-and-artifact-integrity` scope.
+
+Earlier version contracts and recorded experiments retain their historical
+meaning. Asset names and validators are selected by the release version;
+existing Releases and their evidence are not migrated.
+
 ## Candidate And Final Evidence
 
 Candidate evidence is limited to facts observable at its source commit. It can

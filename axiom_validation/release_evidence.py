@@ -29,6 +29,7 @@ OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
 PUBLISH_WORKFLOW_SHA256 = "571181a832014bddf3088bca27eb02ce9ec5a03104f3244d6ad4b9224447d252"
 RELEASE_BODY_POLICY_BASELINE_VERSION = "0.10.0"
+REPOSITORY_CHECKS_RELEASE_VERSION = "0.11.0"
 RELEASE_BODY_MAX_BYTES = 8192
 PUBLIC_REPOSITORY_BLOB_ROOT = "https://github.com/wheakerd/axiom/blob"
 RELEASE_BODY_CHANGE_HEADINGS = frozenset(
@@ -128,7 +129,7 @@ def _validate_subject(
             "expected release version must be one stable numeric production release version"
         )
     if type(version) is str and version != RELEASE_VERSION:
-        failures.append("expected release version must match both current manifests")
+        failures.append("expected release version must match the current Codex manifest")
     if type(tag) is not str or tag != f"v{version}":
         failures.append("expected release tag must match the exact version")
     if type(commit) is not str or OID_PATTERN.fullmatch(commit) is None:
@@ -137,8 +138,57 @@ def _validate_subject(
         failures.append("expected release tree must be a lowercase 40-character Git SHA")
 
 
+def uses_repository_checks(version: str) -> bool:
+    parsed = parse_production_release_version(version)
+    boundary = parse_production_release_version(REPOSITORY_CHECKS_RELEASE_VERSION)
+    return parsed is not None and parsed >= boundary
+
+
 def _asset_prefix(version: str) -> str:
-    return f"axiom-v{version}-codex-core-v2-"
+    kind = "release-policy" if uses_repository_checks(version) else "codex-core-v2"
+    return f"axiom-v{version}-{kind}-"
+
+
+def release_policy_record(subject: dict[str, str]) -> dict[str, Any]:
+    """Describe repository verification requirements for the exact release."""
+    return {
+        "schemaVersion": "1",
+        "kind": "axiom-release-policy",
+        "subject": subject,
+        "verification": {
+            "policy": "repository-checks-v1",
+            "requiredChecks": ["repository-guards", "unit-and-integration-tests"],
+        },
+        "evidenceScope": "release-policy-and-artifact-integrity",
+    }
+
+
+def validate_release_asset(
+    path: Path, subject: dict[str, str], failures: list[str], *, root: Path
+) -> None:
+    if not uses_repository_checks(subject["version"]):
+        validate_external_routing_observation(
+            path,
+            expected_version=subject["version"],
+            expected_tag=subject["tag"],
+            expected_commit=subject["commit"],
+            expected_tree=subject["tree"],
+            failures=failures,
+            root=root,
+        )
+        return
+    try:
+        canonical = path.resolve(strict=True)
+        if not path.is_absolute() or canonical != path:
+            failures.append("release policy asset path must be absolute and canonical")
+        if canonical.is_relative_to(root.resolve()):
+            failures.append("release policy asset must remain outside the checked-in tree")
+    except OSError:
+        failures.append("release policy asset must exist")
+        return
+    record = _load_json_object(path, "release policy asset", failures)
+    if record is not None and record != release_policy_record(subject):
+        failures.append("release policy asset must match the exact subject and repository-checks policy")
 
 
 def _attestation_prefix(version: str) -> str:
@@ -842,7 +892,7 @@ def _validate_local_asset(
 def _attestation_document(plan: dict[str, Any], digest: str) -> dict[str, Any]:
     subject = plan["subject"]
     asset = plan["observationAsset"]
-    return {
+    document = {
         "asset": {
             "githubDigest": asset["digest"],
             "id": asset["id"],
@@ -865,6 +915,9 @@ def _attestation_document(plan: dict[str, Any], digest: str) -> dict[str, Any]:
             "validator": "scripts/check-release-evidence.py",
         },
     }
+    if uses_repository_checks(subject["version"]):
+        document["validation"]["scope"] = "release-policy-and-artifact-integrity"
+    return document
 
 
 def validate_downloaded_observation(
@@ -882,15 +935,7 @@ def validate_downloaded_observation(
     digest = _validate_local_asset(
         asset_path, plan["observationAsset"], "downloaded routing-observation asset", failures
     )
-    validate_external_routing_observation(
-        asset_path,
-        expected_version=subject["version"],
-        expected_tag=subject["tag"],
-        expected_commit=subject["commit"],
-        expected_tree=subject["tree"],
-        failures=failures,
-        root=root,
-    )
+    validate_release_asset(asset_path, subject, failures, root=root)
     if digest is None or failures:
         return None
     try:
@@ -965,15 +1010,7 @@ def verify_release_snapshot(
     digest = _validate_local_asset(
         asset_path, plan["observationAsset"], "downloaded routing-observation asset", failures
     )
-    validate_external_routing_observation(
-        asset_path,
-        expected_version=subject["version"],
-        expected_tag=subject["tag"],
-        expected_commit=subject["commit"],
-        expected_tree=subject["tree"],
-        failures=failures,
-        root=root,
-    )
+    validate_release_asset(asset_path, subject, failures, root=root)
     if digest is not None:
         expected_attestation = _attestation_document(plan, digest)
         actual_attestation = _load_json_object(
@@ -1237,6 +1274,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "render-body", help="render the exact future GitHub Release body"
     )
     render_body.add_argument("--expected-version", required=True)
+    render_policy = commands.add_parser(
+        "render-policy", help="render the release repository-verification policy"
+    )
+    _add_subject_arguments(render_policy)
     select = commands.add_parser("select", help="select one exact Release from a listing")
     select.add_argument("--release-collection", type=Path, required=True)
     select.add_argument("--release-output", type=Path, required=True)
@@ -1307,11 +1348,23 @@ def main(argv: list[str] | None = None) -> int:
     failures: list[str] = []
     if args.command == "render-body":
         if args.expected_version != RELEASE_VERSION:
-            failures.append("release body version must match both current manifests")
+            failures.append("release body version must match the current Codex manifest")
         else:
             body = render_release_body(args.expected_version, failures)
             if body is not None and not failures:
                 sys.stdout.write(body)
+    elif args.command == "render-policy":
+        subject = {
+            "version": args.expected_version,
+            "tag": args.expected_tag,
+            "commit": args.expected_commit,
+            "tree": args.expected_tree,
+        }
+        _validate_subject(*subject.values(), failures)
+        if not uses_repository_checks(args.expected_version):
+            failures.append("release policy records apply from v0.11.0 onward")
+        if not failures:
+            sys.stdout.buffer.write(_canonical_json_bytes(release_policy_record(subject)))
     elif args.command == "select":
         select_release_from_collection(
             args.release_collection,

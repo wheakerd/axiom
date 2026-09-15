@@ -24,7 +24,6 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CODEX_HOOK_PATH = REPOSITORY_ROOT / "hooks" / "codex-hooks.json"
-CLAUDE_HOOK_PATH = REPOSITORY_ROOT / "hooks" / "claude-hooks.json"
 WINDOWS_WRAPPER = Path("hooks/codex-session-start.cmd")
 SKILL_PATH = Path("skills/using-axiom/SKILL.md")
 HEADING = (
@@ -236,7 +235,6 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
         if not sys.dont_write_bytecode:
             raise AssertionError("hook runtime integration must run Python with -B")
         cls.codex_handler = _load_session_start_handler(CODEX_HOOK_PATH)
-        cls.claude_handler = _load_session_start_handler(CLAUDE_HOOK_PATH)
         cls.bash = _bash_program()
         if os.name == "nt":
             _cmd_program()
@@ -279,8 +277,7 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
 
     def _invocations(self) -> tuple[HookInvocation, ...]:
         codex_command = self.codex_handler.get("command")
-        claude_command = self.claude_handler.get("command")
-        if not isinstance(codex_command, str) or not isinstance(claude_command, str):
+        if not isinstance(codex_command, str):
             raise AssertionError("checked-in POSIX hook commands must be strings")
 
         if os.name == "nt":
@@ -295,13 +292,6 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
                     "PLUGIN_ROOT",
                     (HEADING + "\r\n\r\n").encode("utf-8"),
                 ),
-                HookInvocation(
-                    "claude-windows-git-bash",
-                    claude_command,
-                    "bash",
-                    "CLAUDE_PLUGIN_ROOT",
-                    (HEADING + "\n").encode("utf-8"),
-                ),
             )
         return (
             HookInvocation(
@@ -310,13 +300,6 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
                 "bash",
                 "PLUGIN_ROOT",
                 (HEADING + "\n\n").encode("utf-8"),
-            ),
-            HookInvocation(
-                "claude-posix",
-                claude_command,
-                "bash",
-                "CLAUDE_PLUGIN_ROOT",
-                (HEADING + "\n").encode("utf-8"),
             ),
         )
 

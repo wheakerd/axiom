@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2",
+  "inputManifest": "axiom_validation/runtime-contract-inputs-v2.json",
+  "inputManifestSha256": "1d3990a009716fab705e890d7a03ccee7987e29f54fe5915269b1c82c49ff3cc",
+  "entries": [
+    {
+      "pluginVersion": "0.10.1",
+      "tag": "v0.10.1",
+      "commit": "79be4a893549c9b8e390f416cb5f8dad1739493e",
+      "runtimeContractDigest": "sha256:14eff7b5561a67314e90974dfcffabb6a9b7acd7e1a52f2a27e97507f511438d",
+      "derivation": "derived-from-immutable-tag-with-schema-v2"
+    }
+  ],
+  "characterizations": []
+}

@@ -8,20 +8,17 @@ silently broaden what the user authorized.
 
 | Path | Ownership |
 | --- | --- |
-| `skills/` | Shared skill source installed by both hosts |
+| `skills/` | Skill source installed by Codex |
 | `.codex-plugin/plugin.json` | Codex plugin manifest |
 | `.agents/plugins/marketplace.json` | Codex marketplace wrapper |
-| `.claude-plugin/plugin.json` | Claude Code plugin manifest |
-| `.claude-plugin/marketplace.json` | Claude Code marketplace wrapper |
 | `hooks/codex-hooks.json` | Codex-specific startup hook |
-| `hooks/claude-hooks.json` | Claude Code-specific session and compaction hooks |
 | `README.md` | Product landing page and safe-start entry point |
 | `docs/README.md` and `docs/` | Task navigation, user guidance, concepts, references, and maintainer policy |
 | `project/` | Project operations: marketing, distribution, channel status, launch plans, and editorial plans |
 | `evidence/` | Version-bound, privacy-safe host records and current release status |
 | `evals/` | Versioned black-box routing contracts and separately labeled host observations |
 | `evals/context-budget/` | Versioned always-loaded routing proxies, lifecycle slots, and reduction evidence |
-| `axiom_validation/runtime-contract-inputs-v1.json` | Versioned installed-runtime input classification |
+| `axiom_validation/runtime-contract-inputs-v2.json` | Versioned installed-runtime input classification |
 | `axiom_validation/` | Standard-library publication policy modules; otherwise not installed runtime behavior |
 | `tests/` | Focused unit tests and isolated policy fixtures; not installed runtime behavior |
 | `scripts/` and `.github/workflows/` | Stable validation entrypoints and CI wiring; not installed runtime behavior |
@@ -36,9 +33,8 @@ platform-specific copy of a shared skill.
 1. Inspect the worktree and preserve edits you did not create. Do not reset,
    stash, clean, stage, or rewrite unrelated work to make your change appear
    clean.
-2. Identify whether the change affects shared skills, one platform wrapper, or
-   both. A shared behavior change normally needs a parity review in Codex and
-   Claude Code.
+2. Identify whether the change affects Skills, the Codex wrapper, or repository
+   tooling. Review installed behavior in Codex when the runtime changes.
 3. Classify the change against
    [`docs/runtime-identity.md`](docs/runtime-identity.md). An included runtime
    change must alter the digest and advance `pluginVersion`; a repository-only
@@ -61,8 +57,8 @@ platform-specific copy of a shared skill.
   software performance wording alone as a trigger.
 - Keep route definitions and triggers in English. Unambiguous requests in
   other languages may normalize to the canonical English route.
-- Keep the two manifests pointed at the same `./skills/` directory and keep
-  their versions synchronized.
+- Keep the Codex manifest pointed at `./skills/` and bind its version to the
+  current runtime identity.
 - Use `Axiom` for the brand in prose and `axiom` for plugin, marketplace,
   route, path, and command identifiers.
 - Preserve existing user work and treat missing evidence, tooling, or access as
@@ -107,16 +103,9 @@ pull request.
 
 ## Hook changes need extra review
 
-Platform hooks are deliberately separate. Codex declares
-`./hooks/codex-hooks.json`; Claude Code declares
-`./hooks/claude-hooks.json`. Both read the shared
-`skills/using-axiom/SKILL.md` through `SessionStart`, including the `compact`
-source after host compaction. Keep the conventional `hooks/hooks.json` absent
-so one host does not auto-discover the other host's wrapper.
-
-Do not add a Claude Code `PreCompact` context-loading handler. Ordinary
-successful stdout from that event is not injected into model context;
-post-compaction routing belongs to `SessionStart` with the `compact` matcher.
+Codex declares `./hooks/codex-hooks.json` and reads
+`skills/using-axiom/SKILL.md` through `SessionStart`, including `compact`.
+Keep the conventional `hooks/hooks.json` absent.
 
 Review any hook change command by command. A hook must remain foreground-only,
 locally inspectable, and limited to loading the routing gate. Do not add file
@@ -141,7 +130,7 @@ git diff --check
 ```
 
 Also run targeted checks required by the files you changed. Read the final
-diff, confirm both manifest versions still match, and inspect
+diff, confirm the Codex manifest version matches the release identity, and inspect
 `git status --short` for unrelated paths.
 
 Hook or hook-workflow changes also require the dedicated native integration
@@ -176,7 +165,7 @@ accepted but do not increase either Dockerfile count.
 
 Historical compatibility records remain valid against the immutable
 `evidence/schema-v1.json` contract and must not be rewritten. New observations
-must validate against `evidence/schema-v2.json`, bind to an already existing
+must validate against `evidence/schema-v3.json`, bind to an already existing
 immutable tag and commit, include the exact plugin version and runtime contract
 digest, preserve every not-run or unavailable case, and contain only minimal
 sanitized output. A prior observation may be referenced for an identical
@@ -186,7 +175,7 @@ use the validator's post-tag `--record` mode for a same-release asset after the
 immutable tag and commit exist.
 
 Host-native validation is valuable but optional because the relevant CLI may
-not be installed. If a current Codex or Claude Code validator is already
+not be installed. If a current Codex validator is already
 available, run it against a disposable copy when it may write files, and report
 the host and validator versions with the result. A missing validator is
 `unavailable`, not `passed`; do not install or update proprietary tooling just
@@ -220,9 +209,9 @@ subset; enforce omitted uniqueness, string-length, privacy, and semantic checks
 in the deterministic standard-library validator and its negative fixtures.
 The first failure or unknown outcome stops the remaining batch without retry.
 Preserve that case's known and null fields honestly, then mark every later case
-`not-run` with the stop reason. Claude Code results remain
-`UNAVAILABLE / NOT-RUN` when no authenticated subscription or session is
-available; offline validation is a separate static signal.
+`not-run` with the stop reason. Historical Claude Code records retain their
+original outcomes; current Axiom installation support is Codex-only. Offline
+validation is a separate static signal.
 
 Host run records are append-only. A recovery batch receives a new run ID and a
 new result file; it never replaces the original failure. Do not create that file
@@ -272,8 +261,8 @@ provenance and does not authorize publication.
 `Release signature guard` starts after protected history or release state
 changes. Its stable check names distinguish signed `main` history, a manual
 `release/v<version>` candidate, a newly created `v<version>` tag, and a
-published immutable Release. A candidate or tag version must match both
-manifests. Every target must remain on approved `main` history and carry a
+published immutable Release. A candidate or tag version must match the Codex
+manifest. Every target must remain on approved `main` history and carry a
 valid signature made with GitHub's signing key. Candidate evidence never
 authorizes tag creation.
 
@@ -293,13 +282,13 @@ deletion.
 Keep a pull request focused and include:
 
 - The intended outcome and exact affected files.
-- Which files are shared and which are Codex- or Claude Code-specific.
+- Which files are shared and which are Codex-specific.
 - Any route-selection or action-authorization impact, including an explicit
   `none` when there is no impact.
 - Documentation changes or a reason none are needed.
 - Every validation command and its exact result, including unavailable optional
   host checks.
-- A Codex/Claude Code parity review when shared behavior or packaging changes.
+- A Codex behavior review when Skills or packaging changes.
 - Confirmation that unrelated work was not reset, hidden, staged, or rewritten.
 
 Do not mix opportunistic cleanup with the requested change. Do not commit

@@ -31,12 +31,7 @@ ROUTE_SOURCE_ANCHORS = {
 LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
 LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
-    "/plugin marketplace update axiom",
-    "/plugin update axiom@axiom",
-    "/reload-plugins",
     "codex plugin remove axiom@axiom",
-    "/plugin disable axiom@axiom",
-    "/plugin uninstall axiom@axiom",
 )
 
 

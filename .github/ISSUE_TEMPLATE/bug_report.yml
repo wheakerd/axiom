@@ -14,8 +14,6 @@ body:
       description: Where did the behavior occur?
       options:
         - Codex
-        - Claude Code
-        - Both
     validations:
       required: true
 
@@ -23,8 +21,8 @@ body:
     id: host_version
     attributes:
       label: Host version
-      description: Provide the exact Codex or Claude Code version when available.
-      placeholder: "Example: Claude Code 2.1.220"
+      description: Provide the exact Codex version when available.
+      placeholder: "Example: Codex 0.153.0"
     validations:
       required: true
 

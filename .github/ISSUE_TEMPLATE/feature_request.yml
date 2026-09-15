@@ -13,9 +13,7 @@ body:
       label: Host scope
       description: Which supported host should this proposal affect?
       options:
-        - Both Codex and Claude Code
         - Codex
-        - Claude Code
         - Host-independent shared behavior
     validations:
       required: true

@@ -1,5 +1,10 @@
 # Routing Evaluations
 
+Current support: Axiom v0.11.0 installs and runs in Codex. Claude Code
+installation instructions, submission copy and host evidence below describe
+earlier versions. They do not establish current support or a new observation.
+Use the [current installation guide](../docs/guides/getting-started.md) for Codex.
+
 ## Current evidence
 
 The current no-Hook assessment and its exact execution/result identities are

@@ -38,9 +38,11 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "CONTRIBUTING.md",
     "evidence/schema-v1.json",
     "evidence/schema-v2.json",
+    "evidence/schema-v3.json",
     "evidence/release-status.json",
     "evidence/runtime-identity.json",
     "evidence/runtime-contract-history-v1.json",
+    "evidence/runtime-contract-history-v2.json",
     "evidence/repository-policy-revisions-v1.json",
     "evidence/v0.7.4/codex/linux.json",
     "evidence/v0.7.4/claude-code/linux.json",
@@ -84,6 +86,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "axiom_validation/no_hook_linux_isolation.py",
     "axiom_validation/no_hook_observation.py",
     "axiom_validation/runtime-contract-inputs-v1.json",
+    "axiom_validation/runtime-contract-inputs-v2.json",
     "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
     ".github/workflows/publish-immutable-release.yml",
     ".github/workflows/create-protected-release-tag.yml",
@@ -138,7 +141,6 @@ CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/workflows/",
     "/.codex-plugin/",
     "/.agents/plugins/",
-    "/.claude-plugin/",
     "/hooks/",
     "/skills/using-axiom/",
     "/scripts/",
@@ -255,7 +257,7 @@ RELEASE_TAG_CONTROLLER_ANCHORS = (
     "The minted App token is scoped to this repository and requests only "
     "`administration: read` plus `contents: write`; administration write is not granted.",
     "Before one exact `POST /git/refs`, the controller binds the requested version "
-    "and tag, live protected-main commit and tree, both manifest versions",
+    "and tag, live protected-main commit and tree, the Codex manifest version",
     "It performs the same complete read a second time, rejects any difference, "
     "creates only the exact absent tag, and immediately reads the ref back.",
     "An uncertain response is read back once and reported as a failure without retry; "
@@ -447,7 +449,16 @@ def check_skill_contracts(failures: list[str]) -> None:
         )
 
 
+def check_retired_installation_paths(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
+    """Reject restoration of the retired Axiom Claude distribution wrapper."""
+    for relative in (".claude-plugin", "hooks/claude-hooks.json"):
+        path = root / relative
+        if path.exists() or path.is_symlink():
+            failures.append(f"retired Axiom installation surface must be absent: {relative}")
+
+
 def check_required_files(failures: list[str]) -> None:
+    check_retired_installation_paths(failures)
     for relative_path in REQUIRED_PUBLIC_FILES:
         if not (REPOSITORY_ROOT / relative_path).is_file():
             failures.append(

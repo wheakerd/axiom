@@ -1,5 +1,13 @@
 # Field Validation
 
+Current support: Axiom v0.11.0 installs and runs in Codex. Claude Code
+installation instructions, submission copy and host evidence below describe
+earlier versions. They do not establish current support or a new observation.
+Use the [current installation guide](guides/getting-started.md) for Codex.
+For publication from v0.11.0 onward, use the current
+[release verification contract](maintainers/release-documentation.md#release-verification).
+The version-specific procedures below are historical records.
+
 ## Natural CI correction after the goal-preservation result
 
 Head `fa8de661705ab3d30654afbf690ae0ec9944e0cd` produced natural CI run

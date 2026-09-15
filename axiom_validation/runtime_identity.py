@@ -16,9 +16,11 @@ from .context import REPOSITORY_ROOT, release_version
 from .release_versions import parse_production_release_version
 
 
-INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v1.json"
+INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v2.json"
 IDENTITY_RELATIVE = "evidence/runtime-identity.json"
-HISTORY_RELATIVE = "evidence/runtime-contract-history-v1.json"
+HISTORY_RELATIVE = "evidence/runtime-contract-history-v2.json"
+LEGACY_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v1.json"
+LEGACY_HISTORY_RELATIVE = "evidence/runtime-contract-history-v1.json"
 POLICY_REVISIONS_RELATIVE = "evidence/repository-policy-revisions-v1.json"
 README_RELATIVE = "README.md"
 RUNTIME_IDENTITY_SURFACES = (README_RELATIVE,)
@@ -306,8 +308,8 @@ def _manifest_shape(
         "exclusions",
     }
     _exact_object(document, expected_keys, "runtime input manifest", failures)
-    if document.get("schemaVersion") != "1":
-        failures.append("runtime input manifest schemaVersion must be '1'")
+    if document.get("schemaVersion") not in {"1", "2"}:
+        failures.append("runtime input manifest schemaVersion must be '1' or '2'")
     if document.get("digestAlgorithm") != "sha256":
         failures.append("runtime input manifest digestAlgorithm must be 'sha256'")
     canonical = _exact_object(
@@ -526,10 +528,10 @@ def compute_runtime_contract(
     )
 
 
-def _manifest_sha256(root: Path) -> str:
+def _manifest_sha256(root: Path, relative: str = INPUT_MANIFEST_RELATIVE) -> str:
     # Universal-newline decoding keeps this binding stable for LF and CRLF
     # checkouts while preserving every other manifest byte as policy evidence.
-    text = (root / INPUT_MANIFEST_RELATIVE).read_text(encoding="utf-8")
+    text = (root / relative).read_text(encoding="utf-8")
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
@@ -554,7 +556,7 @@ def _validate_identity(
         plugin_version = None
     manifest_version = release_version(root)
     if plugin_version != manifest_version:
-        failures.append(f"{label}.pluginVersion must match both plugin manifests")
+        failures.append(f"{label}.pluginVersion must match the Codex plugin manifest")
     revision = document.get("repositoryPolicyRevision")
     if type(revision) is not int or revision < 1:
         failures.append(f"{label}.repositoryPolicyRevision must be a positive integer")
@@ -566,8 +568,8 @@ def _validate_identity(
         failures,
     )
     if runtime is not None:
-        if runtime.get("schemaVersion") != "1":
-            failures.append(f"{label}.runtimeContract.schemaVersion must be '1'")
+        if runtime.get("schemaVersion") != "2":
+            failures.append(f"{label}.runtimeContract.schemaVersion must be '2'")
         if runtime.get("inputManifest") != INPUT_MANIFEST_RELATIVE:
             failures.append(f"{label}.runtimeContract.inputManifest drifted")
         if runtime.get("inputManifestSha256") != _manifest_sha256(root):
@@ -592,17 +594,21 @@ def _validate_history(
     current_version: str | None,
     current_digest: str,
     failures: list[str],
+    *,
+    schema_version: str = "2",
+    input_manifest: str = INPUT_MANIFEST_RELATIVE,
+    history_path: str = HISTORY_RELATIVE,
 ) -> dict[str, dict[str, Any]]:
-    label = HISTORY_RELATIVE
+    label = history_path
     _exact_object(
         document,
         {"schemaVersion", "inputManifest", "inputManifestSha256", "entries", "characterizations"},
         label,
         failures,
     )
-    if document.get("schemaVersion") != "1":
-        failures.append(f"{label}.schemaVersion must be '1'")
-    if document.get("inputManifest") != INPUT_MANIFEST_RELATIVE:
+    if document.get("schemaVersion") != schema_version:
+        failures.append(f"{label}.schemaVersion must be {schema_version!r}")
+    if document.get("inputManifest") != input_manifest:
         failures.append(f"{label}.inputManifest drifted")
     if document.get("inputManifestSha256") != manifest_sha256:
         failures.append(f"{label}.inputManifestSha256 drifted")
@@ -636,7 +642,7 @@ def _validate_history(
             failures.append(f"{item_label}.commit must be a lowercase full Git SHA")
         if type(entry.get("runtimeContractDigest")) is not str or DIGEST_PATTERN.fullmatch(entry["runtimeContractDigest"]) is None:
             failures.append(f"{item_label}.runtimeContractDigest must be a SHA-256 identity")
-        if entry.get("derivation") != "derived-from-immutable-tag-with-schema-v1":
+        if entry.get("derivation") != f"derived-from-immutable-tag-with-schema-v{schema_version}":
             failures.append(f"{item_label}.derivation drifted")
     if ordered_versions != sorted(ordered_versions, key=_version_key):
         failures.append(f"{label}.entries must be ordered by pluginVersion")
@@ -758,8 +764,10 @@ def _validate_policy_revisions(
             failures.append(f"{item_label}.recordedOn must be an ISO calendar date")
         if type(item.get("baselineCommit")) is not str or COMMIT_PATTERN.fullmatch(item["baselineCommit"]) is None:
             failures.append(f"{item_label}.baselineCommit must be a lowercase full Git SHA")
-        if type(item.get("sourceIssue")) is not int or item["sourceIssue"] < 1:
-            failures.append(f"{item_label}.sourceIssue must be a positive integer")
+        # Direct maintenance requests have no owning GitHub Issue.
+        issue = item.get("sourceIssue")
+        if issue is not None and (type(issue) is not int or issue < 1):
+            failures.append(f"{item_label}.sourceIssue must be null or a positive integer")
         summary = _nonempty_string(item.get("summary"), f"{item_label}.summary", failures)
         if summary is not None and len(summary) > 200:
             failures.append(f"{item_label}.summary must contain at most 200 characters")
@@ -825,6 +833,18 @@ def check_runtime_identity(
         contract.digest,
         failures,
     )
+    legacy_history = load_json_document(root / LEGACY_HISTORY_RELATIVE, failures, root=root)
+    if legacy_history is not None:
+        _validate_history(
+            legacy_history,
+            _manifest_sha256(root, LEGACY_INPUT_MANIFEST_RELATIVE),
+            None,
+            "",
+            failures,
+            schema_version="1",
+            input_manifest=LEGACY_INPUT_MANIFEST_RELATIVE,
+            history_path=LEGACY_HISTORY_RELATIVE,
+        )
     _validate_policy_revisions(
         revisions,
         policy_revision,

@@ -111,7 +111,7 @@ directory would create artificial fragmentation.
 | Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; README keeps a validated rendering |
 | Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
-| Current plugin version | Synchronized plugin manifests | Current |
+| Current plugin version | Codex plugin manifest | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
 | Historical host observations | `evidence/**` and `evals/results/**` | Current and preserved |

@@ -14,8 +14,6 @@ body:
       description: Which host did you test?
       options:
         - Codex
-        - Claude Code
-        - Both (provide separate evidence for each)
     validations:
       required: true
 
@@ -59,7 +57,6 @@ body:
       label: Installation method
       options:
         - Codex Git marketplace
-        - Claude Code Git marketplace
         - Local development marketplace
         - Other (explain in Evidence)
     validations:
@@ -144,7 +141,7 @@ body:
     id: evidence
     attributes:
       label: Evidence
-      description: Include a minimal reproduction, relevant sanitized output, and any limitations. Separate results by host when testing both.
+      description: Include a minimal reproduction, relevant sanitized output, and any limitations. Separate results by operating system and installed version.
     validations:
       required: true
 

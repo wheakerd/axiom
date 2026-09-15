@@ -11,7 +11,7 @@ from axiom_validation import no_hook_clarification as replies
 from axiom_validation import no_hook_discovery as discovery
 from tests import test_no_hook_native_observation as support
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 
 
 class EmptyDiscoveryWindowTests(unittest.TestCase):

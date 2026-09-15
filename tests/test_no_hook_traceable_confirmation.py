@@ -12,7 +12,7 @@ from tests import test_no_hook_empty_discovery_window as support
 from tests.test_no_hook_native_observation import stream
 from tests.test_no_hook_clarification import text_stream
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 
 
 class TraceableConfirmationTests(unittest.TestCase):

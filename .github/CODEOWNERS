@@ -3,7 +3,6 @@
 /.github/workflows/ @wheakerd
 /.codex-plugin/ @wheakerd
 /.agents/plugins/ @wheakerd
-/.claude-plugin/ @wheakerd
 /hooks/ @wheakerd
 /skills/using-axiom/ @wheakerd
 /scripts/ @wheakerd

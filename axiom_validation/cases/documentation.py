@@ -203,7 +203,6 @@ def _hook_reference_drift() -> list[str]:
     try:
         for relative_path in (
             "hooks/codex-hooks.json",
-            "hooks/claude-hooks.json",
             "hooks/codex-session-start.cmd",
             "docs/reference/hooks.md",
         ):

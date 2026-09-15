@@ -49,10 +49,9 @@ BASELINE_METRICS = {
 }
 ABSOLUTE_REVIEW_BYTES = 256
 RELATIVE_REVIEW_BASIS_POINTS = 500
-HOSTS = ("codex", "claude-code")
+HOSTS = ("codex",)
 CURRENT_LIFECYCLE_HOST_STATUSES = {
     "codex": "not-run",
-    "claude-code": "unavailable",
 }
 EXPECTED_HOST_METRICS = {
     "codex": {
@@ -64,25 +63,12 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.10.1 clarifies canonical discovery descriptions without adding a "
-            "route. Current full-profile Codex host, usage and lifecycle observation "
-            "remain NOT-RUN; prior no-Hook observations bind their original runtime only."
+            "Axiom v0.11.0 removes Claude Code installation and runtime support. "
+            "Current Codex host, usage and lifecycle observation remain NOT-RUN; "
+            "prior no-Hook observations bind their original runtime only."
         ),
     },
-    "claude-code": {
-        "host": "claude-code",
-        "status": "unavailable",
-        "exactUsageExposed": False,
-        "inputTokens": None,
-        "cachedInputTokens": None,
-        "credits": None,
-        "wallClockMilliseconds": None,
-        "reason": (
-            "Axiom v0.10.1 changes shared Skill descriptions. Authenticated Claude "
-            "Code installed-host and lifecycle observation remain unavailable and not "
-            "run; static and historical evidence stay separate."
-        ),
-    },
+
 }
 EXPECTED_SCENARIOS = (
     (
@@ -670,7 +656,7 @@ def check_context_budget(failures: list[str]) -> int:
         "commit": None,
         "binding": "pending-immutable-release",
     }:
-        failures.append("targetRelease must remain pending and match both manifests")
+        failures.append("targetRelease must remain pending and match the Codex manifest")
 
     surface = exact_object(
         document.get("surface"),

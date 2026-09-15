@@ -4,11 +4,10 @@
 
 ## Affected files and surfaces
 
-<!-- List exact paths. Mark each as shared, Codex-specific, Claude Code-specific, documentation, or repository validation. -->
+<!-- List exact paths. Mark each as shared, Codex-specific, documentation, or repository validation. -->
 
 - Shared files:
 - Codex-specific files:
-- Claude Code-specific files:
 - Documentation or validation files:
 
 ## Routing and authorization impact
@@ -39,9 +38,9 @@
 
 ## Cross-platform parity
 
-<!-- Explain how Codex and Claude Code wrappers were compared, or why the change is host-specific. -->
+<!-- Explain how the Codex manifest, marketplace wrapper, and Hook were verified. -->
 
-- [ ] Shared skill changes were reviewed against both hosts, or this change does not affect shared skills.
+- [ ] Shared skill changes were reviewed against Codex, or this change does not affect shared skills.
 - [ ] Manifest, marketplace, and hook differences remain intentional and documented.
 - [ ] Optional host-native validation results include the host/tool version, or are marked unavailable.
 

@@ -1,5 +1,10 @@
 # GitHub Discussions Plan
 
+Current support: Axiom v0.11.0 installs and runs in Codex. Claude Code
+installation instructions, submission copy and host evidence below describe
+earlier versions. They do not establish current support or a new observation.
+Use the [current installation guide](../../docs/guides/getting-started.md) for Codex.
+
 Status checked: 2026-08-21. GitHub Discussions is enabled. The three categories
 below are live, and each seed discussion was published once by `wheakerd`.
 

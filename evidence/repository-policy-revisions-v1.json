@@ -240,6 +240,14 @@
       "sourceIssue": 117,
       "summary": "Use frozen traceable test history instead of checkout HEAD and a 15-minute complete CI budget. Preserve every test, runtime, observation protocol, input, result and closed window.",
       "runtimeContractDigest": "sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26"
+    },
+    {
+      "revision": 31,
+      "recordedOn": "2026-09-15",
+      "baselineCommit": "79be4a893549c9b8e390f416cb5f8dad1739493e",
+      "sourceIssue": null,
+      "summary": "Remove Axiom Claude Code support; use Codex runtime schema v2 and repository-check release verification from v0.11.0. Preserve historical experiments.",
+      "runtimeContractDigest": "sha256:6b65c7c6e2ec5cd5e2b433b9504ae0508aef516674c674a7762e355421dd8c36"
     }
   ]
 }

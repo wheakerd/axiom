@@ -12,8 +12,18 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = REPOSITORY_ROOT / "README.md"
 MANIFEST_FILES = (
     ".codex-plugin/plugin.json",
-    ".claude-plugin/plugin.json",
 )
+
+def supported_hosts(version: str) -> frozenset[str]:
+    """Keep legacy evidence vocabulary separate from current installation support."""
+    parsed = parse_production_release_version(version)
+    if parsed is None:
+        return frozenset()
+    if parsed < ((1, "0"), (2, "11"), (1, "0")):
+        return frozenset({"codex", "claude-code"})
+    return frozenset({"codex"})
+
+
 def display_path(path: Path) -> str:
     """Render repository-owned paths without depending on the caller's cwd."""
     try:
@@ -23,7 +33,7 @@ def display_path(path: Path) -> str:
 
 
 def release_version(root: Path = REPOSITORY_ROOT) -> str | None:
-    """Return the one stable production version shared by both manifests."""
+    """Return the stable production version declared by the Codex manifest."""
     versions: list[str] = []
     for relative_path in MANIFEST_FILES:
         try:

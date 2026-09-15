@@ -15,11 +15,9 @@ def check_manifest_schema_fixtures(
     required = {
         ".codex-plugin/plugin.json",
         ".agents/plugins/marketplace.json",
-        ".claude-plugin/plugin.json",
-        ".claude-plugin/marketplace.json",
     }
     if not required.issubset(documents):
-        failures.append("manifest schema fixtures require all four package documents")
+        failures.append("manifest schema fixtures require the Codex manifest and marketplace documents")
         return 0
     fixtures: list[tuple[str, dict[str, dict[str, Any]], str]] = []
 
@@ -30,7 +28,7 @@ def check_manifest_schema_fixtures(
     fixtures.append(("mcpServers", mcp_servers, "mcpServers"))
 
     unknown_top = json.loads(json.dumps(documents))
-    unknown_top[".claude-plugin/plugin.json"]["commands"] = ["./commands/"]
+    unknown_top[".codex-plugin/plugin.json"]["commands"] = ["./commands/"]
     fixtures.append(("unknown-top-level", unknown_top, "commands"))
 
     unknown_nested = json.loads(json.dumps(documents))

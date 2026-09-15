@@ -2,8 +2,7 @@
 
 This guide owns Axiom installation, first use, and the initial safe comparison
 between one routed request and one ordinary control request. Axiom supports
-Codex and Claude Code through separate host wrappers over the same checked-in
-Skills.
+Codex with a checked-in manifest, marketplace wrapper, Hook, and Skills.
 
 ## Before Installing
 
@@ -22,19 +21,6 @@ codex plugin add axiom@axiom
 
 Start a new Codex chat or CLI session. An existing session may retain an older
 Hook or Skill snapshot.
-
-## Install For Claude Code
-
-Add the marketplace, install Axiom, and reload plugins:
-
-```text
-/plugin marketplace add wheakerd/axiom
-/plugin install axiom@axiom
-/reload-plugins
-```
-
-The running session keeps the plugin snapshot loaded at launch until you
-reload plugins or start another session.
 
 ## Inspect The Hook
 
