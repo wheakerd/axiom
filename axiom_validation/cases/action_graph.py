@@ -945,7 +945,7 @@ def check_pull_request_validation_fixtures(
         fixture_documents = json.loads(json.dumps(documents))
         expected_valid = bool(scenario["valid"])
         if not expected_valid:
-            manifest = fixture_documents.get(".claude-plugin/plugin.json")
+            manifest = fixture_documents.get(".codex-plugin/plugin.json")
             if not isinstance(manifest, dict):
                 failures.append(f"{label}:{name} could not construct the invalid fixture")
                 continue

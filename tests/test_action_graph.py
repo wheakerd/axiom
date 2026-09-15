@@ -240,6 +240,16 @@ class ActionGraphTests(unittest.TestCase):
         self.assertEqual([], failures)
         scenarios = (
             (
+                "different frozen source",
+                original.replace("bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1", "0" * 40, 1),
+                "exact frozen bundle source",
+            ),
+            (
+                "implicit tag fetching",
+                original.replace(" --no-tags ", " ", 1),
+                "exact frozen bundle source",
+            ),
+            (
                 "insufficient historical-validation budget",
                 original.replace("timeout-minutes: 15", "timeout-minutes: 10", 1),
                 "stable check name, runner, or timeout changed",

@@ -1,7 +1,7 @@
 # Security Policy
 
 Axiom is a public-beta workflow router. It adds instruction and hook surfaces to
-Codex and Claude Code, so a changed manifest, hook, Skill, or trust boundary can
+Codex, so a changed manifest, hook, Skill, or trust boundary can
 be security-relevant. A routing-quality bug is not automatically a security
 vulnerability.
 

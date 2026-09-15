@@ -12,19 +12,19 @@ from unittest import mock
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation import no_hook_linux_isolation as isolation
 from axiom_validation.no_hook_linux_isolation import check_no_hook_linux_isolation
-from axiom_validation.no_hook_observation import check_no_hook_observation
+from axiom_validation.historical_no_hook import check_no_hook_observation
 
 
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 118 required files, 6 JSON files, "
-    "119 Markdown files, 17 documentation negative fixtures, "
+    "Publication validation passed: 122 required files, 3 JSON files, "
+    "120 Markdown files, 17 documentation negative fixtures, "
     "78 offline route contract fixtures, "
     "95 black-box routing cases, 30 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 7 routing-context lifecycle scenarios, "
-    "18 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
-    "61 canonical installed-runtime inputs, "
-    "12 critical-path CODEOWNERS entries, 238 traceable-Git contract fixtures, "
+    "19 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
+    "57 canonical installed-runtime inputs, "
+    "11 critical-path CODEOWNERS entries, 238 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "
     "7 source-linked cross-route/resume contracts, 102 validator parser fixtures, "
     f"version {RELEASE_VERSION}, 2 compatibility evidence records, "

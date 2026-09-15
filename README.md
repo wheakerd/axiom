@@ -6,7 +6,7 @@
 
 Think before AI thinks.
 
-**Workflow guardrails for Codex and Claude Code.**
+**Workflow guardrails for Codex.**
 
 Axiom is a safety-first workflow router for high-impact coding-agent actions.
 It loads one focused, inspectable workflow when scope, authorization, evidence,
@@ -25,7 +25,7 @@ cannot make a mistake.
 | "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, report evidence, and stop without changes |
 | "Summarize the purpose of this README. Do not modify files." | Select no Axiom route and continue normally |
 
-Install one host, inspect its installed Hook, and then try both requests. These
+Install Axiom in Codex, inspect its installed Hook, and then try both requests. These
 are expected contracts, not claims that your host has already reproduced them.
 
 Codex:
@@ -33,14 +33,6 @@ Codex:
 ```bash
 codex plugin marketplace add wheakerd/axiom
 codex plugin add axiom@axiom
-```
-
-Claude Code:
-
-```text
-/plugin marketplace add wheakerd/axiom
-/plugin install axiom@axiom
-/reload-plugins
 ```
 
 Plugin Hooks execute commands in the host session. Before trusting Axiom,
@@ -74,21 +66,23 @@ routed requests and controls.
 
 ## Current Support Boundary
 
-Codex and Claude Code have separate manifests and Hooks over the same shared
-Skill source. The checked-in package, route contracts, and validation fixtures
+Axiom installs in Codex through its manifest, marketplace wrapper, and Hook.
+The checked-in package, route contracts, and validation fixtures
 are statically testable, but fresh-session behavior still depends on the exact
 host version, operating system, policy, installation method, and installed
 snapshot.
 
-| Host | Checked-in support | Current v0.10.1 observation boundary |
+| Host | Checked-in support | Current v0.11.0 observation boundary |
 | --- | --- | --- |
 | Codex | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Installed-host observation is `NOT-RUN` |
-| Claude Code | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Authenticated observation is `UNAVAILABLE / NOT-RUN` |
+
+Claude Code installation and runtime support ended with this candidate.
+The plugin-architecture workflow still covers other projects targeting Claude Code.
 
 The current release-status record remains `STATIC-ONLY`; static checks do not
 create host evidence. Read [Compatibility](docs/compatibility.md) for the
 bounded matrix and known limitations, [Field Validation](docs/field-validation.md)
-to report a result, and the [v0.10.1 notes](docs/releases/v0.10.1.md) for
+to report a result, and the [v0.11.0 notes](docs/releases/v0.11.0.md) for
 version-specific detail. Historical observations remain under `evidence/` and
 `evals/results/` with their original identities and terminal statuses.
 
@@ -100,10 +94,10 @@ runtime digest are separate identities. See
 input and version policy.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.10.1`
-- `repositoryPolicyRevision`: `30`
-- `runtimeContractDigest` (schema v1): `sha256:a5d23ae1c5f1e5c9530e07ddc876900cc3fc08268448aa7eb8c13378feb6aa26`
-- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v1.json`](axiom_validation/runtime-contract-inputs-v1.json)
+- `pluginVersion`: `0.11.0`
+- `repositoryPolicyRevision`: `31`
+- `runtimeContractDigest` (schema v2): `sha256:6b65c7c6e2ec5cd5e2b433b9504ae0508aef516674c674a7762e355421dd8c36`
+- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
 
 ## Git Boundary
@@ -123,7 +117,7 @@ the broader authority and execution boundaries.
 
 ## Package Shape
 
-Both hosts install the same checked-in `skills/` source. Supporting references
+Codex installs the checked-in `skills/` source. Supporting references
 load on demand and are not separate routes.
 
 ### Shared skills
@@ -137,14 +131,12 @@ load on demand and are not separate routes.
 - `traceable-git-submit`, the checkpoint and Git submission workflow.
 - `reversible-system-change`, the persistent-change workflow.
 
-### Platform wrappers
+### Codex wrapper
 
 - Codex uses `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`,
   and `hooks/codex-hooks.json`.
-- Claude Code uses `.claude-plugin/plugin.json`,
-  `.claude-plugin/marketplace.json`, and `hooks/claude-hooks.json`.
 
-Both manifests point to `./skills/`. Axiom installs no daemon, network service,
+The Codex manifest points to `./skills/`. Axiom installs no daemon, network service,
 watcher, background updater, or bundled runtime dependency.
 
 ## Documentation and Support

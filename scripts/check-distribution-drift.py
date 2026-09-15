@@ -113,17 +113,6 @@ def codex_marketplace_skills() -> list[str]:
     return declared_skills(manifest, plugin_root, label)
 
 
-def claude_marketplace_skills() -> list[str]:
-    label = ".claude-plugin/marketplace.json"
-    entry = marketplace_plugin(load_json(REPOSITORY_ROOT / label), label)
-    raw_path = entry.get("source")
-    if not isinstance(raw_path, str):
-        raise DriftGuardError(f"{label} must use a relative string source")
-    plugin_root = resolve_inside_repository(REPOSITORY_ROOT, raw_path, f"{label} source path")
-    manifest = plugin_root / ".claude-plugin" / "plugin.json"
-    return declared_skills(manifest, plugin_root, label)
-
-
 def readme_skills() -> list[str]:
     lines = README_PATH.read_text(encoding="utf-8").splitlines()
     try:
@@ -176,15 +165,6 @@ def main() -> int:
             ),
         ),
         (".agents/plugins/marketplace.json", codex_marketplace_skills),
-        (
-            ".claude-plugin/plugin.json",
-            lambda: declared_skills(
-                REPOSITORY_ROOT / ".claude-plugin" / "plugin.json",
-                REPOSITORY_ROOT,
-                ".claude-plugin/plugin.json",
-            ),
-        ),
-        (".claude-plugin/marketplace.json", claude_marketplace_skills),
         ("README.md / What Gets Installed", readme_skills),
     ]
 
@@ -204,7 +184,7 @@ def main() -> int:
         return 1
 
     print(
-        f"Distribution drift guard passed: {len(on_disk)} skills match both platform wrappers and README.md."
+        f"Distribution drift guard passed: {len(on_disk)} skills match the Codex manifest, marketplace, and README.md."
     )
     return 0
 

@@ -130,8 +130,8 @@ following:
 4. The exact intended path and mode set is reviewed; all changed public files
    are owned, publishable, and mode `100644` unless a separately reviewed
    executable is genuinely required.
-5. Both host manifests, both marketplace wrappers, both hooks, the one shared
-   Skill tree, README inventory, and distribution checks remain coherent.
+5. The Codex manifest, marketplace wrapper, hook, shared Skill tree, README
+   inventory, and distribution checks remain coherent.
 6. A versioned context-budget record separates exact repository counts,
    estimates, and observed host usage, with the cumulative delta from the
    immutable v0.7.9 gate explained.
@@ -142,9 +142,9 @@ following:
    Static validation, repository proxies, installed lifecycle observations,
    and authenticated behavior are reported as separate evidence classes.
 9. A fresh Codex observation exercises the implemented route and a near-miss
-   control when an authorized host run is available. Authenticated Claude Code
-   remains `UNAVAILABLE / NOT-RUN` when no subscription or session exists; an
-   offline package validator is not a host observation.
+   control when an authorized host run is available. Historical Claude Code
+   observations retain their original version boundaries. An offline package
+   validator is not a host observation.
 10. No route, rule, fixture, or report broadens edit, Git, installation,
     publication, deployment, credential, or external-action authority.
 

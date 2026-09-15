@@ -135,7 +135,7 @@ only `administration: read` plus `contents: write`; administration write is not
 granted. Pull-request code never receives the private key or App token.
 
 Before one exact `POST /git/refs`, the controller binds the requested version
-and tag, live protected-main commit and tree, both manifest versions, the two
+and tag, live protected-main commit and tree, the Codex manifest version, the two
 main ruleset checks, `Verify signed main history`, REST and GraphQL GitHub-made
 signature evidence, tag and Release absence, App installation identity and
 repository scope, and all three live rulesets. It performs the same complete
@@ -177,11 +177,11 @@ respectively. Prerelease identifiers, build metadata, leading-zero components,
 missing or extra components, and prefixed manifest versions are rejected.
 
 `axiom_validation/release_versions.py` owns the canonical parser, derived Bash
-tag pattern, and shared regression corpus. Both manifests, the exact JavaScript
+tag pattern, and shared regression corpus. The Codex manifest, the exact JavaScript
 signed-target guard, the Bash publication gate, release evidence, GitHub Latest
 comparison, and attestation subjects must remain equivalent to that policy.
-The signed-target guard binds the version named by `release/v<version>` to both
-manifests before formal tag creation; it later requires the same version from
+The signed-target guard binds the version named by `release/v<version>` to the Codex
+manifest before formal tag creation; it later requires the same version from
 the exact `v<version>` tag and GitHub Release.
 
 Historical tags and Releases remain immutable records and are not rewritten.
@@ -227,7 +227,7 @@ separate from package and publication-policy validation. The active `main`
 ruleset requires both checks and accepts them only from GitHub Actions.
 
 `Cross-platform hook runtime integration` separately executes the exact
-checked-in Codex and applicable Claude Code `SessionStart` command strings on
+checked-in Codex `SessionStart` command strings on
 `ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix
 checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
 `hook-runtime-macos-15`. They use no repository secret, do not persist checkout
@@ -293,7 +293,7 @@ The checked-in v0.8.20 `Release signature guard` maps each evidence boundary to
 one stable name: `Verify signed main history`, `Verify release candidate`,
 `Verify created release tag`, and `Observe published immutable release`. A
 manual candidate run accepts only `release/v<version>` and requires the stable
-numeric branch version to match both manifests. A manual published-release run
+numeric branch version to match the Codex manifest. A manual published-release run
 accepts only the exact tag and requires the live Release to be final,
 non-prerelease, immutable, and commit-bound. These checked-in names do not
 rewrite the dated live ruleset observation above; migration remains pending
@@ -313,8 +313,8 @@ schedule, secret, or arbitrary repository input. It globally serializes Latest
 publication, verifies the live immutable setting, main/tag identity, and REST
 plus GraphQL GitHub-made signature, and rejects a different equal-or-newer
 current stable release version, then uniquely freezes one numeric Release ID.
-It validates one
-downloaded observation asset, uploads one deterministic attestation without
+From v0.11.0, it validates one downloaded release-policy asset; earlier versions
+retain their original observation contract. It uploads one deterministic attestation without
 replacement, downloads both remote assets, publishes the same draft, and
 requires the final Release to be immutable and GitHub Latest. It can resume a
 draft after the exact attestation already exists and can perform final-only
@@ -355,7 +355,6 @@ critical paths to the repository owner `@wheakerd`:
 - `/.github/workflows/`
 - `/.codex-plugin/`
 - `/.agents/plugins/`
-- `/.claude-plugin/`
 - `/hooks/`
 - `/skills/using-axiom/`
 - `/scripts/`

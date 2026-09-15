@@ -5,8 +5,7 @@ definition in `/hooks` before trusting it and stop if it differs from the
 checked-in source.
 
 The canonical sources are
-[`hooks/codex-hooks.json`](../../hooks/codex-hooks.json),
-[`hooks/claude-hooks.json`](../../hooks/claude-hooks.json), and the packaged
+[`hooks/codex-hooks.json`](../../hooks/codex-hooks.json) and the packaged
 [`hooks/codex-session-start.cmd`](../../hooks/codex-session-start.cmd) wrapper.
 This page is a human-readable rendering. The publication validator compares
 every command block below with those sources.
@@ -38,19 +37,6 @@ type "%~dp0..\skills\using-axiom\SKILL.md"
 
 The handler has a five-second timeout. The Windows path is plugin-relative and
 does not resolve a program from the session working directory or `PATH`.
-
-## Claude Code SessionStart
-
-The matcher is `startup|resume|clear|compact`. The exact checked-in command is:
-
-```bash
-echo 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"
-```
-
-For Claude Code, `compact` follows manual or automatic compaction. Successful
-`SessionStart` stdout is added to the session context. Axiom declares no
-`PreCompact` handler because ordinary successful stdout from that event is not
-context injection.
 
 ## Bounded Behavior
 

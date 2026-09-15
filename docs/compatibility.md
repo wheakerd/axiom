@@ -24,15 +24,14 @@ These labels are not interchangeable. A passing static validator cannot turn a
 
 ## Supported Hosts
 
-The release tree provides separate host wrappers over one shared Skill source:
+The release tree provides the Codex integration:
 
 | Host | Checked-in integration | Lifecycle contract |
 | --- | --- | --- |
 | Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are declared |
-| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; no Axiom `PreCompact` handler is declared |
 
-Both manifests point to `./skills/`. The wrappers and Hooks remain
-platform-specific; the public Skills do not have host-specific copies. This is
+The Codex manifest points to `./skills/`. Claude Code installation and runtime
+support are removed in v0.11.0; its old records remain historical. This is
 repository support, not proof of execution on every host release, operating
 system, shell, installation method, or policy configuration.
 
@@ -46,15 +45,14 @@ canonical current summary. It binds the current plugin and runtime identity,
 keeps current host states separate from prior evidence, and requires an
 immutable subject before a host pass can be claimed.
 
-The Git record for `v0.10.1` reports:
+The Git record for `v0.11.0` reports:
 
 - target binding: `pending-immutable-tag`;
 - checked-in status: `STATIC-ONLY`;
-- installed-runtime identity: plugin `0.10.1`, runtime-contract schema v1;
+- installed-runtime identity: plugin `0.11.0`, runtime-contract schema v2;
 - current Codex installed-host observation: `NOT-RUN`;
-- current authenticated Claude Code observation: `UNAVAILABLE / NOT-RUN`.
 
-See the [v0.10.1 version notes](releases/v0.10.1.md) for candidate-specific
+See the [v0.11.0 version notes](releases/v0.11.0.md) for candidate-specific
 architecture and validation detail. The candidate cannot bind itself to a
 future signed merge, immutable tag, final workflow result, or post-publication
 host observation.
@@ -63,8 +61,7 @@ host observation.
 
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
-| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.10.1 | Static support only |
-| Claude Code | `CHECKED-IN`; deterministic package and contract checks are available | `UNAVAILABLE / NOT-RUN` for v0.10.1 | Static support only |
+| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.11.0 | Static support only |
 
 An identical runtime digest may make older evidence relevant to the same bytes,
 but it does not create a new observation or change the older record's host,
@@ -74,15 +71,12 @@ version, date, lifecycle, or status.
 
 Unless a current immutable result states otherwise, do not assume:
 
-- compatibility with every earlier or later Codex or Claude Code version;
+- compatibility with every earlier or later Codex version;
 - execution across every POSIX shell, Windows configuration, operating system,
   installation method, or host policy;
 - successful marketplace fetch, update, cache refresh, or remote release
   availability from repository presence alone;
 - end-to-end routing in a session that was not freshly started or reloaded;
-- exactly-once Claude Code post-compaction loading without a current
-  `SessionStart` observation for both routed and control requests;
-- semantic parity between hosts when one host observation is unavailable;
 - recovery of task history or tool output that the host no longer exposes;
 - exact tokens, credits, reasoning work, cache hits, or latency that the host
   does not expose for the scoped run; or
@@ -100,7 +94,7 @@ Use a disposable, non-sensitive repository and keep the test read-only:
 1. Record the host and exact version, operating system, Axiom version or
    immutable commit, installation method, and lifecycle source.
 2. Compare the installed Hook with the [checked-in reference](reference/hooks.md).
-3. Start a new session or reload plugins.
+3. Start a new Codex session.
 4. Run the routed and control requests in
    [Getting Started](guides/getting-started.md).
 5. Preserve `PASS`, `FAIL`, `NOT-RUN`, and `UNAVAILABLE` separately and record
@@ -128,9 +122,9 @@ Current sources:
 - [current release status](../evidence/release-status.json);
 - [runtime identity](../evidence/runtime-identity.json) and its
   [policy](runtime-identity.md);
-- [current routing-context record](../evals/context-budget/results/v0.10.1.json);
+- [current routing-context record](../evals/context-budget/results/v0.11.0.json);
 - [current route corpus](../evals/README.md); and
-- [v0.10.1 version notes](releases/v0.10.1.md).
+- [v0.11.0 version notes](releases/v0.11.0.md).
 
 Historical sources:
 

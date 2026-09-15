@@ -1,0 +1,47 @@
+{
+  "name": "axiom",
+  "version": "0.10.1",
+  "description": "Think before AI thinks.",
+  "author": {
+    "name": "wheakerd",
+    "url": "https://github.com/wheakerd"
+  },
+  "homepage": "https://github.com/wheakerd/axiom#readme",
+  "repository": "https://github.com/wheakerd/axiom",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "agents-md",
+    "codex-instructions",
+    "ai-workflows",
+    "agent-safety",
+    "workflow-guardrails",
+    "skills",
+    "context-efficiency",
+    "automation",
+    "developer-tools"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "Axiom",
+    "shortDescription": "Guardrails for agent actions",
+    "longDescription": "Axiom routes focused workflows for repository instructions, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
+    "developerName": "wheakerd",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive"
+    ],
+    "websiteURL": "https://github.com/wheakerd/axiom#readme",
+    "supportURL": "https://github.com/wheakerd/axiom/issues",
+    "defaultPrompt": [
+      "Audit this repository's AGENTS.md instruction system. Report findings only.",
+      "Plan a reversible production change with rollback evidence. Do not execute it.",
+      "Review the routing, authorization, actions, and evidence for this Axiom-guided task."
+    ],
+    "brandColor": "#111827",
+    "brandColorDark": "#5EEAD4",
+    "composerIcon": "./assets/axiom-mark.svg",
+    "logo": "./assets/axiom-mark.svg"
+  }
+}

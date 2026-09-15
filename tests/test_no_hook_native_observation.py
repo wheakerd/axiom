@@ -20,7 +20,7 @@ from axiom_validation import no_hook_native_observation as native
 from axiom_validation import no_hook_observation as legacy
 
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 
 
 def event(document):
@@ -56,6 +56,7 @@ def stream(document, command=None, output=""):
 
 class NativeObservationTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch.object(native, "REPOSITORY_ROOT", ROOT))
         self.temporary = tempfile.TemporaryDirectory(prefix="axiom-native-test-")
         self.parent = Path(self.temporary.name)
         self.addCleanup(self.temporary.cleanup)

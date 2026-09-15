@@ -15,7 +15,7 @@ from axiom_validation import no_hook_clarification as supplement
 from axiom_validation import no_hook_native_observation as native
 from tests.test_no_hook_native_observation import event, stream
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 QUESTION = "Which outcome do you want: redesign the plugin's packaged routes, or install it on this host?"
 
 
@@ -32,6 +32,7 @@ def text_stream(messages=(QUESTION,), *, command=None, output="", terminal=True)
 
 class ClarificationTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch.object(native, "REPOSITORY_ROOT", ROOT))
         self.temp = tempfile.TemporaryDirectory(prefix="axiom-reply-test-")
         self.addCleanup(self.temp.cleanup)
         self.run = Path(self.temp.name) / supplement.RUN_NAME

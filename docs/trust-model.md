@@ -149,19 +149,11 @@ a new, concrete material effect.
 
 ## Update Boundary
 
-Axiom has no updater of its own. Update checks, marketplace refreshes,
-downloads, and installation remain host-controlled actions, but they are not
-always manually initiated: Claude Code can refresh marketplaces and update
-installed plugins on disk after startup when auto-update is enabled. Its
-third-party and local marketplace auto-update setting is disabled by default,
-but a user or administrator can enable it. The running session keeps its
-already-loaded version until reload or the next launch.
-
-Use [Managing an Installation](guides/managing-installation.md#updating) for
-manual refresh and auto-update details, or
-[Disabling Or Removing](guides/managing-installation.md#disabling-or-removing)
-to stop loading Axiom through the host. After any installed snapshot changes,
-start or reload the session and review the installed hook again. A previously
+Axiom has no updater of its own. Codex controls marketplace refreshes,
+downloads and installation. Use [Managing an Installation](guides/managing-installation.md#updating)
+for the supported update flow, or [Disabling Or Removing](guides/managing-installation.md#disabling-or-removing)
+to stop loading Axiom. After changing the installed snapshot, start a new
+session and review the installed hook again. A previously
 trusted hook does not make a changed definition automatically trustworthy, and
 the absence of a manual refresh does not prove that files on disk are unchanged.
 

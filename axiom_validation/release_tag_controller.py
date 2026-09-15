@@ -546,7 +546,7 @@ def collect_state(
     tree_sha = _require_oid(tree.get("sha"), "main Git tree SHA")
 
     manifest_versions: dict[str, str] = {}
-    for path in (".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
+    for path in (".codex-plugin/plugin.json",):
         content = read.get(
             f"/repos/{request.repository}/contents/{path}?ref={main_sha}"
         )

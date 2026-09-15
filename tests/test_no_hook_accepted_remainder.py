@@ -13,7 +13,7 @@ from tests import test_no_hook_empty_discovery_window as empty_window
 from tests.test_no_hook_clarification import text_stream
 from tests.test_no_hook_native_observation import stream
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 
 class TraceableDiscoveryHistoryTests(unittest.TestCase):
     def test_new_runtime_keeps_recorded_remainder_protocol_and_closed_window(self):

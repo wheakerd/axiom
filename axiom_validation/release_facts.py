@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .context import RELEASE_VERSION, REPOSITORY_ROOT
+from .context import supported_hosts, RELEASE_VERSION, REPOSITORY_ROOT
 from .context_budget import load_json
 
 
@@ -282,7 +282,8 @@ def validate_release_facts_record(
             for item in host_metrics
             if type(item) is dict and type(item.get("host")) is str
         }
-        expected_statuses = {"codex": "not-run", "claude-code": "unavailable"}
+        expected_statuses = {host: "not-run" if host == "codex" else "unavailable"
+                             for host in supported_hosts(version)}
         if set(by_host) != set(expected_statuses):
             failures.append("release facts hostMetrics host set drifted")
         for host, status in expected_statuses.items():
@@ -363,6 +364,8 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
         "reached" if comparison["relativeThresholdReached"] else "not reached"
     )
     review_status = comparison["reviewStatus"]
+    host_status = ("`NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. "
+                   if "claude-code" in supported_hosts(version) else "`NOT-RUN`. ")
     return (
         f"The [v{version} routing-context record]({link}) uses the immutable "
         "v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has "
@@ -386,7 +389,7 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
         "The exact static counts are context proxies, and each `ceil(UTF-8 bytes / 4)` "
         "figure is only an estimate for the same English Markdown surface, not an "
         "exact token or credit count. Codex host and lifecycle observation remains "
-        "`NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. No host "
+        f"{host_status}No host "
         "observation is inferred from these static values."
     )
 

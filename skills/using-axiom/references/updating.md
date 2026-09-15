@@ -10,11 +10,9 @@ Codex CLI:
 codex plugin marketplace upgrade axiom
 ```
 
-In a supported Codex workspace plugin UI, use **Refresh**. For Claude Code,
-use its explicit marketplace update and plugin reload flow documented by the
-installed host.
+In a supported Codex workspace plugin UI, use **Refresh**.
 
-After refresh, start a new Codex session or reload Claude Code, then review the
+After refresh, start a new Codex session, then review the
 installed hook before trusting it. Do not claim an update exists unless the
 host reports one, and do not turn this reference into an automatic network or
 installation step.

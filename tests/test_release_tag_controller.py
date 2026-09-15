@@ -280,7 +280,7 @@ class BareFixtureRepository(FixtureRepository):
             cwd=self.worktree,
             check=True,
         )
-        for relative in (".codex-plugin/plugin.json", ".claude-plugin/plugin.json"):
+        for relative in (".codex-plugin/plugin.json",):
             path = self.worktree / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps({"version": RELEASE_VERSION}) + "\n", encoding="utf-8")

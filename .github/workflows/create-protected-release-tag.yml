@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Stable numeric version declared by both manifests on current main
+        description: Stable numeric version declared by the Codex manifest on current main
         required: true
         type: string
       tag:

@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from axiom_validation.context import RELEASE_VERSION
 from axiom_validation.release_evidence import (
@@ -19,6 +20,8 @@ from axiom_validation.release_evidence import (
     render_release_body,
     select_release_from_collection,
     validate_downloaded_observation,
+    validate_release_asset,
+    uses_repository_checks,
     verify_remote_release_preflight,
     verify_release_snapshot,
 )
@@ -32,21 +35,24 @@ TAG = f"v{RELEASE_VERSION}"
 
 
 def current_observation() -> dict:
-    record = external_current_observation()
-    record["runId"] = f"codex-v{RELEASE_VERSION.replace('.', '-')}-release-evidence-test"
-    record["axiom"] = {
-        "version": RELEASE_VERSION,
-        "tag": TAG,
-        "commit": COMMIT,
-        "tree": TREE,
+    return {
+        "schemaVersion": "1",
+        "kind": "axiom-release-policy",
+        "subject": {
+            "version": RELEASE_VERSION, "tag": TAG, "commit": COMMIT, "tree": TREE,
+        },
+        "verification": {
+            "policy": "repository-checks-v1",
+            "requiredChecks": ["repository-guards", "unit-and-integration-tests"],
+        },
+        "evidenceScope": "release-policy-and-artifact-integrity",
     }
-    return record
 
 
 def write_observation(directory: Path, record: dict) -> tuple[Path, str]:
     payload = (json.dumps(record, indent=2) + "\n").encode("ascii")
     digest = hashlib.sha256(payload).hexdigest()
-    path = directory / f"axiom-v{RELEASE_VERSION}-codex-core-v2-{digest}.json"
+    path = directory / f"axiom-v{RELEASE_VERSION}-release-policy-{digest}.json"
     path.write_bytes(payload)
     return path, digest
 
@@ -801,7 +807,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             duplicate = release_metadata(valid_asset)
             duplicate["assets"].append({**valid_asset, "id": 102})
             fixtures.append(("duplicate", duplicate, "exactly one"))
-            malformed = release_metadata({**valid_asset, "name": f"axiom-v{RELEASE_VERSION}-codex-core-v2-bad.json"})
+            malformed = release_metadata({**valid_asset, "name": f"axiom-v{RELEASE_VERSION}-release-policy-bad.json"})
             fixtures.append(("malformed", malformed, "full lowercase SHA-256"))
             mismatched = release_metadata({**valid_asset, "digest": f"sha256:{'0' * 64}"})
             fixtures.append(("digest", mismatched, "GitHub digest"))
@@ -890,23 +896,19 @@ class ReleaseEvidenceTests(unittest.TestCase):
             )
             self.assertTrue(any("metadata changed" in failure for failure in failures), failures)
 
-    def test_incomplete_failed_retrying_mutating_and_wrong_subject_observations_fail(self):
+    def test_missing_checks_extra_claims_and_wrong_subject_policy_records_fail(self):
         mutations = []
         incomplete = current_observation()
-        incomplete["cases"].pop()
+        incomplete["verification"]["requiredChecks"].pop()
         mutations.append(("incomplete", incomplete))
         failed = current_observation()
-        failed["cases"][0]["status"] = "fail"
-        mutations.append(("failed", failed))
-        retrying = current_observation()
-        retrying["run"]["repeatCount"] = 2
-        mutations.append(("retrying", retrying))
-        mutating = current_observation()
-        mutating["cases"][0]["mutationAttempted"] = True
-        mutating["summary"]["mutationAttempts"] = 1
-        mutations.append(("mutating", mutating))
+        failed["verification"]["policy"] = "unchecked"
+        mutations.append(("wrong-policy", failed))
+        extra = current_observation()
+        extra["unverifiedResult"] = "pass"
+        mutations.append(("extra-claim", extra))
         wrong_subject = current_observation()
-        wrong_subject["axiom"]["tree"] = "d" * 40
+        wrong_subject["subject"]["tree"] = "d" * 40
         mutations.append(("wrong-subject", wrong_subject))
 
         for name, record in mutations:
@@ -923,6 +925,64 @@ class ReleaseEvidenceTests(unittest.TestCase):
                     )
                 )
                 self.assertTrue(failures, name)
+
+    def test_repository_policy_never_invokes_legacy_observation_validation(self):
+        with tempfile.TemporaryDirectory() as temporary_directory, mock.patch(
+            "axiom_validation.release_evidence.validate_external_routing_observation",
+            side_effect=AssertionError("legacy observation validation called"),
+        ):
+            directory = Path(temporary_directory)
+            plan, asset, _ = self.prepare(directory)
+            failures = []
+            attestation = validate_downloaded_observation(
+                plan, asset, attestation_directory=directory, failures=failures,
+            )
+            self.assertEqual([], failures)
+            self.assertIsNotNone(attestation)
+            self.assertEqual(
+                "release-policy-and-artifact-integrity",
+                json.loads(attestation.read_text())["validation"]["scope"],
+            )
+
+    def test_legacy_observation_contract_keeps_valid_and_invalid_results(self):
+        subject = {"version": "0.10.1", "tag": "v0.10.1", "commit": COMMIT, "tree": TREE}
+        record = external_current_observation()
+        record["axiom"] = subject
+        mutations = [None, "incomplete", "failed", "retrying", "mutating", "wrong-subject"]
+        with mock.patch("axiom_validation.routing_evals.external.RELEASE_VERSION", "0.10.1"):
+            for mutation in mutations:
+                document = json.loads(json.dumps(record))
+                if mutation == "incomplete":
+                    document["cases"].pop()
+                elif mutation == "failed":
+                    document["cases"][0]["status"] = "fail"
+                elif mutation == "retrying":
+                    document["run"]["repeatCount"] = 2
+                elif mutation == "mutating":
+                    document["cases"][0]["mutationAttempted"] = True
+                    document["summary"]["mutationAttempts"] = 1
+                elif mutation == "wrong-subject":
+                    document["axiom"]["tree"] = "d" * 40
+                with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                    payload = (json.dumps(document, indent=2) + "\n").encode("ascii")
+                    digest = hashlib.sha256(payload).hexdigest()
+                    path = Path(directory) / f"axiom-v0.10.1-codex-core-v2-{digest}.json"
+                    path.write_bytes(payload)
+                    failures = []
+                    validate_release_asset(path, subject, failures, root=Path(__file__).resolve().parents[1])
+                    self.assertEqual(mutation is not None, bool(failures), failures)
+
+    def test_repository_policy_version_boundary_and_rendering(self):
+        for version, expected in (("0.10.999", False), ("0.11.0", True), ("1.0.0", True),
+                                  ("999999999999999999999999.0.0", True), ("0.11.0-beta", False)):
+            self.assertEqual(expected, uses_repository_checks(version), version)
+        result = subprocess.run(
+            [sys.executable, "scripts/check-release-evidence.py", "render-policy",
+             "--expected-version", RELEASE_VERSION, "--expected-tag", TAG,
+             "--expected-commit", COMMIT, "--expected-tree", TREE],
+            cwd=Path(__file__).resolve().parents[1], capture_output=True, check=True,
+        )
+        self.assertEqual(current_observation(), json.loads(result.stdout))
 
     def test_final_release_must_be_immutable_and_latest(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

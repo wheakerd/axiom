@@ -15,7 +15,7 @@ from unittest.mock import patch
 from axiom_validation import no_hook_native_observation as native
 from tests import test_no_hook_native_observation as fixtures
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 
 
 class ExplicitInvocationTests(unittest.TestCase):

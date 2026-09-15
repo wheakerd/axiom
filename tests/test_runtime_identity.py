@@ -61,7 +61,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     def test_checked_in_identity_history_and_rendered_surface(self):
         failures: list[str] = []
         record_count = check_runtime_identity(failures)
-        self.assertEqual(61, record_count)
+        self.assertEqual(57, record_count)
         self.assertEqual([], failures)
 
     def test_each_installed_behavior_class_changes_the_digest(self):
@@ -70,7 +70,7 @@ class RuntimeIdentityTests(unittest.TestCase):
                 root / "skills/agents-architect/SKILL.md", "\nChanged skill contract.\n"
             ),
             "hook": lambda root: self.append_text(
-                root / "hooks/claude-hooks.json", "\n"
+                root / "hooks/codex-hooks.json", "\n"
             ),
             "wrapper": lambda root: self.append_text(
                 root / "hooks/codex-session-start.cmd", "\nrem changed wrapper\n"
@@ -127,6 +127,8 @@ class RuntimeIdentityTests(unittest.TestCase):
                 INPUT_MANIFEST_RELATIVE,
                 "evidence/runtime-identity.json",
                 "evidence/runtime-contract-history-v1.json",
+                "evidence/runtime-contract-history-v2.json",
+                "axiom_validation/runtime-contract-inputs-v1.json",
                 "evidence/repository-policy-revisions-v1.json",
                 "README.md",
             ):
@@ -139,7 +141,7 @@ class RuntimeIdentityTests(unittest.TestCase):
 
             failures: list[str] = []
             record_count = check_runtime_identity(failures, root=root)
-            self.assertEqual(61, record_count)
+            self.assertEqual(57, record_count)
             self.assertEqual([], failures)
 
     def test_new_external_evidence_requires_v2_and_canonical_digest(self):

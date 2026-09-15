@@ -14,16 +14,16 @@ from axiom_validation.hooks import (
 def check_hook_lifecycle_fixtures(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> int:
-    """Prove the Claude wrapper rejects ineffective compaction injection."""
-    required = {"hooks/codex-hooks.json", "hooks/claude-hooks.json"}
+    """Prove the Codex wrapper rejects ineffective compaction injection."""
+    required = {"hooks/codex-hooks.json"}
     if not required.issubset(documents):
-        failures.append("hook lifecycle fixtures require both platform hook documents")
+        failures.append("hook lifecycle fixtures require the Codex hook document")
         return 0
 
     fixtures: list[tuple[str, dict[str, dict[str, Any]], str]] = []
 
     precompact = json.loads(json.dumps(documents))
-    precompact["hooks/claude-hooks.json"]["hooks"]["PreCompact"] = [
+    precompact["hooks/codex-hooks.json"]["hooks"]["PreCompact"] = [
         {
             "matcher": "manual|auto",
             "hooks": [
@@ -31,7 +31,7 @@ def check_hook_lifecycle_fixtures(
                     "type": "command",
                     "command": (
                         "echo 'Load Axiom before compaction'; cat "
-                        '"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"'
+                        '"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md"'
                     ),
                     "statusMessage": "Loading Axiom before compaction",
                 }
@@ -39,15 +39,15 @@ def check_hook_lifecycle_fixtures(
         }
     ]
     fixtures.append(
-        ("claude-precompact-context-injection", precompact, "event set changed")
+        ("codex-precompact-context-injection", precompact, "event set changed")
     )
 
     missing_compact = json.loads(json.dumps(documents))
-    missing_compact["hooks/claude-hooks.json"]["hooks"]["SessionStart"][0][
+    missing_compact["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
         "matcher"
     ] = "startup|resume|clear"
     fixtures.append(
-        ("claude-session-start-without-compact", missing_compact, ".matcher is")
+        ("codex-session-start-without-compact", missing_compact, ".matcher is")
     )
 
     expanded_command = json.loads(json.dumps(documents))

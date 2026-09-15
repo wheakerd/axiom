@@ -18,6 +18,7 @@ import zipfile
 from pathlib import Path, PurePosixPath
 from unittest import mock
 
+from axiom_validation.historical_no_hook import historical_snapshot, restore_frozen_inputs
 import axiom_validation.no_hook_bundle as bundle_module
 from axiom_validation.no_hook_bundle import (
     BUNDLE_ENVELOPE_NAME,
@@ -68,6 +69,7 @@ class SourceFixture:
             destination = self.root / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+        restore_frozen_inputs(REPOSITORY_ROOT, self.root, runtime_only=True)
         source_identity_path = self.root / "evidence/runtime-identity.json"
         source_identity = json.loads(source_identity_path.read_text(encoding="utf-8"))
         schema = json.loads((REPOSITORY_ROOT / bundle_module.SCHEMA_RELATIVE).read_text(encoding="utf-8"))
@@ -279,12 +281,20 @@ class NoHookBundleTests(unittest.TestCase):
             mock.patch.object(isolation, "detect_process_domain_capabilities", side_effect=AssertionError("runtime detector called"))
         ), mock.patch.object(isolation.LinuxProcessDomainSupervisor, "open", side_effect=AssertionError("runtime backend called")):
             parent = Path(directory)
+            # The builder intentionally rejects a dirty current runtime even
+            # when reading old objects. Give it an independent checkout of the
+            # source named by the frozen evidence.
+            frozen_source = parent / "frozen-source"
+            subprocess.run([str(GIT_EXECUTABLE), "clone", "--quiet", "--no-hardlinks",
+                            "--no-checkout", str(REPOSITORY_ROOT), str(frozen_source)], check=True)
+            subprocess.run([str(GIT_EXECUTABLE), "-C", str(frozen_source), "checkout",
+                            "--quiet", "--detach", source["commit"]], check=True)
             outputs = []
             for name in ("first", "second"):
                 destination = parent / name
                 destination.mkdir()
                 result = build_bundle(
-                    REPOSITORY_ROOT,
+                    frozen_source,
                     source["commit"],
                     source["tree"],
                     destination,
@@ -301,7 +311,8 @@ class NoHookBundleTests(unittest.TestCase):
 
     def test_checked_in_static_evidence_reproduces_without_output(self):
         failures: list[str] = []
-        self.assertEqual((50, 2), check_no_hook_bundle(failures))
+        with historical_snapshot(REPOSITORY_ROOT) as snapshot:
+            self.assertEqual((50, 2), check_no_hook_bundle(failures, snapshot))
         self.assertEqual([], failures)
 
     def test_schema_revision_migration_preserves_legacy_pair_and_rejects_mixed_pairs(self):
@@ -2499,21 +2510,21 @@ class NoHookBundleTests(unittest.TestCase):
 
     def test_compatibility_scanner_owns_profile_evidence_without_legacy_drift(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = self._copy_repository(Path(directory))
+            root = self._copy_repository(Path(directory), historical=False)
             before = _directory_files(root)
 
             result = self._run_compatibility_scanner(root)
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "current release v0.10.1 STATIC-ONLY.\n",
+                "current release v0.11.0 STATIC-ONLY.\n",
                 result.stdout,
             )
             self_test = self._run_compatibility_scanner(root, "--self-test")
             self.assertEqual(0, self_test.returncode, self_test.stderr)
             self.assertEqual(
                 "Compatibility evidence validation passed: 2 records, "
-                "12 negative fixtures, current release v0.10.1 STATIC-ONLY.\n",
+                "12 negative fixtures, current release v0.11.0 STATIC-ONLY.\n",
                 self_test.stdout,
             )
 
@@ -2544,12 +2555,12 @@ class NoHookBundleTests(unittest.TestCase):
                 for node in ast.walk(scanner_tree)
                 if isinstance(node, ast.ImportFrom) and node.module is not None
             }
-            self.assertIn("axiom_validation.no_hook_bundle", scanner_imports)
+            self.assertIn("axiom_validation.historical_no_hook", scanner_imports)
 
     def test_compatibility_scanner_rejects_missing_symlink_and_nonregular_profile_evidence(self):
         for mutation in ("missing", "symlink", "nonregular"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
-                root = self._copy_repository(Path(directory))
+                root = self._copy_repository(Path(directory), historical=False)
                 evidence = (
                     root
                     / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
@@ -2585,7 +2596,7 @@ class NoHookBundleTests(unittest.TestCase):
         }
         for label, mutate in mutations.items():
             with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
-                root = self._copy_repository(Path(directory))
+                root = self._copy_repository(Path(directory), historical=False)
                 evidence = (
                     root
                     / "evidence/profiles/openai-hook-independent-v1/bundle-v1.json"
@@ -2606,7 +2617,7 @@ class NoHookBundleTests(unittest.TestCase):
         )
         for relative in mutations:
             with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
-                root = self._copy_repository(Path(directory))
+                root = self._copy_repository(Path(directory), historical=False)
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("{}\n", encoding="utf-8")
@@ -2617,8 +2628,8 @@ class NoHookBundleTests(unittest.TestCase):
                 )
 
     @staticmethod
-    def _copy_repository(parent: Path) -> Path:
-        return Path(
+    def _copy_repository(parent: Path, *, historical: bool = True) -> Path:
+        result = Path(
             shutil.copytree(
                 REPOSITORY_ROOT,
                 parent / "repository",
@@ -2626,6 +2637,9 @@ class NoHookBundleTests(unittest.TestCase):
                 ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc"),
             )
         )
+        if historical:
+            restore_frozen_inputs(REPOSITORY_ROOT, result)
+        return result
 
     @staticmethod
     def _run_compatibility_scanner(

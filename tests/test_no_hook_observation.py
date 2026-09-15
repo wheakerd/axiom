@@ -44,6 +44,9 @@ LEGACY_BUILDER_FIXTURES = REPOSITORY_ROOT / "tests/fixtures/no-hook-builder-revi
 PROTECTED_REPOSITORY_SENTINEL = b"axiom protected repository sentinel v1\n"
 
 
+from tests.historical_fixture import ROOT as REPOSITORY_ROOT
+ENTRYPOINT = REPOSITORY_ROOT / "scripts/run-no-hook-codex-observation.py"
+
 def load_json(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -157,15 +160,18 @@ def legacy_worker_repository(parent: Path, environment: dict[str, str]) -> Path:
     destination.mkdir()
     paths = subprocess.check_output(
         [str(GIT_EXECUTABLE), "ls-files", "-z"],
-        cwd=REPOSITORY_ROOT, env=environment,
+        cwd=Path(__file__).resolve().parents[1], env=environment,
     ).split(b"\0")
     for item in paths:
         if not item:
             continue
         relative = item.decode("utf-8")
+        source = REPOSITORY_ROOT / relative
+        if not source.is_file():
+            continue
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(REPOSITORY_ROOT / relative, target)
+        shutil.copy2(source, target)
     for relative, data in inputs.items():
         (destination / relative).write_bytes(data)
     return destination
@@ -470,6 +476,9 @@ class LegacyBuilderFixtureTests(unittest.TestCase):
 
 
 class ProtocolContractTests(unittest.TestCase):
+    def setUp(self):
+        self.enterContext(mock.patch.object(observer, "REPOSITORY_ROOT", REPOSITORY_ROOT))
+
     def test_v2_builder_receipt_cannot_downgrade_output_binding_to_ownership(self):
         receipt = {
             "schemaVersion": "2", "outputLifecycleVersion": "2",
@@ -499,7 +508,7 @@ class ProtocolContractTests(unittest.TestCase):
         self.assertEqual(16, identities["caseCount"])
         self.assertEqual(14, identities["sourceBindingCount"])
         failures: list[str] = []
-        self.assertEqual((16, 14), observer.check_no_hook_observation(failures))
+        self.assertEqual((16, 14), observer.check_no_hook_observation(failures, root=REPOSITORY_ROOT))
         self.assertEqual([], failures)
         history = load_json(HISTORY)
         self.assertEqual([], history["results"])

@@ -12,7 +12,7 @@ from axiom_validation import no_hook_clarification as replies
 from tests import test_no_hook_empty_discovery_window as window_support
 from tests import test_no_hook_native_observation as support
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT
 
 
 class OutcomeSemanticsTests(unittest.TestCase):

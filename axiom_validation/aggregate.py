@@ -39,10 +39,10 @@ from .manifests import (
     check_shared_source_roots,
     load_json,
 )
-from .no_hook_bundle import check_no_hook_bundle
+from .historical_no_hook import check_no_hook_bundle
 from .no_hook_linux_isolation import check_no_hook_linux_isolation
-from .no_hook_observation import check_no_hook_observation
-from .no_hook_native_observation import validate_native_protocol
+from .historical_no_hook import check_no_hook_observation
+from .historical_no_hook import validate_native_protocol
 from .no_hook_profile import check_no_hook_profile
 from .release_policy import check_release_signature_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract

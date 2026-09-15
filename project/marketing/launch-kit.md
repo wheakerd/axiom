@@ -1,5 +1,10 @@
 # Launch Kit
 
+Current support: Axiom v0.11.0 installs and runs in Codex. Claude Code
+installation instructions, submission copy and host evidence below describe
+earlier versions. They do not establish current support or a new observation.
+Use the [current installation guide](../../docs/guides/getting-started.md) for Codex.
+
 Every draft presents Axiom as a public beta. Replace bracketed evidence fields
 only with current, directly observed facts. Publishing, sending, or cross-posting
 any item requires separate authorization for that actor, target, and payload.

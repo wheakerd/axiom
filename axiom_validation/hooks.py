@@ -11,12 +11,10 @@ from .manifests import MANIFEST_FILES, exact_json_object
 
 EXPECTED_HOOK_DECLARATIONS = {
     ".codex-plugin/plugin.json": "./hooks/codex-hooks.json",
-    ".claude-plugin/plugin.json": "./hooks/claude-hooks.json",
 }
 AUTHOR_KEYS = frozenset({"name", "url"})
 HOOK_FILES = (
     "hooks/codex-hooks.json",
-    "hooks/claude-hooks.json",
 )
 CODEX_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom. Load this startup front door before deciding "
@@ -33,10 +31,6 @@ CODEX_WINDOWS_WRAPPER_TEXT = (
     'type "%~dp0..\\skills\\using-axiom\\SKILL.md"\n'
 )
 CODEX_HOOK_TIMEOUT_SECONDS = 5
-CLAUDE_SESSION_COMMAND = (
-    "echo 'You have Axiom. Load this startup front door before deciding whether any "
-    "Axiom skill applies:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
-)
 APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
     "hooks/codex-hooks.json": {
         "SessionStart": {
@@ -46,16 +40,6 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
                 "command": CODEX_COMMAND,
                 "commandWindows": CODEX_WINDOWS_COMMAND,
                 "timeout": CODEX_HOOK_TIMEOUT_SECONDS,
-                "statusMessage": "Loading Axiom routing",
-            },
-        },
-    },
-    "hooks/claude-hooks.json": {
-        "SessionStart": {
-            "matcher": "startup|resume|clear|compact",
-            "handler": {
-                "type": "command",
-                "command": CLAUDE_SESSION_COMMAND,
                 "statusMessage": "Loading Axiom routing",
             },
         },
