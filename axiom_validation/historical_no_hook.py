@@ -1,8 +1,9 @@
 """Replay frozen v0.10.1 experiments separately from the current installation.
 
-Five superseded runtime, identity and context inputs come from the immutable release.
+Six superseded runtime, identity and context inputs come from the immutable release.
 Experiment documents, implementations, and other Skills come from the inspected
-tree so their existing drift checks still run. No result becomes current evidence.
+tree so their existing drift checks still run. The later task-planning Skill is
+outside that historical inventory. No result becomes current evidence.
 """
 
 from __future__ import annotations
@@ -22,6 +23,10 @@ FROZEN_INPUTS = {
     ".codex-plugin/plugin.json": (
         "plugin.json.txt",
         "6b4b9d50cda95957684db97d7d4caefd7fc6e02e30e65964a5ae453ffc715ad1",
+    ),
+    "skills/using-axiom/SKILL.md": (
+        "using-axiom.md.txt",
+        "34ff05c32ed17a3ced506f3cced49a3bdca7aa30e0cb79326a4d0d0953deeb9c",
     ),
     "skills/using-axiom/references/updating.md": (
         "updating.md.txt",
@@ -44,6 +49,8 @@ FROZEN_INPUTS = {
 
 def restore_frozen_inputs(root: Path, destination: Path, *, runtime_only: bool = False) -> None:
     """Copy source-bound text fixtures into an already disposable replay tree."""
+    if destination.resolve() == root.resolve():
+        raise ValueError("historical replay requires a separate disposable destination")
     for relative, (name, digest) in FROZEN_INPUTS.items():
         if runtime_only and relative in {"evidence/release-status.json", "axiom_validation/context.py"}:
             continue
@@ -59,6 +66,13 @@ def restore_frozen_inputs(root: Path, destination: Path, *, runtime_only: bool =
             raise ValueError(f"historical replay path contains a symbolic link: {relative}")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+    # This exact new public Skill did not exist in the frozen v0.10.1 inventory.
+    # Keep current package checks responsible for it; replay only the old surface.
+    later_skill = destination / "skills/task-planning"
+    if later_skill.is_symlink() or any(parent.is_symlink() for parent in later_skill.parents):
+        raise ValueError("historical replay path contains a symbolic link: skills/task-planning")
+    if later_skill.exists():
+        shutil.rmtree(later_skill)
     if not runtime_only:
         # Preserve the inspected historical prefix, including any drift. The
         # frozen protocol checks its original revision range; current identity
@@ -82,6 +96,17 @@ def historical_snapshot(root: Path = REPOSITORY_ROOT):
                         ignore=shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache"))
         restore_frozen_inputs(root, destination)
         yield destination
+
+
+def check_no_hook_profile(failures: list[str], root: Path = REPOSITORY_ROOT) -> tuple[int, int]:
+    """Validate the frozen profile against its original public Skill inventory."""
+    from .no_hook_profile import check_no_hook_profile as check_frozen
+    try:
+        with historical_snapshot(root) as snapshot:
+            return check_frozen(failures, snapshot)
+    except (OSError, UnicodeError, ValueError) as error:
+        failures.append(f"historical no-Hook profile: {error}")
+        return (0, 0)
 
 
 def check_no_hook_bundle(failures: list[str], root: Path = REPOSITORY_ROOT) -> tuple[int, int]:

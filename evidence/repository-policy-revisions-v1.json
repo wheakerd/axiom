@@ -248,6 +248,14 @@
       "sourceIssue": null,
       "summary": "Remove Axiom Claude Code support; use Codex runtime schema v2 and repository-check release verification from v0.11.0. Preserve historical experiments.",
       "runtimeContractDigest": "sha256:6b65c7c6e2ec5cd5e2b433b9504ae0508aef516674c674a7762e355421dd8c36"
+    },
+    {
+      "revision": 32,
+      "recordedOn": "2026-09-15",
+      "baselineCommit": "c25aeedd1841ba12252619b482bdc1f40fd07e75",
+      "sourceIssue": null,
+      "summary": "Add task-planning for current-scope plan creation and revision in v0.12.0. Preserve specialized ownership, immutable release history, historical evidence, and explicit action authority.",
+      "runtimeContractDigest": "sha256:cdcb0f6155f59c51fede42606763a42343c4747d4112accafc7988904390fbe2"
     }
   ]
 }

@@ -1,5 +1,23 @@
 # Runtime And Repository Identity
 
+## Task planning candidate (policy 32)
+
+Version `0.12.0` adds the `task-planning` public Skill and its startup route.
+It covers general plan creation and scope revision while keeping specialized
+planning under its existing owner. Runtime schema v2 classifies 60 installed
+inputs. Policy revision 32 binds this runtime to the next minor release.
+
+The immutable v0.11.0 release remains recorded in the
+[v2 history](../evidence/runtime-contract-history-v2.json), and its
+[routing-context record](../evals/context-budget/results/v0.11.0.json) retains
+its original bytes. Current identity and routing-context facts describe the
+new candidate; earlier protocols and observations retain their original bindings.
+
+The historical no-Hook replay restores six frozen v0.10.1 inputs, including
+its routing gate, and excludes the newly added planning skill only inside the
+disposable historical tree. The current package and historical experiment
+implementations retain their separate identities.
+
 ## Codex-only candidate (policy 31)
 
 Version `0.11.0` removes Axiom's Claude Code installation and runtime wrapper.

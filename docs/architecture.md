@@ -89,6 +89,10 @@ results byte-identical while current contracts advance additively.
 The selected task skill establishes its own phase and evidence contract. Every
 supporting reference is directly discoverable from its parent `SKILL.md`:
 
+- `task-planning` creates and revises general task plans from current
+  requirements. Scope revisions load one reference for removal, replacement,
+  restoration, dependency repair, and effective constraints. Specialized
+  planning retains its domain owner; planning does not grant execution authority.
 - `using-axiom` owns one shared machine-credential lifecycle reference. It
   loads only for explicit API-key, SSH-key, certificate, signing-key,
   service-account, or other machine-credential work and does not create a

@@ -12,7 +12,7 @@ from pathlib import Path
 from axiom_validation.no_hook_profile import check_no_hook_profile
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+from tests.historical_fixture import ROOT as REPOSITORY_ROOT
 
 
 class NoHookProfileTests(unittest.TestCase):
@@ -45,7 +45,7 @@ class NoHookProfileTests(unittest.TestCase):
 
     def test_contract_and_golden_set(self):
         failures: list[str] = []
-        self.assertEqual((8, 16), check_no_hook_profile(failures))
+        self.assertEqual((8, 16), check_no_hook_profile(failures, REPOSITORY_ROOT))
         self.assertEqual([], failures)
 
     def test_phase1_artifact_bytes_remain_frozen(self):

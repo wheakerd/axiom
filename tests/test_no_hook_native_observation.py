@@ -426,10 +426,10 @@ class NativeObservationTests(unittest.TestCase):
         records = []
         for ordinal, case in enumerate(self.cases, 1):
             definition = native._definition(fixtures, ordinal)
-            material = native.materialize_native_case_contract(materialization_seed=seed, ordinal=ordinal,
+            material = native.materialize_native_case_contract(root=ROOT, materialization_seed=seed, ordinal=ordinal,
                 protocol_digest=self.protocol["protocolDigest"], model_schema=schema,
                 prompt_envelope=envelope, request=case["request"])
-            records.append(native._blank_case(case, material, seed, self.protocol, definition))
+            records.append(native._blank_case(case, material, seed, self.protocol, definition, root=ROOT))
         return {"schemaVersion": "2", "diagnosticRevision": 11, "priorResultSha256s": [],
                 "executionModel": {"model": "gpt-5.5", "reasoningEffort": "medium", "requiredToolMode": "direct"},
                 "attemptCount": 0, "cumulativeAttemptCount": 0, "protocolId": native.PROTOCOL_ID,
@@ -825,7 +825,7 @@ class NativeObservationTests(unittest.TestCase):
                     "protocol_digest": self.protocol["protocolDigest"], "model_schema": source,
                     "prompt_envelope": envelope, "request": case["request"]}
                 original = legacy.materialize_case_contract(**arguments)
-                material = native.materialize_native_case_contract(**arguments)
+                material = native.materialize_native_case_contract(root=ROOT, **arguments)
                 transported = json.loads(material.schema_bytes)
                 self.assertIsNone(native.validate_response_transport(transported))
                 restored, _, _ = self._task_material_block(material.prompt_bytes)
@@ -1059,7 +1059,7 @@ class NativeObservationTests(unittest.TestCase):
             "prompt_envelope": native._input(ROOT, self.protocol, "promptEnvelope"),
             "request": self.cases[0]["request"]}
         return (json.loads(legacy.materialize_case_contract(**arguments).schema_bytes),
-                json.loads(native.materialize_native_case_contract(**arguments).schema_bytes))
+                json.loads(native.materialize_native_case_contract(root=ROOT, **arguments).schema_bytes))
 
     def test_legacy_untyped_leaf_is_rejected_without_root_annotation_masking(self):
         old, current = self._transport_fixture()
@@ -2148,7 +2148,7 @@ class NativeObservationTests(unittest.TestCase):
         (ledger / "attempt-01.json").write_bytes(native._bytes({
             "ordinal": 1, "caseId": self.cases[0]["id"], "protocolDigest": native.FIFTH_PROTOCOL_DIGEST}))
         for ordinal, case in enumerate(self.cases, 1):
-            material = native.materialize_native_case_contract(
+            material = native.materialize_native_case_contract(root=ROOT,
                 materialization_seed=bytes.fromhex(state["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=native.FIFTH_PROTOCOL_DIGEST,
                 model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
@@ -2172,7 +2172,7 @@ class NativeObservationTests(unittest.TestCase):
         (ledger / "attempt-01.json").write_bytes(native._bytes({
             "ordinal": 1, "caseId": self.cases[0]["id"], "protocolDigest": native.SIXTH_PROTOCOL_DIGEST}))
         for ordinal, case in enumerate(self.cases, 1):
-            material = native.materialize_native_case_contract(
+            material = native.materialize_native_case_contract(root=ROOT,
                 materialization_seed=bytes.fromhex(state["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=native.SIXTH_PROTOCOL_DIGEST,
                 model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
@@ -2198,7 +2198,7 @@ class NativeObservationTests(unittest.TestCase):
         (ledger / "attempt-01.json").write_bytes(native._bytes({
             "ordinal": 1, "caseId": self.cases[0]["id"], "protocolDigest": native.SEVENTH_PROTOCOL_DIGEST}))
         for ordinal, case in enumerate(self.cases, 1):
-            material = native.materialize_native_case_contract(
+            material = native.materialize_native_case_contract(root=ROOT,
                 materialization_seed=bytes.fromhex(state["materializationSeed"]),
                 ordinal=ordinal, protocol_digest=native.SEVENTH_PROTOCOL_DIGEST,
                 model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
@@ -3834,13 +3834,14 @@ class NativeObservationTests(unittest.TestCase):
                      ("model-migration-continuation", native.SIXTH_PROTOCOL_DIGEST, native.materialize_native_case_contract),
                      ("stderr-diagnostic-continuation", native.SEVENTH_PROTOCOL_DIGEST, native.materialize_native_case_contract))
         for directory, digest, materialize in histories:
+            root_binding = {"root": ROOT} if materialize is native.materialize_native_case_contract else {}
             if directory is not None:
                 (run / directory / "preparation.json").write_bytes(native._bytes({**state, "protocolDigest": digest}))
             for ordinal, case in enumerate(self.cases, 1):
                 material = materialize(materialization_seed=bytes.fromhex(state["materializationSeed"]),
                     ordinal=ordinal, protocol_digest=digest,
                     model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
-                    prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
+                    prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"], **root_binding)
                 path = (run / directory / f"response-schema-{ordinal:02d}.json" if directory is not None else
                         native._case_paths(run, ordinal)["case"] / "response-schema.json")
                 path.write_bytes(material.schema_bytes)
@@ -3874,7 +3875,7 @@ class NativeObservationTests(unittest.TestCase):
                     "protocolDigest": native.PREVIOUS_PARTIAL_PROTOCOL if ordinal <= 5 else native.REVIEWED_PARTIAL_PROTOCOL}))
             for prefix, digest in (("response-schema", native.PREVIOUS_PARTIAL_PROTOCOL),
                                    ("remainder-response-schema", native.REVIEWED_PARTIAL_PROTOCOL)):
-                material = native.materialize_native_case_contract(
+                material = native.materialize_native_case_contract(root=ROOT,
                     materialization_seed=bytes.fromhex(state["materializationSeed"]), ordinal=ordinal,
                     protocol_digest=digest, model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
                     prompt_envelope=native._input(ROOT, self.protocol, "promptEnvelope"), request=case["request"])
@@ -4245,7 +4246,7 @@ class NativeObservationTests(unittest.TestCase):
         uniform_fields = None
         for ordinal, case in enumerate(self.cases, 1):
             with self.subTest(ordinal=ordinal):
-                material = native.materialize_native_case_contract(materialization_seed=seed, ordinal=ordinal,
+                material = native.materialize_native_case_contract(root=ROOT, materialization_seed=seed, ordinal=ordinal,
                     protocol_digest=self.protocol["protocolDigest"], model_schema=source,
                     prompt_envelope=envelope, request=case["request"])
                 prefix, request = material.prompt_bytes.decode("utf-8").split("\nUser request:\n", 1)
@@ -4275,7 +4276,7 @@ class NativeObservationTests(unittest.TestCase):
         # The same public rules also render for a non-benchmark request; there
         # is no special branch that supplies a frozen case's route or outcome.
         novel = "Assess the requested scope for a local research notebook."
-        material = native.materialize_native_case_contract(materialization_seed=seed, ordinal=1,
+        material = native.materialize_native_case_contract(root=ROOT, materialization_seed=seed, ordinal=1,
             protocol_digest=self.protocol["protocolDigest"], model_schema=source,
             prompt_envelope=envelope, request=novel)
         self.assertTrue(material.prompt_bytes.endswith((novel + "\n").encode()))
@@ -4325,7 +4326,7 @@ class NativeObservationTests(unittest.TestCase):
                      materializationSeed=partial["materializationSeed"])
         (run / native.STATE_NAME).write_bytes(native._bytes(state))
         for ordinal, case in enumerate(self.cases, 1):
-            material = native.materialize_native_case_contract(
+            material = native.materialize_native_case_contract(root=ROOT,
                 materialization_seed=bytes.fromhex(state["materializationSeed"]), ordinal=ordinal,
                 protocol_digest=native.ASSESSMENT_PROTOCOL_DIGEST,
                 model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),
@@ -4384,7 +4385,7 @@ class NativeObservationTests(unittest.TestCase):
         self.assertEqual(prepared, {**json.loads(before[run / native.STATE_NAME]),
                                    "protocolDigest": self.protocol["protocolDigest"]})
         for ordinal, case in enumerate(self.cases, 1):
-            material = native.materialize_native_case_contract(
+            material = native.materialize_native_case_contract(root=ROOT,
                 materialization_seed=bytes.fromhex(partial["materializationSeed"]), ordinal=ordinal,
                 protocol_digest=self.protocol["protocolDigest"],
                 model_schema=native._input(ROOT, self.protocol, "modelResponseSchema"),

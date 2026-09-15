@@ -44,7 +44,7 @@ EXPECTED_CODEX_INTERFACE = {
     "displayName": EXPECTED_DISPLAY_NAME,
     "shortDescription": "Guardrails for agent actions",
     "longDescription": (
-        "Axiom routes focused workflows for repository instructions, usage optimization, "
+        "Axiom routes focused workflows for task planning, repository instructions, plugin architecture, usage optimization, "
         "task review, confirmed external actions, traceable Git submission, and reversible "
         "persistent system changes. Route selection never grants mutation authority."
     ),

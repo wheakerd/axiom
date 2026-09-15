@@ -15,6 +15,7 @@ evidence and project-operation plans remain outside current user guidance.
 | Review permissions and trust boundaries | [Trust Model](trust-model.md) | Users and security reviewers |
 | Check current host support | [Compatibility](compatibility.md) | Users and auditors |
 | See route examples | [Examples](examples.md) | Users and reviewers |
+| Create or revise a task plan | [Task Planning example](examples.md#task-planning) | Users |
 | Report a host result | [Field Validation](field-validation.md) | Testers and auditors |
 | Understand package identity | [Runtime and Repository Identity](runtime-identity.md) | Maintainers and auditors |
 | Review repository controls | [Repository Governance](repository-governance.md) | Maintainers |
