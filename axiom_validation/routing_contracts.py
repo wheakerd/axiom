@@ -20,6 +20,7 @@ EFFECTIVE_INSTRUCTION_TOKENS = (
     "effective-instructions:reconcile-preview",
 )
 ROUTE_SOURCE_ANCHORS = {
+    "task-planning": ("plan", "current", "scope"),
     "agents-architect": ("AGENTS.md", "audit"),
     "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
     "confirm-external-action": ("external", "target", "verify"),

@@ -9,6 +9,20 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.12.0 - unreleased candidate
+
+### Added
+
+- Added `task-planning` for creating and revising actionable task and implementation plans from current requirements.
+
+### Behavioral impact
+
+Plan revisions remove canceled work from goals, steps, dependencies, and acceptance criteria without carrying it forward as unnecessary exclusion text. Retained decisions and effective constraints stay consistent, and specialized workflows keep their existing ownership and authorization boundaries. See the [v0.12.0 notes](docs/releases/v0.12.0.md) for details.
+
+### Required action
+
+None. Update Axiom in Codex and start a new session to use the new skill.
+
 ## 0.11.0 - unreleased candidate
 
 ### Removed

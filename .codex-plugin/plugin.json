@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -26,7 +26,7 @@
   "interface": {
     "displayName": "Axiom",
     "shortDescription": "Guardrails for agent actions",
-    "longDescription": "Axiom routes focused workflows for repository instructions, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
+    "longDescription": "Axiom routes focused workflows for task planning, repository instructions, plugin architecture, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [

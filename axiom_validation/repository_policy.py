@@ -117,6 +117,7 @@ EXPECTED_DIRECT_SKILLS = (
     "optimize-codex-usage",
     "reversible-system-change",
     "review-axiom-task",
+    "task-planning",
     "traceable-git-submit",
     "using-axiom",
 )

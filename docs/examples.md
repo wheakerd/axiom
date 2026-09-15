@@ -4,6 +4,26 @@ These examples show route selection, not claimed execution transcripts. For
 each request, higher-priority instructions, repository state, and the user's
 actual authorization remain decisive.
 
+## `task-planning`
+
+"Create an implementation plan for search with acceptance criteria" selects
+`task-planning`. A later request to remove export and localization updates
+the plan around the retained search work and repairs its dependencies and
+acceptance criteria. The new body presents current work without repeatedly
+describing the canceled features as exclusions.
+
+An explicit local-data constraint remains part of the implementation plan.
+If a deletion makes a retained goal infeasible, resolve that dependency before
+finalizing the affected steps. A later request may restore an earlier removal.
+See [Task Planning](../skills/task-planning/SKILL.md) for the workflow and its
+directly linked revision examples.
+
+Scheduled reminders, ordinary chat corrections, and implementation requests
+keep their host-native owners. A persistent migration plan selects
+`reversible-system-change`; an explicit `$task-planning` invocation can refine
+its presentation while preserving the specialized owner's constraints and
+authority. Creating a plan does not itself authorize execution or scheduling.
+
 ## `agents-architect`
 
 | Field | Example |

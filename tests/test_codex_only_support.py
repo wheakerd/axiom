@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 from axiom_validation.context import REPOSITORY_ROOT, release_version, supported_hosts
-from axiom_validation.historical_no_hook import historical_snapshot
+from axiom_validation.historical_no_hook import historical_snapshot, restore_frozen_inputs
 from axiom_validation.no_hook_bundle import check_no_hook_bundle
 from axiom_validation.repository_policy import check_retired_installation_paths
 
@@ -73,7 +73,16 @@ class CodexOnlySupportTests(unittest.TestCase):
     def test_historical_replay_preserves_current_identity_and_detects_drift(self):
         current_path = REPOSITORY_ROOT / "evidence/runtime-identity.json"
         current_bytes = current_path.read_bytes()
+        planning_path = REPOSITORY_ROOT / "skills/task-planning/SKILL.md"
+        planning_bytes = planning_path.read_bytes()
+        gate_path = REPOSITORY_ROOT / "skills/using-axiom/SKILL.md"
+        gate_bytes = gate_path.read_bytes()
         with historical_snapshot() as snapshot:
+            self.assertFalse((snapshot / "skills/task-planning").exists())
+            self.assertEqual(
+                (REPOSITORY_ROOT / "tests/fixtures/no-hook-v0.10.1/using-axiom.md.txt").read_bytes(),
+                (snapshot / "skills/using-axiom/SKILL.md").read_bytes(),
+            )
             old = json.loads((snapshot / "evidence/runtime-identity.json").read_text())
             self.assertEqual("0.10.1", old["pluginVersion"])
             self.assertEqual("1", old["runtimeContract"]["schemaVersion"])
@@ -85,4 +94,16 @@ class CodexOnlySupportTests(unittest.TestCase):
             check_no_hook_bundle(failures, snapshot)
             self.assertTrue(any("two-build equality evidence drifted" in value for value in failures))
         self.assertEqual(current_bytes, current_path.read_bytes())
-        self.assertEqual("0.11.0", json.loads(current_bytes)["pluginVersion"])
+        self.assertEqual(planning_bytes, planning_path.read_bytes())
+        self.assertEqual(gate_bytes, gate_path.read_bytes())
+        self.assertEqual(release_version(), json.loads(current_bytes)["pluginVersion"])
+
+    def test_historical_replay_rejects_its_source_before_writing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            retained = root / "skills/task-planning/SKILL.md"
+            retained.parent.mkdir(parents=True)
+            retained.write_text("Current planning capability\n")
+            with self.assertRaisesRegex(ValueError, "separate disposable destination"):
+                restore_frozen_inputs(root, root)
+            self.assertEqual("Current planning capability\n", retained.read_text())

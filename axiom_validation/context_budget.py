@@ -63,7 +63,6 @@ EXPECTED_HOST_METRICS = {
         "credits": None,
         "wallClockMilliseconds": None,
         "reason": (
-            "Axiom v0.11.0 removes Claude Code installation and runtime support. "
             "Current Codex host, usage and lifecycle observation remain NOT-RUN; "
             "prior no-Hook observations bind their original runtime only."
         ),

@@ -21,11 +21,6 @@ Axiom routes only the smallest installed workflow set that matches.
 
 ## Bundled Routes
 
-- `task-planning`: create or revise an actionable task or implementation plan
-  from current requirements, including scope removal and replacement. Scheduled
-  automations, status, chat corrections, and execution stay outside. Specialized
-  planning keeps its existing route; an explicit task-planning invocation may
-  refine the artifact while preserving that owner's constraints and authority.
 - `agents-architect`: create, audit, split, migrate, or maintain repository
   `AGENTS.md`, routed `.agents/` guidance, and repo-local skills; also handle
   explicit `effective-instructions`, `effective-instructions:preview`,
