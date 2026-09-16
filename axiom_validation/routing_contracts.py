@@ -20,6 +20,8 @@ EFFECTIVE_INSTRUCTION_TOKENS = (
     "effective-instructions:reconcile-preview",
 )
 ROUTE_SOURCE_ANCHORS = {
+    "clarify-intent": ("ambiguity", "options", "custom"),
+    "delegate-simple-task": ("model", "Full Access", "confirmation"),
     "task-planning": ("plan", "current", "scope"),
     "agents-architect": ("AGENTS.md", "audit"),
     "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
@@ -737,7 +739,7 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "When a request delegates a choice among mutually exclusive implementations",
                 "materially different route sets, write surfaces, or authorization or safety boundaries",
                 "routing MUST NOT choose an alternative for the user.",
-                "Select no route yet and ask exactly one concise clarification question.",
+                "Select only `clarify-intent` and ask exactly one concise clarification question before selecting an action route.",
                 'Wording such as "choose one" does not remove the ambiguity.',
                 "Once the user chooses an unambiguous implementation, resume normal route selection.",
                 "An explicit usage-reduction goal selects",

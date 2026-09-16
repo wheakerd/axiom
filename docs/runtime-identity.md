@@ -1,5 +1,20 @@
 # Runtime And Repository Identity
 
+## Clarification and delegation candidate (policy 33)
+
+Version `0.13.0` adds `clarify-intent` and `delegate-simple-task`. The startup
+gate resolves material ambiguity before action routing and considers useful
+simple delegation with user-ordered models. Verified Full Access permits an
+assignment within existing authority after disclosing its exact model and
+task; the main session model stays unchanged.
+
+Runtime schema v2 classifies 65 installed inputs. Policy 33 binds this runtime
+to the next minor release. The immutable v0.12.0 release is appended to the
+[v2 history](../evidence/runtime-contract-history-v2.json); earlier notes,
+measurements and experiment results retain their original bytes. Historical
+no-Hook replay excludes the three later public Skills only in its disposable
+tree. Current host behavior remains unobserved.
+
 ## Task planning candidate (policy 32)
 
 Version `0.12.0` adds the `task-planning` public Skill and its startup route.

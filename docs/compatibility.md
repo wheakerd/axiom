@@ -38,6 +38,30 @@ system, shell, installation method, or policy configuration.
 Inspect the exact commands in the [Hook Reference](reference/hooks.md) before
 trusting an installation.
 
+## Codex Package Format And Validation
+
+Official documentation last verified: 2026-09-16.
+
+OpenAI still supports `.codex-plugin/plugin.json` as a compatibility manifest.
+Its newer portable format uses root `plugin.json` and `extensions.com.openai`.
+An inline OpenAI extension replaces the compatibility overlay rather than
+merging with it. Axiom keeps its supported Codex layout and explicit hook path;
+adding a second manifest is not required for compatibility. See the official
+[packaging specification](https://developers.openai.com/plugins/build/plugins#plugin-structure).
+
+The `hooks` declaration is supported in this layout. The listing schema also
+supports `interface.brandColorDark` and `interface.supportURL`; their value,
+contrast, and HTTPS requirements still apply. See the official
+[hook specification](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks)
+and [interface requirements](https://developers.openai.com/plugins/deploy/submission-errors#listing-and-interface-errors).
+
+Current package checks use the repository's publication aggregate. A native
+package read is a separate parsing check; it does not prove strict schema
+validation, installation, hook trust, or execution. The response may omit
+listing fields, so it cannot establish whether those fields render in the UI.
+Contributor check ownership is in
+[CONTRIBUTING.md](../CONTRIBUTING.md#required-local-checks).
+
 ## Current Bounded Status
 
 The machine-readable [release status](../evidence/release-status.json) is the
@@ -45,14 +69,14 @@ canonical current summary. It binds the current plugin and runtime identity,
 keeps current host states separate from prior evidence, and requires an
 immutable subject before a host pass can be claimed.
 
-The Git record for `v0.12.0` reports:
+The Git record for `v0.13.0` reports:
 
 - target binding: `pending-immutable-tag`;
 - checked-in status: `STATIC-ONLY`;
-- installed-runtime identity: plugin `0.12.0`, runtime-contract schema v2;
+- installed-runtime identity: plugin `0.13.0`, runtime-contract schema v2;
 - current Codex installed-host observation: `NOT-RUN`;
 
-See the [v0.12.0 version notes](releases/v0.12.0.md) for candidate-specific
+See the [v0.13.0 version notes](releases/v0.13.0.md) for candidate-specific
 architecture and validation detail. The candidate cannot bind itself to a
 future signed merge, immutable tag, final workflow result, or post-publication
 host observation.
@@ -61,7 +85,7 @@ host observation.
 
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
-| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.12.0 | Static support only |
+| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.13.0 | Static support only |
 
 An identical runtime digest may make older evidence relevant to the same bytes,
 but it does not create a new observation or change the older record's host,
@@ -122,9 +146,9 @@ Current sources:
 - [current release status](../evidence/release-status.json);
 - [runtime identity](../evidence/runtime-identity.json) and its
   [policy](runtime-identity.md);
-- [current routing-context record](../evals/context-budget/results/v0.12.0.json);
+- [current routing-context record](../evals/context-budget/results/v0.13.0.json);
 - [current route corpus](../evals/README.md); and
-- [v0.12.0 version notes](releases/v0.12.0.md).
+- [v0.13.0 version notes](releases/v0.13.0.md).
 
 Historical sources:
 

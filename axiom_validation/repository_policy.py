@@ -113,7 +113,9 @@ REQUIRED_PUBLIC_FILES = tuple(
 EXPECTED_DIRECT_SKILLS = (
     "agent-plugin-architect",
     "agents-architect",
+    "clarify-intent",
     "confirm-external-action",
+    "delegate-simple-task",
     "optimize-codex-usage",
     "reversible-system-change",
     "review-axiom-task",

@@ -63,8 +63,9 @@ service, launches background work, or performs an update.
 2. Determine whether the user explicitly invoked Axiom or the request clearly
    matches a bundled skill description.
 3. Select the smallest matching skill set and avoid reading candidate bodies.
-4. Normalize an unambiguous non-English request to the canonical English route,
-   or ask one concise question when multiple routes remain plausible.
+4. Normalize unambiguous non-English requests; select `clarify-intent` for
+   material unresolved meanings before an action route. Assess useful simple
+   delegation only after the intended result is clear.
 5. Continue normally when no Axiom route applies.
 
 The gate is intentionally narrow. General AI work, coding, documentation, and
@@ -89,6 +90,13 @@ results byte-identical while current contracts advance additively.
 The selected task skill establishes its own phase and evidence contract. Every
 supporting reference is directly discoverable from its parent `SKILL.md`:
 
+- `clarify-intent` resolves material ambiguity with plausible options and a
+  custom answer. Full Access does not resolve the user's intended result.
+- `delegate-simple-task` preserves the main model and uses the user's ordered
+  model candidates. Its delegation reference binds the exact model, faithful
+  brief, authorization, and result checks. Verified Full Access allows automatic
+  assignment within scope; otherwise existing assignment authority or a user
+  confirmation is required. It never directly invokes the clarification skill.
 - `task-planning` creates and revises general task plans from current
   requirements. Scope revisions load one reference for removal, replacement,
   restoration, dependency repair, and effective constraints. Specialized

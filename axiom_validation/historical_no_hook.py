@@ -2,8 +2,9 @@
 
 Six superseded runtime, identity and context inputs come from the immutable release.
 Experiment documents, implementations, and other Skills come from the inspected
-tree so their existing drift checks still run. The later task-planning Skill is
-outside that historical inventory. No result becomes current evidence.
+tree so their existing drift checks still run. The later planning, clarification,
+and delegation Skills are outside that historical inventory. No result becomes
+current evidence.
 """
 
 from __future__ import annotations
@@ -66,13 +67,14 @@ def restore_frozen_inputs(root: Path, destination: Path, *, runtime_only: bool =
             raise ValueError(f"historical replay path contains a symbolic link: {relative}")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
-    # This exact new public Skill did not exist in the frozen v0.10.1 inventory.
-    # Keep current package checks responsible for it; replay only the old surface.
-    later_skill = destination / "skills/task-planning"
-    if later_skill.is_symlink() or any(parent.is_symlink() for parent in later_skill.parents):
-        raise ValueError("historical replay path contains a symbolic link: skills/task-planning")
-    if later_skill.exists():
-        shutil.rmtree(later_skill)
+    # These exact public Skills did not exist in the frozen v0.10.1 inventory.
+    # Current package checks own them; this disposable replay retains the old set.
+    for name in ("task-planning", "clarify-intent", "delegate-simple-task"):
+        later_skill = destination / "skills" / name
+        if later_skill.is_symlink() or any(parent.is_symlink() for parent in later_skill.parents):
+            raise ValueError(f"historical replay path contains a symbolic link: skills/{name}")
+        if later_skill.exists():
+            shutil.rmtree(later_skill)
     if not runtime_only:
         # Preserve the inspected historical prefix, including any drift. The
         # frozen protocol checks its original revision range; current identity

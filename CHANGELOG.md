@@ -9,6 +9,31 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.13.0 - unreleased candidate
+
+### Added
+
+- Added `clarify-intent` to resolve material ambiguity with plausible choices and a custom answer.
+- Added `delegate-simple-task` to assess bounded work against user-ordered subagent models while preserving the main session model.
+
+### Changed
+
+- Synchronized Codex package validation guidance and project-level enable/disable instructions with official documentation while retaining the supported manifest format.
+
+### Removed
+
+- Deprecated and removed the obsolete `plugin-creator` allowlist validator from Axiom's active validation workflow because it rejects supported Codex fields. The replacement is the repository's publication aggregate.
+
+### Behavioral impact
+
+The routing gate resolves material intent ambiguity before selecting an action workflow or considering delegation. Eligible simple work in verified Full Access can be delegated within existing authority after announcing the exact model ID and faithful task brief. Other modes require existing assignment authority or confirmation. Model selection follows the user's model order; unavailable or unsuitable models never justify an unlisted fallback. The delegation skill does not directly invoke the clarification skill. See the [v0.13.0 notes](docs/releases/v0.13.0.md).
+
+### Required action
+
+Provide exact model IDs in priority order to use model-aware delegation. Existing instructions to confirm assignments remain effective. Full Access does not expand task scope or authorize consequential actions.
+
+Contributors must replace calls to the retired validator with `python3 scripts/check-publication.py` or the equivalent Python 3 launcher.
+
 ## 0.12.0 - unreleased candidate
 
 ### Added

@@ -18,6 +18,26 @@ snapshot.
 
 ## Disabling Or Removing
 
+For a trusted project, disable Axiom in that project's `.codex/config.toml`:
+
+```toml
+[plugins."axiom@axiom"]
+enabled = false
+```
+
+Set `enabled = true` to enable it again. The key combines the plugin name and
+marketplace name. Project configuration is loaded only for trusted projects
+and remains subject to managed requirements. Disabling leaves the installation
+in place; marketplace refresh may still update its files. Installing or
+enabling a plugin does not automatically trust its hooks. Review the current
+definition in `/hooks` before use.
+
+This project setting applies to local-marketplace installations, not the
+enabled state of workspace-managed plugins. These configuration semantics were
+last verified on 2026-09-16 against the official
+[project plugin settings](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo)
+and [hook trust requirements](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks).
+
 Remove the exact Codex installation from the `axiom` marketplace:
 
 ```bash
