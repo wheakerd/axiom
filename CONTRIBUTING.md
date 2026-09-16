@@ -65,7 +65,10 @@ platform-specific copy of a shared skill.
   unverified rather than as a passing result.
 - Keep volatile model prices, plan limits, and quotas out of always-loaded
   instructions. Label byte/word/call measurements as proxies unless the host
-  exposes exact scoped usage, and never auto-change model or reasoning settings.
+  exposes exact scoped usage, and never auto-change the main model or reasoning
+  settings. Child model selection belongs to `delegate-simple-task`: use the
+  user's ordered candidates and current host support, disclose the exact model
+  and task, and retain the Full Access and assignment-authority boundaries.
 
 Compare always-loaded routing growth cumulatively with the immutable baseline
 in `evals/context-budget/`. An increase of at least 256 UTF-8 bytes or 5%
@@ -175,11 +178,21 @@ use the validator's post-tag `--record` mode for a same-release asset after the
 immutable tag and commit exist.
 
 Host-native validation is valuable but optional because the relevant CLI may
-not be installed. If a current Codex validator is already
-available, run it against a disposable copy when it may write files, and report
-the host and validator versions with the result. A missing validator is
-`unavailable`, not `passed`; do not install or update proprietary tooling just
-to satisfy a contribution check.
+not be installed. Inspect the installed CLI's help before choosing a command;
+do not assume a `codex plugin validate` subcommand exists. If a validator is
+available, run it against a disposable copy when it may write files. A bounded
+app-server `plugin/read` can additionally check local package discovery, but
+is not a strict schema validator or an installed-session test. Report its
+exact host version and only the components actually returned.
+
+The repository aggregate owns Axiom's strict package checks. The obsolete
+`plugin-creator` allowlist validator is retired from the active workflow,
+including optional diagnostics and fallbacks. Follow the
+[v0.13.0 retirement and migration notice](docs/releases/v0.13.0.md#retired-validator).
+Current checks follow the supported
+[Codex package contract](docs/compatibility.md#codex-package-format-and-validation).
+A missing tool is `unavailable`, not `passed`; do not install, update, or patch
+system tooling merely to satisfy a contribution check.
 
 ## Routing evaluation contracts
 

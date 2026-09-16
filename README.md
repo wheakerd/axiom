@@ -46,6 +46,8 @@ removal, and non-destructive troubleshooting.
 
 | Outcome | Route | Core boundary |
 | --- | --- | --- |
+| Clarify an ambiguous request | `clarify-intent` | Offer plausible options and a custom answer before dependent actions |
+| Delegate a simple task | `delegate-simple-task` | Keep the main model; use user-ordered candidates and existing authority |
 | Create or revise an actionable task plan | `task-planning` | Reflect current scope; preserve valid decisions, dependencies, and acceptance criteria |
 | Audit or maintain repository instructions | `agents-architect` | Inspect first; limit changes to the authorized instruction system |
 | Design or audit packaged agent-plugin architecture | `agent-plugin-architect` | Require explicit package intent; keep ordinary plugin code outside |
@@ -73,7 +75,7 @@ are statically testable, but fresh-session behavior still depends on the exact
 host version, operating system, policy, installation method, and installed
 snapshot.
 
-| Host | Checked-in support | Current v0.12.0 observation boundary |
+| Host | Checked-in support | Current v0.13.0 observation boundary |
 | --- | --- | --- |
 | Codex | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Installed-host observation is `NOT-RUN` |
 
@@ -83,7 +85,7 @@ The plugin-architecture workflow still covers other projects targeting Claude Co
 The current release-status record remains `STATIC-ONLY`; static checks do not
 create host evidence. Read [Compatibility](docs/compatibility.md) for the
 bounded matrix and known limitations, [Field Validation](docs/field-validation.md)
-to report a result, and the [v0.12.0 notes](docs/releases/v0.12.0.md) for
+to report a result, and the [v0.13.0 notes](docs/releases/v0.13.0.md) for
 version-specific detail. Historical observations remain under `evidence/` and
 `evals/results/` with their original identities and terminal statuses.
 
@@ -95,9 +97,9 @@ runtime digest are separate identities. See
 input and version policy.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.12.0`
-- `repositoryPolicyRevision`: `32`
-- `runtimeContractDigest` (schema v2): `sha256:cdcb0f6155f59c51fede42606763a42343c4747d4112accafc7988904390fbe2`
+- `pluginVersion`: `0.13.0`
+- `repositoryPolicyRevision`: `33`
+- `runtimeContractDigest` (schema v2): `sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
 
@@ -124,6 +126,8 @@ load on demand and are not separate routes.
 ### Shared skills
 
 - `using-axiom`, the session-start routing gate.
+- `clarify-intent`, the focused request-clarification workflow.
+- `delegate-simple-task`, the model-aware simple-task delegation workflow.
 - `task-planning`, the task-plan creation and revision workflow.
 - `agents-architect`, the repository-instruction workflow.
 - `agent-plugin-architect`, the packaged agent-plugin architecture workflow.

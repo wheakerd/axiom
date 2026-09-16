@@ -4,6 +4,35 @@ These examples show route selection, not claimed execution transcripts. For
 each request, higher-priority instructions, repository state, and the user's
 actual authorization remain decisive.
 
+## `clarify-intent`
+
+"Clean up the old records" can mean archiving, deduplicating, or another
+operation. When the conversation does not resolve the intended outcome,
+`using-axiom` selects [Clarify Intent](../skills/clarify-intent/SKILL.md).
+It offers the plausible choices and accepts a custom answer before dependent
+work. "Maybe fix this identified typo" needs no question when the correction
+is already clear. Full Access does not decide an ambiguous target for the user.
+
+## `delegate-simple-task`
+
+A user provides an ordered list of exact model IDs. For a clear, bounded task
+with a practical acceptance check, [Delegate Simple Task](../skills/delegate-simple-task/SKILL.md)
+uses the first available candidate whose relevant capability is supported.
+The main session model stays unchanged. Model names do not establish prices,
+capability tiers, or suitability.
+
+Under verified Full Access and existing task authority, the main session
+announces the exact child model and a faithful task brief, delegates, and
+checks the result. Outside those conditions it obtains assignment confirmation
+unless current explicit or standing authorization already covers the assignment.
+Missing model preferences, a request to use an unlisted model, or a scope
+expansion needs a decision; unavailable delegation can fall back to main-session
+work. Full Access never overrides an instruction to ask first or an action
+owner's authorization boundary.
+
+This skill does not invoke `clarify-intent`. When intended meaning is unresolved,
+only `using-axiom` can independently select that clarification workflow.
+
 ## `task-planning`
 
 "Create an implementation plan for search with acceptance criteria" selects

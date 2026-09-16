@@ -33,6 +33,27 @@ IDs, timing, token counts, candidate investigations, workflow internals, and
 historical run ledgers belong in version notes or evidence rather than the
 Changelog.
 
+## Deprecation And Removal
+
+Before publishing a version, review the behavior and guidance superseded by
+that release. Record each obsolete feature, command, configuration, validator,
+or procedure in its Changelog entry under `Deprecated` or `Removed`. Name the
+affected version, reason, supported replacement, and required user action;
+put material migration detail in the version note.
+
+Retire obsolete functionality in the same change: remove its active entry
+points, calls, configuration, fallback paths, CI dependencies, and instructions.
+A deprecation notice alone does not complete removal. Current documentation
+must describe the supported replacement, and release checks must confirm that
+the obsolete behavior cannot still be selected by the active workflow. Verify
+actual support before retiring a format merely because a newer one exists.
+
+Preserve immutable version notes and evidence with their original outcomes.
+Historical records do not keep retired functionality enabled or turn its old
+diagnostics into current release requirements. For host-owned external tools,
+retire Axiom's dependency and invocations; removal from the user's system is a
+separate action outside the package release.
+
 ## Version Notes
 
 Create a version note only for material migration, architecture, security,

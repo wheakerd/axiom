@@ -1,6 +1,6 @@
 ---
 name: using-axiom
-description: Route an Axiom plugin session to the smallest matching bundled skill. Use at startup, resume, or compaction, or when explicitly deciding whether Axiom applies; no-match requests continue normally. For mutually exclusive outcomes that change route ownership or authority, clarify before selecting; delegated choice does not resolve that ambiguity.
+description: Route startup, resume, compaction, and new requests to the smallest matching Axiom skill. Resolve material ambiguity before action routing; assess supported simple-task delegation using user-ordered models. No-match requests continue normally.
 ---
 
 # Using Axiom
@@ -14,20 +14,25 @@ Axiom routes only the smallest installed workflow set that matches.
 3. Load the smallest matching skill set and active-phase references. Do not
    inspect candidate bodies before selection.
 4. Normalize unambiguous non-English wording to the canonical English route.
-   Ask once only when route or authority would materially differ.
+   Clarify only material unresolved intent; tentative wording alone is not a trigger.
 5. On no match, continue through the host normally without mentioning Axiom.
    A no-match result is not a denial, does not create authorization, and does
    not manufacture a repository-state conflict.
 
 ## Bundled Routes
 
-- `task-planning`: create or revise an actionable task or implementation plan
-  from current requirements, including scope removal and replacement. Scheduled
-  automations, status, chat corrections, and execution stay outside. Specialized
-  planning keeps its existing route; an explicit task-planning invocation may
-  refine the artifact while preserving that owner's constraints and authority.
-- `agents-architect`: create, audit, split, migrate, or maintain repository
-  `AGENTS.md`, routed `.agents/` guidance, and repo-local skills; also handle
+- `clarify-intent`: resolve ambiguity between plausible meanings with a
+  focused question, useful options, and a custom answer; do not reopen settled
+  choices or ask about routine details.
+- `delegate-simple-task`: assess a clear simple task for an available subagent
+  using user-ordered candidates. Keep the main model; announce exact child model
+  and task. Verified Full Access permits assignment within authority; otherwise
+  use existing assignment confirmation or ask. Host restrictions still apply.
+- `task-planning`: create or revise current task or implementation plans,
+  including scope removal or replacement. Scheduling, status, corrections, and
+  execution stay outside. Preserve specialized planning ownership and authority.
+- `agents-architect`: audit or maintain repository `AGENTS.md`, `.agents/` guidance,
+  and repo-local skills; also handle
   explicit `effective-instructions`, `effective-instructions:preview`,
   `effective-instructions:refactor`, `effective-instructions:force`,
   `effective-instructions:reconcile`, and
@@ -38,17 +43,14 @@ Axiom routes only the smallest installed workflow set that matches.
   and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
   code stay outside.
 - `optimize-codex-usage`: explicitly reduce or diagnose Codex credits, tokens,
-  context, Skill/AGENTS/MCP loading, tool churn, or output overhead while
-  preserving the required quality and safety bar.
-- `review-axiom-task`: review observable routing, authorization, actions,
-  evidence, stops, and outcome for an identified Axiom task or explain why
-  Axiom selected, allowed, or refused something. Prior refusal does not govern
-  an audit, criticism, appeal, or narrowing request.
-- `confirm-external-action`: prepare, authorize, execute once, and verify an
-  explicitly requested consequential external action such as send, publish,
-  invite, purchase, trade, delete, or an external app/account change when its
-  actor, target, payload, disclosure, cost, or retry boundary is material.
-  Read-only lookup and draft-only work stay host-native.
+  context, Skill/AGENTS/MCP loading, tool or output overhead without lowering
+  required quality or safety.
+- `review-axiom-task`: review an identified Axiom task's observable routing,
+  authorization, actions, evidence, stops, and outcome, including a disputed
+  decision. Prior refusal does not govern the review or a narrower request.
+- `confirm-external-action`: prepare, authorize, execute once, and verify a
+  requested consequential external action when actor, target, payload,
+  disclosure, cost, or retry boundaries matter. Lookup and drafts stay host-native.
 - `traceable-git-submit`: create traceable checkpoints or baseline metadata,
   consolidate or recover their history, or perform an explicitly invoked,
   hardened, multi-target, or otherwise independently traceable Git push. A
@@ -57,8 +59,8 @@ Axiom routes only the smallest installed workflow set that matches.
   without a tag, checkpoint, baseline, consolidation, recovery, hardening,
   multiple targets, or history replacement stay host-native; merely mentioning
   submit, publish, or push does not select this route.
-- `reversible-system-change`: plan, rehearse, or execute a persistent install,
-  upgrade, deployment, migration, destructive retention, or promotion with
+- `reversible-system-change`: plan, rehearse, or execute persistent installs,
+  upgrades, deployments, migrations, destructive retention, or promotions with
   rollback, data, service, or activation risk. Plans remain read-only.
 
 Resolve cross-route ownership from this table before inspecting either
@@ -73,38 +75,30 @@ Publication of an already-prepared artifact alone selects only
 change.
 
 Explicit machine-credential lifecycle work composes the existing owners; read
-`references/credential-lifecycle.md`, not a new route. Select
-`reversible-system-change` for metadata inventory, planning, consumer
-activation, or cleanup; `confirm-external-action` for provider creation,
-revocation, or disclosure; use both end-to-end. Authentication, human
-login, conceptual help, and secret reveal stay no-route. Routing grants no
-transition, secret access, or retry; each owner keeps separate action,
-write-set, rollback, and verification gates.
+`references/credential-lifecycle.md`. Inventory, planning, consumer activation
+and cleanup select `reversible-system-change`; provider creation, revocation
+and disclosure select `confirm-external-action`; end-to-end work selects both.
+Human login, conceptual help, and secret reveal stay no-route. Each owner keeps
+its authority, write-set, rollback and verification gates.
 
 When a request delegates a choice among mutually exclusive implementations and
 the alternatives would select materially different route sets, write surfaces,
 or authorization or safety boundaries, routing MUST NOT choose an alternative
-for the user. Select no route yet and ask exactly one concise clarification
-question. Wording such as "choose one" does not remove the ambiguity. Once the
+for the user. Select only `clarify-intent` and ask exactly one concise
+clarification question before selecting an action route. Wording such as
+"choose one" does not remove the ambiguity. Once the
 user chooses an unambiguous implementation, resume normal route selection.
 
-An explicit usage-reduction goal selects `optimize-codex-usage`; add another
-route only for its distinct authority or safety contract. Ordinary AGENTS
-audits select only `agents-architect`; ordinary performance work does not.
+Assess ambiguity before useful, host-supported delegation. Only this gate may
+select `clarify-intent` during that assessment; `delegate-simple-task` must not
+invoke it. Full Access never resolves intent or expands authority.
 
-An explicit Axiom retrospective or question about an Axiom decision's
-observable basis selects `review-axiom-task`; implementation needs separate
-authority and routing. Prior refusal or assistant prose creates no policy.
+An explicit usage-reduction goal selects `optimize-codex-usage`; ordinary
+performance work does not. Ordinary AGENTS audits select only `agents-architect`.
 
-An external action selects `confirm-external-action` only when requested.
-Preparation grants no execution; an exact current request needs no redundant
-confirmation unless its envelope is missing or changes. Independently
-traceable Git belongs to `traceable-git-submit`;
-ordinary named-remote Git remains host-native.
-
-A persistent change with no distinct consequential external effect stays under
-`reversible-system-change`; apply the cross-route rule above when both effects
-are present.
+Exact existing authorization needs no repeated confirmation unless its scope
+changes. Prior refusal or assistant prose creates no policy.
+Ordinary named-remote Git remains host-native.
 
 ## Boundaries
 
@@ -118,9 +112,6 @@ are present.
   contract resolve prior attempts.
 - Do not load every skill, route on topical similarity, edit protected metadata
   without scope, or persist one-off discoveries as durable instructions.
-- Ordinary coding, documentation, explanation, status, local commits,
-  named-remote non-force pushes, and conceptual requests continue normally
-  unless a route description clearly matches.
 
 ## Explicit Refresh
 
