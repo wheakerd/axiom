@@ -1,5 +1,16 @@
 # Runtime And Repository Identity
 
+## Validation corrections (policy 34)
+
+Policy 34 repairs the current routing observation contracts and permits an
+owned disposable historical replay tree beneath a symbolic-link temporary
+directory. Earlier schemas, corpus records, observations, and release bytes
+retain their historical bindings.
+
+This is a repository-policy-only revision. Plugin version `0.13.0` and all
+65 installed runtime inputs retain the same digest. The signed repository
+merge records the corrections; it does not create a new plugin release.
+
 ## Clarification and delegation candidate (policy 33)
 
 Version `0.13.0` adds `clarify-intent` and `delegate-simple-task`. The startup

@@ -11,6 +11,10 @@ from .constants import (
     BENCHMARK_CASE_TIMEOUT_SECONDS,
     BENCHMARK_REASONING_EFFORT,
     BENCHMARK_V2_ID,
+    BENCHMARK_V3_ID,
+    CURRENT_BENCHMARK_CASE_COUNT,
+    CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
+    HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     OID_PATTERN,
     PUBLIC_ROUTES,
@@ -18,6 +22,7 @@ from .constants import (
     SEMVER_PATTERN,
 )
 from .corpus import collect_corpus
+from .current import collect_current_corpus, current_benchmark_case_ids
 from .history import (
     CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
     EXPECTED_RESULT_BINDINGS,
@@ -35,7 +40,7 @@ def validate_external_routing_observation(
     failures: list[str],
     root: Path = REPOSITORY_ROOT,
 ) -> str | None:
-    """Validate one content-addressed post-tag V2 observation outside the tree."""
+    """Validate one explicitly versioned current or legacy observation outside the tree."""
     label = path.name or "external routing observation"
     if not path.is_absolute():
         failures.append("external routing observation path must be absolute")
@@ -77,35 +82,38 @@ def validate_external_routing_observation(
     # add evidence, but it cannot bypass or replace schemas, corpus contracts,
     # historical records, or their immutable bindings.
     check_routing_evaluations(failures, root)
-    cases = collect_corpus(root, failures)
-    benchmark = load_json_object(
-        root / "evals" / "benchmarks" / "codex-core-v2.json", failures, root
-    )
-    benchmark_case_ids: list[str] = []
-    if benchmark is not None:
-        benchmark_case_ids = validate_benchmark(
-            benchmark,
-            cases,
-            failures,
-            schema_version="2",
-            benchmark_id=BENCHMARK_V2_ID,
-            schema_id=SCHEMA_V2_ID,
-            routes=PUBLIC_ROUTES,
-            canonical_routes=("agent-plugin-architect",),
-            expected_case_count=17,
-        )
-
     record = load_json_object(path, failures, path.parent)
-    digest: str | None = None
     if record is None:
         return None
+    current = record.get("schemaVersion") == "3"
+    schema_version = "3" if current else "2"
+    benchmark_id = BENCHMARK_V3_ID if current else BENCHMARK_V2_ID
+    case_count = CURRENT_BENCHMARK_CASE_COUNT if current else 17
+    response_path = HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH if current else HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH
+    response_digest = CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 if current else CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256
+    if current:
+        cases = collect_current_corpus(root, failures)
+        benchmark_case_ids = current_benchmark_case_ids(root, cases, failures)
+    else:
+        cases = collect_corpus(root, failures)
+        benchmark = load_json_object(root / "evals/benchmarks/codex-core-v2.json", failures, root)
+        benchmark_case_ids = []
+        if benchmark is not None:
+            benchmark_case_ids = validate_benchmark(
+                benchmark, cases, failures, schema_version="2",
+                benchmark_id=BENCHMARK_V2_ID, schema_id=SCHEMA_V2_ID,
+                routes=PUBLIC_ROUTES, canonical_routes=("agent-plugin-architect",),
+                expected_case_count=17,
+            )
+
+    digest: str | None = None
     try:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
     except OSError as error:
         failures.append(f"cannot hash {label}: {error}")
     if digest is not None:
         expected_name = (
-            f"axiom-v{expected_version}-codex-core-v2-{digest}.json"
+            f"axiom-v{expected_version}-{benchmark_id}-{digest}.json"
         )
         if path.name != expected_name:
             failures.append(
@@ -120,16 +128,16 @@ def validate_external_routing_observation(
         label,
         failures,
     )
-    if record.get("schemaVersion") != "2":
-        failures.append("external routing observation must use schemaVersion '2'")
-    if record.get("benchmarkId") != BENCHMARK_V2_ID:
-        failures.append("external routing observation must use codex-core-v2")
+    if record.get("schemaVersion") != schema_version:
+        failures.append("external routing observation must use schemaVersion '2' or '3'")
+    if record.get("benchmarkId") != benchmark_id:
+        failures.append(f"external routing observation must use {benchmark_id}")
     if record.get("responseSchema") != {
-        "path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
-        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
+        "path": response_path,
+        "sha256": response_digest,
     }:
         failures.append(
-            "external routing observation must bind immutable host-response schema V3"
+            f"external routing observation must bind exact host-response schema {response_path}"
         )
     expected_subject = {
         "version": expected_version,
@@ -152,7 +160,7 @@ def validate_external_routing_observation(
         "status": "pass",
         "lifecycle": "fresh-start",
         "repeatCount": 1,
-        "callCount": 17,
+        "callCount": case_count,
         "reasoningEffort": BENCHMARK_REASONING_EFFORT,
         "caseTimeoutSeconds": BENCHMARK_CASE_TIMEOUT_SECONDS,
         "installedPluginVerified": True,
@@ -179,23 +187,23 @@ def validate_external_routing_observation(
             case_id for case_id in result_ids if type(case_id) is str
         }
         if (
-            len(result_cases) != 17
-            or len(unique_result_ids) != 17
+            len(result_cases) != case_count
+            or len(unique_result_ids) != case_count
             or result_ids != benchmark_case_ids
         ):
             failures.append(
-                "external routing observation must contain 17 unique cases in exact benchmark order"
+                f"external routing observation must contain {case_count} unique cases in exact benchmark order"
             )
         if any(
             type(item) is not dict or item.get("status") != "pass"
             for item in result_cases
         ):
             failures.append(
-                "external routing observation must preserve 17 passing cases with no unrun or unavailable suffix"
+                f"external routing observation must preserve {case_count} passing cases with no unrun or unavailable suffix"
             )
     if record.get("summary") != {
         "overallStatus": "pass",
-        "evaluatedCases": 17,
+        "evaluatedCases": case_count,
         "canonicalFalseNegatives": 0,
         "highImpactFalsePositives": 0,
         "clarificationMismatches": 0,

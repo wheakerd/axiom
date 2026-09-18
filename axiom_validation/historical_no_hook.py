@@ -93,7 +93,9 @@ def restore_frozen_inputs(root: Path, destination: Path, *, runtime_only: bool =
 def historical_snapshot(root: Path = REPOSITORY_ROOT):
     """Make a disposable replay tree without following links or copying Git state."""
     with tempfile.TemporaryDirectory(prefix="axiom-historical-no-hook-") as temporary:
-        destination = Path(temporary) / "repository"
+        # Resolve only our newly created directory; TMPDIR may have linked ancestors.
+        # Links copied from the source remain visible to the replay path checks.
+        destination = Path(temporary).resolve(strict=True) / "repository"
         shutil.copytree(root, destination, symlinks=True,
                         ignore=shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache"))
         restore_frozen_inputs(root, destination)

@@ -20,6 +20,13 @@ from .constants import (
     CODEX_EXEC_JSONL_ITEM_TYPES,
     HISTORICAL_PUBLIC_ROUTES,
     PUBLIC_ROUTES,
+    CURRENT_PUBLIC_ROUTES,
+    CURRENT_BENCHMARK_CASE_COUNT,
+    CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
+    CURRENT_CORPUS_RELATIVE_PATH,
+    SCHEMA_V3_ID,
+    BENCHMARK_V3_ID,
+    HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     HIGH_IMPACT_ROUTES,
     CASE_KEYS,
     LIFECYCLE_KEYS,
@@ -149,14 +156,19 @@ from .acceptance import (
     validate_host_response_v3_structure,
     classify_host_response_v3_acceptance,
     validate_host_response_v3,
+    validate_host_response_v4_structure,
+    classify_host_response_v4_acceptance,
+    validate_host_response_v4,
 )
 from .schemas import (
     validate_case,
     check_schema_contract,
     check_schema_contract_v2,
+    check_schema_contract_v3,
     check_host_response_schema,
     check_host_response_schema_v2,
     check_host_response_schema_v3,
+    check_host_response_schema_v4,
 )
 from .observer import (
     check_codex_exec_jsonl_taxonomy,
@@ -186,6 +198,7 @@ from .observations import (
 from .suite import (
     check_routing_evaluations,
 )
+from .current import collect_current_corpus, current_benchmark_case_ids, check_current_routing_evaluations
 from .external import (
     validate_external_routing_observation,
 )

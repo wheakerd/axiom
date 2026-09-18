@@ -19,7 +19,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     "Publication validation passed: 124 required files, 3 JSON files, "
     "127 Markdown files, 17 documentation negative fixtures, "
     "78 offline route contract fixtures, "
-    "95 black-box routing cases, 30 fixed host benchmark cases, "
+    "115 black-box routing cases, 50 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 7 routing-context lifecycle scenarios, "
     "21 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "

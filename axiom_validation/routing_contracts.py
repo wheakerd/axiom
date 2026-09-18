@@ -38,7 +38,7 @@ LIFECYCLE_COMMANDS = (
 )
 
 
-def route_contract(request: str) -> dict[str, Any]:
+def historical_route_contract(request: str) -> dict[str, Any]:
     """Evaluate the offline route model after its source contracts are checked."""
     normalized = request.lower()
     if "只制定持久化数据库迁移计划" in request and "不要执行" in request:
@@ -601,6 +601,22 @@ def route_contract(request: str) -> dict[str, Any]:
     }
 
 
+def route_contract(request: str) -> dict[str, Any]:
+    """Evaluate current explicit routes without rewriting the historical model."""
+    contract = historical_route_contract(request)
+    if contract["route"] == "clarify":
+        return {**contract, "route": "clarify-intent"}
+    for route, phase, references in (
+        ("clarify-intent", "clarify", ()),
+        ("delegate-simple-task", "assess", ("references/delegation-contract.md",)),
+        ("task-planning", "plan", ()),
+    ):
+        if re.search(r"(?<![\w-])\$" + re.escape(route) + r"(?![\w-])", request):
+            return {"route": route, "phase": phase, "references": references,
+                    "authorization": frozenset({"read"})}
+    return contract
+
+
 def has_exact_route_token(text: str, token: str) -> bool:
     return bool(
         re.search(
@@ -868,7 +884,7 @@ def check_routing_scenarios(
     failures: list[str],
 ) -> None:
     for scenario in scenarios:
-        actual = route_contract(scenario["request"])
+        actual = historical_route_contract(scenario["request"])
         contract_fields = tuple(
             field for field in scenario if field not in {"name", "request"}
         )
