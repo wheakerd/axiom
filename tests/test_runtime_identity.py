@@ -106,6 +106,119 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual([], current_failures)
             self.assertEqual(baseline.digest, current.digest)
 
+    def copy_v0131_candidate(self, target: Path) -> None:
+        """Build a disposable candidate from the recorded release and policy facts."""
+        self.copy_installed_surfaces(target)
+        for relative in (
+            INPUT_MANIFEST_RELATIVE,
+            "axiom_validation/runtime-contract-inputs-v1.json",
+            "evidence/runtime-identity.json",
+            "evidence/runtime-contract-history-v1.json",
+            "evidence/runtime-contract-history-v2.json",
+            "evidence/repository-policy-revisions-v1.json",
+        ):
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPOSITORY_ROOT / relative, destination)
+
+    def check_candidate_identity(self, root: Path) -> list[str]:
+        failures: list[str] = []
+        self.assertEqual(65, check_runtime_identity(failures, root=root, check_surfaces=False))
+        return failures
+
+    def test_repository_release_exception_accepts_the_authorized_unchanged_candidate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_v0131_candidate(root)
+            self.assertEqual([], self.check_candidate_identity(root))
+
+    def test_repository_release_exception_rejects_changed_identity_bindings(self):
+        variants = (
+            "future-version",
+            "missing-predecessor",
+            "wrong-predecessor-commit",
+            "wrong-predecessor-digest",
+            "wrong-policy-baseline",
+            "wrong-identity-revision",
+            "later-policy-revision",
+            "wrong-policy-digest",
+        )
+        for variant in variants:
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.copy_v0131_candidate(root)
+                manifest_path = root / ".codex-plugin/plugin.json"
+                identity_path = root / "evidence/runtime-identity.json"
+                history_path = root / "evidence/runtime-contract-history-v2.json"
+                revisions_path = root / "evidence/repository-policy-revisions-v1.json"
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                identity = json.loads(identity_path.read_text(encoding="utf-8"))
+                history = json.loads(history_path.read_text(encoding="utf-8"))
+                revisions = json.loads(revisions_path.read_text(encoding="utf-8"))
+                if variant == "future-version":
+                    manifest["version"] = identity["pluginVersion"] = "0.13.2"
+                elif variant == "missing-predecessor":
+                    history["entries"] = [
+                        entry for entry in history["entries"] if entry["pluginVersion"] != "0.13.0"
+                    ]
+                elif variant == "wrong-predecessor-commit":
+                    history["entries"][-1]["commit"] = "0" * 40
+                elif variant == "wrong-predecessor-digest":
+                    history["entries"][-1]["runtimeContractDigest"] = "sha256:" + "0" * 64
+                elif variant == "wrong-policy-baseline":
+                    revisions["revisions"][-1]["baselineCommit"] = "0" * 40
+                elif variant == "wrong-identity-revision":
+                    identity["repositoryPolicyRevision"] = 34
+                elif variant == "later-policy-revision":
+                    identity["repositoryPolicyRevision"] = 36
+                    later = copy.deepcopy(revisions["revisions"][-1])
+                    later["revision"] = 36
+                    revisions["revisions"].append(later)
+                elif variant == "wrong-policy-digest":
+                    revisions["revisions"][-1]["runtimeContractDigest"] = "sha256:" + "0" * 64
+                for path, document in (
+                    (manifest_path, manifest), (identity_path, identity),
+                    (history_path, history), (revisions_path, revisions),
+                ):
+                    path.write_text(json.dumps(document), encoding="utf-8")
+                failures = self.check_candidate_identity(root)
+                expected = (
+                    "pluginVersion advanced while runtimeContractDigest stayed unchanged"
+                    if variant == "future-version" else "v0.13.1 repository-release exception requires"
+                )
+                self.assertTrue(any(expected in failure for failure in failures), failures)
+
+    def test_runtime_change_cannot_use_exception_but_future_runtime_release_still_can_advance(self):
+        for version in ("0.13.1", "0.13.2"):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.copy_v0131_candidate(root)
+                self.append_text(root / "skills/using-axiom/SKILL.md", "\nChanged runtime contract.\n")
+                contract, failures = self.compute(root)
+                self.assertEqual([], failures)
+                self.assertIsNotNone(contract)
+                manifest_path = root / ".codex-plugin/plugin.json"
+                identity_path = root / "evidence/runtime-identity.json"
+                revisions_path = root / "evidence/repository-policy-revisions-v1.json"
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                identity = json.loads(identity_path.read_text(encoding="utf-8"))
+                revisions = json.loads(revisions_path.read_text(encoding="utf-8"))
+                manifest["version"] = identity["pluginVersion"] = version
+                identity["runtimeContract"]["digest"] = contract.digest
+                revisions["revisions"][-1]["runtimeContractDigest"] = contract.digest
+                for path, document in (
+                    (manifest_path, manifest), (identity_path, identity), (revisions_path, revisions),
+                ):
+                    path.write_text(json.dumps(document), encoding="utf-8")
+                failures = self.check_candidate_identity(root)
+                if version == "0.13.1":
+                    self.assertTrue(
+                        any("v0.13.1 repository-release exception requires" in item for item in failures),
+                        failures,
+                    )
+                else:
+                    self.assertEqual([], failures)
+
     def test_line_endings_are_canonical_across_operating_systems(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

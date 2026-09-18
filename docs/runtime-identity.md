@@ -1,5 +1,25 @@
 # Runtime And Repository Identity
 
+## Repository-tooling release 0.13.1 (policy 35)
+
+The explicitly requested `0.13.1` release publishes the routing-validation and
+temporary-directory corrections recorded by policy 34. This is a single
+version-policy exception, not an installed-runtime change or a validation
+waiver. All 65 installed inputs keep the exact `0.13.0` runtime digest.
+
+The exception is bound to the `0.13.0` immutable commit
+`c0f0266c653f9a34b67d0c86d9287e94df7783f0`, policy revision 35, and the corrected
+repository baseline `9ff4a7bfaddd7215ae517d7a74085298ebf2f44a`. The identity
+validator requires those exact bindings and the unchanged runtime digest for
+this candidate. Missing predecessor history, a different revision or baseline,
+or a runtime change cannot use this exception. The record describes the
+approved release decision; it does not itself authorize a remote action.
+
+Other new versions retain the normal digest-change requirement, including a
+same-runtime `0.13.2` candidate. Signed candidates and main history, required
+CI, protected tag creation, artifact integrity, and immutable publication all
+remain required. See the [0.13.1 version notes](releases/v0.13.1.md).
+
 ## Validation corrections (policy 34)
 
 Policy 34 repairs the current routing observation contracts and permits an
@@ -1125,9 +1145,10 @@ executed file whose mode is semantic requires a successor schema.
 
 An installed-runtime change must change `runtimeContractDigest` and advance
 `pluginVersion` before release. A current tree whose version still names an
-immutable tag must have that tag's exact digest. Advancing `pluginVersion`
-without changing the digest is rejected for new candidates; use a new
-`repositoryPolicyRevision` instead.
+immutable tag must have that tag's exact digest. Except for the fixed `0.13.1`
+transition documented above, advancing `pluginVersion` without changing the
+digest is rejected for new candidates; use a new `repositoryPolicyRevision`
+instead.
 
 A repository-policy-only change appends the next contiguous policy revision,
 retains `pluginVersion`, and must leave the runtime digest unchanged. Its signed

@@ -23,6 +23,13 @@
       "commit": "2d33850cd390c7551a3e043c87cd67a64b638246",
       "runtimeContractDigest": "sha256:cdcb0f6155f59c51fede42606763a42343c4747d4112accafc7988904390fbe2",
       "derivation": "derived-from-immutable-tag-with-schema-v2"
+    },
+    {
+      "pluginVersion": "0.13.0",
+      "tag": "v0.13.0",
+      "commit": "c0f0266c653f9a34b67d0c86d9287e94df7783f0",
+      "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8",
+      "derivation": "derived-from-immutable-tag-with-schema-v2"
     }
   ],
   "characterizations": []

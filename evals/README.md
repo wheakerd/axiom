@@ -929,9 +929,9 @@ V4. This optional observation is separate from required publication checks:
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.13.0-codex-core-v3-<full-sha256>.json \
-  --expected-version 0.13.0 \
-  --expected-tag v0.13.0 \
+  /absolute/path/axiom-v0.13.1-codex-core-v3-<full-sha256>.json \
+  --expected-version 0.13.1 \
+  --expected-tag v0.13.1 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```

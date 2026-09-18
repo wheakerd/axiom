@@ -9,6 +9,21 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.13.1 - unreleased candidate
+
+### Fixed
+
+- Corrected current optional routing observations to accept clarification, delegation, and task planning, with explicit separation from historical observation contracts.
+- Allowed historical validation to use writable temporary-directory roots reached through symbolic links while preserving link checks within each copied tree.
+
+### Behavioral impact
+
+These fixes change repository validation tools. Installed Skills, hooks, action authority, and the runtime digest match `0.13.0`. This patch release distributes the corrections first recorded in repository policy revision 34; see the [v0.13.1 notes](docs/releases/v0.13.1.md) for version and evidence details.
+
+### Required action
+
+None for installed plugin workflows. Contributors collecting new optional routing observations should use the current contract in [Routing Evaluations](evals/README.md): `codex-core-v3`, observation schema v3, and response schema V4. Existing historical records retain their original contracts.
+
 ## Repository policy revision 34
 
 ### Fixed

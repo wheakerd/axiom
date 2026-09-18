@@ -1,14 +1,14 @@
 {
   "schemaVersion": "2",
   "targetRelease": {
-    "version": "0.13.0",
-    "tag": "v0.13.0",
+    "version": "0.13.1",
+    "tag": "v0.13.1",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
   "runtimeIdentity": {
-    "pluginVersion": "0.13.0",
-    "repositoryPolicyRevision": 34,
+    "pluginVersion": "0.13.1",
+    "repositoryPolicyRevision": 35,
     "runtimeContractSchemaVersion": "2",
     "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v2.json",
@@ -22,10 +22,10 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.13.0",
+      "pluginVersion": "0.13.1",
       "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8",
       "status": "not-run",
-      "reason": "The v0.13.0 candidate adds intent clarification and simple-task delegation. Historical observations retain their original bindings; static checks do not establish current installed-host behavior."
+      "reason": "Version 0.13.1 publishes repository validation fixes with the same installed runtime as v0.13.0. Historical observations retain their original bindings; a version-only change does not establish new installed-host behavior."
     }
   ],
   "priorReleaseEvidence": [

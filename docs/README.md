@@ -30,6 +30,8 @@ security concerns through the process in [SECURITY.md](../SECURITY.md).
 
 ## Current Collections
 
+- [v0.13.1 notes](releases/v0.13.1.md) explain the repository-tooling fixes and
+  the unchanged installed runtime identity.
 - [Version notes](releases/) retain version-specific migration, architecture,
   compatibility, security, and evidence detail. They are neither the current
   installation guide nor the final GitHub Release body.

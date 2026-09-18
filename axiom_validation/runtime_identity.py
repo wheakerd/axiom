@@ -588,6 +588,32 @@ def _version_key(version: str) -> tuple[int, int, int]:
     return tuple(int(part) for part in version.split("."))
 
 
+def _allows_v0131_repository_release(
+    previous_version: str,
+    previous_commit: str,
+    previous_digest: str,
+    current_digest: str,
+    current_revision: int | None,
+    policy_revisions: dict[str, Any] | None,
+) -> bool:
+    """Match this authorized version-policy record, not grant publication authority."""
+    digest = "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
+    revisions = policy_revisions.get("revisions") if type(policy_revisions) is dict else None
+    latest = revisions[-1] if type(revisions) is list and revisions else None
+    return (
+        previous_version == "0.13.0"
+        and previous_commit == "c0f0266c653f9a34b67d0c86d9287e94df7783f0"
+        and previous_digest == current_digest == digest
+        and type(current_revision) is int
+        and current_revision == 35
+        and type(latest) is dict
+        and type(latest.get("revision")) is int
+        and latest.get("revision") == 35
+        and latest.get("baselineCommit") == "9ff4a7bfaddd7215ae517d7a74085298ebf2f44a"
+        and latest.get("runtimeContractDigest") == digest
+    )
+
+
 def _validate_history(
     document: dict[str, Any],
     manifest_sha256: str,
@@ -598,6 +624,8 @@ def _validate_history(
     schema_version: str = "2",
     input_manifest: str = INPUT_MANIFEST_RELATIVE,
     history_path: str = HISTORY_RELATIVE,
+    current_revision: int | None = None,
+    policy_revisions: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     label = history_path
     _exact_object(
@@ -710,6 +738,23 @@ def _validate_history(
             if entries[latest_version].get("runtimeContractDigest") != current_digest:
                 failures.append(
                     "installed runtime changed without advancing pluginVersion from its immutable tag"
+                )
+        elif current_version == "0.13.1":
+            # The user authorized only this repository-tools release. A stale
+            # predecessor, another policy baseline, or changed runtime cannot
+            # turn that decision into a general version-policy relaxation.
+            if schema_version != "2" or not _allows_v0131_repository_release(
+                latest_version,
+                entries[latest_version].get("commit"),
+                entries[latest_version].get("runtimeContractDigest"),
+                current_digest,
+                current_revision,
+                policy_revisions,
+            ):
+                failures.append(
+                    "v0.13.1 repository-release exception requires v0.13.0, "
+                    "the authorized unchanged runtime digest, and policy 35 "
+                    "bound to repository fix 9ff4a7bfaddd7215ae517d7a74085298ebf2f44a"
                 )
         elif entries[latest_version].get("runtimeContractDigest") == current_digest:
             failures.append(
@@ -832,6 +877,8 @@ def check_runtime_identity(
         plugin_version,
         contract.digest,
         failures,
+        current_revision=policy_revision,
+        policy_revisions=revisions,
     )
     legacy_history = load_json_document(root / LEGACY_HISTORY_RELATIVE, failures, root=root)
     if legacy_history is not None:
