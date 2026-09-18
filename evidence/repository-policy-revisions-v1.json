@@ -272,6 +272,14 @@
       "sourceIssue": null,
       "summary": "Repair current routing observation contracts and symlinked temporary-directory handling while preserving plugin 0.13.0, installed runtime identity, and historical evidence.",
       "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
+    },
+    {
+      "revision": 35,
+      "recordedOn": "2026-09-18",
+      "baselineCommit": "9ff4a7bfaddd7215ae517d7a74085298ebf2f44a",
+      "sourceIssue": null,
+      "summary": "Prepare the explicitly requested v0.13.1 repository-tooling release under a version-specific policy exception, preserving the installed runtime and all normal release verification.",
+      "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
     }
   ]
 }

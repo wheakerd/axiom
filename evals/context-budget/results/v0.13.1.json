@@ -1,0 +1,273 @@
+{
+  "$schema": "../schema-v1.json",
+  "baseline": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "method": "ceil(utf8-bytes/4)",
+        "value": 1475
+      },
+      "logicalLines": 107,
+      "utf8Bytes": 5899,
+      "whitespaceDelimitedWords": 757
+    },
+    "release": {
+      "commit": "4c24ba6c016945038778475ce6b69ac9e9a5ce3b",
+      "tag": "v0.7.9",
+      "tree": "719622eff9654dd1050863213d2bf81d3455d6f6",
+      "version": "0.7.9"
+    },
+    "sha256": "1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011"
+  },
+  "candidate": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "utf8Bytes": 6931,
+      "whitespaceDelimitedWords": 860,
+      "logicalLines": 120,
+      "directReferenceCount": 2,
+      "directReferences": [
+        "references/credential-lifecycle.md",
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "method": "ceil(utf8-bytes/4)",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "value": 1733
+      }
+    },
+    "sha256": "a3bfc96a77821551fe03b4b982fd7db0c97ee3f301cca10d924f1cba5ac49a21"
+  },
+  "comparison": {
+    "method": "same-English-Markdown-surface",
+    "utf8ByteDelta": 1032,
+    "absoluteThresholdReached": true,
+    "relativeThresholdReached": true,
+    "meaningfulIncrease": true,
+    "reviewStatus": "reviewed",
+    "wordDelta": 103,
+    "lineDelta": 13,
+    "referenceDelta": 1,
+    "estimatedTokenDelta": 258,
+    "justification": "The v0.13.1 repository-tooling release leaves the routing gate unchanged. Its source bytes and static metrics match v0.13.0, so this record reuses that same-input measurement. The cumulative increase from v0.7.9 remains reviewed, with detailed rules loaded on demand. No new host observation is asserted."
+  },
+  "hostMetrics": [
+    {
+      "cachedInputTokens": null,
+      "credits": null,
+      "exactUsageExposed": false,
+      "host": "codex",
+      "inputTokens": null,
+      "reason": "Current Codex host, usage and lifecycle observation remain NOT-RUN; prior no-Hook observations bind their original runtime only.",
+      "status": "not-run",
+      "wallClockMilliseconds": null
+    }
+  ],
+  "measurementBoundary": {
+    "estimatedTokens": "estimate",
+    "exactHostUsage": "not-run",
+    "modelOrReasoningChanged": false,
+    "networkOrTelemetryUsed": false,
+    "staticCounts": "proxy",
+    "volatilePricingIncluded": false
+  },
+  "recordId": "routing-context-budget-v0-13-1",
+  "reviewThreshold": {
+    "absoluteUtf8Bytes": 256,
+    "comparison": "cumulative-from-immutable-baseline",
+    "effect": "review-and-justify-not-automatic-rejection",
+    "operator": "either",
+    "relativeBasisPoints": 500
+  },
+  "routingQuality": {
+    "reductionExperiment": null,
+    "reductionPolicy": {
+      "requiredForAnyReduction": true,
+      "requiredResults": [
+        "routing",
+        "no-route"
+      ],
+      "requiredStatus": "pass",
+      "sameWorkloadRequired": true,
+      "staticAndHostEvidenceRemainDistinct": true
+    },
+    "workload": {
+      "classification": "static-contract-workload-identity",
+      "path": "evals/routing",
+      "fileCount": 12,
+      "caseCount": 95,
+      "routedCaseCount": 69,
+      "noRouteCaseCount": 26,
+      "sha256": "91398945f0760e5ca49587c429751a16b6a78c5cf339f9a09867569793f60ab9"
+    }
+  },
+  "scenarios": [
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "fresh-startup-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "fresh-startup-routed",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "review-axiom-task-observable-refusal-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "resume-no-route",
+      "lifecycleSource": "resume",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "resumed"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "clear-routed",
+      "lifecycleSource": "clear",
+      "requestCaseIds": [
+        "review-axiom-task-independent-audit-001"
+      ],
+      "sessionState": "cleared"
+    },
+    {
+      "compactionMode": "manual",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "manual-compaction-no-route",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-no-route-manual-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "automatic",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "automatic-compaction-routed",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-plugin-architecture-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        }
+      ],
+      "id": "unchanged-session-repeated-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "unchanged-session"
+    }
+  ],
+  "schemaVersion": "1",
+  "surface": {
+    "alwaysLoaded": true,
+    "language": "en",
+    "path": "skills/using-axiom/SKILL.md"
+  },
+  "targetRelease": {
+    "binding": "pending-immutable-release",
+    "commit": null,
+    "version": "0.13.1"
+  }
+}
