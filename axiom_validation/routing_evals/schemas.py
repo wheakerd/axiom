@@ -14,6 +14,11 @@ from .constants import (
     CASE_ID_PATTERN,
     CASE_KEYS,
     COVERAGE_LABELS,
+    CURRENT_PUBLIC_ROUTES,
+    CURRENT_BENCHMARK_CASE_COUNT,
+    BENCHMARK_V3_ID,
+    SCHEMA_V3_ID,
+    HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     ENVIRONMENT_KEYS,
     EVIDENCE_SOURCES,
     HISTORICAL_PUBLIC_ROUTES,
@@ -53,13 +58,15 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
     if document is None:
         return None
     schema_version = document.get("schemaVersion")
-    if schema_version not in {"1", "2"}:
-        failures.append(f"{label}.schemaVersion must be '1' or '2'")
+    if schema_version not in {"1", "2", "3"}:
+        failures.append(f"{label}.schemaVersion must be '1', '2', or '3'")
     allowed_routes = (
-        HISTORICAL_PUBLIC_ROUTES if schema_version == "1" else PUBLIC_ROUTES
+        HISTORICAL_PUBLIC_ROUTES if schema_version == "1"
+        else CURRENT_PUBLIC_ROUTES if schema_version == "3" else PUBLIC_ROUTES
     )
     allowed_benchmarks = (
-        (BENCHMARK_ID,) if schema_version == "1" else (BENCHMARK_V2_ID,)
+        (BENCHMARK_ID,) if schema_version == "1"
+        else (BENCHMARK_V3_ID,) if schema_version == "3" else (BENCHMARK_V2_ID,)
     )
     case_id = require_string(document.get("id"), f"{label}.id", failures, 100)
     if case_id is not None and CASE_ID_PATTERN.fullmatch(case_id) is None:
@@ -69,6 +76,8 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
     )
     if schema_version == "2" and contract_version != 2:
         failures.append(f"{label}.contractVersion must be 2 for schema v2")
+    if schema_version == "3" and contract_version != 3:
+        failures.append(f"{label}.contractVersion must be 3 for schema v3")
     language = require_string(document.get("language"), f"{label}.language", failures, 16)
     if language is not None and LANGUAGE_PATTERN.fullmatch(language) is None:
         failures.append(f"{label}.language must be a bounded BCP-47 language tag")
@@ -324,12 +333,16 @@ def check_schema_contract(schema: dict[str, Any], failures: list[str]) -> None:
         failures.append("evals/schema-v1.json summary status enum drifted")
 
 
-def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> None:
-    """Check the additive seven-route corpus and future-observation contract."""
-    label = "evals/schema-v2.json"
+def _check_versioned_schema_contract(
+    schema: dict[str, Any], failures: list[str], *, version: str,
+    schema_id: str, routes: tuple[str, ...], benchmark_id: str,
+    case_count: int, response_paths: tuple[str, ...],
+) -> None:
+    """Check a closed version without widening earlier schema contracts."""
+    label = f"evals/schema-v{version}.json"
     if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
         failures.append(f"{label} has the wrong JSON Schema dialect")
-    if schema.get("$id") != SCHEMA_V2_ID:
+    if schema.get("$id") != schema_id:
         failures.append(f"{label} has the wrong schema identifier")
     definitions = schema.get("$defs")
     expected = {
@@ -380,19 +393,19 @@ def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> Non
 
     route_definition = definitions.get("route")
     if type(route_definition) is not dict or route_definition.get("enum") != list(
-        PUBLIC_ROUTES
+        routes
     ):
         failures.append(f"{label} route enum drifted from current public routes")
 
     case_properties = definitions.get("case", {}).get("properties", {})
-    if case_properties.get("schemaVersion") != {"const": "2"}:
+    if case_properties.get("schemaVersion") != {"const": version}:
         failures.append(f"{label} case schema version drifted")
     if case_properties.get("forbiddenRoutes", {}).get("maxItems") != len(
-        PUBLIC_ROUTES
+        routes
     ):
         failures.append(f"{label} forbidden-route bound drifted")
     if case_properties.get("benchmarkSets", {}).get("items") != {
-        "const": BENCHMARK_V2_ID
+        "const": benchmark_id
     }:
         failures.append(f"{label} case benchmark binding drifted")
 
@@ -400,17 +413,17 @@ def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> Non
         "properties", {}
     )
     expected_benchmark_fields = {
-        "schemaVersion": {"const": "2"},
-        "id": {"const": BENCHMARK_V2_ID},
-        "corpusSchema": {"const": SCHEMA_V2_ID},
+        "schemaVersion": {"const": version},
+        "id": {"const": benchmark_id},
+        "corpusSchema": {"const": schema_id},
     }
     for name, expected_value in expected_benchmark_fields.items():
         if benchmark_properties.get(name) != expected_value:
             failures.append(f"{label} benchmark {name} binding drifted")
     if benchmark_properties.get("caseIds") != {
         "type": "array",
-        "minItems": 17,
-        "maxItems": 17,
+        "minItems": case_count,
+        "maxItems": case_count,
         "uniqueItems": True,
         "items": {"type": "string"},
     }:
@@ -420,11 +433,7 @@ def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> Non
         "properties", {}
     )
     if response_properties.get("path") != {
-        "enum": [
-            HOST_RESPONSE_SCHEMA_V1_RELATIVE_PATH,
-            HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH,
-            HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
-        ]
+        "enum": list(response_paths)
     }:
         failures.append(f"{label} response schema paths drifted")
 
@@ -432,15 +441,15 @@ def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> Non
     if run_properties.get("callCount") != {
         "type": "integer",
         "minimum": 0,
-        "maximum": 17,
+        "maximum": case_count,
     }:
         failures.append(f"{label} call count contract drifted")
     observation_properties = definitions.get("observationRecord", {}).get(
         "properties", {}
     )
-    if observation_properties.get("schemaVersion") != {"const": "2"}:
+    if observation_properties.get("schemaVersion") != {"const": version}:
         failures.append(f"{label} observation schema version drifted")
-    if observation_properties.get("benchmarkId") != {"const": BENCHMARK_V2_ID}:
+    if observation_properties.get("benchmarkId") != {"const": benchmark_id}:
         failures.append(f"{label} observation benchmark binding drifted")
 
     result_properties = definitions.get("resultCase", {}).get("properties", {})
@@ -461,6 +470,24 @@ def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> Non
     ):
         failures.append(f"{label} evidence source enum drifted")
 
+
+
+def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_versioned_schema_contract(
+        schema, failures, version="2", schema_id=SCHEMA_V2_ID,
+        routes=PUBLIC_ROUTES, benchmark_id=BENCHMARK_V2_ID, case_count=17,
+        response_paths=(HOST_RESPONSE_SCHEMA_V1_RELATIVE_PATH,
+                        HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH,
+                        HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH),
+    )
+
+def check_schema_contract_v3(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_versioned_schema_contract(
+        schema, failures, version="3", schema_id=SCHEMA_V3_ID,
+        routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V3_ID,
+        case_count=CURRENT_BENCHMARK_CASE_COUNT,
+        response_paths=(HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,),
+    )
 
 def check_host_response_schema(schema: dict[str, Any], failures: list[str]) -> None:
     """Check the byte-frozen V1 model-facing schema contract."""
@@ -548,19 +575,19 @@ def check_host_response_schema_v2(
         )
 
 
-def check_host_response_schema_v3(
-    schema: dict[str, Any], failures: list[str]
+def _check_prose_free_host_response_schema(
+    schema: dict[str, Any], failures: list[str], *, routes: tuple[str, ...], version: str,
 ) -> None:
-    """Check the prose-free seven-route V3 model-facing schema."""
+    """Check the exact supported model-facing subset for one route version."""
     expected_root_keys = {"type", "additionalProperties", "required", "properties"}
     if set(schema) != expected_root_keys:
         failures.append(
-            "V3 host response schema root keywords drifted from the documented model subset"
+            f"V{version} host response schema root keywords drifted from the documented model subset"
         )
     if schema.get("type") != "object":
-        failures.append("V3 host response schema root must be an object")
+        failures.append(f"V{version} host response schema root must be an object")
     if schema.get("additionalProperties") is not False:
-        failures.append("V3 host response schema must reject unknown fields")
+        failures.append(f"V{version} host response schema must reject unknown fields")
     if list(schema.get("required", ())) != [
         "routingGateObserved",
         "selectedRoutes",
@@ -568,10 +595,10 @@ def check_host_response_schema_v3(
         "mutationAttempted",
         "mutationObserved",
     ]:
-        failures.append("V3 host response schema required fields drifted")
+        failures.append(f"V{version} host response schema required fields drifted")
     properties = schema.get("properties")
     if type(properties) is not dict or set(properties) != HOST_RESPONSE_V2_KEYS:
-        failures.append("V3 host response schema properties drifted")
+        failures.append(f"V{version} host response schema properties drifted")
         return
     expected_properties = {
         "routingGateObserved": {"type": "boolean"},
@@ -579,7 +606,7 @@ def check_host_response_schema_v3(
             "type": "array",
             "minItems": 0,
             "maxItems": 2,
-            "items": {"type": "string", "enum": list(PUBLIC_ROUTES)},
+            "items": {"type": "string", "enum": list(routes)},
         },
         "clarificationCount": {"type": "integer", "minimum": 0, "maximum": 1},
         "mutationAttempted": {"type": "boolean"},
@@ -587,5 +614,12 @@ def check_host_response_schema_v3(
     }
     if properties != expected_properties:
         failures.append(
-            "V3 host response schema properties drifted from the reviewed model subset"
+            f"V{version} host response schema properties drifted from the reviewed model subset"
         )
+
+
+def check_host_response_schema_v3(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_prose_free_host_response_schema(schema, failures, routes=PUBLIC_ROUTES, version="3")
+
+def check_host_response_schema_v4(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_prose_free_host_response_schema(schema, failures, routes=CURRENT_PUBLIC_ROUTES, version="4")

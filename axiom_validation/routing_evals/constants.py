@@ -372,3 +372,23 @@ OBSERVER_PASS_EXECUTION_EVIDENCE = (
     "unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; "
     "installedUnchanged=true."
 )
+
+# Versioned current contracts; earlier route sets and bindings remain immutable.
+CURRENT_PUBLIC_ROUTES = (
+    "agents-architect",
+    "agent-plugin-architect",
+    "clarify-intent",
+    "confirm-external-action",
+    "delegate-simple-task",
+    "optimize-codex-usage",
+    "reversible-system-change",
+    "review-axiom-task",
+    "task-planning",
+    "traceable-git-submit",
+)
+SCHEMA_V3_ID = "urn:axiom:routing-evals:schema:v3"
+BENCHMARK_V3_ID = "codex-core-v3"
+CURRENT_BENCHMARK_CASE_COUNT = 20
+CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v3/current.jsonl"
+HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH = "evals/host-response-schema-v4.json"
+CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 = "a21410982087e26b6cb15c047f0646bdbfd67f5fb650fa4a7998df5809bc1edf"

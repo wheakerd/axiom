@@ -17,6 +17,7 @@ from .constants import (
     SCHEMA_V2_ID,
 )
 from .corpus import check_corpus_coverage, collect_corpus
+from .current import check_current_routing_evaluations
 from .history import (
     CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
     CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256,
@@ -148,8 +149,9 @@ def check_routing_evaluations(
     validate_observation_run_set(
         observations, response_schema_sha256_by_path, failures
     )
+    current_cases, current_benchmark_cases = check_current_routing_evaluations(root, failures)
     return (
-        len(cases),
-        len(benchmark_case_ids) + len(benchmark_v2_case_ids),
+        len(cases) + current_cases,
+        len(benchmark_case_ids) + len(benchmark_v2_case_ids) + current_benchmark_cases,
         len(observations),
     )

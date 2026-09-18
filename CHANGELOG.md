@@ -9,6 +9,21 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 34
+
+### Fixed
+
+- Updated current routing observation validation for clarification, delegation, and task planning while preserving historical contracts and results.
+- Allowed historical validation to use a writable temporary directory reached through a symbolic link while retaining checks against links inside the copied tree.
+
+### Behavioral impact
+
+These corrections affect repository validation tools. Plugin version `0.13.0`, installed runtime inputs, and existing immutable releases remain unchanged.
+
+### Required action
+
+Contributors collecting a new optional routing observation must use the current versioned contract described in [Routing Evaluations](evals/README.md). Installed plugin users do not need an update for this repository revision.
+
 ## 0.13.0 - unreleased candidate
 
 ### Added

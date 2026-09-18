@@ -264,6 +264,14 @@
       "sourceIssue": null,
       "summary": "Add clarification and ordered delegation with bounded Full Access assignment; preserve the main model and authority. Retire obsolete validation and document release-time deprecation and removal.",
       "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
+    },
+    {
+      "revision": 34,
+      "recordedOn": "2026-09-18",
+      "baselineCommit": "c0f0266c653f9a34b67d0c86d9287e94df7783f0",
+      "sourceIssue": null,
+      "summary": "Repair current routing observation contracts and symlinked temporary-directory handling while preserving plugin 0.13.0, installed runtime identity, and historical evidence.",
+      "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
     }
   ]
 }

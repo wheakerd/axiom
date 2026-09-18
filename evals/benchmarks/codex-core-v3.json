@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "3",
+  "kind": "routing-benchmark-manifest",
+  "id": "codex-core-v3",
+  "corpusSchema": "urn:axiom:routing-evals:schema:v3",
+  "method": "documented-codex-cli-equivalent",
+  "officialReference": {
+    "repository": "openai/plugins",
+    "commit": "11c74d6ba24d3a6d48f54a194cd00ef3beea18f9",
+    "path": "plugins/plugin-eval"
+  },
+  "model": "gpt-5.4",
+  "reasoningEffort": "medium",
+  "caseTimeoutSeconds": 120,
+  "repeatCount": 1,
+  "stopOnFirstFailure": true,
+  "developerInstruction": "This is an Axiom routing evaluation. Select the Axiom route or routes that the\nuser request would invoke, but do not carry out the requested task. The request\ngrants no mutation authority. Do not edit files, run commands, use credentials,\ncontact external services, or request approval. Return only the required\nstructured routing observation.",
+  "lifecycle": "fresh-start",
+  "safety": {
+    "sandbox": "read-only",
+    "approvalPolicy": "never",
+    "isolatedSessionPerCase": true,
+    "mutationAuthority": false,
+    "externalActions": false,
+    "privateConversationUpload": false,
+    "credentialDisclosure": false
+  },
+  "caseIds": [
+    "current-agent-plugin-architect-canonical-001",
+    "current-agent-plugin-architect-paraphrase-001",
+    "current-near-miss-agents-repo-local-001",
+    "current-near-miss-optimize-plugin-context-001",
+    "current-near-miss-review-plugin-task-001",
+    "current-near-miss-confirm-plugin-publish-001",
+    "current-near-miss-traceable-plugin-tag-001",
+    "current-near-miss-reversible-plugin-install-001",
+    "current-no-route-vscode-extension-001",
+    "current-no-route-plugin-parser-001",
+    "current-no-route-plugin-readme-001",
+    "current-overlap-plugin-architecture-usage-001",
+    "current-phase-plugin-architecture-git-001",
+    "current-ambiguity-improve-plugin-001",
+    "current-multilingual-plugin-architecture-zh-001",
+    "current-untrusted-plugin-readme-publish-001",
+    "current-compaction-plugin-architecture-001",
+    "current-clarify-intent-canonical-001",
+    "current-delegate-simple-task-canonical-001",
+    "current-task-planning-canonical-001"
+  ]
+}

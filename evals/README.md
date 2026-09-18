@@ -465,20 +465,22 @@ replace them and it is not installed runtime behavior.
 
 ## Surfaces
 
-- `schema-v1.json` remains the byte-frozen six-route corpus, benchmark, and
-  observation contract. `schema-v2.json` adds the current seven-route shapes
-  without reinterpreting v1 evidence.
-- `routing/*.jsonl` contains one reviewed contract per line. Every public task
-  route has canonical, paraphrased, near-miss, cross-route, multilingual, and
-  post-compaction coverage.
+- `schema-v1.json` and `schema-v2.json` retain their historical six-route and
+  seven-route corpus, benchmark, and observation contracts. `schema-v3.json`
+  defines the current ten-route contract without reinterpreting old evidence.
+- `routing/*.jsonl` contains the historical reviewed contracts and their
+  canonical, paraphrased, near-miss, cross-route, multilingual, and
+  post-compaction coverage. `routing-v3/current.jsonl` separately versions the
+  current cases, including clarification, delegation, and task planning.
 - `benchmarks/codex-core-v1.json` freezes the ordered historical 13-case
-  acceptance and safety slice. `benchmarks/codex-core-v2.json` selects the 17
-  current packaged-plugin cases at one fresh session per case.
+  acceptance and safety slice. `benchmarks/codex-core-v2.json` retains its 17
+  historical packaged-plugin cases. `benchmarks/codex-core-v3.json` selects
+  20 current cases at one fresh session per case.
 - `host-response-schema-v1.json` is the byte-frozen historical response
   contract. `host-response-schema-v2.json` is the byte-frozen historical
-  prose-free contract. `host-response-schema-v3.json` keeps the same five
-  semantic fields and adds only the current route while retaining two routes
-  maximum.
+  prose-free contract. `host-response-schema-v3.json` retains its seven-route
+  shape. `host-response-schema-v4.json` accepts all ten current task routes;
+  a material ambiguity selects `clarify-intent` before an action route.
 - [`no-hook/profile-v1.json`](no-hook/profile-v1.json) defines the separate contract-only
   `openai-hook-independent-v1` profile, its 16-case shared Golden Set, the
   16-case Codex subset, the 10-case ChatGPT subset, and its profile-bound
@@ -920,27 +922,31 @@ validation counts. Its sanitized ledger and observation remain separate
 unpublished evidence; neither is promoted or reused for v0.10.0. The immutable
 v0.9.0 Release and its acceptance also remain separate history.
 
-The explicit external mode validates one content-addressed post-merge record
-without changing aggregate behavior:
+For a new current observation, the explicit external mode validates one
+content-addressed schema v3 record against `codex-core-v3` and response schema
+V4. This optional observation is separate from required publication checks:
 
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-v0.10.0-codex-core-v2-<full-sha256>.json \
-  --expected-version 0.10.0 \
-  --expected-tag v0.10.0 \
+  /absolute/path/axiom-v0.13.0-codex-core-v3-<full-sha256>.json \
+  --expected-version 0.13.0 \
+  --expected-tag v0.13.0 \
   --expected-commit <40-character-commit> \
   --expected-tree <40-character-tree>
 ```
 
-It requires schema v2 and response schema V3, the exact 17 unique cases in
-benchmark order, repeat count one, call count 17, 17/17 `PASS`, verified local
+It requires schema v3 and response schema V4, the exact 20 unique cases in
+benchmark order, repeat count one, call count 20, 20/20 `PASS`, verified local
 installation and startup delivery, no unavailable or `NOT-RUN` suffix, and
 zero routing, clarification, or mutation regressions. The subject must bind
 the exact final version, non-null tag, 40-character commit, and 40-character
 tree. The file must stay outside the repository and expose its full SHA-256 in
 its filename. This asset may supplement release evidence; it never edits or
-promotes the checked-in `STATIC-ONLY` release status.
+promotes the checked-in `STATIC-ONLY` release status. Schema v2 records remain
+verifiable only against their original `codex-core-v2` and response V3 contract;
+they do not cover the newer public routes. Historical records and the legacy
+collection examples below retain those original contracts.
 
 ## Bounded review sequence method
 

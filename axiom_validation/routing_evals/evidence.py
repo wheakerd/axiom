@@ -18,6 +18,8 @@ from .constants import (
     PRIVATE_PATTERNS,
     PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS,
     PUBLIC_ROUTES,
+    CURRENT_PUBLIC_ROUTES,
+    HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     RESPONSE_DIAGNOSTICS,
     RESPONSE_SCHEMA_KEYS,
     SEMVER_PATTERN,
@@ -66,6 +68,7 @@ def derive_observer_evidence(
     workspace_unchanged: bool | None,
     source_unchanged: bool | None,
     installed_unchanged: bool | None,
+    allowed_routes: tuple[str, ...] = CURRENT_PUBLIC_ROUTES,
 ) -> list[str]:
     """Create bounded public evidence from closed observer-owned facts only."""
     if selected_routes is None:
@@ -74,7 +77,7 @@ def derive_observer_evidence(
         if type(selected_routes) is not list or len(selected_routes) > 2:
             raise ValueError("observer routes must be a bounded array or null")
         if any(
-            type(route) is not str or route not in PUBLIC_ROUTES
+            type(route) is not str or route not in allowed_routes
             for route in selected_routes
         ):
             raise ValueError("observer routes must use the public route enum")
@@ -131,6 +134,7 @@ def validate_observer_derived_evidence(
     mutation_observed: bool | None,
     label: str,
     failures: list[str],
+    allowed_routes: tuple[str, ...] = PUBLIC_ROUTES,
 ) -> None:
     """Validate fixed observer evidence without accepting model-authored prose."""
     if len(evidence) != 3:
@@ -149,6 +153,7 @@ def validate_observer_derived_evidence(
             workspace_unchanged=None,
             source_unchanged=None,
             installed_unchanged=None,
+            allowed_routes=allowed_routes,
         )[:2]
     except ValueError:
         failures.append(f"{label} cannot be derived from malformed semantic facts")
@@ -187,6 +192,7 @@ def validate_evidence_source(
             failures.append(f"{label} must be observer-derived for this contract")
     if (
         response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS
+        | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH}
         and value == "model-provided"
     ):
         failures.append(f"{label} cannot claim model-provided evidence under a prose-free schema")
@@ -194,7 +200,7 @@ def validate_evidence_source(
 
 
 def validate_response_schema_binding(
-    value: Any, label: str, failures: list[str]
+    value: Any, label: str, failures: list[str], *, current: bool = False
 ) -> dict[str, Any] | None:
     if value is None:
         return None
@@ -207,6 +213,8 @@ def validate_response_schema_binding(
         HOST_RESPONSE_SCHEMA_V2_RELATIVE_PATH,
         HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     }
+    if current:
+        supported_paths = {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH}
     if path is not None and path not in supported_paths:
         failures.append(
             f"{label}.path must name a supported immutable host response schema"
