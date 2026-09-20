@@ -25,7 +25,8 @@ grants only its named push, not metadata, consolidation, fetch, force or
 retry.
 
 A combined commit, tag, and push of an already-prepared plugin release selects
-the hardened phase; this never authorizes the commit, tag, or push. Ordinary named-remote
+its prepared-release phase; selection grants no commit, tag, or push authority.
+Ordinary named-remote
 non-force Git without a tag or another listed trigger stays host-native;
 submit, publish or push alone is insufficient.
 
@@ -44,8 +45,11 @@ submit, publish or push alone is insufficient.
   is an ancestor of the final commit: read only `references/direct-submit.md`.
   Mere stale-tracking mention is not a route. Do not create or update Axiom
   metadata.
-- A combined prepared-plugin commit/tag/push, or explicit hardened, raw-target,
-  multi-target, or history-replacing network work: read
+- A combined prepared-plugin commit/tag/push: read
+  `references/safe-git-values-and-metadata.md`,
+  `references/repository-and-remote-targets.md`, and
+  `references/prepared-release-submit.md`.
+- Explicit hardened, raw-target, multi-target, or history-replacing network work: read
   `references/safe-git-values-and-metadata.md` and
   `references/repository-and-remote-targets.md`. Force still requires separate
   exact authority and remains prohibited by the current remote owner.
@@ -72,8 +76,10 @@ remote-refresh scope, additionally read
 `references/repository-and-remote-targets.md` for its network closure only. Do
 not resolve push identity or inventory targets without push scope.
 
-Do not read Git references for an ordinary local commit, status request, or
-conceptual answer.
+Every authorized network phase except simple direct submission additionally
+loads `references/network-transport.md`. The simple phase keeps its own normal
+Git mechanism. Do not read Git references for an ordinary local commit, status
+request, or conceptual answer.
 
 ## Universal Safety
 
@@ -116,28 +122,9 @@ conceptual answer.
 
 ## Phase Outcomes
 
-For a simple direct push, follow `references/direct-submit.md` for the exact
-named-remote command, normal hooks, one attempt and proportional verification.
-
-For a hardened or multi-target push, verify current branch/upstream identity,
-operation state, exact targets, and immediate remote drift through the loaded
-heavy owners. Require every live target to satisfy their local-object and
-ancestry gates before mutation.
-
-For a checkpoint, require clean staged state, exact adoption of any existing
-unpublished commits, current baseline identity, a frozen write set, exact index
-equality, a tree-bound verified candidate, branch compare-and-swap, and atomic
-provenance append. Preserve concurrent index state. Do not update the cache.
-
-For consolidation, require every unpublished commit to match active provenance,
-construct one commit with the exact final tree, update the branch with
-compare-and-swap, and persist recoverable state. Without push authority, retain
-the backup and active record with push targets `unbound`, and stop locally.
-
-For a combined submission or recovery, recheck every remote immediately before
-push, bind once or require exact existing binding, verify every target and
-refreshed upstream, then persist `cleanupReady`. Cleanup requires separate exact
-authority. Drift, partial state, or uncertainty retains recovery state.
+Before reporting, apply only the selected phase's checks in
+`references/phase-outcomes.md`. Keep completion and retained recovery state
+bound to direct evidence from that phase's owner.
 
 ## Report
 

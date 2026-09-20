@@ -22,6 +22,7 @@ def check_reversible_safety_scenarios(failures: list[str]) -> int:
             skill_root / "SKILL.md",
             skill_root / "references" / "preflight-and-rollback.md",
             skill_root / "references" / "execution-and-verification.md",
+            skill_root / "references" / "recovery-material-preparation.md",
         )
     )
     for evidence_label in (
@@ -36,13 +37,19 @@ def check_reversible_safety_scenarios(failures: list[str]) -> int:
                 f"reversible-system-change is missing rollback evidence label {evidence_label!r}"
             )
 
+    normalized_contract = " ".join(contract_text.split()).casefold()
     for phase_anchor in (
         "non-mutating workflow rehearsal",
         "isolated restore rehearsal",
         "rehearsal-write authority",
         "cannot affect active state or data",
+        "Before candidate or active-state mutation",
+        "It does not require an already validated backup.",
+        "Creation fails on collision",
+        "without restoring the source or relying on the not-yet-created backup",
+        "Preparation-only authority ends with the observed material",
     ):
-        if phase_anchor.casefold() not in contract_text.casefold():
+        if phase_anchor.casefold() not in normalized_contract:
             failures.append(
                 f"reversible-system-change is missing rehearsal phase contract {phase_anchor!r}"
             )

@@ -1,4 +1,4 @@
 interface:
   display_name: "Reversible System Change"
   short_description: "Plan and verify reversible system changes"
-  default_prompt: "Use $reversible-system-change to select a read-only plan or non-mutating rehearsal, a separately authorized isolated restore rehearsal, or a complete persistent change with current restore-validated rollback and direct postcondition checks."
+  default_prompt: "Use $reversible-system-change to select a read-only plan or non-mutating rehearsal, bounded authorized preparation of missing recovery material, an isolated restore rehearsal, or a complete persistent change with current restore-validated rollback and direct postcondition checks."

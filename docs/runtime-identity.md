@@ -1,5 +1,22 @@
 # Runtime And Repository Identity
 
+## Skill contract corrections candidate 0.13.2 (policy 36)
+
+Version `0.13.2` prepares compatible corrections to existing Git submission and
+recovery, reversible-change preparation, and plugin release-readiness
+workflows. No new public capability is added. The changed installed Skills and
+their routed references change the schema v2 runtime digest and classify
+69 installed inputs.
+
+Policy revision 36 binds this candidate's current runtime identity. Its
+`baselineCommit`, `98624d806beed701beeb50235edc96675c214924`, identifies the
+observed prior repository state, not a commit containing these uncommitted
+fixes. The [machine-readable identity](../evidence/runtime-identity.json) owns
+the current digest. Candidate evidence remains pending an immutable tag, and
+current installed-host observation remains `NOT-RUN`. Earlier policy entries,
+runtime history, version notes, and observations retain their original
+bindings. See the [0.13.2 version notes](releases/v0.13.2.md).
+
 ## Repository-tooling release 0.13.1 (policy 35)
 
 The explicitly requested `0.13.1` release publishes the routing-validation and

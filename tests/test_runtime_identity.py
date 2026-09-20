@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import copy
+import io
 import json
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -20,6 +22,9 @@ from axiom_validation.runtime_identity import (
 )
 
 
+FROZEN_V0131_CANDIDATE = "98624d806beed701beeb50235edc96675c214924"
+
+
 class RuntimeIdentityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -31,6 +36,9 @@ class RuntimeIdentityTests(unittest.TestCase):
         if manifest is None or failures:
             raise AssertionError(failures)
         cls.manifest = manifest
+        cls.expected_record_count = json.loads(
+            (REPOSITORY_ROOT / "evidence/runtime-identity.json").read_text(encoding="utf-8")
+        )["runtimeContract"]["recordCount"]
 
     def copy_installed_surfaces(self, target: Path) -> None:
         for relative in self.manifest["installedSurfaceRoots"]:
@@ -61,7 +69,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     def test_checked_in_identity_history_and_rendered_surface(self):
         failures: list[str] = []
         record_count = check_runtime_identity(failures)
-        self.assertEqual(65, record_count)
+        self.assertEqual(self.expected_record_count, record_count)
         self.assertEqual([], failures)
 
     def test_each_installed_behavior_class_changes_the_digest(self):
@@ -107,19 +115,34 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual(baseline.digest, current.digest)
 
     def copy_v0131_candidate(self, target: Path) -> None:
-        """Build a disposable candidate from the recorded release and policy facts."""
-        self.copy_installed_surfaces(target)
-        for relative in (
-            INPUT_MANIFEST_RELATIVE,
-            "axiom_validation/runtime-contract-inputs-v1.json",
-            "evidence/runtime-identity.json",
-            "evidence/runtime-contract-history-v1.json",
-            "evidence/runtime-contract-history-v2.json",
-            "evidence/repository-policy-revisions-v1.json",
-        ):
-            destination = target / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(REPOSITORY_ROOT / relative, destination)
+        """Replay one frozen candidate commit, independently of the current package.
+
+        This commit records the reviewed 0.13.1 candidate, not a tag or proof of
+        publication. The disposable test repository must contain its objects.
+        """
+        archive = getattr(type(self), "_v0131_archive", None)
+        if archive is None:
+            root = subprocess.check_output(
+                ["git", "-C", str(REPOSITORY_ROOT), "rev-parse", "--show-toplevel"],
+                text=True,
+            ).strip()
+            self.assertEqual(REPOSITORY_ROOT.resolve(), Path(root).resolve())
+            archive = subprocess.check_output(
+                [
+                    "git", "-C", root, "archive", "--format=tar",
+                    FROZEN_V0131_CANDIDATE, "--",
+                    *self.manifest["installedSurfaceRoots"],
+                    INPUT_MANIFEST_RELATIVE,
+                    "axiom_validation/runtime-contract-inputs-v1.json",
+                    "evidence/runtime-identity.json",
+                    "evidence/runtime-contract-history-v1.json",
+                    "evidence/runtime-contract-history-v2.json",
+                    "evidence/repository-policy-revisions-v1.json",
+                ],
+            )
+            type(self)._v0131_archive = archive
+        with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as snapshot:
+            snapshot.extractall(target, filter="data")
 
     def check_candidate_identity(self, root: Path) -> list[str]:
         failures: list[str] = []
@@ -254,7 +277,7 @@ class RuntimeIdentityTests(unittest.TestCase):
 
             failures: list[str] = []
             record_count = check_runtime_identity(failures, root=root)
-            self.assertEqual(65, record_count)
+            self.assertEqual(self.expected_record_count, record_count)
             self.assertEqual([], failures)
 
     def test_new_external_evidence_requires_v2_and_canonical_digest(self):

@@ -280,6 +280,14 @@
       "sourceIssue": null,
       "summary": "Prepare the explicitly requested v0.13.1 repository-tooling release under a version-specific policy exception, preserving the installed runtime and all normal release verification.",
       "runtimeContractDigest": "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
+    },
+    {
+      "revision": 36,
+      "recordedOn": "2026-09-19",
+      "baselineCommit": "98624d806beed701beeb50235edc96675c214924",
+      "sourceIssue": null,
+      "summary": "Prepare compatible v0.13.2 skill contract fixes for Git submission and recovery, rollback preparation, and target-owned release readiness; preserve historical evidence and action authority.",
+      "runtimeContractDigest": "sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047"
     }
   ]
 }

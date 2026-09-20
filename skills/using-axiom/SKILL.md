@@ -61,7 +61,8 @@ Axiom routes only the smallest installed workflow set that matches.
   submit, publish, or push does not select this route.
 - `reversible-system-change`: plan, rehearse, or execute persistent installs,
   upgrades, deployments, migrations, destructive retention, or promotions with
-  rollback, data, service, or activation risk. Plans remain read-only.
+  rollback, data, service, or activation risk. Includes backup preparation.
+  Plans remain read-only.
 
 Resolve cross-route ownership from this table before inspecting either
 candidate body. A deployment, promotion, migration, destructive retention, or

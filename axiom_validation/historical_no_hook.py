@@ -1,9 +1,9 @@
 """Replay frozen v0.10.1 experiments separately from the current installation.
 
-Six superseded runtime, identity and context inputs come from the immutable release.
-Experiment documents, implementations, and other Skills come from the inspected
-tree so their existing drift checks still run. The later planning, clarification,
-and delegation Skills are outside that historical inventory. No result becomes
+Superseded identity and context inputs come from the immutable release fixtures.
+The complete Skill inventory comes from the bundle's bound source, never a mix
+with current runtime edits. Experiment documents and implementations remain from
+the inspected tree so their existing drift checks still run. No result becomes
 current evidence.
 """
 
@@ -48,6 +48,76 @@ FROZEN_INPUTS = {
 }
 
 
+def _restore_bound_runtime(root: Path, destination: Path) -> None:
+    """Materialize only bytes proved by the unchanged historical bundle binding."""
+    from .no_hook_bundle import (
+        EVIDENCE_RELATIVE, SCHEMA_RELATIVE, MAX_BUNDLE_MANIFEST_BYTES,
+        MAX_RUNTIME_FILE_BYTES, BundleContractError, GitObjectSource,
+        _load_json_bytes, _read_regular_file, load_bundle_schema,
+        validate_bundle_manifest,
+    )
+
+    evidence_path = root / EVIDENCE_RELATIVE
+    if not evidence_path.exists() and not evidence_path.is_symlink():
+        # Small isolation-test trees can omit experiment inputs. Actual evidence
+        # validators still reject a missing bundle; this supplies no evidence.
+        return
+    evidence = _load_json_bytes(_read_regular_file(
+        evidence_path, "historical bundle evidence", maximum=MAX_BUNDLE_MANIFEST_BYTES,
+    ), "historical bundle evidence")
+    if type(evidence) is not dict or "bundleManifest" not in evidence:
+        raise ValueError("historical bundle manifest is unavailable")
+    schema, schema_bytes, _ = load_bundle_schema(root / SCHEMA_RELATIVE)
+    manifest = validate_bundle_manifest(
+        evidence["bundleManifest"], schema=schema, schema_bytes=schema_bytes,
+    )
+    records = manifest["runtimeFiles"]
+    payload = {}
+    for record in records:
+        try:
+            data = _read_regular_file(
+                destination / record["path"], "historical runtime input",
+                maximum=MAX_RUNTIME_FILE_BYTES,
+            )
+        except (OSError, BundleContractError):
+            break
+        if ((destination / record["path"]).lstat().st_mode & 0o111
+                or len(data) != record["size"]
+                or hashlib.sha256(data).hexdigest() != record["sha256"]):
+            break
+        payload[record["path"]] = data
+    if len(payload) != len(records):
+        executable = shutil.which("git")
+        if executable is None:
+            raise ValueError("bound historical runtime source requires local Git objects")
+        source = GitObjectSource(root.resolve(), Path(executable).resolve())
+        binding = manifest["source"]
+        if source.tree_for_commit(binding["commit"]) != binding["tree"]:
+            raise ValueError("historical runtime source commit/tree binding differs")
+        entries = source.list_files(binding["commit"], "skills")
+        actual = {entry.path: entry for entry in entries}
+        if set(actual) != {record["path"] for record in records}:
+            raise ValueError("historical runtime source inventory differs from bound bundle")
+        payload = {}
+        for record in records:
+            entry = actual[record["path"]]
+            if (entry.mode != record["mode"] or entry.size != record["size"]
+                    or hashlib.sha256(entry.data).hexdigest() != record["sha256"]):
+                raise ValueError("historical runtime source bytes differ from bound bundle")
+            payload[entry.path] = entry.data
+
+    skills = destination / "skills"
+    if skills.is_symlink() or any(parent.is_symlink() for parent in skills.parents):
+        raise ValueError("historical replay path contains a symbolic link: skills")
+    if skills.exists():
+        shutil.rmtree(skills)
+    for relative, data in payload.items():
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        target.chmod(0o644)
+
+
 def restore_frozen_inputs(root: Path, destination: Path, *, runtime_only: bool = False) -> None:
     """Copy source-bound text fixtures into an already disposable replay tree."""
     if destination.resolve() == root.resolve():
@@ -67,6 +137,7 @@ def restore_frozen_inputs(root: Path, destination: Path, *, runtime_only: bool =
             raise ValueError(f"historical replay path contains a symbolic link: {relative}")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+    _restore_bound_runtime(root, destination)
     # These exact public Skills did not exist in the frozen v0.10.1 inventory.
     # Current package checks own them; this disposable replay retains the old set.
     for name in ("task-planning", "clarify-intent", "delegate-simple-task"):
@@ -120,7 +191,7 @@ def check_no_hook_bundle(failures: list[str], root: Path = REPOSITORY_ROOT) -> t
         with historical_snapshot(root) as snapshot:
             return check_frozen(failures, snapshot)
     except (OSError, UnicodeError, ValueError) as error:
-        failures.append(f"historical no-Hook bundle: {error}")
+        failures.append(f"no-Hook bundle validation failed: historical replay: {error}")
         return (0, 0)
 
 

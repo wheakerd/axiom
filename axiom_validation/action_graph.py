@@ -1275,12 +1275,12 @@ def check_distribution_workflow_text(
         )
 
     steps = job.get("steps") if isinstance(job, dict) else None
-    if not isinstance(steps, list) or len(steps) != 6 or any(
+    if not isinstance(steps, list) or len(steps) != 7 or any(
         not isinstance(step, dict) for step in steps
     ):
-        failures.append(f"{label} must contain exactly six canonical validation steps")
+        failures.append(f"{label} must contain exactly seven canonical validation steps")
     else:
-        checkout, python, node, environment, distribution, publication = steps
+        checkout, python, node, environment, history, distribution, publication = steps
         checkout_with = checkout.get("with")
         if (
             set(checkout) != {"name", "uses", "with"}
@@ -1332,7 +1332,7 @@ def check_distribution_workflow_text(
             "          node --version\n"
             "          git --version\n"
             "\n"
-            "      - name: Check distribution agreement\n"
+            "      - name: Fetch frozen bundle source\n"
         )
         if (
             set(environment) != {"name", "run"}
@@ -1343,6 +1343,16 @@ def check_distribution_workflow_text(
             failures.append(
                 f"{label} must report the exact Ubuntu, Python, Node.js, and Git environment"
             )
+
+        if (
+            set(history) != {"name", "run"}
+            or scalar(history.get("name")) != "Fetch frozen bundle source"
+            or scalar(history.get("run"))
+            != "git -c gc.auto=0 -c maintenance.auto=false fetch --no-tags "
+            "--no-write-fetch-head --no-recurse-submodules --no-auto-maintenance "
+            "--refmap= origin bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1"
+        ):
+            failures.append(f"{label} must fetch only the exact frozen bundle source without refs or tags")
 
         expected_commands = (
             (

@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
+from unittest import mock
 
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.historical_no_hook import (
@@ -17,6 +20,7 @@ from axiom_validation.historical_no_hook import (
     historical_snapshot,
     restore_frozen_inputs,
 )
+from axiom_validation.no_hook_bundle import EVIDENCE_RELATIVE, SCHEMA_RELATIVE, GitObjectSource
 
 
 class HistoricalSnapshotTests(unittest.TestCase):
@@ -30,6 +34,63 @@ class HistoricalSnapshotTests(unittest.TestCase):
         retained.parent.mkdir(parents=True)
         retained.write_text("Current planning capability\n", encoding="utf-8")
         return root
+
+    def _bound_runtime_source(self, directory: Path):
+        root = self._source(directory)
+        for relative in (EVIDENCE_RELATIVE, SCHEMA_RELATIVE):
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(REPOSITORY_ROOT / relative, target)
+        manifest = json.loads((root / EVIDENCE_RELATIVE).read_text())["bundleManifest"]
+        executable = shutil.which("git")
+        if executable is None:
+            self.skipTest("bound historical runtime reconstruction requires Git")
+        source = GitObjectSource(REPOSITORY_ROOT, Path(executable).resolve())
+        return root, manifest, source
+
+    def test_runtime_edits_replay_the_complete_bound_source_without_changing_inputs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root, manifest, source = self._bound_runtime_source(Path(temporary).resolve())
+            changed = root / "skills/traceable-git-submit/SKILL.md"
+            changed.parent.mkdir(parents=True)
+            changed.write_text("Current runtime instructions\n", encoding="utf-8")
+            added = changed.parent / "references/new-current-phase.md"
+            added.parent.mkdir()
+            added.write_text("New current phase\n", encoding="utf-8")
+            evidence_bytes = (root / EVIDENCE_RELATIVE).read_bytes()
+            with mock.patch("axiom_validation.no_hook_bundle.GitObjectSource", return_value=source):
+                with historical_snapshot(root) as snapshot:
+                    paths = {path.relative_to(snapshot).as_posix()
+                             for path in (snapshot / "skills").rglob("*") if path.is_file()}
+                    self.assertEqual({record["path"] for record in manifest["runtimeFiles"]}, paths)
+                    for record in manifest["runtimeFiles"]:
+                        data = (snapshot / record["path"]).read_bytes()
+                        self.assertEqual(record["size"], len(data))
+                        self.assertEqual(record["sha256"], hashlib.sha256(data).hexdigest())
+                    self.assertEqual(evidence_bytes, (snapshot / EVIDENCE_RELATIVE).read_bytes())
+            self.assertEqual("Current runtime instructions\n", changed.read_text())
+            self.assertEqual("New current phase\n", added.read_text())
+            self.assertEqual(evidence_bytes, (root / EVIDENCE_RELATIVE).read_bytes())
+
+    def test_bound_runtime_rejects_source_bytes_that_do_not_match_the_record(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root, manifest, source = self._bound_runtime_source(Path(temporary).resolve())
+            entries = list(source.list_files(manifest["source"]["commit"], "skills"))
+            entries[0] = replace(entries[0], data=entries[0].data + b"altered")
+            with mock.patch("axiom_validation.no_hook_bundle.GitObjectSource", return_value=source):
+                with mock.patch.object(source, "list_files", return_value=tuple(entries)):
+                    with self.assertRaisesRegex(ValueError, "source bytes differ from bound bundle"):
+                        with historical_snapshot(root):
+                            self.fail("mismatching frozen bytes must not supply historical evidence")
+
+    def test_missing_bound_source_does_not_fall_back_to_current_runtime(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root, _, _ = self._bound_runtime_source(Path(temporary).resolve())
+            with mock.patch("axiom_validation.no_hook_bundle.GitObjectSource",
+                            side_effect=ValueError("bound source unavailable")):
+                with self.assertRaisesRegex(ValueError, "bound source unavailable"):
+                    with historical_snapshot(root):
+                        self.fail("unavailable history must not be replaced by live runtime")
 
     def _symlink(self, link: Path, target: Path, *, directory: bool = False) -> None:
         try:

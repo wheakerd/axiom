@@ -12,8 +12,8 @@ from .context_budget import load_json
 ROUTE_CATALOG_PATH = REPOSITORY_ROOT / "axiom_validation" / "route-boundaries-v1.json"
 ROUTE_SURFACES = (
     "README.md",
-    "docs/releases/v0.8.4.md",
 )
+HISTORICAL_ROUTE_SURFACES = ("docs/releases/v0.8.4.md",)
 ROUTE_MARKER = "route-boundary:traceable-git-submit-v1"
 ROUTE_START = f"<!-- {ROUTE_MARKER}:start -->"
 ROUTE_END = f"<!-- {ROUTE_MARKER}:end -->"
@@ -149,7 +149,7 @@ def validate_route_catalog(document: dict[str, Any], failures: list[str]) -> boo
             failures.append("route catalog preparedRelease artifactState drifted")
         if prepared.get("expectedRoute") != root.get("route"):
             failures.append("route catalog preparedRelease expectedRoute drifted")
-        if prepared.get("expectedPhase") != "hardened-submit":
+        if prepared.get("expectedPhase") != "prepared-release-submit":
             failures.append("route catalog preparedRelease expectedPhase drifted")
 
     trigger_values = root.get("traceableTriggers")
@@ -259,7 +259,7 @@ def validate_route_catalog(document: dict[str, Any], failures: list[str]) -> boo
                     failures.append(f"route catalog scenarios[{index}].route drifted")
                 if trigger == "prepared-plugin-release":
                     prepared_count += 1
-                    if phase != "hardened-submit":
+                    if phase != "prepared-release-submit":
                         failures.append(
                             f"route catalog scenarios[{index}] prepared release phase drifted"
                         )
@@ -312,11 +312,16 @@ def render_route_boundary(document: dict[str, Any]) -> str:
     """Render the reviewed Git route boundary without prose-owned facts."""
     route = document["route"]
     trigger_labels = [entry["label"] for entry in document["traceableTriggers"]]
+    phase = (
+        "prepared-release"
+        if document["preparedRelease"]["expectedPhase"] == "prepared-release-submit"
+        else "hardened"
+    )
     return (
         "Ordinary named-remote, non-force staging, commits, and pushes stay "
         "host-native when they include neither a tag nor a traceable trigger. "
         "A combined commit, tag, and push of an already-prepared plugin release "
-        f"selects `{route}`'s hardened phase. The traceable triggers are "
+        f"selects `{route}`'s {phase} phase. The traceable triggers are "
         f"{_english_join(trigger_labels)}. Merely mentioning `submit`, `publish`, "
         "or `push` does not select the route."
     )
@@ -347,6 +352,12 @@ def check_route_surface_text(
     document: dict[str, Any],
     failures: list[str],
 ) -> None:
+    if relative_path in HISTORICAL_ROUTE_SURFACES:
+        # Preserve this version note's original phase, not the current route.
+        document = {
+            **document,
+            "preparedRelease": {**document["preparedRelease"], "expectedPhase": "hardened-submit"},
+        }
     expected = rendered_route_block(document)
     if text.count(ROUTE_START) != 1 or text.count(ROUTE_END) != 1:
         failures.append(f"{relative_path} must contain exactly one managed route-boundary block")
@@ -379,7 +390,7 @@ def check_route_catalog(failures: list[str]) -> int:
                     f"{display_path(front_door_path)} drifted from route catalog anchor {anchor!r}"
                 )
 
-    for relative_path in ROUTE_SURFACES:
+    for relative_path in (*ROUTE_SURFACES, *HISTORICAL_ROUTE_SURFACES):
         path = REPOSITORY_ROOT / relative_path
         try:
             text = path.read_text(encoding="utf-8")

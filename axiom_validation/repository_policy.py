@@ -666,7 +666,7 @@ def check_release_version_surfaces(failures: list[str]) -> None:
         (
             REPOSITORY_ROOT / "docs" / "compatibility.md",
             (
-                f"The Git record for `{release_tag}` reports:",
+                f"The checked-in candidate for `{release_tag}` reports:",
                 f"](releases/{release_tag}.md)",
             ),
         ),

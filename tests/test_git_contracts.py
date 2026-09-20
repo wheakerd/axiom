@@ -1,5 +1,6 @@
 """Focused tests for traceable-Git safety gates and fixtures."""
 
+import copy
 import os
 import subprocess
 import tempfile
@@ -7,11 +8,15 @@ import unittest
 from pathlib import Path
 
 from axiom_validation.git_contracts import (
+    CLEANUP_AUTHORITY_FIELDS,
+    backup_cleanup_transition,
+    backup_ref_gate,
     direct_push_fast_forward_gate,
     lightweight_direct_submit_gate,
     lightweight_push_arguments,
     lightweight_push_outcome,
     ordinary_combined_commit_push_gate,
+    ordered_push_baselines_gate,
     safe_git_oid,
     safe_git_operand,
 )
@@ -19,6 +24,181 @@ from axiom_validation.cases.git_contracts import check_traceable_security_contra
 
 
 class GitContractTests(unittest.TestCase):
+    @staticmethod
+    def fixture_git(repository: Path, *arguments: str, check: bool = True):
+        return subprocess.run(
+            ("git", "-C", str(repository), *arguments),
+            env={
+                **{key: os.environ[key] for key in ("SystemRoot", "WINDIR", "TEMP", "TMP") if key in os.environ},
+                "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+                "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_CONFIG_GLOBAL": os.devnull,
+                "GIT_TERMINAL_PROMPT": "0",
+                "GIT_NO_LAZY_FETCH": "1",
+            },
+            check=check, capture_output=True, text=True, timeout=10,
+        )
+
+    def initialize_fixture(self, repository: Path) -> None:
+        repository.mkdir()
+        self.fixture_git(repository, "init", "--quiet", "--initial-branch=main")
+        self.fixture_git(repository, "config", "user.name", "fixture")
+        self.fixture_git(repository, "config", "user.email", "fixture@example.invalid")
+
+    def fixture_commit(self, repository: Path, subject: str) -> str:
+        self.fixture_git(repository, "commit", "--quiet", "--allow-empty", "-m", subject)
+        return self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip()
+
+    def test_backup_cleanup_recovers_the_delete_before_record_update_window(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-backup-cleanup-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            old_head = self.fixture_commit(repository, "original history")
+            final_head = self.fixture_commit(repository, "consolidated history")
+            backup_ref = "refs/axiom/backups/workflow-1"
+            self.fixture_git(repository, "update-ref", "--no-deref", backup_ref, old_head, "0" * 40)
+            self.assertNotEqual(old_head, final_head)
+            self.assertFalse(safe_git_oid(backup_ref, "sha1"))
+            self.assertTrue(backup_ref_gate(backup_ref, old_head, "sha1", "non-symbolic", old_head))
+
+            authority = dict.fromkeys(CLEANUP_AUTHORITY_FIELDS, True)
+            readiness = {"backupRefDeleted": False}
+
+            def next_step(record):
+                symbolic = self.fixture_git(repository, "symbolic-ref", "--quiet", backup_ref, check=False)
+                resolved = self.fixture_git(repository, "rev-parse", "--verify", "--quiet", backup_ref, check=False)
+                kind = "symbolic" if symbolic.returncode == 0 else (
+                    "non-symbolic" if resolved.returncode == 0 else "absent"
+                )
+                return backup_cleanup_transition(
+                    record, authority, backup_ref=backup_ref, old_head=old_head,
+                    object_format="sha1", observed_kind=kind,
+                    observed_oid=resolved.stdout.strip() if resolved.returncode == 0 else None,
+                )
+
+            self.assertEqual("persist-intent", next_step(readiness))
+            readiness["backupDeletion"] = {
+                "state": "pending", "backupRef": backup_ref, "expectedOid": old_head,
+            }
+            self.assertEqual("delete-backup", next_step(readiness))
+            self.fixture_git(repository, "update-ref", "--no-deref", "-d", backup_ref, old_head)
+            # The process ended after ref deletion and before the metadata update.
+            self.assertEqual("record-complete", next_step(readiness))
+            self.assertEqual("blocked", next_step({"backupRefDeleted": False}))
+            wrong_intent = copy.deepcopy(readiness)
+            wrong_intent["backupDeletion"]["expectedOid"] = final_head
+            self.assertEqual("blocked", next_step(wrong_intent))
+            authority["verification_current"] = False
+            self.assertEqual("blocked", next_step(readiness))
+            authority["verification_current"] = True
+            readiness["backupRefDeleted"] = True
+            readiness["backupDeletion"]["state"] = "complete"
+            self.assertEqual("delete-record", next_step(readiness))
+            self.assertEqual(final_head, self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+    def test_backup_ref_rejects_symbolic_wrong_namespace_and_changed_oid(self):
+        backup_ref = "refs/axiom/backups/workflow-1"
+        old_head = "a" * 40
+        authority = dict.fromkeys(CLEANUP_AUTHORITY_FIELDS, True)
+        readiness = {
+            "backupRefDeleted": False,
+            "backupDeletion": {"state": "pending", "backupRef": backup_ref, "expectedOid": old_head},
+        }
+        for ref, kind, oid in (
+            (backup_ref, "symbolic", old_head),
+            (backup_ref, "uncertain", old_head),
+            (backup_ref, "non-symbolic", "b" * 40),
+            ("refs/heads/main", "non-symbolic", old_head),
+            (old_head, "non-symbolic", old_head),
+        ):
+            with self.subTest(ref=ref, kind=kind, oid=oid):
+                self.assertFalse(backup_ref_gate(ref, old_head, "sha1", kind, oid))
+                self.assertEqual("blocked", backup_cleanup_transition(
+                    readiness, authority, backup_ref=ref, old_head=old_head,
+                    object_format="sha1", observed_kind=kind, observed_oid=oid,
+                ))
+
+    def test_each_ordered_target_uses_its_own_live_ancestor_before_any_push(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-ordered-baselines-") as temporary:
+            root = Path(temporary)
+            repository = root / "client"
+            self.initialize_fixture(repository)
+            first = self.fixture_commit(repository, "A")
+            second = self.fixture_commit(repository, "B")
+            final = self.fixture_commit(repository, "C")
+            remotes = (root / "first.git", root / "second.git")
+            for remote, baseline in zip(remotes, (first, second)):
+                remote.mkdir()
+                self.fixture_git(remote, "init", "--bare", "--quiet")
+                self.fixture_git(repository, "push", "--quiet", str(remote), f"{baseline}:refs/heads/main")
+            frozen = [
+                {"ordinal": ordinal, "fingerprint": f"fixture-{ordinal}",
+                 "mergeRef": "refs/heads/main", "liveBaselineSha": baseline}
+                for ordinal, baseline in enumerate((first, second), 1)
+            ]
+
+            def observations():
+                result = []
+                for target, remote in zip(frozen, remotes):
+                    oid = self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip()
+                    result.append({
+                        "ordinal": target["ordinal"], "fingerprint": target["fingerprint"],
+                        "mergeRef": target["mergeRef"], "oid": oid,
+                        "objectType": self.fixture_git(repository, "cat-file", "-t", oid).stdout.strip(),
+                        "isAncestor": self.fixture_git(repository, "merge-base", "--is-ancestor", oid, final, check=False).returncode == 0,
+                    })
+                return result
+
+            def accepted(targets, observed):
+                return ordered_push_baselines_gate(
+                    targets, observed, final, "sha1",
+                    authorization_current=True, operation_state_clear=True,
+                )
+
+            self.assertTrue(accepted(frozen, observations()))
+            borrowed = copy.deepcopy(frozen)
+            borrowed[1]["liveBaselineSha"] = first
+            self.assertFalse(accepted(borrowed, observations()))
+            self.assertFalse(accepted(frozen, list(reversed(observations()))))
+            # An endpoint changed after inventory. The all-target gate prevents
+            # even the still-valid first endpoint from being pushed.
+            self.fixture_git(repository, "push", "--quiet", str(remotes[1]), f"{final}:refs/heads/main")
+            if accepted(frozen, observations()):
+                self.fail("target drift must stop before the first push")
+            self.assertEqual(first, self.fixture_git(remotes[0], "rev-parse", "refs/heads/main").stdout.strip())
+            self.fixture_git(remotes[1], "update-ref", "refs/heads/main", second, final)
+            self.assertTrue(accepted(frozen, observations()))
+            for remote in remotes:
+                self.fixture_git(repository, "push", "--quiet", str(remote), "refs/heads/main:refs/heads/main")
+            for remote in remotes:
+                self.assertEqual(final, self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
+
+    def test_prepared_release_atomic_push_does_not_leave_a_branch_without_its_tag(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-prepared-release-") as temporary:
+            root = Path(temporary)
+            repository = root / "client"
+            remote = root / "remote.git"
+            self.initialize_fixture(repository)
+            remote.mkdir()
+            self.fixture_git(remote, "init", "--bare", "--quiet")
+            baseline = self.fixture_commit(repository, "base")
+            self.fixture_git(repository, "push", "--quiet", str(remote), "refs/heads/main:refs/heads/main")
+            final = self.fixture_commit(repository, "prepared release")
+            tag_ref = "refs/tags/v1.2.3"
+            self.fixture_git(repository, "update-ref", "--no-deref", tag_ref, final, "0" * 40)
+            self.fixture_git(remote, "update-ref", "--no-deref", tag_ref, baseline, "0" * 40)
+            refspecs = ("refs/heads/main:refs/heads/main", f"{tag_ref}:{tag_ref}")
+            rejected = self.fixture_git(repository, "push", "--atomic", str(remote), *refspecs, check=False)
+            self.assertNotEqual(0, rejected.returncode)
+            self.assertEqual(baseline, self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
+            self.assertEqual(baseline, self.fixture_git(remote, "rev-parse", tag_ref).stdout.strip())
+            # Restore this disposable receiver's test precondition; production
+            # recovery must retain a conflicting immutable tag and stop.
+            self.fixture_git(remote, "update-ref", "--no-deref", "-d", tag_ref, baseline)
+            self.fixture_git(repository, "push", "--atomic", str(remote), *refspecs)
+            self.assertEqual(final, self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
+            self.assertEqual(final, self.fixture_git(remote, "rev-parse", tag_ref).stdout.strip())
+
     def test_all_traceable_git_fixtures(self):
         failures = []
         count = check_traceable_security_contracts(failures)

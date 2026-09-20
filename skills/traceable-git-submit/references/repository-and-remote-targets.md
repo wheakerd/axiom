@@ -24,7 +24,7 @@ escaping; a linked worktree is valid when Git resolves both identities.
 
 ## Hardened Direct Submit Preflight
 
-For a history-preserving submit, freeze object format, symbolic branch,
+For an existing-commit history-preserving push, freeze object format, symbolic branch,
 upstream display/full tracking ref, `upstreamRemote`, `mergeRef`, `HEAD`,
 upstream OID, local divergence, and operation-state paths. Resolve `pushRemote`
 under the next section. Use current Git facts, not Axiom cache or provenance,
@@ -36,7 +36,7 @@ Stop on detached/unborn `HEAD`, missing upstream or push identity, a local-only
 push remote, or an in-progress operation. Do not stop solely because the local
 tracking ref is stale, missing an object already identified by the live target,
 or reports behind/diverged state. Set `finalSha` to current `HEAD`; bind
-`liveBaselineSha` only from the verified live target under the next gates.
+`liveBaselineSha` separately for each verified live target under the next gates.
 Uncommitted work is excluded: never stage, stash, clean, commit, or require a
 clean worktree merely to push existing commits. Never force-push on this route.
 
@@ -62,30 +62,14 @@ configuration fallback selects `pushRemote != upstreamRemote` and the user did
 not name it, report only validated remote names and target fingerprints and
 obtain exact destination confirmation before push or provenance binding.
 
-## Network Semantic And Transport Closure
+## Network Closure
 
-First apply the generic semantic closure in `safe-git-values-and-metadata.md`.
-For an authorized refresh or push, also close the network-specific effects
-below; stop if any cannot be disabled or separately authorized.
-
-Refresh uses one exact source-only refspec and empty `--refmap`, never
-`remote.<name>.fetch`; fetch objects before compare-and-swap update of the sole
-tracking ref. Keep tags, prune/tag-prune, submodules, `FETCH_HEAD`, maintenance,
-and commit-graph writes off. Broad prune needs separate authority. Reject
-`fetch.bundleURI` and other implicit endpoints.
-
-Push uses one frozen raw target and exact full-ref refspec. Neutralize
-`push.followTags`, recurse, signing, push options, negotiation, upstream setup,
-prune, and force. Bypass pre-push hooks unless their exact frozen identity and
-action are separately authorized.
-
-Classify endpoints without display. Allow authenticated `https://`, `ssh://`,
-`git+ssh://`, and standard SCP-like SSH. Reject plaintext `http://`/`git://`,
-network `file://` or local paths, controls, `<helper>::<address>`, and `ext::`.
-At command scope set `protocol.allow=never`, enable only the classified HTTPS
-or SSH protocol, and keep `protocol.ext.allow` disabled. Contain enumeration,
-hashing, queries, errors, and debugging; emit only fingerprints, validated
-refs/OIDs, and sanitized status.
+Before any network operation, apply `network-transport.md` together with
+`safe-git-values-and-metadata.md`. A prepared-release submission uses this
+file's repository, identity and ordered-target gates; its commit construction,
+branch/tag baselines, two-ref push and verification belong exclusively to
+`prepared-release-submit.md`. The existing-commit preflight above does not
+prohibit that separately authorized preparation.
 
 ## Target Inventory And Authorization
 
@@ -112,21 +96,27 @@ Direct push identity remains in memory. A consolidated record binds only under
 `post-consolidation-recovery.md`; never select a subset from a multi-target
 remote.
 
-For a direct push, query the sole target's exact `mergeRef` after inventory.
-Require exactly one full OID, require that object to exist locally as a commit,
-and require `git merge-base --is-ancestor <live-baseline-sha> <final-sha>` to
-succeed. Bind that OID as `liveBaselineSha`. Missing, unreadable, non-local,
-non-commit, or non-ancestor live state stops without fetch, tracking-ref
-mutation, push, or retry. The local tracking OID remains informational and is
-never compared with `liveBaselineSha` as a permission gate.
+For a direct push, query each ordered target's exact `mergeRef` after
+inventory. Require exactly one full OID per target, a locally available commit,
+and `git merge-base --is-ancestor <target-baseline-sha> <final-sha>` success.
+Bind that OID as `liveBaselineSha` on that target's ordinal/fingerprint/ref
+record. Different targets may have different ancestor baselines; never borrow
+one target's proof for another. Missing, unreadable, non-local, non-commit, or
+non-ancestor state at any target means zero pushes, without fetch, tracking-ref
+mutation or retry. Tracking OIDs remain informational. Consolidated submission
+uses its recorded `baselineSha` for every bound target instead; do not invent
+a direct-push baseline or change provenance during recovery.
 
 ## Immediate Drift Gate
 
 Immediately before the first push, re-resolve push identity, re-enumerate
 targets, and require exact equality with frozen or bound fields. Recheck
-operation state and the direct branch ref. Query every target's `mergeRef`;
-require exactly one result equal to the bound `liveBaselineSha` from each before
-issuing any push. Missing, unreadable, changed, moved, non-local, non-commit, or
+operation state and require the direct branch ref still equals `finalSha` for
+an existing-commit push, or recorded `newCommit` for consolidation/recovery.
+Query every target's `mergeRef`; compare each result with that same target's
+bound `liveBaselineSha`, or recorded `baselineSha` for consolidation. Require
+all comparisons to pass before issuing any push. Missing, unreadable, changed,
+moved, non-local, non-commit, or
 non-ancestor state means zero pushes. Report only ordinal/fingerprint, escaped
 ref, and expected/observed OID.
 
@@ -160,4 +150,6 @@ sanitization cannot be guaranteed, report only target verification failure.
 ## References
 
 - `safe-git-values-and-metadata.md`
+- `network-transport.md`
+- `prepared-release-submit.md`
 - `post-consolidation-recovery.md`

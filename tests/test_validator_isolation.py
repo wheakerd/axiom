@@ -12,18 +12,21 @@ from unittest import mock
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation import no_hook_linux_isolation as isolation
 from axiom_validation.no_hook_linux_isolation import check_no_hook_linux_isolation
-from axiom_validation.historical_no_hook import check_no_hook_observation
+from axiom_validation.historical_no_hook import (
+    check_no_hook_observation,
+    historical_snapshot,
+)
 
 
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 125 required files, 3 JSON files, "
-    "128 Markdown files, 17 documentation negative fixtures, "
+    "Publication validation passed: 126 required files, 3 JSON files, "
+    "133 Markdown files, 17 documentation negative fixtures, "
     "78 offline route contract fixtures, "
     "115 black-box routing cases, 50 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 7 routing-context lifecycle scenarios, "
-    "22 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
-    "65 canonical installed-runtime inputs, "
+    "23 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
+    "69 canonical installed-runtime inputs, "
     "11 critical-path CODEOWNERS entries, 238 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "
     "7 source-linked cross-route/resume contracts, 102 validator parser fixtures, "
@@ -63,16 +66,19 @@ with mock.patch.object(ctypes, 'CDLL', side_effect=AssertionError('runtime initi
 
     def test_protocol_validator_never_starts_codex_or_another_process(self):
         failures: list[str] = []
-        with (
-            mock.patch("axiom_validation.no_hook_observation.subprocess.Popen") as launch,
-            mock.patch("axiom_validation.no_hook_linux_isolation.subprocess.Popen") as domain_launch,
-            mock.patch.object(isolation, "detect_process_domain_capabilities", side_effect=AssertionError("runtime detector called")),
-            mock.patch.object(isolation, "_libc", side_effect=AssertionError("runtime library called")),
-            mock.patch.object(isolation.LinuxProcessDomainSupervisor, "open", side_effect=AssertionError("runtime backend called")),
-            mock.patch.object(isolation, "run_current_host_synthetic_probe", side_effect=AssertionError("runtime probe called")),
-        ):
-            self.assertEqual((16, 14), check_no_hook_observation(failures))
-            self.assertEqual(1, check_no_hook_linux_isolation(failures))
+        # Prepare the bound historical source before asserting that protocol
+        # validation launches no processes; source preparation may read Git objects.
+        with historical_snapshot() as snapshot:
+            with (
+                mock.patch("axiom_validation.no_hook_observation.subprocess.Popen") as launch,
+                mock.patch("axiom_validation.no_hook_linux_isolation.subprocess.Popen") as domain_launch,
+                mock.patch.object(isolation, "detect_process_domain_capabilities", side_effect=AssertionError("runtime detector called")),
+                mock.patch.object(isolation, "_libc", side_effect=AssertionError("runtime library called")),
+                mock.patch.object(isolation.LinuxProcessDomainSupervisor, "open", side_effect=AssertionError("runtime backend called")),
+                mock.patch.object(isolation, "run_current_host_synthetic_probe", side_effect=AssertionError("runtime probe called")),
+            ):
+                self.assertEqual((16, 14), check_no_hook_observation(failures, root=snapshot))
+                self.assertEqual(1, check_no_hook_linux_isolation(failures))
         self.assertEqual([], failures)
         launch.assert_not_called()
         domain_launch.assert_not_called()

@@ -61,12 +61,15 @@ enter remote verification. Only a bound record can reach `cleanupReady`.
 
 1. Require `repo`, `branchRef`, `branch`, `upstream`, `upstreamRemote`, and
    `mergeRef` to match current facts. Require valid full-SHA `oldHead`,
-   `finalTree`, `newCommit`, and `backupRef`. Bind an unbound record through the
-   gate above before remote work; require strict equality for a bound record.
+   `finalTree`, and `newCommit`, with commit/tree types as applicable. Validate
+   `backupRef` as the exact full `refs/axiom/backups/` ref name through
+   `safe-git-values-and-metadata.md`, not as an OID. Bind an unbound record
+   through the gate above before remote work; require equality for a bound one.
 2. Require `HEAD == newCommit`, `newCommit^ == baselineSha`, and
    `newCommit^{tree} == oldHead^{tree} == finalTree`.
-3. If `backupRef` exists, require `backupRef == oldHead`. A missing ref is only
-   observed state until cleanup proof permits it.
+3. If `backupRef` exists, require a non-symbolic ref whose resolved commit OID
+   equals `oldHead`. A missing ref is only observed state until the cleanup
+   intent and proof below permit reconciliation.
 4. Query each bound target's `mergeRef`; require exactly `baselineSha` or
    `newCommit`. Refresh only through `consolidation-and-push.md` under explicit
    refresh authority. Push/recovery authority never implies fetch; without it,
@@ -109,20 +112,32 @@ Only after every bound target and refreshed `@{u}` equal `newCommit`:
    insufficient.
 4. Under exact authority, recheck identity, bound targets, upstream, cache,
    containment, and backup immediately before deletion. Drift stops cleanup.
-5. Delete an existing backup with old-value compare-and-swap:
+5. Before deletion, atomically persist and reread `cleanupReady.backupDeletion`
+   with state `pending`, the exact `backupRef`, and expected OID `oldHead`.
+   Bind it to the unchanged record identity, final commit, push target set,
+   and current exact cleanup authority. Use the verified sibling lock and
+   no-follow atomic replacement contract for this and later record updates.
+   If intent persistence is uncertain, do not delete the ref.
+6. Delete an existing backup with old-value compare-and-swap:
 
    ```bash
    git -C <repo> update-ref --no-deref -d <backup-ref> <old-head>
    ```
 
-6. Atomically set `cleanupReady.backupRefDeleted: true`, reread through the
-   no-follow boundary, and verify every bound field.
-7. Delete the active record through the same containment boundary.
+7. Verify that the exact ref is absent. Atomically set
+   `cleanupReady.backupRefDeleted: true` and `backupDeletion.state: complete`,
+   reread through the no-follow boundary, and verify every bound field.
+8. Delete the active record through the same containment boundary.
 
-A missing backup is acceptable only when its deletion flag is already true,
-exact authority covers record deletion, and every current proof still passes.
-Otherwise stop. On failure retain the record; resume at the first incomplete
-step only after fresh verification and valid exact authority.
+A pending deletion resumes only after identity, intent, current authority,
+containment, every target, upstream, and baseline proofs still pass. If the ref
+still equals `oldHead`, resume its compare-and-swap deletion; if absent, record
+the observed desired state through step 7 without issuing another deletion or
+claiming who removed it. A changed or symbolic ref stops. Absence without a
+matching persisted intent or an already-true deletion flag never proves
+authorized cleanup. An already-complete flag requires absence and current
+proofs before record deletion. On failure retain the record and resume at the
+first incomplete step; never recreate the backup or invent intent afterward.
 
 ## References
 
