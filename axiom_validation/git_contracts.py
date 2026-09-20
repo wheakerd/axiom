@@ -76,6 +76,118 @@ def direct_push_fast_forward_gate(
     )
 
 
+def ordered_push_baselines_gate(
+    frozen_targets: Sequence[Mapping[str, Any]],
+    observed_targets: Sequence[Mapping[str, Any]],
+    final_oid: str,
+    object_format: str,
+    *,
+    authorization_current: bool,
+    operation_state_clear: bool,
+) -> bool:
+    """Check all ordered targets before any push, using each target's baseline."""
+    if (
+        authorization_current is not True
+        or operation_state_clear is not True
+        or not frozen_targets
+        or len(frozen_targets) != len(observed_targets)
+    ):
+        return False
+    fingerprints: set[str] = set()
+    for ordinal, (frozen, observed) in enumerate(zip(frozen_targets, observed_targets), 1):
+        if not isinstance(frozen, Mapping) or not isinstance(observed, Mapping):
+            return False
+        fingerprint = frozen.get("fingerprint")
+        baseline = frozen.get("liveBaselineSha")
+        ref = frozen.get("mergeRef")
+        if (
+            type(fingerprint) is not str or not fingerprint or fingerprint in fingerprints
+            or type(baseline) is not str or type(ref) is not str
+            or not ref.startswith("refs/heads/") or not safe_git_operand("ref", ref, True)
+            or type(frozen.get("ordinal")) is not int or frozen["ordinal"] != ordinal
+            or type(observed.get("ordinal")) is not int or observed["ordinal"] != ordinal
+            or observed.get("fingerprint") != fingerprint
+            or observed.get("mergeRef") != ref
+        ):
+            return False
+        fingerprints.add(fingerprint)
+        if not direct_push_fast_forward_gate(
+            baseline, final_oid, object_format,
+            target_count=1,
+            configured_target=True,
+            exact_ref=True,
+            force_requested=False,
+            live_object_type=observed.get("objectType"),
+            live_is_ancestor=observed.get("isAncestor"),
+            identity_rechecked=True,
+            operation_state_clear=operation_state_clear,
+            target_unchanged=True,
+            live_oid_unchanged=observed.get("oid") == baseline,
+        ):
+            return False
+    return True
+
+
+def backup_ref_gate(
+    backup_ref: str,
+    old_head: str,
+    object_format: str,
+    observed_kind: str,
+    observed_oid: str | None,
+) -> bool:
+    """Validate the recovery ref's name separately from its resolved commit OID."""
+    return bool(
+        type(backup_ref) is str
+        and backup_ref.startswith("refs/axiom/backups/")
+        and safe_git_operand("ref", backup_ref, True)
+        and type(old_head) is str
+        and safe_git_oid(old_head, object_format)
+        and observed_kind == "non-symbolic"
+        and observed_oid == old_head
+    )
+
+
+def backup_cleanup_transition(
+    cleanup_ready: Mapping[str, Any],
+    authority: Mapping[str, Any],
+    *,
+    backup_ref: str,
+    old_head: str,
+    object_format: str,
+    observed_kind: str,
+    observed_oid: str | None,
+) -> str:
+    """Resume only a proved exact cleanup state; ref absence is not intent."""
+    if not all_evidence(authority, CLEANUP_AUTHORITY_FIELDS):
+        return "blocked"
+    if not backup_ref_gate(backup_ref, old_head, object_format, "non-symbolic", old_head):
+        return "blocked"
+    deleted = cleanup_ready.get("backupRefDeleted")
+    if type(deleted) is not bool:
+        return "blocked"
+    absent = observed_kind == "absent" and observed_oid is None
+    present = backup_ref_gate(backup_ref, old_head, object_format, observed_kind, observed_oid)
+    intent = cleanup_ready.get("backupDeletion")
+    if intent is None:
+        if deleted and absent:
+            return "delete-record"
+        return "persist-intent" if not deleted and present else "blocked"
+    if (
+        not isinstance(intent, Mapping)
+        or set(intent) != {"state", "backupRef", "expectedOid"}
+        or intent.get("backupRef") != backup_ref
+        or intent.get("expectedOid") != old_head
+    ):
+        return "blocked"
+    if intent.get("state") == "pending" and not deleted:
+        if present:
+            return "delete-backup"
+        return "record-complete" if absent else "blocked"
+    if intent.get("state") == "complete" and deleted and absent:
+        return "delete-record"
+    return "blocked"
+
+
 def lightweight_direct_submit_gate(
     *,
     target_count: int,

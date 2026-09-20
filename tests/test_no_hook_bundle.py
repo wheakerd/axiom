@@ -2642,6 +2642,19 @@ class NoHookBundleTests(unittest.TestCase):
         )
         if historical:
             restore_frozen_inputs(REPOSITORY_ROOT, result)
+        else:
+            # Current-runtime scanner fixtures still need the historical source
+            # objects. Copy only the local object database into a fresh test Git
+            # root; never copy source config, hooks, credentials, or worktrees.
+            source = GitObjectSource(REPOSITORY_ROOT, GIT_EXECUTABLE)
+            objects = Path(source.run((
+                "rev-parse", "--path-format=absolute", "--git-path", "objects",
+            )).decode("utf-8").strip())
+            subprocess.run(
+                [str(GIT_EXECUTABLE), "init", "--quiet", str(result)],
+                env=source.environment, check=True, capture_output=True,
+            )
+            shutil.copytree(objects, result / ".git/objects", dirs_exist_ok=True)
         return result
 
     @staticmethod

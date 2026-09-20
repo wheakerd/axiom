@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, active-version promotion, or explicit machine-credential lifecycle inventory, plan, activation, or retirement with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; isolated restore rehearsals require exact rehearsal-write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, generic status queries, or conceptual explanations. When installation or deployment and architecture work are mutually exclusive alternatives, clarify before routing; do not select a different write scope on the user's behalf.
+description: Plan, prepare recovery material, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, active-version promotion, or explicit machine-credential lifecycle inventory, plan, activation, or retirement with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; recovery preparation and isolated restore rehearsals require bounded write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, generic status queries, or conceptual explanations. When installation or deployment and architecture work are mutually exclusive alternatives, clarify before routing; do not select a different write scope on the user's behalf.
 ---
 
 # Reversible System Change
@@ -20,6 +20,10 @@ restore, and verify the prior working state.
   `references/preflight-and-rollback.md`. Keep the entire phase read-only; do
   not create a candidate, backup, capsule, cache, remote record, or sensitive
   content access.
+- Prepare missing recovery material: read `references/preflight-and-rollback.md`
+  and `references/recovery-material-preparation.md`. This bounded authorized
+  phase may create an isolated backup before restore validation, but cannot
+  prepare a candidate, overwrite prior material, or alter active state.
 - Authorized isolated restore rehearsal: read
   `references/preflight-and-rollback.md` only. Freeze an isolated non-active
   target and its complete write set, obtain exact rehearsal-write authority,
@@ -27,12 +31,13 @@ restore, and verify the prior working state.
   evidence; it never authorizes candidate preparation, active promotion, the
   complete change, or cleanup.
 - Execute a complete authorized change: read
-  `references/preflight-and-rollback.md` first. Read
+  `references/preflight-and-rollback.md` first. If recovery material must be
+  created, enter its preparation phase within the current authority. Read
   `references/execution-and-verification.md` only after the exact target,
   write set, promotion authority, rollback coverage, and current restore
   validation pass.
 - Conceptual explanations and pure status/version/availability queries do not
-  select this skill or load either reference.
+  select this skill or load its references.
 
 ## Authority Boundary
 
@@ -41,10 +46,11 @@ postcondition before mutation. Ask one concise question only when target,
 environment, destructive scope, credentials, sensitive asset use, promotion,
 or rollback authority would change execution.
 
-Keep an isolated restore rehearsal, candidate preparation, active promotion,
-service restart/reload, data migration, destructive retention, sensitive asset
-access, rollback, and rehearsal cleanup as separate actions. Permission for one
-never implies another. Freeze the exact direct and indirect write set; a newly
+Keep recovery-material preparation, isolated restore rehearsal, candidate
+preparation, active promotion, service restart/reload, data migration,
+destructive retention, sensitive asset access, rollback, and cleanup as separate
+actions. Permission for one never implies another. Freeze the exact direct and
+indirect write set; a newly
 discovered target, dependency, service, data store, endpoint, or destructive
 effect requires renewed authority.
 
@@ -55,15 +61,18 @@ them.
 
 ## Rollback Gate
 
-Before the first persistent write, require a rollback point that represents the
-observed prior state, covers every non-forward-compatible effect, is currently
-readable by the restore principal with all prerequisites present, and has
-passed a target-native restore validation or an authorized isolated rehearsal.
+Before candidate or active-state mutation, require a rollback point that
+represents the observed prior state and covers every non-forward-compatible
+effect. It must be currently readable by the restore principal, with all
+prerequisites present, and must have passed a target-native restore validation
+or an authorized isolated rehearsal.
 Recheck that evidence immediately before mutation.
 
-For the isolated restore rehearsal itself, first prove that its non-active
-target cannot affect active state or data and that a failed rehearsal can be
-abandoned or recreated within its authorized write set. If that isolation is
+Recovery-material preparation uses its directly routed isolation and failure
+disposal gate. It does not require an already validated backup. For an isolated
+restore rehearsal, first prove that its non-active target cannot affect active
+state or data and that a failed rehearsal can be abandoned or recreated within
+its authorized write set. If that isolation is
 unproven, treat the rehearsal as complete execution and require this full gate.
 
 Keep `identified`, `present`, `readable`, `restore-validated`, and `rehearsed`
@@ -77,8 +86,8 @@ execution; a plan may report the gap.
 1. Observe current target and runtime state with scoped read-only probes.
 2. Freeze persistent effects, destructive roots, and the postcondition layers
    that own the requested outcome.
-3. Establish the rollback gate and validate an isolated candidate or dry run
-   without promotion when supported.
+3. Prepare missing recovery material through its bounded phase, establish the
+   full rollback gate, then validate a candidate or dry run without promotion.
 4. Refresh drift-sensitive preconditions immediately before the authorized
    write.
 5. Apply the smallest candidate mutation and promote only through separately
@@ -99,10 +108,12 @@ After resume or compaction, reobserve the target and drift-sensitive state,
 then fail closed unless host-native task context and current direct evidence
 from the owning system reconstruct the active phase, exact current user
 authority, frozen action envelope and complete write set, prior mutations and
-attempt identifiers, idempotency status, and rollback point and validation
-evidence. If any material field is missing, stale, or inconsistent, perform
-zero new mutations. Never adopt post-change state as the prior rollback
-baseline. An unknown external outcome enters Verify only and must not be
+attempt identifiers, idempotency status, and phase-appropriate recovery
+evidence. Preparation resumes through its isolation and disposal gate; candidate
+or active-state mutation still requires current full rollback validation. If any
+required field is missing, stale, or inconsistent, perform zero new mutations.
+Never adopt post-change state as the prior rollback baseline. An unknown
+external outcome enters Verify only and must not be
 resent. Reestablish changed or missing evidence and obtain renewed authority;
 authority cannot waive the rollback gate. Do not add a daemon, cache,
 telemetry, or persistent handoff tool to reconstruct the handoff.
@@ -114,9 +125,10 @@ telemetry, or persistent handoff tool to reconstruct the handoff.
 - Preserve unrelated state and the only working copy. Do not reset, stash,
   clean, install adjacent tools, change global configuration, or widen remote
   permissions to make a gate pass.
-- Delete candidate or rollback material only under explicit cleanup authority
-  after required postconditions pass and another required recovery route
-  remains.
+- Dispose of failed preparation output only through its frozen disposal gate.
+  Delete other candidate or rollback material only under explicit cleanup
+  authority after required postconditions pass and another required recovery
+  route remains.
 
 Report the target, actions actually authorized, mutation/promotion/rollback
 outcome, material failed or unavailable postconditions, final observed state,

@@ -2,14 +2,15 @@
 
 ## Purpose
 
-Apply only the authorized mutation, promote deliberately, verify its real
+After full rollback validation, apply the authorized mutation, verify its real
 postconditions, and restore the prior state when a pre-authorized failure gate
-is reached.
+is reached. Missing recovery material is prepared through its own phase first.
 
 ## Final Gate
 
-Immediately before the first persistent write, refresh the facts that could
-invalidate the plan:
+Immediately before candidate or active-state mutation, refresh the facts that
+could invalidate the plan. Recovery-material preparation uses its own phase;
+its successful completion cannot pass this full rollback gate by itself:
 
 - Target identity and active environment.
 - Current active version, entry point, configuration, and service state.

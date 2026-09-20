@@ -9,6 +9,23 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.13.2 - unreleased candidate
+
+### Fixed
+
+- Completed the prepared-release Git submission contract, retained separate fast-forward baselines for multiple destinations, and clarified network transport ownership.
+- Corrected consolidation backup-ref validation and recovery after interrupted backup cleanup.
+- Allowed bounded preparation of missing recovery material before restore validation, while retaining full rollback checks before later system changes.
+- Made plugin release-readiness checks follow the target repository's release contract, including local marketplaces and non-GitHub flows.
+
+### Behavioral impact
+
+These compatible corrections make existing Git, reversible-change, and plugin architecture workflows executable within their authorized scope. They add no public capability or implicit action authority. Unavailable evidence remains distinct from a check that does not apply. See the [v0.13.2 notes](docs/releases/v0.13.2.md).
+
+### Required action
+
+None. Existing release and recovery records retain their original evidence; resume interrupted work only after the workflow's current-state checks pass.
+
 ## 0.13.1 - unreleased candidate
 
 ### Fixed

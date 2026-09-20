@@ -17,7 +17,7 @@
   },
   "preparedRelease": {
     "artifactState": "already-prepared-plugin-release",
-    "expectedPhase": "hardened-submit",
+    "expectedPhase": "prepared-release-submit",
     "expectedRoute": "traceable-git-submit",
     "operations": [
       "commit",
@@ -53,14 +53,17 @@
     {
       "authorization": [
         "read",
+        "commit",
+        "tag",
         "network-push"
       ],
       "classification": "traceable",
       "name": "catalog-prepared-plugin-release",
-      "phase": "hardened-submit",
+      "phase": "prepared-release-submit",
       "references": [
         "references/safe-git-values-and-metadata.md",
-        "references/repository-and-remote-targets.md"
+        "references/repository-and-remote-targets.md",
+        "references/prepared-release-submit.md"
       ],
       "request": "Commit, tag, and push the already-prepared plugin release without rewriting history.",
       "route": "traceable-git-submit",

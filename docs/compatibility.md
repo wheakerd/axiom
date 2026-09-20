@@ -69,15 +69,15 @@ canonical current summary. It binds the current plugin and runtime identity,
 keeps current host states separate from prior evidence, and requires an
 immutable subject before a host pass can be claimed.
 
-The Git record for `v0.13.1` reports:
+The checked-in candidate for `v0.13.2` reports:
 
 - target binding: `pending-immutable-tag`;
 - checked-in status: `STATIC-ONLY`;
-- installed-runtime identity: plugin `0.13.1`, runtime-contract schema v2;
+- installed-runtime identity: plugin `0.13.2`, runtime-contract schema v2;
 - current Codex installed-host observation: `NOT-RUN`;
 
-See the [v0.13.1 version notes](releases/v0.13.1.md) for candidate-specific
-repository-tooling changes and the unchanged runtime identity. The candidate cannot bind itself to a
+See the [v0.13.2 version notes](releases/v0.13.2.md) for candidate-specific
+skill contract corrections and the changed runtime identity. The candidate cannot bind itself to a
 future signed merge, immutable tag, final workflow result, or post-publication
 host observation.
 
@@ -85,7 +85,7 @@ host observation.
 
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
-| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.13.1 | Static support only |
+| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.13.2 | Static support only |
 
 An identical runtime digest may make older evidence relevant to the same bytes,
 but it does not create a new observation or change the older record's host,
@@ -146,9 +146,9 @@ Current sources:
 - [current release status](../evidence/release-status.json);
 - [runtime identity](../evidence/runtime-identity.json) and its
   [policy](runtime-identity.md);
-- [current routing-context record](../evals/context-budget/results/v0.13.1.json);
+- [current routing-context record](../evals/context-budget/results/v0.13.2.json);
 - [current route corpus](../evals/README.md); and
-- [v0.13.1 version notes](releases/v0.13.1.md).
+- [v0.13.2 version notes](releases/v0.13.2.md).
 
 Historical sources:
 

@@ -6,6 +6,7 @@ from axiom_validation.routing_contracts import (
     check_cross_route_resume_contracts,
     check_routing_scenarios,
     check_routing_source_contracts,
+    historical_route_contract,
     route_contract,
 )
 from axiom_validation.cases.routing import ROUTE_BOUNDARY_SCENARIOS, ROUTING_SCENARIOS
@@ -33,13 +34,24 @@ class RoutingContractTests(unittest.TestCase):
             "rewriting history."
         )
         self.assertEqual("traceable-git-submit", tagged_release["route"])
-        self.assertEqual("hardened-submit", tagged_release["phase"])
+        self.assertEqual("prepared-release-submit", tagged_release["phase"])
         self.assertEqual(
             (
                 "references/safe-git-values-and-metadata.md",
                 "references/repository-and-remote-targets.md",
+                "references/prepared-release-submit.md",
             ),
             tagged_release["references"],
+        )
+        self.assertEqual(
+            frozenset({"read", "commit", "tag", "network-push"}),
+            tagged_release["authorization"],
+        )
+        self.assertEqual(
+            "hardened-submit",
+            historical_route_contract(
+                "Commit, tag, and push the already-prepared plugin release."
+            )["phase"],
         )
         self.assertIsNone(
             route_contract(
@@ -47,6 +59,44 @@ class RoutingContractTests(unittest.TestCase):
                 "without force."
             )["route"]
         )
+
+    def test_recovery_preparation_has_its_own_write_scope(self):
+        preparation = route_contract(
+            "Prepare missing recovery material for this persistent database migration."
+        )
+        self.assertEqual("recovery-material-preparation", preparation["phase"])
+        self.assertEqual(
+            (
+                "references/preflight-and-rollback.md",
+                "references/recovery-material-preparation.md",
+            ),
+            preparation["references"],
+        )
+        self.assertEqual(
+            frozenset({"read", "recovery-preparation-write"}),
+            preparation["authorization"],
+        )
+        for request in (
+            "Plan how to prepare missing recovery material for this persistent database migration.",
+            "Prepare a read-only plan to create a backup of this persistent database.",
+        ):
+            with self.subTest(request=request):
+                plan = route_contract(request)
+                self.assertEqual("plan", plan["phase"])
+                self.assertEqual(frozenset({"read"}), plan["authorization"])
+                self.assertNotIn(
+                    "references/recovery-material-preparation.md", plan["references"]
+                )
+
+    def test_local_marketplace_readiness_stays_a_read_only_architecture_phase(self):
+        contract = route_contract(
+            "Audit release readiness of this packaged Codex plugin with a local "
+            "marketplace, prerelease versions, and no GitHub repository."
+        )
+        self.assertEqual("agent-plugin-architect", contract["route"])
+        self.assertEqual("release-readiness-audit", contract["phase"])
+        self.assertEqual(frozenset({"read"}), contract["authorization"])
+        self.assertIn("references/release-readiness.md", contract["references"])
 
     def test_explicit_direct_submit_loads_only_lightweight_owner(self):
         contract = route_contract(

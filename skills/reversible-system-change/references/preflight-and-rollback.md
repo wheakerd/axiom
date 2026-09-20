@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Prove that one authorized persistent target, an exact write set, and a usable
-prior state are known before mutation.
+Resolve one authorized target and exact write set, then establish usable prior
+state before candidate or active-state mutation.
 
 ## Resolve The Exact Target
 
@@ -79,6 +79,11 @@ version slot, package version retained in a trusted cache, snapshot, backup,
 database restore point, configuration copy with metadata, deployment revision,
 or reversible pointer change.
 
+If the material must first be created, use the parent's recovery-material
+preparation phase and its directly routed reference. Its isolation gate permits
+only bounded preparation; all requirements below still govern candidate and
+active-state mutation.
+
 Keep these evidence states distinct:
 
 - `identified`: the prior state and proposed recovery mechanism are named.
@@ -90,7 +95,7 @@ Keep these evidence states distinct:
   required ordering has completed and its result was checked.
 
 Do not call a rollback path `verified`, `usable`, or `restore-ready` by
-collapsing lower states. Before mutation require all of the following:
+collapsing lower states. Before candidate or active-state mutation require:
 
 1. The rollback point represents the directly observed pre-change state.
 2. Its identifier and location are unambiguous and excluded from destructive
@@ -111,7 +116,7 @@ collapsing lower states. Before mutation require all of the following:
 8. A post-restore check can prove the active state, runtime, data, and behavior
    returned to the observed prior state at every affected layer.
 9. The rollback point and all evidence have a recorded current identity and are
-   rechecked immediately before the first write.
+   rechecked immediately before candidate or active-state mutation.
 
 For a pointer-only rollback with no irreversible data effect, an isolated
 equivalent switch plus a behavior check may serve as the rehearsal. Merely
@@ -131,8 +136,8 @@ backup or copy command, a present snapshot, an existing rollback script,
 documentation of restore commands, a checksum, a historical rehearsal, user
 confidence, or a mutable artifact that would need to be downloaded later.
 
-If the complete evidence set cannot be verified, stop this skill before
-execution. Plan-only work may report the gap and stop gate, but user acceptance
+If the complete evidence set cannot be verified, stop before candidate or
+active-state mutation. Plan-only work may report the gap, but user acceptance
 of irreversible risk does not satisfy the contract. Continue only by explicitly
 re-routing to another applicable workflow that does not promise verified
 rollback and independently satisfies its authority and safety gates.

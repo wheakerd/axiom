@@ -75,7 +75,7 @@ are statically testable, but fresh-session behavior still depends on the exact
 host version, operating system, policy, installation method, and installed
 snapshot.
 
-| Host | Checked-in support | Current v0.13.1 observation boundary |
+| Host | Checked-in support | Current v0.13.2 observation boundary |
 | --- | --- | --- |
 | Codex | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Installed-host observation is `NOT-RUN` |
 
@@ -85,7 +85,7 @@ The plugin-architecture workflow still covers other projects targeting Claude Co
 The current release-status record remains `STATIC-ONLY`; static checks do not
 create host evidence. Read [Compatibility](docs/compatibility.md) for the
 bounded matrix and known limitations, [Field Validation](docs/field-validation.md)
-to report a result, and the [v0.13.1 notes](docs/releases/v0.13.1.md) for
+to report a result, and the [v0.13.2 notes](docs/releases/v0.13.2.md) for
 version-specific detail. Historical observations remain under `evidence/` and
 `evals/results/` with their original identities and terminal statuses.
 
@@ -97,9 +97,9 @@ runtime digest are separate identities. See
 input and version policy.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.13.1`
-- `repositoryPolicyRevision`: `35`
-- `runtimeContractDigest` (schema v2): `sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8`
+- `pluginVersion`: `0.13.2`
+- `repositoryPolicyRevision`: `36`
+- `runtimeContractDigest` (schema v2): `sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
 
@@ -108,8 +108,8 @@ input and version policy.
 <!-- route-boundary:traceable-git-submit-v1:start -->
 Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
 include neither a tag nor a traceable trigger. A combined commit, tag, and push of an
-already-prepared plugin release selects `traceable-git-submit`'s hardened phase. The
-traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
+already-prepared plugin release selects `traceable-git-submit`'s prepared-release phase.
+The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
 baseline, consolidation, recovery, multi-target, force, and history replacement. Merely
 mentioning `submit`, `publish`, or `push` does not select the route.
 <!-- route-boundary:traceable-git-submit-v1:end -->

@@ -317,7 +317,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
         "name": "ambiguous-deployment-rehearsal",
         "request": "Rehearse this deployment.",
-        "route": "clarify",
+        "route": "clarify-intent",
         "phase": "rehearsal-type",
         "references": (),
         "authorization": frozenset({"read"}),
@@ -488,7 +488,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
         "name": "material-multi-route-ambiguity",
         "request": "Reduce Codex usage by either rewriting AGENTS.md or changing deployment defaults; choose one.",
-        "route": "clarify",
+        "route": "clarify-intent",
         "phase": "route-choice",
         "references": (),
         "authorization": frozenset({"read"}),
@@ -561,12 +561,13 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "name": "agent-plugin-git-owner",
         "request": "Commit, tag, and push the already-prepared plugin release.",
         "route": "traceable-git-submit",
-        "phase": "hardened-submit",
+        "phase": "prepared-release-submit",
         "references": (
             "references/safe-git-values-and-metadata.md",
             "references/repository-and-remote-targets.md",
+            "references/prepared-release-submit.md",
         ),
-        "authorization": frozenset({"read", "network-push"}),
+        "authorization": frozenset({"read", "commit", "tag", "network-push"}),
     },
     {
         "name": "agent-plugin-install-owner",
@@ -675,7 +676,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
         "name": "agent-plugin-architecture-ambiguity",
         "request": "Make this plugin better; either redesign its packaged architecture or improve its ordinary parser.",
-        "route": "clarify",
+        "route": "clarify-intent",
         "phase": "route-choice",
         "references": (),
         "authorization": frozenset({"read"}),
