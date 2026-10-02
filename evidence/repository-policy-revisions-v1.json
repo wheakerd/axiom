@@ -296,6 +296,14 @@
       "sourceIssue": 91,
       "summary": "Promote the observed native hook aggregate into main protection and synchronize the fail-closed release controller, governance evidence, and regression tests without changing installed runtime.",
       "runtimeContractDigest": "sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047"
+    },
+    {
+      "revision": 38,
+      "recordedOn": "2026-10-02",
+      "baselineCommit": "dd6b9fc9030b8e7d0cefb64b1f46d6237d1f791a",
+      "sourceIssue": null,
+      "summary": "Default authored AGENTS instruction prose to English, require explicit scoped document-language overrides, and verify output language without changing routes or action authority.",
+      "runtimeContractDigest": "sha256:72ea38cde663d346658ad39049e682b99b149427fba9789c1e52ffa30d98b357"
     }
   ]
 }
