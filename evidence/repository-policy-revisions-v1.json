@@ -288,6 +288,14 @@
       "sourceIssue": null,
       "summary": "Prepare compatible v0.13.2 skill contract fixes for Git submission and recovery, rollback preparation, and target-owned release readiness; preserve historical evidence and action authority.",
       "runtimeContractDigest": "sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047"
+    },
+    {
+      "revision": 37,
+      "recordedOn": "2026-10-02",
+      "baselineCommit": "0fe187a8206c9d0ef5d6cbd165d3d04755050298",
+      "sourceIssue": 91,
+      "summary": "Promote the observed native hook aggregate into main protection and synchronize the fail-closed release controller, governance evidence, and regression tests without changing installed runtime.",
+      "runtimeContractDigest": "sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047"
     }
   ]
 }

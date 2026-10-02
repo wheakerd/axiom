@@ -15,6 +15,7 @@ from .context import (
     display_path,
 )
 from .release_evidence import render_release_body
+from .release_tag_controller import MAIN_RULESET, RULESET_BINDINGS
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
 
 _BASE_REQUIRED_PUBLIC_FILES = (
@@ -137,7 +138,7 @@ AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/evaluation-and-evidence.md",
     "references/validation-reporting.md",
 )
-GOVERNANCE_VERIFIED_DATE = "2026-08-29"
+GOVERNANCE_VERIFIED_DATE = "2026-10-02"
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
@@ -154,6 +155,7 @@ CRITICAL_CODEOWNER_PATTERNS = (
 )
 GOVERNANCE_SNAPSHOT_ANCHORS = (
     f"Last verified (UTC): `{GOVERNANCE_VERIFIED_DATE}`",
+    f"and updated at `{RULESET_BINDINGS[MAIN_RULESET][1]}`",
     "`require-signed-commits-on-main`",
     "`require-github-signed-release-tags`",
     "`restrict-release-tag-creation`",
@@ -179,8 +181,8 @@ GOVERNANCE_SNAPSHOT_ANCHORS = (
     "`20677005`",
     "`20724385`",
     "`21703772`",
-    "Required checks on `main`: `repository-guards` and "
-    "`unit-and-integration-tests`",
+    "Required checks on `main`: `repository-guards`, `unit-and-integration-tests`, "
+    "and `hook-runtime-gate`",
     "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
     "Release-tag creator allowlist: **GitHub App "
     "`axiom-release-tag-controller` only**",
@@ -218,8 +220,10 @@ HOOK_RUNTIME_PROMOTION_ANCHORS = (
     "the interval from the first qualifying run to the last is at least 14 full days",
     "there is no unresolved runner-specific false failure or scheduled compatibility failure",
     "when an eligible fork pull request is available during the observation period",
-    "The observation gate is therefore **NOT SATISFIED**.",
-    "`hook-runtime-gate` must not be promoted from this evidence.",
+    "The observation gate is **SATISFIED** as of `2026-10-02`.",
+    "`hook-runtime-gate` is required, bound to GitHub Actions `integration_id: 15368`",
+    "Fork execution remains **NOT-RUN**; the conditional fork criterion was not triggered",
+    "The release-tag controller now requires the same three exact main checks",
 )
 RELEASE_TAG_POLICY_ANCHORS = (
     "The active repository ruleset `require-github-signed-release-tags` targets "

@@ -1,5 +1,21 @@
 # Runtime And Repository Identity
 
+## Required hook-runtime gate (policy 37)
+
+Policy 37 promotes `hook-runtime-gate` after the documented native-run
+observation threshold was met. It records the live main-ruleset read-back and
+synchronizes the release-tag controller's exact check set and ruleset timestamp.
+Regression tests require current successful aggregate evidence and reject a
+missing aggregate prerequisite before any release-tag mutation.
+
+This is repository-policy-only work. Plugin `0.13.2` and all 69 installed
+runtime inputs retain the exact digest in the
+[machine-readable identity](../evidence/runtime-identity.json). The signed
+merge and required checks complete this policy revision; no new package tag,
+GitHub Release, Latest update, or marketplace publication is created.
+See [Repository Governance](repository-governance.md#hook-runtime-promotion-gate)
+for the observation evidence and the server-side enforcement boundary.
+
 ## Skill contract corrections candidate 0.13.2 (policy 36)
 
 Version `0.13.2` prepares compatible corrections to existing Git submission and

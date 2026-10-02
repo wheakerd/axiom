@@ -445,6 +445,61 @@ class ReleaseTagControllerTests(unittest.TestCase):
             )
         self.assertEqual(0, fixture.mutation_attempts)
 
+    def test_main_check_contract_includes_promoted_hook_gate(self):
+        self.assertEqual(
+            ("repository-guards", "unit-and-integration-tests", "hook-runtime-gate"),
+            MAIN_REQUIRED_CHECKS,
+        )
+
+    def test_main_ruleset_without_hook_gate_is_rejected(self):
+        fixture = FixtureRepository()
+        rule = next(
+            rule
+            for rule in fixture.rulesets[MAIN_RULESET]["rules"]
+            if rule["type"] == "required_status_checks"
+        )
+        rule["parameters"]["required_status_checks"] = [
+            check
+            for check in rule["parameters"]["required_status_checks"]
+            if check["context"] != "hook-runtime-gate"
+        ]
+        api = FixtureApi(fixture)
+        with self.assertRaisesRegex(ControllerError, "required checks drifted"):
+            run_controller(api, api, fixture.request(), fixture.app_identity())
+        self.assertEqual(0, fixture.mutation_attempts)
+
+    def test_hook_gate_requires_successful_current_main_evidence(self):
+        mutations = (
+            ("missing", lambda runs, gate: runs.remove(gate)),
+            ("duplicate", lambda runs, gate: runs.append(copy.deepcopy(gate))),
+            ("failed", lambda runs, gate: gate.update(conclusion="failure")),
+            ("cancelled", lambda runs, gate: gate.update(conclusion="cancelled")),
+            ("skipped", lambda runs, gate: gate.update(conclusion="skipped")),
+            ("neutral", lambda runs, gate: gate.update(conclusion="neutral")),
+            ("pending", lambda runs, gate: gate.update(status="in_progress", conclusion=None)),
+            ("stale", lambda runs, gate: gate.update(head_sha="4" * 40)),
+            ("wrong-app", lambda runs, gate: gate.update(app={"id": 1, "slug": "other"})),
+        )
+        for label, mutate in mutations:
+            with self.subTest(label=label):
+                fixture = FixtureRepository()
+                gate = next(
+                    run for run in fixture.check_runs if run["name"] == "hook-runtime-gate"
+                )
+                mutate(fixture.check_runs, gate)
+                api = FixtureApi(fixture)
+                with self.assertRaisesRegex(ControllerError, "hook-runtime-gate"):
+                    run_controller(api, api, fixture.request(), fixture.app_identity())
+                self.assertEqual(0, fixture.mutation_attempts)
+
+    def test_main_ruleset_timestamp_drift_is_rejected(self):
+        fixture = FixtureRepository()
+        fixture.rulesets[MAIN_RULESET]["updated_at"] = "2026-01-01T00:00:00Z"
+        api = FixtureApi(fixture)
+        with self.assertRaisesRegex(ControllerError, "changed after the reviewed migration snapshot"):
+            run_controller(api, api, fixture.request(), fixture.app_identity())
+        self.assertEqual(0, fixture.mutation_attempts)
+
     def test_invalid_github_signature_is_rejected(self):
         fixture = FixtureRepository()
         fixture.signature = {
