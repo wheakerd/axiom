@@ -21,6 +21,10 @@ For every changed instruction file, verify:
 - links and declared paths resolve from their documented bases;
 - the file is below the Axiom instruction-byte boundary;
 - its rule scope has one reachable canonical owner with no conflicting copy;
+- newly authored prose follows the parent skill's Document Language contract:
+  inspect every changed file, identify any explicit user document-language
+  request and its scope, and reject a mismatch without translating preserved
+  source literals or unrelated content;
 - protected plugin metadata, Axiom routing protocols, secrets, runtime state,
   and one-off task detail did not leak into target guidance;
 - completion claims use current evidence from the layer they describe; and
@@ -107,6 +111,30 @@ baseline scenarios.
 Static construction or `codex debug prompt-input` can prove file discovery or
 prompt assembly but not semantic model selection. Label actual host routing as
 not run or unavailable unless directly observed in a fresh session.
+
+### Document-Language Regressions
+
+When the document-language contract changes, review these semantic cases across
+root `AGENTS.md`, linked indexes, leaves, references, and scoped repo-local
+Skills. Inspect authored prose, not merely route selection or ASCII characters:
+
+- Non-English task with no document-language request: English documents.
+- Non-English reply or explanation requested: English documents; the response
+  follows its separate language instruction.
+- Explicit non-English document request: that language only within the named
+  document scope; unrelated files remain unchanged.
+- Non-English existing docs or source material: newly authored prose defaults
+  to English; preserve exact literals and out-of-scope content.
+- Narrow maintenance or repo-local Skill update: apply the parent contract even
+  when the document-contract reference is not loaded.
+- Resume or compaction: retain the controlling explicit document-language
+  decision and its scope; do not infer one from the latest message language.
+- Conflicting active instruction: honor actual precedence and report the
+  outcome-changing conflict; do not claim an inferred user exception.
+
+Structural checks and source review do not reproduce an intermittent model
+failure or establish generated output behavior; keep those claims separate
+from a directly observed run.
 
 ## Actual Loading
 

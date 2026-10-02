@@ -1,5 +1,20 @@
 # Runtime And Repository Identity
 
+## Default-English instruction candidate 0.13.3 (policy 38)
+
+Version `0.13.3` adds the missing document-language contract to the existing
+AGENTS Architect parent and validates authored prose against that contract.
+English is the default; another language requires an explicit user request for
+the affected documents. It adds no route, startup-gate change, or action authority.
+
+Policy revision 38 binds the changed digest for the same 69 installed inputs.
+Its baseline is main commit `dd6b9fc9030b8e7d0cefb64b1f46d6237d1f791a`.
+The immutable `v0.13.2` tag remains at
+`0fe187a8206c9d0ef5d6cbd165d3d04755050298` with its original digest. Current
+candidate identity belongs to the [machine-readable record](../evidence/runtime-identity.json).
+This preparation creates no tag, Release, Latest change, or installed-host
+observation. See the [0.13.3 version notes](releases/v0.13.3.md).
+
 ## Required hook-runtime gate (policy 37)
 
 Policy 37 promotes `hook-runtime-gate` after the documented native-run

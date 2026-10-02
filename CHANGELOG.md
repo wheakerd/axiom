@@ -9,6 +9,21 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.13.3 - unreleased candidate
+
+### Fixed
+
+- Made newly authored AGENTS and linked instruction-document prose default to English, with another language only when the user explicitly requests it for those documents.
+- Added scoped output-language acceptance and regression coverage that distinguishes document language from conversation, explanation, and source language.
+
+### Behavioral impact
+
+The workflow now explicitly rejects task language as an implicit document-language choice. Explicit document-language requests apply only to their requested scope; canonical identifiers, exact source literals, and unrelated content are preserved. This authoring rule stays in Axiom rather than being copied into target repositories. Route selection and action authority are unchanged. See the [v0.13.3 notes](docs/releases/v0.13.3.md).
+
+### Required action
+
+None. Request another language explicitly when it is intended for generated instruction documents.
+
 ## 0.13.2 - unreleased candidate
 
 ### Fixed

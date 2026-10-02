@@ -75,7 +75,7 @@ are statically testable, but fresh-session behavior still depends on the exact
 host version, operating system, policy, installation method, and installed
 snapshot.
 
-| Host | Checked-in support | Current v0.13.2 observation boundary |
+| Host | Checked-in support | Current v0.13.3 observation boundary |
 | --- | --- | --- |
 | Codex | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Installed-host observation is `NOT-RUN` |
 
@@ -85,7 +85,7 @@ The plugin-architecture workflow still covers other projects targeting Claude Co
 The current release-status record remains `STATIC-ONLY`; static checks do not
 create host evidence. Read [Compatibility](docs/compatibility.md) for the
 bounded matrix and known limitations, [Field Validation](docs/field-validation.md)
-to report a result, and the [v0.13.2 notes](docs/releases/v0.13.2.md) for
+to report a result, and the [v0.13.3 notes](docs/releases/v0.13.3.md) for
 version-specific detail. Historical observations remain under `evidence/` and
 `evals/results/` with their original identities and terminal statuses.
 
@@ -97,9 +97,9 @@ runtime digest are separate identities. See
 input and version policy.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.13.2`
-- `repositoryPolicyRevision`: `37`
-- `runtimeContractDigest` (schema v2): `sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047`
+- `pluginVersion`: `0.13.3`
+- `repositoryPolicyRevision`: `38`
+- `runtimeContractDigest` (schema v2): `sha256:72ea38cde663d346658ad39049e682b99b149427fba9789c1e52ffa30d98b357`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
 

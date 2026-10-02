@@ -65,6 +65,25 @@ as protected plugin metadata, not AGENTS branches. Repo-local
 it as part of the target repository's AGENTS system. Packaged Skill maintenance
 uses its owning product workflow instead.
 
+## Document Language
+
+Write new or rewritten prose in root or nested `AGENTS.md` and linked `.agents`
+instruction documents in English by default, including repo-local Skills when
+they are explicitly in scope. Use another document language only when the user
+explicitly requests it for those documents; apply that exception only to the
+requested files or document scope.
+
+Conversation or task-input language, a request for a non-English reply or
+explanation, existing document or source language, and multilingual route
+normalization do not establish a document-language exception. Keep document
+language separate from response language. Honor the active instruction chain;
+report an outcome-changing conflict rather than silently inventing an exception.
+
+Preserve canonical identifiers, paths, commands, and exact source literals.
+Do not translate unchanged or unrelated content merely for consistency. This is
+an Axiom authoring rule, not a rule to copy into the target repository unless
+the user explicitly requests it as repository policy.
+
 ## Always-On Rules
 
 - Honor the instruction chain already loaded at its actual precedence. Treat
