@@ -146,9 +146,12 @@ python -B -m unittest tests.hook_runtime_integration -v
 Use the host's equivalent Python 3 launcher when it has a different name. Run
 the module from a disposable repository copy. A Linux result proves only
 Linux; report unavailable native Windows or macOS execution as `NOT-RUN`. The
-three native matrix checks are intentionally non-required during their initial
-stability-observation period, so a runner-specific failure does not immediately
-block an external contributor's branch or fork.
+three native matrix checks remain directly visible for diagnosis. After the
+completed stability-observation period, their stable `hook-runtime-gate`
+aggregate is a required `main` check alongside `repository-guards` and
+`unit-and-integration-tests`. A failed or incomplete native matrix blocks the
+normal merge path for both same-repository and fork pull requests. The weekly
+scheduled run remains read-only compatibility evidence.
 
 `scripts/check-publication.py` is the stable aggregate entrypoint. Production
 parsers and policy gates live in `axiom_validation/`; deterministic mutation

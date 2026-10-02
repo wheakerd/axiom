@@ -23,11 +23,15 @@ MAIN_RULESET = "require-signed-commits-on-main"
 INTEGRITY_RULESET = "require-github-signed-release-tags"
 CREATION_RULESET = "restrict-release-tag-creation"
 RULESET_BINDINGS = {
-    MAIN_RULESET: (20677005, "2026-08-26T04:46:04.609Z"),
+    MAIN_RULESET: (20677005, "2026-10-02T03:03:01.610Z"),
     INTEGRITY_RULESET: (20724385, "2026-08-29T01:53:08.312Z"),
     CREATION_RULESET: (21703772, "2026-08-29T01:52:49.941Z"),
 }
-MAIN_REQUIRED_CHECKS = ("repository-guards", "unit-and-integration-tests")
+MAIN_REQUIRED_CHECKS = (
+    "repository-guards",
+    "unit-and-integration-tests",
+    "hook-runtime-gate",
+)
 SIGNED_MAIN_CHECK = "Verify signed main history"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 REPOSITORY_PATTERN = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")

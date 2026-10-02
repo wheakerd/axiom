@@ -21,15 +21,19 @@ This document is a dated, read-only observation of GitHub repository policy.
 It does not configure GitHub, grant authority, or replace server-side rulesets.
 A failed workflow is detection evidence, not server-side mutation prevention.
 
-Last verified (UTC): `2026-08-29`
+Last verified (UTC): `2026-10-02`
 
-Verification used authenticated GitHub REST queries for the public
-`wheakerd/axiom` repository after the separately authorized release-App
-migration. The migration added and read back the App bypass while the owner-user
-bypass remained active, removed and read back only the owner-user bypass, then
-migrated only the integrity check context. At least one server-side creation
-restriction remained active throughout. Follow-up verification was read-only
-and changed no branch, tag, release, workflow, permission, or collaborator. The
+The current verification used authenticated GitHub REST queries for the public
+`wheakerd/axiom` repository and the separately approved Issue #91 main-ruleset
+promotion. Only the `hook-runtime-gate` prerequisite was added; all existing
+protections and both release-tag rulesets were preserved. The immediate
+administrator-visible read-back binds the updated main-ruleset timestamp below.
+
+The release-App migration recorded on `2026-08-29` remains historical evidence.
+It added and read back the App bypass while the owner-user bypass remained
+active, removed and read back only the owner-user bypass, then migrated only
+the integrity check context. At least one server-side creation restriction
+remained active throughout. Its follow-up verification was read-only. The
 [ruleset REST API](https://docs.github.com/en/rest/repos/rules),
 [ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets),
 and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
@@ -38,7 +42,7 @@ are the external interpretation references.
 ## Main Branch Policy
 
 The active repository ruleset `require-signed-commits-on-main`, ID `20677005`
-and updated at `2026-08-26T04:46:04.609Z`, targets exactly
+and updated at `2026-10-02T03:03:01.610Z`, targets exactly
 `refs/heads/main`. Its administrator-visible REST response reported
 `bypass_actors: []` and `current_user_can_bypass: never`. It contains:
 
@@ -51,14 +55,16 @@ and updated at `2026-08-26T04:46:04.609Z`, targets exactly
 - `non_fast_forward`, which blocks force pushes; and
 - `required_signatures`, which requires signed commits; and
 - `required_status_checks`, with exact GitHub Actions checks
-  `repository-guards` and `unit-and-integration-tests`, both bound to
-  `integration_id: 15368`, `strict_required_status_checks_policy: true`, and
+  `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate`,
+  all bound to `integration_id: 15368`,
+  `strict_required_status_checks_policy: true`, and
   `do_not_enforce_on_create: false`.
 
-Required checks on `main`: `repository-guards` and
-`unit-and-integration-tests`. Both must pass before merge, and strict mode
+Required checks on `main`: `repository-guards`, `unit-and-integration-tests`,
+and `hook-runtime-gate`. All three must pass before merge, and strict mode
 requires the pull-request branch to be current with `main` before their final
-results are accepted. The two checks remain distinct server-side prerequisites.
+results are accepted. Only the stable hook aggregate is required; the three
+native platform jobs remain directly visible for diagnosis.
 
 The ruleset contains no `deletion` rule. `main` was the repository's default
 branch at verification time, but no destructive deletion probe was attempted
@@ -135,7 +141,7 @@ only `administration: read` plus `contents: write`; administration write is not
 granted. Pull-request code never receives the private key or App token.
 
 Before one exact `POST /git/refs`, the controller binds the requested version
-and tag, live protected-main commit and tree, the Codex manifest version, the two
+and tag, live protected-main commit and tree, the Codex manifest version, the three
 main ruleset checks, `Verify signed main history`, REST and GraphQL GitHub-made
 signature evidence, tag and Release absence, App installation identity and
 repository scope, and all three live rulesets. It performs the same complete
@@ -224,7 +230,8 @@ release provenance or installed-host evidence.
 `unit-and-integration-tests` check. It runs the complete standard-library
 unittest discovery command in the fixed blocking environment and remains
 separate from package and publication-policy validation. The active `main`
-ruleset requires both checks and accepts them only from GitHub Actions.
+ruleset requires these two checks plus `hook-runtime-gate` and accepts all
+three only from GitHub Actions.
 
 `Cross-platform hook runtime integration` separately executes the exact
 checked-in Codex `SessionStart` command strings on
@@ -278,16 +285,74 @@ qualifying sequence, a separately authorized main-ruleset edit that requires
 only `hook-runtime-gate` in addition to the existing checks, and an immediate
 administrator-visible read-back of the exact ruleset.
 
-The read-only Issue #91 inspection on `2026-08-29` found seven consecutive
-successful `main` push runs, IDs `33157277902`, `33165891508`, `33189905453`,
-`33193216120`, `33226776075`, `33229067054`, and `33230600290`. Each run had
-successful Ubuntu, Windows, and macOS jobs, but the sequence spanned only
-`2026-08-28T08:55:43Z` through `2026-08-29T03:07:12Z`, less than one day. Seven
-same-repository pull-request runs also succeeded; no scheduled run or fork
-pull-request run was available. The observation gate is therefore **NOT
-SATISFIED**. The authenticated live read-back still reports only
-`repository-guards` and `unit-and-integration-tests` as required by ruleset
-`20677005`; `hook-runtime-gate` must not be promoted from this evidence.
+The observation gate is **SATISFIED** as of `2026-10-02`. Authenticated,
+complete Actions pagination found exactly 30 consecutive successful `main`
+push runs from `2026-08-28T08:55:43Z` through `2026-09-20T06:31:35Z`: 22 days,
+21 hours, 35 minutes, and 52 seconds. Direct job reads verified successful
+Ubuntu, Windows, and macOS execution in every run, with stable platform check
+names and no rerun attempts. The aggregate succeeded in all 23 main runs after
+its introduction by [PR #102](https://github.com/wheakerd/axiom/pull/102).
+The first seven runs predate that job and are not claimed as aggregate evidence.
+
+The five scheduled runs through `2026-09-28` also completed successfully, with
+all native jobs and the aggregate passing: [33399164877](https://github.com/wheakerd/axiom/actions/runs/33399164877), [34122423756](https://github.com/wheakerd/axiom/actions/runs/34122423756), [34845330141](https://github.com/wheakerd/axiom/actions/runs/34845330141), [35601659701](https://github.com/wheakerd/axiom/actions/runs/35601659701), [36432042976](https://github.com/wheakerd/axiom/actions/runs/36432042976). All 93 retained
+hook-workflow pull-request runs succeeded. The complete 88-object PR inventory
+contained 30 main-targeting PRs overlapping this observation window, all from
+the same repository. No eligible fork PR was available. Fork execution remains
+**NOT-RUN**; the conditional fork criterion was not triggered, and same-repository
+results are not substituted for it. No unresolved runner-specific or scheduled
+compatibility failure was found.
+
+| Main push run | Created (UTC) | Commit | Three native jobs | Aggregate |
+| --- | --- | --- | --- | --- |
+| [33157277902](https://github.com/wheakerd/axiom/actions/runs/33157277902) | `2026-08-28T08:55:43Z` | `8c932c4ec184` | PASS | Not yet introduced |
+| [33165891508](https://github.com/wheakerd/axiom/actions/runs/33165891508) | `2026-08-28T11:06:24Z` | `f0abb36276a6` | PASS | Not yet introduced |
+| [33189905453](https://github.com/wheakerd/axiom/actions/runs/33189905453) | `2026-08-28T16:25:38Z` | `76c287bd38be` | PASS | Not yet introduced |
+| [33193216120](https://github.com/wheakerd/axiom/actions/runs/33193216120) | `2026-08-28T17:07:30Z` | `bf39b50f2a26` | PASS | Not yet introduced |
+| [33226776075](https://github.com/wheakerd/axiom/actions/runs/33226776075) | `2026-08-29T01:34:43Z` | `f66c7b7ba1f8` | PASS | Not yet introduced |
+| [33229067054](https://github.com/wheakerd/axiom/actions/runs/33229067054) | `2026-08-29T02:29:09Z` | `2eb3bd1e9110` | PASS | Not yet introduced |
+| [33230600290](https://github.com/wheakerd/axiom/actions/runs/33230600290) | `2026-08-29T03:07:12Z` | `6581813f058d` | PASS | Not yet introduced |
+| [33236568607](https://github.com/wheakerd/axiom/actions/runs/33236568607) | `2026-08-29T05:36:41Z` | `662c4665e95a` | PASS | PASS |
+| [33238736411](https://github.com/wheakerd/axiom/actions/runs/33238736411) | `2026-08-29T06:33:07Z` | `0fae0f2e0f16` | PASS | PASS |
+| [33244919318](https://github.com/wheakerd/axiom/actions/runs/33244919318) | `2026-08-29T09:11:52Z` | `58863cb47e49` | PASS | PASS |
+| [33253925160](https://github.com/wheakerd/axiom/actions/runs/33253925160) | `2026-08-29T13:00:48Z` | `1b1da516f910` | PASS | PASS |
+| [33313767954](https://github.com/wheakerd/axiom/actions/runs/33313767954) | `2026-08-30T13:17:17Z` | `057f3cfde5c8` | PASS | PASS |
+| [33364599584](https://github.com/wheakerd/axiom/actions/runs/33364599584) | `2026-08-31T06:32:20Z` | `6caf0649d2a4` | PASS | PASS |
+| [33372904449](https://github.com/wheakerd/axiom/actions/runs/33372904449) | `2026-08-31T08:26:20Z` | `4495b60c257f` | PASS | PASS |
+| [33461035004](https://github.com/wheakerd/axiom/actions/runs/33461035004) | `2026-09-01T02:02:25Z` | `8c4bd1d42586` | PASS | PASS |
+| [33461985339](https://github.com/wheakerd/axiom/actions/runs/33461985339) | `2026-09-01T02:17:31Z` | `a7aa0612d77b` | PASS | PASS |
+| [33462499989](https://github.com/wheakerd/axiom/actions/runs/33462499989) | `2026-09-01T02:25:47Z` | `8f4235872eda` | PASS | PASS |
+| [33463258462](https://github.com/wheakerd/axiom/actions/runs/33463258462) | `2026-09-01T02:37:52Z` | `2361aea7e566` | PASS | PASS |
+| [33464234676](https://github.com/wheakerd/axiom/actions/runs/33464234676) | `2026-09-01T02:53:45Z` | `e959be96fa41` | PASS | PASS |
+| [33465679885](https://github.com/wheakerd/axiom/actions/runs/33465679885) | `2026-09-01T03:17:36Z` | `dbfdcf4e74a2` | PASS | PASS |
+| [33496224117](https://github.com/wheakerd/axiom/actions/runs/33496224117) | `2026-09-01T10:12:37Z` | `de365be1797a` | PASS | PASS |
+| [33727281445](https://github.com/wheakerd/axiom/actions/runs/33727281445) | `2026-09-03T07:16:42Z` | `c7a3b5988cf0` | PASS | PASS |
+| [34490380687](https://github.com/wheakerd/axiom/actions/runs/34490380687) | `2026-09-10T14:38:28Z` | `6719a8323a75` | PASS | PASS |
+| [34829019617](https://github.com/wheakerd/axiom/actions/runs/34829019617) | `2026-09-14T09:38:08Z` | `79be4a893549` | PASS | PASS |
+| [34926804107](https://github.com/wheakerd/axiom/actions/runs/34926804107) | `2026-09-15T03:55:04Z` | `c25aeedd1841` | PASS | PASS |
+| [34947196877](https://github.com/wheakerd/axiom/actions/runs/34947196877) | `2026-09-15T08:29:02Z` | `2d33850cd390` | PASS | PASS |
+| [35082864466](https://github.com/wheakerd/axiom/actions/runs/35082864466) | `2026-09-16T10:03:20Z` | `c0f0266c653f` | PASS | PASS |
+| [35297357135](https://github.com/wheakerd/axiom/actions/runs/35297357135) | `2026-09-18T01:56:42Z` | `9ff4a7bfaddd` | PASS | PASS |
+| [35300999159](https://github.com/wheakerd/axiom/actions/runs/35300999159) | `2026-09-18T02:51:41Z` | `98624d806bee` | PASS | PASS |
+| [35494455081](https://github.com/wheakerd/axiom/actions/runs/35494455081) | `2026-09-20T06:31:35Z` | `0fe187a8206c` | PASS | PASS |
+
+After separate approval, ruleset `20677005` was updated and read back:
+`hook-runtime-gate` is required, bound to GitHub Actions `integration_id: 15368`,
+with the two existing checks, strict mode, signature and PR requirements,
+force-push prohibition, exact `main` target, and empty bypass list preserved.
+A platform-specific hook failure therefore blocks the normal `main` merge
+path. This is native process and server-side policy evidence, not installed-host
+or model-session evidence; no deliberately broken production merge was attempted.
+
+The release-tag controller now requires the same three exact main checks and
+binds the reviewed new ruleset timestamp. Missing, duplicate, failed, cancelled,
+skipped, neutral, pending, wrong-commit, or wrong-App aggregate evidence fails
+before tag creation. The controller retains its read-only administration scope
+and all existing signature, tag-integrity, and creation-only App restrictions.
+
+The earlier `2026-08-29` inspection correctly left this Issue open at seven
+qualifying runs over less than one day. That historical finding has not been
+reinterpreted; the later complete sequence supplies the promotion evidence.
 
 The checked-in v0.8.20 `Release signature guard` maps each evidence boundary to
 one stable name: `Verify signed main history`, `Verify release candidate`,
@@ -295,9 +360,10 @@ one stable name: `Verify signed main history`, `Verify release candidate`,
 manual candidate run accepts only `release/v<version>` and requires the stable
 numeric branch version to match the Codex manifest. A manual published-release run
 accepts only the exact tag and requires the live Release to be final,
-non-prerelease, immutable, and commit-bound. These checked-in names do not
-rewrite the dated live ruleset observation above; migration remains pending
-until a separate authenticated read-back confirms it.
+non-prerelease, immutable, and commit-bound. The separately observed release-App
+migration established the `Verify signed main history` integrity context.
+The Issue #91 main-check promotion does not change those release-tag contexts
+or reinterpret the historical release observations.
 
 `Create protected release tag` is separate from the read-only signature guard
 and from immutable publication. It is manual-only on current `main`, consumes

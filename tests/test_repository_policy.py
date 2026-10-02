@@ -285,6 +285,30 @@ class RepositoryPolicyTests(unittest.TestCase):
             failures,
         )
 
+    def test_repository_governance_requires_promoted_aggregate_evidence(self):
+        governance = (REPOSITORY_ROOT / "docs/repository-governance.md").read_text(
+            encoding="utf-8"
+        )
+        codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(
+            encoding="utf-8"
+        )
+        for anchor in (
+            "`hook-runtime-gate` is required",
+            "The observation gate is **SATISFIED**",
+            "Fork execution remains\n**NOT-RUN**",
+            "The release-tag controller now requires the same three exact main checks",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, governance)
+                failures = []
+                check_repository_governance_documents(
+                    governance.replace(anchor, "REMOVED", 1), codeowners, failures
+                )
+                self.assertTrue(
+                    any("Hook Runtime Promotion Gate" in failure for failure in failures),
+                    failures,
+                )
+
     def test_external_action_fixtures(self):
         failures = []
         self.assertEqual(155, check_external_action_scenarios(failures))
