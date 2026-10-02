@@ -98,7 +98,7 @@ input and version policy.
 
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.13.2`
-- `repositoryPolicyRevision`: `36`
+- `repositoryPolicyRevision`: `37`
 - `runtimeContractDigest` (schema v2): `sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
