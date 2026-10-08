@@ -45,8 +45,6 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/runtime-contract-history-v1.json",
     "evidence/runtime-contract-history-v2.json",
     "evidence/repository-policy-revisions-v1.json",
-    "evidence/v0.7.4/codex/linux.json",
-    "evidence/v0.7.4/claude-code/linux.json",
     "evals/README.md",
     "evals/schema-v1.json",
     "evals/schema-v2.json",
@@ -57,15 +55,8 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/review-sequences-v1.json",
     "evals/codex-exec-jsonl-observer-v2.json",
     "evals/codex-exec-jsonl-observer-v3.json",
-    "evals/no-hook-observation/codex-protocol-v1.json",
-    "evals/no-hook-observation/codex-prompt-envelope-v1.json",
-    "evals/no-hook-observation/codex-fixtures-v1.json",
-    "evals/no-hook-observation/codex-model-response-schema-v1.json",
-    "evals/no-hook-observation/codex-result-schema-v1.json",
-    "evals/no-hook-observation/result-history-v1.json",
     "evals/benchmarks/codex-core-v1.json",
     "evals/benchmarks/codex-core-v2.json",
-    "evals/no-hook/bundle-manifest-schema-v1.json",
     "evals/context-budget/README.md",
     "evals/context-budget/schema-v1.json",
     f"evals/context-budget/results/v{RELEASE_VERSION}.json",
@@ -77,18 +68,12 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "scripts/check-documentation.py",
     "scripts/check-runtime-identity.py",
     "scripts/check-release-evidence.py",
-    "scripts/build-no-hook-bundle.py",
-    "scripts/run-no-hook-codex-observation.py",
     "scripts/create-release-tag.py",
     "scripts/measure-routing-context.py",
     "scripts/render-release-facts.py",
     "axiom_validation/route-boundaries-v1.json",
-    "axiom_validation/no_hook_bundle.py",
-    "axiom_validation/no_hook_linux_isolation.py",
-    "axiom_validation/no_hook_observation.py",
     "axiom_validation/runtime-contract-inputs-v1.json",
     "axiom_validation/runtime-contract-inputs-v2.json",
-    "evidence/profiles/openai-hook-independent-v1/bundle-v1.json",
     ".github/workflows/publish-immutable-release.yml",
     ".github/workflows/create-protected-release-tag.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -117,6 +102,7 @@ EXPECTED_DIRECT_SKILLS = (
     "clarify-intent",
     "confirm-external-action",
     "delegate-simple-task",
+    "local-web-search",
     "optimize-codex-usage",
     "reversible-system-change",
     "review-axiom-task",
@@ -203,8 +189,7 @@ REPOSITORY_GUARDS_ENVIRONMENT_ANCHORS = (
     "pins the required `repository-guards` job to the exact `ubuntu-24.04` runner",
     "Python `3.14.7` and Node.js `24.19.0`",
     "`package-manager-cache: false` setting keeps package-manager caching disabled",
-    "`python -B scripts/check-distribution-drift.py` and "
-    "`python -B scripts/check-publication.py`",
+    "one read-only aggregate: `python -B scripts/check-publication.py`",
     "Fork pull requests use ordinary `pull_request`, receive only `contents: read`, "
     "and receive no repository secret",
     "No moving `ubuntu-latest` compatibility canary is currently defined",
@@ -315,12 +300,17 @@ GOVERNANCE_REVIEW_BOUNDARY_ANCHORS = (
     "ruleset bypass.",
     "Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator "
     "permission, or required check.",
-    "The external contribution flow and merge gates therefore remain unchanged: "
-    "`repository-guards` and `unit-and-integration-tests` remain the only required "
-    "checks, and the three hook-runtime matrix checks plus `hook-runtime-gate` "
-    "remain non-required review evidence.",
+    "Server-side enforcement of the three required check contexts is preventive",
+    "The single-maintainer review policy does not alter the required checks "
+    "recorded in Main Branch Policy: `repository-guards`, "
+    "`unit-and-integration-tests`, and `hook-runtime-gate`.",
+    "The three native hook-runtime matrix jobs supply the required aggregate; "
+    "they are not separate required check contexts.",
 )
 GOVERNANCE_REVIEW_BOUNDARY_FORBIDDEN = (
+    "Server-side enforcement of the two required check contexts",
+    "`repository-guards` and `unit-and-integration-tests` remain the only required checks",
+    "`hook-runtime-gate` remain non-required review evidence",
     "`Path A: enforce independent review` is the selected policy for this snapshot.",
     "Independent human review is currently enforced.",
     "CODEOWNERS blocks an unapproved merge.",

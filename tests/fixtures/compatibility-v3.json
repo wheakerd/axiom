@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "3",
+  "release": {
+    "version": "0.0.0",
+    "tag": "v0.0.0",
+    "commit": "0000000000000000000000000000000000000000"
+  },
+  "runtimeIdentity": {
+    "pluginVersion": "0.0.0",
+    "runtimeContractSchemaVersion": "2",
+    "runtimeContractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "observationSubject": "installed-runtime-contract",
+  "host": {
+    "name": "codex",
+    "version": "fixture",
+    "operatingSystem": "linux",
+    "architecture": "fixture",
+    "shell": "fixture"
+  },
+  "installation": {
+    "method": "Synthetic fixture; no installation was performed.",
+    "targetPluginVersion": "0.0.0",
+    "installedSnapshotVerified": true
+  },
+  "hook": {
+    "event": "SessionStart",
+    "matcher": "startup|resume|clear|compact",
+    "expectedCommandSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "installedCommandSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "installedCommandVerified": true
+  },
+  "reporter": {
+    "identity": "anonymous",
+    "anonymous": true
+  },
+  "recordedAt": "2000-01-01T00:00:00Z",
+  "cases": [
+    {
+      "id": "startup-routed",
+      "sessionKind": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "request": "Synthetic validator fixture; no host request was executed.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": "agents-architect",
+      "noRouteControl": false,
+      "inspected": [
+        "Synthetic validator input"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Synthetic test data; not an observation."
+      ],
+      "supportingOutput": [
+        "Synthetic passing case for validator regression."
+      ]
+    },
+    {
+      "id": "startup-no-route",
+      "sessionKind": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "request": "Synthetic validator fixture; no host request was executed.",
+      "expectedRoute": "none",
+      "observedRoute": "none",
+      "noRouteControl": true,
+      "inspected": [
+        "Synthetic validator input"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Synthetic test data; not an observation."
+      ],
+      "supportingOutput": [
+        "Synthetic passing case for validator regression."
+      ]
+    },
+    {
+      "id": "manual-compaction-routed",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "request": "Synthetic validator fixture; no host request was executed.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": null,
+      "noRouteControl": false,
+      "inspected": [
+        "Synthetic validator input"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "not-run",
+      "limitations": [
+        "Synthetic test data; not an observation."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "manual-compaction-no-route",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "request": "Synthetic validator fixture; no host request was executed.",
+      "expectedRoute": "none",
+      "observedRoute": null,
+      "noRouteControl": true,
+      "inspected": [
+        "Synthetic validator input"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "not-run",
+      "limitations": [
+        "Synthetic test data; not an observation."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "automatic-compaction-routed",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "request": "Synthetic validator fixture; no host request was executed.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": null,
+      "noRouteControl": false,
+      "inspected": [
+        "Synthetic validator input"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "not-run",
+      "limitations": [
+        "Synthetic test data; not an observation."
+      ],
+      "supportingOutput": []
+    },
+    {
+      "id": "automatic-compaction-no-route",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "request": "Synthetic validator fixture; no host request was executed.",
+      "expectedRoute": "none",
+      "observedRoute": null,
+      "noRouteControl": true,
+      "inspected": [
+        "Synthetic validator input"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "not-run",
+      "limitations": [
+        "Synthetic test data; not an observation."
+      ],
+      "supportingOutput": []
+    }
+  ]
+}

@@ -26,7 +26,7 @@
   "interface": {
     "displayName": "Axiom",
     "shortDescription": "Guardrails for agent actions",
-    "longDescription": "Axiom routes focused workflows for intent clarification, simple-task delegation, task planning, repository instructions, plugin architecture, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
+    "longDescription": "Axiom routes focused workflows for intent clarification, simple-task delegation, task planning, local web research, repository instructions, plugin architecture, usage optimization, task review, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [

@@ -88,11 +88,11 @@ def write_current_record(directory: Path, record: dict) -> Path:
 class CurrentRoutingTests(unittest.TestCase):
     def test_current_contract_covers_installed_routes_and_updated_ambiguity(self):
         failures = []
-        self.assertEqual((20, 20), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
+        self.assertEqual((27, 27), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
         self.assertEqual([], failures)
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
         self.assertEqual(CURRENT_BENCHMARK_CASE_COUNT, len(cases))
-        self.assertEqual(10, len(CURRENT_PUBLIC_ROUTES))
+        self.assertEqual(11, len(CURRENT_PUBLIC_ROUTES))
         for case in cases.values():
             if case["expectedClarification"]:
                 self.assertEqual(["clarify-intent"], case["expectedRoutes"])

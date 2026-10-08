@@ -1,6 +1,6 @@
 ---
 name: using-axiom
-description: Route startup, resume, compaction, and new requests to the smallest matching Axiom skill. Resolve material ambiguity before action routing; assess supported simple-task delegation using user-ordered models. No-match requests continue normally.
+description: Route startup, resume, compaction, new requests, and planned local web search to the smallest matching Axiom skill. Resolve material ambiguity before action routing; assess supported simple-task delegation using user-ordered models. No-match requests continue normally.
 ---
 
 # Using Axiom
@@ -19,6 +19,10 @@ Axiom routes only the smallest installed workflow set that matches.
    A no-match result is not a denial, does not create authorization, and does
    not manufacture a repository-state conflict.
 
+Reassess before a later tool choice initiates web research from a local or
+uncertain execution location, including a fallback from cloud search. Select
+`local-web-search` before access; routing itself remains read-only.
+
 ## Bundled Routes
 
 - `clarify-intent`: resolve ambiguity between plausible meanings with a
@@ -31,6 +35,10 @@ Axiom routes only the smallest installed workflow set that matches.
 - `task-planning`: create or revise current task or implementation plans,
   including scope removal or replacement. Scheduling, status, corrections, and
   execution stay outside. Preserve specialized planning ownership and authority.
+- `local-web-search`: constrain planned web search and follow-up page access
+  from the user's machine or local workspace browser or client. Classify an
+  uncertain execution location before access. Confirmed cloud-hosted search
+  and unrelated web app actions stay outside.
 - `agents-architect`: audit or maintain repository `AGENTS.md`, `.agents/` guidance,
   and repo-local skills; also handle
   explicit `effective-instructions`, `effective-instructions:preview`,

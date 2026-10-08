@@ -36,7 +36,8 @@ ROOT_CURRENT_DOCUMENTS = (
     "SECURITY.md",
 )
 COMPATIBILITY_ENTRY = "docs/getting-started.md"
-PROJECT_PREFIXES = ("project/",)
+# Keep retired project paths classified for legacy-document and navigation checks.
+LEGACY_PROJECT_PREFIXES = ("project/",)
 LIFECYCLE_VALUES = frozenset(
     {"current", "historical", "generated", "project-plan", "archived"}
 )
@@ -263,7 +264,7 @@ def _allowed_lifecycle(relative_path: str) -> frozenset[str] | None:
         "docs/releases/"
     ):
         return frozenset({"historical", "archived"})
-    if relative_path.startswith(PROJECT_PREFIXES):
+    if relative_path.startswith(LEGACY_PROJECT_PREFIXES):
         return frozenset({"project-plan", "historical", "archived"})
     if relative_path.startswith(("evidence/", "evals/results/")):
         return frozenset({"historical", "generated", "archived"})

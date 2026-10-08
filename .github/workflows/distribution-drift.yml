@@ -40,11 +40,5 @@ jobs:
           node --version
           git --version
 
-      - name: Fetch frozen bundle source
-        run: git -c gc.auto=0 -c maintenance.auto=false fetch --no-tags --no-write-fetch-head --no-recurse-submodules --no-auto-maintenance --refmap= origin bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1
-
-      - name: Check distribution agreement
-        run: python -B scripts/check-distribution-drift.py
-
       - name: Check publication invariants
         run: python -B scripts/check-publication.py

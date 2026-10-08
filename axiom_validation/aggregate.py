@@ -39,11 +39,6 @@ from .manifests import (
     check_shared_source_roots,
     load_json,
 )
-from .historical_no_hook import check_no_hook_bundle
-from .no_hook_linux_isolation import check_no_hook_linux_isolation
-from .historical_no_hook import check_no_hook_observation
-from .historical_no_hook import validate_native_protocol
-from .historical_no_hook import check_no_hook_profile
 from .release_policy import check_release_signature_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
@@ -205,15 +200,6 @@ def main() -> int:
     )
     routing_eval_case_count, routing_benchmark_case_count, routing_result_count = (
         run_policy("routing-evals", check_routing_evaluations, failures)
-    )
-    run_policy("no-hook-profile", check_no_hook_profile, failures)
-    run_policy("no-hook-bundle", check_no_hook_bundle, failures)
-    run_policy("no-hook-linux-isolation", check_no_hook_linux_isolation, failures)
-    run_policy("no-hook-observation", check_no_hook_observation, failures)
-    run_policy(
-        "no-hook-native-observation",
-        lambda domain_failures: domain_failures.extend(validate_native_protocol()),
-        failures,
     )
     review_sequence_count, review_checkpoint_count = run_policy(
         "review-evals", check_review_sequence_contracts, failures

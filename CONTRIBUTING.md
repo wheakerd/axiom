@@ -14,12 +14,9 @@ silently broaden what the user authorized.
 | `hooks/codex-hooks.json` | Codex-specific startup hook |
 | `README.md` | Product landing page and safe-start entry point |
 | `docs/README.md` and `docs/` | Task navigation, user guidance, concepts, references, and maintainer policy |
-| `project/` | Project operations: marketing, distribution, channel status, launch plans, and editorial plans |
-| `evidence/` | Version-bound, privacy-safe host records and current release status |
-| `evals/` | Versioned black-box routing contracts and separately labeled host observations |
-| `evals/context-budget/` | Versioned always-loaded routing proxies, lifecycle slots, and reduction evidence |
-| `axiom_validation/runtime-contract-inputs-v2.json` | Versioned installed-runtime input classification |
-| `axiom_validation/` | Standard-library publication policy modules; otherwise not installed runtime behavior |
+| `evidence/` | Current identity and status, append-only policy ledger, compatibility schemas, and version-bound runtime digest histories |
+| `evals/` | Versioned routing contracts, their historical index, context budgets, and separately labeled host observations |
+| `axiom_validation/` | Standard-library publication policy modules and versioned installed-runtime input classification |
 | `tests/` | Focused unit tests and isolated policy fixtures; not installed runtime behavior |
 | `scripts/` and `.github/workflows/` | Stable validation entrypoints and CI wiring; not installed runtime behavior |
 
@@ -121,20 +118,17 @@ documentation whenever a declared hook path or command changes.
 Run checks from the repository root and record the exact commands and outcomes:
 
 ```bash
-python3 scripts/check-distribution-drift.py
-python3 scripts/check-runtime-identity.py --check
-python3 scripts/check-compatibility-evidence.py --self-test
-python3 scripts/measure-routing-context.py --check
-python3 scripts/check-documentation.py
-python3 scripts/check-publication.py
-python3 -m unittest discover -s tests -p 'test_*.py'
-python3 -m unittest tests.test_routing_evals -v
+python3 -B scripts/check-publication.py
+python3 -B -m unittest discover -s tests -p 'test_*.py'
 git diff --check
 ```
 
-Also run targeted checks required by the files you changed. Read the final
-diff, confirm the Codex manifest version matches the release identity, and inspect
-`git status --short` for unrelated paths.
+The aggregate owns distribution agreement, runtime identity, compatibility
+evidence, routing context, documentation, and publication checks. Use focused
+scripts to diagnose a failing domain; a passing aggregate does not require
+repeating those checks. Run any additional checks required by the changed
+surface, read the final diff, confirm the manifest version matches the release
+identity, and inspect `git status --short` for unrelated paths.
 
 Hook or hook-workflow changes also require the dedicated native integration
 module on every available target host:
@@ -169,12 +163,19 @@ Dockerfile input pins`. `FROM scratch`, references to an already validated
 local build stage, and validated action-local `COPY` or `ADD` sources are
 accepted but do not increase either Dockerfile count.
 
-Historical compatibility records remain valid against the immutable
-`evidence/schema-v1.json` contract and must not be rewritten. New observations
-must validate against `evidence/schema-v3.json`, bind to an already existing
-immutable tag and commit, include the exact plugin version and runtime contract
-digest, preserve every not-run or unavailable case, and contain only minimal
-sanitized output. A prior observation may be referenced for an identical
+The v0.7.4 host snapshots and frozen no-Hook experiment are retained in the
+[verified Git archive](docs/field-validation.md#archived-experiments). Their
+commands, tests, and source downloads are retired from current publication.
+The compatibility validator uses `tests/fixtures/compatibility-v3.json` for
+synthetic schema regression; no fixture is reported as a host observation.
+
+Historical compatibility records retain their original schema: v1 supplies the
+shared definitions, v2 binds runtime schema v1, and v3 supports runtime schemas
+v1 and v2. New current observations use `evidence/schema-v3.json`, bind to an
+already existing immutable tag and commit, include the exact plugin version and
+runtime digest, preserve every not-run or unavailable case, and contain only
+minimal sanitized output. The [evidence inventory](docs/field-validation.md#evidence-directory)
+explains these distinct versions and the offline validator's limits. A prior observation may be referenced for an identical
 runtime digest, but never relabeled as evidence of a new host, lifecycle,
 version, or date. The checked-in current release status stays `STATIC-ONLY`;
 use the validator's post-tag `--record` mode for a same-release asset after the

@@ -88,7 +88,7 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
     # contracts must resolve that decision to the now-installed public skill.
     for case in cases.values():
         request = case.get("request", "")
-        if case.get("expectedClarification") or request.startswith(("$task-planning", "$delegate-simple-task")):
+        if case.get("expectedClarification") or request.startswith(("$task-planning", "$delegate-simple-task", "$local-web-search")):
             actual = route_contract(request)
             if [actual["route"]] != case.get("expectedRoutes"):
                 failures.append(f"current offline route disagrees with case {case['id']!r}")

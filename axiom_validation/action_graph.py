@@ -1275,12 +1275,12 @@ def check_distribution_workflow_text(
         )
 
     steps = job.get("steps") if isinstance(job, dict) else None
-    if not isinstance(steps, list) or len(steps) != 7 or any(
+    if not isinstance(steps, list) or len(steps) != 5 or any(
         not isinstance(step, dict) for step in steps
     ):
-        failures.append(f"{label} must contain exactly seven canonical validation steps")
+        failures.append(f"{label} must contain exactly five canonical validation steps")
     else:
-        checkout, python, node, environment, history, distribution, publication = steps
+        checkout, python, node, environment, publication = steps
         checkout_with = checkout.get("with")
         if (
             set(checkout) != {"name", "uses", "with"}
@@ -1332,7 +1332,7 @@ def check_distribution_workflow_text(
             "          node --version\n"
             "          git --version\n"
             "\n"
-            "      - name: Fetch frozen bundle source\n"
+            "      - name: Check publication invariants\n"
         )
         if (
             set(environment) != {"name", "run"}
@@ -1345,36 +1345,13 @@ def check_distribution_workflow_text(
             )
 
         if (
-            set(history) != {"name", "run"}
-            or scalar(history.get("name")) != "Fetch frozen bundle source"
-            or scalar(history.get("run"))
-            != "git -c gc.auto=0 -c maintenance.auto=false fetch --no-tags "
-            "--no-write-fetch-head --no-recurse-submodules --no-auto-maintenance "
-            "--refmap= origin bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1"
+            set(publication) != {"name", "run"}
+            or scalar(publication.get("name")) != "Check publication invariants"
+            or scalar(publication.get("run")) != "python -B scripts/check-publication.py"
         ):
-            failures.append(f"{label} must fetch only the exact frozen bundle source without refs or tags")
-
-        expected_commands = (
-            (
-                distribution,
-                "Check distribution agreement",
-                "python -B scripts/check-distribution-drift.py",
-            ),
-            (
-                publication,
-                "Check publication invariants",
-                "python -B scripts/check-publication.py",
-            ),
-        )
-        for step, expected_name, expected_command in expected_commands:
-            if (
-                set(step) != {"name", "run"}
-                or scalar(step.get("name")) != expected_name
-                or scalar(step.get("run")) != expected_command
-            ):
-                failures.append(
-                    f"{label} must run exact read-only validator step {expected_name!r}"
-                )
+            failures.append(
+                f"{label} must run exact read-only validator step 'Check publication invariants'"
+            )
 
     for forbidden in ("pull_request_target", "${{", "GITHUB_TOKEN", "permissions: write"):
         if forbidden in text:
@@ -1463,12 +1440,12 @@ def check_unit_test_workflow_text(
         failures.append(f"{label} stable check name, runner, or timeout changed")
 
     steps = job.get("steps") if isinstance(job, dict) else None
-    if not isinstance(steps, list) or len(steps) != 6 or any(
+    if not isinstance(steps, list) or len(steps) != 5 or any(
         not isinstance(step, dict) for step in steps
     ):
-        failures.append(f"{label} must contain exactly six canonical test steps")
+        failures.append(f"{label} must contain exactly five canonical test steps")
     else:
-        checkout, python, node, environment, history, tests = steps
+        checkout, python, node, environment, tests = steps
         checkout_with = checkout.get("with")
         if (
             set(checkout) != {"name", "uses", "with"}
@@ -1535,7 +1512,7 @@ def check_unit_test_workflow_text(
             "          node --version\n"
             "          git --version\n"
             "\n"
-            "      - name: Fetch frozen bundle source\n"
+            "      - name: Run unit and integration tests\n"
         )
         if (
             set(environment) != {"name", "run"}
@@ -1546,16 +1523,6 @@ def check_unit_test_workflow_text(
             failures.append(
                 f"{label} must report the exact Ubuntu, Python, Node.js, and Git environment"
             )
-
-        if (
-            set(history) != {"name", "run"}
-            or scalar(history.get("name")) != "Fetch frozen bundle source"
-            or scalar(history.get("run"))
-            != "git -c gc.auto=0 -c maintenance.auto=false fetch --no-tags "
-            "--no-write-fetch-head --no-recurse-submodules --no-auto-maintenance "
-            "--refmap= origin bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1"
-        ):
-            failures.append(f"{label} must fetch only the exact frozen bundle source without refs or tags")
 
         if (
             set(tests) != {"name", "run"}

@@ -1,5 +1,10 @@
 # Repository Governance
 
+This reference combines checked-in enforcement contracts with dated GitHub
+observations. Remote-state claims below apply to their stated verification
+dates; editing this document does not re-verify the live repository. For a
+current remote decision, use [Manual Re-verification](#manual-re-verification).
+
 ## Repository Policy Identity
 
 Repository governance has an identity separate from the installed plugin.
@@ -23,7 +28,7 @@ A failed workflow is detection evidence, not server-side mutation prevention.
 
 Last verified (UTC): `2026-10-02`
 
-The current verification used authenticated GitHub REST queries for the public
+The 2026-10-02 verification used authenticated GitHub REST queries for the public
 `wheakerd/axiom` repository and the separately approved Issue #91 main-ruleset
 promotion. Only the `hook-runtime-gate` prerequisite was added; all existing
 protections and both release-tag rulesets were preserved. The immediate
@@ -209,9 +214,10 @@ the exact `ubuntu-24.04` runner. Full-commit-SHA setup Actions select Python
 `3.14.7` and Node.js `24.19.0`; the exact `package-manager-cache: false`
 setting keeps package-manager caching disabled. Checkout credentials remain
 non-persistent. Before validation, the job reports `/etc/os-release`, `python --version`,
-`node --version`, and `git --version`. It then preserves the two policy owners
-as separate read-only commands: `python -B scripts/check-distribution-drift.py`
-and `python -B scripts/check-publication.py`.
+`node --version`, and `git --version`. Distribution agreement and publication
+policy run through one read-only aggregate: `python -B scripts/check-publication.py`.
+The aggregate validates the manifest, marketplace, and README skill inventory
+alongside the remaining publication invariants.
 
 Fork pull requests use ordinary `pull_request`, receive only `contents: read`,
 and receive no repository secret. The job ID and stable required-check name
@@ -452,7 +458,7 @@ not block an unapproved merge while `require_code_owner_review: false` and
 The current directly observed preventive controls are the server-side
 pull-request requirement, required signatures, non-fast-forward protection,
 strict required checks, squash-only main merges, and the release-tag creation
-and integrity rules. Server-side enforcement of the two required check contexts
+and integrity rules. Server-side enforcement of the three required check contexts
 is preventive, while the repository-owned validator and test content behind
 those results remains controlled by the same ultimate trust root.
 
@@ -482,11 +488,11 @@ ruleset require an approving review, code-owner review, last-push approval,
 stale-review dismissal, and review-thread resolution.
 
 Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator
-permission, or required check. The external contribution flow and merge gates
-therefore remain unchanged: `repository-guards` and
-`unit-and-integration-tests` remain the only required checks, and the three
-hook-runtime matrix checks plus `hook-runtime-gate` remain non-required review
-evidence.
+permission, or required check. The single-maintainer review policy does not
+alter the required checks recorded in Main Branch Policy: `repository-guards`,
+`unit-and-integration-tests`, and `hook-runtime-gate`. The three native
+hook-runtime matrix jobs supply the required aggregate; they are not separate
+required check contexts.
 
 ## Manual Re-verification
 

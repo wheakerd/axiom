@@ -83,12 +83,15 @@ successful static check into release provenance.
 
 Release provenance begins at protected repository history. A separate workflow
 verifies the GitHub signature and approved-`main` ancestry of merged or
-published targets, binds strict release tags to both manifest versions, and
+published targets, binds strict release tags to the Codex manifest version, and
 fails closed on tag movement, deletion, forced update, malformed tags,
 off-history targets, and mismatched GitHub Release refs. Workflow detection is
 not server-side prevention: branch and tag rulesets must continue to reject
 unsigned protected updates and mutable release tags before they take effect.
-Matching upstream `v*` creation is separately restricted to the repository
-owner by a creation-only ruleset. The signature, required-check, deletion, and
-non-fast-forward rules have no bypass actor. A reusable commit-level check is
-target-quality evidence, not authorization for an exact tag-creation request.
+The [governance snapshot](docs/repository-governance.md#release-tag-policy), last
+verified on 2026-10-02, records upstream `v*` creation as restricted to the
+`axiom-release-tag-controller` GitHub App by a creation-only ruleset. The
+separate signature, required-check, deletion, and non-fast-forward rules have
+no bypass actor. Use the snapshot's re-verification procedure before relying on
+live remote state. A reusable commit-level check is target-quality evidence,
+not authorization for an exact tag-creation request.
