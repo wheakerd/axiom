@@ -380,6 +380,7 @@ CURRENT_PUBLIC_ROUTES = (
     "clarify-intent",
     "confirm-external-action",
     "delegate-simple-task",
+    "local-web-search",
     "optimize-codex-usage",
     "reversible-system-change",
     "review-axiom-task",
@@ -388,7 +389,7 @@ CURRENT_PUBLIC_ROUTES = (
 )
 SCHEMA_V3_ID = "urn:axiom:routing-evals:schema:v3"
 BENCHMARK_V3_ID = "codex-core-v3"
-CURRENT_BENCHMARK_CASE_COUNT = 20
+CURRENT_BENCHMARK_CASE_COUNT = 27
 CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v3/current.jsonl"
 HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH = "evals/host-response-schema-v4.json"
-CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 = "a21410982087e26b6cb15c047f0646bdbfd67f5fb650fa4a7998df5809bc1edf"
+CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 = "637b9bcd2825d2286db4d4ff2228d3611f43845f9999418f48c3e16aae3799fc"

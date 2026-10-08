@@ -20,10 +20,11 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from axiom_validation.context import supported_hosts
-from axiom_validation.historical_no_hook import check_clarification
-from axiom_validation.historical_no_hook import check_no_hook_bundle  # noqa: E402
-from axiom_validation.historical_no_hook import check_no_hook_observation  # noqa: E402
-from axiom_validation.runtime_identity import check_runtime_identity  # noqa: E402
+from axiom_validation.runtime_identity import (  # noqa: E402
+    HISTORY_RELATIVE,
+    LEGACY_HISTORY_RELATIVE,
+    check_runtime_identity,
+)
 
 
 EVIDENCE_ROOT = REPOSITORY_ROOT / "evidence"
@@ -32,15 +33,16 @@ SCHEMA_V2_PATH = EVIDENCE_ROOT / "schema-v2.json"
 SCHEMA_V3_PATH = EVIDENCE_ROOT / "schema-v3.json"
 STATUS_PATH = EVIDENCE_ROOT / "release-status.json"
 RUNTIME_IDENTITY_PATH = EVIDENCE_ROOT / "runtime-identity.json"
-RUNTIME_HISTORY_PATH = EVIDENCE_ROOT / "runtime-contract-history-v1.json"
+RUNTIME_HISTORY_PATHS = {
+    "1": REPOSITORY_ROOT / LEGACY_HISTORY_RELATIVE,
+    "2": REPOSITORY_ROOT / HISTORY_RELATIVE,
+}
 POLICY_REVISIONS_PATH = EVIDENCE_ROOT / "repository-policy-revisions-v1.json"
-PROFILE_STATIC_EVIDENCE_PATH = (
-    EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-v1.json"
-)
 MANIFEST_PATHS = (
     REPOSITORY_ROOT / ".codex-plugin" / "plugin.json",
 )
 MAX_JSON_BYTES = 256 * 1024
+MAX_JSON_DEPTH = 64
 
 RECORD_KEYS = frozenset(
     {
@@ -189,17 +191,29 @@ def load_json(path: Path, failures: list[str]) -> dict[str, Any] | None:
         return None
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError as error:
+    except (OSError, UnicodeError) as error:
         failures.append(f"cannot read {display_path(path)}: {error}")
         return None
     try:
         value = json.loads(text, object_pairs_hook=reject_duplicate_json_keys)
-    except (json.JSONDecodeError, DuplicateJsonKeyError) as error:
+    except (ValueError, RecursionError) as error:
         failures.append(f"invalid JSON in {display_path(path)}: {error}")
         return None
     if type(value) is not dict:
         failures.append(f"{display_path(path)} must contain a top-level object")
         return None
+    # Evidence formats are shallow; bound later semantic and privacy walks
+    # independently of the interpreter's JSON decoder and recursion limit.
+    pending = [(value, 0)]
+    while pending:
+        node, depth = pending.pop()
+        if depth > MAX_JSON_DEPTH:
+            failures.append(f"{display_path(path)} exceeds the {MAX_JSON_DEPTH}-level JSON nesting limit")
+            return None
+        if type(node) is dict:
+            pending.extend((child, depth + 1) for child in node.values())
+        elif type(node) is list:
+            pending.extend((child, depth + 1) for child in node)
     return value
 
 
@@ -398,7 +412,7 @@ def validate_case(case: Any, label: str, hook_verified: bool, failures: list[str
     observed_mutation = require_bool(
         document.get("mutationObserved"), f"{label}.mutationObserved", failures
     )
-    result = document.get("result")
+    result = require_string(document.get("result"), f"{label}.result", failures)
     if result not in RESULTS:
         failures.append(f"{label}.result must be one of {', '.join(sorted(RESULTS))}")
     limitations = require_string_list(
@@ -460,11 +474,12 @@ def validate_record(
     failures: list[str],
 ) -> None:
     label = display_path(path) if path is not None else "record"
-    schema_version = record.get("schemaVersion")
+    schema_version = require_string(record.get("schemaVersion"), f"{label}.schemaVersion", failures)
     expected_keys = RECORD_KEYS if schema_version == "1" else RECORD_V2_KEYS
     exact_object(record, expected_keys, label, failures)
     if schema_version not in {"1", "2", "3"}:
         failures.append(f"{label}.schemaVersion must be '1', '2', or '3'")
+        return
 
     release = exact_object(record.get("release"), RELEASE_KEYS, f"{label}.release", failures)
     version = tag = commit = None
@@ -496,7 +511,7 @@ def validate_record(
                 failures.append(
                     f"{label}.runtimeIdentity.pluginVersion must match release.version"
                 )
-            if runtime.get("runtimeContractSchemaVersion") not in ({"1"} if schema_version == "2" else {"1", "2"}):
+            if runtime.get("runtimeContractSchemaVersion") not in (("1",) if schema_version == "2" else ("1", "2")):
                 failures.append(
                     f"{label}.runtimeIdentity.runtimeContractSchemaVersion is unsupported by evidence schema {schema_version}"
                 )
@@ -567,7 +582,7 @@ def validate_record(
         )
         installed_digest = hook.get("installedCommandSha256")
         if installed_digest is not None:
-            require_string(
+            installed_digest = require_string(
                 installed_digest, f"{label}.hook.installedCommandSha256", failures
             )
         hook_verified_value = require_bool(
@@ -607,7 +622,10 @@ def validate_record(
     else:
         if len(cases) != len(CASE_CONTRACTS):
             failures.append(f"{label}.cases must contain exactly six lifecycle cases")
-        case_ids = [case.get("id") for case in cases if type(case) is dict]
+        case_ids = [
+            case["id"] for case in cases
+            if type(case) is dict and type(case.get("id")) is str
+        ]
         if len(case_ids) != len(set(case_ids)):
             failures.append(f"{label}.cases repeats a case id")
         if set(case_ids) != set(CASE_CONTRACTS):
@@ -701,12 +719,45 @@ def manifest_version(failures: list[str]) -> str | None:
     return versions[0] if len(versions) == len(MANIFEST_PATHS) else None
 
 
+def load_runtime_histories(failures: list[str]) -> dict[str, dict[str, Any]]:
+    histories: dict[str, dict[str, Any]] = {}
+    for schema_version, path in RUNTIME_HISTORY_PATHS.items():
+        history = load_json(path, failures) or {}
+        if history.get("schemaVersion") != schema_version:
+            failures.append(f"{display_path(path)} runtime schema binding drifted")
+        histories[schema_version] = history
+    return histories
+
+
+def record_runtime_schema(record: dict[str, Any]) -> str | None:
+    if record.get("schemaVersion") == "1":
+        return "1"
+    runtime = record.get("runtimeIdentity")
+    schema_version = runtime.get("runtimeContractSchemaVersion") if type(runtime) is dict else None
+    return schema_version if type(schema_version) is str else None
+
+
+def runtime_history_entry(
+    record: dict[str, Any],
+    histories: dict[str, dict[str, Any]],
+) -> dict[str, Any] | None:
+    history = histories.get(record_runtime_schema(record), {})
+    entries = history.get("entries")
+    release = record.get("release")
+    if type(entries) is not list or type(release) is not dict:
+        return None
+    return next(
+        (entry for entry in entries if type(entry) is dict and entry.get("tag") == release.get("tag")),
+        None,
+    )
+
+
 def validate_status(
     status: dict[str, Any],
     records: dict[str, dict[str, Any]],
     current_version: str | None,
     runtime_identity: dict[str, Any],
-    runtime_history: dict[str, Any],
+    runtime_histories: dict[str, dict[str, Any]],
     failures: list[str],
 ) -> None:
     label = "evidence/release-status.json"
@@ -747,7 +798,7 @@ def validate_status(
             "runtimeContractSchemaVersion": canonical_runtime.get("schemaVersion"),
             "runtimeContractDigest": canonical_runtime.get("digest"),
             "inputManifest": canonical_runtime.get("inputManifest"),
-            "history": "evidence/runtime-contract-history-v2.json",
+            "history": HISTORY_RELATIVE,
         }
         for field, expected in expected_runtime.items():
             if status_runtime.get(field) != expected:
@@ -770,12 +821,12 @@ def validate_status(
             document = exact_object(item, CURRENT_HOST_KEYS, item_label, failures)
             if document is None:
                 continue
-            host = document.get("host")
+            host = require_string(document.get("host"), f"{item_label}.host", failures)
             if host not in supported_hosts(target_version):
                 failures.append(f"{item_label}.host is unsupported")
             else:
                 current_hosts.add(host)
-            if document.get("status") not in {"not-run", "unknown", "unavailable"}:
+            if document.get("status") not in ("not-run", "unknown", "unavailable"):
                 failures.append(f"{item_label}.status cannot imply a current host pass")
             if document.get("hostVersion") is not None:
                 failures.append(f"{item_label}.hostVersion must remain null without a current run")
@@ -799,11 +850,6 @@ def validate_status(
 
     prior = status.get("priorReleaseEvidence")
     referenced_paths: set[str] = set()
-    history_by_tag = {
-        item.get("tag"): item
-        for item in runtime_history.get("entries", [])
-        if type(item) is dict and type(item.get("tag")) is str
-    }
     if type(prior) is not list:
         failures.append(f"{label}.priorReleaseEvidence must be an array")
     else:
@@ -817,7 +863,7 @@ def validate_status(
             )
             tag = require_string(document.get("tag"), f"{item_label}.tag", failures)
             commit = require_string(document.get("commit"), f"{item_label}.commit", failures)
-            if document.get("status") not in {"partial-host-observed", "unavailable", "not-run"}:
+            if document.get("status") not in ("partial-host-observed", "unavailable", "not-run"):
                 failures.append(f"{item_label}.status is not a prior-evidence state")
             if document.get("observationSubject") != "installed-runtime-contract":
                 failures.append(f"{item_label}.observationSubject drifted")
@@ -850,13 +896,18 @@ def validate_status(
             )
             if document.get("lifecycleSources") != lifecycle_sources:
                 failures.append(f"{item_label}.lifecycleSources disagree with its evidence record")
-            history_entry = history_by_tag.get(tag)
+            history_entry = runtime_history_entry(record, runtime_histories)
             if history_entry is None:
-                failures.append(f"{item_label} has no derived runtime history entry")
-            elif document.get("runtimeContractDigest") != history_entry.get(
-                "runtimeContractDigest"
-            ):
-                failures.append(f"{item_label}.runtimeContractDigest disagrees with tag history")
+                failures.append(f"{item_label} has no derived runtime history entry for its schema")
+            else:
+                if commit != history_entry.get("commit"):
+                    failures.append(f"{item_label}.commit disagrees with tag history")
+                expected_digest = history_entry.get("runtimeContractDigest")
+                if document.get("runtimeContractDigest") != expected_digest:
+                    failures.append(f"{item_label}.runtimeContractDigest disagrees with tag history")
+                record_runtime = record.get("runtimeIdentity")
+                if type(record_runtime) is dict and record_runtime.get("runtimeContractDigest") != expected_digest:
+                    failures.append(f"{item_label} evidence record runtime digest disagrees with tag history")
             if release.get("version") == target_version:
                 failures.append(f"{item_label} carries current-release evidence into STATIC-ONLY status")
         if referenced_paths != set(records):
@@ -892,15 +943,8 @@ def collect_records(failures: list[str]) -> dict[str, dict[str, Any]]:
         SCHEMA_V3_PATH.resolve(),
         STATUS_PATH.resolve(),
         RUNTIME_IDENTITY_PATH.resolve(),
-        RUNTIME_HISTORY_PATH.resolve(),
-        (EVIDENCE_ROOT / "runtime-contract-history-v2.json").resolve(),
+        *(path.resolve() for path in RUNTIME_HISTORY_PATHS.values()),
         POLICY_REVISIONS_PATH.resolve(),
-        PROFILE_STATIC_EVIDENCE_PATH.resolve(),
-        (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-6.json").resolve(),
-        (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-9.json").resolve(),
-        (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-12.json").resolve(),
-        (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-14.json").resolve(),
-        (EVIDENCE_ROOT / "profiles/openai-hook-independent-v1/bundle-revision-25.json").resolve(),
     }
     expected_json.update((REPOSITORY_ROOT / path).resolve() for path in records)
     unexpected_json = sorted(
@@ -910,8 +954,6 @@ def collect_records(failures: list[str]) -> dict[str, dict[str, Any]]:
     )
     if unexpected_json:
         failures.append("unowned evidence JSON files: " + ", ".join(unexpected_json))
-    if not records:
-        failures.append("no version-bound compatibility evidence records were found")
     return records
 
 
@@ -932,13 +974,17 @@ def check_negative_fixtures(
     status: dict[str, Any],
     current_version: str | None,
     runtime_identity: dict[str, Any],
-    runtime_history: dict[str, Any],
+    runtime_histories: dict[str, dict[str, Any]],
     failures: list[str],
 ) -> int:
-    codex_path = "evidence/v0.7.4/codex/linux.json"
-    source = records.get(codex_path)
+    # Test payloads are synthetic and never enter release-status evidence.
+    source = load_json(REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json", failures)
     if source is None:
-        failures.append("negative fixtures require the version-bound Codex record")
+        return 0
+    control_failures: list[str] = []
+    validate_record(source, None, control_failures)
+    if control_failures:
+        failures.append("schema-v3 positive evidence fixture failed: " + "; ".join(control_failures))
         return 0
 
     fixtures: list[tuple[str, dict[str, Any]]] = []
@@ -949,7 +995,7 @@ def check_negative_fixtures(
     del missing_tag["release"]["tag"]
     fixtures.append(("missing immutable tag", missing_tag))
     wrong_tag = copy.deepcopy(source)
-    wrong_tag["release"]["tag"] = "v0.7.5"
+    wrong_tag["release"]["tag"] = "v0.0.1"
     fixtures.append(("version and tag mismatch", wrong_tag))
     unobserved_pass = copy.deepcopy(source)
     unobserved_pass["cases"][0]["observedRoute"] = None
@@ -964,40 +1010,26 @@ def check_negative_fixtures(
     mutating_pass["cases"][0]["mutationAttempted"] = True
     fixtures.append(("passing case with mutation", mutating_pass))
 
-    history_entry = next(
-        (
-            item
-            for item in runtime_history.get("entries", [])
-            if type(item) is dict and item.get("tag") == source["release"]["tag"]
-        ),
-        None,
-    )
-    if history_entry is None:
-        failures.append("schema-v2 fixtures require the v0.7.4 runtime history entry")
-    else:
-        v2_control = copy.deepcopy(source)
-        v2_control["schemaVersion"] = "2"
-        v2_control["runtimeIdentity"] = {
-            "pluginVersion": source["release"]["version"],
-            "runtimeContractSchemaVersion": "1",
-            "runtimeContractDigest": history_entry["runtimeContractDigest"],
-        }
-        v2_control["observationSubject"] = "installed-runtime-contract"
-        control_failures: list[str] = []
-        validate_record(v2_control, None, control_failures)
-        if control_failures:
-            failures.append(
-                "schema-v2 positive evidence fixture failed: "
-                + "; ".join(control_failures)
-            )
-        missing_runtime_digest = copy.deepcopy(v2_control)
-        del missing_runtime_digest["runtimeIdentity"]["runtimeContractDigest"]
-        fixtures.append(("v2 record without runtime digest", missing_runtime_digest))
-        unprefixed_runtime_digest = copy.deepcopy(v2_control)
-        unprefixed_runtime_digest["runtimeIdentity"]["runtimeContractDigest"] = (
-            history_entry["runtimeContractDigest"].removeprefix("sha256:")
-        )
-        fixtures.append(("v2 record with unprefixed runtime digest", unprefixed_runtime_digest))
+    v2_control = copy.deepcopy(source)
+    v2_control["schemaVersion"] = "2"
+    v2_control["runtimeIdentity"]["runtimeContractSchemaVersion"] = "1"
+    control_failures = []
+    validate_record(v2_control, None, control_failures)
+    if control_failures:
+        failures.append("schema-v2 positive evidence fixture failed: " + "; ".join(control_failures))
+    v1_control = copy.deepcopy(v2_control)
+    v1_control["schemaVersion"] = "1"
+    del v1_control["runtimeIdentity"], v1_control["observationSubject"]
+    control_failures = []
+    validate_record(v1_control, None, control_failures)
+    if control_failures:
+        failures.append("schema-v1 positive evidence fixture failed: " + "; ".join(control_failures))
+    missing_runtime_digest = copy.deepcopy(v2_control)
+    del missing_runtime_digest["runtimeIdentity"]["runtimeContractDigest"]
+    fixtures.append(("v2 record without runtime digest", missing_runtime_digest))
+    unprefixed_runtime_digest = copy.deepcopy(v2_control)
+    unprefixed_runtime_digest["runtimeIdentity"]["runtimeContractDigest"] = "0" * 64
+    fixtures.append(("v2 record with unprefixed runtime digest", unprefixed_runtime_digest))
 
     for name, document in fixtures:
         expect_fixture_failure(
@@ -1019,14 +1051,14 @@ def check_negative_fixtures(
             records,
             current_version,
             runtime_identity,
-            runtime_history,
+            runtime_histories,
             candidate_failures,
         ),
         failures,
     )
     current_version_reuse = copy.deepcopy(status)
-    current_version_reuse["targetRelease"]["version"] = "0.7.4"
-    current_version_reuse["targetRelease"]["tag"] = "v0.7.4"
+    current_version_reuse["targetRelease"]["version"] = source["release"]["version"]
+    current_version_reuse["targetRelease"]["tag"] = source["release"]["tag"]
     expect_fixture_failure(
         "old release status reused as current",
         current_version_reuse,
@@ -1035,7 +1067,7 @@ def check_negative_fixtures(
             records,
             current_version,
             runtime_identity,
-            runtime_history,
+            runtime_histories,
             candidate_failures,
         ),
         failures,
@@ -1050,7 +1082,7 @@ def check_negative_fixtures(
             records,
             current_version,
             runtime_identity,
-            runtime_history,
+            runtime_histories,
             candidate_failures,
         ),
         failures,
@@ -1070,12 +1102,9 @@ def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str 
     if schema_v3 is not None:
         check_schema_v2_contract(schema_v3, failures, "3")
     records = collect_records(failures)
-    check_no_hook_bundle(failures, REPOSITORY_ROOT)
-    check_no_hook_observation(failures, REPOSITORY_ROOT)
-    failures.extend(check_clarification(REPOSITORY_ROOT))
     current_version = manifest_version(failures)
     runtime_identity = load_json(RUNTIME_IDENTITY_PATH, failures) or {}
-    runtime_history = load_json(RUNTIME_HISTORY_PATH, failures) or {}
+    runtime_histories = load_runtime_histories(failures)
     status = load_json(STATUS_PATH, failures)
     if status is not None:
         validate_status(
@@ -1083,7 +1112,7 @@ def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str 
             records,
             current_version,
             runtime_identity,
-            runtime_history,
+            runtime_histories,
             failures,
         )
     fixture_count = 0
@@ -1093,7 +1122,7 @@ def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str 
             status,
             current_version,
             runtime_identity,
-            runtime_history,
+            runtime_histories,
             failures,
         )
     return failures, len(records), fixture_count, current_version
@@ -1109,7 +1138,11 @@ def validate_external_record(
     record = load_json(path, failures)
     if record is None:
         return failures
-    validate_record(record, None, failures)
+    record_failures: list[str] = []
+    validate_record(record, None, record_failures)
+    failures.extend(record_failures)
+    if record_failures:
+        return failures
     if record.get("schemaVersion") not in {"2", "3"}:
         failures.append("new external observations must use evidence/schema-v2.json or evidence/schema-v3.json")
     release = record.get("release", {})
@@ -1119,24 +1152,21 @@ def validate_external_record(
         failures.append("external record commit does not match --expected-commit")
 
     runtime_identity = load_json(RUNTIME_IDENTITY_PATH, failures) or {}
-    runtime_history = load_json(RUNTIME_HISTORY_PATH, failures) or {}
+    histories = load_runtime_histories(failures)
     expected_version = expected_tag.removeprefix("v")
     expected_digest = None
-    expected_schema = "1"
+    expected_schema = record_runtime_schema(record)
     if runtime_identity.get("pluginVersion") == expected_version:
         runtime = runtime_identity.get("runtimeContract")
         if type(runtime) is dict:
             expected_digest = runtime.get("digest")
             expected_schema = runtime.get("schemaVersion")
-    if expected_digest is None:
-        observed_runtime = record.get("runtimeIdentity")
-        if type(observed_runtime) is dict and observed_runtime.get("runtimeContractSchemaVersion") == "2":
-            runtime_history = load_json(EVIDENCE_ROOT / "runtime-contract-history-v2.json", failures) or {}
-            expected_schema = "2"
-        for entry in runtime_history.get("entries", []):
-            if type(entry) is dict and entry.get("tag") == expected_tag:
-                expected_digest = entry.get("runtimeContractDigest")
-                break
+    history_entry = runtime_history_entry(record, histories)
+    if history_entry is not None:
+        if expected_commit != history_entry.get("commit"):
+            failures.append("external record commit disagrees with canonical tag history")
+        if expected_digest is None:
+            expected_digest = history_entry.get("runtimeContractDigest")
     if type(expected_digest) is not str:
         failures.append("external record release has no canonical runtime digest binding")
     else:

@@ -304,6 +304,62 @@
       "sourceIssue": null,
       "summary": "Default authored AGENTS instruction prose to English, require explicit scoped document-language overrides, and verify output language without changing routes or action authority.",
       "runtimeContractDigest": "sha256:72ea38cde663d346658ad39049e682b99b149427fba9789c1e52ffa30d98b357"
+    },
+    {
+      "revision": 39,
+      "recordedOn": "2026-10-07",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Add local web research to the untagged candidate with minimal machine disclosure, serial browsing, challenge handoff, and authentic browser identity; grant no bypass authority.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 40,
+      "recordedOn": "2026-10-07",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Consolidate the routing index under evals, flatten project operations, and replace the duplicate distribution checker with the publication aggregate; preserve runtime and historical records.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 41,
+      "recordedOn": "2026-10-07",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Remove retired project-operation plans and publishing drafts from the release tree; retain their Git history, update document ownership and validation expectations, and preserve installed runtime.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 42,
+      "recordedOn": "2026-10-07",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Archive retired compatibility evidence and no-Hook experiments in Git history; remove their active validators and CI dependencies while retaining synthetic schema regression coverage.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 43,
+      "recordedOn": "2026-10-08",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Align current documentation with implemented routes and runtime schema v2, preserve historical sources, and correct required-check guidance and regression guards without changing installed runtime.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 44,
+      "recordedOn": "2026-10-08",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Align evidence ownership and schema lineage; select history by runtime schema and validate canonical commit/digest bindings without changing historical formats or current host status.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 45,
+      "recordedOn": "2026-10-08",
+      "baselineCommit": "41239ac67d5c2c63f76182580ed7570882441f02",
+      "sourceIssue": null,
+      "summary": "Reject malformed compatibility inputs with diagnostics, align security guidance with Codex and the documented tag controller, and remove obsolete fixture attributes; preserve installed runtime.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
     }
   ]
 }

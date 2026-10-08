@@ -23,6 +23,7 @@ ROUTE_SOURCE_ANCHORS = {
     "clarify-intent": ("ambiguity", "options", "custom"),
     "delegate-simple-task": ("model", "Full Access", "confirmation"),
     "task-planning": ("plan", "current", "scope"),
+    "local-web-search": ("local", "cloud-hosted", "execution location"),
     "agents-architect": ("AGENTS.md", "audit"),
     "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
     "confirm-external-action": ("external", "target", "verify"),
@@ -652,6 +653,7 @@ def route_contract(request: str) -> dict[str, Any]:
         ("clarify-intent", "clarify", ()),
         ("delegate-simple-task", "assess", ("references/delegation-contract.md",)),
         ("task-planning", "plan", ()),
+        ("local-web-search", "research", ("references/local-browsing.md",)),
     ):
         if re.search(r"(?<![\w-])\$" + re.escape(route) + r"(?![\w-])", request):
             return {"route": route, "phase": phase, "references": references,

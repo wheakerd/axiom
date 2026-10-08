@@ -12,7 +12,7 @@ from typing import Any
 from ..context import REPOSITORY_ROOT
 
 
-HISTORY_INDEX_RELATIVE_PATH = "validation_data/routing-history-v1.json"
+HISTORY_INDEX_RELATIVE_PATH = "evals/routing-history-v1.json"
 HISTORY_INDEX_PATH = REPOSITORY_ROOT / HISTORY_INDEX_RELATIVE_PATH
 HISTORY_INDEX_SHA256 = (
     "9b1f28cdc004af83d1ec37a892de62b273975ec8c919aa11c15745df49c12e21"

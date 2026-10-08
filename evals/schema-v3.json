@@ -53,7 +53,7 @@
         "forbiddenRoutes": {
           "type": "array",
           "uniqueItems": true,
-          "maxItems": 10,
+          "maxItems": 11,
           "items": {
             "$ref": "#/$defs/route"
           }
@@ -153,6 +153,7 @@
         "clarify-intent",
         "confirm-external-action",
         "delegate-simple-task",
+        "local-web-search",
         "optimize-codex-usage",
         "reversible-system-change",
         "review-axiom-task",
@@ -226,8 +227,8 @@
         },
         "caseIds": {
           "type": "array",
-          "minItems": 20,
-          "maxItems": 20,
+          "minItems": 27,
+          "maxItems": 27,
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -450,7 +451,7 @@
         "callCount": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 20
+          "maximum": 27
         },
         "reasoningEffort": {
           "type": [

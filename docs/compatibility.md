@@ -71,21 +71,18 @@ immutable subject before a host pass can be claimed.
 
 The checked-in candidate for `v0.13.3` reports:
 
-- target binding: `pending-immutable-tag`;
-- checked-in status: `STATIC-ONLY`;
-- installed-runtime identity: plugin `0.13.3`, runtime-contract schema v2;
-- current Codex installed-host observation: `NOT-RUN`;
-
-See the [v0.13.3 version notes](releases/v0.13.3.md) for candidate-specific
-skill contract corrections and the changed runtime identity. The candidate cannot bind itself to a
-future signed merge, immutable tag, final workflow result, or post-publication
-host observation.
-
-### Current Matrix
+- status: `STATIC-ONLY`;
+- binding: `pending-immutable-tag`;
+- installed-runtime contract: schema v2.
 
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
 | Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.13.3 | Static support only |
+
+The [v0.13.3 notes](releases/v0.13.3.md) describe default-English instruction
+authoring, local web research, and repository cleanup. The candidate cannot bind
+itself to a future signed merge, immutable tag, final workflow result, or
+post-publication host observation.
 
 An identical runtime digest may make older evidence relevant to the same bytes,
 but it does not create a new observation or change the older record's host,
@@ -152,7 +149,7 @@ Current sources:
 
 Historical sources:
 
-- [version-bound host records](../evidence/);
+- [archived version-bound host records and no-Hook experiments](field-validation.md#archived-experiments);
 - [routing observation records](../evals/results/);
 - [routing-context history](../evals/context-budget/results/); and
 - [version notes](releases/).

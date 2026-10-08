@@ -45,6 +45,13 @@
     "current-compaction-plugin-architecture-001",
     "current-clarify-intent-canonical-001",
     "current-delegate-simple-task-canonical-001",
-    "current-task-planning-canonical-001"
+    "current-task-planning-canonical-001",
+    "current-local-web-search-canonical-001",
+    "current-local-web-search-paraphrase-001",
+    "current-local-web-search-cloud-fallback-001",
+    "current-local-web-search-unknown-location-001",
+    "current-no-route-cloud-web-search-001",
+    "current-no-route-bot-explanation-001",
+    "current-compaction-local-web-search-blocked-001"
   ]
 }

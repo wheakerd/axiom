@@ -37,26 +37,26 @@
         "classification": "estimate",
         "comparisonScope": "same-English-Markdown-surface-only",
         "method": "ceil(utf8-bytes/4)",
-        "value": 1741
+        "value": 1871
       },
-      "logicalLines": 121,
-      "utf8Bytes": 6962,
-      "whitespaceDelimitedWords": 863
+      "logicalLines": 129,
+      "utf8Bytes": 7484,
+      "whitespaceDelimitedWords": 934
     },
-    "sha256": "5b0701d19c4d5daed2b26b3a66d80f9eea7f5cb3aac31d0ae9b31f0c1892994a"
+    "sha256": "833a525f8151d3bf57b0a6269f5ec21b59010312613fa382373d4b8e21e4aae9"
   },
   "comparison": {
     "method": "same-English-Markdown-surface",
-    "utf8ByteDelta": 1063,
+    "utf8ByteDelta": 1585,
     "absoluteThresholdReached": true,
     "relativeThresholdReached": true,
     "meaningfulIncrease": true,
     "reviewStatus": "reviewed",
-    "wordDelta": 106,
-    "lineDelta": 14,
+    "wordDelta": 177,
+    "lineDelta": 22,
     "referenceDelta": 1,
-    "estimatedTokenDelta": 266,
-    "justification": "The v0.13.3 startup gate is byte-identical to v0.13.2. Document-language authoring and acceptance remain in the selected agents-architect workflow, with no new public route or startup cost. The cumulative increase from v0.7.9 remains reviewed; static counts do not establish host behavior."
+    "estimatedTokenDelta": 396,
+    "justification": "The local-web-search route and pre-request reassessment add 522 bytes to the previous candidate gate. This is needed to distinguish local execution from confirmed cloud search and cover later local fallbacks. Detailed browsing conduct remains in the selected skill reference. The cumulative increase from v0.7.9 is reviewed; static counts do not establish host behavior."
   },
   "hostMetrics": [
     {

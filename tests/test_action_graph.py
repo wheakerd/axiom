@@ -78,7 +78,7 @@ class ActionGraphTests(unittest.TestCase):
             (
                 "environment report removed",
                 original.replace(environment_block, "", 1),
-                "exactly seven canonical validation steps",
+                "exactly five canonical validation steps",
             ),
             (
                 "checkout credentials persisted",
@@ -110,10 +110,10 @@ class ActionGraphTests(unittest.TestCase):
                 "only the repository-guards job",
             ),
             (
-                "merged validator purpose",
+                "retired validator substituted",
                 original.replace(
-                    "python -B scripts/check-distribution-drift.py",
                     "python -B scripts/check-publication.py",
+                    "python -B scripts/check-distribution-drift.py",
                     1,
                 ),
                 "exact read-only validator step",
@@ -129,51 +129,17 @@ class ActionGraphTests(unittest.TestCase):
                     failures,
                 )
 
-    def test_distribution_workflow_requires_bounded_history_before_validation(self):
-        path = REPOSITORY_ROOT / ".github" / "workflows" / "distribution-drift.yml"
-        original = path.read_text(encoding="utf-8")
-        history_block = (
-            "      - name: Fetch frozen bundle source\n"
-            "        run: git -c gc.auto=0 -c maintenance.auto=false fetch --no-tags "
-            "--no-write-fetch-head --no-recurse-submodules --no-auto-maintenance "
-            "--refmap= origin bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1\n\n"
-        )
-        scenarios = (
-            (
-                "missing frozen source fetch",
-                original.replace(history_block, "", 1),
-                "exactly seven canonical validation steps",
-            ),
-            (
-                "different frozen source",
-                original.replace("bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1", "0" * 40, 1),
-                "exact frozen bundle source",
-            ),
-            (
-                "implicit tag fetching",
-                original.replace(" --no-tags ", " ", 1),
-                "exact frozen bundle source",
-            ),
-            (
-                "implicit configured ref updates",
-                original.replace(" --refmap= ", " ", 1),
-                "exact frozen bundle source",
-            ),
-            (
-                "fetch occurs after validation",
-                original.replace(history_block, "", 1) + "\n" + history_block,
-                "exact frozen bundle source",
-            ),
-        )
-        for name, mutated, owned_reason in scenarios:
-            with self.subTest(name=name):
-                self.assertNotEqual(original, mutated)
+    def test_validation_workflows_reject_additional_history_fetch(self):
+        for name, checker, label in (
+            ("distribution-drift.yml", check_distribution_workflow_text, "validation"),
+            ("unit-and-integration-tests.yml", check_unit_test_workflow_text, "test"),
+        ):
+            with self.subTest(workflow=name):
+                text = (REPOSITORY_ROOT / ".github/workflows" / name).read_text()
+                extra = "\n      - name: Fetch historical experiment\n        run: git fetch origin legacy\n"
                 failures = []
-                check_distribution_workflow_text(mutated, failures)
-                self.assertTrue(
-                    any(owned_reason in failure for failure in failures),
-                    failures,
-                )
+                checker(text + extra, failures)
+                self.assertTrue(any(f"exactly five canonical {label} steps" in f for f in failures), failures)
 
     def test_hook_runtime_workflow_gate_matrix_and_security_mutations_are_rejected(self):
         path = (
@@ -286,17 +252,7 @@ class ActionGraphTests(unittest.TestCase):
         self.assertEqual([], failures)
         scenarios = (
             (
-                "different frozen source",
-                original.replace("bca92e0f5ac48b1ac4bd24ecf9aebb7a40c89ef1", "0" * 40, 1),
-                "exact frozen bundle source",
-            ),
-            (
-                "implicit tag fetching",
-                original.replace(" --no-tags ", " ", 1),
-                "exact frozen bundle source",
-            ),
-            (
-                "insufficient historical-validation budget",
+                "changed test budget",
                 original.replace("timeout-minutes: 15", "timeout-minutes: 10", 1),
                 "stable check name, runner, or timeout changed",
             ),

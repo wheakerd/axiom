@@ -11,18 +11,35 @@ entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
 ## 0.13.3 - unreleased candidate
 
+### Added
+
+- Added `local-web-search` for searches and follow-up page access from a local browser or client, including a fallback from cloud search.
+- Added execution-location checks, limits on machine-information disclosure, serial browsing, and a stop-and-handoff boundary for challenges, CAPTCHAs, and rate limits.
+
+### Changed
+
+- Moved the routing history index into `evals/` and removed retired project-operation plans, launch copy, and article drafts from the release tree. Their original content remains in Git history.
+- Removed the duplicate distribution checker; CI and contributor instructions now use `scripts/check-publication.py` as the single aggregate validation entrypoint.
+- Aligned current documentation with implemented routing and runtime schema v2, separated historical design from current guidance, and corrected the required-check summary without changing installed behavior.
+
+### Removed
+
+- Archived the v0.7.4 host snapshots and frozen no-Hook experiment in verified Git history. Retired their bundle builder, observation commands, tests, and CI source downloads; retained synthetic compatibility-schema regression coverage.
+
 ### Fixed
 
 - Made newly authored AGENTS and linked instruction-document prose default to English, with another language only when the user explicitly requests it for those documents.
 - Added scoped output-language acceptance and regression coverage that distinguishes document language from conversation, explanation, and source language.
+- Corrected compatibility evidence to select the matching runtime history and reject commits or digests that disagree with its canonical release subject. Preserved existing formats and historical records.
+- Made malformed compatibility records report validation errors instead of Python exceptions, corrected outdated security guidance, and removed the obsolete attribute rule for retired experiment fixtures.
 
 ### Behavioral impact
 
-The workflow now explicitly rejects task language as an implicit document-language choice. Explicit document-language requests apply only to their requested scope; canonical identifiers, exact source literals, and unrelated content are preserved. This authoring rule stays in Axiom rather than being copied into target repositories. Route selection and action authority are unchanged. See the [v0.13.3 notes](docs/releases/v0.13.3.md).
+AGENTS authoring now explicitly rejects task language as an implicit document-language choice. Explicit document-language requests apply only to their requested scope; canonical identifiers, exact source literals, and unrelated content are preserved. This authoring rule stays in Axiom rather than being copied into target repositories. Local web research selects its own route before access; confirmed cloud-hosted search stays outside. The new workflow preserves browser identity and cannot guarantee that a site will not classify a request as automated. Action authority is unchanged. See the [v0.13.3 notes](docs/releases/v0.13.3.md).
 
 ### Required action
 
-None. Request another language explicitly when it is intended for generated instruction documents.
+Repository consumers must replace `scripts/check-distribution-drift.py` with `scripts/check-publication.py`, use `evals/routing-history-v1.json` for the history index, and retire links to the removed `project/` documents. Consult Git history when those historical documents are needed. Retire no-Hook builder and observation command invocations; use the [experiment archive](docs/field-validation.md#archived-experiments) for explicitly scoped historical reproduction. Plugin installation paths are unchanged. Request another language explicitly when it is intended for generated instruction documents. If a research site requires manual handling, resolve it yourself and explicitly indicate readiness before automated browsing can resume.
 
 ## 0.13.2 - unreleased candidate
 

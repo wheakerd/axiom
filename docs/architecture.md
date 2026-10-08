@@ -1,179 +1,119 @@
 # Architecture
 
-Axiom is a foreground routing layer made of checked-in plugin metadata,
-platform hooks, Markdown skills, and on-demand references. It has no daemon,
-network service, watcher, automatic updater, or hidden persistent component.
+Axiom is a foreground routing layer built from Codex plugin metadata, startup
+hooks, Markdown Skills, and on-demand references. After routing, Codex uses its
+normal tools and permissions. Axiom adds no execution service, daemon, watcher,
+automatic updater, or hidden persistent component.
 
 ```mermaid
 flowchart TD
-    A["Codex wrapper"] --> B["SessionStart hook"]
-    B --> C["Read using-axiom routing gate"]
-    C --> D{"Does the request clearly match a route?"}
-    D -- "No" --> E["Continue through the host normally"]
-    D -- "Yes" --> F["Load the smallest matching skill"]
-    F --> G["Load only active-phase references"]
-    G --> H["Act within existing instructions and authorization"]
+    A["Codex SessionStart hook"] --> B["Read using-axiom"]
+    B --> C{"Material unresolved intent?"}
+    C -- "Yes" --> D["Clarify before dependent action routing"]
+    D --> C
+    C -- "No" --> E{"Explicit invocation or clear route match?"}
+    E -- "No" --> F["Continue through the host normally"]
+    E -- "Yes" --> G["Load the smallest matching Skill set"]
+    G --> H["Read active-phase references only"]
+    H --> I["Use host tools within existing authority"]
 ```
 
-## 1. Codex Wrapper
+## Package And Hook
 
-The Codex wrapper declares the plugin, marketplace source, and startup Hook.
+| Source | Responsibility |
+| --- | --- |
+| [Codex manifest](../.codex-plugin/plugin.json) | Plugin identity, `./skills/`, and explicit hook path |
+| [Marketplace descriptor](../.agents/plugins/marketplace.json) | Installation and catalog metadata for this repository root |
+| [Hook definition](../hooks/codex-hooks.json) | `SessionStart` handler for `startup`, `resume`, `clear`, and `compact` |
+| [Routing gate](../skills/using-axiom/SKILL.md) | Request matching, route ownership, composition, and no-match continuation |
+| [Packaged Skills](../skills/) | Direct public entries with parent-owned references and optional agent metadata |
 
-| Host | Marketplace | Manifest | Hook definition |
-| --- | --- | --- | --- |
-| Codex | `.agents/plugins/marketplace.json` | `.codex-plugin/plugin.json` | `hooks/codex-hooks.json` |
+The hook prints a loading message and reads the gate using the host-provided
+plugin root. Its bounded foreground command performs no writes, network
+requests, background launches, or updates. It exposes instructions; it does not
+select a task route or authorize an action. The
+[Hook Reference](reference/hooks.md) renders the exact declarations and Windows
+wrapper for comparison with the installed definition.
 
-The Codex manifest declares `./skills/`. The distribution guard compares that
-tree with the manifest, marketplace wrapper, and README shared-skill list.
+## Route Selection
 
-### Installed Runtime Versus Repository Policy
+The gate honors the active instruction hierarchy, then matches explicit
+invocations or clear bundled descriptions. It normalizes unambiguous
+non-English wording to canonical routes without introducing localized aliases.
+Material ambiguity is resolved before action routing; tentative wording alone
+does not require a question. Useful, host-supported delegation is assessed only
+after the intended result is clear.
 
-Package identity is not repository-policy identity. `pluginVersion` names the
-installed package, `repositoryPolicyRevision` advances append-only repository
-governance, and `runtimeContractDigest` identifies the canonical installed
-behavior inputs. The deterministic input schema includes Skills, hooks,
-wrappers, component paths, and behavior-relevant manifest fields while
-excluding version and distribution metadata.
+Selection precedes reading candidate Skill bodies. Load the smallest matching
+set and only the references required for the active phase. Ordinary code or
+documentation does not become an architecture workflow merely because its
+repository contains a plugin.
 
-The validator requires an immutable version's current tree to retain that
-version's recorded runtime digest. A repository-only change keeps the plugin
-version and digest and appends a policy revision; an installed-runtime change
-must change the digest and advance the plugin version. See
-[Runtime And Repository Identity](runtime-identity.md).
+Reassess when a later tool choice initiates research from a local or uncertain
+execution location, including a fallback from cloud search. Select
+`local-web-search` before access; routing itself sends no network request.
 
-## 2. Session And Compaction Hooks
+## Workflow Ownership
 
-The hooks expose the routing gate to the active host session. They do not
-select a task route themselves.
+The [Skill sources](../skills/) and [routing gate](../skills/using-axiom/SKILL.md)
+are canonical. This table summarizes responsibilities; concrete requests and
+controls are in [Examples](examples.md).
 
-| Host event | Checked-in matcher | Action |
-| --- | --- | --- |
-| Codex `SessionStart` | `startup`, `resume`, `clear`, `compact` | Print a short loading message and read the routing gate from `PLUGIN_ROOT` |
+| Route | Responsibility |
+| --- | --- |
+| `clarify-intent` | Resolve material ambiguity with a focused question, plausible options, and a custom answer |
+| `delegate-simple-task` | Assign clear bounded work using user-ordered model candidates while preserving the main model and host restrictions |
+| `task-planning` | Create or revise general task plans while preserving specialized planning ownership |
+| `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |
+| `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, and local Skills |
+| `agent-plugin-architect` | Design or audit packaged plugin architecture and read-only release readiness |
+| `optimize-codex-usage` | Reduce or diagnose Codex usage without weakening required quality or safety |
+| `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |
+| `confirm-external-action` | Bind, authorize, execute once, and verify a consequential external effect |
+| `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, and explicitly traceable or hardened Git submission |
+| `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |
 
-The exact commands are published for independent review in the
-[Hook Reference](reference/hooks.md). Each invocation is
-a bounded foreground command. No hook writes a file, contacts a network
-service, launches background work, or performs an update.
+`agent-plugin-architect` can design another project's Codex or Claude Code
+plugin. Axiom itself supports Codex only. The
+[route contract](agent-plugin-architect-route-contract.md) explains the boundary.
 
-## 3. `using-axiom` Routing Gate
+## Composition And Phase Changes
 
-`skills/using-axiom/SKILL.md` is the front door. Its decision sequence is:
+Composition follows the gate's ownership rules, not a precautionary load of
+every related Skill. A persistent deployment or migration with a consequential
+external effect selects both `reversible-system-change` and
+`confirm-external-action`. Each keeps its own authority and verification gates.
+Publishing an already-prepared artifact alone selects the external-action owner.
 
-1. Apply higher-priority system, developer, user, and repository instructions.
-2. Determine whether the user explicitly invoked Axiom or the request clearly
-   matches a bundled skill description.
-3. Select the smallest matching skill set and avoid reading candidate bodies.
-4. Normalize unambiguous non-English requests; select `clarify-intent` for
-   material unresolved meanings before an action route. Assess useful simple
-   delegation only after the intended result is clear.
-5. Continue normally when no Axiom route applies.
+Machine-credential work uses one shared
+[lifecycle reference](../skills/using-axiom/references/credential-lifecycle.md).
+Metadata inventory and persistent consumer activation belong to the reversible
+owner; provider creation, revocation, and disclosure belong to the external
+owner. An end-to-end rotation needs both. Generic authentication help and human
+login do not create another route.
 
-The gate is intentionally narrow. General AI work, coding, documentation, and
-plugin-maintenance similarity do not make a request an Axiom task.
+After resume or compaction, active routes are reselected from direct evidence
+before new mutation. Each owner's handoff contract determines how interrupted
+attempts are reconstructed. Route selection, prior assistant prose, and tool
+availability never supply missing authorization.
 
-### Packaged Agent-Plugin Architecture
+## No-Match Continuation And Trust
 
-Version 0.8.0 implements `agent-plugin-architect` for explicit packaged Codex
-or Claude Code plugin architecture across shared Skills, route ownership,
-manifests, marketplace wrappers, hooks, and version-bound compatibility
-evidence. Its accepted ownership, case, schema, and stop contract remains in
-[Agent Plugin Architect Route Contract](agent-plugin-architect-route-contract.md).
+Ordinary source edits, tests, explanations, status queries, local staging or
+commits, and named-remote non-force pushes stay host-native unless a specific
+description matches. No match is a normal result, not a denial or evidence of a
+repository conflict. Active instructions and user authority still govern the
+work. See the [Trust Model](trust-model.md).
 
-The route does not own repository-local `AGENTS.md` or `.agents/skills`
-systems, ordinary plugin source code or documentation, Git submission,
-installation, publication, deployment, or external actions. It uses one shared
-Skill tree, adds no startup hook, and keeps historical schemas, benchmarks, and
-results byte-identical while current contracts advance additively.
+## Identity, Lifecycle, And Evidence
 
-## 4. Task Skills And On-Demand References
+[Runtime and Repository Identity](runtime-identity.md) separates installed
+behavior from repository policy. Documentation or CI changes do not require an
+installed release when the final classified runtime inputs remain unchanged.
 
-The selected task skill establishes its own phase and evidence contract. Every
-supporting reference is directly discoverable from its parent `SKILL.md`:
-
-- `clarify-intent` resolves material ambiguity with plausible options and a
-  custom answer. Full Access does not resolve the user's intended result.
-- `delegate-simple-task` preserves the main model and uses the user's ordered
-  model candidates. Its delegation reference binds the exact model, faithful
-  brief, authorization, and result checks. Verified Full Access allows automatic
-  assignment within scope; otherwise existing assignment authority or a user
-  confirmation is required. It never directly invokes the clarification skill.
-- `task-planning` creates and revises general task plans from current
-  requirements. Scope revisions load one reference for removal, replacement,
-  restoration, dependency repair, and effective constraints. Specialized
-  planning retains its domain owner; planning does not grant execution authority.
-- `using-axiom` owns one shared machine-credential lifecycle reference. It
-  loads only for explicit API-key, SSH-key, certificate, signing-key,
-  service-account, or other machine-credential work and does not create a
-  public route.
-- `agents-architect` performs only the metadata inventory needed to select one
-  direct audit, initialization, design, migration, maintenance, runtime, or
-  validation route.
-- `agent-plugin-architect` inventories a packaged plugin, then loads only the
-  directly linked release-readiness, architecture, route, trust, cross-host,
-  evidence, or validation reference needed for the active phase. Readiness is
-  read-only and grants no later mutation authority. The Skill does not
-  duplicate content per host or infer host behavior from package shape.
-- `optimize-codex-usage` keeps conceptual answers in its main Skill and loads
-  one context-audit reference only for measurement or implementation. It uses
-  host metrics when exposed and otherwise labels size and call counts as
-  proxies.
-- `review-axiom-task` freezes a retrospective window at the triggering request,
-  evaluates review, appeal, criticism, and narrowing independently of prior
-  refusal state, and returns a bounded observable decision basis while keeping
-  hidden reasoning protected and persisting no trace.
-- `confirm-external-action` freezes an actor, target, payload, disclosure,
-  cost, count, and retry envelope before one authorized external effect, then
-  verifies the result through the owning external system.
-- `traceable-git-submit` separates an explicitly invoked lightweight direct
-  submission from checkpoint, baseline, consolidation, hardened, multi-target,
-  one-final, and recovery chains. The simple phase loads only its parent-owned
-  `direct-submit.md`; ordinary named-remote pushes load no Axiom Git Skill.
-- `reversible-system-change` loads preflight and rollback guidance for plans,
-  non-mutating rehearsals, and separately authorized isolated restore
-  rehearsals. It adds the execution reference only for a complete authorized
-  change, promotion, rollback, or completion claim.
-
-For a machine-credential lifecycle, `confirm-external-action` and
-`reversible-system-change` both link directly to the shared `using-axiom`
-reference. Provider creation and revocation remain external action envelopes;
-metadata inventory and persistent consumer activation or cleanup remain
-reversible-change phases. An end-to-end rotation selects both owners and loads
-the shared protocol once. Secret values, generic authentication, and human
-login do not create another route or a cross-owner authorization shortcut.
-
-This keeps unrelated workflow instructions out of the active context. A child
-route may narrow permissions or add checks; it cannot broaden authorization or
-weaken a parent prohibition.
-
-## 5. Execution Remains Host-Native
-
-After a route is selected, the active Codex agent continues to
-use the host's normal tools, instruction hierarchy, and approval boundaries.
-Axiom does not add an execution service or bypass host controls.
-
-Route selection and action authorization are separate decisions. A loaded
-workflow can require more evidence or stop conditions, but it cannot create
-permission to edit, commit, push, read credentials, mutate a remote target,
-delete data, or promote a version. A task review may describe earlier actions;
-it cannot rerun them or turn current state into proof of past authorization.
-See the [Trust Model](trust-model.md).
-
-## 6. No-Match Continuation
-
-When no skill clearly applies, `using-axiom` tells the agent to continue
-normally without mentioning Axiom. That path is a first-class outcome, not a
-fallback error. It keeps ordinary source edits, tests, explanations, status
-queries, local Git staging or commits, and named-remote non-force pushes in the
-host's normal workflow.
-
-## Lifecycle And Updates
-
-Axiom has no long-running state manager or updater of its own. The host loads
-the installed snapshot at its configured lifecycle events and controls how that
-snapshot changes. Use the Codex refresh flow, then start a new session.
-Review any changed hook before trusting the new snapshot. See
-[Managing an Installation](guides/managing-installation.md#updating) for the
-supported lifecycle.
-
-For the checked-in support boundary and evidence categories, see
-[Compatibility](compatibility.md).
+Codex owns installation and refresh. After changing the installed snapshot,
+start a new session and review its hook again; follow
+[Managing an Installation](guides/managing-installation.md). Static package
+validation and native command tests do not establish fresh installed-plugin or
+model-session behavior. [Compatibility](compatibility.md) owns the current
+support and observation boundary.

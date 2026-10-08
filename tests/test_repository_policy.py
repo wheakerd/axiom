@@ -182,6 +182,32 @@ class RepositoryPolicyTests(unittest.TestCase):
         )
         fixtures = (
             (
+                "stale required-check count",
+                governance.replace(
+                    "Server-side enforcement of the three required check contexts",
+                    "Server-side enforcement of the two required check contexts",
+                    1,
+                ),
+                "unsupported review-boundary claim",
+            ),
+            (
+                "contradictory required-check summary",
+                governance + "\n\n`repository-guards` and "
+                "`unit-and-integration-tests` remain the only required checks.\n",
+                "unsupported review-boundary claim",
+            ),
+            (
+                "demoted hook aggregate",
+                governance.replace(
+                    "The three native\nhook-runtime matrix jobs supply the required "
+                    "aggregate; they are not separate\nrequired check contexts.",
+                    "The three hook-runtime matrix checks plus `hook-runtime-gate` "
+                    "remain non-required review evidence.",
+                    1,
+                ),
+                "unsupported review-boundary claim",
+            ),
+            (
                 "deleted transition condition",
                 governance.replace(transition, "", 1),
                 "missing scoped anchor",

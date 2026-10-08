@@ -27,10 +27,13 @@ runtime contract.
 | Reference | Users and auditors | Skills, Hooks, compatibility, and validation protocols |
 | Maintainer | Contributors and maintainers | Documentation, governance, release, and validator policy |
 | Evidence or generated | Auditors and automation | Machine facts, host observations, digests, and bounded summaries |
-| Project operations | Maintainers | Marketing, distribution, channel status, plans, and archives |
 
 A document may link across classes, but it must not silently acquire another
 class's ownership.
+
+Project-operation plans, marketing drafts, and channel-status ledgers belong
+outside the plugin release tree. Retired material remains in Git history and
+does not establish current product guidance or external state.
 
 ## Lifecycle States
 
@@ -69,9 +72,8 @@ The current repository assigns these responsibilities:
 - `docs/releases/` contains version notes;
 - `docs/maintainers/release-documentation.md` defines release-document and
   evidence responsibilities for future releases;
-- `project/README.md` and `project/marketing/` own project-operation plans and
-  dated channel status outside current guidance;
-- `evidence/` and `evals/results/` retain machine records and observations.
+- `evidence/` and `evals/results/` retain machine records and observations;
+  `docs/field-validation.md` indexes retired records at immutable archive sources.
 
 [The documentation index](../README.md) describes these current locations by
 audience and task. A proposed path does not become canonical until the content,
@@ -93,9 +95,6 @@ docs/
 |-- reference/
 |-- maintainers/
 `-- releases/
-project/
-|-- README.md
-`-- marketing/
 evidence/
 evals/
 ```
@@ -114,14 +113,13 @@ directory would create artificial fragmentation.
 | Current plugin version | Codex plugin manifest | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
-| Historical host observations | `evidence/**` and `evals/results/**` | Current and preserved |
+| Historical host observations | Version-bound records under `evidence/**`, `evals/results/**`, and immutable sources indexed by `docs/field-validation.md` | Preserve original subjects and outcomes; archived records do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
-| Exceptional migration, architecture, security, compatibility, or evidence detail | `docs/releases/v<version>.md` when warranted | Current; never reused as the final Release body |
+| Exceptional migration, architecture, security, compatibility, or evidence detail | `docs/releases/v<version>.md` when warranted | Candidate detail until publication; then preserved history, never reused as the final Release body |
 | GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
 | Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | Dated governance evidence and maintainer reference | Current |
-| Marketing, distribution, channel status, launch plans, and editorial plans | `project/README.md` and `project/marketing/**` with absolute verification dates | Current and outside user guidance |
 
 Machine-derived facts should use bounded generated regions or deterministic
 checks where practical. Human prose may explain their meaning but must not
@@ -150,10 +148,14 @@ redefine their values.
   copy or replace it with a concise link in the same change.
 - Preserve Git history where practical and never delete or rewrite immutable
   evidence, evaluation results, failure records, or historical Release facts
-  to simplify navigation.
-- Keep project plans and channel status out of current user guidance. Preserve
-  their absolute verification dates and truthful planned, submitted, or
-  published state.
+  to simplify navigation. Retired experiments may leave the current tree after
+  their exact bytes are verified at an immutable Git commit and the canonical
+  evidence owner links to that archive. Retire their active commands, default
+  checks, and CI dependencies together; preserve applicable generic regression
+  coverage with synthetic fixtures.
+- Keep project plans and channel status outside the plugin release tree.
+  Preserve retired records in Git history with their absolute verification
+  dates and truthful planned, submitted, or published state.
 - Do not copy candidate-only absence or future-tense publication text into a
   final Release body. Render future bodies from the tagged Changelog entry and
   establish final evidence only from the immutable remote objects.

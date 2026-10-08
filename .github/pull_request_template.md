@@ -30,9 +30,8 @@
 
 | Command | Result |
 | --- | --- |
-| `python3 scripts/check-distribution-drift.py` | |
-| `python3 scripts/check-compatibility-evidence.py --self-test` | |
-| `python3 scripts/check-publication.py` | |
+| `python3 -B scripts/check-publication.py` | |
+| `python3 -B -m unittest discover -s tests -p 'test_*.py'` | |
 | `git diff --check` | |
 | Additional targeted checks | |
 

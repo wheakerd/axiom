@@ -281,7 +281,7 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual([], failures)
 
     def test_new_external_evidence_requires_v2_and_canonical_digest(self):
-        source_path = REPOSITORY_ROOT / "evidence/v0.7.4/codex/linux.json"
+        source_path = REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json"
         source = json.loads(source_path.read_text(encoding="utf-8"))
         history = json.loads(
             (REPOSITORY_ROOT / "evidence/runtime-contract-history-v1.json").read_text(
@@ -289,8 +289,16 @@ class RuntimeIdentityTests(unittest.TestCase):
             )
         )
         history_entry = next(
-            entry for entry in history["entries"] if entry["tag"] == source["release"]["tag"]
+            entry for entry in history["entries"] if entry["runtimeContractDigest"]
         )
+        source["release"] = {
+            "version": history_entry["pluginVersion"],
+            "tag": history_entry["tag"],
+            "commit": history_entry["commit"],
+        }
+        source["installation"]["targetPluginVersion"] = source["release"]["version"]
+        source["schemaVersion"] = "1"
+        del source["runtimeIdentity"], source["observationSubject"]
         command = [
             sys.executable,
             str(REPOSITORY_ROOT / "scripts/check-compatibility-evidence.py"),

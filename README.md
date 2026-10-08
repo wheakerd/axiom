@@ -98,8 +98,8 @@ input and version policy.
 
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.13.3`
-- `repositoryPolicyRevision`: `38`
-- `runtimeContractDigest` (schema v2): `sha256:72ea38cde663d346658ad39049e682b99b149427fba9789c1e52ffa30d98b357`
+- `repositoryPolicyRevision`: `45`
+- `runtimeContractDigest` (schema v2): `sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
 
@@ -129,6 +129,7 @@ load on demand and are not separate routes.
 - `clarify-intent`, the focused request-clarification workflow.
 - `delegate-simple-task`, the model-aware simple-task delegation workflow.
 - `task-planning`, the task-plan creation and revision workflow.
+- `local-web-search`, the local research privacy and browsing-conduct workflow.
 - `agents-architect`, the repository-instruction workflow.
 - `agent-plugin-architect`, the packaged agent-plugin architecture workflow.
 - `optimize-codex-usage`, the explicit Codex consumption workflow.
