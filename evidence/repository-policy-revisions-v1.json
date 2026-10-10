@@ -384,6 +384,14 @@
       "sourceIssue": null,
       "summary": "Align docs with source, preserve versioned history and protocols, validate canonical links instead of copied release prose, and document prepared-release routing; preserve installed runtime.",
       "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
+    },
+    {
+      "revision": 49,
+      "recordedOn": "2026-10-09",
+      "baselineCommit": "e83e82d7121074829213a96287634c466013f465",
+      "sourceIssue": null,
+      "summary": "Retry only post-creation HTTP 404 tag reads within fixed bounds; preserve single-attempt creation and fail-closed gates, add safety regressions, and align governance guidance.",
+      "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
     }
   ]
 }

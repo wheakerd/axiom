@@ -255,7 +255,12 @@ RELEASE_TAG_CONTROLLER_ANCHORS = (
     "and tag, live protected-main commit and tree, the Codex manifest version",
     "It performs the same complete read a second time, rejects any difference, "
     "creates only the exact absent tag, and immediately reads the ref back.",
-    "An uncertain response is read back once and reported as a failure without retry; "
+    "After a valid creation response, only a GET returning HTTP 404 may be retried: "
+    "at most four exact-ref reads, with waits of 1, 2, and 4 seconds.",
+    "Other HTTP or transport errors, malformed responses, and ref, type, or commit "
+    "mismatches stop immediately.",
+    "Exhausted reads leave verification failed; the tag is never recreated.",
+    "An uncertain creation response is read back once and reported as a failure without retry; "
     "a rerun rejects the existing ref with zero mutation.",
     "GitHub returns `bypass_actors` only to a caller with ruleset write access.",
     "It binds ruleset IDs `20677005`, `20724385`, and `21703772` plus their "
