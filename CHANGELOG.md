@@ -9,6 +9,21 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 49
+
+### Fixed
+
+- Added bounded read-only verification when a successfully created release tag initially returns HTTP 404: at most four exact-ref GETs, with waits of 1, 2, and 4 seconds.
+- Kept tag creation single-attempt and preserved both pre-creation safety checks, exact response validation, and fail-closed handling of other errors and uncertain creation outcomes.
+
+### Behavioral impact
+
+The release controller can tolerate temporary post-creation invisibility without repeating a tag-creation request or weakening verification. Exhausted reads still fail. This repository-only tooling fix preserves plugin version `0.13.4`, the runtime digest, installed behavior, and existing immutable tags and Releases.
+
+### Required action
+
+None. The controller uses bounded reads only after a valid creation response; a failed or uncertain workflow does not authorize another creation attempt.
+
 ## Repository policy revision 48
 
 ### Changed

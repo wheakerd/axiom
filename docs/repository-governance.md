@@ -170,9 +170,18 @@ main ruleset checks, `Verify signed main history`, REST and GraphQL GitHub-made
 signature evidence, tag and Release absence, App installation identity and
 repository scope, and all three live rulesets. It performs the same complete
 read a second time, rejects any difference, creates only the exact absent tag,
-and immediately reads the ref back. It has no update or delete operation. An
-uncertain response is read back once and reported as a failure without retry;
-a rerun rejects the existing ref with zero mutation.
+and immediately reads the ref back. After a valid creation response, only a GET
+returning HTTP 404 may be retried: at most four exact-ref reads, with waits of
+1, 2, and 4 seconds. Each read uses the same read-only credential, frozen tag
+and commit, and existing request timeout. Other HTTP or transport errors,
+malformed responses, and ref, type, or commit mismatches stop immediately.
+Exhausted reads leave verification failed; the tag is never recreated.
+
+The controller has no update or delete operation. An uncertain creation
+response is read back once and reported as a failure without retry; a rerun
+rejects the existing ref with zero mutation. Bounded visibility reads apply
+only after the single creation response has passed its exact-ref validation;
+they do not repeat the creation request, pre-creation gates, or workflow.
 
 GitHub returns `bypass_actors` only to a caller with ruleset write access. The
 controller deliberately retains `administration: read`, so its App-token view

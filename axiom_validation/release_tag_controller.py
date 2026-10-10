@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -36,6 +37,7 @@ SIGNED_MAIN_CHECK = "Verify signed main history"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 REPOSITORY_PATTERN = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 APP_SLUG_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+CREATED_REF_READBACK_DELAYS = (1, 2, 4)
 
 
 class ControllerError(RuntimeError):
@@ -669,13 +671,37 @@ def _validate_created_ref(document: Any, request: ReleaseTagRequest) -> dict[str
     return {"ref": expected_ref, "sha": request.expected_main_sha}
 
 
+def _read_created_ref(read: ApiClient, request: ReleaseTagRequest) -> dict[str, str]:
+    """Retry only post-success 404 reads; never retry creation or accept absence."""
+    path = f"/repos/{request.repository}/git/ref/tags/{_quoted(request.tag)}"
+    last_error: GitHubRequestError | None = None
+    for attempt in range(len(CREATED_REF_READBACK_DELAYS) + 1):
+        try:
+            readback = read.get(path)
+        except GitHubRequestError as error:
+            if error.status != 404:
+                raise
+            last_error = error
+            if attempt < len(CREATED_REF_READBACK_DELAYS):
+                time.sleep(CREATED_REF_READBACK_DELAYS[attempt])
+        else:
+            # An empty or malformed successful response is not a retryable 404.
+            return _validate_created_ref(readback, request)
+    raise ControllerError(
+        "created tag read-back returned HTTP 404 after "
+        f"{len(CREATED_REF_READBACK_DELAYS) + 1} attempts; "
+        "the single creation response was valid but read-back remains unverified; "
+        "the controller will not recreate the tag"
+    ) from last_error
+
+
 def run_controller(
     read: ApiClient,
     admin_and_mutation: ApiClient,
     request: ReleaseTagRequest,
     token_identity: ReleaseAppTokenIdentity,
 ) -> dict[str, Any]:
-    """Validate twice, attempt one ref creation, and immediately read it back."""
+    """Validate twice, create once, and verify with bounded read-only polling."""
     validate_request(request)
     validate_app_token_identity(token_identity)
     initial_identity = _validate_app_identity(
@@ -715,12 +741,9 @@ def run_controller(
         ) from error
 
     created_ref = _validate_created_ref(created, request)
-    readback = read.get(
-        f"/repos/{request.repository}/git/ref/tags/{_quoted(request.tag)}"
-    )
-    verified_ref = _validate_created_ref(readback, request)
+    verified_ref = _read_created_ref(read, request)
     if created_ref != verified_ref:
-        raise ControllerError("created tag response and immediate read-back disagree")
+        raise ControllerError("created tag response and read-back disagree")
     return {
         "outcome": "created-and-verified",
         "version": request.version,

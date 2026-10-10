@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Any, Callable
+from unittest.mock import call, patch
 
 from axiom_validation.context import RELEASE_VERSION
 from axiom_validation.release_tag_controller import (
@@ -344,7 +345,174 @@ class BareFixtureRepository(FixtureRepository):
         return ref
 
 
+VISIBLE_TAG = object()
+
+
+class ReadbackApi(FixtureApi):
+    """Script only the exact tag GET after the single creation attempt."""
+
+    def __init__(self, repository: FixtureRepository, outcomes: list[Any]) -> None:
+        super().__init__(repository)
+        self.outcomes = list(outcomes)
+        self.readback_requests: list[tuple[str, bool]] = []
+
+    def get(self, path: str, *, allow_not_found: bool = False) -> Any:
+        result = super().get(path, allow_not_found=allow_not_found)
+        if self.repository.mutation_attempts and path == (
+            f"/repos/{REPOSITORY}/git/ref/tags/v{RELEASE_VERSION}"
+        ):
+            self.readback_requests.append((path, allow_not_found))
+            if not self.outcomes:
+                raise AssertionError("unexpected additional tag read-back")
+            outcome = self.outcomes.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return result if outcome is VISIBLE_TAG else copy.deepcopy(outcome)
+        return result
+
+
 class ReleaseTagControllerTests(unittest.TestCase):
+    def test_created_tag_visibility_is_retried_without_repeating_creation(self):
+        for misses in range(4):
+            with self.subTest(initial_404s=misses):
+                fixture = FixtureRepository()
+                read = ReadbackApi(
+                    fixture,
+                    [GitHubRequestError("not visible", status=404) for _ in range(misses)]
+                    + [VISIBLE_TAG],
+                )
+                admin = FixtureApi(fixture)
+                with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+                    result = run_controller(
+                        read, admin, fixture.request(), fixture.app_identity()
+                    )
+                self.assertEqual("created-and-verified", result["outcome"])
+                self.assertEqual(1, fixture.mutation_attempts)
+                self.assertEqual(1, result["mutationAttempts"])
+                self.assertEqual(2, fixture.snapshot_reads)
+                self.assertEqual(
+                    [(f"/repos/{REPOSITORY}/git/ref/tags/v{RELEASE_VERSION}", False)]
+                    * (misses + 1),
+                    read.readback_requests,
+                )
+                self.assertFalse(any("/git/ref/tags/" in path for path in admin.get_paths))
+                self.assertEqual([call(delay) for delay in (1, 2, 4)[:misses]], sleep.call_args_list)
+
+    def test_created_tag_visibility_exhaustion_does_not_recreate_on_rerun(self):
+        fixture = FixtureRepository()
+        read = ReadbackApi(
+            fixture, [GitHubRequestError("not visible", status=404) for _ in range(4)]
+        )
+        admin = FixtureApi(fixture)
+        with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+            with self.assertRaisesRegex(ControllerError, "read-back.*4.*unverified"):
+                run_controller(read, admin, fixture.request(), fixture.app_identity())
+        self.assertEqual(4, len(read.readback_requests))
+        self.assertEqual([call(1), call(2), call(4)], sleep.call_args_list)
+        self.assertEqual(1, fixture.mutation_attempts)
+        self.assertEqual(fixture.main_sha, fixture.tag_ref["object"]["sha"])
+        with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+            with self.assertRaisesRegex(ControllerError, "already exists; no mutation attempted"):
+                run_controller(admin, admin, fixture.request(), fixture.app_identity())
+        sleep.assert_not_called()
+        self.assertEqual(1, fixture.mutation_attempts)
+
+    def test_readback_non_404_failures_stop_immediately(self):
+        for status in (400, 401, 403, 409, 422, 429, 500, 502, 503, None):
+            for misses in (0, 1):
+                with self.subTest(status=status, initial_404s=misses):
+                    fixture = FixtureRepository()
+                    error = GitHubRequestError("non-retryable failure", status=status)
+                    read = ReadbackApi(
+                        fixture,
+                        [GitHubRequestError("not visible", status=404)] * misses + [error],
+                    )
+                    with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+                        with self.assertRaises(GitHubRequestError) as failure:
+                            run_controller(read, FixtureApi(fixture), fixture.request(), fixture.app_identity())
+                    self.assertIs(error, failure.exception)
+                    self.assertEqual(1 + misses, len(read.readback_requests))
+                    self.assertEqual([call(1)] * misses, sleep.call_args_list)
+                    self.assertEqual(1, fixture.mutation_attempts)
+
+    def test_malformed_or_conflicting_readback_is_never_retried(self):
+        valid = {
+            "ref": f"refs/tags/v{RELEASE_VERSION}",
+            "object": {"type": "commit", "sha": "1" * 40},
+        }
+        malformed = [
+            None, {}, [], {**valid, "ref": "refs/tags/other"},
+            {**valid, "object": {"type": "tag", "sha": "1" * 40}},
+            {**valid, "object": {"type": "commit", "sha": "3" * 40}},
+        ]
+        for response in malformed:
+            for misses in (0, 1):
+                with self.subTest(response=response, initial_404s=misses):
+                    fixture = FixtureRepository()
+                    read = ReadbackApi(
+                        fixture,
+                        [GitHubRequestError("not visible", status=404)] * misses + [response],
+                    )
+                    with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+                        with self.assertRaises(ControllerError):
+                            run_controller(read, FixtureApi(fixture), fixture.request(), fixture.app_identity())
+                    self.assertEqual(1 + misses, len(read.readback_requests))
+                    self.assertEqual([call(1)] * misses, sleep.call_args_list)
+                    self.assertEqual(1, fixture.mutation_attempts)
+
+    def test_invalid_creation_response_never_enters_readback(self):
+        for response in (
+            None, {},
+            {"ref": "refs/tags/other", "object": {"type": "commit", "sha": "1" * 40}},
+            {"ref": f"refs/tags/v{RELEASE_VERSION}", "object": {"type": "tag", "sha": "1" * 40}},
+            {"ref": f"refs/tags/v{RELEASE_VERSION}", "object": {"type": "commit", "sha": "3" * 40}},
+        ):
+            with self.subTest(response=response):
+                fixture = FixtureRepository()
+                read = ReadbackApi(fixture, [])
+                admin = FixtureApi(fixture)
+                original_post = admin.post
+
+                def malformed_post(path, payload):
+                    original_post(path, payload)
+                    return response
+
+                with patch.object(admin, "post", side_effect=malformed_post):
+                    with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+                        with self.assertRaises(ControllerError):
+                            run_controller(read, admin, fixture.request(), fixture.app_identity())
+                sleep.assert_not_called()
+                self.assertEqual([], read.readback_requests)
+                self.assertEqual(1, fixture.mutation_attempts)
+
+    def test_uncertain_creation_never_enters_visibility_retry(self):
+        for response in (VISIBLE_TAG, None, GitHubRequestError("not visible", status=404)):
+            with self.subTest(response=response):
+                fixture = FixtureRepository()
+                fixture.raise_after_creation = True
+                read = ReadbackApi(fixture, [response])
+                with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+                    with self.assertRaises(ControllerError):
+                        run_controller(read, FixtureApi(fixture), fixture.request(), fixture.app_identity())
+                sleep.assert_not_called()
+                self.assertEqual(
+                    [(f"/repos/{REPOSITORY}/git/ref/tags/v{RELEASE_VERSION}", True)],
+                    read.readback_requests,
+                )
+                self.assertEqual(1, fixture.mutation_attempts)
+
+    def test_disposable_bare_repository_delayed_readback(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-release-tag-readback-") as temporary:
+            fixture = BareFixtureRepository(Path(temporary))
+            read = ReadbackApi(fixture, [GitHubRequestError("not visible", status=404), VISIBLE_TAG])
+            with patch("axiom_validation.release_tag_controller.time.sleep") as sleep:
+                result = run_controller(read, FixtureApi(fixture), fixture.request(), fixture.app_identity())
+            self.assertEqual("created-and-verified", result["outcome"])
+            self.assertEqual(1, fixture.mutation_attempts)
+            self.assertEqual(fixture.main_sha, fixture.read_tag(f"v{RELEASE_VERSION}")["object"]["sha"])
+            self.assertEqual(2, len(read.readback_requests))
+            sleep.assert_called_once_with(1)
+
     def test_correct_current_main_creates_once_and_rerun_is_read_only(self):
         fixture = FixtureRepository()
         api = FixtureApi(fixture)
