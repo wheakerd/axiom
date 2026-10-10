@@ -163,6 +163,19 @@ hooks active, pushes once, creates no Axiom provenance metadata, and uses the
 normal Git result as primary evidence. A conclusive result needs no extra query;
 a materially ambiguous one permits at most one query to the owning remote.
 
+> Commit the prepared plugin changes, create the agreed release tag, and push
+> the branch and tag.
+
+This combined request selects
+[prepared-release submission](../skills/traceable-git-submit/references/prepared-release-submit.md).
+Freeze the authorized changes, commit message, exact tag, signing requirements,
+and push targets. Where direct tag creation is permitted, push the exact branch
+and tag atomically to each authorized endpoint, then verify both refs. If a
+repository controller owns protected tag creation, hand that action to its
+separately authorized owner. This phase creates no checkpoint or baseline
+metadata and grants no GitHub Release, marketplace, or installation action.
+An uncertain push result permits verification, not an automatic retry.
+
 An ordinary "commit the staged change and git push origin main" stays
 host-native. An expected authorized staged set is normal, not a manufactured
 conflict. Additional paths, target drift, force, retries, or cleanup need their

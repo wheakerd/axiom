@@ -70,7 +70,7 @@ controls are in [Examples](examples.md).
 | `optimize-codex-usage` | Reduce or diagnose Codex usage without weakening required quality or safety |
 | `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |
 | `confirm-external-action` | Bind, authorize, execute once, and verify a consequential external effect |
-| `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, and explicitly traceable or hardened Git submission |
+| `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared plugin releases, and explicitly traceable or hardened Git submission |
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |
 
 `agent-plugin-architect` can design another project's Codex or Claude Code

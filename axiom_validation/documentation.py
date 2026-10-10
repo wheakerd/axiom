@@ -35,6 +35,10 @@ ROOT_CURRENT_DOCUMENTS = (
     "CONTRIBUTING.md",
     "SECURITY.md",
 )
+EVALUATION_CURRENT_DOCUMENTS = (
+    "evals/README.md",
+    "evals/context-budget/README.md",
+)
 COMPATIBILITY_ENTRY = "docs/getting-started.md"
 # Keep retired project paths classified for legacy-document and navigation checks.
 LEGACY_PROJECT_PREFIXES = ("project/",)
@@ -54,6 +58,7 @@ FORBIDDEN_TASK_PREFIXES = (
     "project/",
     "evidence/",
     "evals/results/",
+    "evals/history/",
 )
 
 
@@ -96,7 +101,7 @@ def discover_markdown(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
 
 def is_current_document(relative_path: str) -> bool:
     """Return whether a Markdown path belongs to the maintained current set."""
-    if relative_path in ROOT_CURRENT_DOCUMENTS:
+    if relative_path in (*ROOT_CURRENT_DOCUMENTS, *EVALUATION_CURRENT_DOCUMENTS):
         return True
     if not relative_path.startswith("docs/"):
         return False
@@ -217,7 +222,7 @@ def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
     current = {
         path.relative_to(root).as_posix(): path
         for path in current_documents(root)
-        if path.relative_to(root).as_posix().startswith("docs/")
+        if path.relative_to(root).as_posix() not in ROOT_CURRENT_DOCUMENTS
     }
     expected = set(current) - {"docs/README.md"}
     index_text = _read_text(index, root, failures)
@@ -266,6 +271,8 @@ def _allowed_lifecycle(relative_path: str) -> frozenset[str] | None:
         return frozenset({"historical", "archived"})
     if relative_path.startswith(LEGACY_PROJECT_PREFIXES):
         return frozenset({"project-plan", "historical", "archived"})
+    if relative_path.startswith("evals/history/"):
+        return frozenset({"historical", "archived"})
     if relative_path.startswith(("evidence/", "evals/results/")):
         return frozenset({"historical", "generated", "archived"})
     if is_current_document(relative_path):
@@ -397,7 +404,10 @@ def check_task_navigation_text(
         return
     for raw in _raw_destinations(section):
         target = _local_target(source, raw, root)
-        if target is not None and target.startswith(FORBIDDEN_TASK_PREFIXES):
+        if target is not None and any(
+            target == prefix.rstrip("/") or target.startswith(prefix)
+            for prefix in FORBIDDEN_TASK_PREFIXES
+        ):
             failures.append(
                 "docs/README.md Start By Task must not list historical or "
                 f"project-plan document {target} as current guidance"

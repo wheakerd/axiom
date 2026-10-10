@@ -62,6 +62,11 @@ system, Axiom version or immutable commit, installation method, lifecycle
 source, exact request, selected route, clarification count, and whether any
 mutation was attempted.
 
+Keep reports free of credentials, private conversation text, and sensitive
+repository content. If a result may expose a vulnerability or unauthorized
+action, use the private reporting process in [SECURITY.md](../../SECURITY.md)
+before sharing details publicly.
+
 - Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml)
   for a bounded host result.
 - Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml)

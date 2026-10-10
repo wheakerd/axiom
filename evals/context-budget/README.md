@@ -2,7 +2,7 @@
 
 This directory records Axiom's repeatable budget for the always-loaded
 `skills/using-axiom/SKILL.md` routing gate. It measures a repository surface;
-it does not expose hidden Codex or Claude Code accounting and does not invoke a
+it does not expose hidden Codex accounting and does not invoke a
 model, start a host session, contact a network service, or collect telemetry.
 
 ## Measurement Boundary
@@ -14,30 +14,30 @@ figure is `ceil(UTF-8 bytes / 4)`, explicitly labeled as an estimate suitable
 only for before/after comparison of the same English Markdown surface. It must
 not be compared with billed, cached, or host-reported tokens as if equivalent.
 
-The immutable v0.7.9 gate is the cumulative baseline for the v0.10.0 candidate:
+The [Codex manifest](../../.codex-plugin/plugin.json) selects the
+`results/v<version>.json` record in [results/](results/). That record owns the
+candidate's measured values and its comparison with the immutable v0.7.9
+cumulative baseline. This guide explains the current measurement contract;
+version notes and records retain each candidate's counts and change narrative.
 
-| Metric | Baseline | v0.10.0 candidate | Delta | Classification |
-| --- | ---: | ---: | ---: | --- |
-| UTF-8 bytes | 5,899 | 6,960 | +1,061 | exact static count used as a proxy |
-| Whitespace-delimited words | 757 | 871 | +114 | exact static count used as a proxy |
-| Logical lines | 107 | 124 | +17 | exact static count used as a proxy |
-| Unique direct references | 1 | 2 | +1 | exact static count used as a proxy |
-| `ceil(bytes / 4)` | 1,475 | 1,740 | +265 | estimate for the same English surface only |
-
-Reproduce the candidate measurement from any working directory:
+Measure the checked-in routing gate and validate its selected record from the
+repository root:
 
 ```bash
-python3 scripts/measure-routing-context.py
-python3 scripts/measure-routing-context.py --check
+python3 -B scripts/measure-routing-context.py
+python3 -B scripts/measure-routing-context.py --check
 ```
 
-The first command emits deterministic JSON to stdout. The second verifies the
-versioned record, fixed workload identity, threshold arithmetic, lifecycle
-matrix, and duplicate-injection semantics. Neither command writes files.
+The first command emits the actual file's digest and metrics as deterministic
+JSON to stdout. The second checks those bytes against the selected record and
+verifies the fixed workload identity, headroom limit, growth-review arithmetic,
+lifecycle matrix, and duplicate-injection semantics. Neither command writes
+files. A mismatch requires correcting the candidate or its record; changing a
+guide's prose cannot make stale measurements valid.
 
 ## Lifecycle Matrix
 
-The v0.10.0 record represents all required paths: fresh startup with a no-route
+The versioned record represents all required paths: fresh startup with a no-route
 request, fresh startup with a routed request, resume with no route, clear with
 a routed request, manual compaction with no route, automatic compaction with a
 routed request, and three repeated no-route requests in one otherwise unchanged
@@ -46,23 +46,28 @@ scenario. That expected count is static configuration evidence, not an observed
 host event. Routed slots bind canonical, paraphrased, and post-compaction
 observable-refusal and independent-audit `review-axiom-task` contracts,
 plus the post-compaction `agent-plugin-architect` contract; this does not turn
-them into host results. The fixed workload now contains 95 cases. Its five new
-release-readiness cases remain outside both frozen benchmarks.
+them into host results. The context-budget comparison retains the fixed
+95-case corpus in `evals/routing/`: 69 routed cases and 26 no-route controls.
+This workload identity is separate from the current Codex routing corpus and
+benchmark described in [Routing Evaluations](../README.md).
 
 Each host observation stores its injection events and observed count. The
 validator derives `duplicateInjectionDetected` as observed count greater than
 the scenario's expected count. A passing observation must have the exact count
 and no duplicate. Unrun or unavailable observations must retain null counts,
-null duplicate state, and an empty event list. Codex lifecycle observation for
-v0.10.0 is `NOT-RUN`; authenticated Claude Code observation is
-`UNAVAILABLE / NOT-RUN`. The preserved independent v0.8.2 diagnostic used one
-fresh Case 1 session and therefore does not claim current or actual
-post-compaction behavior.
+null duplicate state, and an empty event list. Read the manifest-selected
+record for each scenario's actual status; the presence of a scenario or a
+passing static check does not turn `NOT-RUN` into a host observation.
+Historical Claude Code entries retain their original status; current Axiom
+installation and runtime support is Codex-only.
 
-The immutable v0.9.0 Release and prior observations remain separate evidence
-and are not copied into the v0.10.0 candidate's host metrics. Current exact host
-usage is therefore `NOT-RUN`; the deterministic static measurement is local and telemetry-free,
-so the record keeps `networkOrTelemetryUsed` false.
+Prior observations remain separate evidence and cannot be copied into a new
+candidate's host metrics. Static measurement is local and telemetry-free;
+exact host usage remains unobserved unless a separate observation supplies it.
+A record's `targetRelease` describes its own binding. In particular,
+`pending-immutable-release` does not establish current publication status; see
+[Runtime and Repository Identity](../../docs/runtime-identity.md) for the
+separate publication and observation boundaries.
 
 ## Growth Review And Reduction Evidence
 
@@ -87,27 +92,29 @@ conditions, evidence gates, and model or reasoning settings cannot be removed
 or changed merely to obtain a smaller number.
 
 Reduction evidence binds its before surface to the nearest earlier stable
-SemVer record; v0.7.9 remains only the cumulative growth baseline. The v0.10.0
-candidate is byte-identical in size to v0.9.0, so its current reduction
-experiment is correctly null. The most recent actual reduction remains the historical
-v0.8.10-to-v0.8.11 experiment over its fixed 67-case workload:
+SemVer record; the immutable cumulative baseline is not reset to that
+predecessor. When the gate shrinks, `routingQuality.reductionExperiment` must
+bind both document digests and equivalent passing routing and no-route results
+over the same fixed workload. Without a reduction from that predecessor, the
+field must be null. Clause review separately checks route conditions and
+safety boundaries because static fixtures do not execute natural-language
+instructions. Static results cannot stand in for paired host observations.
 
-| Metric | v0.8.10 before | v0.8.11 after | Delta |
-| --- | ---: | ---: | ---: |
-| UTF-8 bytes | 7,739 | 6,673 | -1,066 |
-| Whitespace-delimited words | 1,001 | 852 | -149 |
-| Logical lines | 135 | 120 | -15 |
-| Unique direct references | 1 | 1 | 0 |
-| `ceil(bytes / 4)` | 1,935 | 1,669 | -266 |
+## Headroom And Record Ownership
 
-The cumulative 1,061-byte increase is about 17.99%, so both growth-review
-triggers remain reached and reviewed. Headroom below the 8,192-byte instruction
-boundary is 1,232 bytes (15.04%). Contributors must preserve at least 15%
-headroom after equivalent acceptance and should
-prefer roughly 6-6.5 KiB when precision permits. The hard limit is a rejection
-guard, not an authoring target.
+[Runtime Changes](../../docs/maintainers/runtime-changes.md#always-loaded-context)
+requires at least 15% headroom below the 8,192-byte instruction boundary. The
+publication aggregate enforces the resulting 6,963-byte maximum against the
+actual startup file, independently of recorded metrics. Remaining bytes equal
+8,192 minus the measured `utf8Bytes`; divide that remainder by 8,192 to obtain
+the headroom fraction. Passing this size check does not replace routing and
+safety acceptance or permit lower model or reasoning settings.
 
-The machine-readable contract is [schema v1](schema-v1.json), and the current
-versioned record is [v0.10.0](results/v0.10.0.json). The v0.9.0 and earlier
-records remain byte-for-byte historical evidence; the current record binds the
-unchanged gate, 95-case workload, and static-only evidence boundary.
+The machine-readable record format is [schema v1](schema-v1.json); the current
+semantic checks are implemented in
+[context_budget.py](../../axiom_validation/context_budget.py). Preserve earlier
+records with their original metrics, workload identities, host vocabulary,
+and evidence boundaries. Do not rewrite them to match the present gate or
+infer the current host set from a historical schema alone. Change this guide
+when the measurement contract changes; record new candidate measurements in
+their versioned owner without maintaining a second manual table here.

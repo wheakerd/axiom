@@ -30,10 +30,10 @@ The release tree provides the Codex integration:
 | --- | --- | --- |
 | Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are declared |
 
-The Codex manifest points to `./skills/`. Claude Code installation and runtime
-support are removed in v0.11.0; its old records remain historical. This is
-repository support, not proof of execution on every host release, operating
-system, shell, installation method, or policy configuration.
+The Codex manifest points to `./skills/`. Codex is Axiom's only supported
+installation and runtime host; records for other hosts remain historical.
+This is repository support, not proof of execution on every host release,
+operating system, shell, installation method, or policy configuration.
 
 Inspect the exact commands in the [Hook Reference](reference/hooks.md) before
 trusting an installation.
@@ -69,20 +69,18 @@ canonical current summary. It binds the current plugin and runtime identity,
 keeps current host states separate from prior evidence, and requires an
 immutable subject before a host pass can be claimed.
 
-The checked-in candidate for `v0.13.3` reports:
-
-- status: `STATIC-ONLY`;
-- binding: `pending-immutable-tag`;
-- installed-runtime contract: schema v2.
+The table summarizes that record. Read its `targetRelease` and
+`runtimeIdentity` fields for the candidate version, immutable binding, and
+installed-runtime contract schema.
 
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
-| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` for v0.13.3 | Static support only |
+| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` | `STATIC-ONLY` |
 
-The [v0.13.3 notes](releases/v0.13.3.md) describe default-English instruction
-authoring, local web research, and repository cleanup. The candidate cannot bind
-itself to a future signed merge, immutable tag, final workflow result, or
-post-publication host observation.
+A source candidate cannot establish a future signed merge, immutable tag,
+final workflow result, or post-publication host observation. See
+[Routing Context Budget](../evals/context-budget/README.md) for the current
+startup-document measurement and its separate static evidence boundary.
 
 An identical runtime digest may make older evidence relevant to the same bytes,
 but it does not create a new observation or change the older record's host,
@@ -110,31 +108,11 @@ session observation.
 
 ## Report A Compatibility Result
 
-Use a disposable, non-sensitive repository and keep the test read-only:
-
-1. Record the host and exact version, operating system, Axiom version or
-   immutable commit, installation method, and lifecycle source.
-2. Compare the installed Hook with the [checked-in reference](reference/hooks.md).
-3. Start a new Codex session.
-4. Run the routed and control requests in
-   [Getting Started](guides/getting-started.md).
-5. Preserve `PASS`, `FAIL`, `NOT-RUN`, and `UNAVAILABLE` separately and record
-   whether any mutation or tool event occurred.
-
-Submit the bounded result with the
-[compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml).
-Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml)
-for a false positive, false negative, or unexpected clarification. Do not
-include credentials, private conversations, or sensitive repository content.
-
-The standard-library evidence validator is:
-
-```bash
-python3 scripts/check-compatibility-evidence.py --self-test
-```
-
-It validates checked-in records and negative fixtures; it does not execute a
-host or create an observation.
+Follow [Recording A Result](field-validation.md#recording-a-result) for the
+read-only test, required host and subject details, sanitized reporting fields,
+and offline evidence-validation command. It owns the reporting procedure for
+both compatibility and routing-case reports. Preserve each observed outcome
+and leave unexecuted lifecycle cases `NOT-RUN`.
 
 ## Evidence Paths
 
@@ -143,9 +121,8 @@ Current sources:
 - [current release status](../evidence/release-status.json);
 - [runtime identity](../evidence/runtime-identity.json) and its
   [policy](runtime-identity.md);
-- [current routing-context record](../evals/context-budget/results/v0.13.3.json);
-- [current route corpus](../evals/README.md); and
-- [v0.13.3 version notes](releases/v0.13.3.md).
+- [routing-context measurement and record selection](../evals/context-budget/README.md); and
+- [current route corpus](../evals/README.md).
 
 Historical sources:
 
@@ -162,11 +139,13 @@ user reference.
 
 ## Version Interpretation
 
-Use the synchronized manifest version and an immutable version tag when
-describing a release. Do not infer the current version from a floating tag,
-marketplace cache, or working-tree checkout. An installed marketplace snapshot
-may lag the repository, so current observations include an explicit version and
-Hook review.
+Use the synchronized manifests to identify the source package version and an
+immutable version tag when describing a published release. A working-tree
+checkout, floating tag, or marketplace cache does not establish publication or
+the installed version. An installed marketplace snapshot may lag the source,
+so compare its behavior with documentation and Hook declarations from the same
+release or commit. Current observations include an explicit version and Hook
+review.
 
 User-visible release history belongs in the [Changelog](../CHANGELOG.md).
 Contributor requirements for compatibility claims and optional native

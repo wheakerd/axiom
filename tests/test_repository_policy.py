@@ -1,8 +1,15 @@
 """Focused tests for repository layout and safety-domain gates."""
 
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
-from axiom_validation.context import CURRENT_RELEASE_NOTES, REPOSITORY_ROOT
+from axiom_validation.context import CURRENT_RELEASE_NOTES, RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.repository_policy import (
     CRITICAL_CODEOWNER_PATTERNS,
     check_packaged_skills,
@@ -18,6 +25,31 @@ from axiom_validation.cases.rollback import check_reversible_safety_scenarios
 
 
 class RepositoryPolicyTests(unittest.TestCase):
+    def test_publication_command_preserves_source_tree_without_bytecode(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "axiom"
+            shutil.copytree(
+                REPOSITORY_ROOT,
+                root,
+                ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc"),
+            )
+            environment = os.environ.copy()
+            environment.pop("PYTHONDONTWRITEBYTECODE", None)
+            environment.pop("PYTHONPYCACHEPREFIX", None)
+            result = subprocess.run(
+                [sys.executable, "-B", "scripts/check-publication.py"],
+                cwd=root,
+                env=environment,
+                text=True,
+                capture_output=True,
+                timeout=120,
+                check=False,
+            )
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertIn("Publication validation passed:", result.stdout)
+            self.assertEqual([], list(root.rglob("__pycache__")))
+            self.assertEqual([], list(root.rglob("*.pyc")))
+
     def test_current_skill_inventory_references_and_release_surfaces(self):
         failures = []
         check_required_files(failures)
@@ -30,6 +62,56 @@ class RepositoryPolicyTests(unittest.TestCase):
         documents = discover_release_documents()
         self.assertIn(CURRENT_RELEASE_NOTES, documents)
         self.assertEqual(tuple(sorted(documents)), documents)
+
+    def _release_surface_failures(self, relative, old, new):
+        target = REPOSITORY_ROOT / relative
+        original_read = Path.read_text
+        original = original_read(target, encoding="utf-8")
+        self.assertIn(old, original)
+
+        def read_changed(path, *args, **kwargs):
+            text = original_read(path, *args, **kwargs)
+            return text.replace(old, new) if path == target else text
+
+        failures = []
+        with patch.object(Path, "read_text", read_changed):
+            check_release_version_surfaces(failures)
+        return failures
+
+    def test_current_guides_require_canonical_sources_even_with_version_prose(self):
+        for relative, anchor in (
+            ("README.md", "](evidence/release-status.json)"),
+            ("README.md", "](docs/compatibility.md)"),
+            ("README.md", "](CHANGELOG.md)"),
+            ("docs/compatibility.md", "](../evidence/release-status.json)"),
+            ("docs/compatibility.md", "](../evidence/runtime-identity.json)"),
+        ):
+            with self.subTest(relative=relative, anchor=anchor):
+                # Repeating the version and old release-note link cannot
+                # replace the current source owner.
+                legacy_prose = (
+                    "](missing.json)\n"
+                    f"The checked-in candidate for `v{RELEASE_VERSION}` reports:\n"
+                    f"[Notes](docs/releases/v{RELEASE_VERSION}.md)\n"
+                    f"[Notes](releases/v{RELEASE_VERSION}.md)\n"
+                )
+                failures = self._release_surface_failures(relative, anchor, legacy_prose)
+                self.assertTrue(
+                    any(relative in failure and repr(anchor) in failure for failure in failures),
+                    failures,
+                )
+
+    def test_release_history_still_requires_the_exact_candidate_version(self):
+        for relative, anchor in (
+            ("CHANGELOG.md", f"## {RELEASE_VERSION} - "),
+            (CURRENT_RELEASE_NOTES, f"Version `{RELEASE_VERSION}`"),
+        ):
+            with self.subTest(relative=relative):
+                failures = self._release_surface_failures(relative, anchor, "Unversioned")
+                self.assertTrue(
+                    any(relative in failure and repr(anchor) in failure for failure in failures),
+                    failures,
+                )
 
     def test_repository_governance_and_codeowners_contract(self):
         failures = []

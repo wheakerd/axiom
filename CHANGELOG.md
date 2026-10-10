@@ -9,6 +9,61 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 48
+
+### Changed
+
+- Defined current guidance as documentation of the same source snapshot, with distinct rules for published releases, installed packages, historical evidence, and versioned protocols.
+- Replaced manually repeated candidate-version prose and routing-context measurement tables with links to canonical records and current measurement commands.
+- Aligned workflow summaries with prepared-release Git submission and distinguished completed governance promotion evidence from current enforcement.
+- Updated documentation checks to require canonical source links in current guides while retaining exact version bindings for release history, with regression coverage for both boundaries.
+
+### Behavioral impact
+
+This repository-only documentation and validation change preserves plugin version `0.13.4`, the runtime digest, routing behavior, and the startup document's headroom. Current guides explain implemented workflows; historical notes and observations retain their original version bindings and outcomes.
+
+### Required action
+
+Use documentation from the same release or source snapshot as the package being inspected. Contributors should follow the [source and version rules](docs/maintainers/documentation-policy.md#source-and-version-scope); no configuration or installation change is required.
+
+## 0.13.4 - unreleased candidate
+
+### Changed
+
+- Shortened startup routing prose while retaining every route, selection condition, authorization boundary, and safety rule.
+- Added a measured 15% minimum startup-document headroom check with boundary regression coverage.
+
+### Behavioral impact
+
+The startup document occupies less space within the instruction limit. Routing and action authority are unchanged, and all startup rules remain in the same always-loaded document. The changed installed bytes receive a new runtime digest and patch version; model and reasoning settings are unchanged. See the [v0.13.4 notes](docs/releases/v0.13.4.md) for the paired static acceptance and evidence boundary.
+
+### Required action
+
+None. Existing configuration, workflow names, and installation paths remain valid.
+
+## Repository policy revision 46
+
+### Changed
+
+- Split detailed runtime-authoring and validation procedures out of the contribution entry point, and indexed current guidance by document responsibility.
+- Separated historical routing methods and run narratives from the current evaluation guide while preserving their original outcomes and validation contracts.
+- Extended documentation checks to current evaluation entry points and the historical-method boundary.
+
+### Fixed
+
+- Added the missing local web research capability to the README overview and corrected obsolete issue-template guidance.
+- Updated routing-context explanations to the v0.13.3 record, including its actual growth, latest recorded reduction, and remaining headroom shortfall.
+- Corrected contributor tooling ownership and a stale release-tag creator statement; linked duplicated compatibility and security procedures to their canonical owners.
+- Preserved bytecode suppression when the publication aggregate launches the compatibility checker, so the documented `-B` invocation does not create Python caches through that subprocess.
+
+### Behavioral impact
+
+This repository-only change improves navigation and contributor checks. Plugin version `0.13.3`, installed Skills, hooks, runtime digest, and historical release evidence retain their existing identities. The checked-in candidate wording describes its original source state; published Release objects own publication facts.
+
+### Required action
+
+Contributors should use the linked runtime-authoring and validation guides from `CONTRIBUTING.md`, the current `evals/README.md` for evaluation contracts, and `evals/history/codex-core-v1-v2.md` for earlier methods and run narratives. The publication-check command and plugin installation paths are unchanged.
+
 ## 0.13.3 - unreleased candidate
 
 ### Added

@@ -1,9 +1,28 @@
 # Repository Governance
 
-This reference combines checked-in enforcement contracts with dated GitHub
-observations. Remote-state claims below apply to their stated verification
-dates; editing this document does not re-verify the live repository. For a
-current remote decision, use [Manual Re-verification](#manual-re-verification).
+This reference is for maintainers and auditors reviewing repository controls.
+It keeps checked-in enforcement contracts and their dated GitHub observations
+in one canonical place. Remote-state claims apply only to their stated
+verification dates; editing this page does not re-verify the live repository.
+For plugin execution and permissions, use the [Trust Model](trust-model.md).
+
+## Find The Relevant Boundary
+
+| Review task | Section | Evidence scope |
+| --- | --- | --- |
+| Classify a repository change | [Repository Policy Identity](#repository-policy-identity) | Checked-in identity contract |
+| Inspect merge and tag restrictions | [Main Branch Policy](#main-branch-policy) and [Release Tag Policy](#release-tag-policy) | Dated remote snapshot |
+| Understand release-controller permissions | [Release Tag Controller Migration](#release-tag-controller-migration) | Original migration record and controller contract |
+| Check version syntax | [Production Release Version Policy](#production-release-version-policy) | Checked-in parser and consumers |
+| Inspect CI and publication boundaries | [Pull-Request Validation And Release Provenance](#pull-request-validation-and-release-provenance) | Checked-in contracts, with dated promotion evidence |
+| Understand immutable-release guarantees | [Immutable Release Policy](#immutable-release-policy) | Dated setting observation and verification limits |
+| Assess ownership and independent review | [Critical-Path Ownership](#critical-path-ownership) and [Human Review Trust Boundary](#human-review-trust-boundary) | CODEOWNERS plus dated remote evidence |
+| Verify live settings for a new decision | [Manual Re-verification](#manual-re-verification) and [Availability And Limits](#availability-and-limits) | Read-only procedure and observation limits |
+
+Release preparation and evidence responsibilities belong to
+[Release Documentation And Evidence](maintainers/release-documentation.md).
+The migration narrative and completed hook-promotion sequence below retain
+their original dates and outcomes; neither implies a new live verification.
 
 ## Repository Policy Identity
 
@@ -268,6 +287,11 @@ model-session evidence. Pull requests continue to use ordinary
 persistence disabled; `pull_request_target` and repository secrets remain
 absent.
 
+The criteria and observations below document the one-time promotion completed
+on `2026-10-02`. They retain their historical scope; a new change or release
+does not restart this observation period. Main merges and protected tag
+creation require `hook-runtime-gate` under the contracts described here.
+
 The observation period exits only when direct GitHub Actions history satisfies
 all of these conditions:
 
@@ -360,7 +384,9 @@ The earlier `2026-08-29` inspection correctly left this Issue open at seven
 qualifying runs over less than one day. That historical finding has not been
 reinterpreted; the later complete sequence supplies the promotion evidence.
 
-The checked-in v0.8.20 `Release signature guard` maps each evidence boundary to
+## Release Workflow Boundaries
+
+The checked-in `Release signature guard` maps each evidence boundary to
 one stable name: `Verify signed main history`, `Verify release candidate`,
 `Verify created release tag`, and `Observe published immutable release`. A
 manual candidate run accepts only `release/v<version>` and requires the stable
@@ -368,7 +394,7 @@ numeric branch version to match the Codex manifest. A manual published-release r
 accepts only the exact tag and requires the live Release to be final,
 non-prerelease, immutable, and commit-bound. The separately observed release-App
 migration established the `Verify signed main history` integrity context.
-The Issue #91 main-check promotion does not change those release-tag contexts
+The main-check promotion does not change those release-tag contexts
 or reinterpret the historical release observations.
 
 `Create protected release tag` is separate from the read-only signature guard
@@ -568,8 +594,10 @@ copy tokens or full administrative API responses into the repository.
   protected`; active protection was observed through repository rulesets and
   the effective branch-rules endpoint instead.
 - The authenticated direct-collaborator query reported only `wheakerd`. The
-  owner-visible creation ruleset reported the same user as its only bypass
-  actor. No destructive proof of branch or tag rejection was attempted.
+  administrator-visible creation ruleset reported the dedicated release App
+  as its only bypass actor; the earlier owner-user bypass was removed in the
+  dated migration above. No destructive proof of branch or tag rejection was
+  attempted.
 - Repository-plan capability was not inferred from documentation. The three
   named rulesets were directly observed as active; unavailable fields remain
   unavailable if a future plan or API response hides them.
