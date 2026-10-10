@@ -27,6 +27,8 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "docs/guides/managing-installation.md",
     "docs/reference/hooks.md",
     "docs/maintainers/documentation-policy.md",
+    "docs/maintainers/runtime-changes.md",
+    "docs/maintainers/validation.md",
     "docs/maintainers/release-documentation.md",
     "docs/architecture.md",
     "docs/examples.md",
@@ -46,6 +48,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/runtime-contract-history-v2.json",
     "evidence/repository-policy-revisions-v1.json",
     "evals/README.md",
+    "evals/history/codex-core-v1-v2.md",
     "evals/schema-v1.json",
     "evals/schema-v2.json",
     "evals/host-response-schema-v1.json",
@@ -645,13 +648,16 @@ def check_repository_governance_contract(failures: list[str]) -> int:
 
 
 def check_release_version_surfaces(failures: list[str]) -> None:
-    """Derive every current-release document contract from RELEASE_VERSION."""
-    release_tag = f"v{RELEASE_VERSION}"
+    """Bind current guides to source owners and release documents to their version."""
     release_path = REPOSITORY_ROOT / CURRENT_RELEASE_NOTES
     surface_contracts = (
         (
             README_PATH,
-            (release_tag, f"]({CURRENT_RELEASE_NOTES})"),
+            (
+                "](evidence/release-status.json)",
+                "](docs/compatibility.md)",
+                "](CHANGELOG.md)",
+            ),
         ),
         (
             REPOSITORY_ROOT / "CHANGELOG.md",
@@ -660,8 +666,8 @@ def check_release_version_surfaces(failures: list[str]) -> None:
         (
             REPOSITORY_ROOT / "docs" / "compatibility.md",
             (
-                f"The checked-in candidate for `{release_tag}` reports:",
-                f"](releases/{release_tag}.md)",
+                "](../evidence/release-status.json)",
+                "](../evidence/runtime-identity.json)",
             ),
         ),
         (
@@ -693,8 +699,7 @@ def check_release_version_surfaces(failures: list[str]) -> None:
         for anchor in anchors:
             if anchor not in text:
                 failures.append(
-                    f"{display_path(path)} is missing current release anchor {anchor!r} "
-                    f"derived from RELEASE_VERSION={RELEASE_VERSION!r}"
+                    f"{display_path(path)} is missing required documentation anchor {anchor!r}"
                 )
     rendered_body = render_release_body(RELEASE_VERSION, failures)
     release_notes = documents.get(release_path)
@@ -740,7 +745,7 @@ def check_compatibility_evidence(failures: list[str]) -> tuple[int, int]:
     validator = REPOSITORY_ROOT / "scripts" / "check-compatibility-evidence.py"
     try:
         result = subprocess.run(
-            [sys.executable, str(validator), "--self-test"],
+            [sys.executable, "-B", str(validator), "--self-test"],
             cwd=REPOSITORY_ROOT,
             text=True,
             capture_output=True,

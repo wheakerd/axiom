@@ -45,9 +45,8 @@ LF, hashes each normalized input, and hashes canonical JSON records with
 SHA-256. Selected manifest fields are JSON values rather than source formatting.
 The input-policy digest also normalizes line endings before hashing its text.
 
-Schema v2 retains v1 canonicalization, removes the retired Claude manifest
-input, and uses its own digest namespace. File mode is not a digest input:
-current runtime text is read by the host or an explicitly selected interpreter.
+File mode is not a digest input: current runtime text is read by the host or
+an explicitly selected interpreter.
 A future directly executed file whose mode affects behavior needs a successor
 schema.
 
@@ -95,7 +94,9 @@ archived failures. New observations bind their own immutable subject and follow
   derivation used for the Codex-only transition.
 - The [v1 policy](../axiom_validation/runtime-contract-inputs-v1.json) and
   [v1 history](../evidence/runtime-contract-history-v1.json) retain their
-  original cross-host classification and bindings.
+  original cross-host classification and bindings. Schema v2 retains their
+  canonicalization, removes the retired Claude manifest input, and uses its
+  own digest namespace.
 - The [policy ledger](../evidence/repository-policy-revisions-v1.json) and
   [version notes](releases/) own revision-specific changes and migrations.
 - Retired host snapshots and no-Hook experiments remain at the verified sources

@@ -36,7 +36,7 @@ from .jsonio import (
     require_string_list,
 )
 def check_documented_method(root: Path, failures: list[str]) -> None:
-    path = root / "evals" / "README.md"
+    path = root / "evals" / "history" / "codex-core-v1-v2.md"
     if not _inspect_regular_file(path, MAX_JSON_BYTES, failures, root):
         return
     label = _display(path, root)

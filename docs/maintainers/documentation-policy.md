@@ -18,6 +18,41 @@ runtime contract.
 6. Documentation must not grant action authority or imply behavior that the
    checked-in runtime does not provide.
 
+## Source And Version Scope
+
+Current guides, concepts, references, and contributor procedures describe the
+implementation and contracts in the same repository snapshot. Write the
+supported workflow in the present tense, verify it against its source owner,
+and replace obsolete instructions in place. Put release-by-release additions,
+removals, and migration narratives in the Changelog or version notes.
+
+"Current" means the checked-in tree that accompanies the document. `main` may
+contain unreleased changes; its documentation does not prove that the latest
+published or installed package has those changes. Users checking an installed
+release should use the documentation at that release's tag. Source inspection
+establishes declared behavior; installation, host observations, and remote
+publication still require evidence from their own owners.
+
+| Content | Version rule |
+| --- | --- |
+| Current usage, architecture, security, and contribution guidance | Follow the same checked-in source; avoid manual copies of the current release number and version-by-version narration |
+| Current version, digest, status, or measured counts | Link to the canonical manifest, record, or measurement command; use a checked generated region when displaying the values |
+| Changelog, version notes, and migration history | Retain the version whose change or migration they describe |
+| Observations, failures, evaluation results, and historical methods | Preserve the exact original subject, version, date, schema, and outcome; never relabel them as current |
+| Supported schema or protocol selectors, compatibility limits, and prerequisites | Keep exact versions when they determine valid behavior; update their current selection only with the owning implementation |
+
+Version information is therefore not limited to change history. A format such
+as `schema-v3.json`, an immutable evidence link, or an exact compatibility
+boundary is part of a usable contract. Do not remove it merely to make prose
+appear version-neutral. Conversely, a heading such as "Current vX.Y.Z" or a
+manually copied measurement table does not belong in a maintained guide when
+its canonical source already supplies that value.
+
+When reviewing a current document, distinguish an implemented capability from
+a plan, an example, and an observed result. Update the capability description
+from source, keep examples tied to their actual contract, and preserve
+`NOT-RUN` or other evidence limits until new observations justify a change.
+
 ## Document Classes
 
 | Class | Primary audience | Responsibility |
@@ -41,7 +76,7 @@ Use this vocabulary when a document's role is not obvious from its location:
 
 | State | Meaning |
 | --- | --- |
-| `current` | Maintained guidance for the present product |
+| `current` | Maintained guidance for the implementation in the same checked-in tree |
 | `historical` | Immutable or append-only past evidence or narrative |
 | `generated` | Content derived from a canonical machine-readable source |
 | `project-plan` | Intended work or channel activity, not product capability |
@@ -62,6 +97,11 @@ Place optional metadata near the document H1 using this exact form:
 The current repository assigns these responsibilities:
 
 - `README.md` owns the bounded public introduction and safe-start summary;
+- `CONTRIBUTING.md` owns contribution intake and the repository map;
+  `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and
+  `docs/maintainers/validation.md` owns contributor check procedures;
+- `SECURITY.md` owns vulnerability reporting and security boundaries, while
+  `CHANGELOG.md` owns user-visible changes and required action;
 - `docs/guides/` owns installation, first use, update, removal, and
   troubleshooting;
 - `docs/reference/hooks.md` renders the canonical Hook declarations and
@@ -73,7 +113,9 @@ The current repository assigns these responsibilities:
 - `docs/maintainers/release-documentation.md` defines release-document and
   evidence responsibilities for future releases;
 - `evidence/` and `evals/results/` retain machine records and observations;
-  `docs/field-validation.md` indexes retired records at immutable archive sources.
+  `docs/field-validation.md` indexes retired records at immutable archive sources;
+- `evals/README.md` and `evals/context-budget/README.md` own current evaluation
+  guidance; `evals/history/` retains earlier methods and run narratives.
 
 [The documentation index](../README.md) describes these current locations by
 audience and task. A proposed path does not become canonical until the content,
@@ -107,6 +149,10 @@ directory would create artificial fragmentation.
 | Fact | Canonical owner | Current rule |
 | --- | --- | --- |
 | Product introduction and safe first step | `README.md` | Current and within the documented size budget |
+| Contribution intake and repository map | `CONTRIBUTING.md` | Current; links to detailed authoring and validation owners |
+| Runtime-authoring requirements | `docs/maintainers/runtime-changes.md` | Contributor policy; installed behavior remains owned by Skills, hooks, and manifests |
+| Contributor check procedures | `docs/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
+| Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; README keeps a validated rendering |
 | Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
@@ -120,6 +166,8 @@ directory would create artificial fragmentation.
 | Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | Dated governance evidence and maintainer reference | Current |
+| Routing evaluation contracts and optional observation method | `evals/README.md` with versioned cases, schemas, and benchmark manifests | Current; earlier methods remain under `evals/history/` |
+| Routing-context measurements | Versioned `evals/context-budget/results/` records with `evals/context-budget/README.md` | Counts are static proxies; historical records keep their original bindings |
 
 Machine-derived facts should use bounded generated regions or deterministic
 checks where practical. Human prose may explain their meaning but must not
@@ -134,6 +182,7 @@ redefine their values.
 | Installation, update, removal, or troubleshooting behavior | Update the canonical guide; link from other surfaces instead of copying steps |
 | Host support or observed compatibility | Update current status from the owning evidence and preserve prior records unchanged |
 | Manifest version or runtime digest | Render the current identity from its machine-readable owner |
+| Current guidance contains release-specific narration or copied measurements | Replace the narration with the implemented workflow and link to version notes or the canonical measurement source; preserve original evidence |
 | User-visible change | Add a concise `CHANGELOG.md` entry that states impact and required action |
 | Exceptional migration, architecture, security, compatibility, or evidence detail | Add or update a version note only when the detail is material |
 | External publication or channel state | Record an absolute verification date and do not promote planned or submitted work to published |
@@ -171,22 +220,30 @@ redefine their values.
 
 Every documentation change must, at minimum:
 
-- keep `README.md` at or below the 16 KiB migration ceiling once the README
-  reduction phase lands, and report the preferred 8--12 KiB range;
+- review current instructions against their same-snapshot source owners and
+  separate release history, schema selectors, and observed evidence from
+  current capability claims;
+- keep `README.md` at or below the enforced 16 KiB ceiling, and report the
+  preferred 8--12 KiB range;
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and
   avoid skipped heading levels;
 - keep `docs/README.md` complete for current public documents and reject
-  current-document orphans;
+  current-document orphans, including the current evaluation and context-budget
+  entry points outside `docs/`;
 - accept only the documented lifecycle values;
 - preserve generated marker boundaries and compare rendered machine facts with
   their canonical sources;
+- require current entry points to link their canonical status and identity
+  owners, while the Changelog and selected version note retain exact release
+  bindings; a repeated version number is not a substitute for those links;
 - keep current public guidance from linking to non-public sources;
 - preserve the parseable README `### Shared skills` inventory until its owning
   validator is migrated atomically;
 - validate the public Hook reference against checked-in declarations and
   wrappers; and
-- keep historical and project-plan documents out of current user navigation.
+- keep historical and project-plan documents, including `evals/history/`, out
+  of current task navigation.
 
 Run the deterministic, Python-standard-library-only documentation validator
 from the repository root:

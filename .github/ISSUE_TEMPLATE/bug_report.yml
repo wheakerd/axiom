@@ -122,7 +122,7 @@ body:
     id: cross_platform
     attributes:
       label: Cross-platform observation
-      description: If possible, say whether the same request behaves differently in the other supported host.
+      description: If possible, say whether the same request behaves differently on another operating system or Codex version.
 
   - type: checkboxes
     id: secret_review

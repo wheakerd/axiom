@@ -360,6 +360,30 @@
       "sourceIssue": null,
       "summary": "Reject malformed compatibility inputs with diagnostics, align security guidance with Codex and the documented tag controller, and remove obsolete fixture attributes; preserve installed runtime.",
       "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 46,
+      "recordedOn": "2026-10-09",
+      "baselineCommit": "f27543dece0852d60460e95c3d3d48d04f2dfb42",
+      "sourceIssue": null,
+      "summary": "Separate contribution guidance and historical evaluations, align public docs with v0.13.3, extend document-boundary checks, and prevent compatibility-check bytecode writes; preserve installed runtime.",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484"
+    },
+    {
+      "revision": 47,
+      "recordedOn": "2026-10-09",
+      "baselineCommit": "f27543dece0852d60460e95c3d3d48d04f2dfb42",
+      "sourceIssue": null,
+      "summary": "Compact startup wording without changing routing or safety rules; enforce 15% measured headroom, record paired static acceptance, and bind the v0.13.4 candidate runtime.",
+      "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
+    },
+    {
+      "revision": 48,
+      "recordedOn": "2026-10-09",
+      "baselineCommit": "f27543dece0852d60460e95c3d3d48d04f2dfb42",
+      "sourceIssue": null,
+      "summary": "Align docs with source, preserve versioned history and protocols, validate canonical links instead of copied release prose, and document prepared-release routing; preserve installed runtime.",
+      "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
     }
   ]
 }

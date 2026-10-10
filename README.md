@@ -9,9 +9,9 @@ Think before AI thinks.
 **Workflow guardrails for Codex.**
 
 Axiom provides focused workflows for task planning and high-impact coding-agent actions.
-It loads one focused, inspectable workflow when scope, authorization, evidence,
-or rollback needs to be explicit, while ordinary requests continue through the
-host normally.
+It loads the smallest matching set of inspectable workflows when scope,
+authorization, evidence, or rollback needs to be explicit, while ordinary
+requests continue through the host normally.
 
 A route never grants mutation authority. Selecting one does not by itself
 permit an edit, commit, push, deployment, deletion, credential use, or external
@@ -49,6 +49,7 @@ removal, and non-destructive troubleshooting.
 | Clarify an ambiguous request | `clarify-intent` | Offer plausible options and a custom answer before dependent actions |
 | Delegate a simple task | `delegate-simple-task` | Keep the main model; use user-ordered candidates and existing authority |
 | Create or revise an actionable task plan | `task-planning` | Reflect current scope; preserve valid decisions, dependencies, and acceptance criteria |
+| Research through a local browser or client | `local-web-search` | Check execution location and disclosure; pause for challenges or rate limits |
 | Audit or maintain repository instructions | `agents-architect` | Inspect first; limit changes to the authorized instruction system |
 | Design or audit packaged agent-plugin architecture | `agent-plugin-architect` | Require explicit package intent; keep ordinary plugin code outside |
 | Reduce Codex usage overhead | `optimize-codex-usage` | Preserve required quality and safety; never invent hidden usage data |
@@ -75,19 +76,20 @@ are statically testable, but fresh-session behavior still depends on the exact
 host version, operating system, policy, installation method, and installed
 snapshot.
 
-| Host | Checked-in support | Current v0.13.3 observation boundary |
+| Host | Checked-in support | Current observation boundary |
 | --- | --- | --- |
 | Codex | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Installed-host observation is `NOT-RUN` |
 
-Claude Code installation and runtime support ended in v0.11.0.
+Codex is Axiom's only supported installation and runtime host.
 The plugin-architecture workflow still covers other projects targeting Claude Code.
 
-The current release-status record remains `STATIC-ONLY`; static checks do not
-create host evidence. Read [Compatibility](docs/compatibility.md) for the
+The [source release-status record](evidence/release-status.json) remains
+`STATIC-ONLY`; static checks do not create host evidence. Read
+[Compatibility](docs/compatibility.md) for the
 bounded matrix and known limitations, [Field Validation](docs/field-validation.md)
-to report a result, and the [v0.13.3 notes](docs/releases/v0.13.3.md) for
-version-specific detail. Historical observations remain under `evidence/` and
-`evals/results/` with their original identities and terminal statuses.
+to report a result, and the [Changelog](CHANGELOG.md) for version-specific
+changes. Historical observations remain under `evidence/` and `evals/results/`
+with their original identities and terminal statuses.
 
 ### Runtime and repository identity
 
@@ -97,9 +99,9 @@ runtime digest are separate identities. See
 input and version policy.
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.13.3`
-- `repositoryPolicyRevision`: `45`
-- `runtimeContractDigest` (schema v2): `sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484`
+- `pluginVersion`: `0.13.4`
+- `repositoryPolicyRevision`: `48`
+- `runtimeContractDigest` (schema v2): `sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->
 

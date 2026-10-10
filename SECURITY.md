@@ -73,25 +73,20 @@ safe reproduction prompts.
 ## Repository Workflow Boundary
 
 Pull-request validation and release provenance are separate trust domains.
-`Distribution and publication guards` uses the ordinary `pull_request` event
-for both same-repository and fork contributions, grants only `contents: read`,
-does not reference repository secrets, and checks out with
-`persist-credentials: false`. It validates the proposed merge tree without
-requiring a GitHub-signed contributor commit or a same-repository head. It does
-not publish, write repository state, authorize an external action, or turn a
-successful static check into release provenance.
+Contributor checks validate a proposed merge tree with read-only repository
+permissions and without repository secrets. A passing check does not establish
+release provenance or authorize publication.
 
-Release provenance begins at protected repository history. A separate workflow
-verifies the GitHub signature and approved-`main` ancestry of merged or
-published targets, binds strict release tags to the Codex manifest version, and
-fails closed on tag movement, deletion, forced update, malformed tags,
-off-history targets, and mismatched GitHub Release refs. Workflow detection is
-not server-side prevention: branch and tag rulesets must continue to reject
-unsigned protected updates and mutable release tags before they take effect.
-The [governance snapshot](docs/repository-governance.md#release-tag-policy), last
-verified on 2026-10-02, records upstream `v*` creation as restricted to the
-`axiom-release-tag-controller` GitHub App by a creation-only ruleset. The
-separate signature, required-check, deletion, and non-fast-forward rules have
-no bypass actor. Use the snapshot's re-verification procedure before relying on
-live remote state. A reusable commit-level check is target-quality evidence,
+Release provenance depends on protected history, immutable release subjects,
+and independently verified publication evidence. Workflow detection cannot
+replace server-side prevention of unsigned protected updates or mutable
+release tags. A reusable commit-level check is evidence about that commit,
 not authorization for an exact tag-creation request.
+
+[Repository Governance](docs/repository-governance.md#pull-request-validation-and-release-provenance)
+owns the workflow trust boundaries, required checks, and dated ruleset
+snapshot. Its [release-tag policy](docs/repository-governance.md#release-tag-policy)
+and [manual re-verification procedure](docs/repository-governance.md#manual-re-verification)
+define what to inspect before relying on live remote state. See
+[Release Documentation And Evidence](docs/maintainers/release-documentation.md#candidate-and-final-evidence)
+for the distinction between candidate records and final publication evidence.

@@ -251,9 +251,9 @@ def candidate_terminal_observation() -> dict:
 def documented_method_failures(text: str) -> list[str]:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
-        eval_root = root / "evals"
-        eval_root.mkdir()
-        (eval_root / "README.md").write_text(text, encoding="utf-8")
+        history_root = root / "evals" / "history"
+        history_root.mkdir(parents=True)
+        (history_root / "codex-core-v1-v2.md").write_text(text, encoding="utf-8")
         failures: list[str] = []
         check_documented_method(root, failures)
         return failures
@@ -267,7 +267,8 @@ class RoutingEvaluationTests(unittest.TestCase):
 
     def test_documented_method_requires_native_hook_trust_without_bypass(self):
         readme = (
-            Path(__file__).resolve().parents[1] / "evals" / "README.md"
+            Path(__file__).resolve().parents[1]
+            / "evals" / "history" / "codex-core-v1-v2.md"
         ).read_text(encoding="utf-8")
         self.assertEqual([], documented_method_failures(readme))
 
@@ -289,7 +290,8 @@ class RoutingEvaluationTests(unittest.TestCase):
 
     def test_documented_method_requires_codex_home_outside_system_temp(self):
         readme = (
-            Path(__file__).resolve().parents[1] / "evals" / "README.md"
+            Path(__file__).resolve().parents[1]
+            / "evals" / "history" / "codex-core-v1-v2.md"
         ).read_text(encoding="utf-8")
         weakened = readme.replace(
             '"AXIOM_EVAL_RUNTIME_ROOT"',
@@ -302,7 +304,8 @@ class RoutingEvaluationTests(unittest.TestCase):
 
     def test_documented_method_requires_bounded_noncausal_stderr_diagnostics(self):
         readme = (
-            Path(__file__).resolve().parents[1] / "evals" / "README.md"
+            Path(__file__).resolve().parents[1]
+            / "evals" / "history" / "codex-core-v1-v2.md"
         ).read_text(encoding="utf-8")
         self.assertEqual([], documented_method_failures(readme))
 

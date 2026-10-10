@@ -117,6 +117,24 @@ def _current_orphan() -> list[str]:
         temporary.cleanup()
 
 
+def _evaluation_entry_missing_from_index() -> list[str]:
+    temporary, root = _temporary_root()
+    try:
+        (root / "docs").mkdir()
+        (root / "evals").mkdir()
+        (root / "docs" / "README.md").write_text(
+            "# Index\n\n## Start By Task\n\nCurrent guidance.\n", encoding="utf-8"
+        )
+        (root / "evals" / "README.md").write_text(
+            "# Routing Evaluations\n", encoding="utf-8"
+        )
+        failures: list[str] = []
+        check_docs_index_and_orphans(root, failures)
+        return failures
+    finally:
+        temporary.cleanup()
+
+
 def _invalid_lifecycle() -> list[str]:
     failures: list[str] = []
     check_lifecycle_text(
@@ -188,6 +206,40 @@ def _project_task_navigation() -> list[str]:
     return failures
 
 
+def _historical_evaluation_task_navigation() -> list[str]:
+    failures: list[str] = []
+    root = Path("/fixture").resolve()
+    check_task_navigation_text(
+        root / "docs" / "README.md",
+        "# Index\n\n## Start By Task\n\n[Old](../evals/history/method.md)\n",
+        root,
+        failures,
+    )
+    return failures
+
+
+def _historical_evaluation_labeled_current() -> list[str]:
+    failures: list[str] = []
+    check_lifecycle_text(
+        "evals/history/method.md",
+        "# Old Method\n\n<!-- lifecycle: current -->\n",
+        failures,
+    )
+    return failures
+
+
+def _historical_directory_task_navigation() -> list[str]:
+    failures: list[str] = []
+    root = Path("/fixture").resolve()
+    check_task_navigation_text(
+        root / "docs" / "README.md",
+        "# Index\n\n## Start By Task\n\n[Archive](../evals/history/)\n",
+        root,
+        failures,
+    )
+    return failures
+
+
 def _skill_inventory_drift() -> list[str]:
     failures: list[str] = []
     check_readme_skill_inventory_text(
@@ -231,6 +283,7 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("heading-level-skip", _heading_skip, "skips a heading level"),
     ("index-missing-current", _index_missing_current, "does not directly index"),
     ("current-document-orphan", _current_orphan, "is orphaned"),
+    ("evaluation-entry-missing-from-index", _evaluation_entry_missing_from_index, "does not directly index current document evals/README.md"),
     ("invalid-lifecycle", _invalid_lifecycle, "invalid lifecycle value"),
     ("lifecycle-path-mismatch", _lifecycle_path_mismatch, "conflicts with its document class"),
     ("unmatched-generated-marker", _unmatched_generated_marker, "without an end"),
@@ -238,6 +291,9 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("private-maintenance-link", _private_maintenance_link, "private maintenance content"),
     ("historical-task-navigation", _historical_task_navigation, "historical or project-plan"),
     ("project-task-navigation", _project_task_navigation, "historical or project-plan"),
+    ("historical-evaluation-task-navigation", _historical_evaluation_task_navigation, "historical or project-plan"),
+    ("historical-evaluation-labeled-current", _historical_evaluation_labeled_current, "conflicts with its document class"),
+    ("historical-directory-task-navigation", _historical_directory_task_navigation, "historical or project-plan"),
     ("skill-inventory-drift", _skill_inventory_drift, "differs from the canonical front door"),
     ("hook-reference-drift", _hook_reference_drift, "not present in the checked-in declarations"),
 )

@@ -37,7 +37,22 @@
       "commit": "0fe187a8206c9d0ef5d6cbd165d3d04755050298",
       "runtimeContractDigest": "sha256:732f5b7495c5111972783403348aca617fec1fb4ed7a01fbefc65ee5835dc047",
       "derivation": "derived-from-immutable-tag-with-schema-v2"
+    },
+    {
+      "pluginVersion": "0.13.3",
+      "tag": "v0.13.3",
+      "commit": "f27543dece0852d60460e95c3d3d48d04f2dfb42",
+      "runtimeContractDigest": "sha256:1ff9a461d3504e4adf0104f474551c2d1e0c296fe114840e4d098ffa0f053484",
+      "derivation": "derived-from-immutable-tag-with-schema-v2"
     }
   ],
-  "characterizations": []
+  "characterizations": [
+    {
+      "fromVersion": "0.13.2",
+      "toVersion": "0.13.3",
+      "changeClass": "installed-runtime-change",
+      "expectedDigestRelation": "different",
+      "rationale": "The immutable v0.13.3 runtime adds local-web-search routing and updates canonical English instruction contracts."
+    }
+  ]
 }

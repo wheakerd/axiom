@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.context_budget import (
@@ -28,6 +29,24 @@ from axiom_validation.context_budget import (
 
 
 class ContextBudgetTests(unittest.TestCase):
+    def test_headroom_boundary_uses_measured_bytes_not_recorded_metrics(self):
+        for byte_count, rejected in ((6963, False), (6964, True), (8192, True)):
+            with self.subTest(byte_count=byte_count):
+                metrics = measure_markdown(ROUTING_GATE_PATH)
+                metrics["utf8Bytes"] = byte_count
+                failures = []
+                with patch(
+                    "axiom_validation.context_budget.measure_markdown",
+                    return_value=metrics,
+                ):
+                    check_context_budget(failures)
+                # Other diagnostics may report the intentionally stale record;
+                # it must not suppress or invent the measured headroom failure.
+                self.assertEqual(
+                    rejected,
+                    any("at least 15% headroom" in failure for failure in failures),
+                )
+
     def test_current_versioned_record_and_gate(self):
         failures = []
         self.assertEqual(7, check_context_budget(failures))

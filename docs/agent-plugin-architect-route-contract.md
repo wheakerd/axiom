@@ -26,6 +26,7 @@ or runtime support beyond [Codex](compatibility.md).
 | Publish an already-prepared artifact | `confirm-external-action` |
 | Make ordinary named-remote, non-force Git commits or pushes | Host-native Git |
 | Create checkpoints, consolidate history, or perform independently traceable Git submission | `traceable-git-submit` |
+| Commit already-prepared plugin changes, create an exact release tag, and push the branch and tag | `traceable-git-submit`, prepared-release phase |
 
 The [startup gate](../skills/using-axiom/SKILL.md) owns route selection. Words
 such as "plugin", "publish", or "push" alone do not select this architecture
@@ -66,9 +67,6 @@ outcomes. See [Compatibility](compatibility.md) and
 
 ## Historical Design
 
-The original Stage 1 proposal described implementation for v0.8.0. Its
-"not implemented" status, fixed route counts, cross-host package assumptions,
-and Stage 2 acceptance plan are historical, not current requirements.
-The exact proposal is preserved in the
-[immutable design snapshot](https://github.com/wheakerd/axiom/blob/41239ac67d5c2c63f76182580ed7570882441f02/docs/agent-plugin-architect-route-contract.md).
-The [v0.8.0 notes](releases/v0.8.0.md) retain the original implementation record.
+Earlier design and implementation records remain in the
+[immutable design snapshot](https://github.com/wheakerd/axiom/blob/41239ac67d5c2c63f76182580ed7570882441f02/docs/agent-plugin-architect-route-contract.md)
+and [v0.8.0 notes](releases/v0.8.0.md). The packaged sources own current behavior.
