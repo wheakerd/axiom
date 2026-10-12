@@ -22,8 +22,7 @@ HISTORY_RELATIVE = "evidence/runtime-contract-history-v2.json"
 LEGACY_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v1.json"
 LEGACY_HISTORY_RELATIVE = "evidence/runtime-contract-history-v1.json"
 POLICY_REVISIONS_RELATIVE = "evidence/repository-policy-revisions-v1.json"
-README_RELATIVE = "README.md"
-RUNTIME_IDENTITY_SURFACES = (README_RELATIVE,)
+RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
 RUNTIME_IDENTITY_END = "<!-- runtime-identity:current:end -->"
 
@@ -835,15 +834,15 @@ def render_runtime_identity(document: dict[str, Any]) -> str:
             f"- `pluginVersion`: `{document['pluginVersion']}`",
             f"- `repositoryPolicyRevision`: `{document['repositoryPolicyRevision']}`",
             f"- `runtimeContractDigest` (schema v{runtime['schemaVersion']}): `{runtime['digest']}`",
-            f"- Digest input manifest: [`{runtime['inputManifest']}`]({runtime['inputManifest']})",
+            f"- Digest input manifest: [`{runtime['inputManifest']}`](../{runtime['inputManifest']})",
         )
     )
 
 
 def replace_runtime_identity_block(text: str, document: dict[str, Any]) -> str:
-    """Replace the one managed README identity block."""
+    """Replace the managed block in the runtime-identity reference."""
     if text.count(RUNTIME_IDENTITY_START) != 1 or text.count(RUNTIME_IDENTITY_END) != 1:
-        raise ValueError("README runtime-identity markers must each appear exactly once")
+        raise ValueError("runtime-identity markers must each appear exactly once")
     start = text.index(RUNTIME_IDENTITY_START) + len(RUNTIME_IDENTITY_START)
     end = text.index(RUNTIME_IDENTITY_END, start)
     return text[:start] + "\n" + render_runtime_identity(document) + "\n" + text[end:]
@@ -899,15 +898,15 @@ def check_runtime_identity(
         failures,
     )
     if check_surfaces:
-        readme_path = root / README_RELATIVE
-        try:
-            readme = readme_path.read_text(encoding="utf-8")
-            expected = replace_runtime_identity_block(readme, identity)
-        except (OSError, UnicodeError, ValueError) as error:
-            failures.append(f"cannot validate {README_RELATIVE} runtime identity: {error}")
-        else:
-            if readme != expected:
-                failures.append(f"{README_RELATIVE} runtime identity block is stale")
+        for relative_path in RUNTIME_IDENTITY_SURFACES:
+            try:
+                text = (root / relative_path).read_text(encoding="utf-8")
+                expected = replace_runtime_identity_block(text, identity)
+            except (OSError, UnicodeError, ValueError) as error:
+                failures.append(f"cannot validate {relative_path} runtime identity: {error}")
+            else:
+                if text != expected:
+                    failures.append(f"{relative_path} runtime identity block is stale")
     return contract.record_count
 
 

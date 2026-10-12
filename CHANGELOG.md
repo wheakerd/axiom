@@ -9,6 +9,34 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 50
+
+### Changed
+
+- Rewrote the README around the Codex plugin, separate installation and update
+  commands, and current skill descriptions with example prompts.
+- Marked retired Claude Code support with strikethrough and distinguished it
+  from the active plugin-architecture skill's other-project capabilities.
+- Moved generated runtime identity and Git routing details to their canonical
+  reference pages, preserving their validation and generation.
+
+### Added
+
+- Added a CodeQL workflow and status badge for Python and GitHub Actions
+  security analysis, alongside the dynamic release and existing checks.
+
+### Behavioral impact
+
+The landing page focuses on using Axiom. Repository security analysis adds
+CodeQL findings without changing installed skills, hooks, plugin version, or
+runtime digest. A workflow badge reports execution status, not the absence of
+vulnerabilities; no installed-host observation is implied.
+
+### Required action
+
+None for plugin users. Contributors should review CodeQL results alongside
+the existing repository checks after the workflow runs on GitHub.
+
 ## Repository policy revision 49
 
 ### Fixed

@@ -2,8 +2,17 @@
 
 Axiom separates installed plugin behavior from repository maintenance. The
 [machine-readable identity](../evidence/runtime-identity.json) owns the current
-version, policy revision, digest schema, digest, and input count. The README
-renders those values; this page explains how to interpret them.
+version, policy revision, digest schema, digest, and input count. This page
+renders the current identity and explains how to interpret it.
+
+## Current Identity
+
+<!-- runtime-identity:current:start -->
+- `pluginVersion`: `0.13.4`
+- `repositoryPolicyRevision`: `50`
+- `runtimeContractDigest` (schema v2): `sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931`
+- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](../axiom_validation/runtime-contract-inputs-v2.json)
+<!-- runtime-identity:current:end -->
 
 ## Identity Fields
 

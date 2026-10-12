@@ -97,6 +97,20 @@ before new mutation. Each owner's handoff contract determines how interrupted
 attempts are reconstructed. Route selection, prior assistant prose, and tool
 availability never supply missing authorization.
 
+## Git Workflow Routing
+
+<!-- route-boundary:traceable-git-submit-v1:start -->
+Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
+include neither a tag nor a traceable trigger. A combined commit, tag, and push of an
+already-prepared plugin release selects `traceable-git-submit`'s prepared-release phase.
+The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
+baseline, consolidation, recovery, multi-target, force, and history replacement. Merely
+mentioning `submit`, `publish`, or `push` does not select the route.
+<!-- route-boundary:traceable-git-submit-v1:end -->
+
+Route selection does not authorize Git mutation; the current request and host
+permissions still govern the action.
+
 ## No-Match Continuation And Trust
 
 Ordinary source edits, tests, explanations, status queries, local staging or

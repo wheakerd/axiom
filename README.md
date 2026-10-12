@@ -2,169 +2,174 @@
 
 [![Release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver)](https://github.com/wheakerd/axiom/releases/latest)
 [![Distribution and publication guards](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml)
+[![CodeQL](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Think before AI thinks.
+**Think before AI thinks.**
 
-**Workflow guardrails for Codex.**
+**Axiom is a Codex plugin with a collection of focused skills for turning
+requests into clear, actionable work.** It helps clarify intent, plan tasks,
+maintain repository instructions, research, review decisions, and handle
+actions that need explicit authorization or a recovery plan.
 
-Axiom provides focused workflows for task planning and high-impact coding-agent actions.
-It loads the smallest matching set of inspectable workflows when scope,
-authorization, evidence, or rollback needs to be explicit, while ordinary
-requests continue through the host normally.
+Describe what you want in Codex, or name a skill directly. Axiom loads the
+smallest matching skill set and its relevant references; everyday requests
+continue through Codex normally. The skills use Codex's existing tools and
+permissions, with no background service or automatic updater.
 
-A route never grants mutation authority. Selecting one does not by itself
-permit an edit, commit, push, deployment, deletion, credential use, or external
-action. Axiom is a public beta, not a sandbox or a guarantee that an agent
-cannot make a mistake.
+**Supported host:** Codex. ~~Claude Code~~ support has been retired; see
+[Deprecated Skills and Support](#deprecated-skills-and-support).
 
-## Start Safely
+[Install](#installation) | [Update](#updating) | [Use a skill](#skills) |
+[Documentation](docs/README.md)
 
-| Request | Expected boundary |
-| --- | --- |
-| "Perform a read-only audit of this repository's `AGENTS.md` instruction system. Report findings only; do not modify files." | Select `agents-architect`, report evidence, and stop without changes |
-| "Summarize the purpose of this README. Do not modify files." | Select no Axiom route and continue normally |
+---
 
-Install Axiom in Codex, inspect its installed Hook, and then try both requests. These
-are expected contracts, not claims that your host has already reproduced them.
+## Installation
 
-Codex:
+Run these commands in a terminal to add the marketplace and install Axiom:
 
 ```bash
 codex plugin marketplace add wheakerd/axiom
 codex plugin add axiom@axiom
 ```
 
-Plugin Hooks execute commands in the host session. Before trusting Axiom,
-compare the installed `/hooks` entry with the exact declarations and wrapper
-in the [Hook reference](docs/reference/hooks.md). Stop if they differ. Continue
-with [Getting Started](docs/guides/getting-started.md) for first use, or use
-[Managing an Installation](docs/guides/managing-installation.md) for updates,
-removal, and non-destructive troubleshooting.
+Start a new Codex chat or CLI session. Open `/hooks` and compare the installed
+entry with the [Hook Reference](docs/reference/hooks.md) before trusting it.
+Stop if the definitions differ. The [Getting Started guide](docs/guides/getting-started.md)
+owns the full installation and first-use procedure.
 
-## What Axiom Routes
+## Updating
 
-| Outcome | Route | Core boundary |
-| --- | --- | --- |
-| Clarify an ambiguous request | `clarify-intent` | Offer plausible options and a custom answer before dependent actions |
-| Delegate a simple task | `delegate-simple-task` | Keep the main model; use user-ordered candidates and existing authority |
-| Create or revise an actionable task plan | `task-planning` | Reflect current scope; preserve valid decisions, dependencies, and acceptance criteria |
-| Research through a local browser or client | `local-web-search` | Check execution location and disclosure; pause for challenges or rate limits |
-| Audit or maintain repository instructions | `agents-architect` | Inspect first; limit changes to the authorized instruction system |
-| Design or audit packaged agent-plugin architecture | `agent-plugin-architect` | Require explicit package intent; keep ordinary plugin code outside |
-| Reduce Codex usage overhead | `optimize-codex-usage` | Preserve required quality and safety; never invent hidden usage data |
-| Review an Axiom-guided task | `review-axiom-task` | Review observable evidence independently and label unavailable facts |
-| Confirm a consequential external action | `confirm-external-action` | Bind actor, target, payload, disclosure, count, and retry semantics |
-| Make Git publication independently traceable | `traceable-git-submit` | Separate checkpoint, push, history, and cleanup authority |
-| Plan or execute a persistent system change | `reversible-system-change` | Separate planning, rehearsal, activation, rollback, and retention |
+Refresh the installed marketplace snapshot from a terminal:
 
-Machine-credential lifecycle work composes `confirm-external-action` and
-`reversible-system-change` when provider effects and persistent consumers are
-both in scope; it does not add another public route.
+```bash
+codex plugin marketplace upgrade axiom
+```
 
-Ordinary coding, documentation, explanation, status, local commits, and
-conceptual requests continue through the host normally when no route clearly
-matches. A no-route result is not a safety certification: host permissions and
-repository instructions still apply. See [Examples](docs/examples.md) for more
-routed requests and controls.
+In a supported Codex workspace plugin UI, use **Refresh**. After updating,
+start a new session and inspect `/hooks` again. Axiom does not check for or
+install updates automatically. See [Managing an Installation](docs/guides/managing-installation.md)
+for disabling, removal, and troubleshooting.
 
-## Current Support Boundary
+## First Use
 
-Axiom installs in Codex through its manifest, marketplace wrapper, and Hook.
-The checked-in package, route contracts, and validation fixtures
-are statically testable, but fresh-session behavior still depends on the exact
-host version, operating system, policy, installation method, and installed
-snapshot.
+In Codex, try a read-only request that matches a skill:
 
-| Host | Checked-in support | Current observation boundary |
-| --- | --- | --- |
-| Codex | Manifest, marketplace wrapper, `SessionStart` Hook, and shared Skills | Installed-host observation is `NOT-RUN` |
+```text
+Use $agents-architect to audit this repository's AGENTS.md instruction system.
+Report findings only; do not modify files.
+```
 
-Codex is Axiom's only supported installation and runtime host.
-The plugin-architecture workflow still covers other projects targeting Claude Code.
+Then try an ordinary request:
 
-The [source release-status record](evidence/release-status.json) remains
-`STATIC-ONLY`; static checks do not create host evidence. Read
-[Compatibility](docs/compatibility.md) for the
-bounded matrix and known limitations, [Field Validation](docs/field-validation.md)
-to report a result, and the [Changelog](CHANGELOG.md) for version-specific
-changes. Historical observations remain under `evidence/` and `evals/results/`
-with their original identities and terminal statuses.
+```text
+Summarize the purpose of this README. Do not modify files.
+```
 
-### Runtime and repository identity
+The first should select `agents-architect`; the second should continue normally
+without an Axiom skill. These are expected behaviors, not a claim that your
+installation has already reproduced them.
 
-The installed package version, repository-policy revision, and deterministic
-runtime digest are separate identities. See
-[Runtime and Repository Identity](docs/runtime-identity.md) for the complete
-input and version policy.
+> [!IMPORTANT]
+> A request that matches no Axiom skill still follows Codex permissions
+> and repository instructions. No match is not a safety certification.
+> Selecting a skill does not grant permission to edit, publish, deploy,
+> or delete anything.
 
-<!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.13.4`
-- `repositoryPolicyRevision`: `49`
-- `runtimeContractDigest` (schema v2): `sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931`
-- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](axiom_validation/runtime-contract-inputs-v2.json)
-<!-- runtime-identity:current:end -->
+---
 
-## Git Boundary
+## Skills
 
-<!-- route-boundary:traceable-git-submit-v1:start -->
-Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
-include neither a tag nor a traceable trigger. A combined commit, tag, and push of an
-already-prepared plugin release selects `traceable-git-submit`'s prepared-release phase.
-The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
-baseline, consolidation, recovery, multi-target, force, and history replacement. Merely
-mentioning `submit`, `publish`, or `push` does not select the route.
-<!-- route-boundary:traceable-git-submit-v1:end -->
-
-Route selection never authorizes Git mutation. Read the
-[Trust Model](docs/trust-model.md) and [Architecture](docs/architecture.md) for
-the broader authority and execution boundaries.
-
-## Package Shape
-
-Codex installs the checked-in `skills/` source. Supporting references
-load on demand and are not separate routes.
+Use natural language or include `$skill-name` in a Codex message. The examples
+below are chat prompts, not terminal commands. Each linked source describes
+the skill's full scope and requirements; [Examples](docs/examples.md) gives
+more requests and expected behavior.
 
 ### Shared skills
 
-- `using-axiom`, the session-start routing gate.
-- `clarify-intent`, the focused request-clarification workflow.
-- `delegate-simple-task`, the model-aware simple-task delegation workflow.
-- `task-planning`, the task-plan creation and revision workflow.
-- `local-web-search`, the local research privacy and browsing-conduct workflow.
-- `agents-architect`, the repository-instruction workflow.
-- `agent-plugin-architect`, the packaged agent-plugin architecture workflow.
-- `optimize-codex-usage`, the explicit Codex consumption workflow.
-- `review-axiom-task`, the read-only Axiom task-review workflow.
-- `confirm-external-action`, the consequential external-action workflow.
-- `traceable-git-submit`, the checkpoint and Git submission workflow.
-- `reversible-system-change`, the persistent-change workflow.
+- `using-axiom`, the [startup routing skill](skills/using-axiom/SKILL.md).
+  Finds the smallest matching skill set and leaves unmatched work with Codex.
+  It loads through the startup hook; to inspect a match, ask:
+  `Use $using-axiom to identify the skill that fits this request.`
+- `clarify-intent`, [request clarification](skills/clarify-intent/SKILL.md).
+  Resolves materially different interpretations with a focused question and
+  useful options. Try: `Use $clarify-intent to clarify what "clean up this project" should mean before making changes.`
+- `delegate-simple-task`, [bounded task delegation](skills/delegate-simple-task/SKILL.md).
+  Assesses simple work against your ordered model preferences while preserving
+  the main model. Try: `Use $delegate-simple-task to assess whether this typo fix can be delegated using my model preferences.`
+- `task-planning`, [task planning and revision](skills/task-planning/SKILL.md).
+  Turns requirements into steps, dependencies, and acceptance criteria, or
+  updates an existing plan. Try: `Use $task-planning to plan this settings-page change. Do not implement it yet.`
+- `local-web-search`, [research through a local browser or client](skills/local-web-search/SKILL.md).
+  Limits information disclosed in requests and handles site challenges through
+  a user handoff. Try: `Use $local-web-search to find official migration guidance through my local browser.`
+- `agents-architect`, [repository instruction architecture](skills/agents-architect/SKILL.md).
+  Audits and maintains `AGENTS.md`, routed `.agents/` guidance, and repository
+  skills. Try: `Use $agents-architect to audit this repository's instruction system. Report findings only.`
+- `agent-plugin-architect`, [packaged plugin architecture](skills/agent-plugin-architect/SKILL.md).
+  Designs or audits skills, routes, manifests, hooks, and compatibility evidence
+  for a packaged agent plugin. Try: `Use $agent-plugin-architect to audit this Codex plugin's package architecture without editing it.`
+- `optimize-codex-usage`, [Codex usage analysis](skills/optimize-codex-usage/SKILL.md).
+  Finds ways to reduce context, token, and tool overhead while preserving
+  required quality. Try: `Use $optimize-codex-usage to review this workflow's context overhead and recommend reductions.`
+- `review-axiom-task`, [Axiom task review](skills/review-axiom-task/SKILL.md).
+  Reviews observable routing, authorization, actions, and evidence for an
+  identified task. Try: `Use $review-axiom-task to review why Axiom paused the previous task. Do not retry it.`
+- `confirm-external-action`, [consequential external actions](skills/confirm-external-action/SKILL.md).
+  Checks the actor, destination, exact content, and existing authorization
+  before execution and verification. Try: `Use $confirm-external-action to prepare this announcement for publication. Show the exact destination and text; do not publish yet.`
+- `traceable-git-submit`, [traceable Git work](skills/traceable-git-submit/SKILL.md).
+  Handles explicit checkpoints, consolidation, recovery, and submissions that
+  need traceability. Try: `Use $traceable-git-submit to create a checkpoint of the README changes. Do not push.`
+- `reversible-system-change`, [changes with recovery planning](skills/reversible-system-change/SKILL.md).
+  Plans, rehearses, or executes persistent changes with verified recovery and
+  outcome checks. Try: `Use $reversible-system-change to plan this database migration and its rollback. Do not execute it.`
 
-### Codex wrapper
+### Deprecated Skills and Support
 
-- Codex uses `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`,
-  and `hooks/codex-hooks.json`.
+No current top-level bundled skill is marked deprecated. Earlier nested
+AGENTS Architect topics are now supporting references within
+[`agents-architect`](skills/agents-architect/SKILL.md), not separate skills to
+install or invoke.
 
-The Codex manifest points to `./skills/`. Axiom installs no daemon, network service,
-watcher, background updater, or bundled runtime dependency.
+~~Claude Code installation and runtime support~~ was removed in
+[v0.11.0](docs/releases/v0.11.0.md). Existing users should disable or uninstall
+their old Axiom installation in that host and use the Codex installation above.
+Updating the repository does not remove cached installations.
+
+`agent-plugin-architect` can still help design Claude Code plugins for other
+projects. That skill does not make Claude Code a supported host for Axiom.
+
+---
+
+## Security and Checks
+
+The release badge follows GitHub Releases automatically. The other status
+badges link to the repository's live workflow results:
+
+- **Distribution and publication guards** validate the package, documentation,
+  and repository publication rules.
+- **CodeQL** scans Python and GitHub Actions workflows for potential
+  vulnerabilities. Its configuration is in [the security workflow](.github/workflows/codeql.yml).
+- **MIT** identifies the project's license.
+
+A workflow badge reports a run result, not a guarantee that the project is
+free of vulnerabilities. Axiom is a public beta, and its instructions do not
+replace Codex permissions or provide a sandbox. Read the
+[Trust Model](docs/trust-model.md) for the security boundaries and
+[SECURITY.md](SECURITY.md) to report a vulnerability privately.
 
 ## Documentation and Support
 
-- [Documentation index](docs/README.md): guidance by audience and task.
-- [Getting Started](docs/guides/getting-started.md): install, inspect, and try a routed request plus a control.
-- [Managing an Installation](docs/guides/managing-installation.md): update, disable, remove, and troubleshoot.
-- [Hook Reference](docs/reference/hooks.md): exact declarations, commands, wrapper, and trust checks.
-- [Compatibility](docs/compatibility.md): current bounded support and evidence links.
-- [Security Policy](SECURITY.md): private vulnerability reporting and public routing-report boundaries.
-- [Support and bug reports](https://github.com/wheakerd/axiom/issues): public issue tracker and report templates.
-- [Changelog](CHANGELOG.md): user-visible changes and required action.
-- [License](LICENSE): MIT.
-
-Contributors should read [CONTRIBUTING.md](CONTRIBUTING.md) and the public
-[Documentation Policy](docs/maintainers/documentation-policy.md). Repository
-validators and CI checks are contributor tooling; they are not installed
-runtime dependencies or evidence that a host behavior was observed.
+- [Documentation index](docs/README.md): guides and references by task.
+- [Compatibility](docs/compatibility.md): supported hosts and known limitations,
+  backed by the [release-status record](evidence/release-status.json).
+- [Architecture](docs/architecture.md): how routing and skills fit together.
+- [Changelog](CHANGELOG.md): changes and migration notices.
+- [GitHub Issues](https://github.com/wheakerd/axiom/issues): help and bug reports.
+- [Contributing](CONTRIBUTING.md): contribution and validation guidance.
 
 ## License
 
-MIT
+[MIT](LICENSE).

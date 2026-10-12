@@ -96,7 +96,8 @@ Place optional metadata near the document H1 using this exact form:
 
 The current repository assigns these responsibilities:
 
-- `README.md` owns the bounded public introduction and safe-start summary;
+- `README.md` owns the bounded public introduction, installation and update
+  quick start, skill summaries and examples, and retired-support notice;
 - `CONTRIBUTING.md` owns contribution intake and the repository map;
   `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and
   `docs/maintainers/validation.md` owns contributor check procedures;
@@ -157,7 +158,8 @@ directory would create artificial fragmentation.
 | Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Codex plugin manifest | Current |
-| Runtime contract identity | Versioned runtime-identity inputs and machine output | Current |
+| Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |
+| Git workflow routing boundary | `axiom_validation/route-boundaries-v1.json` and the routing skill | Current; `docs/architecture.md` renders the checked summary |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
 | Historical host observations | Version-bound records under `evidence/**`, `evals/results/**`, and immutable sources indexed by `docs/field-validation.md` | Preserve original subjects and outcomes; archived records do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
@@ -179,7 +181,7 @@ redefine their values.
 | --- | --- |
 | Skill, route, trigger, or stop condition | Update the owning reference and any validated summary in the same change |
 | Hook declaration or wrapper command | Regenerate or update the Hook reference and verify it against both sources |
-| Installation, update, removal, or troubleshooting behavior | Update the canonical guide; link from other surfaces instead of copying steps |
+| Installation, update, removal, or troubleshooting behavior | Update the canonical guide; keep README install/update quick-start commands aligned and link to the guide for full procedures |
 | Host support or observed compatibility | Update current status from the owning evidence and preserve prior records unchanged |
 | Manifest version or runtime digest | Render the current identity from its machine-readable owner |
 | Current guidance contains release-specific narration or copied measurements | Replace the narration with the implemented workflow and link to version notes or the canonical measurement source; preserve original evidence |

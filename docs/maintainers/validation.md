@@ -41,6 +41,27 @@ before calling the result repository-only.
 | Compatibility evidence | [Field Validation](../field-validation.md) |
 | Release documents or provenance | [Release Documentation And Evidence](release-documentation.md) and [Repository Governance](../repository-governance.md) |
 
+## Code Security Scanning
+
+The [CodeQL workflow](../../.github/workflows/codeql.yml) analyzes Python and
+GitHub Actions with the `security-extended` query suite on pull requests to
+`main`, pushes to `main`, and manual dispatch. Actions use full commit pins;
+checkout credentials are not persisted. The analysis job can read source and
+upload security findings, but cannot push repository content.
+
+Review findings in the repository's
+[code scanning results](https://github.com/wheakerd/axiom/security/code-scanning).
+A successful analysis run does not mean there are no findings. The README
+badge reports workflow status; code-scanning alerts and repository rules own
+any merge-blocking decision. This workflow does not scan Markdown instructions
+for prompt injection or establish installed-host behavior.
+
+Configuration was checked against GitHub's
+[CodeQL workflow reference](https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options)
+(`last_verified: 2026-10-11`). Remote execution and alert results require an
+actual GitHub Actions run; local publication checks validate the workflow's
+repository policy, not the CodeQL analysis itself.
+
 ## Hook Runtime Integration
 
 Hook or Hook-workflow changes require the dedicated native integration module
