@@ -15,6 +15,7 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.documentation import (
     check_documentation,
     check_lifecycle_text,
+    check_readme_skill_inventory_text,
     check_task_navigation_text,
     is_current_document,
 )
@@ -54,6 +55,68 @@ class DocumentationValidationTests(unittest.TestCase):
             "(preferred 8-12 KiB: within)", result.stdout
         )
         self.assertIn("21 negative fixtures", result.stdout)
+
+    def test_skill_inventory_ignores_headings_in_usage_examples(self):
+        for fence in ("```", "~~~~"):
+            with self.subTest(fence=fence):
+                failures: list[str] = []
+                check_readme_skill_inventory_text(
+                    "# A\n\n## Skills\n\n### Shared skills\n\n"
+                    "#### using-axiom\n\n**Usage:**\n\n"
+                    f"{fence}text\n### Shared skills\n#### example-only\n{fence}\n\n"
+                    "#### fixture-route\n\n### Deprecated Skills and Support\n\n"
+                    "#### retired-route\n",
+                    "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
+                    failures,
+                )
+                self.assertEqual([], failures)
+
+    def test_skill_inventory_does_not_leak_into_following_sections(self):
+        for heading in ("# Other", "## Other", "### Other"):
+            with self.subTest(heading=heading):
+                failures: list[str] = []
+                check_readme_skill_inventory_text(
+                    "# A\n\n## Skills\n\n### Shared skills\n\n#### using-axiom\n\n"
+                    f"{heading}\n\n#### fixture-route\n",
+                    "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
+                    failures,
+                )
+                self.assertTrue(any(
+                    "differs from the canonical front door" in failure
+                    for failure in failures
+                ))
+
+    def test_skill_inventory_requires_each_skill_once_in_canonical_order(self):
+        for skills in (
+            ("using-axiom",),
+            ("using-axiom", "fixture-route", "fixture-route"),
+            ("fixture-route", "using-axiom"),
+        ):
+            with self.subTest(skills=skills):
+                failures: list[str] = []
+                check_readme_skill_inventory_text(
+                    "# A\n\n## Skills\n\n### Shared skills\n\n"
+                    + "\n\n".join(f"#### {skill}" for skill in skills) + "\n",
+                    "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
+                    failures,
+                )
+                self.assertTrue(any(
+                    "differs from the canonical front door" in failure
+                    for failure in failures
+                ))
+
+    def test_skill_inventory_rejects_duplicate_shared_sections(self):
+        failures: list[str] = []
+        check_readme_skill_inventory_text(
+            "# A\n\n## Skills\n\n### Shared skills\n\n#### using-axiom\n\n"
+            "### Shared skills\n\n#### fixture-route\n",
+            "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
+            failures,
+        )
+        self.assertTrue(any(
+            "exactly one parseable Shared skills heading" in failure
+            for failure in failures
+        ))
 
     def test_task_navigation_rejects_archive_directories_and_their_files(self):
         root = Path("/fixture").resolve()

@@ -427,15 +427,25 @@ def check_guidance_boundaries(root: Path, failures: list[str]) -> None:
 
 
 def _readme_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
-    if text.count(README_SHARED_HEADING) != 1:
+    _, masked = fenced_blocks_and_masked_text(text)
+    lines = masked.splitlines()
+    starts = [
+        index for index, line in enumerate(lines)
+        if line.rstrip() == README_SHARED_HEADING
+    ]
+    if len(starts) != 1:
         failures.append(
             "README.md must contain exactly one parseable Shared skills heading"
         )
         return ()
-    section = text.split(README_SHARED_HEADING, 1)[1].split("\n### ", 1)[0]
-    return tuple(
-        re.findall(r"^- `([a-z0-9-]+)`,", section, re.MULTILINE)
-    )
+    inventory = []
+    for line in lines[starts[0] + 1:]:
+        if re.match(r"^[ \t]{0,3}#{1,3}(?:[ \t]+|$)", line):
+            break
+        skill = re.fullmatch(r"#### ([a-z0-9-]+)[ \t]*", line)
+        if skill is not None:
+            inventory.append(skill.group(1))
+    return tuple(inventory)
 
 
 def _front_door_inventory(text: str, failures: list[str]) -> tuple[str, ...]:

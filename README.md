@@ -88,43 +88,172 @@ more requests and expected behavior.
 
 ### Shared skills
 
-- `using-axiom`, the [startup routing skill](skills/using-axiom/SKILL.md).
-  Finds the smallest matching skill set and leaves unmatched work with Codex.
-  It loads through the startup hook; to inspect a match, ask:
-  `Use $using-axiom to identify the skill that fits this request.`
-- `clarify-intent`, [request clarification](skills/clarify-intent/SKILL.md).
-  Resolves materially different interpretations with a focused question and
-  useful options. Try: `Use $clarify-intent to clarify what "clean up this project" should mean before making changes.`
-- `delegate-simple-task`, [bounded task delegation](skills/delegate-simple-task/SKILL.md).
-  Assesses simple work against your ordered model preferences while preserving
-  the main model. Try: `Use $delegate-simple-task to assess whether this typo fix can be delegated using my model preferences.`
-- `task-planning`, [task planning and revision](skills/task-planning/SKILL.md).
-  Turns requirements into steps, dependencies, and acceptance criteria, or
-  updates an existing plan. Try: `Use $task-planning to plan this settings-page change. Do not implement it yet.`
-- `local-web-search`, [research through a local browser or client](skills/local-web-search/SKILL.md).
-  Limits information disclosed in requests and handles site challenges through
-  a user handoff. Try: `Use $local-web-search to find official migration guidance through my local browser.`
-- `agents-architect`, [repository instruction architecture](skills/agents-architect/SKILL.md).
-  Audits and maintains `AGENTS.md`, routed `.agents/` guidance, and repository
-  skills. Try: `Use $agents-architect to audit this repository's instruction system. Report findings only.`
-- `agent-plugin-architect`, [packaged plugin architecture](skills/agent-plugin-architect/SKILL.md).
-  Designs or audits skills, routes, manifests, hooks, and compatibility evidence
-  for a packaged agent plugin. Try: `Use $agent-plugin-architect to audit this Codex plugin's package architecture without editing it.`
-- `optimize-codex-usage`, [Codex usage analysis](skills/optimize-codex-usage/SKILL.md).
-  Finds ways to reduce context, token, and tool overhead while preserving
-  required quality. Try: `Use $optimize-codex-usage to review this workflow's context overhead and recommend reductions.`
-- `review-axiom-task`, [Axiom task review](skills/review-axiom-task/SKILL.md).
-  Reviews observable routing, authorization, actions, and evidence for an
-  identified task. Try: `Use $review-axiom-task to review why Axiom paused the previous task. Do not retry it.`
-- `confirm-external-action`, [consequential external actions](skills/confirm-external-action/SKILL.md).
-  Checks the actor, destination, exact content, and existing authorization
-  before execution and verification. Try: `Use $confirm-external-action to prepare this announcement for publication. Show the exact destination and text; do not publish yet.`
-- `traceable-git-submit`, [traceable Git work](skills/traceable-git-submit/SKILL.md).
-  Handles explicit checkpoints, consolidation, recovery, and submissions that
-  need traceability. Try: `Use $traceable-git-submit to create a checkpoint of the README changes. Do not push.`
-- `reversible-system-change`, [changes with recovery planning](skills/reversible-system-change/SKILL.md).
-  Plans, rehearses, or executes persistent changes with verified recovery and
-  outcome checks. Try: `Use $reversible-system-change to plan this database migration and its rollback. Do not execute it.`
+#### using-axiom
+
+**Link:** [Startup routing skill](skills/using-axiom/SKILL.md)
+
+**Description:** Finds the smallest matching skill set and leaves unmatched
+work with Codex. It loads through the startup hook.
+
+**Usage:**
+
+```text
+Use $using-axiom to identify the skill that fits this request.
+```
+
+#### clarify-intent
+
+**Link:** [Request clarification](skills/clarify-intent/SKILL.md)
+
+**Description:** Resolves materially different interpretations with a focused
+question and useful options.
+
+**Usage:**
+
+```text
+Use $clarify-intent to clarify what "clean up this project" should mean
+before making changes.
+```
+
+#### delegate-simple-task
+
+**Link:** [Bounded task delegation](skills/delegate-simple-task/SKILL.md)
+
+**Description:** Assesses simple work against your ordered model preferences
+while preserving the main model.
+
+**Usage:**
+
+```text
+Use $delegate-simple-task to assess whether this typo fix can be delegated
+using my model preferences.
+```
+
+#### task-planning
+
+**Link:** [Task planning and revision](skills/task-planning/SKILL.md)
+
+**Description:** Turns requirements into steps, dependencies, and acceptance
+criteria, or updates an existing plan.
+
+**Usage:**
+
+```text
+Use $task-planning to plan this settings-page change.
+Do not implement it yet.
+```
+
+#### local-web-search
+
+**Link:** [Research through a local browser or client](skills/local-web-search/SKILL.md)
+
+**Description:** Limits information disclosed in requests and handles site
+challenges through a user handoff.
+
+**Usage:**
+
+```text
+Use $local-web-search to find official migration guidance
+through my local browser.
+```
+
+#### agents-architect
+
+**Link:** [Repository instruction architecture](skills/agents-architect/SKILL.md)
+
+**Description:** Audits and maintains `AGENTS.md`, routed `.agents/` guidance,
+and repository skills.
+
+**Usage:**
+
+```text
+Use $agents-architect to audit this repository's instruction system.
+Report findings only.
+```
+
+#### agent-plugin-architect
+
+**Link:** [Packaged plugin architecture](skills/agent-plugin-architect/SKILL.md)
+
+**Description:** Designs or audits skills, routes, manifests, hooks, and
+compatibility evidence for a packaged agent plugin.
+
+**Usage:**
+
+```text
+Use $agent-plugin-architect to audit this Codex plugin's package architecture
+without editing it.
+```
+
+#### optimize-codex-usage
+
+**Link:** [Codex usage analysis](skills/optimize-codex-usage/SKILL.md)
+
+**Description:** Finds ways to reduce context, token, and tool overhead while
+preserving required quality.
+
+**Usage:**
+
+```text
+Use $optimize-codex-usage to review this workflow's context overhead
+and recommend reductions.
+```
+
+#### review-axiom-task
+
+**Link:** [Axiom task review](skills/review-axiom-task/SKILL.md)
+
+**Description:** Reviews observable routing, authorization, actions, and
+evidence for an identified task.
+
+**Usage:**
+
+```text
+Use $review-axiom-task to review why Axiom paused the previous task.
+Do not retry it.
+```
+
+#### confirm-external-action
+
+**Link:** [Consequential external actions](skills/confirm-external-action/SKILL.md)
+
+**Description:** Checks the actor, destination, exact content, and existing
+authorization before execution and verification.
+
+**Usage:**
+
+```text
+Use $confirm-external-action to prepare this announcement for publication.
+Show the exact destination and text; do not publish yet.
+```
+
+#### traceable-git-submit
+
+**Link:** [Traceable Git work](skills/traceable-git-submit/SKILL.md)
+
+**Description:** Handles explicit checkpoints, consolidation, recovery, and
+submissions that need traceability.
+
+**Usage:**
+
+```text
+Use $traceable-git-submit to create a checkpoint of the README changes.
+Do not push.
+```
+
+#### reversible-system-change
+
+**Link:** [Changes with recovery planning](skills/reversible-system-change/SKILL.md)
+
+**Description:** Plans, rehearses, or executes persistent changes with
+verified recovery and outcome checks.
+
+**Usage:**
+
+```text
+Use $reversible-system-change to plan this database migration and its rollback.
+Do not execute it.
+```
 
 ### Deprecated Skills and Support
 

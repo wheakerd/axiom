@@ -400,6 +400,14 @@
       "sourceIssue": null,
       "summary": "Refresh README installation and skill guidance, move generated identity and Git routing details to references, and add CodeQL scanning for Python and Actions; preserve installed runtime.",
       "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
+    },
+    {
+      "revision": 51,
+      "recordedOn": "2026-10-11",
+      "baselineCommit": "80859bd46b2331f0e1e6a8ae5a19387655f58ef9",
+      "sourceIssue": null,
+      "summary": "Organize README skills into linked sections with descriptions and copyable prompts; align documentation policy and inventory validation while preserving installed runtime.",
+      "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
     }
   ]
 }
