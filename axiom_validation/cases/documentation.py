@@ -243,7 +243,7 @@ def _historical_directory_task_navigation() -> list[str]:
 def _skill_inventory_drift() -> list[str]:
     failures: list[str] = []
     check_readme_skill_inventory_text(
-        "# A\n\n### Shared skills\n\n- `using-axiom`, gate.\n",
+        "# A\n\n## Skills\n\n### Shared skills\n\n#### using-axiom\n",
         "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
         failures,
     )

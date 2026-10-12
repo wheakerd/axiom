@@ -9,6 +9,26 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 51
+
+### Changed
+
+- Gave each README skill its own heading, source link, description, and
+  copyable usage prompt, keeping the same structure for future additions.
+- Updated documentation policy and inventory validation for the skill
+  headings, excluding example code and following sections from the inventory.
+
+### Behavioral impact
+
+Skills are easier to browse, link to, and try from the README. This
+repository-only documentation and validation change preserves plugin version
+`0.13.4`, the runtime digest, and installed behavior.
+
+### Required action
+
+None for plugin users. Contributors should use the same entry structure when
+updating README skill summaries.
+
 ## Repository policy revision 50
 
 ### Changed

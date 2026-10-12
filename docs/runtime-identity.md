@@ -9,7 +9,7 @@ renders the current identity and explains how to interpret it.
 
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.13.4`
-- `repositoryPolicyRevision`: `50`
+- `repositoryPolicyRevision`: `51`
 - `runtimeContractDigest` (schema v2): `sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](../axiom_validation/runtime-contract-inputs-v2.json)
 <!-- runtime-identity:current:end -->

@@ -145,6 +145,13 @@ evals/
 Topical current references may remain directly under `docs/` when another
 directory would create artificial fragmentation.
 
+Under README `### Shared skills`, give each skill a `#### skill-name` heading
+in canonical startup-route order. Each entry contains **Link**, **Description**,
+and **Usage** fields: a repository-relative link to its `SKILL.md`, a concise
+summary, and a copyable prompt in a fenced `text` block. Keep detailed
+requirements in the linked source. New entries use the same structure; add
+optional detail within an entry without creating another skill-level heading.
+
 ## Canonical Ownership
 
 | Fact | Canonical owner | Current rule |
@@ -240,8 +247,8 @@ Every documentation change must, at minimum:
   owners, while the Changelog and selected version note retain exact release
   bindings; a repeated version number is not a substitute for those links;
 - keep current public guidance from linking to non-public sources;
-- preserve the parseable README `### Shared skills` inventory until its owning
-  validator is migrated atomically;
+- keep README `### Shared skills` and its per-skill level-four headings
+  parseable, with the inventory matching the canonical startup front door;
 - validate the public Hook reference against checked-in declarations and
   wrappers; and
 - keep historical and project-plan documents, including `evals/history/`, out
