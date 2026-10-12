@@ -23,12 +23,14 @@ from axiom_validation.release_facts import (
     validate_release_facts_record,
 )
 from axiom_validation.route_catalog import (
+    ROUTE_SURFACES,
     check_route_catalog,
     check_route_surface_text,
     load_route_catalog,
     rendered_route_block,
     route_boundary_scenarios,
 )
+from axiom_validation.runtime_identity import RUNTIME_IDENTITY_SURFACES
 
 
 class ReleaseFactTests(unittest.TestCase):
@@ -153,7 +155,7 @@ class ReleaseFactTests(unittest.TestCase):
             {scenario["route"] for scenario in scenarios[1:]},
         )
 
-    def test_exact_over_broad_readme_sentence_is_rejected(self):
+    def test_exact_over_broad_architecture_sentence_is_rejected(self):
         failures = []
         document = load_route_catalog(failures)
         self.assertIsNotNone(document)
@@ -164,15 +166,15 @@ class ReleaseFactTests(unittest.TestCase):
             "`traceable-git-submit`."
         )
         route_failures = []
-        check_route_surface_text("README.md", text, document, route_failures)
+        check_route_surface_text("docs/architecture.md", text, document, route_failures)
         self.assertTrue(
             any("over-broad route claim" in failure for failure in route_failures),
             route_failures,
         )
 
     def test_check_cli_is_cwd_independent_and_read_only(self):
-        readme = REPOSITORY_ROOT / "README.md"
-        before = readme.read_bytes()
+        surfaces = {"README.md", *FACTS_SURFACES, *ROUTE_SURFACES, *RUNTIME_IDENTITY_SURFACES}
+        before = {path: (REPOSITORY_ROOT / path).read_bytes() for path in surfaces}
         script = REPOSITORY_ROOT / "scripts" / "render-release-facts.py"
         completed = subprocess.run(
             [sys.executable, str(script), "--check"],
@@ -182,7 +184,7 @@ class ReleaseFactTests(unittest.TestCase):
             text=True,
         )
         self.assertIn("Canonical fact validation passed", completed.stdout)
-        self.assertEqual(before, readme.read_bytes())
+        self.assertEqual(before, {path: (REPOSITORY_ROOT / path).read_bytes() for path in surfaces})
 
         missing_mode = subprocess.run(
             [sys.executable, str(script)],
@@ -192,7 +194,7 @@ class ReleaseFactTests(unittest.TestCase):
             text=True,
         )
         self.assertNotEqual(0, missing_mode.returncode)
-        self.assertEqual(before, readme.read_bytes())
+        self.assertEqual(before, {path: (REPOSITORY_ROOT / path).read_bytes() for path in surfaces})
 
 
 if __name__ == "__main__":

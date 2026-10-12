@@ -65,7 +65,7 @@ establish current host support nor impose retired procedures on current work.
 
 | Location | Responsibility |
 | --- | --- |
-| Root `README.md` | Product introduction, installation summary, capabilities, and support boundary |
+| Root `README.md` | Product introduction, installation and update quick start, skill usage, and retired-support notice |
 | Root `CONTRIBUTING.md` | Contribution intake, repository map, and review checklist |
 | Root `SECURITY.md` | Supported security scope and private vulnerability reporting |
 | Root `CHANGELOG.md` | User-visible changes, impact, and required action |

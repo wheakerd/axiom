@@ -16,6 +16,7 @@ from pathlib import Path
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.runtime_identity import (
     INPUT_MANIFEST_RELATIVE,
+    RUNTIME_IDENTITY_SURFACES,
     check_runtime_identity,
     compute_runtime_contract,
     load_json_document,
@@ -49,6 +50,21 @@ class RuntimeIdentityTests(unittest.TestCase):
                 shutil.copytree(source, destination, symlinks=True)
             else:
                 shutil.copy2(source, destination)
+
+    def copy_identity_fixture(self, target: Path) -> None:
+        self.copy_installed_surfaces(target)
+        for relative in (
+            INPUT_MANIFEST_RELATIVE,
+            "evidence/runtime-identity.json",
+            "evidence/runtime-contract-history-v1.json",
+            "evidence/runtime-contract-history-v2.json",
+            "axiom_validation/runtime-contract-inputs-v1.json",
+            "evidence/repository-policy-revisions-v1.json",
+            *RUNTIME_IDENTITY_SURFACES,
+        ):
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPOSITORY_ROOT / relative, destination)
 
     def compute(
         self,
@@ -258,19 +274,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     def test_identity_manifest_binding_is_stable_for_crlf_checkout(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            self.copy_installed_surfaces(root)
-            for relative in (
-                INPUT_MANIFEST_RELATIVE,
-                "evidence/runtime-identity.json",
-                "evidence/runtime-contract-history-v1.json",
-                "evidence/runtime-contract-history-v2.json",
-                "axiom_validation/runtime-contract-inputs-v1.json",
-                "evidence/repository-policy-revisions-v1.json",
-                "README.md",
-            ):
-                destination = root / relative
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(REPOSITORY_ROOT / relative, destination)
+            self.copy_identity_fixture(root)
             manifest_path = root / INPUT_MANIFEST_RELATIVE
             manifest_text = manifest_path.read_text(encoding="utf-8")
             manifest_path.write_bytes(manifest_text.replace("\n", "\r\n").encode("utf-8"))
@@ -279,6 +283,29 @@ class RuntimeIdentityTests(unittest.TestCase):
             record_count = check_runtime_identity(failures, root=root)
             self.assertEqual(self.expected_record_count, record_count)
             self.assertEqual([], failures)
+
+    def test_identity_reference_rejects_stale_values_and_missing_markers(self):
+        for mutation in ("stale-value", "missing-marker"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.copy_identity_fixture(root)
+                reference = root / "docs/runtime-identity.md"
+                original = reference.read_text(encoding="utf-8")
+                if mutation == "stale-value":
+                    identity = json.loads((root / "evidence/runtime-identity.json").read_text())
+                    changed = original.replace(
+                        f"`repositoryPolicyRevision`: `{identity['repositoryPolicyRevision']}`",
+                        "`repositoryPolicyRevision`: `0`",
+                    )
+                    expected = "docs/runtime-identity.md runtime identity block is stale"
+                else:
+                    changed = original.replace("<!-- runtime-identity:current:start -->", "")
+                    expected = "runtime-identity markers must each appear exactly once"
+                self.assertNotEqual(original, changed)
+                reference.write_text(changed, encoding="utf-8")
+                failures = []
+                check_runtime_identity(failures, root=root)
+                self.assertTrue(any(expected in failure for failure in failures), failures)
 
     def test_new_external_evidence_requires_v2_and_canonical_digest(self):
         source_path = REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json"

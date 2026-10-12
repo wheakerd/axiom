@@ -11,7 +11,7 @@ from .context_budget import load_json
 
 ROUTE_CATALOG_PATH = REPOSITORY_ROOT / "axiom_validation" / "route-boundaries-v1.json"
 ROUTE_SURFACES = (
-    "README.md",
+    "docs/architecture.md",
 )
 HISTORICAL_ROUTE_SURFACES = ("docs/releases/v0.8.4.md",)
 ROUTE_MARKER = "route-boundary:traceable-git-submit-v1"
