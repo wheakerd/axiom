@@ -30,7 +30,7 @@ permissions, with no background service or automatic updater.
 Run these commands in a terminal to add the marketplace and install Axiom:
 
 ```bash
-codex plugin marketplace add wheakerd/axiom
+codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
@@ -54,6 +54,8 @@ In a supported Codex workspace plugin UI, use **Refresh**. After updating,
 start a new session and inspect `/hooks` again. Automatic update behavior is
 controlled by Codex and your settings. See [Managing an Installation](docs/guides/managing-installation.md)
 for disabling, removal, and troubleshooting.
+For a marketplace clone timeout, follow the guide's
+[recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts).
 
 ## First Use
 

@@ -9,6 +9,21 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 54
+
+### Changed
+
+- Use Codex's documented sparse marketplace checkout in the installation quick start and canonical guide.
+- Document native re-registration, source-pin preservation, and verification when marketplace upgrade reports a catalog clone timeout.
+
+### Behavioral impact
+
+The installation guidance reduces the marketplace checkout to its catalog while preserving the entry's immutable plugin source and native update controls. This documentation change retains the plugin version and runtime digest.
+
+### Required action
+
+None for working installations. Users encountering a marketplace clone timeout can follow the [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts), preserving deliberate source pins and workspace controls.
+
 ## Repository policy revision 53
 
 ### Changed

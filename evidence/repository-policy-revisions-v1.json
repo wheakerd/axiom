@@ -424,6 +424,14 @@
       "sourceIssue": null,
       "summary": "Pin the default marketplace to a published Git version, prepare catalog metadata only after verified Latest publication, and preserve user and native client update controls without changing runtime.",
       "runtimeContractDigest": "sha256:fd42aceebd2d390a8bcaec02d2d66d2d5ebe18ebc01b1bcaf4dddab2aee10747"
+    },
+    {
+      "revision": 54,
+      "recordedOn": "2026-10-13",
+      "baselineCommit": "b845d303ade33681594f6005e34c9ea9f36948d7",
+      "sourceIssue": null,
+      "summary": "Document native sparse marketplace installation and clone-timeout recovery, preserving source pins, client update controls, plugin version, and installed runtime.",
+      "runtimeContractDigest": "sha256:fd42aceebd2d390a8bcaec02d2d66d2d5ebe18ebc01b1bcaf4dddab2aee10747"
     }
   ]
 }
