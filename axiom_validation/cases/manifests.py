@@ -41,6 +41,19 @@ def check_manifest_schema_fixtures(
     ] = "sh"
     fixtures.append(("unknown-nested-source", unknown_source, "command"))
 
+    published_source = documents[".agents/plugins/marketplace.json"]["plugins"][0]["source"]
+    for name, source in (
+        ("local-development-source", {"source": "local", "path": "./"}),
+        ("floating-main-source", {**published_source, "ref": "main"}),
+        ("floating-latest-source", {**published_source, "ref": "latest"}),
+        ("unselected-git-source", {key: value for key, value in published_source.items() if key != "ref"}),
+        ("prerelease-source", {**published_source, "ref": "v1.0.0-rc.1"}),
+        ("unowned-git-source", {**published_source, "url": "https://github.com/example/other.git"}),
+    ):
+        fixture = json.loads(json.dumps(documents))
+        fixture[".agents/plugins/marketplace.json"]["plugins"][0]["source"] = source
+        fixtures.append((name, fixture, ".source"))
+
     screenshots = json.loads(json.dumps(documents))
     screenshots[".codex-plugin/plugin.json"]["interface"]["screenshots"] = [
         "./assets/axiom-mark.svg"

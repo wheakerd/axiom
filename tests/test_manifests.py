@@ -119,7 +119,15 @@ class ManifestPolicyTests(unittest.TestCase):
     def test_schema_mutations_are_rejected(self):
         failures = []
         count = check_manifest_schema_fixtures(self.documents(), failures)
-        self.assertEqual(21, count)
+        self.assertEqual(27, count)
+        self.assertEqual([], failures)
+
+    def test_catalog_can_retain_a_published_version_during_development(self):
+        documents = self.documents()
+        documents[".agents/plugins/marketplace.json"]["plugins"][0]["source"]["ref"] = "v0.13.4"
+        failures = []
+        check_manifest_capability_schema(documents, failures)
+        check_manifest_versions(documents, failures)
         self.assertEqual([], failures)
 
     def test_official_prompt_scalar_shape_is_accepted_but_is_not_checked_in_contract(self):

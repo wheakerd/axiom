@@ -16,6 +16,45 @@ In a supported Codex workspace plugin UI, use **Refresh**. Start a new session
 after the update, then inspect `/hooks` again before trusting the changed
 snapshot.
 
+Whether updates are checked or installed automatically, and their timing, are
+controlled by your settings and the native client or workspace policy. Axiom
+provides versioned source metadata and has no update scheduler.
+
+## Version Selection
+
+The [marketplace entry](../../.agents/plugins/marketplace.json) uses Codex's
+official Git `url` source with an immutable release-tag `ref`. The default
+marketplace remains discoverable from the repository's default branch, while
+the entry selects the plugin's published source independently. A normal
+`main` commit leaves that selection unchanged.
+
+After a stable release becomes GitHub Latest, maintainers publish the matching
+catalog reference through the existing signed PR process. Until that catalog
+change is merged, clients continue to resolve the preceding selection. A
+GitHub Release, its Latest marker, and a Git tag literally named `latest` are
+different objects; the client does not infer one from the others.
+
+For an existing default-branch registration, use the native marketplace
+upgrade above, then inspect the installed version with:
+
+```bash
+codex plugin list --marketplace axiom --json
+```
+
+Keep deliberate user pins. Codex's marketplace `--ref` option fixes the
+**catalog snapshot**; it does not override a plugin entry's own `source.ref`.
+To hold a specific plugin version, select an immutable catalog snapshot whose
+entry resolves to that version, using the client's supported source controls.
+Inspect the entry before assuming that a catalog tag and the plugin version
+match. For a workspace-managed installation, the workspace administrator owns
+the configured repository, path, ref, and native sync policy.
+
+These source and lifecycle semantics were last verified on 2026-10-13 against
+the official [marketplace format](https://developers.openai.com/plugins/build/plugins#marketplace-metadata),
+[marketplace configuration](https://learn.chatgpt.com/docs/config-file/config-reference),
+and [workspace sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management).
+Workspace sync timing is not a promise about personal Codex installations.
+
 ## Disabling Or Removing
 
 For a trusted project, disable Axiom in that project's `.codex/config.toml`:

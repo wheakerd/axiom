@@ -247,6 +247,10 @@ jobs:
               --attestation "$downloaded_attestation" \
               --latest-release-metadata "$latest_release" \
               --final
+            python3 scripts/check-release-evidence.py render-marketplace \
+              --plan "$current_plan" \
+              --latest-release-metadata "$latest_release" \
+              --summary >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
@@ -301,3 +305,7 @@ jobs:
             --prepublish-release-metadata "$prepublish_release" \
             --latest-release-metadata "$latest_release" \
             --final
+          python3 scripts/check-release-evidence.py render-marketplace \
+            --plan "$current_plan" \
+            --latest-release-metadata "$latest_release" \
+            --summary >> "$GITHUB_STEP_SUMMARY"

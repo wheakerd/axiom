@@ -15,7 +15,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
-from .release_versions import parse_production_release_version
+from .release_versions import parse_production_release_tag, parse_production_release_version
 
 JSON_FILES = (
     ".codex-plugin/plugin.json",
@@ -29,7 +29,7 @@ EXPECTED_HOOK_DECLARATIONS = {
     ".codex-plugin/plugin.json": "./hooks/codex-hooks.json",
 }
 EXPECTED_SKILLS_ROOT = "./skills/"
-EXPECTED_PLUGIN_ROOT = "./"
+EXPECTED_PLUGIN_REPOSITORY = "https://github.com/wheakerd/axiom.git"
 EXPECTED_PLUGIN_NAME = "axiom"
 EXPECTED_DISPLAY_NAME = "Axiom"
 EXPECTED_TAGLINE = "Think before AI thinks."
@@ -880,20 +880,24 @@ def check_manifest_capability_schema(
             source = exact_json_object(
                 entry.get("source"),
                 f"{codex_marketplace_path}.plugins[0].source",
-                frozenset({"source", "path"}),
+                frozenset({"source", "url", "ref"}),
                 failures,
             )
             if source is not None:
                 require_json_strings(
                     source,
-                    frozenset({"source", "path"}),
+                    frozenset({"source", "url", "ref"}),
                     f"{codex_marketplace_path}.plugins[0].source",
                     failures,
                 )
-                if source != {"source": "local", "path": EXPECTED_PLUGIN_ROOT}:
+                if (
+                    source.get("source") != "url"
+                    or source.get("url") != EXPECTED_PLUGIN_REPOSITORY
+                    or parse_production_release_tag(source.get("ref")) is None
+                ):
                     failures.append(
                         f"{codex_marketplace_path}.plugins[0].source must remain the "
-                        "owned local plugin root"
+                        "owned Git repository at an immutable production release tag"
                     )
             policy = exact_json_object(
                 entry.get("policy"),
@@ -1042,16 +1046,5 @@ def check_shared_source_roots(
                 f"{EXPECTED_SKILLS_ROOT!r}"
             )
 
-    codex_path = ".agents/plugins/marketplace.json"
-    codex_document = documents.get(codex_path)
-    if codex_document is not None:
-        entry = marketplace_plugin(codex_document, codex_path, failures)
-        if entry is not None:
-            source = entry.get("source")
-            if not isinstance(source, dict):
-                failures.append(f"{codex_path} axiom source must be an object")
-            elif source.get("path") != EXPECTED_PLUGIN_ROOT:
-                failures.append(
-                    f"{codex_path} axiom source.path is {source.get('path')!r}; "
-                    f"expected shared plugin root {EXPECTED_PLUGIN_ROOT!r}"
-                )
+    # The Git marketplace source is validated by check_manifest_capability_schema;
+    # its published plugin root is independent of this development checkout.

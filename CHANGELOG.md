@@ -9,6 +9,22 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 53
+
+### Changed
+
+- Bound the default marketplace plugin source to an immutable published version using Codex's documented Git source format.
+- Added a verified Latest catalog handoff to the existing release publisher and documented its signed PR completion, source pins, and native client update controls.
+- Retired default-branch plugin content as the default installation source; ordinary `main` development retains the published catalog selection.
+
+### Behavioral impact
+
+Marketplace refresh resolves the published plugin reference instead of the development tree. Automatic update decisions remain with users and the native client. This distribution and repository-policy correction retains plugin version `0.14.0` and its installed runtime digest.
+
+### Required action
+
+Existing default-source users can refresh through Codex's native marketplace upgrade and inspect the installed version. Preserve deliberate source pins. Maintainers complete the catalog PR after verified Latest publication; see [Managing an Installation](docs/guides/managing-installation.md#version-selection) and [Marketplace Publication](docs/maintainers/release-documentation.md#marketplace-publication).
+
 ## 0.14.0 - unreleased
 
 ### Added
