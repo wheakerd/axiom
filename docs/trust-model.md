@@ -50,6 +50,10 @@ action. It cannot broaden the request. In particular:
   use existing assignment approval or obtain it before delegating.
 - Architecture work stays within its authorized repository instruction system
   or packaged-plugin surface. A release-readiness audit remains read-only.
+- Continuous progress requires explicit invocation and verified native
+  supervision. Handoffs preserve the original scope, model, human controls,
+  and budgets. An ended session is not task completion; cancellation stops
+  dispatch and the exact schedule, while unresolved tools remain visible.
 - Task review uses only scoped observable evidence. It does not rerun the task,
   recover unavailable history, disclose hidden reasoning, or inherit authority
   from a previous refusal or assistant explanation.

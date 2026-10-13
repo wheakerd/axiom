@@ -408,6 +408,14 @@
       "sourceIssue": null,
       "summary": "Organize README skills into linked sections with descriptions and copyable prompts; align documentation policy and inventory validation while preserving installed runtime.",
       "runtimeContractDigest": "sha256:82b024681b3d7cc65b14af34171f2c11ef3e2f9167197ca952d3fddfcfb4a931"
+    },
+    {
+      "revision": 52,
+      "recordedOn": "2026-10-12",
+      "baselineCommit": "7c5d9b9787a27ffe092b1850fc90503eb2df31ff",
+      "sourceIssue": null,
+      "summary": "Add explicitly invoked continuous progress with host-owned supervision, durable handoff, compaction recovery and verified shutdown; preserve authority and version earlier routing contracts.",
+      "runtimeContractDigest": "sha256:fd42aceebd2d390a8bcaec02d2d66d2d5ebe18ebc01b1bcaf4dddab2aee10747"
     }
   ]
 }

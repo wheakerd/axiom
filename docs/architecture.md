@@ -64,6 +64,7 @@ controls are in [Examples](examples.md).
 | `clarify-intent` | Resolve material ambiguity with a focused question, plausible options, and a custom answer |
 | `delegate-simple-task` | Assign clear bounded work using user-ordered model candidates while preserving the main model and host restrictions |
 | `task-planning` | Create or revise general task plans while preserving specialized planning ownership |
+| `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |
 | `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, and local Skills |
 | `agent-plugin-architect` | Design or audit packaged plugin architecture and read-only release readiness |
@@ -78,6 +79,13 @@ plugin. Axiom itself supports Codex only. The
 [route contract](agent-plugin-architect-route-contract.md) explains the boundary.
 
 ## Composition And Phase Changes
+
+`continuous-progress` uses Codex-owned sessions and native scheduling after
+explicit activation. Its supervisor has a stable address while coordinators
+rotate. A durable record retains the goal, ownership, human control, and
+evidence. It starts no service through the startup hook and supplies no daemon.
+Unavailable scheduling, dispatch permissions, or exclusive ownership remain
+visible capability limits; local execution requires the owning host to run.
 
 Composition follows the gate's ownership rules, not a precautionary load of
 every related Skill. A persistent deployment or migration with a consequential

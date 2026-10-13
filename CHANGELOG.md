@@ -9,6 +9,23 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.0 - unreleased
+
+### Added
+
+- Added `continuous-progress` for explicitly requested work across fresh workers, coordinator handoffs, and an independently scheduled native supervisor.
+- Added durable goal recovery after compaction, evidence-aware handling of timeouts, and verified shutdown after completion or cancellation.
+
+### Behavioral impact
+
+The workflow preserves the original goal, scope, model, effort, human controls, and budgets across sessions. It requires verified host capabilities and does not install a service or activate from an ordinary request to continue.
+
+### Required action
+
+Invoke `$continuous-progress` explicitly and authorize its session and native scheduling operations for the stated task. Local scheduling requires its owning Codex application and machine to remain available. Existing workflows need no migration.
+
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.0/docs/releases/v0.14.0.md) for activation, recovery, and validation boundaries.
+
 ## Repository policy revision 51
 
 ### Changed

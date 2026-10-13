@@ -15,6 +15,8 @@ from .constants import (
     CASE_KEYS,
     COVERAGE_LABELS,
     CURRENT_PUBLIC_ROUTES,
+    V3_PUBLIC_ROUTES, V3_BENCHMARK_CASE_COUNT,
+    BENCHMARK_V4_ID, SCHEMA_V4_ID, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
     CURRENT_BENCHMARK_CASE_COUNT,
     BENCHMARK_V3_ID,
     SCHEMA_V3_ID,
@@ -58,14 +60,16 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
     if document is None:
         return None
     schema_version = document.get("schemaVersion")
-    if schema_version not in {"1", "2", "3"}:
-        failures.append(f"{label}.schemaVersion must be '1', '2', or '3'")
+    if schema_version not in {"1", "2", "3", "4"}:
+        failures.append(f"{label}.schemaVersion must be '1', '2', '3', or '4'")
     allowed_routes = (
         HISTORICAL_PUBLIC_ROUTES if schema_version == "1"
-        else CURRENT_PUBLIC_ROUTES if schema_version == "3" else PUBLIC_ROUTES
+        else CURRENT_PUBLIC_ROUTES if schema_version == "4"
+        else V3_PUBLIC_ROUTES if schema_version == "3" else PUBLIC_ROUTES
     )
     allowed_benchmarks = (
         (BENCHMARK_ID,) if schema_version == "1"
+        else (BENCHMARK_V4_ID,) if schema_version == "4"
         else (BENCHMARK_V3_ID,) if schema_version == "3" else (BENCHMARK_V2_ID,)
     )
     case_id = require_string(document.get("id"), f"{label}.id", failures, 100)
@@ -78,6 +82,8 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
         failures.append(f"{label}.contractVersion must be 2 for schema v2")
     if schema_version == "3" and contract_version != 3:
         failures.append(f"{label}.contractVersion must be 3 for schema v3")
+    if schema_version == "4" and contract_version != 4:
+        failures.append(f"{label}.contractVersion must be 4 for schema v4")
     language = require_string(document.get("language"), f"{label}.language", failures, 16)
     if language is not None and LANGUAGE_PATTERN.fullmatch(language) is None:
         failures.append(f"{label}.language must be a bounded BCP-47 language tag")
@@ -484,8 +490,8 @@ def check_schema_contract_v2(schema: dict[str, Any], failures: list[str]) -> Non
 def check_schema_contract_v3(schema: dict[str, Any], failures: list[str]) -> None:
     _check_versioned_schema_contract(
         schema, failures, version="3", schema_id=SCHEMA_V3_ID,
-        routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V3_ID,
-        case_count=CURRENT_BENCHMARK_CASE_COUNT,
+        routes=V3_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V3_ID,
+        case_count=V3_BENCHMARK_CASE_COUNT,
         response_paths=(HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,),
     )
 
@@ -622,4 +628,16 @@ def check_host_response_schema_v3(schema: dict[str, Any], failures: list[str]) -
     _check_prose_free_host_response_schema(schema, failures, routes=PUBLIC_ROUTES, version="3")
 
 def check_host_response_schema_v4(schema: dict[str, Any], failures: list[str]) -> None:
-    _check_prose_free_host_response_schema(schema, failures, routes=CURRENT_PUBLIC_ROUTES, version="4")
+    _check_prose_free_host_response_schema(schema, failures, routes=V3_PUBLIC_ROUTES, version="4")
+
+
+def check_schema_contract_v4(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_versioned_schema_contract(
+        schema, failures, version="4", schema_id=SCHEMA_V4_ID,
+        routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V4_ID,
+        case_count=CURRENT_BENCHMARK_CASE_COUNT,
+        response_paths=(HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,),
+    )
+
+def check_host_response_schema_v5(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_prose_free_host_response_schema(schema, failures, routes=CURRENT_PUBLIC_ROUTES, version="5")

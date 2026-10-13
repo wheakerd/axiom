@@ -22,6 +22,7 @@ when comparing the source tree, a published release, and an installed package.
 | Resolve an unclear request | [Clarify Intent example](examples.md#clarify-intent) | Users |
 | Delegate simple work without changing the main model | [Delegate Simple Task example](examples.md#delegate-simple-task) | Users |
 | Create or revise a task plan | [Task Planning example](examples.md#task-planning) | Users |
+| Explicitly continue a task across sessions | [Continuous Progress](../skills/continuous-progress/SKILL.md) | Users |
 | Research through a local browser or client | [Local Web Search example](examples.md#local-web-search) | Users |
 | Interpret evidence files or report a host result | [Field Validation](field-validation.md) | Testers and auditors |
 | Understand package identity | [Runtime and Repository Identity](runtime-identity.md) | Maintainers and auditors |

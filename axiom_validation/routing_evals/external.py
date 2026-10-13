@@ -12,6 +12,8 @@ from .constants import (
     BENCHMARK_REASONING_EFFORT,
     BENCHMARK_V2_ID,
     BENCHMARK_V3_ID,
+    BENCHMARK_V4_ID, V3_BENCHMARK_CASE_COUNT,
+    HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
@@ -85,15 +87,16 @@ def validate_external_routing_observation(
     record = load_json_object(path, failures, path.parent)
     if record is None:
         return None
-    current = record.get("schemaVersion") == "3"
-    schema_version = "3" if current else "2"
-    benchmark_id = BENCHMARK_V3_ID if current else BENCHMARK_V2_ID
-    case_count = CURRENT_BENCHMARK_CASE_COUNT if current else 17
-    response_path = HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH if current else HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH
-    response_digest = CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 if current else CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256
-    if current:
-        cases = collect_current_corpus(root, failures)
-        benchmark_case_ids = current_benchmark_case_ids(root, cases, failures)
+    schema_version = record.get("schemaVersion")
+    current = schema_version == "4"
+    versioned = schema_version in {"3", "4"}
+    benchmark_id = BENCHMARK_V4_ID if current else BENCHMARK_V3_ID if versioned else BENCHMARK_V2_ID
+    case_count = CURRENT_BENCHMARK_CASE_COUNT if current else V3_BENCHMARK_CASE_COUNT if versioned else 17
+    response_path = HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH if current else HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH if versioned else HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH
+    response_digest = CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256 if current else CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 if versioned else CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256
+    if versioned:
+        cases = collect_current_corpus(root, failures, version=schema_version)
+        benchmark_case_ids = current_benchmark_case_ids(root, cases, failures, version=schema_version)
     else:
         cases = collect_corpus(root, failures)
         benchmark = load_json_object(root / "evals/benchmarks/codex-core-v2.json", failures, root)
@@ -128,8 +131,8 @@ def validate_external_routing_observation(
         label,
         failures,
     )
-    if record.get("schemaVersion") != schema_version:
-        failures.append("external routing observation must use schemaVersion '2' or '3'")
+    if schema_version not in {"2", "3", "4"}:
+        failures.append("external routing observation must use schemaVersion '2', '3', or '4'")
     if record.get("benchmarkId") != benchmark_id:
         failures.append(f"external routing observation must use {benchmark_id}")
     if record.get("responseSchema") != {

@@ -1,6 +1,6 @@
 ---
 name: using-axiom
-description: Route startup, resume, compaction, new requests, and planned local web search to the smallest matching Axiom skill. Resolve material ambiguity before action routing; assess supported simple-task delegation using user-ordered models. No-match requests continue normally.
+description: Route startup, resume, compaction, requests and local web research to Axiom skills.
 ---
 
 ## Route Once
@@ -20,6 +20,7 @@ before access; routing stays read-only.
 - `clarify-intent`: resolve ambiguity among plausible meanings with a focused question, useful options and a custom answer; never reopen settled choices or ask routine details.
 - `delegate-simple-task`: assess clear simple tasks using available subagent candidates in user order. Keep the main model; announce exact child model and task. Verified Full Access permits assignment within authority; else use existing assignment confirmation or ask. Host restrictions apply.
 - `task-planning`: create/revise current task/implementation plans, including scope removal/replacement. Exclude scheduling, status, corrections, execution. Keep specialized planning ownership/authority.
+- `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling. Exclude ordinary continuation and skill discussion.
 - `local-web-search`: constrain planned web search and follow-up page access from the user's machine or local workspace browser/client. Classify uncertain execution location before access. Exclude confirmed cloud-hosted search and unrelated web app actions.
 - `agents-architect`: audit/maintain repository `AGENTS.md`/`.agents/` guidance and repo-local skills; handle explicit `effective-instructions`, `effective-instructions:preview`, `effective-instructions:refactor`, `effective-instructions:force`, `effective-instructions:reconcile`, and `effective-instructions:reconcile-preview` modes. Exclude packaged plugin skills.
 - `agent-plugin-architect`: design or audit packaged Codex or Claude Code

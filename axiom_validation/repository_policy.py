@@ -104,6 +104,7 @@ EXPECTED_DIRECT_SKILLS = (
     "agents-architect",
     "clarify-intent",
     "confirm-external-action",
+    "continuous-progress",
     "delegate-simple-task",
     "local-web-search",
     "optimize-codex-usage",
@@ -378,7 +379,7 @@ def check_skill_contracts(failures: list[str]) -> None:
                 metadata = parse_agent_metadata_document(
                     metadata_text,
                     display_path(metadata_path),
-                    allow_policy=skill_name == "using-axiom",
+                    allow_policy=skill_name in {"using-axiom", "continuous-progress"},
                 )
             except CanonicalYamlError as error:
                 failures.append(str(error))
