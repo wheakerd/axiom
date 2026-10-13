@@ -55,6 +55,79 @@ the official [marketplace format](https://developers.openai.com/plugins/build/pl
 and [workspace sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management).
 Workspace sync timing is not a promise about personal Codex installations.
 
+## Marketplace Clone Timeouts
+
+An error containing `git clone marketplace source timed out after 30s`
+identifies a failure to download the marketplace catalog. Codex supports
+`--sparse` for Git marketplaces to reduce the catalog checkout. Axiom's current
+catalog needs only `.agents/plugins`: its plugin entry uses a separate Git
+`url` source with an immutable release ref.
+
+### Inspect The Registration
+
+Record the marketplace and installed plugin listings before changing the
+registration:
+
+```bash
+codex plugin marketplace list --json
+codex plugin list --marketplace axiom --json
+```
+
+Also check the original registration settings for an explicit catalog ref,
+custom source, or additional sparse paths. The migration below applies to a
+personal `wheakerd/axiom` Git registration following the default branch.
+For a pinned catalog, retain its original `--ref` when re-adding it. Inspect
+that snapshot's entries: if they use local plugin paths, include each path
+with another `--sparse` option. A catalog that points to local plugin files
+needs those files as well as `.agents/plugins`. Keep custom sources and
+workspace-managed controls with their existing owner.
+
+### Re-Register With Sparse Checkout
+
+When an existing registration rejects changed source options, remove that
+marketplace registration and add it again with the supported sparse option:
+
+```bash
+codex plugin marketplace remove axiom
+codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
+codex plugin marketplace upgrade axiom
+```
+
+Stop if a command fails. If re-registration fails after removal, restore the
+previous source and ref through `codex plugin marketplace add` using the
+settings recorded above. Do not remove the plugin or delete its cache to
+change the marketplace registration.
+
+Sparse checkout changes which catalog files are fetched. It preserves the
+default-branch catalog selection and the entry's independent plugin version
+selection. It adds no update scheduler and does not override client or user
+update settings.
+
+### Verify The Result
+
+Run the two listing commands again. Check the registered source, installed
+version, plugin source ref, and enabled state against the intended catalog
+entry and your recorded settings. Follow the [update checks](#updating) for a
+fresh session and Hook inspection.
+
+This registration migration was verified on 2026-10-13 with Codex CLI
+`0.162.1` on Linux in an isolated Axiom `v0.14.0` installation. The existing
+plugin cache and enabled setting were preserved, and the complete native upgrade succeeded.
+This does not establish desktop refresh, Hook trust, or automatic update
+timing on another installation.
+
+The clone deadline applies to the catalog download. A complete refresh may
+also download plugin sources and can take longer than 30 seconds. Sparse
+checkout does not change the client's timeout or guarantee completion on a
+slow or unavailable network. If the error persists, record the exact failing
+phase, CLI version, exit status, and sanitized error for the
+[problem report](#reporting-a-problem).
+
+The supported CLI options and sparse-path requirements were last verified on
+2026-10-13 against the official
+[marketplace CLI documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)
+and [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
 ## Disabling Or Removing
 
 For a trusted project, disable Axiom in that project's `.codex/config.toml`:
