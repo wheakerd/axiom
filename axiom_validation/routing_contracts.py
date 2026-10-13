@@ -23,6 +23,7 @@ ROUTE_SOURCE_ANCHORS = {
     "clarify-intent": ("ambiguity", "options", "custom"),
     "delegate-simple-task": ("model", "Full Access", "confirmation"),
     "task-planning": ("plan", "current", "scope"),
+    "continuous-progress": ("explicit invocation only", "compaction", "native scheduling"),
     "local-web-search": ("local", "cloud-hosted", "execution location"),
     "agents-architect": ("AGENTS.md", "audit"),
     "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
@@ -608,6 +609,10 @@ def route_contract(request: str) -> dict[str, Any]:
     if contract["route"] == "clarify":
         return {**contract, "route": "clarify-intent"}
     normalized = request.casefold()
+    if re.match(r"^\s*(?:(?:use|resume)\s+)?\$continuous-progress(?![\w-])", normalized):
+        return {"route": "continuous-progress", "phase": "capability-check",
+                "references": ("references/host-and-run-contract.md",),
+                "authorization": frozenset({"read"})}
     if (
         contract["route"] == "traceable-git-submit"
         and contract["phase"] == "hardened-submit"

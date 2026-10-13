@@ -23,6 +23,8 @@ from .constants import (
     PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS,
     PUBLIC_ROUTES,
     CURRENT_PUBLIC_ROUTES,
+    V3_PUBLIC_ROUTES, V3_BENCHMARK_CASE_COUNT, BENCHMARK_V4_ID,
+    HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256,
     CURRENT_BENCHMARK_CASE_COUNT,
     BENCHMARK_V3_ID,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
@@ -86,13 +88,17 @@ def validate_observation(
         maximum_call_count = 17
     elif schema_version == "3":
         expected_benchmark_id = BENCHMARK_V3_ID
+        allowed_routes = V3_PUBLIC_ROUTES
+        maximum_call_count = V3_BENCHMARK_CASE_COUNT
+    elif schema_version == "4":
+        expected_benchmark_id = BENCHMARK_V4_ID
         allowed_routes = CURRENT_PUBLIC_ROUTES
         maximum_call_count = CURRENT_BENCHMARK_CASE_COUNT
     else:
         expected_benchmark_id = None
         allowed_routes = PUBLIC_ROUTES
         maximum_call_count = 17
-        failures.append(f"{label}.schemaVersion must be '1', '2', or '3'")
+        failures.append(f"{label}.schemaVersion must be '1', '2', '3', or '4'")
     if record.get("kind") != "routing-observation":
         failures.append(f"{label}.kind must be routing-observation")
     if record.get("benchmarkId") != expected_benchmark_id:
@@ -105,7 +111,8 @@ def validate_observation(
         response_schema_value,
         f"{label}.responseSchema",
         failures,
-        current=schema_version == "3",
+        current=schema_version in {"3", "4"},
+        response_version="5" if schema_version == "4" else "4",
     )
     response_schema_path = (
         response_schema.get("path") if response_schema is not None else None
@@ -115,6 +122,11 @@ def validate_observation(
         "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
     }:
         failures.append(f"{label}.responseSchema must bind the exact current V4 schema")
+    if schema_version == "4" and response_schema is not None and response_schema != {
+        "path": HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
+        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256,
+    }:
+        failures.append(f"{label}.responseSchema must bind the exact V5 schema")
     subject = validate_subject(record.get("axiom"), f"{label}.axiom", failures)
     candidate_evidence = subject is not None and subject.get("tag") is None
     host = exact_object(record.get("host"), HOST_KEYS, f"{label}.host", failures)
@@ -177,7 +189,7 @@ def validate_observation(
                 failures.append(
                     f"{label}.run.callCount must be <= {maximum_call_count}"
                 )
-        elif candidate_evidence or schema_version in {"2", "3"}:
+        elif candidate_evidence or schema_version in {"2", "3", "4"}:
             failures.append(
                 f"{label}.run.callCount is required for candidate or versioned evidence"
             )
@@ -321,7 +333,7 @@ def validate_observation(
             document.get("responseDiagnostic"),
             status,
             run_id,
-            candidate_evidence or schema_version in {"2", "3"},
+            candidate_evidence or schema_version in {"2", "3", "4"},
             f"{case_label}.responseDiagnostic",
             failures,
         )
@@ -329,7 +341,7 @@ def validate_observation(
             document.get("acceptanceDiagnostic"),
             status,
             response_diagnostic,
-            schema_version in {"2", "3"}
+            schema_version in {"2", "3", "4"}
             or run_id
             in {
                 CANDIDATE2_CODEX_RUN_ID,
@@ -343,14 +355,14 @@ def validate_observation(
             document.get("evidenceSource"),
             status=status,
             response_schema_path=response_schema_path,
-            required=schema_version in {"2", "3"} or run_id == CANDIDATE4_CODEX_RUN_ID,
+            required=schema_version in {"2", "3", "4"} or run_id == CANDIDATE4_CODEX_RUN_ID,
             observer_required=(
-                schema_version in {"2", "3"} or run_id == CANDIDATE4_CODEX_RUN_ID
+                schema_version in {"2", "3", "4"} or run_id == CANDIDATE4_CODEX_RUN_ID
             ),
             label=f"{case_label}.evidenceSource",
             failures=failures,
         )
-        if response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH}:
+        if response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH}:
             if response_diagnostic == "schema-evidence":
                 failures.append(
                     f"{case_label}.responseDiagnostic cannot classify absent model evidence"
@@ -522,7 +534,7 @@ def validate_observation(
         failures.append(f"{label}.run.callCount disagrees with attempted cases")
     if evaluated and (installed is not True or hook is not True):
         failures.append(f"{label}.run attempted cases without verified plugin and hook")
-    if schema_version in {"2", "3"} and run_status != "pass":
+    if schema_version in {"2", "3", "4"} and run_status != "pass":
         # A stopped versioned batch publishes no partial aggregate as a benchmark
         # quality result. Per-case facts remain available without implying
         # coverage for the unattempted suffix.

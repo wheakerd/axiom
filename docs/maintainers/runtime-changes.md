@@ -21,7 +21,8 @@ Skills provide the focused workflows it selects. Supporting `references/` and
 `agents/` resources belong to their owning Skill and load on demand; they are
 not independent public routes.
 
-Axiom installs Markdown Skills and foreground Hook definitions. It has no
+Axiom installs Markdown Skills and foreground Hook definitions. Explicit
+continuous-progress runs may use Codex-owned native scheduling. Axiom has no
 installed daemon, background updater, network update check, or bundled runtime
 dependency. Repository validation may use a host-provided interpreter, but it
 must not become a dependency of the installed plugin.
@@ -45,9 +46,13 @@ must not become a dependency of the installed plugin.
   instructions. Label byte, word, and call measurements as proxies unless the
   host exposes exact scoped usage. Never auto-change the main model or
   reasoning settings.
-- Child model selection belongs to `delegate-simple-task`: use the user's
+- Simple-task child model selection belongs to `delegate-simple-task`: use the user's
   ordered candidates and current host support, disclose the exact model and
   task, and retain the Full Access and assignment-authority boundaries.
+- `continuous-progress` inherits the observed model and effort for its workers
+  and successors. Its explicit activation, host capability checks, independent
+  native supervisor, compaction recovery, and shutdown remain separate from
+  simple-task delegation. It must not install a scheduler or change the hook.
 
 When editing a route, review its direct references and examples for accidental
 permission expansion. State separately whether the change affects matching,

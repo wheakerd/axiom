@@ -374,7 +374,7 @@ OBSERVER_PASS_EXECUTION_EVIDENCE = (
 )
 
 # Versioned current contracts; earlier route sets and bindings remain immutable.
-CURRENT_PUBLIC_ROUTES = (
+V3_PUBLIC_ROUTES = (
     "agents-architect",
     "agent-plugin-architect",
     "clarify-intent",
@@ -389,7 +389,15 @@ CURRENT_PUBLIC_ROUTES = (
 )
 SCHEMA_V3_ID = "urn:axiom:routing-evals:schema:v3"
 BENCHMARK_V3_ID = "codex-core-v3"
-CURRENT_BENCHMARK_CASE_COUNT = 27
-CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v3/current.jsonl"
+V3_BENCHMARK_CASE_COUNT = 27
+V3_CORPUS_RELATIVE_PATH = "evals/routing-v3/current.jsonl"
 HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH = "evals/host-response-schema-v4.json"
 CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 = "637b9bcd2825d2286db4d4ff2228d3611f43845f9999418f48c3e16aae3799fc"
+
+CURRENT_PUBLIC_ROUTES = (*V3_PUBLIC_ROUTES[:4], "continuous-progress", *V3_PUBLIC_ROUTES[4:])
+SCHEMA_V4_ID = "urn:axiom:routing-evals:schema:v4"
+BENCHMARK_V4_ID = "codex-core-v4"
+CURRENT_BENCHMARK_CASE_COUNT = 33
+CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v4/current.jsonl"
+HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH = "evals/host-response-schema-v5.json"
+CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256 = "0cf3f61e2f5a5300bfc399906dd351a90e0b891eda91940704b9929fcc065a8a"

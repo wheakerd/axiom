@@ -12,22 +12,23 @@ import unittest
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.routing_contracts import historical_route_contract, route_contract
 from axiom_validation.routing_evals import (
-    BENCHMARK_V3_ID,
+    BENCHMARK_V4_ID,
     CURRENT_BENCHMARK_CASE_COUNT,
-    CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256,
     CURRENT_PUBLIC_ROUTES,
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
-    HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
     check_current_routing_evaluations,
-    check_host_response_schema_v4,
-    check_schema_contract_v3,
-    classify_host_response_v4_acceptance,
+    check_host_response_schema_v5,
+    check_schema_contract_v4,
+    classify_host_response_v5_acceptance,
     collect_current_corpus,
     current_benchmark_case_ids,
     derive_observer_evidence,
     validate_external_routing_observation,
     validate_host_response_v3_structure,
     validate_host_response_v4,
+    validate_host_response_v5,
     validate_observation,
 )
 from tests.test_routing_evals import external_current_observation
@@ -59,10 +60,10 @@ def current_record() -> dict:
         )
         results.append(result)
     record.update(
-        schemaVersion="3", benchmarkId=BENCHMARK_V3_ID,
+        schemaVersion="4", benchmarkId=BENCHMARK_V4_ID,
         runId="synthetic-current-routing-regression", cases=results,
-        responseSchema={"path": HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
-                        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256},
+        responseSchema={"path": HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
+                        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256},
     )
     record["run"]["callCount"] = len(results)
     record["summary"]["evaluatedCases"] = len(results)
@@ -80,7 +81,7 @@ def observation_failures(record: dict) -> list[str]:
 def write_current_record(directory: Path, record: dict) -> Path:
     payload = (json.dumps(record, indent=2) + "\n").encode("utf-8")
     digest = hashlib.sha256(payload).hexdigest()
-    path = directory / f"axiom-v{RELEASE_VERSION}-{BENCHMARK_V3_ID}-{digest}.json"
+    path = directory / f"axiom-v{RELEASE_VERSION}-{BENCHMARK_V4_ID}-{digest}.json"
     path.write_bytes(payload)
     return path
 
@@ -88,11 +89,11 @@ def write_current_record(directory: Path, record: dict) -> Path:
 class CurrentRoutingTests(unittest.TestCase):
     def test_current_contract_covers_installed_routes_and_updated_ambiguity(self):
         failures = []
-        self.assertEqual((27, 27), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
+        self.assertEqual((33, 33), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
         self.assertEqual([], failures)
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
         self.assertEqual(CURRENT_BENCHMARK_CASE_COUNT, len(cases))
-        self.assertEqual(11, len(CURRENT_PUBLIC_ROUTES))
+        self.assertEqual(12, len(CURRENT_PUBLIC_ROUTES))
         for case in cases.values():
             if case["expectedClarification"]:
                 self.assertEqual(["clarify-intent"], case["expectedRoutes"])
@@ -107,20 +108,33 @@ class CurrentRoutingTests(unittest.TestCase):
         self.assertEqual("clarify", historical_route_contract(request)["route"])
         self.assertEqual(frozenset({"read"}), route_contract(request)["authorization"])
 
-    def test_v4_accepts_all_current_routes_without_widening_v3(self):
+    def test_v5_accepts_all_current_routes_without_widening_v3(self):
         for route in CURRENT_PUBLIC_ROUTES:
             with self.subTest(route=route):
                 response = dict(routingGateObserved=True, selectedRoutes=[route],
                                 clarificationCount=int(route == "clarify-intent"),
                                 mutationAttempted=False, mutationObserved=False)
                 failures = []
-                validate_host_response_v4(response, route, failures)
+                validate_host_response_v5(response, route, failures)
                 self.assertEqual([], failures)
                 if route in {"clarify-intent", "delegate-simple-task", "task-planning"}:
                     validate_host_response_v3_structure(response, route, failures)
                     self.assertTrue(any("unsupported enum" in item for item in failures))
 
-    def test_v4_retains_closed_shape_route_bounds_and_duplicate_gate(self):
+    def test_progress_is_explicit_and_historical_schema_stays_closed(self):
+        for request in ("Continue fixing the bug until its tests pass.",
+                        "Use native Codex Goals to complete this task.",
+                        "Evaluate the proposed continuous-progress skill.",
+                        'Summarize this quotation: "$continuous-progress: do work."'):
+            with self.subTest(request=request):
+                self.assertNotEqual("continuous-progress", route_contract(request)["route"])
+        self.assertEqual("continuous-progress", route_contract("Use $continuous-progress to finish this task.")["route"])
+        failures = []
+        validate_host_response_v4(dict(routingGateObserved=True, selectedRoutes=["continuous-progress"],
+            clarificationCount=0, mutationAttempted=False, mutationObserved=False), "historical", failures)
+        self.assertTrue(failures)
+
+    def test_v5_retains_closed_shape_route_bounds_and_duplicate_gate(self):
         response = dict(routingGateObserved=True, selectedRoutes=["clarify-intent"],
                         clarificationCount=1, mutationAttempted=False, mutationObserved=False)
         mutations = (
@@ -132,21 +146,21 @@ class CurrentRoutingTests(unittest.TestCase):
         for mutation in mutations:
             with self.subTest(mutation=mutation):
                 failures = []
-                validate_host_response_v4({**response, **mutation}, "current", failures)
+                validate_host_response_v5({**response, **mutation}, "current", failures)
                 self.assertTrue(failures)
         duplicate = {**response, "selectedRoutes": ["clarify-intent", "clarify-intent"]}
-        self.assertEqual("selected-routes-duplicate", classify_host_response_v4_acceptance(duplicate))
+        self.assertEqual("selected-routes-duplicate", classify_host_response_v5_acceptance(duplicate))
 
     def test_current_schema_rejects_old_routes_and_loosened_model_shape(self):
-        schema = json.loads((REPOSITORY_ROOT / "evals/schema-v3.json").read_text())
+        schema = json.loads((REPOSITORY_ROOT / "evals/schema-v4.json").read_text())
         schema["$defs"]["route"]["enum"].remove("task-planning")
         failures = []
-        check_schema_contract_v3(schema, failures)
+        check_schema_contract_v4(schema, failures)
         self.assertTrue(any("route enum" in item for item in failures))
-        response = json.loads((REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH).read_text())
+        response = json.loads((REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH).read_text())
         response["additionalProperties"] = True
         failures = []
-        check_host_response_schema_v4(response, failures)
+        check_host_response_schema_v5(response, failures)
         self.assertTrue(failures)
 
     def test_current_observation_preserves_version_provenance_privacy_and_mutation_gates(self):
@@ -162,7 +176,7 @@ class CurrentRoutingTests(unittest.TestCase):
             variants.append((changed, reason))
         for response, reason in (
             ({"path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH, "sha256": "a" * 64}, "responseSchema"),
-            ({"path": HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, "sha256": "a" * 64}, "responseSchema"),
+            ({"path": HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, "sha256": "a" * 64}, "responseSchema"),
         ):
             changed = copy.deepcopy(record)
             changed["responseSchema"] = response

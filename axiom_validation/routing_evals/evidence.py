@@ -20,6 +20,7 @@ from .constants import (
     PUBLIC_ROUTES,
     CURRENT_PUBLIC_ROUTES,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
     RESPONSE_DIAGNOSTICS,
     RESPONSE_SCHEMA_KEYS,
     SEMVER_PATTERN,
@@ -192,7 +193,7 @@ def validate_evidence_source(
             failures.append(f"{label} must be observer-derived for this contract")
     if (
         response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS
-        | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH}
+        | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH}
         and value == "model-provided"
     ):
         failures.append(f"{label} cannot claim model-provided evidence under a prose-free schema")
@@ -200,7 +201,7 @@ def validate_evidence_source(
 
 
 def validate_response_schema_binding(
-    value: Any, label: str, failures: list[str], *, current: bool = False
+    value: Any, label: str, failures: list[str], *, current: bool = False, response_version: str = "4"
 ) -> dict[str, Any] | None:
     if value is None:
         return None
@@ -214,7 +215,7 @@ def validate_response_schema_binding(
         HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     }
     if current:
-        supported_paths = {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH}
+        supported_paths = {HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH if response_version == "5" else HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH}
     if path is not None and path not in supported_paths:
         failures.append(
             f"{label}.path must name a supported immutable host response schema"

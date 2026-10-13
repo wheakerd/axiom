@@ -9,10 +9,10 @@ evidence, use [Compatibility](../docs/compatibility.md).
 
 | Source | Responsibility |
 | --- | --- |
-| [schema-v3.json](schema-v3.json) | Current eleven-route corpus and observation format |
-| [routing-v3/current.jsonl](routing-v3/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
-| [codex-core-v3.json](benchmarks/codex-core-v3.json) | Ordered 27-case benchmark, model settings, developer instruction, timeout, and stop policy |
-| [host-response-schema-v4.json](host-response-schema-v4.json) | Current five-field, prose-free model response with all eleven routes |
+| [schema-v4.json](schema-v4.json) | Current twelve-route corpus and observation format |
+| [routing-v4/current.jsonl](routing-v4/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
+| [codex-core-v4.json](benchmarks/codex-core-v4.json) | Ordered 33-case benchmark, model settings, developer instruction, timeout, and stop policy |
+| [host-response-schema-v5.json](host-response-schema-v5.json) | Current five-field, prose-free model response with all twelve routes |
 | [review-sequences-v1.json](review-sequences-v1.json) and [review-response-schema-v1.json](review-response-schema-v1.json) | Bounded review sequences and their structured response contract |
 | [Routing Context Budget](context-budget/README.md) | Deterministic instruction-size measurement and its limits |
 
@@ -28,7 +28,7 @@ and do not define localized aliases.
 Case IDs are stable and cannot be repurposed. A change to the request, expected
 or forbidden route, clarification count, lifecycle precondition, or risk class
 requires a new `contractVersion` and an explanation in the pull request. The
-current schema fixes that version to `3`, so a successor must version the
+current schema fixes that version to `4`, so a successor must version the
 schema and its consumers together. Preserve the exact corpus, response schema,
 and benchmark bound to existing observations; do not edit an expectation after
 a failure to make that result pass. An ordered benchmark change receives a new
@@ -69,13 +69,13 @@ reports current counts from checked-in contracts; historical totals belong to
 their original records.
 
 For a separately produced current observation, external validation accepts one
-content-addressed schema v3 record against `codex-core-v3` and response schema
-V4. This optional observation is separate from required publication checks:
+content-addressed schema v4 record against `codex-core-v4` and response schema
+V5. This optional observation is separate from required publication checks:
 
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-vX.Y.Z-codex-core-v3-<full-sha256>.json \
+  /absolute/path/axiom-vX.Y.Z-codex-core-v4-<full-sha256>.json \
   --expected-version X.Y.Z \
   --expected-tag vX.Y.Z \
   --expected-commit <40-character-commit> \
@@ -85,8 +85,8 @@ python3 scripts/check-publication.py \
 Use the independently verified version, tag, commit, and tree of the observed
 subject in place of the placeholders. The checked-in manifest does not prove
 that its candidate has been published or observed. Acceptance requires the
-exact 27 unique cases in benchmark order,
-repeat count one, call count 27, 27/27 `PASS`, verified local installation and
+exact 33 unique cases in benchmark order,
+repeat count one, call count 33, 33/33 `PASS`, verified local installation and
 startup delivery, no unavailable or `NOT-RUN` suffix, and zero routing,
 clarification, or mutation regressions. The file stays outside the repository
 and exposes its full SHA-256 in its filename. Validation does not query a
@@ -94,7 +94,8 @@ remote service to establish publication or create an observation.
 
 The asset may supplement release evidence; it never edits or promotes the
 checked-in `STATIC-ONLY` [release status](../evidence/release-status.json).
-Historical schema v2 records remain verifiable only against their original
+Historical schema v3 records remain verifiable against `codex-core-v3` and
+response V4; schema v2 records remain verifiable only against their original
 `codex-core-v2` and response V3 contract; they do not cover the current routes.
 
 ## Host Observation Boundaries

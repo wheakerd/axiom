@@ -143,6 +143,23 @@ Use $task-planning to plan this settings-page change.
 Do not implement it yet.
 ```
 
+#### continuous-progress
+
+**Link:** [Supervised progress across sessions](skills/continuous-progress/SKILL.md)
+
+**Description:** Explicitly invoked progress through fresh workers and
+coordinator handoffs, with a verified native supervisor. Stops after verified
+completion or cancellation; local scheduling requires Codex and the machine
+to remain available.
+
+**Usage:**
+
+```text
+Use $continuous-progress to finish this task. Create fresh execution and
+successor chats as needed, register an independent native supervisor,
+and stop its schedule when the task is verified complete or I cancel.
+```
+
 #### local-web-search
 
 **Link:** [Research through a local browser or client](skills/local-web-search/SKILL.md)
