@@ -427,6 +427,12 @@ requires the final Release to be immutable and GitHub Latest. It can resume a
 draft after the exact attestation already exists and can perform final-only
 readback without a second publication mutation.
 
+After successful final verification, including final-only recovery, it emits
+the standard Codex marketplace source for the verified Latest version. The
+summary explicitly leaves catalog publication pending the
+[signed catalog update](maintainers/release-documentation.md#marketplace-publication).
+This handoff adds no `main` push trigger, branch write, or client update policy.
+
 The release-target guard remains a separate policy owner. GitHub does not
 start another workflow for an ordinary event created by a workflow's
 `GITHUB_TOKEN`, so the publication workflow fails closed on direct signature

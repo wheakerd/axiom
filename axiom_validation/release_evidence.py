@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
+from .manifests import EXPECTED_PLUGIN_REPOSITORY
 from .release_versions import (
     PRODUCTION_RELEASE_TAG_ERE_PATTERN,
     PRODUCTION_RELEASE_VERSION_CASES,
@@ -27,7 +28,7 @@ ATTESTATION_SCHEMA_VERSION = "1"
 PLAN_SCHEMA_VERSION = "2"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
-PUBLISH_WORKFLOW_SHA256 = "571181a832014bddf3088bca27eb02ce9ec5a03104f3244d6ad4b9224447d252"
+PUBLISH_WORKFLOW_SHA256 = "cdc297bc7ce203dc1454d5b8876f4278d4516b59ddd85f4201ae330c3ea631a5"
 RELEASE_BODY_POLICY_BASELINE_VERSION = "0.10.0"
 REPOSITORY_CHECKS_RELEASE_VERSION = "0.11.0"
 RELEASE_BODY_MAX_BYTES = 8192
@@ -1064,6 +1065,38 @@ def verify_release_snapshot(
                 failures.append("GitHub Latest does not identify the immutable release")
 
 
+def render_marketplace_source(
+    plan: dict[str, Any], latest_metadata_path: Path, failures: list[str]
+) -> str | None:
+    """Render standard Codex source metadata for the verified Latest release.
+
+    The publisher calls this after final evidence verification. This renderer
+    neither publishes a catalog nor changes a user's installation or settings.
+    """
+    if not _validate_plan(plan, failures):
+        return None
+    latest = _load_json_object(latest_metadata_path, "latest release metadata", failures)
+    if latest is None:
+        return None
+    subject = plan["subject"]
+    release = _inspect_release(
+        latest,
+        version=subject["version"],
+        tag=subject["tag"],
+        commit=subject["commit"],
+        expected_phase="final",
+        failures=failures,
+    )
+    if release != plan["release"]:
+        failures.append("GitHub Latest must still identify the verified release")
+    if failures:
+        return None
+    return json.dumps(
+        {"source": "url", "url": EXPECTED_PLUGIN_REPOSITORY, "ref": subject["tag"]},
+        indent=2,
+    ) + "\n"
+
+
 def _scalar(value: Any) -> str | None:
     return value.value if isinstance(value, CanonicalYamlScalar) else None
 
@@ -1237,6 +1270,8 @@ def check_publish_workflow_contract(
         "scripts/check-release-evidence.py assert-absent",
         "releases/latest",
         "--final",
+        "scripts/check-release-evidence.py render-marketplace",
+        '--summary >> "$GITHUB_STEP_SUMMARY"',
     )
     for anchor in required_anchors:
         if anchor not in text:
@@ -1278,6 +1313,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "render-policy", help="render the release repository-verification policy"
     )
     _add_subject_arguments(render_policy)
+    marketplace = commands.add_parser(
+        "render-marketplace", help="render the verified Latest release's Codex source entry"
+    )
+    marketplace.add_argument("--plan", type=Path, required=True)
+    marketplace.add_argument("--latest-release-metadata", type=Path, required=True)
+    marketplace.add_argument("--summary", action="store_true", help="render a workflow handoff")
     select = commands.add_parser("select", help="select one exact Release from a listing")
     select.add_argument("--release-collection", type=Path, required=True)
     select.add_argument("--release-output", type=Path, required=True)
@@ -1365,6 +1406,25 @@ def main(argv: list[str] | None = None) -> int:
             failures.append("release policy records apply from v0.11.0 onward")
         if not failures:
             sys.stdout.buffer.write(_canonical_json_bytes(release_policy_record(subject)))
+    elif args.command == "render-marketplace":
+        plan = load_release_plan(args.plan, failures)
+        if plan is not None:
+            source = render_marketplace_source(plan, args.latest_release_metadata, failures)
+            if source is not None and not failures:
+                if args.summary:
+                    sys.stdout.write(
+                        "## Marketplace publication pending\n\n"
+                        "Apply this source to the axiom entry in "
+                        "`.agents/plugins/marketplace.json` through the existing signed PR "
+                        "process. Recheck GitHub Latest before merging and verify the merged "
+                        "catalog. Until then, the catalog retains its previous version. "
+                        "See [the catalog publication procedure]"
+                        "(https://github.com/wheakerd/axiom/blob/main/docs/maintainers/"
+                        "release-documentation.md#marketplace-publication).\n\n"
+                        f"```json\n{source}```\n"
+                    )
+                else:
+                    sys.stdout.write(source)
     elif args.command == "select":
         select_release_from_collection(
             args.release_collection,

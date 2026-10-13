@@ -18,6 +18,7 @@ from axiom_validation.release_evidence import (
     classify_publication_state,
     prepare_release_plan,
     render_release_body,
+    render_marketplace_source,
     select_release_from_collection,
     validate_downloaded_observation,
     validate_release_asset,
@@ -125,6 +126,58 @@ class ReleaseEvidenceTests(unittest.TestCase):
         failures: list[str] = []
         self.assertIsNotNone(check_publish_workflow_contract(failures))
         self.assertEqual([], failures)
+
+    def test_marketplace_handoff_uses_only_the_verified_latest_release(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            plan, _, asset = self.prepare(directory)
+            latest_path = directory / "latest.json"
+            latest = release_metadata(asset, draft=False, immutable=True)
+            write_json(latest_path, latest)
+            failures = []
+            rendered = render_marketplace_source(plan, latest_path, failures)
+            self.assertEqual([], failures)
+            self.assertEqual(
+                {"source": "url", "url": "https://github.com/wheakerd/axiom.git", "ref": TAG},
+                json.loads(rendered),
+            )
+            for field, value in (
+                ("id", 999), ("tag_name", "v999.0.0"),
+                ("target_commitish", "d" * 40), ("draft", True),
+                ("prerelease", True), ("immutable", False),
+            ):
+                with self.subTest(field=field):
+                    write_json(latest_path, {**latest, field: value})
+                    failures = []
+                    self.assertIsNone(render_marketplace_source(plan, latest_path, failures))
+                    self.assertTrue(failures)
+
+    def test_marketplace_command_reports_pending_publication_without_writes(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            plan, _, asset = self.prepare(directory)
+            plan_path = directory / "plan.json"
+            latest_path = directory / "latest.json"
+            write_json(plan_path, plan)
+            write_json(latest_path, release_metadata(asset, draft=False, immutable=True))
+            script = Path(__file__).resolve().parents[1] / "scripts/check-release-evidence.py"
+            arguments = [
+                sys.executable, "-B", str(script), "render-marketplace",
+                "--plan", str(plan_path), "--latest-release-metadata", str(latest_path),
+            ]
+            before = {path.name: path.read_bytes() for path in directory.iterdir()}
+            result = subprocess.run(arguments, capture_output=True, text=True, check=False)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(TAG, json.loads(result.stdout)["ref"])
+            summary = subprocess.run(arguments + ["--summary"], capture_output=True, text=True, check=False)
+            self.assertEqual(0, summary.returncode, summary.stderr)
+            self.assertIn("Marketplace publication pending", summary.stdout)
+            self.assertIn("existing signed PR", summary.stdout)
+            self.assertEqual(before, {path.name: path.read_bytes() for path in directory.iterdir()})
+            write_json(latest_path, release_metadata(asset))
+            rejected = subprocess.run(arguments, capture_output=True, text=True, check=False)
+            self.assertNotEqual(0, rejected.returncode)
+            self.assertEqual("", rejected.stdout)
 
     def test_release_body_is_rendered_from_changelog_not_version_notes(self):
         failures: list[str] = []

@@ -19,6 +19,12 @@ codex plugin marketplace add wheakerd/axiom
 codex plugin add axiom@axiom
 ```
 
+The [marketplace entry](../../.agents/plugins/marketplace.json) selects a
+published version through its Git source `ref`. Fetching the marketplace from
+the default branch does not install that branch's development plugin files.
+See [version selection](managing-installation.md#version-selection) for fixed
+sources and existing installations.
+
 Start a new Codex chat or CLI session. An existing session may retain an older
 Hook or Skill snapshot.
 

@@ -34,6 +34,9 @@ codex plugin marketplace add wheakerd/axiom
 codex plugin add axiom@axiom
 ```
 
+The marketplace selects an immutable published version. Development commits
+on `main` do not advance that selection.
+
 Start a new Codex chat or CLI session. Open `/hooks` and compare the installed
 entry with the [Hook Reference](docs/reference/hooks.md) before trusting it.
 Stop if the definitions differ. The [Getting Started guide](docs/guides/getting-started.md)
@@ -48,8 +51,8 @@ codex plugin marketplace upgrade axiom
 ```
 
 In a supported Codex workspace plugin UI, use **Refresh**. After updating,
-start a new session and inspect `/hooks` again. Axiom does not check for or
-install updates automatically. See [Managing an Installation](docs/guides/managing-installation.md)
+start a new session and inspect `/hooks` again. Automatic update behavior is
+controlled by Codex and your settings. See [Managing an Installation](docs/guides/managing-installation.md)
 for disabling, removal, and troubleshooting.
 
 ## First Use

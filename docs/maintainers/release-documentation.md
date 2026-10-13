@@ -119,6 +119,51 @@ Earlier version contracts and recorded experiments retain their historical
 meaning. Asset names and validators are selected by the release version;
 existing Releases and their evidence are not migrated.
 
+## Marketplace Publication
+
+The default [marketplace](../../.agents/plugins/marketplace.json) uses the
+official Codex Git `url` source and an immutable production `v<version>` ref.
+Its selected plugin may precede the development manifest version. Keep the
+selection unchanged during ordinary `main` development and for releases that
+are not Latest. The client and user own refresh and automatic-update policy;
+there is no repository-side client updater or `main`-triggered release check.
+
+After verifying final immutable publication and GitHub Latest, the
+[publisher](../../.github/workflows/publish-immutable-release.yml) renders the
+standard source object in its job summary. The same handoff runs during
+final-only recovery. It reports **Marketplace publication pending** because
+the workflow does not write to protected `main` or bypass its PR rules.
+
+Complete the authorized catalog publication through the existing signed PR
+process:
+
+1. Verify the current Latest Release is final, stable, immutable, and identifies
+   the intended tag and signed commit. For a deliberate Latest selection made
+   outside the publisher, perform the same verification before preparing the
+   catalog change; a Release event alone does not prove a Latest transition.
+2. On a task branch from current `main`, replace only the Axiom entry's source
+   with the verified Git URL and version tag. Preserve other catalog metadata.
+   Record the next repository-policy revision and its baseline, retain the
+   installed runtime identity, and run the contributor checks. This catalog
+   operation requires publication scope; a policy revision does not grant it.
+3. Recheck Latest before merging the signed PR with its required checks. If it
+   changed, refresh the candidate for the selected release instead of merging
+   a stale reference. Do not move a version tag or the legacy `latest` Git tag.
+4. Read back the merged catalog and resolve its plugin tag. Confirm that the
+   selected manifest version matches that tag. Record the catalog commit for
+   users who need a fixed catalog snapshot. A tag on the marketplace repository
+   may contain a different plugin reference; it is not a per-plugin pin.
+
+The directory update is complete only after that merge and readback. Release
+publication or a generated job summary alone does not update the directory or
+an installed client. A failed or delayed handoff leaves the previous catalog
+selection available; resume it without republishing the immutable Release.
+
+The format was last verified on 2026-10-13 against the official
+[marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata).
+Use its native `url`/`ref` fields; do not add an Axiom update channel or schedule
+to the plugin manifest.
+
 ## Candidate And Final Evidence
 
 Candidate evidence is limited to facts observable at its source commit. It can

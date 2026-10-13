@@ -416,6 +416,14 @@
       "sourceIssue": null,
       "summary": "Add explicitly invoked continuous progress with host-owned supervision, durable handoff, compaction recovery and verified shutdown; preserve authority and version earlier routing contracts.",
       "runtimeContractDigest": "sha256:fd42aceebd2d390a8bcaec02d2d66d2d5ebe18ebc01b1bcaf4dddab2aee10747"
+    },
+    {
+      "revision": 53,
+      "recordedOn": "2026-10-13",
+      "baselineCommit": "d52a04828eb28460df12b8d1ebf308fa0ec2ef51",
+      "sourceIssue": null,
+      "summary": "Pin the default marketplace to a published Git version, prepare catalog metadata only after verified Latest publication, and preserve user and native client update controls without changing runtime.",
+      "runtimeContractDigest": "sha256:fd42aceebd2d390a8bcaec02d2d66d2d5ebe18ebc01b1bcaf4dddab2aee10747"
     }
   ]
 }
