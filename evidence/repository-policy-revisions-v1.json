@@ -464,6 +464,14 @@
       "sourceIssue": null,
       "summary": "Advance the default marketplace source to verified immutable Latest v0.14.2 while preserving plugin version, installed runtime identity, deliberate source pins, and native client update controls.",
       "runtimeContractDigest": "sha256:376151bbcc2a9c367fc19badbf45e59b802c581937071d0ac7ba7ea7aaba7ba6"
+    },
+    {
+      "revision": 59,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "f93bb8e4a2bd4fd7c8dea3062f7277624726b950",
+      "sourceIssue": null,
+      "summary": "Format inline-code skill markers with brief invocation goals, no separators, and further output in a new paragraph; prepare compatible runtime correction 0.14.3.",
+      "runtimeContractDigest": "sha256:a00d850185cae14d6c7479ccf205db632e17944da8154cdad503435209877c0d"
     }
   ]
 }

@@ -9,6 +9,27 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.3 - unreleased
+
+### Fixed
+
+- Format the entire `Axiom:<skill-name>` notice marker as inline code and follow it with a brief goal or reason on the same line.
+- Continue further output in a new paragraph without adding separator decorations between the marker and reason.
+
+### Removed
+
+- Replace the marker-only notice rule introduced in `0.14.2` with the concise format with a reason in `0.14.3`.
+
+### Behavioral impact
+
+Each skill invocation shows both its name and why it is being used. The once-per-invocation timing and existing selection and authorization boundaries remain unchanged.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.14.3.md) for the notice format and evidence boundary.
+
 ## Repository policy revision 58
 
 ### Changed

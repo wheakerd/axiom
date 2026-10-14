@@ -56,9 +56,13 @@ Use this read-only request:
 
 The expected contract is selection of `agents-architect`, a read-only evidence
 report, and no file mutation. A route selection is not permission to change the
-repository. Before the workflow, expect the short notice
-`Axiom:agents-architect`; the startup router identifies itself separately as
-`Axiom:using-axiom`.
+repository. Before the workflow, expect a notice like this:
+
+`Axiom:agents-architect` Review the repository's instruction structure.
+
+The entire marker is inline code; the brief goal or reason follows on the same
+line without a separator. Further output starts in a new paragraph. The startup
+router identifies itself separately with `Axiom:using-axiom` and its reason.
 
 ## Try One Control Request
 
