@@ -440,6 +440,14 @@
       "sourceIssue": null,
       "summary": "Require the active using-axiom gate, verified user-selected Ultra reasoning, and invocation consent for simple-task delegation; prepare the compatible runtime correction as 0.14.1.",
       "runtimeContractDigest": "sha256:4d246152c8738c4925c28b74336a9518892bdf9c6d57d1c813dc5595d07ffd10"
+    },
+    {
+      "revision": 56,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "ec26f03776f0b357068e83bb8409d96cb17d85d6",
+      "sourceIssue": null,
+      "summary": "Advance the default marketplace source to verified immutable Latest v0.14.1 while preserving plugin version, installed runtime identity, deliberate source pins, and native client update controls.",
+      "runtimeContractDigest": "sha256:4d246152c8738c4925c28b74336a9518892bdf9c6d57d1c813dc5595d07ffd10"
     }
   ]
 }
