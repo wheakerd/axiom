@@ -46,9 +46,11 @@ must not become a dependency of the installed plugin.
   instructions. Label byte, word, and call measurements as proxies unless the
   host exposes exact scoped usage. Never auto-change the main model or
   reasoning settings.
-- Simple-task child model selection belongs to `delegate-simple-task`: use the user's
-  ordered candidates and current host support, disclose the exact model and
-  task, and retain the Full Access and assignment-authority boundaries.
+- Simple-task child model selection belongs to `delegate-simple-task`. Its
+  [activation conditions](../../skills/delegate-simple-task/SKILL.md#activation)
+  require the active startup gate, verified user-selected Ultra reasoning, and
+  invocation consent. Preserve those conditions in route metadata, direct
+  requests, and resume behavior before applying assignment permissions.
 - `continuous-progress` inherits the observed model and effort for its workers
   and successors. Its explicit activation, host capability checks, independent
   native supervisor, compaction recovery, and shutdown remain separate from
