@@ -56,7 +56,9 @@ Use this read-only request:
 
 The expected contract is selection of `agents-architect`, a read-only evidence
 report, and no file mutation. A route selection is not permission to change the
-repository.
+repository. Before the workflow, expect the short notice
+`Axiom:agents-architect`; the startup router identifies itself separately as
+`Axiom:using-axiom`.
 
 ## Try One Control Request
 
@@ -64,9 +66,11 @@ Use this ordinary request:
 
 > Summarize the purpose of this README. Do not modify files.
 
-The expected contract is no Axiom route and normal host execution. A no-route
-result is not a safety certification; host permissions and repository
-instructions remain in force.
+The expected contract is normal host execution with no additional Axiom route.
+An invoked startup router still displays `Axiom:using-axiom`. A no-route result
+is not a safety certification; host permissions and repository instructions
+remain in force. See the [notice contract](../../skills/using-axiom/references/skill-notices.md)
+for invocation boundaries.
 
 ## Interpret And Report The Result
 

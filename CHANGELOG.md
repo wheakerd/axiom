@@ -9,6 +9,27 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.2 - unreleased
+
+### Fixed
+
+- Require every invoked Axiom skill to display `Axiom:<skill-name>` before its workflow actions, including direct calls and startup routing.
+- Use the actual skill name and emit once per invocation; reference reads and source inspection do not produce extra notices.
+
+### Removed
+
+- Remove the startup router's silent no-match behavior in `0.14.2`; `Axiom:using-axiom` now identifies the routing invocation even when no other skill matches.
+
+### Behavioral impact
+
+Users can see which skills are being invoked. A later request or resume that selects a skill again produces a new notice. Notices preserve existing selection and authorization conditions and require no confirmation.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.14.2.md) for invocation and evidence boundaries.
+
 ## Repository policy revision 56
 
 ### Changed

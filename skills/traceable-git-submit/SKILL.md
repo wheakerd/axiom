@@ -5,6 +5,9 @@ description: Clarify unresolved material either/or choices before routing; deleg
 
 # Traceable Git Submit
 
+Before acting, emit `Axiom:traceable-git-submit` in commentary. Apply the
+[notice contract](../using-axiom/references/skill-notices.md).
+
 ## Intent Gate
 
 Distinguish unresolved workflow choice from a selected phase before Git

@@ -72,8 +72,12 @@ Then try an ordinary request:
 Summarize the purpose of this README. Do not modify files.
 ```
 
-The first should select `agents-architect`; the second should continue normally
-without an Axiom skill. These are expected behaviors, not a claim that your
+Each invoked skill first displays a short notice such as
+`Axiom:agents-architect`. The startup router displays `Axiom:using-axiom`,
+including when no other skill matches. The first request should select
+`agents-architect`; the second should continue normally without another skill.
+See the [notice contract](skills/using-axiom/references/skill-notices.md) for
+invocation boundaries. These are expected behaviors, not a claim that your
 installation has already reproduced them.
 
 > [!IMPORTANT]

@@ -5,6 +5,9 @@ description: Design, initialize, audit, split, migrate, maintain, or validate a 
 
 # AGENTS Architect
 
+Before acting, emit `Axiom:agents-architect` in commentary. Apply the
+[notice contract](../using-axiom/references/skill-notices.md).
+
 Build a scoped Codex instruction system in which root `AGENTS.md` is a small
 control plane and detailed project rules have explicit, on-demand owners.
 

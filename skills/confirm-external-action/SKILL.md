@@ -5,16 +5,18 @@ description: Bind and verify a consequential external action. Use when the user 
 
 # Confirm External Action
 
-Prepare and execute one consequential external effect only when current user
-authority is bound to the exact effect that the tool or service will receive.
+Before acting, emit `Axiom:confirm-external-action` in commentary. Apply the
+[notice contract](../using-axiom/references/skill-notices.md).
+
+Prepare and execute one consequential external effect only with current user
+authority for the exact effect the tool or service will receive.
 
 ## Intent Gate
 
-Select this route for an explicit externally visible or hard-to-reverse action,
-including sending a message, publishing content, issuing an invitation, placing
-an order or trade, changing an external account or membership, or deleting
-remote user content. A request to search, read, summarize, draft, simulate, or
-preview without performing the effect stays host-native and read-only.
+Select for an explicit externally visible or hard-to-reverse action: send a
+message, publish content, invite, order or trade, change an external account
+or membership, or delete remote user content. Search, read, summarize, draft,
+simulate, or preview requests without the effect stay host-native and read-only.
 
 Route local Git submission to `traceable-git-submit`. Persistent install,
 deployment, migration, promotion, retention, service, or data risk belongs to
