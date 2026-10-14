@@ -72,8 +72,9 @@ Then try an ordinary request:
 Summarize the purpose of this README. Do not modify files.
 ```
 
-Each invoked skill first displays a short notice such as
-`Axiom:agents-architect`. The startup router displays `Axiom:using-axiom`,
+Each invoked skill first displays its full `Axiom:<skill-name>` marker in
+inline code, followed by a brief goal or reason on the same line. Further
+output starts in a new paragraph. The startup router uses `Axiom:using-axiom`,
 including when no other skill matches. The first request should select
 `agents-architect`; the second should continue normally without another skill.
 See the [notice contract](skills/using-axiom/references/skill-notices.md) for

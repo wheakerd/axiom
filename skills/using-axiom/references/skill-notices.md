@@ -1,10 +1,19 @@
 # Skill Invocation Notices
 
-Every invoked Axiom skill must begin with a short user-visible commentary
-line in this exact form: `Axiom:<skill-name>`. Replace `<skill-name>` with the
-skill's frontmatter `name`, preserving its lowercase kebab-case spelling.
-For example: `Axiom:task-planning`. Do not add a purpose statement to this
-line; any useful progress update can follow separately.
+Every invoked Axiom skill must begin with one short user-visible commentary
+line. Wrap the entire `Axiom:<skill-name>` marker in Markdown inline-code
+backticks, then add one space and a brief statement of the invocation's goal
+or reason in the user's language. Replace `<skill-name>` with the skill's
+frontmatter `name`, preserving its lowercase kebab-case spelling. Use this
+Markdown format:
+
+```markdown
+`Axiom:task-planning` Turn the current requirements into an actionable plan.
+```
+
+Do not display a bare marker, put the reason inside the code span, or insert
+separator decorations such as `--` or a dash between the marker and reason.
+After this notice line, continue any further output in a new paragraph.
 
 Emit the notice before the skill's workflow actions, including routing,
 questions, tool use, or delegation. This applies to explicit invocation,
