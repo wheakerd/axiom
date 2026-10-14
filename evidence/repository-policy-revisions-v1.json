@@ -456,6 +456,14 @@
       "sourceIssue": null,
       "summary": "Require concise, correctly named notices for every skill invocation, including startup and direct calls; preserve invocation boundaries and prepare the compatible runtime correction as 0.14.2.",
       "runtimeContractDigest": "sha256:376151bbcc2a9c367fc19badbf45e59b802c581937071d0ac7ba7ea7aaba7ba6"
+    },
+    {
+      "revision": 58,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "439c89b90261225c87e8f9027873868297984f81",
+      "sourceIssue": null,
+      "summary": "Advance the default marketplace source to verified immutable Latest v0.14.2 while preserving plugin version, installed runtime identity, deliberate source pins, and native client update controls.",
+      "runtimeContractDigest": "sha256:376151bbcc2a9c367fc19badbf45e59b802c581937071d0ac7ba7ea7aaba7ba6"
     }
   ]
 }
