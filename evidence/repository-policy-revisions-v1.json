@@ -472,6 +472,14 @@
       "sourceIssue": null,
       "summary": "Format inline-code skill markers with brief invocation goals, no separators, and further output in a new paragraph; prepare compatible runtime correction 0.14.3.",
       "runtimeContractDigest": "sha256:a00d850185cae14d6c7479ccf205db632e17944da8154cdad503435209877c0d"
+    },
+    {
+      "revision": 60,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "0441f471c443f23e17faa84cd695f9a65aea4e3f",
+      "sourceIssue": null,
+      "summary": "Advance the default marketplace source to verified immutable Latest v0.14.3 while preserving the installed runtime identity and native client update controls.",
+      "runtimeContractDigest": "sha256:a00d850185cae14d6c7479ccf205db632e17944da8154cdad503435209877c0d"
     }
   ]
 }
