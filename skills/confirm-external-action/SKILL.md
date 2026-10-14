@@ -5,9 +5,6 @@ description: Bind and verify a consequential external action. Use when the user 
 
 # Confirm External Action
 
-Before acting, emit `Axiom:confirm-external-action` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Prepare and execute one consequential external effect only with current user
 authority for the exact effect the tool or service will receive.
 

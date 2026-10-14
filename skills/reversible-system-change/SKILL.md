@@ -5,9 +5,6 @@ description: Plan, prepare recovery material, rehearse, or execute persistent sy
 
 # Reversible System Change
 
-Before acting, emit `Axiom:reversible-system-change` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Make one authorized persistent change without losing the ability to identify,
 restore, and verify the prior working state.
 

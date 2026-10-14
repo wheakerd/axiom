@@ -5,9 +5,6 @@ description: Reduce or diagnose Codex token, credit, and context consumption wit
 
 # Optimize Codex Usage
 
-Before acting, emit `Axiom:optimize-codex-usage` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Reduce total Codex consumption while preserving the requested outcome,
 authorization boundaries, safety checks, and completion evidence.
 

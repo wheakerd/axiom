@@ -5,9 +5,6 @@ description: Review an Axiom task's routing, scope, authorization, actions, evid
 
 # Review Axiom Task
 
-Before acting, emit `Axiom:review-axiom-task` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Review available evidence in a compact retrospective. Axiom supplies routing
 and workflow instructions, not an instrumented trace; the host acts through
 its normal tools and authority.

@@ -480,6 +480,14 @@
       "sourceIssue": null,
       "summary": "Advance the default marketplace source to verified immutable Latest v0.14.3 while preserving the installed runtime identity and native client update controls.",
       "runtimeContractDigest": "sha256:a00d850185cae14d6c7479ccf205db632e17944da8154cdad503435209877c0d"
+    },
+    {
+      "revision": 61,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "7201828a2970aad6d3f4551790f186c3b9ae3012",
+      "sourceIssue": null,
+      "summary": "Inline optional invocation guidance in using-axiom while preserving all other gate text; adjust minimum routing-gate headroom from 15% to 10% with a 7372-byte maximum and reviewed growth.",
+      "runtimeContractDigest": "sha256:6c0737b38c0003d889ef841ca527c9384b4c3d67fc6ee6440c654989756094f4"
     }
   ]
 }

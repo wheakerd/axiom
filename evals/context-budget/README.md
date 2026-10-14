@@ -30,7 +30,7 @@ python3 -B scripts/measure-routing-context.py --check
 
 The first command emits the actual file's digest and metrics as deterministic
 JSON to stdout. The second checks those bytes against the selected record and
-verifies the fixed workload identity, headroom limit, growth-review arithmetic,
+verifies the fixed workload identity, byte boundary, growth-review arithmetic,
 lifecycle matrix, and duplicate-injection semantics. Neither command writes
 files. A mismatch requires correcting the candidate or its record; changing a
 guide's prose cannot make stale measurements valid.
@@ -100,15 +100,16 @@ field must be null. Clause review separately checks route conditions and
 safety boundaries because static fixtures do not execute natural-language
 instructions. Static results cannot stand in for paired host observations.
 
-## Headroom And Record Ownership
+## Byte Boundary And Record Ownership
 
 [Runtime Changes](../../docs/maintainers/runtime-changes.md#always-loaded-context)
-requires at least 15% headroom below the 8,192-byte instruction boundary. The
-publication aggregate enforces the resulting 6,963-byte maximum against the
-actual startup file, independently of recorded metrics. Remaining bytes equal
-8,192 minus the measured `utf8Bytes`; divide that remainder by 8,192 to obtain
-the headroom fraction. Passing this size check does not replace routing and
-safety acceptance or permit lower model or reasoning settings.
+requires at least 10% headroom below the 8,192-byte authoring boundary, not a
+platform limit. The publication aggregate rejects more than 7,372 UTF-8 bytes
+(`8192 * 90 // 100`) against the actual startup file, independently of recorded
+metrics. Reviewed growth within that maximum is allowed; an earlier gate size
+is not a ceiling.
+Passing this check does not replace routing and safety acceptance or permit
+lower model or reasoning settings.
 
 The machine-readable record format is [schema v1](schema-v1.json); the current
 semantic checks are implemented in

@@ -5,9 +5,6 @@ description: Use before web search or follow-up page access from the user's mach
 
 # Local Web Search
 
-Before acting, emit `Axiom:local-web-search` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Keep local research requests relevant, avoid adding machine information, and
 stop automated access when a site challenges or limits it. These constraints
 cannot guarantee that Cloudflare or another service will not classify a

@@ -5,9 +5,6 @@ description: Clarify a user request when its wording supports materially differe
 
 # Clarify Intent
 
-Before acting, emit `Axiom:clarify-intent` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Turn a material ambiguity into a user decision while preserving the requested
 outcome, constraints, and existing authorization.
 

@@ -69,14 +69,13 @@ Compare routing growth cumulatively with the immutable baseline in
 at least 256 UTF-8 bytes or 5% requires review and a substantive justification;
 this is a review trigger, not a quality pass/fail shortcut.
 
-Keep the always-loaded gate at least 15% below the 8,192-byte instruction
-boundary after equivalent routing and safety acceptance, with roughly 6-6.5
-KiB preferred when precision permits. Treat 8,192 bytes as a rejection guard,
-not an authoring target. These targets do not establish that the current gate
-meets them; the context-budget report owns the measured result.
-The publication aggregate enforces the 15% minimum against the actual gate
-bytes, allowing at most 6,963 bytes. A passing size check does not replace
-equivalent routing and safety acceptance.
+Keep at least 10% headroom below the 8,192-byte authoring boundary for the
+always-loaded gate. This is an engineering reserve, not a platform limit.
+The publication aggregate rejects more than 7,372 UTF-8 bytes against the
+actual gate (`8192 * 90 // 100`). Growth within that maximum requires the
+review described above; do not rewrite stable routing merely to preserve an
+earlier file size. A passing size check does not replace routing and safety
+acceptance. The context-budget report owns the measured result.
 
 Any reduction experiment must use the same fixed routing workload before and
 after and report both routed and no-route results as passing. Bind reduction

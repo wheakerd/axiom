@@ -72,14 +72,16 @@ Then try an ordinary request:
 Summarize the purpose of this README. Do not modify files.
 ```
 
-Each invoked skill first displays its full `Axiom:<skill-name>` marker in
-inline code, followed by a brief goal or reason on the same line. Further
-output starts in a new paragraph. The startup router uses `Axiom:using-axiom`,
-including when no other skill matches. The first request should select
-`agents-architect`; the second should continue normally without another skill.
-See the [notice contract](skills/using-axiom/references/skill-notices.md) for
-invocation boundaries. These are expected behaviors, not a claim that your
-installation has already reproduced them.
+The first request should select `agents-architect`; the second should continue
+normally without another skill. When the startup gate is enabled or you
+explicitly invoke `using-axiom`, its
+[optional notice guidance](skills/using-axiom/SKILL.md#invocation-notes)
+leaves explanations and layout to the model and host under your output-verbosity
+preferences. Explanations identify Axiom skills as `Axiom:<skill-name>` and
+external skills (including repository-local skills), plugins, or MCP capabilities
+by their own inline-code names,
+with a brief reason. A quiet response is valid. These are expected behaviors,
+not a claim that your installation has already reproduced them.
 
 > [!IMPORTANT]
 > A request that matches no Axiom skill still follows Codex permissions

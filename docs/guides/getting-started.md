@@ -56,13 +56,19 @@ Use this read-only request:
 
 The expected contract is selection of `agents-architect`, a read-only evidence
 report, and no file mutation. A route selection is not permission to change the
-repository. Before the workflow, expect a notice like this:
+repository. With `using-axiom` active, the model and host may explain the
+invocation according to your output-verbosity preferences. For example:
 
 `Axiom:agents-architect` Review the repository's instruction structure.
 
-The entire marker is inline code; the brief goal or reason follows on the same
-line without a separator. Further output starts in a new paragraph. The startup
-router identifies itself separately with `Axiom:using-axiom` and its reason.
+The entire Axiom skill marker is inline code. An external or repository-local
+skill, plugin, or MCP capability keeps its own inline-code name and a
+brief reason, without an `Axiom:` prefix. The model chooses whether to explain
+the invocation and how to arrange the surrounding output.
+
+This optional guidance belongs to `using-axiom`: it applies through the enabled
+startup gate or an explicit invocation of that skill. With the gate disabled,
+invoking a different Axiom skill alone does not activate notice guidance.
 
 ## Try One Control Request
 
@@ -71,10 +77,10 @@ Use this ordinary request:
 > Summarize the purpose of this README. Do not modify files.
 
 The expected contract is normal host execution with no additional Axiom route.
-An invoked startup router still displays `Axiom:using-axiom`. A no-route result
-is not a safety certification; host permissions and repository instructions
-remain in force. See the [notice contract](../../skills/using-axiom/references/skill-notices.md)
-for invocation boundaries.
+Startup and a no-route result receive no notice. A no-route result is not
+a safety certification; host permissions and repository instructions remain
+in force. See the [notice guidance](../../skills/using-axiom/SKILL.md#invocation-notes)
+for activation and naming boundaries.
 
 ## Interpret And Report The Result
 
