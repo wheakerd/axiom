@@ -488,6 +488,14 @@
       "sourceIssue": null,
       "summary": "Inline optional invocation guidance in using-axiom while preserving all other gate text; adjust minimum routing-gate headroom from 15% to 10% with a 7372-byte maximum and reviewed growth.",
       "runtimeContractDigest": "sha256:6c0737b38c0003d889ef841ca527c9384b4c3d67fc6ee6440c654989756094f4"
+    },
+    {
+      "revision": 62,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "5b80e7c68fa6335e0c4183fd77919fbb94b7930e",
+      "sourceIssue": null,
+      "summary": "Advance the default marketplace source to verified immutable Latest v0.14.4 while preserving the installed runtime identity and native client update controls.",
+      "runtimeContractDigest": "sha256:6c0737b38c0003d889ef841ca527c9384b4c3d67fc6ee6440c654989756094f4"
     }
   ]
 }
