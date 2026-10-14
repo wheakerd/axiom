@@ -9,6 +9,20 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 58
+
+### Changed
+
+- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.2`.
+
+### Behavioral impact
+
+Marketplace refresh now selects the release that displays `Axiom:<skill-name>` for every skill invocation. This catalog handoff preserves plugin version `0.14.2` and its installed runtime digest.
+
+### Required action
+
+Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
+
 ## 0.14.2 - unreleased
 
 ### Fixed
