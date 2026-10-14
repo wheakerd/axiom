@@ -18,7 +18,7 @@ before access; routing stays read-only.
 ## Bundled Routes
 
 - `clarify-intent`: resolve ambiguity among plausible meanings with a focused question, useful options and a custom answer; never reopen settled choices or ask routine details.
-- `delegate-simple-task`: assess clear simple tasks using available subagent candidates in user order. Keep the main model; announce exact child model and task. Verified Full Access permits assignment within authority; else use existing assignment confirmation or ask. Host restrictions apply.
+- `delegate-simple-task`: assess simple-task models only with this gate active and verified user-selected `Ultra`. Before loading, require user confirmation or explicit invocation consent; else ask and wait. Missing gate or Ultra evidence blocks direct requests too; Full Access cannot bypass.
 - `task-planning`: create/revise current task/implementation plans, including scope removal/replacement. Exclude scheduling, status, corrections, execution. Keep specialized planning ownership/authority.
 - `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling. Exclude ordinary continuation and skill discussion.
 - `local-web-search`: constrain planned web search and follow-up page access from the user's machine or local workspace browser/client. Classify uncertain execution location before access. Exclude confirmed cloud-hosted search and unrelated web app actions.

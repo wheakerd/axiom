@@ -432,6 +432,14 @@
       "sourceIssue": null,
       "summary": "Document native sparse marketplace installation and clone-timeout recovery, preserving source pins, client update controls, plugin version, and installed runtime.",
       "runtimeContractDigest": "sha256:fd42aceebd2d390a8bcaec02d2d66d2d5ebe18ebc01b1bcaf4dddab2aee10747"
+    },
+    {
+      "revision": 55,
+      "recordedOn": "2026-10-13",
+      "baselineCommit": "9ecfa46e6a11c3228dca348517ae8b95310767f2",
+      "sourceIssue": null,
+      "summary": "Require the active using-axiom gate, verified user-selected Ultra reasoning, and invocation consent for simple-task delegation; prepare the compatible runtime correction as 0.14.1.",
+      "runtimeContractDigest": "sha256:4d246152c8738c4925c28b74336a9518892bdf9c6d57d1c813dc5595d07ffd10"
     }
   ]
 }
