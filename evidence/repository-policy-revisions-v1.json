@@ -448,6 +448,14 @@
       "sourceIssue": null,
       "summary": "Advance the default marketplace source to verified immutable Latest v0.14.1 while preserving plugin version, installed runtime identity, deliberate source pins, and native client update controls.",
       "runtimeContractDigest": "sha256:4d246152c8738c4925c28b74336a9518892bdf9c6d57d1c813dc5595d07ffd10"
+    },
+    {
+      "revision": 57,
+      "recordedOn": "2026-10-14",
+      "baselineCommit": "a529255151f990f4a9a96fbdd20a867ae1187f73",
+      "sourceIssue": null,
+      "summary": "Require concise, correctly named notices for every skill invocation, including startup and direct calls; preserve invocation boundaries and prepare the compatible runtime correction as 0.14.2.",
+      "runtimeContractDigest": "sha256:376151bbcc2a9c367fc19badbf45e59b802c581937071d0ac7ba7ea7aaba7ba6"
     }
   ]
 }

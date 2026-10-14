@@ -5,6 +5,9 @@ description: Supervised progress across Codex sessions by explicit invocation on
 
 # Continuous Progress
 
+Before acting, emit `Axiom:continuous-progress` in commentary. Apply the
+[notice contract](../using-axiom/references/skill-notices.md).
+
 Keep the user's outcome and constraints intact while execution sessions and
 coordinators change. Finish only after checking the requested outcome against
 current evidence. A worker exit, coordinator final response, or failed handoff

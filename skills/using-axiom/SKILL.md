@@ -1,7 +1,9 @@
 ---
 name: using-axiom
-description: Route startup, resume, compaction, requests and local web research to Axiom skills.
+description: Route startup, resume, compaction, requests and local web research.
 ---
+
+Emit `Axiom:using-axiom`; follow `references/skill-notices.md`.
 
 ## Route Once
 
@@ -9,11 +11,11 @@ description: Route startup, resume, compaction, requests and local web research 
 2. Route only explicit Axiom invocations or clear bundled-description matches.
 3. Load the smallest matching installed skill set and active-phase references. Inspect no candidate bodies before selection.
 4. Map unambiguous non-English to its canonical English route. Clarify only material unresolved intent; tentative wording alone is no trigger.
-5. No match: continue normally in the host; do not mention Axiom. A no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
+5. No match: continue normally in the host. A no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
 
-Before later web research from local or uncertain execution locations,
-including fallbacks from cloud search, reassess and select `local-web-search`
-before access; routing stays read-only.
+Before web research from local or uncertain execution locations, including
+cloud-search fallbacks, reassess and select `local-web-search`; routing stays
+read-only.
 
 ## Bundled Routes
 

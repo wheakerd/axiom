@@ -5,15 +5,17 @@ description: Review an Axiom task's routing, scope, authorization, actions, evid
 
 # Review Axiom Task
 
-Produce a compact retrospective from available evidence. This is not an
-instrumented execution trace: Axiom supplies routing and workflow instructions,
-while the host agent performs actions through its normal tools and authority.
+Before acting, emit `Axiom:review-axiom-task` in commentary. Apply the
+[notice contract](../using-axiom/references/skill-notices.md).
+
+Review available evidence in a compact retrospective. Axiom supplies routing
+and workflow instructions, not an instrumented trace; the host acts through
+its normal tools and authority.
 
 ## Scope Gate
 
-- Identify the review target before inspecting history. Use the current task
-  segment preceding the review request, or one task or thread the user
-  explicitly identifies.
+- Before inspecting history, select the preceding task segment or one task
+  or thread explicitly identified by the user.
 - Freeze the reviewed execution immediately before the triggering request.
   Record that request as review authority, and keep the review's own reads and
   reasoning outside the task being reviewed.
