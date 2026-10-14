@@ -9,6 +9,20 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 62
+
+### Changed
+
+- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.4`.
+
+### Behavioral impact
+
+Marketplace refresh now selects the release with optional invocation explanations owned by `using-axiom` and native verbosity controls. This catalog handoff preserves plugin version `0.14.4` and its installed runtime digest.
+
+### Required action
+
+None. Existing clients follow Codex's native marketplace refresh and update controls.
+
 ## 0.14.4 - unreleased
 
 ### Fixed
