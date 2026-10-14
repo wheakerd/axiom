@@ -23,6 +23,14 @@ ambiguity selects `clarify-intent` before an action route. English route
 definitions remain canonical; non-English fixture requests test normalization
 and do not define localized aliases.
 
+The preserved `codex-core-v4` benchmark uses `medium` reasoning and includes
+the delegation-positive expectation from `0.14.0`. That expectation does not
+verify the stricter [delegation activation conditions](../skills/delegate-simple-task/SKILL.md#activation)
+introduced in `0.14.1`. Do not use it as current Ultra-gate evidence. A future
+host observation of that changed behavior needs a successor contract with
+explicit gate, effort, and invocation-consent cases. Static checks continue to
+validate the frozen assets without claiming current host behavior.
+
 ## Contract changes
 
 Case IDs are stable and cannot be repurposed. A change to the request, expected

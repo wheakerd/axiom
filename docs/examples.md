@@ -17,15 +17,24 @@ the correction is clear. Full Access does not resolve intent.
 
 ## `delegate-simple-task`
 
-> Use my ordered model candidates to handle this small, clearly scoped edit.
+> I authorize $delegate-simple-task to assess this small edit using my ordered
+> model candidates, only with using-axiom active and my Ultra reasoning verified.
 
-[Delegate Simple Task](../skills/delegate-simple-task/SKILL.md) assesses the
+[Delegate Simple Task](../skills/delegate-simple-task/SKILL.md) requires an
+enabled, active `using-axiom` gate, current host evidence of user-selected
+`Ultra` reasoning, and consent to invoke the skill. When the gate and Ultra
+are verified but consent is missing, the gate asks once and waits before
+loading it. An inactive or unverified gate, non-Ultra reasoning, or unknown
+effort prevents activation, even for a direct skill request.
+
+After authorized activation, the skill assesses the
 first available candidate whose relevant capability is supported, announces its
 exact model and faithful task brief, and checks the result. The main model stays
 unchanged. Model names alone establish neither price nor suitability.
 
-Verified Full Access permits assignment within existing task authority and host
-restrictions. Otherwise, use existing assignment approval or obtain it. Missing
+Verified Full Access cannot replace invocation consent. After activation, it
+permits assignment within existing task authority and host restrictions.
+Otherwise, use existing assignment approval or obtain it. Missing
 model preferences require a decision; unavailable delegation may fall back to
 the main session. This Skill does not invoke clarification itself: the startup
 gate resolves material ambiguity before delegation.

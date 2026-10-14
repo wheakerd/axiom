@@ -62,7 +62,7 @@ controls are in [Examples](examples.md).
 | Route | Responsibility |
 | --- | --- |
 | `clarify-intent` | Resolve material ambiguity with a focused question, plausible options, and a custom answer |
-| `delegate-simple-task` | Assign clear bounded work using user-ordered model candidates while preserving the main model and host restrictions |
+| `delegate-simple-task` | Assess clear bounded work through the active gate with verified Ultra and invocation consent; preserve the main model and assignment boundaries |
 | `task-planning` | Create or revise general task plans while preserving specialized planning ownership |
 | `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |

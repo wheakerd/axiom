@@ -125,13 +125,14 @@ before making changes.
 **Link:** [Bounded task delegation](skills/delegate-simple-task/SKILL.md)
 
 **Description:** Assesses simple work against your ordered model preferences
-while preserving the main model.
+while preserving the main model. Requires the active `using-axiom` gate,
+verified `Ultra` reasoning, and your consent to invoke the skill.
 
 **Usage:**
 
 ```text
-Use $delegate-simple-task to assess whether this typo fix can be delegated
-using my model preferences.
+I authorize $delegate-simple-task to assess this typo fix using my model
+preferences, only with the using-axiom gate active and my Ultra reasoning verified.
 ```
 
 #### task-planning

@@ -44,10 +44,13 @@ action. It cannot broaden the request. In particular:
 
 - Clarification resolves intent; it grants no execution authority. Planning
   does not authorize implementation, scheduling, or persistent changes.
-- Delegation preserves the main model, follows user-ordered candidate models,
-  and announces the exact child model and task. Verified Full Access permits an
-  assignment only within existing authority and host restrictions. Otherwise,
-  use existing assignment approval or obtain it before delegating.
+- Simple-task delegation requires the active `using-axiom` gate, verified
+  user-selected `Ultra` reasoning, and consent to invoke the skill. Full Access
+  cannot waive those conditions. After activation, delegation preserves the
+  main model, follows user-ordered candidates, and announces the exact child
+  model and task. Verified Full Access permits an assignment only within
+  existing authority and host restrictions; otherwise use existing assignment
+  approval or obtain it before delegating.
 - Architecture work stays within its authorized repository instruction system
   or packaged-plugin surface. A release-readiness audit remains read-only.
 - Continuous progress requires explicit invocation and verified native

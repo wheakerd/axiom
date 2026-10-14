@@ -9,6 +9,28 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.1 - unreleased
+
+### Fixed
+
+- Require an active `using-axiom` gate, verified user-selected `Ultra` reasoning, and confirmation or explicit authorization before invoking `delegate-simple-task`.
+- Keep direct requests, Full Access, and resumed work subject to the same activation conditions; preserve separate assignment permissions.
+
+### Removed
+
+- Removed automatic simple-task skill activation without invocation consent in `0.14.1`. The startup gate now requests confirmation when eligible; disabled or unverified gates and non-Ultra or unknown effort do not trigger the skill.
+
+### Behavioral impact
+
+The main session continues the task when activation conditions are not met. Full Access cannot replace invocation consent or enable the gate. An explicit skill request supplies consent but cannot bypass gate or reasoning checks.
+
+### Required action
+
+To use this skill, enable `using-axiom`, select `Ultra`, and confirm or explicitly authorize the skill invocation. Existing explicit authorization is honored within its scope. Users staying on other reasoning levels need take no action.
+
+See the [version notes](docs/releases/v0.14.1.md) for activation and evidence boundaries.
+
+
 ## Repository policy revision 54
 
 ### Changed

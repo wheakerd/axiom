@@ -379,7 +379,9 @@ def check_skill_contracts(failures: list[str]) -> None:
                 metadata = parse_agent_metadata_document(
                     metadata_text,
                     display_path(metadata_path),
-                    allow_policy=skill_name in {"using-axiom", "continuous-progress"},
+                    allow_policy=skill_name in {
+                        "using-axiom", "continuous-progress", "delegate-simple-task"
+                    },
                 )
             except CanonicalYamlError as error:
                 failures.append(str(error))
