@@ -9,6 +9,31 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.4 - unreleased
+
+### Fixed
+
+- Make invocation explanations optional and owned by `using-axiom`, active only through the enabled startup gate or an explicit invocation of that skill. Inline the rules in its body so the startup Hook delivers them without a separate reference read.
+- Reserve the inline-code `Axiom:<skill-name>` marker for bundled Axiom skills. External and repository-local skills, plugins, and MCP capabilities keep their own inline-code names and a brief reason when explained.
+
+### Changed
+
+- Adjust the routing gate's minimum headroom from 15% to 10%, enforcing a 7,372-byte maximum below the 8,192-byte authoring boundary. This accommodates the required inline invocation guidance while preserving all other gate text.
+
+### Removed
+
+- Replace the mandatory notices introduced in `0.14.2` and the fixed output layout introduced in `0.14.3` with model- and host-controlled explanations in `0.14.4`.
+
+### Behavioral impact
+
+The model and host decide whether to explain an invocation under the user's output-verbosity preferences and choose the surrounding layout. With the startup gate disabled, invoking another Axiom skill alone does not enable notice guidance. Existing routing, consent, and authorization conditions remain in force.
+
+### Required action
+
+None. Use the host's native verbosity and gate controls; no new Axiom setting is required.
+
+See the [version notes](docs/releases/v0.14.4.md) for activation, ownership, and evidence boundaries.
+
 ## Repository policy revision 60
 
 ### Changed

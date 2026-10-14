@@ -5,9 +5,6 @@ description: Create or revise an actionable task plan from the user's current re
 
 # Task Planning
 
-Before acting, emit `Axiom:task-planning` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Produce a self-contained plan that describes the work currently requested.
 Treat the plan as the current agreement about the work. Size its detail to the
 task and preserve the user's preferred format when it remains useful.

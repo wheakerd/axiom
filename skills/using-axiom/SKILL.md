@@ -3,7 +3,9 @@ name: using-axiom
 description: Route startup, resume, compaction, requests and local web research.
 ---
 
-Emit `Axiom:using-axiom`; follow `references/skill-notices.md`.
+## Invocation Notes
+
+Optional, per the user's verbosity preference and host behavior. When explaining, name bundled Axiom skills in inline code as `Axiom:<skill-name>`; name other skills, plugins, MCP tools or repository-local skills by their own name in inline code, without `Axiom:`. Give a brief reason in the user's language. No fixed layout or repetition; no notice for no-route or startup.
 
 ## Route Once
 

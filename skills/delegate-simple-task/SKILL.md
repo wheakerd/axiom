@@ -5,9 +5,6 @@ description: Assess clear, simple, bounded work using the user's ordered subagen
 
 # Delegate Simple Task
 
-Before acting, emit `Axiom:delegate-simple-task` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Keep the main session model and its responsibility for the user's outcome.
 Assign suitable work only to a model the user has included in an ordered
 candidate list.

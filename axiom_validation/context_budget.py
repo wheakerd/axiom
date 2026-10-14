@@ -49,8 +49,8 @@ BASELINE_METRICS = {
 }
 ABSOLUTE_REVIEW_BYTES = 256
 RELATIVE_REVIEW_BASIS_POINTS = 500
-# Reserve at least 15% of the 8 KiB instruction boundary, using whole bytes.
-ROUTING_GATE_MAX_BYTES = 8192 * 85 // 100
+# Preserve at least 10% headroom below the 8 KiB authoring boundary.
+ROUTING_GATE_MAX_BYTES = 8192 * 90 // 100
 HOSTS = ("codex",)
 CURRENT_LIFECYCLE_HOST_STATUSES = {
     "codex": "not-run",
@@ -732,7 +732,7 @@ def check_context_budget(failures: list[str]) -> int:
         current_metrics = None
     if current_metrics is not None and current_metrics["utf8Bytes"] > ROUTING_GATE_MAX_BYTES:
         failures.append(
-            "routing gate must retain at least 15% headroom below 8192 bytes: "
+            "routing gate must preserve at least 10% headroom below 8192 bytes: "
             f"measured {current_metrics['utf8Bytes']} bytes; maximum {ROUTING_GATE_MAX_BYTES}"
         )
     if candidate is not None:

@@ -5,9 +5,6 @@ description: Design, initialize, audit, migrate, maintain, or evaluate a package
 
 # Agent Plugin Architect
 
-Before acting, emit `Axiom:agent-plugin-architect` in commentary. Apply the
-[notice contract](../using-axiom/references/skill-notices.md).
-
 Design or audit the smallest coherent packaged-plugin control plane for Codex
 and Claude Code. Treat Codex as the first-class target and preserve a single
 shared Skill tree when both hosts can discover it without weakening Codex.
