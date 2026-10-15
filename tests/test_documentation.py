@@ -26,10 +26,10 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         report = check_documentation(failures)
         self.assertEqual([], failures)
-        self.assertEqual(141, report.markdown_count)
+        self.assertEqual(142, report.markdown_count)
         self.assertEqual(22, report.current_document_count)
         self.assertEqual(17, report.indexed_document_count)
-        self.assertEqual(33, report.generated_region_count)
+        self.assertEqual(34, report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
         self.assertEqual("within", report.preferred_budget_status)
 

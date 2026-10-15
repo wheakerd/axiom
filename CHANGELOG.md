@@ -9,6 +9,22 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.5 - unreleased
+
+### Changed
+
+- Shorten five `using-axiom` Bundled Routes entries by removing descriptions already supplied by their skills' unchanged frontmatter.
+
+### Behavioral impact
+
+The startup gate carries less repeated text. Route matching continues to use bundled skill descriptions, while route ownership, exclusions, consent, authorization, and invocation guidance remain unchanged.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.14.5.md) for the scope and static context measurement.
+
 ## Repository policy revision 62
 
 ### Changed

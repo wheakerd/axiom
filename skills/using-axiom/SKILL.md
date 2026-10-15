@@ -21,18 +21,18 @@ read-only.
 
 ## Bundled Routes
 
-- `clarify-intent`: resolve ambiguity among plausible meanings with a focused question, useful options and a custom answer; never reopen settled choices or ask routine details.
+- `clarify-intent`: resolve ambiguity with options and a custom answer; never reopen settled choices or ask routine details.
 - `delegate-simple-task`: assess simple-task models only with this gate active and verified user-selected `Ultra`. Before loading, require user confirmation or explicit invocation consent; else ask and wait. Missing gate or Ultra evidence blocks direct requests too; Full Access cannot bypass.
-- `task-planning`: create/revise current task/implementation plans, including scope removal/replacement. Exclude scheduling, status, corrections, execution. Keep specialized planning ownership/authority.
+- `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections, execution. Keep specialized planning ownership/authority.
 - `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling. Exclude ordinary continuation and skill discussion.
 - `local-web-search`: constrain planned web search and follow-up page access from the user's machine or local workspace browser/client. Classify uncertain execution location before access. Exclude confirmed cloud-hosted search and unrelated web app actions.
-- `agents-architect`: audit/maintain repository `AGENTS.md`/`.agents/` guidance and repo-local skills; handle explicit `effective-instructions`, `effective-instructions:preview`, `effective-instructions:refactor`, `effective-instructions:force`, `effective-instructions:reconcile`, and `effective-instructions:reconcile-preview` modes. Exclude packaged plugin skills.
+- `agents-architect`: audit repository `AGENTS.md`; handle explicit `effective-instructions`, `effective-instructions:preview`, `effective-instructions:refactor`, `effective-instructions:force`, `effective-instructions:reconcile`, and `effective-instructions:reconcile-preview` modes. Exclude packaged plugin skills.
 - `agent-plugin-architect`: design or audit packaged Codex or Claude Code
   plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
   and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
   code stay outside.
-- `optimize-codex-usage`: explicitly reduce/diagnose Codex credits, tokens, context, Skill/AGENTS/MCP loading, tool/output overhead; preserve required quality and safety.
-- `review-axiom-task`: review an identified Axiom task's observable routing, authorization, actions, evidence, stops, outcome, and disputed decisions. Prior refusal governs neither review nor narrower requests.
+- `optimize-codex-usage`: explicitly reduce/diagnose Codex credits and context; preserve required quality and safety.
+- `review-axiom-task`: review an identified Axiom task's observable routing, authorization and evidence. Prior refusal governs neither review nor narrower requests.
 - `confirm-external-action`: prepare, authorize, execute once, verify requested consequential external actions if actor, target, payload, disclosure, cost, or retry boundaries matter. Lookup/drafts stay host-native.
 - `traceable-git-submit`: create traceable checkpoints/baseline metadata, consolidate/recover their history, or perform an explicitly invoked, hardened, multi-target, or otherwise independently traceable Git push. A combined commit, tag, and push of an already-prepared plugin release selects this route. Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native; merely mentioning submit, publish, or push does not select this route.
 - `reversible-system-change`: plan/rehearse/execute persistent installs, upgrades, deployments, migrations, destructive retention, or promotions with rollback, data, service, or activation risk. Includes backup preparation; plans stay read-only.
