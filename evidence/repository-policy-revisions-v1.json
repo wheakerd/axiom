@@ -504,6 +504,14 @@
       "sourceIssue": null,
       "summary": "Compact five duplicated Bundled Routes descriptions while preserving frontmatter matching, authorization boundaries, and all text outside the route list.",
       "runtimeContractDigest": "sha256:8e0c16b80a129664114ae3580f0080e640ee250478efe61887fe62307a759e58"
+    },
+    {
+      "revision": 64,
+      "recordedOn": "2026-10-15",
+      "baselineCommit": "de9676cd16e552ff4226ac7a8f0eab49653f5300",
+      "sourceIssue": null,
+      "summary": "Advance the default marketplace source to verified immutable Latest v0.14.5 while preserving the installed runtime identity and native client update controls.",
+      "runtimeContractDigest": "sha256:8e0c16b80a129664114ae3580f0080e640ee250478efe61887fe62307a759e58"
     }
   ]
 }
