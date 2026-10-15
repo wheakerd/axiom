@@ -9,6 +9,20 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 64
+
+### Changed
+
+- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.5`.
+
+### Behavioral impact
+
+Marketplace refresh now selects the release with shorter Bundled Routes summaries. This catalog handoff preserves plugin version `0.14.5` and its installed runtime digest.
+
+### Required action
+
+None. Existing clients follow Codex's native marketplace refresh and update controls.
+
 ## 0.14.5 - unreleased
 
 ### Changed
