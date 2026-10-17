@@ -162,7 +162,7 @@ host caches as a substitute for the host-managed lifecycle.
 
 ## Non-Destructive Troubleshooting
 
-If the loading message or expected route is missing:
+If expected Axiom capabilities are unavailable or a request routes incorrectly:
 
 1. Confirm that Axiom is installed and enabled in the host's plugin list.
 2. Open `/hooks` and confirm that the `SessionStart` Hook is present, trusted,
