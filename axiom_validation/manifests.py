@@ -966,13 +966,15 @@ def check_claude_marketplace(
     repository_root: Path = REPOSITORY_ROOT,
 ) -> None:
     """Validate the optional Claude Code catalog once a verified handoff adds it."""
-    path = repository_root / CLAUDE_MARKETPLACE_RELATIVE
-    if not path.exists() and not path.is_symlink():
-        return
     label = CLAUDE_MARKETPLACE_RELATIVE
-    document = load_json(path, failures)
+    document = documents.get(label)
     if document is None:
-        return
+        path = repository_root / label
+        if not path.exists() and not path.is_symlink():
+            return
+        document = load_json(path, failures)
+        if document is None:
+            return
     exact_json_object(document, label, CLAUDE_MARKETPLACE_KEYS, failures)
     require_json_strings(document, frozenset({"name", "description"}), label, failures)
     if document.get("name") != EXPECTED_PLUGIN_NAME:

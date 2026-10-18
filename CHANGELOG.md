@@ -9,6 +9,21 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## Repository policy revision 69
+
+### Changed
+
+- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.15.0`.
+- Publish the Claude Code marketplace catalog, selecting the same immutable release `v0.15.0`.
+
+### Behavioral impact
+
+Codex marketplace refresh now selects the release with Claude Code support and the Git submission hardening. Claude Code can add the `wheakerd/axiom` marketplace and install `axiom@axiom`. This catalog handoff preserves plugin version `0.15.0` and its installed runtime digest.
+
+### Required action
+
+None for existing Codex clients, which follow Codex's native marketplace refresh and update controls. Claude Code users install through the commands in the README.
+
 ## 0.15.0 - unreleased
 
 ### Added
