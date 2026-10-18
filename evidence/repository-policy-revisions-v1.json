@@ -544,6 +544,14 @@
       "sourceIssue": null,
       "summary": "Restore Claude Code as a supported installation and runtime host through runtime schema v3, and reject hard-wrapped Changelog entries for new releases.",
       "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868"
+    },
+    {
+      "revision": 69,
+      "recordedOn": "2026-10-18",
+      "baselineCommit": "ebc08dfd5bb972ae8f54a86bb3d2eb9d8c348824",
+      "sourceIssue": null,
+      "summary": "Advance the Codex marketplace source to verified Latest v0.15.0, publish the Claude Code marketplace catalog at the same immutable release, and validate catalog agreement against supplied documents.",
+      "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868"
     }
   ]
 }

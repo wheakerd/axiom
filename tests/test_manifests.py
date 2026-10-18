@@ -1,19 +1,21 @@
 """Focused tests for manifest and marketplace policy."""
 
 import copy
+import json
 import struct
 import tempfile
 import unittest
 import zlib
 from pathlib import Path
 
-from axiom_validation.context import RELEASE_VERSION, release_version
+from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT, release_version
 from axiom_validation.release_versions import (
     PRODUCTION_RELEASE_VERSION_CASES,
     parse_production_release_tag,
     parse_production_release_version,
 )
 from axiom_validation.manifests import (
+    CLAUDE_MARKETPLACE_RELATIVE,
     BRANDING_IMAGE_MAX_BYTES,
     EXPECTED_CODEX_DEFAULT_PROMPTS,
     JSON_FILES,
@@ -125,6 +127,11 @@ class ManifestPolicyTests(unittest.TestCase):
     def test_catalog_can_retain_a_published_version_during_development(self):
         documents = self.documents()
         documents[".agents/plugins/marketplace.json"]["plugins"][0]["source"]["ref"] = "v0.13.4"
+        claude_catalog = REPOSITORY_ROOT / CLAUDE_MARKETPLACE_RELATIVE
+        if claude_catalog.is_file():
+            claude = json.loads(claude_catalog.read_text(encoding="utf-8"))
+            claude["plugins"][0]["source"]["ref"] = "v0.13.4"
+            documents[CLAUDE_MARKETPLACE_RELATIVE] = claude
         failures = []
         check_manifest_capability_schema(documents, failures)
         check_manifest_versions(documents, failures)
