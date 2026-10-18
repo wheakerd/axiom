@@ -66,7 +66,7 @@ are the external interpretation references.
 ## Main Branch Policy
 
 The active repository ruleset `require-signed-commits-on-main`, ID `20677005`
-and updated at `2026-10-02T03:03:01.610Z`, targets exactly
+and updated at `2026-10-18T05:00:36.457Z`, targets exactly
 `refs/heads/main`. Its administrator-visible REST response reported
 `bypass_actors: []` and `current_user_can_bypass: never`. It contains:
 
@@ -95,6 +95,14 @@ branch at verification time, but no destructive deletion probe was attempted
 and no repository-specific deletion rule was observed. Default-branch deletion
 rule: **UNAVAILABLE / NOT-RUN**. This absence must not be rewritten as an
 enforced deletion restriction.
+
+On 2026-10-18, with the repository owner's explicit approval, this ruleset's
+enforcement was disabled for one lease-guarded update that reset `main` from
+`33cf1a9` to its parent `e0de645`, and was then restored. The identical reviewed
+tree was re-landed through signed pull request #152 as `81317b7`, removing a
+co-author trailer from `main` history. The restored ruleset was read back
+identical to the reviewed snapshot except for its server update instant, which
+the release-tag controller now binds.
 
 ## Release Tag Policy
 
