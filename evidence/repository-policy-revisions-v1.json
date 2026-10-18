@@ -512,6 +512,14 @@
       "sourceIssue": null,
       "summary": "Advance the default marketplace source to verified immutable Latest v0.14.5 while preserving the installed runtime identity and native client update controls.",
       "runtimeContractDigest": "sha256:8e0c16b80a129664114ae3580f0080e640ee250478efe61887fe62307a759e58"
+    },
+    {
+      "revision": 65,
+      "recordedOn": "2026-10-17",
+      "baselineCommit": "e0de6457e56f86ffa3bd79fc5e87ffdf7b3b1e29",
+      "sourceIssue": null,
+      "summary": "Document Python, Node.js, Git inventory and history prerequisites for contributor validation; trigger installation troubleshooting on missing capabilities or incorrect routing.",
+      "runtimeContractDigest": "sha256:8e0c16b80a129664114ae3580f0080e640ee250478efe61887fe62307a759e58"
     }
   ]
 }
