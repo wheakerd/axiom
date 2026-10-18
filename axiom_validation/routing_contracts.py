@@ -676,6 +676,7 @@ def has_exact_route_token(text: str, token: str) -> bool:
 
 
 def check_routing_source_contracts(failures: list[str]) -> None:
+    check_target_instruction_contracts(failures)
     route_catalog = load_route_catalog(failures)
     shared_boundary_anchors = (
         tuple(route_catalog["sharedSourceAnchors"])
@@ -778,6 +779,85 @@ def require_ordered_contract_anchors(
             )
             return
         cursor = index + len(anchor)
+
+
+def check_target_instruction_contracts(failures: list[str]) -> None:
+    """Bind portable validation and discovery claims to their source owners."""
+    contracts = (
+        (
+            "agent-plugin-architect/references/validation-reporting.md",
+            "target validation applicability",
+            (
+                "frozen disposable copy outside the publishable tree",
+                "Derive required commands, languages, byte limits, schemas, aggregate validators, and test entrypoints from the target repository's current contract.",
+                "target-owned tests and aggregate validators, in their declared languages",
+                "duplicate-aware JSON and JSONL parsing where those formats are used",
+                "declared language rules, and byte limits",
+                "declared root-to-reference reachability and Skill layout",
+                "manifest and hook parsing, supported-host parity, and hook non-expansion",
+                "historical byte preservation, and diff hygiene",
+                "Missing target-required checks remain incomplete or `NOT-RUN`",
+                "do not import an Axiom-named suite or undeclared ASCII policy",
+                "Do not install, activate, publish, deploy, or contact external services",
+            ),
+            ("the full standard-library test suite and aggregate publication validator",
+             "exact ASCII policy"),
+        ),
+        (
+            "agent-plugin-architect/references/evaluation-and-evidence.md",
+            "target evaluation applicability",
+            (
+                "existing routing evaluator and evidence schemas when present",
+                "Extend them only where the authorized change requires it",
+                "preserve historical schemas, benchmark definitions, and observations",
+                "Without such tooling, use a proportional manual/static scenario review",
+                "do not create an evaluator or install tooling merely to satisfy this Skill",
+                "Missing target-required evidence remains incomplete or `NOT-RUN`",
+                "If the target has an actual always-loaded startup surface, compare its before/after bytes",
+                "Reuse its context framework when present",
+                "declared materiality threshold",
+                "Without a framework, report the byte comparison and its limits",
+                "Do not invent a startup gate or threshold for a target that has none",
+                "never a pass inferred from files",
+            ),
+            ("Measure the actual always-loaded routing-gate delta with the existing context framework",),
+        ),
+        (
+            "agents-architect/references/routing-architecture.md",
+            "native Skill discovery boundary",
+            (
+                "On-demand rule layer: ordinary `.agents/`",
+                "rule leaves reached through explicit `AGENTS.md` routing",
+                "Only root or justified nested files named `AGENTS.md` belong to the native auto-load layer Axiom writes",
+                "Ordinary `.agents/**` rule resources need an explicit next hop",
+                "Repo-local `.agents/skills/**/SKILL.md`, including nested topics, may be discovered natively as Skill metadata",
+                "separate from AGENTS instruction-chain loading",
+                "does not prove body loading or selection",
+                "A declared AGENTS front door remains a project instruction; nesting alone does not enforce it",
+                "Do not create AGENTS branches inside protected plugin metadata",
+            ),
+            ("Every `.agents/**` document",),
+        ),
+        (
+            "agents-architect/references/validation-reporting.md",
+            "conditional AGENTS-to-Skill validation",
+            (
+                "Repo-local Skill changes: validate discovery metadata, frontmatter, direct routes, and resources",
+                "Check the AGENTS selector only for a declared AGENTS-to-Skill route",
+                "standalone Skills need none",
+                "Discovery proves neither explicit-route reachability nor body loading",
+                "Do not report suggestions as completed changes, hide failures, or claim actual Codex loading without direct evidence",
+            ),
+            ("and the AGENTS owner that selects the Skill",),
+        ),
+    )
+    for relative, name, anchors, stale in contracts:
+        path = REPOSITORY_ROOT / "skills" / relative
+        require_ordered_contract_anchors(path, anchors, failures, name)
+        text = " ".join(path.read_text(encoding="utf-8").split()).casefold()
+        for phrase in stale:
+            if phrase.casefold() in text:
+                failures.append(f"{display_path(path)} retains stale {name}: {phrase!r}")
 
 
 def check_cross_route_resume_contracts(failures: list[str]) -> int:

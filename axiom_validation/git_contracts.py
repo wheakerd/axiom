@@ -201,6 +201,8 @@ def lightweight_direct_submit_gate(
     operation_state_clear: bool,
     target_unchanged: bool,
     mechanism_conflict: bool,
+    effective_configuration_safe: bool,
+    configuration_rechecked: bool,
 ) -> bool:
     """Accept only one unchanged named-remote, one-branch, non-force push."""
     return bool(
@@ -216,6 +218,8 @@ def lightweight_direct_submit_gate(
         and operation_state_clear is True
         and target_unchanged is True
         and mechanism_conflict is False
+        and effective_configuration_safe is True
+        and configuration_rechecked is True
     )
 
 

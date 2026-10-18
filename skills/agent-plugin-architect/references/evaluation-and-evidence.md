@@ -1,8 +1,11 @@
 # Evaluation And Evidence
 
-Use the repository's existing routing evaluator and evidence schemas. Extend a
-contract with successor schemas, benchmarks, fixtures, and result locations;
-do not rewrite historical schemas, benchmark definitions, or observations.
+Use the target repository's existing routing evaluator and evidence schemas
+when present. Extend them only where the authorized change requires it;
+preserve historical schemas, benchmark definitions, and observations. Without
+such tooling, use a proportional manual/static scenario review; do not create
+an evaluator or install tooling merely to satisfy this Skill. Missing
+target-required evidence remains incomplete or `NOT-RUN`.
 
 Cover at least:
 
@@ -14,10 +17,11 @@ Cover at least:
 - route-list parity, direct reference reachability, version synchronization,
   hook non-expansion, and release consistency.
 
-Measure the actual always-loaded routing-gate delta with the existing context
-framework. Record bytes, words, lines, digest, workload size, and whether the
-project's materiality threshold was crossed. Justify material growth in the
-result rather than hiding it.
+If the target has an actual always-loaded startup surface, compare its
+before/after bytes. Reuse its context framework when present for words, lines,
+digest, workload size, and declared materiality threshold; justify material
+growth. Without a framework, report the byte comparison and its limits. Do not
+invent a startup gate or threshold for a target that has none.
 
 Classify every claim as static, offline-host, authenticated-host, lifecycle,
 model, or marketplace evidence. A missing subscription or host session is

@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from axiom_validation.git_contracts import (
     CLEANUP_AUTHORITY_FIELDS,
@@ -25,17 +26,26 @@ from axiom_validation.cases.git_contracts import check_traceable_security_contra
 
 class GitContractTests(unittest.TestCase):
     @staticmethod
-    def fixture_git(repository: Path, *arguments: str, check: bool = True):
+    def fixture_environment(environment=None):
+        inherited_namespace = os.environ.get("GIT_NAMESPACE")
+        if (inherited_namespace and environment is not None and "GIT_NAMESPACE" in environment
+                and environment["GIT_NAMESPACE"] != inherited_namespace):
+            raise ValueError("cannot clear or replace an inherited namespace")
+        return {
+            **{key: os.environ[key] for key in ("SystemRoot", "WINDIR", "TEMP", "TMP", "GIT_NAMESPACE")
+               if key in os.environ},
+            "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_TERMINAL_PROMPT": "0",
+            "GIT_NO_LAZY_FETCH": "1",
+            **(environment or {}),
+        }
+
+    def fixture_git(self, repository: Path, *arguments: str, check: bool = True, environment=None):
         return subprocess.run(
             ("git", "-C", str(repository), *arguments),
-            env={
-                **{key: os.environ[key] for key in ("SystemRoot", "WINDIR", "TEMP", "TMP") if key in os.environ},
-                "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-                "GIT_CONFIG_NOSYSTEM": "1",
-                "GIT_CONFIG_GLOBAL": os.devnull,
-                "GIT_TERMINAL_PROMPT": "0",
-                "GIT_NO_LAZY_FETCH": "1",
-            },
+            env=self.fixture_environment(environment),
             check=check, capture_output=True, text=True, timeout=10,
         )
 
@@ -48,6 +58,472 @@ class GitContractTests(unittest.TestCase):
     def fixture_commit(self, repository: Path, subject: str) -> str:
         self.fixture_git(repository, "commit", "--quiet", "--allow-empty", "-m", subject)
         return self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip()
+
+    def fixture_configuration_safe(self, repository, *git_options, environment=None):
+        """Resolve only isolated fixture facts; this is not an installed runner."""
+        def read(key, *, boolean=False, multiple=False):
+            result = self.fixture_git(
+                repository, *git_options, "config", "--null",
+                *(("--type=bool",) if boolean else ()),
+                "--get-all", key,
+                check=False, environment=environment,
+            )
+            if result.returncode == 1 and not result.stdout and not result.stderr:
+                return None
+            if result.returncode != 0 or not result.stdout.endswith("\0"):
+                raise ValueError("unreadable or malformed configuration")
+            values = result.stdout[:-1].split("\0")
+            if boolean and any(value not in ("true", "false") for value in values):
+                raise ValueError("unclassifiable configuration")
+            if multiple:
+                return values
+            return values[-1]
+
+        try:
+            namespace = self.fixture_environment(environment).get("GIT_NAMESPACE", "")
+            if type(namespace) is not str or namespace:
+                return False
+            if read("remotes.origin", multiple=True) is not None:
+                return False
+            # This fixture models fully qualified exact and single-wildcard
+            # mappings for the fixed command `git push origin main` only.
+            # Unsupported evidence stops; no installed parser is supplied.
+            mappings = []
+            for value in read("remote.origin.push", multiple=True) or []:
+                forced = value.startswith("+")
+                refspec = value[1:] if forced else value
+                if refspec.count(":") != 1:
+                    raise ValueError("unsupported fixture refspec")
+                source, destination = refspec.split(":")
+                if source.count("*") != destination.count("*"):
+                    raise ValueError("unclassifiable fixture refspec")
+                for ref in (source, destination):
+                    if self.fixture_git(repository, "check-ref-format", "--refspec-pattern", ref,
+                                        check=False, environment=environment).returncode != 0:
+                        raise ValueError("unsupported fixture refspec")
+                mappings.append((source, destination, forced))
+            frozen = "refs/heads/main"
+            mapped = None
+            for source, destination, forced in mappings:
+                if "*" in source:
+                    prefix, suffix = source.split("*")
+                    if (not frozen.startswith(prefix) or not frozen.endswith(suffix)
+                            or len(frozen) < len(prefix) + len(suffix)):
+                        continue
+                    matched = frozen[len(prefix):len(frozen) - len(suffix) if suffix else None]
+                    destination = destination.replace("*", matched)
+                elif source != frozen:
+                    continue
+                mapped = destination, forced
+                break  # Git uses the first matching remote push refspec.
+            default = read("push.default")
+            if default not in (None, "nothing", "current", "upstream", "tracking", "simple", "matching"):
+                raise ValueError("unclassifiable push default")
+            if mapped is None and default in ("upstream", "tracking"):
+                if read("branch.main.remote") != "origin":
+                    raise ValueError("unresolved fixture upstream remote")
+                merge = read("branch.main.merge", multiple=True)
+                if merge is None or len(merge) != 1:
+                    raise ValueError("unresolved fixture upstream destination")
+                mapped = merge[0], False
+            if mapped is not None and mapped != (frozen, False):
+                return False
+            follow_tags = read("push.followTags", boolean=True)
+            mirror = read("remote.origin.mirror", boolean=True)
+            inherited_recursion = read("submodule.recurse", boolean=True, multiple=True) or []
+            ordered_recursion = self.fixture_git(
+                repository, *git_options, "config", "--null", "--get-regexp",
+                r"^(push\.recursesubmodules|submodule\.recurse)$",
+                check=False, environment=environment,
+            )
+            if (ordered_recursion.returncode == 1 and not ordered_recursion.stdout
+                    and not ordered_recursion.stderr):
+                records = []
+            elif ordered_recursion.returncode == 0 and ordered_recursion.stdout.endswith("\0"):
+                records = ordered_recursion.stdout[:-1].split("\0")
+            else:
+                raise ValueError("unreadable recursion traversal")
+            recursion, inherited_index = "no", 0
+            # Git feeds both keys into one variable in configuration traversal
+            # order. Native boolean parsing above also covers valueless keys.
+            for record in records:
+                key, separator, value = record.partition("\n")
+                if key == "submodule.recurse" and inherited_index < len(inherited_recursion):
+                    recursion = "on-demand" if inherited_recursion[inherited_index] == "true" else "no"
+                    inherited_index += 1
+                elif (key == "push.recursesubmodules" and separator
+                      and value in ("no", "check", "on-demand", "only")):
+                    recursion = value
+                else:
+                    raise ValueError("malformed recursion traversal")
+            if inherited_index != len(inherited_recursion):
+                raise ValueError("inconsistent recursion traversal")
+            options = []
+            for value in read("push.pushOption", multiple=True) or []:
+                if value == "":
+                    options.clear()
+                else:
+                    options.append(value)
+        except ValueError:
+            return False
+        return (
+            follow_tags != "true" and mirror != "true" and not options
+            and recursion in ("no", "check")
+        )
+
+    @staticmethod
+    def fixture_direct_gate(configuration_safe, *, rechecked=True):
+        return lightweight_direct_submit_gate(
+            target_count=1, configured_named_remote=True, exact_branch=True,
+            force_requested=False, widened_refspec=False, fetch_requested=False,
+            retry_requested=False, identity_rechecked=True, operation_state_clear=True,
+            target_unchanged=True, mechanism_conflict=False,
+            effective_configuration_safe=configuration_safe,
+            configuration_rechecked=rechecked,
+        )
+
+    def test_direct_configuration_uses_git_boolean_parsing_and_defaults(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-config-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            self.assertTrue(self.fixture_configuration_safe(repository))
+            for key in ("push.followTags", "remote.origin.mirror", "submodule.recurse"):
+                for value, expected in (("false", True), ("no", True), ("off", True),
+                                        ("0", True), ("", True), ("true", False),
+                                        ("yes", False), ("on", False), ("2", False),
+                                        ("invalid", False)):
+                    with self.subTest(key=key, value=value):
+                        self.assertEqual(expected, self.fixture_configuration_safe(
+                            repository, "-c", f"{key}={value}"))
+            config = repository / ".git" / "config"
+            config.write_text(config.read_text() + "\n[push]\nfollowTags\n")
+            self.assertFalse(self.fixture_configuration_safe(repository))
+
+    def test_direct_configuration_resolves_inheritance_scopes_and_overrides(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-config-") as temporary:
+            root = Path(temporary)
+            repository = root / "repository"
+            self.initialize_fixture(repository)
+            inherited = root / "inherited.config"
+            inherited.write_text("[push]\nfollowTags = true\n")
+            self.fixture_git(repository, "config", f"includeIf.gitdir:{repository}/.git.path", str(inherited))
+            self.assertFalse(self.fixture_configuration_safe(repository))
+            self.fixture_git(repository, "config", "push.followTags", "false")
+            self.assertTrue(self.fixture_configuration_safe(repository))
+            self.fixture_git(repository, "config", "extensions.worktreeConfig", "true")
+            self.fixture_git(repository, "config", "--worktree", "push.followTags", "true")
+            self.assertFalse(self.fixture_configuration_safe(repository))
+            environment = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "push.followTags",
+                           "GIT_CONFIG_VALUE_0": "false"}
+            self.assertTrue(self.fixture_configuration_safe(repository, environment=environment))
+            self.assertFalse(self.fixture_configuration_safe(
+                repository, "-c", "push.followTags=true", environment=environment))
+            self.assertFalse(self.fixture_configuration_safe(
+                repository, "-c", "push.followTags=invalid", "-c", "push.followTags=false"))
+
+    def test_direct_configuration_push_option_ordered_empty_resets(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-config-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            for values, expected in (((), True), (("",), True), (("one",), False),
+                                     (("one", ""), True), (("", "one"), False),
+                                     (("one", "two", "", ""), True),
+                                     (("one", "", "two"), False)):
+                with self.subTest(values=values):
+                    options = tuple(part for value in values for part in ("-c", f"push.pushOption={value}"))
+                    self.assertEqual(expected, self.fixture_configuration_safe(repository, *options))
+            inherited = Path(temporary) / "global.config"
+            inherited.write_text("[push]\npushOption = inherited\n")
+            environment = {"GIT_CONFIG_GLOBAL": str(inherited)}
+            self.assertFalse(self.fixture_configuration_safe(repository, environment=environment))
+            self.assertTrue(self.fixture_configuration_safe(
+                repository, "-c", "push.pushOption=", environment=environment))
+
+    def test_direct_configuration_recursion_explicit_and_inherited_modes(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-config-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            for mode, expected in (("no", True), ("check", True), ("on-demand", False),
+                                   ("only", False), ("unknown", False), ("", False)):
+                for inherited in ("true", "false"):
+                    with self.subTest(mode=mode, inherited=inherited):
+                        self.assertEqual(expected, self.fixture_configuration_safe(
+                            repository, "-c", f"submodule.recurse={inherited}",
+                            "-c", f"push.recurseSubmodules={mode}"))
+                        # Reversing traversal order lets the final boolean
+                        # select on-demand or no; malformed values still stop.
+                        self.assertEqual(inherited == "false" and mode not in ("unknown", ""),
+                                         self.fixture_configuration_safe(
+                                             repository, "-c", f"push.recurseSubmodules={mode}",
+                                             "-c", f"submodule.recurse={inherited}"))
+            inherited_file = Path(temporary) / "global.config"
+            inherited_file.write_text("[push]\nrecurseSubmodules = no\n")
+            self.fixture_git(repository, "config", "submodule.recurse", "true")
+            environment = {"GIT_CONFIG_GLOBAL": str(inherited_file)}
+            self.assertFalse(self.fixture_configuration_safe(repository, environment=environment))
+            environment.update({"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "push.recurseSubmodules",
+                                "GIT_CONFIG_VALUE_0": "no"})
+            self.assertTrue(self.fixture_configuration_safe(repository, environment=environment))
+            self.assertFalse(self.fixture_configuration_safe(
+                repository, "-c", "submodule.recurse=true", environment=environment))
+
+    def test_native_joint_recursion_last_boolean_controls_submodule_push(self):
+        cases = (
+            ("on-demand", "false", False),
+            ("only", "false", False),
+            ("no", "true", True),
+            ("check", "true", True),
+        )
+        for earlier_mode, later_boolean, pushes_child in cases:
+            with self.subTest(earlier_mode=earlier_mode, later_boolean=later_boolean), tempfile.TemporaryDirectory(
+                    prefix="axiom-direct-recursion-") as temporary:
+                root = Path(temporary)
+                child_source = root / "child-source"
+                self.initialize_fixture(child_source)
+                child_base = self.fixture_commit(child_source, "child base")
+                child_remote = root / "child.git"
+                self.fixture_git(child_source, "clone", "--bare", "--quiet", str(child_source), str(child_remote))
+
+                repository = root / "repository"
+                self.initialize_fixture(repository)
+                self.fixture_git(repository, "-c", "protocol.file.allow=always", "submodule", "add",
+                                 "--quiet", str(child_remote), "module")
+                self.fixture_commit(repository, "parent base")
+                remote = root / "remote.git"
+                self.fixture_git(repository, "clone", "--bare", "--quiet", str(repository), str(remote))
+                self.fixture_git(repository, "remote", "add", "origin", str(remote))
+
+                child = repository / "module"
+                self.fixture_git(child, "config", "user.name", "fixture")
+                self.fixture_git(child, "config", "user.email", "fixture@example.invalid")
+                child_tip = self.fixture_commit(child, "unpublished child")
+                self.fixture_git(repository, "add", "--", "module")
+                parent_tip = self.fixture_commit(repository, "reference unpublished child")
+                self.fixture_git(repository, "config", "--add", "push.recurseSubmodules", earlier_mode)
+                self.fixture_git(repository, "config", "--add", "submodule.recurse", later_boolean)
+
+                self.assertEqual(not pushes_child, self.fixture_configuration_safe(repository))
+                # Exercise Git itself against disposable local remotes: a final
+                # false resets even only/on-demand to no, while true selects
+                # on-demand even after no/check. Never infer this from the
+                # fixture configuration classifier alone.
+                self.fixture_git(repository, "push", "origin", "main")
+                self.assertEqual(parent_tip, self.fixture_git(
+                    remote, "rev-parse", "refs/heads/main").stdout.strip())
+                self.assertEqual(child_tip if pushes_child else child_base, self.fixture_git(
+                    child_remote, "rev-parse", "refs/heads/main").stdout.strip())
+
+    def test_direct_configuration_read_and_parse_errors_stop(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-config-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            for namespace in ("fixture-namespace", None, 1):
+                with self.subTest(namespace=namespace):
+                    self.assertFalse(self.fixture_configuration_safe(
+                        repository, environment={"GIT_NAMESPACE": namespace}))
+            with patch.dict(os.environ, {"GIT_NAMESPACE": "fixture-namespace"}):
+                self.assertEqual("fixture-namespace", self.fixture_environment()["GIT_NAMESPACE"])
+                self.assertFalse(self.fixture_configuration_safe(repository))
+                self.assertFalse(self.fixture_configuration_safe(repository, environment={"GIT_NAMESPACE": ""}))
+                self.assertEqual("fixture-namespace", os.environ["GIT_NAMESPACE"])
+            self.assertFalse(self.fixture_configuration_safe(
+                repository, environment={"GIT_CONFIG_GLOBAL": str(repository)}))
+            (repository / ".git" / "config").write_text("[malformed\n")
+            self.assertFalse(self.fixture_configuration_safe(repository))
+
+    def test_direct_configuration_precommit_conflict_and_prepush_drift_stop(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-config-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            before = self.fixture_commit(repository, "base")
+            self.fixture_git(repository, "config", "push.followTags", "true")
+            mutations = []
+            if self.fixture_direct_gate(self.fixture_configuration_safe(repository)):
+                mutations.append(self.fixture_commit(repository, "unauthorized"))
+            self.assertEqual([], mutations)
+            self.assertEqual(before, self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+            self.fixture_git(repository, "config", "push.followTags", "false")
+            self.assertTrue(self.fixture_direct_gate(self.fixture_configuration_safe(repository)))
+            final = self.fixture_commit(repository, "candidate")
+            self.fixture_git(repository, "config", "push.pushOption", "drift")
+            self.assertFalse(self.fixture_direct_gate(self.fixture_configuration_safe(repository)))
+            self.assertFalse(self.fixture_direct_gate(True, rechecked=False))
+            self.assertEqual(final, self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+    def test_direct_push_only_checks_configuration_without_a_commit_step(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-push-only-") as temporary:
+            root = Path(temporary)
+            repository = root / "repository"
+            self.initialize_fixture(repository)
+            # The requested submission starts with an already committed HEAD.
+            before = self.fixture_commit(repository, "existing candidate")
+            remote = root / "remote.git"
+            remote.mkdir()
+            self.fixture_git(remote, "init", "--bare", "--quiet", "--initial-branch=main")
+            self.fixture_git(repository, "remote", "add", "origin", str(remote))
+            pushes = []
+
+            def submit_existing_commit():
+                if not self.fixture_direct_gate(self.fixture_configuration_safe(repository)):
+                    return None
+                arguments = ("git", "push", "origin", "main")
+                self.assertTrue(lightweight_push_arguments(arguments, "origin", "main"))
+                pushes.append(arguments)
+                return self.fixture_git(repository, *arguments[1:])
+
+            self.fixture_git(repository, "config", "push.followTags", "true")
+            self.assertIsNone(submit_existing_commit())
+            self.assertEqual([], pushes)
+            self.assertNotEqual(0, self.fixture_git(
+                remote, "rev-parse", "--verify", "refs/heads/main", check=False).returncode)
+            self.assertEqual(before, self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+            self.fixture_git(repository, "config", "push.followTags", "false")
+            self.assertEqual(0, submit_existing_commit().returncode)
+            self.assertEqual([("git", "push", "origin", "main")], pushes)
+            self.assertEqual(before, self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
+            self.assertEqual(before, self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+    def test_direct_mapping_and_groups_stop_before_commit_or_push(self):
+        conflicts = (
+            ("T1-force", (("remote.origin.push", "+refs/heads/main:refs/heads/main"),)),
+            ("T2-destination", (("remote.origin.push", "refs/heads/main:refs/heads/other"),)),
+            ("T4-upstream", (("push.default", "upstream"), ("branch.main.remote", "origin"),
+                             ("branch.main.merge", "refs/heads/other2"))),
+            ("T3-group", (("remotes.origin", "b2 b3"),)),
+            ("R1-recursion-order", (("push.recurseSubmodules", "no"), ("submodule.recurse", "true"))),
+            ("N1-namespace", ()),
+        )
+        for name, configuration in conflicts:
+            for phase in ("push-only", "pre-commit", "pre-push-drift"):
+                with self.subTest(conflict=name, phase=phase), tempfile.TemporaryDirectory(
+                        prefix="axiom-direct-mapping-") as temporary, patch.dict(os.environ):
+                    root = Path(temporary)
+                    repository = root / "repository"
+                    self.initialize_fixture(repository)
+                    base = self.fixture_commit(repository, "base")
+                    remote_tip = self.fixture_commit(repository, "remote advance")
+                    remotes = []
+                    for remote_name in (("origin", "b2", "b3") if name == "T3-group" else ("origin",)):
+                        remote = root / f"{remote_name}.git"
+                        self.fixture_git(repository, "clone", "--bare", "--quiet", str(repository), str(remote))
+                        self.fixture_git(repository, "remote", "add", remote_name, str(remote))
+                        remotes.append(remote)
+                    # A forced mapping would overwrite a divergent remote tip.
+                    self.fixture_git(repository, "update-ref", "refs/heads/main", base, remote_tip)
+                    before = self.fixture_commit(repository, "existing candidate")
+
+                    def remote_refs():
+                        return [self.fixture_git(remote, "for-each-ref", "--format=%(refname) %(objectname)").stdout
+                                for remote in remotes]
+
+                    def install_conflict():
+                        for key, value in configuration:
+                            self.fixture_git(repository, "config", "--add", key, value)
+                        if name == "N1-namespace":
+                            os.environ["GIT_NAMESPACE"] = "fixture-namespace"
+                            self.assertEqual("fixture-namespace", self.fixture_environment()["GIT_NAMESPACE"])
+
+                    # origin remains a configured remote with one URL even
+                    # when the group of the same name shadows it.
+                    self.assertEqual([str(remotes[0])], self.fixture_git(
+                        repository, "remote", "get-url", "--push", "--all", "origin").stdout.splitlines())
+                    refs_before = remote_refs()
+                    commits, pushes = [], []
+                    if phase != "pre-push-drift":
+                        install_conflict()
+                    if phase != "push-only" and self.fixture_direct_gate(self.fixture_configuration_safe(repository)):
+                        commits.append(self.fixture_commit(repository, "combined candidate"))
+                        if phase == "pre-push-drift":
+                            install_conflict()
+                    if self.fixture_direct_gate(self.fixture_configuration_safe(repository)):
+                        arguments = ("git", "push", "origin", "main")
+                        pushes.append(arguments)
+                        self.fixture_git(repository, *arguments[1:], check=False)
+                    self.assertEqual(1 if phase == "pre-push-drift" else 0, len(commits))
+                    self.assertEqual([], pushes)
+                    if name == "N1-namespace":
+                        self.assertEqual("fixture-namespace", os.environ["GIT_NAMESPACE"])
+                    self.assertEqual(refs_before, remote_refs())
+                    self.assertEqual(commits[-1] if commits else before,
+                                     self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+    def test_direct_mapping_first_match_and_clean_exact_command(self):
+        clean = (
+            (),
+            # R2: the final push.recurseSubmodules value wins in this order.
+            (("submodule.recurse", "true"), ("push.recurseSubmodules", "no")),
+            (("submodule.recurse", "true"), ("push.recurseSubmodules", "check")),
+            (("remote.origin.push", "refs/heads/main:refs/heads/main"),),
+            (("remote.origin.push", "refs/heads/*:refs/heads/*"),),
+            (("remote.origin.push", "refs/heads/other:refs/heads/elsewhere"),
+             ("remote.origin.push", "refs/heads/main:refs/heads/main"),
+             ("remote.origin.push", "+refs/heads/main:refs/heads/other")),
+            (("remote.origin.push", "refs/heads/*:refs/heads/*"),
+             ("remote.origin.push", "+refs/heads/main:refs/heads/other")),
+            (("push.default", "upstream"), ("branch.main.remote", "origin"),
+             ("branch.main.merge", "refs/heads/main")),
+            (("remote.origin.push", "refs/heads/topic:refs/heads/unused"),
+             ("push.default", "upstream"), ("branch.main.remote", "origin"),
+             ("branch.main.merge", "refs/heads/main")),
+            (("remote.origin.push", "refs/heads/main:refs/heads/main"),
+             ("push.default", "upstream"), ("branch.main.remote", "origin"),
+             ("branch.main.merge", "refs/heads/other2")),
+        )
+        for configuration in clean:
+            for combined in (False, True):
+                with self.subTest(configuration=configuration, combined=combined), tempfile.TemporaryDirectory(
+                        prefix="axiom-direct-clean-mapping-") as temporary:
+                    root = Path(temporary)
+                    repository = root / "repository"
+                    self.initialize_fixture(repository)
+                    self.fixture_commit(repository, "base")
+                    remote = root / "remote.git"
+                    self.fixture_git(repository, "clone", "--bare", "--quiet", str(repository), str(remote))
+                    self.fixture_git(repository, "remote", "add", "origin", str(remote))
+                    before = self.fixture_commit(repository, "existing candidate")
+                    for key, value in configuration:
+                        self.fixture_git(repository, "config", "--add", key, value)
+                    if combined:
+                        self.assertTrue(self.fixture_direct_gate(self.fixture_configuration_safe(repository)))
+                        before = self.fixture_commit(repository, "combined candidate")
+                    self.assertTrue(self.fixture_direct_gate(self.fixture_configuration_safe(repository)))
+                    arguments = ("git", "push", "origin", "main")
+                    self.assertTrue(lightweight_push_arguments(arguments, "origin", "main"))
+                    self.assertEqual(0, self.fixture_git(repository, *arguments[1:]).returncode)
+                    self.assertEqual(f"refs/heads/main {before}\n", self.fixture_git(
+                        remote, "for-each-ref", "--format=%(refname) %(objectname)").stdout)
+                    self.assertEqual(before, self.fixture_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+    def test_direct_mapping_first_conflict_and_unresolved_evidence_stop(self):
+        with tempfile.TemporaryDirectory(prefix="axiom-direct-mapping-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+            self.fixture_commit(repository, "base")
+            conflicts = (
+                (("remote.origin.push", "+refs/heads/main:refs/heads/main"),
+                 ("remote.origin.push", "refs/heads/main:refs/heads/main")),
+                (("remote.origin.push", "refs/heads/*:refs/heads/other/*"),
+                 ("remote.origin.push", "refs/heads/main:refs/heads/main")),
+                (("remote.origin.push", "refs/heads/topic:refs/heads/unused"),
+                 ("remote.origin.push", "refs/heads/main:refs/heads/other")),
+                (("remote.origin.push", "refs/heads/main:refs/heads/main"),
+                 ("remote.origin.push", "unclassifiable")),
+                (("push.default", "upstream"),),
+                (("push.default", "upstream"), ("branch.main.remote", "other"),
+                 ("branch.main.merge", "refs/heads/main")),
+                (("push.default", "upstream"), ("branch.main.remote", "origin"),
+                 ("branch.main.merge", "refs/heads/main"), ("branch.main.merge", "refs/heads/other")),
+                (("remote.origin.push", "refs/heads/topic:refs/heads/unused"),
+                 ("push.default", "upstream"), ("branch.main.remote", "origin"),
+                 ("branch.main.merge", "refs/heads/other2")),
+                (("push.default", "invalid"),),
+                (("remotes.origin", ""),),
+            )
+            for configuration in conflicts:
+                with self.subTest(configuration=configuration):
+                    options = tuple(part for key, value in configuration for part in ("-c", f"{key}={value}"))
+                    self.assertFalse(self.fixture_direct_gate(self.fixture_configuration_safe(repository, *options)))
 
     def test_backup_cleanup_recovers_the_delete_before_record_update_window(self):
         with tempfile.TemporaryDirectory(prefix="axiom-backup-cleanup-") as temporary:
@@ -202,7 +678,7 @@ class GitContractTests(unittest.TestCase):
     def test_all_traceable_git_fixtures(self):
         failures = []
         count = check_traceable_security_contracts(failures)
-        self.assertEqual(238, count)
+        self.assertEqual(241, count)
         self.assertEqual([], failures)
 
     def test_oid_and_literal_operand_gates(self):
@@ -290,6 +766,8 @@ class GitContractTests(unittest.TestCase):
             "operation_state_clear": True,
             "target_unchanged": True,
             "mechanism_conflict": False,
+            "effective_configuration_safe": True,
+            "configuration_rechecked": True,
         }
         self.assertTrue(lightweight_direct_submit_gate(**accepted))
         for field, value in (
@@ -305,6 +783,9 @@ class GitContractTests(unittest.TestCase):
             ("operation_state_clear", False),
             ("target_unchanged", False),
             ("mechanism_conflict", True),
+            ("effective_configuration_safe", False),
+            ("effective_configuration_safe", None),
+            ("configuration_rechecked", False),
         ):
             with self.subTest(field=field):
                 rejected = dict(accepted)
@@ -433,6 +914,8 @@ class GitContractTests(unittest.TestCase):
                     operation_state_clear=True,
                     target_unchanged=True,
                     mechanism_conflict=True,
+                    effective_configuration_safe=True,
+                    configuration_rechecked=True,
                 )
             )
             after = subprocess.run(
@@ -505,6 +988,8 @@ class GitContractTests(unittest.TestCase):
                 run("rev-parse", "refs/remotes/origin/main", cwd=client).stdout.strip(),
             )
             final_push = ("push", "origin", "main")
+            hook_marker.unlink()
+            self.assertTrue(self.fixture_direct_gate(self.fixture_configuration_safe(client)))
             self.assertTrue(
                 lightweight_push_arguments(
                     ("git", *final_push), "origin", "main"

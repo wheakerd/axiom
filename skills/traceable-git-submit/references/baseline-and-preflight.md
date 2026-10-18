@@ -15,12 +15,11 @@ unsafe workflow changes before they occur.
 
 ## Authorization Separation
 
-Ordinary local staging and commits do not apply this reference. A direct
-history-preserving submit, publish, or push uses
-`repository-and-remote-targets.md` instead and must not create, migrate, or
-update Axiom metadata. Reading Git facts never authorizes cache mutation. Use
-cache init, check, migration, or update semantics only for the exact selected
-traceable phase.
+Ordinary Git stays host-native. Return to `../SKILL.md` for phase selection;
+an explicitly selected simple direct push reads only `direct-submit.md`
+and creates no Axiom metadata. Reading Git facts never authorizes cache
+mutation. Use cache init, check, migration, or update semantics only for the
+exact selected traceable phase.
 
 Do not fetch solely for local consolidation. Remote refresh and network push
 each require independent explicit authority; push authority never grants a

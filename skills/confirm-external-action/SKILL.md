@@ -15,7 +15,8 @@ message, publish content, invite, order or trade, change an external account
 or membership, or delete remote user content. Search, read, summarize, draft,
 simulate, or preview requests without the effect stay host-native and read-only.
 
-Route local Git submission to `traceable-git-submit`. Persistent install,
+Keep ordinary Git host-native; select `traceable-git-submit` only under
+`../using-axiom/SKILL.md`. Persistent install,
 deployment, migration, promotion, retention, service, or data risk belongs to
 `reversible-system-change`. For explicit machine-credential creation,
 revocation, or secret disclosure, read
