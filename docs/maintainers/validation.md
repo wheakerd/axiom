@@ -11,6 +11,18 @@ tool output out of the contribution.
 
 ## Required Checks
 
+Provide Python 3, Node.js available as `node` on `PATH`, and Git. The
+[canonical CI environment](../repository-governance.md#repository-guards-canonical-environment)
+owns their current selections. The publication aggregate invokes Node.js to
+validate the exact JavaScript release-workflow guard.
+
+A disposable Git copy must preserve the candidate's tracked-file inventory in
+its index and the historical objects required by the
+[runtime-identity fixtures](../../tests/test_runtime_identity.py). A
+filesystem-only or shallow copy may lack those prerequisites; the
+[unit-test workflow](../../.github/workflows/unit-and-integration-tests.yml)
+checks out full history.
+
 Run these checks from the repository root and record exact commands and
 outcomes:
 
@@ -96,8 +108,9 @@ mutations and synthetic data, not all aggregate fixtures.
 
 Keep fixture names in failure messages, and let the aggregate reporter add the
 policy domain. Keep fixture payloads separate from production policy modules,
-and do not add a third-party test or runtime dependency. Prefer focused,
-standard-library-only validation when adding repository checks.
+and do not add a third-party test or runtime dependency. Prefer focused
+validation using Python's standard library, without third-party Python
+packages; the host executable prerequisites above still apply.
 
 The aggregate summary's `immutable external action and image pins` total adds
 one for each validated full-SHA GitHub Action, digest-pinned `docker://` action,
