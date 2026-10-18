@@ -536,6 +536,14 @@
       "sourceIssue": null,
       "summary": "Bind the release-tag controller to the reviewed main ruleset update instant after its temporary enforcement change and record that change in repository governance.",
       "runtimeContractDigest": "sha256:2ebfdae0fbb78feb12df09a3e740876ef2618482731cd1c831a1605d0f181a8f"
+    },
+    {
+      "revision": 68,
+      "recordedOn": "2026-10-18",
+      "baselineCommit": "690e3f3ffd2c935863a2b32ac127d4068572b93d",
+      "sourceIssue": null,
+      "summary": "Restore Claude Code as a supported installation and runtime host through runtime schema v3, and reject hard-wrapped Changelog entries for new releases.",
+      "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868"
     }
   ]
 }

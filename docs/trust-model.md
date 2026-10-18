@@ -1,6 +1,6 @@
 # Trust Model
 
-Axiom provides workflow instructions within Codex's existing trust model. It
+Axiom provides workflow instructions within the host's existing trust model. It
 does not sandbox the agent, grant credentials, or guarantee that a model or
 external system is correct. Selecting a route loads instructions; it does not
 authorize an action.
@@ -16,7 +16,7 @@ authorize an action.
 | Credentials and disclosure | Access and use remain with their existing owners; sensitive content needs the applicable exact-use and disclosure authority |
 | Evidence | Observe the layer that owns the outcome; a plan, artifact, accepted request, or successful command alone may be insufficient |
 | Usage measurement | Host metrics apply only to their stated scope; bytes, words, route sizes, and tool calls are proxies |
-| Updates | Codex controls refresh and installation; Axiom does not run an updater |
+| Updates | Codex or Claude Code controls refresh and installation; Axiom does not run an updater |
 
 ## Hook Trust Boundary
 

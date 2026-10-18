@@ -17,6 +17,7 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.runtime_identity import (
     INPUT_MANIFEST_RELATIVE,
     RUNTIME_IDENTITY_SURFACES,
+    V2_INPUT_MANIFEST_RELATIVE,
     check_runtime_identity,
     compute_runtime_contract,
     load_json_document,
@@ -37,6 +38,10 @@ class RuntimeIdentityTests(unittest.TestCase):
         if manifest is None or failures:
             raise AssertionError(failures)
         cls.manifest = manifest
+        v2_manifest = load_json_document(REPOSITORY_ROOT / V2_INPUT_MANIFEST_RELATIVE, failures)
+        if v2_manifest is None or failures:
+            raise AssertionError(failures)
+        cls.v2_manifest = v2_manifest
         cls.expected_record_count = json.loads(
             (REPOSITORY_ROOT / "evidence/runtime-identity.json").read_text(encoding="utf-8")
         )["runtimeContract"]["recordCount"]
@@ -58,7 +63,9 @@ class RuntimeIdentityTests(unittest.TestCase):
             "evidence/runtime-identity.json",
             "evidence/runtime-contract-history-v1.json",
             "evidence/runtime-contract-history-v2.json",
+            "evidence/runtime-contract-history-v3.json",
             "axiom_validation/runtime-contract-inputs-v1.json",
+            V2_INPUT_MANIFEST_RELATIVE,
             "evidence/repository-policy-revisions-v1.json",
             *RUNTIME_IDENTITY_SURFACES,
         ):
@@ -147,8 +154,8 @@ class RuntimeIdentityTests(unittest.TestCase):
                 [
                     "git", "-C", root, "archive", "--format=tar",
                     FROZEN_V0131_CANDIDATE, "--",
-                    *self.manifest["installedSurfaceRoots"],
-                    INPUT_MANIFEST_RELATIVE,
+                    *self.v2_manifest["installedSurfaceRoots"],
+                    V2_INPUT_MANIFEST_RELATIVE,
                     "axiom_validation/runtime-contract-inputs-v1.json",
                     "evidence/runtime-identity.json",
                     "evidence/runtime-contract-history-v1.json",
@@ -233,7 +240,7 @@ class RuntimeIdentityTests(unittest.TestCase):
                 root = Path(temporary)
                 self.copy_v0131_candidate(root)
                 self.append_text(root / "skills/using-axiom/SKILL.md", "\nChanged runtime contract.\n")
-                contract, failures = self.compute(root)
+                contract, failures = self.compute(root, self.v2_manifest)
                 self.assertEqual([], failures)
                 self.assertIsNotNone(contract)
                 manifest_path = root / ".codex-plugin/plugin.json"

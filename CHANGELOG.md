@@ -9,6 +9,37 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.15.0 - unreleased
+
+### Added
+
+- Install and run Axiom in Claude Code. The Claude Code plugin shares the same skills as the Codex plugin and loads the same routing gate through a `SessionStart` hook at startup, resume, clear, and compaction.
+
+### Fixed
+
+- Stop explicit simple Git submission when effective configuration would add tags, push options, submodule pushes, or mirroring; check immediately before every direct push, including push-only requests, and additionally before a combined request's commit. The pre-push check detects drift.
+- Resolve source-only refspec mappings at both checks; stop on a mapped force update, a destination different from the frozen branch, or any remote group, including one that shadows a configured remote.
+- Resolve both recursion keys in Git's configuration traversal order; the last entry decides. `submodule.recurse=true` selects `on-demand`, while `false` resets to `no`; only a final `no` or `check` mode avoids submodule pushes. Stop on a nonempty inherited `GIT_NAMESPACE`, uncertain receiving-side propagation, or any other effective setting or inherited environment that changes the frozen push.
+- Align secondary Git guidance with ordinary host-native Git and the selected direct or hardened submission phase.
+- Derive plugin validation requirements from the target repository's contract and distinguish native repo-local Skill discovery from AGENTS routing.
+
+### Changed
+
+- Classify the Claude Code manifest in runtime contract schema v3. Schema v2, its history, and every earlier digest remain unchanged.
+- Require new Changelog entries to keep each paragraph and list item on one source line so GitHub renders Release notes without broken lines.
+
+### Behavioral impact
+
+Codex users receive the Git submission hardening first tagged as `v0.14.6`, which was not published as a GitHub Release because its notes rendered with broken lines. The simple submission phase keeps its exact command, normal hooks, signing policy, and one-attempt limit; conflicting effective configuration stops it without automatic changes.
+
+In Claude Code, the shared routes load natively. `delegate-simple-task`, `optimize-codex-usage`, and `continuous-progress` depend on Codex-only mechanisms; in Claude Code they report that they are not available instead of being simulated.
+
+### Required action
+
+None for Codex. To use Axiom in Claude Code, add the `wheakerd/axiom` marketplace and install `axiom@axiom` as described in [Managing Installation](docs/guides/managing-installation.md).
+
+See the [version notes](docs/releases/v0.15.0.md) for the host boundary, runtime schema, and static context evidence.
+
 ## 0.14.6 - unreleased
 
 ### Fixed

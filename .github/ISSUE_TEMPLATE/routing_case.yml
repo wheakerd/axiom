@@ -49,6 +49,7 @@ body:
       label: Host
       options:
         - Codex
+        - Claude Code
     validations:
       required: true
 

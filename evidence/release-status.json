@@ -1,29 +1,40 @@
 {
   "schemaVersion": "2",
   "targetRelease": {
-    "version": "0.14.6",
-    "tag": "v0.14.6",
+    "version": "0.15.0",
+    "tag": "v0.15.0",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
   "runtimeIdentity": {
-    "pluginVersion": "0.14.6",
-    "repositoryPolicyRevision": 67,
-    "runtimeContractSchemaVersion": "2",
-    "runtimeContractDigest": "sha256:2ebfdae0fbb78feb12df09a3e740876ef2618482731cd1c831a1605d0f181a8f",
-    "inputManifest": "axiom_validation/runtime-contract-inputs-v2.json",
-    "history": "evidence/runtime-contract-history-v2.json"
+    "pluginVersion": "0.15.0",
+    "repositoryPolicyRevision": 68,
+    "runtimeContractSchemaVersion": "3",
+    "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868",
+    "inputManifest": "axiom_validation/runtime-contract-inputs-v3.json",
+    "history": "evidence/runtime-contract-history-v3.json"
   },
   "status": "STATIC-ONLY",
   "currentHostEvidence": [
+    {
+      "host": "claude-code",
+      "hostVersion": null,
+      "lifecycleSource": null,
+      "observationSubject": "installed-runtime-contract",
+      "observedAt": null,
+      "pluginVersion": "0.15.0",
+      "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868",
+      "status": "not-run",
+      "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
+    },
     {
       "host": "codex",
       "hostVersion": null,
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.14.6",
-      "runtimeContractDigest": "sha256:2ebfdae0fbb78feb12df09a3e740876ef2618482731cd1c831a1605d0f181a8f",
+      "pluginVersion": "0.15.0",
+      "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868",
       "status": "not-run",
       "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
     }

@@ -1,0 +1,18 @@
+{
+  "description": "Load Axiom's documented routing gate at Claude Code session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door before deciding whether any Axiom skill applies. The Codex-only routes delegate-simple-task, optimize-codex-usage, and continuous-progress are not available in Claude Code; say so instead of simulating them:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\"",
+            "timeout": 5,
+            "statusMessage": "Loading Axiom routing"
+          }
+        ]
+      }
+    ]
+  }
+}

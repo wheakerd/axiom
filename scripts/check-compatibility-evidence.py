@@ -23,6 +23,7 @@ from axiom_validation.context import supported_hosts
 from axiom_validation.runtime_identity import (  # noqa: E402
     HISTORY_RELATIVE,
     LEGACY_HISTORY_RELATIVE,
+    V2_HISTORY_RELATIVE,
     check_runtime_identity,
 )
 
@@ -35,7 +36,8 @@ STATUS_PATH = EVIDENCE_ROOT / "release-status.json"
 RUNTIME_IDENTITY_PATH = EVIDENCE_ROOT / "runtime-identity.json"
 RUNTIME_HISTORY_PATHS = {
     "1": REPOSITORY_ROOT / LEGACY_HISTORY_RELATIVE,
-    "2": REPOSITORY_ROOT / HISTORY_RELATIVE,
+    "2": REPOSITORY_ROOT / V2_HISTORY_RELATIVE,
+    "3": REPOSITORY_ROOT / HISTORY_RELATIVE,
 }
 POLICY_REVISIONS_PATH = EVIDENCE_ROOT / "repository-policy-revisions-v1.json"
 MANIFEST_PATHS = (
@@ -383,7 +385,7 @@ def check_schema_v2_contract(schema: dict[str, Any], failures: list[str], schema
     if type(runtime_properties) is not dict or set(runtime_properties) != RUNTIME_IDENTITY_KEYS:
         failures.append(f"evidence/schema-v{schema_version}.json runtimeIdentity properties drifted")
     elif runtime_properties.get("runtimeContractSchemaVersion") != (
-        {"const": "1"} if schema_version == "2" else {"enum": ["1", "2"]}
+        {"const": "1"} if schema_version == "2" else {"enum": ["1", "2", "3"]}
     ):
         failures.append(f"evidence/schema-v{schema_version}.json runtime contract schema versions drifted")
 
@@ -511,7 +513,7 @@ def validate_record(
                 failures.append(
                     f"{label}.runtimeIdentity.pluginVersion must match release.version"
                 )
-            if runtime.get("runtimeContractSchemaVersion") not in (("1",) if schema_version == "2" else ("1", "2")):
+            if runtime.get("runtimeContractSchemaVersion") not in (("1",) if schema_version == "2" else ("1", "2", "3")):
                 failures.append(
                     f"{label}.runtimeIdentity.runtimeContractSchemaVersion is unsupported by evidence schema {schema_version}"
                 )

@@ -16,11 +16,20 @@ from .context import REPOSITORY_ROOT, release_version
 from .release_versions import parse_production_release_version
 
 
-INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v2.json"
+CURRENT_SCHEMA_VERSION = "3"
+INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v3.json"
 IDENTITY_RELATIVE = "evidence/runtime-identity.json"
-HISTORY_RELATIVE = "evidence/runtime-contract-history-v2.json"
+HISTORY_RELATIVE = "evidence/runtime-contract-history-v3.json"
 LEGACY_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v1.json"
 LEGACY_HISTORY_RELATIVE = "evidence/runtime-contract-history-v1.json"
+V2_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v2.json"
+V2_HISTORY_RELATIVE = "evidence/runtime-contract-history-v2.json"
+SCHEMA_FILES = {
+    "1": (LEGACY_INPUT_MANIFEST_RELATIVE, LEGACY_HISTORY_RELATIVE),
+    "2": (V2_INPUT_MANIFEST_RELATIVE, V2_HISTORY_RELATIVE),
+    CURRENT_SCHEMA_VERSION: (INPUT_MANIFEST_RELATIVE, HISTORY_RELATIVE),
+}
+SCHEMA_V3_FIRST_VERSION = "0.15.0"
 POLICY_REVISIONS_RELATIVE = "evidence/repository-policy-revisions-v1.json"
 RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
@@ -307,8 +316,8 @@ def _manifest_shape(
         "exclusions",
     }
     _exact_object(document, expected_keys, "runtime input manifest", failures)
-    if document.get("schemaVersion") not in {"1", "2"}:
-        failures.append("runtime input manifest schemaVersion must be '1' or '2'")
+    if document.get("schemaVersion") not in {"1", "2", "3"}:
+        failures.append("runtime input manifest schemaVersion must be '1', '2', or '3'")
     if document.get("digestAlgorithm") != "sha256":
         failures.append("runtime input manifest digestAlgorithm must be 'sha256'")
     canonical = _exact_object(
@@ -423,6 +432,9 @@ def compute_runtime_contract(
                     }
                 )
         elif kind == "json-fields":
+            if historical and _path_entry_is_missing(root / relative_path):
+                # A manifest classified after an old tag contributes no record there.
+                continue
             classify(relative_path, f"input:{relative_path}")
             included = _sorted_unique_strings(
                 entry.get("includedFields"), f"{label}.includedFields", failures
@@ -534,11 +546,22 @@ def _manifest_sha256(root: Path, relative: str = INPUT_MANIFEST_RELATIVE) -> str
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def runtime_schema_for_version(version: str | None) -> str:
+    """Return the runtime contract schema that owns one plugin version."""
+    parsed = parse_production_release_version(version) if version is not None else None
+    if parsed is not None and parsed < parse_production_release_version(SCHEMA_V3_FIRST_VERSION):
+        return "2"
+    return CURRENT_SCHEMA_VERSION
+
+
 def _validate_identity(
     document: dict[str, Any],
     contract: RuntimeContract,
     root: Path,
     failures: list[str],
+    *,
+    schema_version: str = CURRENT_SCHEMA_VERSION,
+    manifest_relative: str = INPUT_MANIFEST_RELATIVE,
 ) -> tuple[str | None, int | None]:
     label = IDENTITY_RELATIVE
     _exact_object(
@@ -567,11 +590,13 @@ def _validate_identity(
         failures,
     )
     if runtime is not None:
-        if runtime.get("schemaVersion") != "2":
-            failures.append(f"{label}.runtimeContract.schemaVersion must be '2'")
-        if runtime.get("inputManifest") != INPUT_MANIFEST_RELATIVE:
+        if runtime.get("schemaVersion") != schema_version:
+            failures.append(
+                f"{label}.runtimeContract.schemaVersion must be {schema_version!r}"
+            )
+        if runtime.get("inputManifest") != manifest_relative:
             failures.append(f"{label}.runtimeContract.inputManifest drifted")
-        if runtime.get("inputManifestSha256") != _manifest_sha256(root):
+        if runtime.get("inputManifestSha256") != _manifest_sha256(root, manifest_relative):
             failures.append(f"{label}.runtimeContract.inputManifestSha256 drifted")
         if runtime.get("digest") != contract.digest:
             failures.append(f"{label}.runtimeContract.digest does not match computed inputs")
@@ -620,7 +645,7 @@ def _validate_history(
     current_digest: str,
     failures: list[str],
     *,
-    schema_version: str = "2",
+    schema_version: str = CURRENT_SCHEMA_VERSION,
     input_manifest: str = INPUT_MANIFEST_RELATIVE,
     history_path: str = HISTORY_RELATIVE,
     current_revision: int | None = None,
@@ -856,41 +881,57 @@ def check_runtime_identity(
 ) -> int:
     """Validate the current runtime identity, append-only records, and rendered facts."""
     root = root.resolve()
-    manifest = load_json_document(root / INPUT_MANIFEST_RELATIVE, failures, root=root)
+    schema = runtime_schema_for_version(release_version(root))
+    manifest_relative, history_relative = SCHEMA_FILES[schema]
+    manifest = load_json_document(root / manifest_relative, failures, root=root)
     if manifest is None:
         return 0
     contract = compute_runtime_contract(root, manifest, failures)
     if contract is None:
         return 0
     identity = load_json_document(root / IDENTITY_RELATIVE, failures, root=root)
-    history = load_json_document(root / HISTORY_RELATIVE, failures, root=root)
+    history = load_json_document(root / history_relative, failures, root=root)
     revisions = load_json_document(root / POLICY_REVISIONS_RELATIVE, failures, root=root)
     if identity is None or history is None or revisions is None:
         return contract.record_count
     plugin_version, policy_revision = _validate_identity(
-        identity, contract, root, failures
+        identity,
+        contract,
+        root,
+        failures,
+        schema_version=schema,
+        manifest_relative=manifest_relative,
     )
     _validate_history(
         history,
-        _manifest_sha256(root),
+        _manifest_sha256(root, manifest_relative),
         plugin_version,
         contract.digest,
         failures,
+        schema_version=schema,
+        input_manifest=manifest_relative,
+        history_path=history_relative,
         current_revision=policy_revision,
         policy_revisions=revisions,
     )
-    legacy_history = load_json_document(root / LEGACY_HISTORY_RELATIVE, failures, root=root)
-    if legacy_history is not None:
-        _validate_history(
-            legacy_history,
-            _manifest_sha256(root, LEGACY_INPUT_MANIFEST_RELATIVE),
-            None,
-            "",
-            failures,
-            schema_version="1",
-            input_manifest=LEGACY_INPUT_MANIFEST_RELATIVE,
-            history_path=LEGACY_HISTORY_RELATIVE,
-        )
+    legacy_schemas = [
+        (version, *SCHEMA_FILES[version])
+        for version in sorted(SCHEMA_FILES)
+        if int(version) < int(schema)
+    ]
+    for schema_version, legacy_manifest, legacy_path in legacy_schemas:
+        legacy_history = load_json_document(root / legacy_path, failures, root=root)
+        if legacy_history is not None:
+            _validate_history(
+                legacy_history,
+                _manifest_sha256(root, legacy_manifest),
+                None,
+                "",
+                failures,
+                schema_version=schema_version,
+                input_manifest=legacy_manifest,
+                history_path=legacy_path,
+            )
     _validate_policy_revisions(
         revisions,
         policy_revision,

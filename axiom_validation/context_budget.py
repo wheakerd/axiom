@@ -9,7 +9,7 @@ import stat
 from pathlib import Path
 from typing import Any
 
-from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
+from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path, supported_hosts
 
 
 CONTEXT_BUDGET_ROOT = REPOSITORY_ROOT / "evals" / "context-budget"
@@ -51,9 +51,11 @@ ABSOLUTE_REVIEW_BYTES = 256
 RELATIVE_REVIEW_BASIS_POINTS = 500
 # Preserve at least 10% headroom below the 8 KiB authoring boundary.
 ROUTING_GATE_MAX_BYTES = 8192 * 90 // 100
-HOSTS = ("codex",)
+HOST_ORDER = ("codex", "claude-code")
+HOSTS = tuple(host for host in HOST_ORDER if host in supported_hosts(RELEASE_VERSION))
 CURRENT_LIFECYCLE_HOST_STATUSES = {
     "codex": "not-run",
+    "claude-code": "not-run",
 }
 EXPECTED_HOST_METRICS = {
     "codex": {
@@ -69,7 +71,19 @@ EXPECTED_HOST_METRICS = {
             "prior no-Hook observations bind their original runtime only."
         ),
     },
-
+    "claude-code": {
+        "host": "claude-code",
+        "status": "not-run",
+        "exactUsageExposed": False,
+        "inputTokens": None,
+        "cachedInputTokens": None,
+        "credits": None,
+        "wallClockMilliseconds": None,
+        "reason": (
+            "Current Claude Code host, usage and lifecycle observation remain NOT-RUN; "
+            "the Claude Code plugin delivers the same unchanged routing gate."
+        ),
+    },
 }
 EXPECTED_SCENARIOS = (
     (

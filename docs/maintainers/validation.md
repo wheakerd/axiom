@@ -143,6 +143,17 @@ test. Report the exact host version and only the components actually returned.
 See [Compatibility](../compatibility.md#codex-package-format-and-validation)
 for the supported package contract.
 
+When Claude Code is installed, run its strict validator from a disposable copy:
+
+```bash
+claude plugin validate --strict .
+```
+
+It checks the Claude Code manifest and shared Skill metadata against the
+installed Claude Code version; record that version with the result. It does
+not install the plugin or run its Hook. See
+[Compatibility](../compatibility.md#claude-code-package-format-and-validation).
+
 The repository aggregate owns Axiom's strict package checks. The retired
 `plugin-creator` allowlist validator is not an optional diagnostic or fallback;
 the [v0.13.0 migration notice](../releases/v0.13.0.md#retired-validator) records

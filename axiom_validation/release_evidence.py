@@ -30,6 +30,7 @@ OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
 PUBLISH_WORKFLOW_SHA256 = "cdc297bc7ce203dc1454d5b8876f4278d4516b59ddd85f4201ae330c3ea631a5"
 RELEASE_BODY_POLICY_BASELINE_VERSION = "0.10.0"
+RELEASE_BODY_UNWRAPPED_BASELINE_VERSION = "0.15.0"
 REPOSITORY_CHECKS_RELEASE_VERSION = "0.11.0"
 RELEASE_BODY_MAX_BYTES = 8192
 PUBLIC_REPOSITORY_BLOB_ROOT = "https://github.com/wheakerd/axiom/blob"
@@ -196,6 +197,33 @@ def _attestation_prefix(version: str) -> str:
     return f"axiom-v{version}-release-evidence-"
 
 
+_BLOCK_START = re.compile(r"(?:#{1,6} |[-*+] |\d+[.)] |\||>|<!--)")
+
+
+def _hard_wrapped_lines(entry: str) -> list[str]:
+    """Return prose lines that continue the previous paragraph or list item."""
+    wrapped: list[str] = []
+    previous = ""
+    in_fence = False
+    for line in entry.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            previous = ""
+            continue
+        if in_fence:
+            continue
+        if (
+            stripped
+            and previous
+            and not previous.startswith("#")
+            and _BLOCK_START.match(stripped) is None
+        ):
+            wrapped.append(stripped)
+        previous = stripped
+    return wrapped
+
+
 def render_release_body(
     version: str,
     failures: list[str],
@@ -249,6 +277,16 @@ def render_release_body(
             failures.append(
                 "fix-forward Changelog entry is missing required sections: "
                 + ", ".join(missing)
+            )
+
+    unwrapped_baseline = parse_production_release_version(RELEASE_BODY_UNWRAPPED_BASELINE_VERSION)
+    if unwrapped_baseline is not None and precedence >= unwrapped_baseline:
+        wrapped = _hard_wrapped_lines(entry)
+        if wrapped:
+            failures.append(
+                f"Changelog entry for {version} must keep each paragraph and list item "
+                f"on one source line; found {len(wrapped)} hard-wrapped continuation "
+                f"line(s), first: {wrapped[0]!r}"
             )
 
     body = re.sub(

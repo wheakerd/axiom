@@ -1,8 +1,8 @@
 # Contributing to Axiom
 
 Keep contributions focused, evidence-based, and easy to review. Axiom's public
-repository contains the installed Codex plugin, its documentation, and the
-tooling used to validate a proposed change.
+repository contains the installed Codex and Claude Code plugins, their
+documentation, and the tooling used to validate a proposed change.
 
 Use [GitHub Issues](https://github.com/wheakerd/axiom/issues) for ordinary bug
 reports and feature requests. Follow [SECURITY.md](SECURITY.md) for potentially
@@ -12,10 +12,11 @@ sensitive findings; do not disclose vulnerability details in a public report.
 
 | Path | Ownership |
 | --- | --- |
-| [skills/](skills/) | Skill source installed by Codex, with supporting resources loaded on demand |
+| [skills/](skills/) | Skill source shared by both hosts, with supporting resources loaded on demand |
 | [.codex-plugin/plugin.json](.codex-plugin/plugin.json) | Codex plugin manifest |
 | [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) | Codex marketplace wrapper |
-| [hooks/](hooks/) | Codex startup Hook declaration and packaged wrappers |
+| [.claude-plugin/](.claude-plugin/) | Claude Code plugin manifest and, after a verified release, its marketplace |
+| [hooks/](hooks/) | Codex and Claude Code startup Hook declarations and packaged wrappers |
 | [README.md](README.md) | Product landing page and safe-start entry point |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
 | [evidence/](evidence/) | Current identity and status, policy ledger, compatibility schemas, and runtime digest histories |
@@ -35,7 +36,7 @@ they are not installed plugin dependencies or proof of host behavior.
    stash, clean, stage, or rewrite unrelated work to make your change appear
    clean.
 2. Identify the intended outcome and the owning surface: installed Skills and
-   Hooks, the Codex package, documentation, or repository tooling.
+   Hooks, a host package, documentation, or repository tooling.
 3. Classify the change against
    [Runtime and Repository Identity](docs/runtime-identity.md#classify-a-change).
    An included runtime change must alter the digest and advance
@@ -93,13 +94,13 @@ passing result. Static checks do not establish installed-session behavior.
 Use the [pull-request template](.github/pull_request_template.md) and include:
 
 - the intended outcome and exact affected files;
-- which files are shared and which are Codex-specific;
+- which files are shared and which are specific to Codex or Claude Code;
 - route-selection and action-authorization impact, including an explicit
   `none` when there is no impact, and any changed stop conditions;
 - documentation changes or a reason none are needed;
 - every validation command and its exact result, including unavailable
   optional host checks;
-- a Codex behavior review when Skills or packaging changes; and
+- a behavior review on each affected host when Skills or packaging changes; and
 - confirmation that unrelated work was not reset, hidden, staged, or rewritten.
 
 Do not mix opportunistic cleanup with the requested change. Do not commit

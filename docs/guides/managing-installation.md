@@ -16,6 +16,20 @@ In a supported Codex workspace plugin UI, use **Refresh**. Start a new session
 after the update, then inspect `/hooks` again before trusting the changed
 snapshot.
 
+For Claude Code, refresh the marketplace and update Axiom:
+
+```bash
+claude plugin marketplace update axiom
+claude plugin update axiom@axiom
+```
+
+Inside a running session, use `/plugin marketplace update axiom` and
+`/plugin update axiom@axiom`. Run `/reload-plugins` or start another session,
+then compare the installed Hook with the [Hook Reference](../reference/hooks.md).
+Claude Code may update plugin files in the background when marketplace
+auto-update is enabled; the running session still uses the snapshot loaded at
+launch.
+
 Whether updates are checked or installed automatically, and their timing, are
 controlled by your settings and the native client or workspace policy. Axiom
 provides versioned source metadata and has no update scheduler.
@@ -28,8 +42,11 @@ marketplace remains discoverable from the repository's default branch, while
 the entry selects the plugin's published source independently. A normal
 `main` commit leaves that selection unchanged.
 
+The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same Git
+`url` source and immutable release-tag `ref`. Both catalogs advance together.
+
 After a stable release becomes GitHub Latest, maintainers publish the matching
-catalog reference through the existing signed PR process. Until that catalog
+catalog references through the existing signed PR process. Until that catalog
 change is merged, clients continue to resolve the preceding selection. A
 GitHub Release, its Latest marker, and a Git tag literally named `latest` are
 different objects; the client does not infer one from the others.
@@ -156,9 +173,18 @@ Remove the exact Codex installation from the `axiom` marketplace:
 codex plugin remove axiom@axiom
 ```
 
-After removal, start a new Codex session. Confirm that Axiom is absent from
-the plugin list and `/hooks` before treating it as inactive. Do not edit installed files or delete
-host caches as a substitute for the host-managed lifecycle.
+In Claude Code, disable Axiom while retaining it, or uninstall it:
+
+```bash
+claude plugin disable axiom@axiom
+claude plugin uninstall axiom@axiom
+```
+
+After a Codex removal, start a new session. After a Claude Code change, run
+`/reload-plugins` or start another session. Confirm that Axiom is absent or
+disabled in the host's plugin list and that its Hook is absent from `/hooks`
+before treating it as inactive. Do not edit installed files or delete host
+caches as a substitute for the host-managed lifecycle.
 
 ## Non-Destructive Troubleshooting
 
@@ -169,9 +195,15 @@ If expected Axiom capabilities are unavailable or a request routes incorrectly:
    and identical to the [checked-in reference](../reference/hooks.md).
 3. Confirm that the installed Axiom version is the version you intended to
    test.
-4. Start a fresh Codex session.
+4. Start a fresh Codex session, or run `/reload-plugins` in Claude Code.
 5. Retry one read-only routed request and one no-route control from
    [Getting Started](getting-started.md).
+
+If routing is missing after Claude Code compaction, confirm that `compact`
+remains in the installed `SessionStart` matcher. On Windows, confirm that Git
+Bash is available; without it the Claude Code Hook fails and the session starts
+without the routing gate. A Codex-only route reporting that it is not available
+in Claude Code is the expected result, not a failure.
 
 Do not delete host data, clear caches, edit the installed plugin, change global
 configuration, install a proprietary validator, or create a second Hook merely

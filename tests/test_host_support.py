@@ -1,4 +1,4 @@
-"""Regressions for current installation support and historical evidence isolation."""
+"""Regressions for version-bound host support and historical evidence isolation."""
 
 import copy
 import importlib.util
@@ -11,7 +11,7 @@ from axiom_validation.context import REPOSITORY_ROOT, release_version, supported
 from axiom_validation.repository_policy import check_retired_installation_paths
 
 
-class CodexOnlySupportTests(unittest.TestCase):
+class HostSupportTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         path = REPOSITORY_ROOT / "scripts/check-compatibility-evidence.py"
@@ -29,11 +29,30 @@ class CodexOnlySupportTests(unittest.TestCase):
             manifest.write_text('{"version": "0.11.0-beta"}\n')
             self.assertIsNone(release_version(root))
 
-    def test_legacy_evidence_does_not_expand_current_host_support(self):
+    def test_host_support_is_bound_to_each_version(self):
         self.assertEqual({"codex", "claude-code"}, supported_hosts("0.10.1"))
         self.assertEqual({"codex"}, supported_hosts("0.11.0"))
-        self.assertEqual({"codex"}, supported_hosts("1.0.0"))
-        self.assertEqual({"codex"}, supported_hosts("9" * 5000 + ".0.0"))
+        self.assertEqual({"codex"}, supported_hosts("0.14.6"))
+        self.assertEqual({"codex", "claude-code"}, supported_hosts("0.15.0"))
+        self.assertEqual({"codex", "claude-code"}, supported_hosts("1.0.0"))
+        self.assertEqual({"codex", "claude-code"}, supported_hosts("9" * 5000 + ".0.0"))
+        self.assertEqual(set(), supported_hosts("0.15.0-beta"))
+
+    def test_claude_code_evidence_is_accepted_only_where_supported(self):
+        record = json.loads((REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json").read_text())
+        record["schemaVersion"] = "3"
+        record["release"].update(version="0.15.0", tag="v0.15.0")
+        record["installation"]["targetPluginVersion"] = "0.15.0"
+        record["runtimeIdentity"] = {
+            "pluginVersion": "0.15.0",
+            "runtimeContractSchemaVersion": "3",
+            "runtimeContractDigest": "sha256:" + "0" * 64,
+        }
+        record["observationSubject"] = "installed-runtime-contract"
+        record["host"]["name"] = "claude-code"
+        failures = []
+        self.evidence.validate_record(record, None, failures)
+        self.assertEqual([], failures)
 
     def test_successor_evidence_accepts_current_runtime_and_rejects_retired_host(self):
         record = json.loads((REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json").read_text())
@@ -58,15 +77,21 @@ class CodexOnlySupportTests(unittest.TestCase):
         self.evidence.validate_record(record, None, failures)
         self.assertTrue(any("unsupported by evidence schema 2" in value for value in failures))
 
-    def test_retired_wrapper_and_dangling_hook_are_rejected(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / ".claude-plugin").mkdir()
-            (root / "hooks").mkdir()
-            (root / "hooks/claude-hooks.json").symlink_to(root / "missing.json")
-            failures = []
-            check_retired_installation_paths(failures, root)
-            self.assertEqual(2, len(failures))
+    def test_claude_wrapper_is_rejected_outside_supported_versions(self):
+        for version, expected in ((None, 2), ("0.14.6", 2), ("0.15.0", 0)):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                (root / ".claude-plugin").mkdir()
+                (root / "hooks").mkdir()
+                (root / "hooks/claude-hooks.json").symlink_to(root / "missing.json")
+                if version is not None:
+                    (root / ".codex-plugin").mkdir()
+                    (root / ".codex-plugin/plugin.json").write_text(
+                        json.dumps({"version": version}) + "\n"
+                    )
+                failures = []
+                check_retired_installation_paths(failures, root)
+                self.assertEqual(expected, len(failures), failures)
 
     def test_empty_host_history_is_valid_without_promoting_synthetic_fixtures(self):
         failures, records, fixtures, version = self.evidence.validate_repository(True)

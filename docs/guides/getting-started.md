@@ -2,7 +2,8 @@
 
 This guide owns Axiom installation, first use, and the initial safe comparison
 between one routed request and one ordinary control request. Axiom supports
-Codex with a checked-in manifest, marketplace wrapper, Hook, and Skills.
+Codex and Claude Code through separate host manifests, marketplaces, and Hooks
+over the same checked-in Skills.
 
 ## Before Installing
 
@@ -35,6 +36,30 @@ If `axiom` is already registered without sparse checkout, follow the
 
 Start a new Codex chat or CLI session. An existing session may retain an older
 Hook or Skill snapshot.
+
+## Install For Claude Code
+
+Add the marketplace and install Axiom from a terminal:
+
+```bash
+claude plugin marketplace add wheakerd/axiom
+claude plugin install axiom@axiom
+```
+
+Inside a running session, use `/plugin marketplace add wheakerd/axiom` and
+`/plugin install axiom@axiom`, then `/reload-plugins`. The Claude Code catalog
+in `.claude-plugin/marketplace.json` selects the same published version as the
+Codex catalog through a Git source `ref`; development commits on `main` do not
+change it.
+
+Start a new Claude Code session or run `/reload-plugins`. A running session
+keeps the plugin snapshot loaded at launch. On Windows, Claude Code needs Git
+Bash to run the startup Hook.
+
+The Claude Code plugin loads the same skills. `delegate-simple-task`,
+`continuous-progress`, and `optimize-codex-usage` depend on Codex-only
+features; in Claude Code they report that they are not available instead of
+running. Invoke any other skill in plain language or as `/axiom:<skill-name>`.
 
 ## Inspect The Hook
 
