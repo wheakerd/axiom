@@ -207,7 +207,7 @@ host support.
   identifies the retired no-Hook work and earlier compatibility snapshots at
   their verified immutable source.
 
-Historical Claude Code results do not restore Axiom installation or runtime
-support for that host. Reproducing an old experiment is a separately scoped
+Historical Claude Code results bind only their original versions; they are not
+observations of Axiom's current Claude Code support. Reproducing an old experiment is a separately scoped
 task; preserving its source grants no authority to install, authenticate, run
 models, or publish.

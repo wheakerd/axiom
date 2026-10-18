@@ -8,10 +8,10 @@ renders the current identity and explains how to interpret it.
 ## Current Identity
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.14.6`
-- `repositoryPolicyRevision`: `67`
-- `runtimeContractDigest` (schema v2): `sha256:2ebfdae0fbb78feb12df09a3e740876ef2618482731cd1c831a1605d0f181a8f`
-- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v2.json`](../axiom_validation/runtime-contract-inputs-v2.json)
+- `pluginVersion`: `0.15.0`
+- `repositoryPolicyRevision`: `68`
+- `runtimeContractDigest` (schema v3): `sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868`
+- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v3.json`](../axiom_validation/runtime-contract-inputs-v3.json)
 <!-- runtime-identity:current:end -->
 
 ## Identity Fields
@@ -30,14 +30,16 @@ requests may use `null`.
 
 ## Current Runtime Contract
 
-The [schema v2 input policy](../axiom_validation/runtime-contract-inputs-v2.json)
-classifies the current Codex package. It includes every file under `skills/`
-and `hooks/`, plus the Codex manifest's `name`, `skills`, `hooks`,
-`interface.capabilities`, and `interface.defaultPrompt` fields.
+The [schema v3 input policy](../axiom_validation/runtime-contract-inputs-v3.json)
+classifies the current Codex and Claude Code package. It includes every file
+under `skills/` and `hooks/`, the Codex manifest's `name`, `skills`, `hooks`,
+`interface.capabilities`, and `interface.defaultPrompt` fields, and the Claude
+Code manifest's `name`, `skills`, and `hooks` fields.
 
-The policy excludes the manifest version, publisher and presentation fields,
-the marketplace wrapper, and branding assets used only by excluded presentation
-fields. These exclusions distinguish distribution and presentation from loaded
+The policy excludes manifest versions, publisher and presentation fields, the
+Codex marketplace wrapper, and branding assets used only by excluded
+presentation fields. The Claude Code marketplace file lies outside the
+installed surface. These exclusions distinguish distribution and presentation from loaded
 behavior; they do not exempt those files from package validation.
 
 Future behavior-bearing assets, MCP or app declarations, settings, executables,
@@ -98,9 +100,14 @@ archived failures. New observations bind their own immutable subject and follow
 
 ## Historical Identities
 
-- The [v2 history](../evidence/runtime-contract-history-v2.json) records
-  immutable subjects under the current schema, beginning with the v0.10.1
-  derivation used for the Codex-only transition.
+- The [v3 history](../evidence/runtime-contract-history-v3.json) records
+  immutable subjects under the current schema, beginning with the v0.14.6
+  derivation used for the Claude Code restoration.
+- The [v2 policy](../axiom_validation/runtime-contract-inputs-v2.json) and
+  [v2 history](../evidence/runtime-contract-history-v2.json) retain the
+  Codex-only classification and bindings from the v0.10.1 derivation through
+  v0.14.x. Schema v3 retains their canonicalization, restores a Claude manifest
+  input, and uses its own digest namespace.
 - The [v1 policy](../axiom_validation/runtime-contract-inputs-v1.json) and
   [v1 history](../evidence/runtime-contract-history-v1.json) retain their
   original cross-host classification and bindings. Schema v2 retains their

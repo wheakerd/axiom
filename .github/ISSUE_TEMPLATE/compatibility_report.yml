@@ -14,6 +14,7 @@ body:
       description: Which host did you test?
       options:
         - Codex
+        - Claude Code
     validations:
       required: true
 
@@ -22,7 +23,7 @@ body:
     attributes:
       label: Host version
       description: Provide the exact version shown by the host.
-      placeholder: "Example: Codex CLI 0.149.0"
+      placeholder: "Example: Codex CLI 0.149.0 or Claude Code 2.1.292"
     validations:
       required: true
 

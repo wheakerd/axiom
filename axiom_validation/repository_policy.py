@@ -13,6 +13,8 @@ from .context import (
     RELEASE_VERSION,
     REPOSITORY_ROOT,
     display_path,
+    release_version,
+    supported_hosts,
 )
 from .release_evidence import render_release_body
 from .release_tag_controller import MAIN_RULESET, RULESET_BINDINGS
@@ -46,6 +48,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/runtime-identity.json",
     "evidence/runtime-contract-history-v1.json",
     "evidence/runtime-contract-history-v2.json",
+    "evidence/runtime-contract-history-v3.json",
     "evidence/repository-policy-revisions-v1.json",
     "evals/README.md",
     "evals/history/codex-core-v1-v2.md",
@@ -77,6 +80,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "axiom_validation/route-boundaries-v1.json",
     "axiom_validation/runtime-contract-inputs-v1.json",
     "axiom_validation/runtime-contract-inputs-v2.json",
+    "axiom_validation/runtime-contract-inputs-v3.json",
     ".github/workflows/publish-immutable-release.yml",
     ".github/workflows/create-protected-release-tag.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -458,7 +462,10 @@ def check_skill_contracts(failures: list[str]) -> None:
 
 
 def check_retired_installation_paths(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
-    """Reject restoration of the retired Axiom Claude distribution wrapper."""
+    """Reject the Claude distribution wrapper outside versions that support Claude Code."""
+    version = release_version(root)
+    if version is not None and "claude-code" in supported_hosts(version):
+        return
     for relative in (".claude-plugin", "hooks/claude-hooks.json"):
         path = root / relative
         if path.exists() or path.is_symlink():

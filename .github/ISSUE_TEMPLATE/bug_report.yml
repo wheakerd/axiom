@@ -14,6 +14,7 @@ body:
       description: Where did the behavior occur?
       options:
         - Codex
+        - Claude Code
     validations:
       required: true
 

@@ -21,7 +21,9 @@ def supported_hosts(version: str) -> frozenset[str]:
         return frozenset()
     if parsed < ((1, "0"), (2, "11"), (1, "0")):
         return frozenset({"codex", "claude-code"})
-    return frozenset({"codex"})
+    if parsed < ((1, "0"), (2, "15"), (1, "0")):
+        return frozenset({"codex"})
+    return frozenset({"codex", "claude-code"})
 
 
 def display_path(path: Path) -> str:

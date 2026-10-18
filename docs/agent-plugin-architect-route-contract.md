@@ -12,8 +12,8 @@ linked references own the executable instructions.
 The route covers package inventory, shared Skills, route ownership, manifests,
 marketplace wrappers, hooks, trust boundaries, release readiness, and
 version-bound compatibility evidence. It can design plugins for Codex or Claude
-Code. That target-project capability does not extend Axiom's own installation
-or runtime support beyond [Codex](compatibility.md).
+Code. That target-project capability is separate from Axiom's own installation
+and runtime support, described in [Compatibility](compatibility.md).
 
 | Request | Owner |
 | --- | --- |

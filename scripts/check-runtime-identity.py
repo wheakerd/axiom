@@ -43,7 +43,7 @@ def parser() -> argparse.ArgumentParser:
     argument_parser.add_argument(
         "--historical",
         action="store_true",
-        help="allow absent newly classified fields or excluded roots when deriving an old tag",
+        help="allow absent newly classified inputs, fields, or excluded roots when deriving an old tag",
     )
     return argument_parser
 

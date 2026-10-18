@@ -1,0 +1,24 @@
+{
+  "name": "axiom",
+  "version": "0.15.0",
+  "description": "Think before AI thinks.",
+  "author": {
+    "name": "wheakerd",
+    "url": "https://github.com/wheakerd"
+  },
+  "homepage": "https://github.com/wheakerd/axiom#readme",
+  "repository": "https://github.com/wheakerd/axiom",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "agents-md",
+    "ai-workflows",
+    "agent-safety",
+    "workflow-guardrails",
+    "skills",
+    "context-efficiency",
+    "developer-tools"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/claude-hooks.json"
+}

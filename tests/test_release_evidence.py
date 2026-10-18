@@ -280,6 +280,49 @@ class ReleaseEvidenceTests(unittest.TestCase):
                 body,
             )
 
+    def test_new_changelog_entries_reject_hard_wrapped_prose(self):
+        single_line = """# Changelog
+
+## {version} - unreleased
+
+### Fixed
+
+- Keep this list item on one line.
+
+### Behavioral impact
+
+Existing behavior is unchanged.
+
+### Required action
+
+None.
+"""
+        wrapped = single_line.replace(
+            "- Keep this list item on one line.",
+            "- Keep this list item\n  on one line.",
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            changelog = root / "CHANGELOG.md"
+            for version, payload, rejected in (
+                ("0.15.0", wrapped, True),
+                ("0.15.0", single_line, False),
+                ("0.14.9", wrapped, False),
+            ):
+                with self.subTest(version=version, rejected=rejected):
+                    changelog.write_text(payload.format(version=version), encoding="utf-8")
+                    failures: list[str] = []
+                    body = render_release_body(version, failures, root=root)
+                    if rejected:
+                        self.assertIsNone(body)
+                        self.assertTrue(
+                            any("one source line" in failure for failure in failures),
+                            failures,
+                        )
+                    else:
+                        self.assertEqual([], failures)
+                        self.assertIsNotNone(body)
+
     def test_publish_workflow_contract_rejects_an_appended_command(self):
         workflow = (
             Path(__file__).resolve().parents[1]

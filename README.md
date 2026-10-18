@@ -7,18 +7,19 @@
 
 **Think before AI thinks.**
 
-**Axiom is a Codex plugin with a collection of focused skills for turning
-requests into clear, actionable work.** It helps clarify intent, plan tasks,
+**Axiom is a Codex and Claude Code plugin with a collection of focused skills
+for turning requests into clear, actionable work.** It helps clarify intent, plan tasks,
 maintain repository instructions, research, review decisions, and handle
 actions that need explicit authorization or a recovery plan.
 
-Describe what you want in Codex, or name a skill directly. Axiom loads the
+Describe what you want in your host, or name a skill directly. Axiom loads the
 smallest matching skill set and its relevant references; everyday requests
-continue through Codex normally. The skills use Codex's existing tools and
-permissions, with no background service or automatic updater.
+continue through the host normally. The skills use the host's existing tools
+and permissions, with no background service or automatic updater.
 
-**Supported host:** Codex. ~~Claude Code~~ support has been retired; see
-[Deprecated Skills and Support](#deprecated-skills-and-support).
+**Supported hosts:** Codex and Claude Code. Both share the same skills;
+`delegate-simple-task`, `continuous-progress`, and `optimize-codex-usage`
+need Codex features and are not available in Claude Code.
 
 [Install](#installation) | [Update](#updating) | [Use a skill](#skills) |
 [Documentation](docs/README.md)
@@ -27,18 +28,27 @@ permissions, with no background service or automatic updater.
 
 ## Installation
 
-Run these commands in a terminal to add the marketplace and install Axiom:
+Run these commands in a terminal for your host.
+
+**Codex:**
 
 ```bash
 codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-The marketplace selects an immutable published version. Development commits
+**Claude Code:**
+
+```bash
+claude plugin marketplace add wheakerd/axiom
+claude plugin install axiom@axiom
+```
+
+Each marketplace selects an immutable published version. Development commits
 on `main` do not advance that selection.
 
-Start a new Codex chat or CLI session. Open `/hooks` and compare the installed
-entry with the [Hook Reference](docs/reference/hooks.md) before trusting it.
+Start a new session. Open `/hooks` and compare the installed entry with the
+[Hook Reference](docs/reference/hooks.md) before trusting it.
 Stop if the definitions differ. The [Getting Started guide](docs/guides/getting-started.md)
 owns the full installation and first-use procedure.
 
@@ -50,16 +60,21 @@ Refresh the installed marketplace snapshot from a terminal:
 codex plugin marketplace upgrade axiom
 ```
 
+```bash
+claude plugin marketplace update axiom
+claude plugin update axiom@axiom
+```
+
 In a supported Codex workspace plugin UI, use **Refresh**. After updating,
 start a new session and inspect `/hooks` again. Automatic update behavior is
-controlled by Codex and your settings. See [Managing an Installation](docs/guides/managing-installation.md)
+controlled by each host and your settings. See [Managing an Installation](docs/guides/managing-installation.md)
 for disabling, removal, and troubleshooting.
 For a marketplace clone timeout, follow the guide's
 [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts).
 
 ## First Use
 
-In Codex, try a read-only request that matches a skill:
+Try a read-only request that matches a skill:
 
 ```text
 Use $agents-architect to audit this repository's AGENTS.md instruction system.
@@ -84,7 +99,7 @@ with a brief reason. A quiet response is valid. These are expected behaviors,
 not a claim that your installation has already reproduced them.
 
 > [!IMPORTANT]
-> A request that matches no Axiom skill still follows Codex permissions
+> A request that matches no Axiom skill still follows your host's permissions
 > and repository instructions. No match is not a safety certification.
 > Selecting a skill does not grant permission to edit, publish, deploy,
 > or delete anything.
@@ -93,8 +108,9 @@ not a claim that your installation has already reproduced them.
 
 ## Skills
 
-Use natural language or include `$skill-name` in a Codex message. The examples
-below are chat prompts, not terminal commands. Each linked source describes
+Use natural language, include `$skill-name` in Codex, or type
+`/axiom:skill-name` in Claude Code. The examples below are chat prompts, not
+terminal commands. Each linked source describes
 the skill's full scope and requirements; [Examples](docs/examples.md) gives
 more requests and expected behavior.
 
@@ -131,6 +147,8 @@ before making changes.
 
 **Link:** [Bounded task delegation](skills/delegate-simple-task/SKILL.md)
 
+**Host:** Codex only.
+
 **Description:** Assesses simple work against your ordered model preferences
 while preserving the main model. Requires the active `using-axiom` gate,
 verified `Ultra` reasoning, and your consent to invoke the skill.
@@ -159,6 +177,8 @@ Do not implement it yet.
 #### continuous-progress
 
 **Link:** [Supervised progress across sessions](skills/continuous-progress/SKILL.md)
+
+**Host:** Codex only.
 
 **Description:** Explicitly invoked progress through fresh workers and
 coordinator handoffs, with a verified native supervisor. Stops after verified
@@ -218,6 +238,8 @@ without editing it.
 #### optimize-codex-usage
 
 **Link:** [Codex usage analysis](skills/optimize-codex-usage/SKILL.md)
+
+**Host:** Codex only.
 
 **Description:** Finds ways to reduce context, token, and tool overhead while
 preserving required quality.
@@ -292,13 +314,9 @@ AGENTS Architect topics are now supporting references within
 [`agents-architect`](skills/agents-architect/SKILL.md), not separate skills to
 install or invoke.
 
-~~Claude Code installation and runtime support~~ was removed in
-[v0.11.0](docs/releases/v0.11.0.md). Existing users should disable or uninstall
-their old Axiom installation in that host and use the Codex installation above.
-Updating the repository does not remove cached installations.
-
-`agent-plugin-architect` can still help design Claude Code plugins for other
-projects. That skill does not make Claude Code a supported host for Axiom.
+Claude Code support, removed in [v0.11.0](docs/releases/v0.11.0.md), returned in
+[v0.15.0](docs/releases/v0.15.0.md). A cached pre-0.11.0 Claude Code
+installation updates through the commands above.
 
 ---
 
@@ -315,7 +333,7 @@ badges link to the repository's live workflow results:
 
 A workflow badge reports a run result, not a guarantee that the project is
 free of vulnerabilities. Axiom is a public beta, and its instructions do not
-replace Codex permissions or provide a sandbox. Read the
+replace host permissions or provide a sandbox. Read the
 [Trust Model](docs/trust-model.md) for the security boundaries and
 [SECURITY.md](SECURITY.md) to report a vulnerability privately.
 

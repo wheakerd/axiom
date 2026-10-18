@@ -11,11 +11,21 @@ from .manifests import MANIFEST_FILES, exact_json_object
 
 EXPECTED_HOOK_DECLARATIONS = {
     ".codex-plugin/plugin.json": "./hooks/codex-hooks.json",
+    ".claude-plugin/plugin.json": "./hooks/claude-hooks.json",
 }
 AUTHOR_KEYS = frozenset({"name", "url"})
 HOOK_FILES = (
     "hooks/codex-hooks.json",
+    "hooks/claude-hooks.json",
 )
+CLAUDE_COMMAND = (
+    "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door "
+    "before deciding whether any Axiom skill applies. The Codex-only routes "
+    "delegate-simple-task, optimize-codex-usage, and continuous-progress are not "
+    "available in Claude Code; say so instead of simulating them:'; "
+    "cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
+)
+CLAUDE_HOOK_TIMEOUT_SECONDS = 5
 CODEX_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom. Load this startup front door before deciding "
     "whether any Axiom skill applies:'; cat \"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
@@ -40,6 +50,17 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
                 "command": CODEX_COMMAND,
                 "commandWindows": CODEX_WINDOWS_COMMAND,
                 "timeout": CODEX_HOOK_TIMEOUT_SECONDS,
+                "statusMessage": "Loading Axiom routing",
+            },
+        },
+    },
+    "hooks/claude-hooks.json": {
+        "SessionStart": {
+            "matcher": "startup|resume|clear|compact",
+            "handler": {
+                "type": "command",
+                "command": CLAUDE_COMMAND,
+                "timeout": CLAUDE_HOOK_TIMEOUT_SECONDS,
                 "statusMessage": "Loading Axiom routing",
             },
         },

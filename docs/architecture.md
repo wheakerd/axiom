@@ -75,7 +75,8 @@ controls are in [Examples](examples.md).
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |
 
 `agent-plugin-architect` can design another project's Codex or Claude Code
-plugin. Axiom itself supports Codex only. The
+plugin. Axiom itself supports both hosts, with three Codex-only routes; see
+[Compatibility](compatibility.md). The
 [route contract](agent-plugin-architect-route-contract.md) explains the boundary.
 
 ## Composition And Phase Changes

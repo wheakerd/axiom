@@ -21,13 +21,18 @@ JSON_FILES = (
     ".codex-plugin/plugin.json",
     ".agents/plugins/marketplace.json",
     "hooks/codex-hooks.json",
+    ".claude-plugin/plugin.json",
+    "hooks/claude-hooks.json",
 )
 MANIFEST_FILES = (
     ".codex-plugin/plugin.json",
+    ".claude-plugin/plugin.json",
 )
 EXPECTED_HOOK_DECLARATIONS = {
     ".codex-plugin/plugin.json": "./hooks/codex-hooks.json",
+    ".claude-plugin/plugin.json": "./hooks/claude-hooks.json",
 }
+CLAUDE_MARKETPLACE_RELATIVE = ".claude-plugin/marketplace.json"
 EXPECTED_SKILLS_ROOT = "./skills/"
 EXPECTED_PLUGIN_REPOSITORY = "https://github.com/wheakerd/axiom.git"
 EXPECTED_PLUGIN_NAME = "axiom"
@@ -82,6 +87,23 @@ CODEX_INTERFACE_KEYS = frozenset(EXPECTED_CODEX_INTERFACE)
 CODEX_MARKETPLACE_KEYS = frozenset({"name", "interface", "plugins"})
 CODEX_MARKETPLACE_PLUGIN_KEYS = frozenset({"name", "source", "policy", "category"})
 AUTHOR_KEYS = frozenset({"name", "url"})
+CLAUDE_MANIFEST_KEYS = frozenset(
+    {
+        "name",
+        "version",
+        "description",
+        "author",
+        "homepage",
+        "repository",
+        "license",
+        "keywords",
+        "skills",
+        "hooks",
+    }
+)
+CLAUDE_MARKETPLACE_KEYS = frozenset({"name", "owner", "description", "plugins"})
+CLAUDE_MARKETPLACE_PLUGIN_KEYS = frozenset({"name", "source", "description", "category"})
+EXPECTED_CLAUDE_CATEGORY = "productivity"
 CODEX_DEFAULT_PROMPT_MAX_ITEMS = 3
 CODEX_DEFAULT_PROMPT_MAX_CHARACTERS = 128
 CODEX_LISTING_URL_MAX_CHARACTERS = 1024
@@ -918,6 +940,86 @@ def check_manifest_capability_schema(
                         "owned install policy"
                     )
 
+    claude_path = ".claude-plugin/plugin.json"
+    claude = documents.get(claude_path)
+    if claude is not None:
+        exact_json_object(claude, claude_path, CLAUDE_MANIFEST_KEYS, failures)
+        require_json_strings(
+            claude,
+            frozenset(CLAUDE_MANIFEST_KEYS - {"author", "keywords"}),
+            claude_path,
+            failures,
+        )
+        author = exact_json_object(
+            claude.get("author"), f"{claude_path}.author", AUTHOR_KEYS, failures
+        )
+        if author is not None:
+            require_json_strings(author, AUTHOR_KEYS, f"{claude_path}.author", failures)
+        require_json_string_list(claude.get("keywords"), f"{claude_path}.keywords", failures)
+
+    check_claude_marketplace(documents, failures, repository_root)
+
+
+def check_claude_marketplace(
+    documents: dict[str, dict[str, Any]],
+    failures: list[str],
+    repository_root: Path = REPOSITORY_ROOT,
+) -> None:
+    """Validate the optional Claude Code catalog once a verified handoff adds it."""
+    path = repository_root / CLAUDE_MARKETPLACE_RELATIVE
+    if not path.exists() and not path.is_symlink():
+        return
+    label = CLAUDE_MARKETPLACE_RELATIVE
+    document = load_json(path, failures)
+    if document is None:
+        return
+    exact_json_object(document, label, CLAUDE_MARKETPLACE_KEYS, failures)
+    require_json_strings(document, frozenset({"name", "description"}), label, failures)
+    if document.get("name") != EXPECTED_PLUGIN_NAME:
+        failures.append(f"{label} name must be {EXPECTED_PLUGIN_NAME!r}")
+    owner = exact_json_object(document.get("owner"), f"{label}.owner", AUTHOR_KEYS, failures)
+    if owner is not None:
+        require_json_strings(owner, AUTHOR_KEYS, f"{label}.owner", failures)
+    entry = exact_single_plugin(document, label, CLAUDE_MARKETPLACE_PLUGIN_KEYS, failures)
+    if entry is None:
+        return
+    require_json_strings(
+        entry, frozenset({"name", "description", "category"}), f"{label}.plugins[0]", failures
+    )
+    if entry.get("category") != EXPECTED_CLAUDE_CATEGORY:
+        failures.append(f"{label} axiom category must be {EXPECTED_CLAUDE_CATEGORY!r}")
+    source = exact_json_object(
+        entry.get("source"),
+        f"{label}.plugins[0].source",
+        frozenset({"source", "url", "ref"}),
+        failures,
+    )
+    if source is None:
+        return
+    if (
+        source.get("source") != "url"
+        or source.get("url") != EXPECTED_PLUGIN_REPOSITORY
+        or parse_production_release_tag(source.get("ref")) is None
+    ):
+        failures.append(
+            f"{label}.plugins[0].source must be the owned Git repository at an "
+            "immutable production release tag"
+        )
+        return
+    codex = documents.get(".agents/plugins/marketplace.json")
+    codex_entry = None
+    if isinstance(codex, dict) and isinstance(codex.get("plugins"), list) and codex["plugins"]:
+        codex_entry = codex["plugins"][0]
+    codex_ref = (
+        codex_entry.get("source", {}).get("ref")
+        if isinstance(codex_entry, dict) and isinstance(codex_entry.get("source"), dict)
+        else None
+    )
+    if source.get("ref") != codex_ref:
+        failures.append(
+            f"{label} must select the same immutable release tag as the Codex catalog"
+        )
+
 
 def check_manifest_versions(
     documents: dict[str, dict[str, Any]], failures: list[str]
@@ -997,6 +1099,13 @@ def check_distribution_identity(
             failures.append(f"{codex_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
         if codex_manifest.get("description") != EXPECTED_TAGLINE:
             failures.append(f"{codex_manifest_path} description must be {EXPECTED_TAGLINE!r}")
+    claude_manifest_path = ".claude-plugin/plugin.json"
+    claude_manifest = documents.get(claude_manifest_path)
+    if claude_manifest is not None:
+        if claude_manifest.get("name") != EXPECTED_PLUGIN_NAME:
+            failures.append(f"{claude_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
+        if claude_manifest.get("description") != EXPECTED_TAGLINE:
+            failures.append(f"{claude_manifest_path} description must be {EXPECTED_TAGLINE!r}")
         interface = codex_manifest.get("interface")
         if isinstance(interface, dict):
             if interface.get("displayName") != EXPECTED_DISPLAY_NAME:

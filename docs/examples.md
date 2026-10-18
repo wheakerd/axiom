@@ -92,7 +92,7 @@ compaction does not implicitly select these modes.
 
 [Agent Plugin Architect](../skills/agent-plugin-architect/SKILL.md) inventories
 the package and loads only the active architecture references. It can design
-another project's Codex or Claude Code integration; Axiom itself supports Codex.
+another project's Codex or Claude Code integration; Axiom itself supports both hosts.
 An explicit release-readiness audit returns classified evidence and the next
 bounded decision while remaining read-only.
 

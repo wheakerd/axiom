@@ -24,19 +24,30 @@ These labels are not interchangeable. A passing static validator cannot turn a
 
 ## Supported Hosts
 
-The release tree provides the Codex integration:
+The release tree provides one integration per host over the same Skills:
 
 | Host | Checked-in integration | Lifecycle contract |
 | --- | --- | --- |
 | Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are declared |
+| Claude Code | `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `skills/`; the `.claude-plugin/marketplace.json` catalog is published after a verified release | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; one Bash command, which needs Git Bash on Windows |
 
-The Codex manifest points to `./skills/`. Codex is Axiom's only supported
-installation and runtime host; records for other hosts remain historical.
-This is repository support, not proof of execution on every host release,
-operating system, shell, installation method, or policy configuration.
+Both manifests point to `./skills/`. Codex and Claude Code are supported
+installation and runtime hosts from `0.15.0`; Claude Code records from
+`0.10.x` and earlier remain historical. In Claude Code,
+`delegate-simple-task`, `continuous-progress`, and `optimize-codex-usage` are
+not available because they depend on Codex-only features. This is repository
+support, not proof of execution on every host release, operating system,
+shell, installation method, or policy configuration.
 
 Inspect the exact commands in the [Hook Reference](reference/hooks.md) before
 trusting an installation.
+
+## Claude Code Package Format And Validation
+
+`claude plugin validate --strict` accepted the Claude Code manifest and every
+shared Skill with Claude Code `2.1.292` on 2026-10-18. That check validates
+schema and Skill metadata; it does not prove installation, Hook trust, or
+execution. The manifest declares only fields that strict validation accepts.
 
 ## Codex Package Format And Validation
 

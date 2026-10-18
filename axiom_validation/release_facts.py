@@ -8,6 +8,7 @@ from typing import Any
 
 from .context import supported_hosts, RELEASE_VERSION, REPOSITORY_ROOT
 from .context_budget import load_json
+from .release_versions import parse_production_release_version
 
 
 SUPERSEDED_CANDIDATE_LABEL = "Superseded historical candidate"
@@ -282,8 +283,10 @@ def validate_release_facts_record(
             for item in host_metrics
             if type(item) is dict and type(item.get("host")) is str
         }
-        expected_statuses = {host: "not-run" if host == "codex" else "unavailable"
-                             for host in supported_hosts(version)}
+        expected_statuses = {
+            host: "unavailable" if host == "claude-code" and _legacy_dual_host(version) else "not-run"
+            for host in supported_hosts(version)
+        }
         if set(by_host) != set(expected_statuses):
             failures.append("release facts hostMetrics host set drifted")
         for host, status in expected_statuses.items():
@@ -349,6 +352,12 @@ def _quantity(value: int, noun: str, *, delta: bool = False) -> str:
     return f"{rendered} {noun}{suffix}"
 
 
+def _legacy_dual_host(version: str) -> bool:
+    """Keep pre-0.11.0 dual-host fact wording byte-stable for historical records."""
+    parsed = parse_production_release_version(version)
+    return parsed is not None and parsed < parse_production_release_version("0.11.0")
+
+
 def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
     """Render exact static facts while preserving proxy and observation labels."""
     version = document["targetRelease"]["version"]
@@ -364,8 +373,12 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
         "reached" if comparison["relativeThresholdReached"] else "not reached"
     )
     review_status = comparison["reviewStatus"]
-    host_status = ("`NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. "
-                   if "claude-code" in supported_hosts(version) else "`NOT-RUN`. ")
+    if "claude-code" not in supported_hosts(version):
+        host_status = "`NOT-RUN`. "
+    elif _legacy_dual_host(version):
+        host_status = "`NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. "
+    else:
+        host_status = "`NOT-RUN`; Claude Code host observation also remains `NOT-RUN`. "
     return (
         f"The [v{version} routing-context record]({link}) uses the immutable "
         "v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has "
