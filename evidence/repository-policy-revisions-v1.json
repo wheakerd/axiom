@@ -520,6 +520,14 @@
       "sourceIssue": null,
       "summary": "Document Python, Node.js, Git inventory and history prerequisites for contributor validation; trigger installation troubleshooting on missing capabilities or incorrect routing.",
       "runtimeContractDigest": "sha256:8e0c16b80a129664114ae3580f0080e640ee250478efe61887fe62307a759e58"
+    },
+    {
+      "revision": 66,
+      "recordedOn": "2026-10-17",
+      "baselineCommit": "81317b77ccec4727821370f8e1d81c2dc2fdd43b",
+      "sourceIssue": null,
+      "summary": "Harden direct Git configuration checks, align secondary Git routing, derive plugin validation from target contracts, and distinguish native Skill discovery from AGENTS routing.",
+      "runtimeContractDigest": "sha256:2ebfdae0fbb78feb12df09a3e740876ef2618482731cd1c831a1605d0f181a8f"
     }
   ]
 }

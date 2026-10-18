@@ -264,6 +264,43 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         (
             "## Scope",
             "## Pre-Commit Conflict Gate",
+            "## Effective Configuration Before Every Push",
+            "Inspect effective configuration immediately before every direct push, including push-only requests",
+            "For a combined request, also inspect it before the commit",
+            "the pre-push inspection checks for drift",
+            "conditional, worktree, environment, and command-scope configuration",
+            "push.followTags=true",
+            "push.pushOption",
+            "remote.<name>.mirror=true",
+            "Evaluate `push.recurseSubmodules` and `submodule.recurse` jointly in Git's configuration traversal order for the executing environment",
+            "The last entry of either key decides the mode",
+            "`push.recurseSubmodules` supplies its mode",
+            "`submodule.recurse=true` supplies `on-demand`",
+            "`submodule.recurse=false` supplies `no`",
+            "Stop when the resulting mode is `on-demand` or `only`",
+            "Modes `no` and `check` are safe only when they remain the final mode",
+            "boolean parsing and ordered multi-value empty-reset semantics",
+            "Absent settings use Git defaults",
+            "Distinguish absence from an inspection or parse error",
+            "malformed, unreadable, conflicting, or unclassifiable evidence stops",
+            "never add flags, change configuration",
+            "signing policy, endpoint privacy, and one-attempt boundary",
+            "Retain only the conflicting key and effect category",
+            "At both inspections, resolve the command's source-only refspec",
+            "executing Git version's effective mapping rules",
+            "first matching `remote.<name>.push` refspec",
+            "`push.default=upstream`",
+            "`branch.<name>.remote` and `branch.<name>.merge`",
+            "Stop if the effective refspec is forced (leading `+`) or its destination differs from the frozen destination branch",
+            "stop if the named remote argument resolves as a remote group",
+            "`remotes.<name>`",
+            "including a group that shadows a configured remote of the same name",
+            "never invoke group members",
+            "Unresolved mapping or group status is unclassifiable evidence and stops",
+            "At both inspections, stop on a nonempty inherited `GIT_NAMESPACE`",
+            "or when its propagation to the receiving side is unclassifiable",
+            "never clear or override it",
+            "Any other effective setting or inherited environment that would change the exact command's refs, destinations, remotes, force, tags, submodules, or push options is also a conflict and stops",
             "git push origin main",
             "Keep normal repository pre-push hooks active",
             "## One Native Push",
@@ -277,6 +314,29 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         "lightweight direct-submit",
     )
     using_axiom_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+    require_ordered_contract_anchors(
+        REPOSITORY_ROOT / "skills" / "confirm-external-action" / "SKILL.md",
+        (
+            "Keep ordinary Git host-native; select `traceable-git-submit` only under `../using-axiom/SKILL.md`",
+            "Persistent install, deployment, migration, promotion, retention, service, or data risk belongs to `reversible-system-change`",
+            "keep both authorization gates independent",
+        ),
+        failures,
+        "external-action canonical Git route separation",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "references/baseline-and-preflight.md",
+        (
+            "Ordinary Git stays host-native",
+            "Return to `../SKILL.md` for phase selection",
+            "an explicitly selected simple direct push reads only `direct-submit.md`",
+            "creates no Axiom metadata",
+            "Reading Git facts never authorizes cache mutation",
+            "only for the exact selected traceable phase",
+        ),
+        failures,
+        "baseline canonical Git phase separation",
+    )
     require_ordered_contract_anchors(
         using_axiom_path,
         (
@@ -549,6 +609,8 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         "operation_state_clear": True,
         "target_unchanged": True,
         "mechanism_conflict": False,
+        "effective_configuration_safe": True,
+        "configuration_rechecked": True,
     }
     lightweight_scenarios = (
         ("ordinary-direct", None, True),
@@ -564,6 +626,9 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         ("operation-state-stops", ("operation_state_clear", False), False),
         ("target-drift-stops", ("target_unchanged", False), False),
         ("mechanism-conflict-stops", ("mechanism_conflict", True), False),
+        ("configuration-conflict-stops", ("effective_configuration_safe", False), False),
+        ("configuration-unknown-stops", ("effective_configuration_safe", None), False),
+        ("configuration-drift-not-rechecked-stops", ("configuration_rechecked", False), False),
     )
     for name, change, expected in lightweight_scenarios:
         scenario = dict(lightweight_defaults)

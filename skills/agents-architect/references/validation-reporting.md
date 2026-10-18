@@ -50,8 +50,10 @@ Add only checks triggered by the changed surface:
   authoring target.
 - Migration: validate the source-to-owner mapping and that no independently
   editable duplicate remains.
-- Repo-local Skill changes: validate frontmatter, direct routes, resources,
-  and the AGENTS owner that selects the Skill.
+- Repo-local Skill changes: validate discovery metadata, frontmatter, direct
+  routes, and resources. Check the AGENTS selector only for a declared
+  AGENTS-to-Skill route; standalone Skills need none. Discovery proves neither
+  explicit-route reachability nor body loading.
 - Implementation reconciliation: validate explicit activation, recorded
   working-tree or ref baseline, per-rule evidence status and disposition,
   active-chain authority, collaboration separation, preview/apply

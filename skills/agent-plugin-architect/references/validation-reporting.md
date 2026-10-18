@@ -4,17 +4,22 @@ Run repository-owned validation proportional to every changed surface. Use a
 frozen disposable copy outside the publishable tree for any validator whose
 mutation behavior is uncertain.
 
-For a shared packaged Skill and release contract, check:
+Derive required commands, languages, byte limits, schemas, aggregate validators,
+and test entrypoints from the target repository's current contract. For the
+changed Skill and package surfaces, check applicable requirements:
 
-- the full standard-library test suite and aggregate publication validator;
-- distribution drift, compatibility evidence, and routing-context results;
-- changed-Skill quick validation when available;
-- duplicate-aware JSON and JSONL parsing;
-- Markdown links and fragments, exact ASCII policy, and instruction byte size;
-- direct root-to-reference reachability and absence of nested Skills;
-- manifest and hook parsing, cross-host parity, and hook non-expansion;
+- target-owned tests and aggregate validators, in their declared languages;
+- target distribution, compatibility evidence, and routing-context contracts;
+- changed-Skill quick validation when applicable and available;
+- duplicate-aware JSON and JSONL parsing where those formats are used;
+- Markdown links and fragments, declared language rules, and byte limits;
+- declared root-to-reference reachability and Skill layout;
+- manifest and hook parsing, supported-host parity, and hook non-expansion;
 - expected path set and modes, historical byte preservation, and diff hygiene;
-- brand/document consistency and available offline host validation.
+- target brand/document consistency and available offline host validation.
+
+Missing target-required checks remain incomplete or `NOT-RUN`; do not import
+an Axiom-named suite or undeclared ASCII policy.
 
 Report the exact validated revision or tree, commands and outcomes, context
 metrics, compatibility class, and any expected legacy-validator exception.

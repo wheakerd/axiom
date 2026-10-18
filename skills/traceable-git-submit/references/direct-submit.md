@@ -36,6 +36,46 @@ unchanged.
 For a combined commit-and-push request, finish the preceding conflict check
 before the commit. An unresolved predictable conflict leaves `HEAD` unchanged.
 
+## Effective Configuration Before Every Push
+
+Inspect effective configuration immediately before every direct push, including
+push-only requests. For a combined request, also inspect it before the commit;
+the pre-push inspection checks for drift. Use the same repository and execution
+environment as the requested command, including applicable conditional,
+worktree, environment, and command-scope configuration. Stop on
+`push.followTags=true`, a nonempty effective `push.pushOption` list, or
+`remote.<name>.mirror=true`. Evaluate `push.recurseSubmodules` and
+`submodule.recurse` jointly in Git's configuration traversal order for the
+executing environment. The last entry of either key decides the mode:
+`push.recurseSubmodules` supplies its mode; `submodule.recurse=true` supplies
+`on-demand`, and `submodule.recurse=false` supplies `no`. Stop when the resulting
+mode is `on-demand` or `only`. Modes `no` and `check` are safe only when they
+remain the final mode. Respect Git
+boolean parsing and ordered multi-value empty-reset semantics; key presence
+alone is insufficient. Absent settings use Git defaults. Distinguish absence
+from an inspection or parse error; malformed, unreadable, conflicting, or unclassifiable evidence
+stops. A conflict is a stop: never add flags, change configuration, import the
+heavy transport closure, or silently switch workflows. Preserve the exact
+command, normal hooks, signing policy, endpoint privacy, and one-attempt
+boundary. Retain only the conflicting key and effect category, never
+push-option payloads or endpoint values.
+
+At both inspections, resolve the command's source-only refspec under the
+executing Git version's effective mapping rules, including the first matching
+`remote.<name>.push` refspec and, where applicable, `push.default=upstream` with
+`branch.<name>.remote` and `branch.<name>.merge`. Stop if the effective refspec
+is forced (leading `+`) or its destination differs from the frozen destination
+branch. Also stop if the named remote argument resolves as a remote group
+(`remotes.<name>`), including a group that shadows a configured remote of the
+same name; never invoke group members. Unresolved mapping or group status is
+unclassifiable evidence and stops.
+
+At both inspections, stop on a nonempty inherited `GIT_NAMESPACE` or when its
+propagation to the receiving side is unclassifiable; never clear or override it.
+Any other effective setting or inherited environment that would change the
+exact command's refs, destinations, remotes, force, tags, submodules, or push
+options is also a conflict and stops.
+
 ## Preserve The Named-Remote Mechanism
 
 Honor the exact user- or repository-specified named-remote command as a literal

@@ -24,8 +24,8 @@ Design the root control plane and finite on-demand routing topology.
 
 - Native auto-load layer: root `AGENTS.md` plus rare tiny nested
   `AGENTS.md` files for stable subprojects.
-- On-demand layer: `.agents/` group indexes, direct domain entries, and rule
-  leaves reached only through explicit `AGENTS.md` routing.
+- On-demand rule layer: ordinary `.agents/` group indexes, direct domain entries,
+  and rule leaves reached through explicit `AGENTS.md` routing.
 - Cross-cutting layer: safety or risk rule leaves selected only by explicit
   concern or risk signals.
 - Runtime layer: `.agents/.runtime/` for temporary session capsules only.
@@ -36,8 +36,12 @@ Design the root control plane and finite on-demand routing topology.
   Target repository guidance must not restate that layer.
 
 Only root or justified nested files named `AGENTS.md` belong to the native
-auto-load layer Axiom writes. Every `.agents/**` document is an explicit
-next-hop rule resource, never a Codex native discovery entry.
+auto-load layer Axiom writes. Ordinary `.agents/**` rule resources need an
+explicit next hop. Repo-local `.agents/skills/**/SKILL.md`, including nested
+topics, may be discovered natively as Skill metadata; this is separate from
+AGENTS instruction-chain loading and does not prove body loading or selection.
+A declared AGENTS front door remains a project instruction; nesting alone
+does not enforce it.
 
 ## Route Roles
 

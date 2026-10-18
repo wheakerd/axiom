@@ -9,6 +9,45 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.14.6 - unreleased
+
+### Fixed
+
+- Stop explicit simple Git submission when effective configuration would add
+  tags, push options, submodule pushes, or mirroring; check immediately before
+  every direct push, including push-only requests, and additionally before a
+  combined request's commit. The pre-push check detects drift.
+- Resolve source-only refspec mappings at both checks; stop on a mapped force
+  update, a destination different from the frozen branch, or any remote group,
+  including one that shadows a configured remote.
+- Resolve both recursion keys in Git's configuration traversal order; the last
+  entry decides. `submodule.recurse=true` selects `on-demand`, while `false`
+  resets to `no`; only a final `no` or `check` mode avoids submodule pushes.
+  Stop on nonempty inherited
+  `GIT_NAMESPACE` or uncertain receiving-side propagation, and on any other
+  effective setting or inherited environment that changes the frozen push.
+- Align secondary Git guidance with ordinary host-native Git and the selected
+  direct or hardened submission phase.
+- Derive plugin validation requirements from the target repository's contract
+  and distinguish native repo-local Skill discovery from AGENTS routing.
+
+### Behavioral impact
+
+The simple submission phase preserves its exact command, normal hooks,
+signing policy, and one-attempt limit. Conflicting or unclassifiable effective
+configuration stops the phase without automatic configuration changes.
+Plugin audits retain target-required checks without imposing Axiom's tooling;
+Skill discovery does not prove body loading or explicit-route reachability.
+
+### Required action
+
+None for ordinary Git use. If an explicitly selected simple submission stops,
+resolve the reported configuration conflict through a separately authorized
+change before requesting another attempt.
+
+See the [version notes](docs/releases/v0.14.6.md) for the boundaries and
+static context evidence.
+
 ## Repository policy revision 64
 
 ### Changed
