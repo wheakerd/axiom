@@ -276,7 +276,7 @@ ruleset requires these two checks plus `hook-runtime-gate` and accepts all
 three only from GitHub Actions.
 
 `Cross-platform hook runtime integration` separately executes the exact
-checked-in Codex `SessionStart` command strings on
+checked-in Codex and Claude Code `SessionStart` command strings on
 `ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix
 checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
 `hook-runtime-macos-15`. They use no repository secret, do not persist checkout
@@ -436,8 +436,8 @@ draft after the exact attestation already exists and can perform final-only
 readback without a second publication mutation.
 
 After successful final verification, including final-only recovery, it emits
-the standard Codex marketplace source for the verified Latest version. The
-summary explicitly leaves catalog publication pending the
+the standard marketplace source that both host catalogs use for the verified
+Latest version. The summary explicitly leaves both catalogs pending the
 [signed catalog update](maintainers/release-documentation.md#marketplace-publication).
 This handoff adds no `main` push trigger, branch write, or client update policy.
 
@@ -475,6 +475,7 @@ critical paths to the repository owner `@wheakerd`:
 - `/.github/CODEOWNERS`
 - `/.github/workflows/`
 - `/.codex-plugin/`
+- `/.claude-plugin/`
 - `/.agents/plugins/`
 - `/hooks/`
 - `/skills/using-axiom/`

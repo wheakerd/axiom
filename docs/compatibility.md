@@ -28,25 +28,27 @@ The release tree provides one integration per host over the same Skills:
 
 | Host | Checked-in integration | Lifecycle contract |
 | --- | --- | --- |
-| Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; POSIX and Windows command variants are declared |
-| Claude Code | `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `skills/`; the `.claude-plugin/marketplace.json` catalog is published after a verified release | `SessionStart` on `startup`, `resume`, `clear`, and `compact`; one Bash command, which needs Git Bash on Windows |
+| Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; POSIX and Windows command variants are declared |
+| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; one POSIX shell command, which needs Git Bash on Windows |
 
 Both manifests point to `./skills/`. Codex and Claude Code are supported
 installation and runtime hosts from `0.15.0`; Claude Code records from
-`0.10.x` and earlier remain historical. In Claude Code,
-`delegate-simple-task`, `continuous-progress`, and `optimize-codex-usage` are
-not available because they depend on Codex-only features. This is repository
-support, not proof of execution on every host release, operating system,
-shell, installation method, or policy configuration.
+`0.10.x` and earlier remain historical. From `0.16.0`, both hosts receive
+every bundled route. `continuous-progress` keeps each host's operations detail
+in its own `references/`, and `delegate-simple-task` leaves the judgment of
+host settings to the host model. This is repository support, not proof of
+execution on every host release, operating system, shell, installation method,
+or policy configuration.
 
-Inspect the exact commands in the [Hook Reference](reference/hooks.md) before
-trusting an installation.
+Compare the installed Hook with the exact commands in the
+[Hook Reference](reference/hooks.md) before it runs: in Codex, before you trust
+it in `/hooks`; in Claude Code, before the plugin loads.
 
 ## Claude Code Package Format And Validation
 
 `claude plugin validate --strict` accepted the Claude Code manifest and every
-shared Skill with Claude Code `2.1.292` on 2026-10-18. That check validates
-schema and Skill metadata; it does not prove installation, Hook trust, or
+shared Skill with Claude Code `2.1.308` on 2026-10-22. That check validates
+schema and Skill metadata; it does not prove installation or
 execution. The manifest declares only fields that strict validation accepts.
 
 ## Codex Package Format And Validation
@@ -87,6 +89,7 @@ installed-runtime contract schema.
 | Host | Repository support | Current installed-host evidence | Current claim |
 | --- | --- | --- | --- |
 | Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` | `STATIC-ONLY` |
+| Claude Code | `CHECKED-IN`; deterministic package and contract checks and strict `claude plugin validate` are available | `NOT-RUN` | `STATIC-ONLY` |
 
 A source candidate cannot establish a future signed merge, immutable tag,
 final workflow result, or post-publication host observation. See
@@ -101,12 +104,12 @@ version, date, lifecycle, or status.
 
 Unless a current immutable result states otherwise, do not assume:
 
-- compatibility with every earlier or later Codex version;
+- compatibility with every earlier or later Codex or Claude Code version;
 - execution across every POSIX shell, Windows configuration, operating system,
   installation method, or host policy;
 - successful marketplace fetch, update, cache refresh, or remote release
   availability from repository presence alone;
-- end-to-end routing in a session that was not freshly started or reloaded;
+- end-to-end routing in a session that was not freshly started;
 - recovery of task history or tool output that the host no longer exposes;
 - exact tokens, credits, reasoning work, cache hits, or latency that the host
   does not expose for the scoped run; or

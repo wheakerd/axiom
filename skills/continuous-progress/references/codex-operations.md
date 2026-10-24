@@ -58,7 +58,9 @@ scheduling is unavailable. CLI execution by itself supplies no future wakeup.
 
 Observe `contextCompaction` and the associated native turn lifecycle when the
 host exposes them. The item can complete before the compaction turn. Wait for
-the turn to end or verify an idle host state before recovery input. Then reread
+the turn to end or verify an idle host state before recovery input. If input is
+rejected with `ActiveTurnNotSteerable`, observe the same turn until it ends, then
+submit once. Then reread
 the original durable request and constraints, reconcile work, and transfer to a
 fresh coordinator. Manual compaction proves that path only; automatic context
 pressure, a numerical reserve, and another host need their own observations.

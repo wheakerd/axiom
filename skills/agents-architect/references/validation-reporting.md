@@ -46,8 +46,8 @@ Add only checks triggered by the changed surface:
   [instruction document contracts](instruction-document-contracts.md) and
   validate its schema.
 - Size or split changes: measure root, key indexes, selected owners, and
-  representative active chains; do not use `project_doc_max_bytes` as an
-  authoring target.
+  representative active chains; do not use a host size limit such as Codex
+  `project_doc_max_bytes` as an authoring target.
 - Migration: validate the source-to-owner mapping and that no independently
   editable duplicate remains.
 - Repo-local Skill changes: validate discovery metadata, frontmatter, direct
@@ -110,8 +110,8 @@ an explicit unambiguous non-English normalization, and these boundaries:
 Include material staged, unstaged, untracked, and ignored content in the
 baseline scenarios.
 
-Static construction or `codex debug prompt-input` can prove file discovery or
-prompt assembly but not semantic model selection. Label actual host routing as
+Static construction, Codex `codex debug prompt-input`, or the Claude Code
+`/memory` and `/context` listings can prove file discovery or prompt assembly but not semantic model selection. Label actual host routing as
 not run or unavailable unless directly observed in a fresh session.
 
 ### Document-Language Regressions
@@ -154,7 +154,7 @@ Git strategy, or manual commands only when that artifact changed a decision or
 is needed for recovery.
 
 Do not report suggestions as completed changes, hide failures, or claim actual
-Codex loading without direct evidence.
+host loading without direct evidence.
 
 ## References
 

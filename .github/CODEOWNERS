@@ -2,6 +2,7 @@
 /.github/CODEOWNERS @wheakerd
 /.github/workflows/ @wheakerd
 /.codex-plugin/ @wheakerd
+/.claude-plugin/ @wheakerd
 /.agents/plugins/ @wheakerd
 /hooks/ @wheakerd
 /skills/using-axiom/ @wheakerd

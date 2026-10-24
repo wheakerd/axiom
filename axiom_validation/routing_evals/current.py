@@ -8,29 +8,41 @@ from typing import Any
 
 from .benchmark import validate_benchmark
 from .constants import (
-    BENCHMARK_V4_ID,
+    BENCHMARK_V3_ID, BENCHMARK_V4_ID, BENCHMARK_V5_ID,
+    CURRENT_BENCHMARK_PROFILES,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_CORPUS_RELATIVE_PATH,
-    CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
     CURRENT_PUBLIC_ROUTES,
-    V3_PUBLIC_ROUTES, V3_BENCHMARK_CASE_COUNT, V3_CORPUS_RELATIVE_PATH,
-    BENCHMARK_V3_ID, SCHEMA_V3_ID,
-    HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
-    SCHEMA_V4_ID,
+    HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
+    SCHEMA_V3_ID, SCHEMA_V4_ID, SCHEMA_V5_ID,
+    V3_BENCHMARK_CASE_COUNT, V3_CORPUS_RELATIVE_PATH, V3_PUBLIC_ROUTES,
+    V4_BENCHMARK_CASE_COUNT, V4_CORPUS_RELATIVE_PATH, V4_PUBLIC_ROUTES,
 )
 from .jsonio import load_json_object, load_jsonl_cases
 from .schemas import (
-    check_host_response_schema_v5,
-    check_schema_contract_v4,
+    check_host_response_schema_v6,
+    check_schema_contract_v5,
     validate_case,
 )
 
+_CANONICAL_V3 = ("agent-plugin-architect", "clarify-intent", "delegate-simple-task", "task-planning")
+# version: (corpus, benchmark ID, schema ID, routes, case count, canonical routes)
+VERSIONED_CONTRACTS = {
+    "3": (V3_CORPUS_RELATIVE_PATH, BENCHMARK_V3_ID, SCHEMA_V3_ID, V3_PUBLIC_ROUTES,
+          V3_BENCHMARK_CASE_COUNT, _CANONICAL_V3),
+    "4": (V4_CORPUS_RELATIVE_PATH, BENCHMARK_V4_ID, SCHEMA_V4_ID, V4_PUBLIC_ROUTES,
+          V4_BENCHMARK_CASE_COUNT, (*_CANONICAL_V3, "continuous-progress")),
+    "5": (CURRENT_CORPUS_RELATIVE_PATH, BENCHMARK_V5_ID, SCHEMA_V5_ID, CURRENT_PUBLIC_ROUTES,
+          CURRENT_BENCHMARK_CASE_COUNT, (*_CANONICAL_V3, "continuous-progress")),
+}
 
-def collect_current_corpus(root: Path, failures: list[str], *, version: str = "4") -> dict[str, dict[str, Any]]:
-    """Read only v4 cases; do not reinterpret the historical corpus."""
-    if version not in {"3", "4"}:
+
+def collect_current_corpus(root: Path, failures: list[str], *, version: str = "5") -> dict[str, dict[str, Any]]:
+    """Read one versioned corpus; do not reinterpret the historical corpus."""
+    if version not in VERSIONED_CONTRACTS:
         raise ValueError("unsupported versioned corpus")
-    relative = V3_CORPUS_RELATIVE_PATH if version == "3" else CURRENT_CORPUS_RELATIVE_PATH
+    relative = VERSIONED_CONTRACTS[version][0]
     path = root / relative
     cases: dict[str, dict[str, Any]] = {}
     for line, case in enumerate(load_jsonl_cases(path, failures, root), 1):
@@ -50,35 +62,37 @@ def collect_current_corpus(root: Path, failures: list[str], *, version: str = "4
 
 
 def current_benchmark_case_ids(
-    root: Path, cases: dict[str, dict[str, Any]], failures: list[str], *, version: str = "4"
+    root: Path, cases: dict[str, dict[str, Any]], failures: list[str], *, version: str = "5",
+    host: str = "codex",
 ) -> list[str]:
-    if version not in {"3", "4"}:
+    if version not in VERSIONED_CONTRACTS:
         raise ValueError("unsupported versioned benchmark")
-    legacy = version == "3"
-    benchmark = load_json_object(root / f"evals/benchmarks/codex-core-v{version}.json", failures, root)
+    _, benchmark_id, schema_id, routes, case_count, canonical = VERSIONED_CONTRACTS[version]
+    if host != "codex":
+        if version != "5" or host not in CURRENT_BENCHMARK_PROFILES:
+            raise ValueError("unsupported host benchmark")
+        benchmark_id = CURRENT_BENCHMARK_PROFILES[host]["id"]
+    benchmark = load_json_object(root / f"evals/benchmarks/{benchmark_id}.json", failures, root)
     if benchmark is None:
         return []
     return validate_benchmark(
         benchmark, cases, failures, schema_version=version,
-        benchmark_id=BENCHMARK_V3_ID if legacy else BENCHMARK_V4_ID,
-        schema_id=SCHEMA_V3_ID if legacy else SCHEMA_V4_ID,
-        routes=V3_PUBLIC_ROUTES if legacy else CURRENT_PUBLIC_ROUTES,
-        canonical_routes=("agent-plugin-architect", "clarify-intent", "delegate-simple-task", "task-planning") + (() if legacy else ("continuous-progress",)),
-        expected_case_count=V3_BENCHMARK_CASE_COUNT if legacy else CURRENT_BENCHMARK_CASE_COUNT,
+        benchmark_id=benchmark_id, schema_id=schema_id, routes=routes,
+        canonical_routes=canonical, expected_case_count=case_count, host=host,
     )
 
 
 def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[int, int]:
     """Validate current schemas, source coverage, and bounded offline contracts."""
-    schema = load_json_object(root / "evals/schema-v4.json", failures, root)
+    schema = load_json_object(root / "evals/schema-v5.json", failures, root)
     if schema is not None:
-        check_schema_contract_v4(schema, failures)
-    response_path = root / HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH
+        check_schema_contract_v5(schema, failures)
+    response_path = root / HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH
     response = load_json_object(response_path, failures, root)
     if response is not None:
-        check_host_response_schema_v5(response, failures)
-        if hashlib.sha256(response_path.read_bytes()).hexdigest() != CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256:
-            failures.append(f"{HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH} digest drifted")
+        check_host_response_schema_v6(response, failures)
+        if hashlib.sha256(response_path.read_bytes()).hexdigest() != CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256:
+            failures.append(f"{HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH} digest drifted")
 
     installed_routes = {
         path.parent.name for path in (root / "skills").glob("*/SKILL.md")
@@ -88,6 +102,8 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
         failures.append("current routing enum differs from the installed task skill inventory")
     cases = collect_current_corpus(root, failures)
     case_ids = current_benchmark_case_ids(root, cases, failures)
+    if current_benchmark_case_ids(root, cases, failures, host="claude-code") != case_ids:
+        failures.append("claude-code-core-v5 must select the codex-core-v5 cases in the same order")
     covered = {route for case in cases.values() for route in case.get("expectedRoutes", ())}
     if covered != set(CURRENT_PUBLIC_ROUTES):
         failures.append("current routing corpus must cover every current public task route")
@@ -98,7 +114,7 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
     # contracts must resolve that decision to the now-installed public skill.
     for case in cases.values():
         request = case.get("request", "")
-        if "continuous-progress" in request or "current-no-route-ordinary-continuation" in case["id"] or "current-no-route-goals-only" in case["id"] or case.get("expectedClarification") or request.startswith(("$task-planning", "$delegate-simple-task", "$local-web-search")):
+        if "continuous-progress" in request or "current-no-route-ordinary-continuation" in case["id"] or "current-no-route-goals-only" in case["id"] or case.get("expectedClarification") or request.startswith(("Use the task-planning skill", "Use the delegate-simple-task skill", "Use the local-web-search skill")):
             actual = route_contract(request)
             if ([actual["route"]] if actual["route"] else []) != case.get("expectedRoutes"):
                 failures.append(f"current offline route disagrees with case {case['id']!r}")

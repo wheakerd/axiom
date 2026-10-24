@@ -9,7 +9,7 @@ raw-target, multi-target, recovery, force, fetch, or retry workflow.
 
 ## Scope
 
-Enter when the user explicitly invokes `$traceable-git-submit` for one
+Enter when the user explicitly invokes this skill for one
 named-remote branch push that preserves history. Also enter for the specialized
 live-baseline constraint only when the request jointly states that the local
 tracking ref is stale and the verified live remote tip is an ancestor of the

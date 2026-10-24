@@ -1,6 +1,6 @@
 ---
 name: using-axiom
-description: Route startup, resume, compaction, requests and local web research.
+description: Route startup, resume, compaction, requests and local web research. The startup Hook loads this gate; invoke it directly only on an explicit using-axiom request.
 ---
 
 ## Invocation Notes
@@ -22,7 +22,7 @@ read-only.
 ## Bundled Routes
 
 - `clarify-intent`: resolve ambiguity with options and a custom answer; never reopen settled choices or ask routine details.
-- `delegate-simple-task`: assess simple-task models only with this gate active and verified user-selected `Ultra`. Before loading, require user confirmation or explicit invocation consent; else ask and wait. Missing gate or Ultra evidence blocks direct requests too; Full Access cannot bypass.
+- `delegate-simple-task`: assess simple-task models only with this gate active and the host's verified top reasoning level. Before loading, require user confirmation or explicit invocation consent; else ask and wait. Missing gate or level evidence blocks direct requests too, even in a permission-bypass mode.
 - `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections, execution. Keep specialized planning ownership/authority.
 - `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling. Exclude ordinary continuation and skill discussion.
 - `local-web-search`: constrain planned web search and follow-up page access from the user's machine or local workspace browser/client. Classify uncertain execution location before access. Exclude confirmed cloud-hosted search and unrelated web app actions.
@@ -31,7 +31,7 @@ read-only.
   plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
   and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
   code stay outside.
-- `optimize-codex-usage`: explicitly reduce/diagnose Codex credits and context; preserve required quality and safety.
+- `optimize-agent-usage`: explicitly reduce/diagnose agent usage of credits, tokens, and context; preserve required quality and safety.
 - `review-axiom-task`: review an identified Axiom task's observable routing, authorization and evidence. Prior refusal governs neither review nor narrower requests.
 - `confirm-external-action`: prepare, authorize, execute once, verify requested consequential external actions if actor, target, payload, disclosure, cost, or retry boundaries matter. Lookup/drafts stay host-native.
 - `traceable-git-submit`: create traceable checkpoints/baseline metadata, consolidate/recover their history, or perform an explicitly invoked, hardened, multi-target, or otherwise independently traceable Git push. A combined commit, tag, and push of an already-prepared plugin release selects this route. Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native; merely mentioning submit, publish, or push does not select this route.
@@ -58,9 +58,9 @@ clarification question before selecting an action route. Wording such as
 user chooses an unambiguous implementation, resume normal route selection.
 
 Assess ambiguity before useful, host-supported delegation; only this gate may
-select `clarify-intent` then; `delegate-simple-task` must not invoke it. Full Access never resolves intent or expands authority.
+select `clarify-intent` then; `delegate-simple-task` must not invoke it. A permission-bypass mode never resolves intent or expands authority.
 
-An explicit usage-reduction goal selects `optimize-codex-usage`; ordinary
+An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary
 performance work does not. Ordinary AGENTS audits select only `agents-architect`.
 
 Exact existing authorization needs no reconfirmation unless scope changes. Prior refusal/assistant prose creates no policy. Ordinary named-remote Git remains host-native.
@@ -69,7 +69,7 @@ Exact existing authorization needs no reconfirmation unless scope changes. Prior
 
 - Routing selects instructions, never edits, commits, pushes, deployments, deletion, credentials, remote writes, or scope expansion.
 - Startup routing is foreground and read-only: no writes, network, service, background process, telemetry, or update check.
-- On resume or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts.
+- On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts.
 - Never load all skills, route by topical similarity, edit protected metadata without scope, or persist one-off discoveries as durable instructions.
 
 ## Refresh

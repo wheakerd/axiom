@@ -21,14 +21,14 @@ EFFECTIVE_INSTRUCTION_TOKENS = (
 )
 ROUTE_SOURCE_ANCHORS = {
     "clarify-intent": ("ambiguity", "options", "custom"),
-    "delegate-simple-task": ("model", "Full Access", "confirmation"),
+    "delegate-simple-task": ("model", "permission-bypass", "confirmation"),
     "task-planning": ("plan", "current", "scope"),
     "continuous-progress": ("explicit invocation only", "compaction", "native scheduling"),
     "local-web-search": ("local", "cloud-hosted", "execution location"),
     "agents-architect": ("AGENTS.md", "audit"),
     "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
     "confirm-external-action": ("external", "target", "verify"),
-    "optimize-codex-usage": ("Codex", "credits", "context"),
+    "optimize-agent-usage": ("usage", "credits", "context"),
     "review-axiom-task": ("routing", "authorization", "evidence"),
     "traceable-git-submit": ("checkpoint", "push"),
     "reversible-system-change": ("plan", "persistent", "rollback"),
@@ -37,6 +37,9 @@ LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
 LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
     "codex plugin remove axiom@axiom",
+    "claude plugin marketplace update axiom",
+    "claude plugin update axiom@axiom",
+    "claude plugin uninstall axiom@axiom",
 )
 
 
@@ -129,11 +132,12 @@ def historical_route_contract(request: str) -> dict[str, Any]:
         )
     )
     usage = bool(
-        re.search(r"\bcodex\b.*\b(?:credits?|tokens?|context|usage)\b", normalized)
-        or re.search(r"\b(?:skills?|agents\.md|mcp)\b.*\bcontext\b", normalized)
+        re.search(r"\b(?:codex|claude code)\b.*\b(?:credits?|tokens?|context|usage)\b", normalized)
+        or re.search(r"\b(?:context|token|credit)s? (?:cost|usage|consumption)\b", normalized)
+        or re.search(r"\b(?:skills?|agents\.md|claude\.md|mcp)\b.*\bcontext\b", normalized)
     )
     agents = bool(
-        re.search(r"(?:agents\.md|\.agents)", normalized)
+        re.search(r"(?:agents\.md|\.agents|\.claude/skills)", normalized)
         and re.search(r"\b(?:audit|create|design|initialize|split|rewrit|migrat|maintain|validat)\w*\b", normalized)
     )
     release_readiness = bool(
@@ -609,7 +613,11 @@ def route_contract(request: str) -> dict[str, Any]:
     if contract["route"] == "clarify":
         return {**contract, "route": "clarify-intent"}
     normalized = request.casefold()
-    if re.match(r"^\s*(?:(?:use|resume)\s+)?\$continuous-progress(?![\w-])", normalized):
+    # Schema v5 states explicit invocations in plain language for both hosts; the
+    # Codex `$skill-name` form stays accepted for existing examples.
+    if re.match(r"^\s*(?:(?:use|resume)\s+)?\$continuous-progress(?![\w-])", normalized) or re.match(
+        r"^\s*(?:use|resume)\s+the\s+continuous-progress\s+skill\b", normalized
+    ):
         return {"route": "continuous-progress", "phase": "capability-check",
                 "references": ("references/host-and-run-contract.md",),
                 "authorization": frozenset({"read"})}
@@ -660,10 +668,25 @@ def route_contract(request: str) -> dict[str, Any]:
         ("task-planning", "plan", ()),
         ("local-web-search", "research", ("references/local-browsing.md",)),
     ):
-        if re.search(r"(?<![\w-])\$" + re.escape(route) + r"(?![\w-])", request):
+        if re.search(r"(?<![\w-])\$" + re.escape(route) + r"(?![\w-])", request) or re.match(
+            r"\s*use\s+the\s+" + re.escape(route) + r"\s+skill\b", normalized
+        ):
             return {"route": route, "phase": phase, "references": references,
                     "authorization": frozenset({"read"})}
-    return contract
+    return _with_current_route_names(contract)
+
+
+# The historical model keeps its original route names; current routes rename them.
+CURRENT_ROUTE_RENAMES = {"optimize-codex-usage": "optimize-agent-usage"}
+
+
+def _with_current_route_names(contract: dict[str, Any]) -> dict[str, Any]:
+    route = contract["route"]
+    if isinstance(route, tuple):
+        renamed = tuple(CURRENT_ROUTE_RENAMES.get(item, item) for item in route)
+    else:
+        renamed = CURRENT_ROUTE_RENAMES.get(route, route)
+    return contract if renamed == route else {**contract, "route": renamed}
 
 
 def has_exact_route_token(text: str, token: str) -> bool:
@@ -846,7 +869,7 @@ def check_target_instruction_contracts(failures: list[str]) -> None:
                 "Check the AGENTS selector only for a declared AGENTS-to-Skill route",
                 "standalone Skills need none",
                 "Discovery proves neither explicit-route reachability nor body loading",
-                "Do not report suggestions as completed changes, hide failures, or claim actual Codex loading without direct evidence",
+                "Do not report suggestions as completed changes, hide failures, or claim actual host loading without direct evidence",
             ),
             ("and the AGENTS owner that selects the Skill",),
         ),
@@ -889,7 +912,7 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 'Wording such as "choose one" does not remove the ambiguity.',
                 "Once the user chooses an unambiguous implementation, resume normal route selection.",
                 "An explicit usage-reduction goal selects",
-                "On resume or compaction, reselect every still-active route from current direct evidence before any new mutation.",
+                "On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation.",
                 "If route or phase cannot be reconstructed, perform zero new mutations",
             ),
         ),
@@ -898,11 +921,11 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
             "packaged-plugin ownership and phase",
             (
                 "Confirm that the selected request explicitly concerns packaged agent-plugin architecture.",
-                "Repo-local `AGENTS.md` or `.agents/skills` work belongs to",
+                "Repo-local `AGENTS.md`, `.agents/skills`, or `.claude/skills` work belongs to",
                 "references/release-readiness.md",
                 "Load only references needed for the active phase.",
                 "at most one other Axiom route",
-                "An explicit usage-cost goal may add `optimize-codex-usage`",
+                "An explicit usage-cost goal may add `optimize-agent-usage`",
                 "Git submission, installation, publication, deployment, and consequential external effects remain separate active phases",
             ),
         ),

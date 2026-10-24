@@ -173,6 +173,8 @@ class ReleaseEvidenceTests(unittest.TestCase):
             self.assertEqual(0, summary.returncode, summary.stderr)
             self.assertIn("Marketplace publication pending", summary.stdout)
             self.assertIn("existing signed PR", summary.stdout)
+            for catalog in (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"):
+                self.assertIn(catalog, summary.stdout)
             self.assertEqual(before, {path.name: path.read_bytes() for path in directory.iterdir()})
             write_json(latest_path, release_metadata(asset))
             rejected = subprocess.run(arguments, capture_output=True, text=True, check=False)

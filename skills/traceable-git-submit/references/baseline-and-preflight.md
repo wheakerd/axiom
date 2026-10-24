@@ -37,7 +37,8 @@ git -C <repo> rev-parse --path-format=absolute --git-path axiom/traceable-git-su
 Use that resolved path as the only current cache location. It must live under
 Git metadata, remain absent from `git status`, avoid dependence on the target
 repository's `.gitignore`, and work when `.git` is a file in a linked worktree.
-Do not hand-build `.git/axiom/...` or use `PLUGIN_ROOT` as target state.
+Do not hand-build `.git/axiom/...` or use the installed plugin root (Codex
+`PLUGIN_ROOT`, Claude Code `CLAUDE_PLUGIN_ROOT`) as target state.
 
 The cache is advisory. The upstream remote-tracking ref from `@{u}` remains
 authoritative.

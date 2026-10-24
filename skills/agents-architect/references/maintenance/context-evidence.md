@@ -7,7 +7,7 @@ Collect task evidence for AGENTS maintenance while preserving instruction priori
 ## Apply when
 
 - The user asks whether the current task produced durable AGENTS updates.
-- The user supplies a Codex task, thread, chat, session, or conversation ID.
+- The user supplies a host task, thread, chat, session, or conversation ID.
 - The user asks whether repeated or excessive inspection indicates an
   instruction gap.
 - Context appears compacted or incomplete.
@@ -31,7 +31,7 @@ Collect task evidence for AGENTS maintenance while preserving instruction priori
     dispositions. Carry forward any unresolved preview candidates.
   - Reading AGENTS, making a narrow AGENTS edit, completing ordinary work, or
     activating this Skill does not establish a review baseline.
-- For a supplied task ID, use available Codex task or thread inspection tools
+- For a supplied task ID, use the active host's task or session inspection tools
   to read recent summaries, then page backward until the review-window start is
   reached. Apply the same first-review and explicit-baseline rules to that task.
 - Prefer turn summaries, user corrections, material file changes, and final

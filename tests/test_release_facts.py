@@ -143,6 +143,20 @@ class ReleaseFactTests(unittest.TestCase):
             inserted,
         )
 
+    def test_observation_wording_follows_each_release_host_scope(self):
+        expected = {
+            "0.8.4": "authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. No host",
+            "0.13.0": "Codex host and lifecycle observation remains `NOT-RUN`. No host",
+            "0.15.0": "Claude Code host observation also remains `NOT-RUN`. No host",
+            "0.16.0": "Codex and Claude Code host and lifecycle observations remain `NOT-RUN`. No host",
+        }
+        for version, sentence in expected.items():
+            failures = []
+            document = load_release_facts(version, failures)
+            self.assertEqual([], failures)
+            block = rendered_release_block(f"docs/releases/v{version}.md", document)
+            self.assertIn(sentence, block, version)
+
     def test_structured_route_catalog_drives_docs_and_offline_scenarios(self):
         failures = []
         self.assertEqual(10, check_route_catalog(failures))

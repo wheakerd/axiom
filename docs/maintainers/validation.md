@@ -77,16 +77,17 @@ repository policy, not the CodeQL analysis itself.
 ## Hook Runtime Integration
 
 Hook or Hook-workflow changes require the dedicated native integration module
-on every available target host:
+on at least one supported operating system:
 
 ```bash
 python3 -B -m unittest tests.hook_runtime_integration -v
 ```
 
-Run the module from a disposable repository copy. A Linux result proves only
-Linux; report unavailable native Windows or macOS execution as `NOT-RUN`.
-Static inspection, emulation, and a successful package read cannot replace a
-native result.
+Run the module from a disposable repository copy. One local operating system is
+sufficient: the host tool owns hook triggering, and the required CI matrix runs
+the same module on Linux, Windows, and macOS, which covers each system's
+command variant. Static inspection, emulation, and a successful package read
+cannot replace a native result.
 
 The native matrix and its stable `hook-runtime-gate` aggregate are described in
 [Repository Governance](../repository-governance.md#hook-runtime-promotion-gate).

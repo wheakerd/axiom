@@ -142,8 +142,9 @@ safety or risk constraints and loads only from an explicit matching signal.
 
 ## Size And Active-Set Contract
 
-- Platform fact: a visible `project_doc_max_bytes` value is truncation
-  protection or configuration evidence, not Axiom's authoring budget.
+- Platform fact: a visible host size limit, such as Codex
+  `project_doc_max_bytes`, is truncation protection or configuration evidence,
+  not Axiom's authoring budget.
 - Axiom authoring rule: keep root `AGENTS.md` below 8192 bytes.
 - Keep every other AGENTS or skill instruction document below 8192 bytes. If a
   document reaches or exceeds that boundary, split by canonical owner or move
@@ -160,7 +161,7 @@ safety or risk constraints and loads only from an explicit matching signal.
 - For AGENTS changes, report root, key index, rule-leaf, and representative
   scenario active-set byte totals.
 
-These are Axiom authoring rules, not claims about a universal Codex hard limit.
+These are Axiom authoring rules, not claims about a universal host hard limit.
 
 ## Validation Contract
 

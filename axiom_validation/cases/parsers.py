@@ -47,7 +47,7 @@ def check_validator_negative_fixtures(failures: list[str]) -> int:
     }
     for name, fixture in agent_fixtures.items():
         try:
-            parse_agent_metadata_document(fixture, f"fixture:{name}", allow_policy=False)
+            parse_agent_metadata_document(fixture, f"fixture:{name}")
         except CanonicalYamlError:
             rejected += 1
         else:

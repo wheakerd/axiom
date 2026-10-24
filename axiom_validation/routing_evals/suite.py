@@ -27,7 +27,7 @@ from .history import (
     validate_history_index,
 )
 from .jsonio import _display, load_json_object
-from .observer import check_codex_exec_jsonl_taxonomy
+from .observer import check_claude_code_stream_json_taxonomy, check_codex_exec_jsonl_taxonomy
 from .observations import validate_observation, validate_observation_run_set
 from .schemas import (
     check_host_response_schema,
@@ -79,6 +79,7 @@ def check_routing_evaluations(
         if actual_digest != expected_digest:
             failures.append(f"{relative_path} digest drifted")
     check_codex_exec_jsonl_taxonomy(root, failures)
+    check_claude_code_stream_json_taxonomy(root, failures)
     check_documented_method(root, failures)
     cases = collect_corpus(root, failures)
     check_corpus_coverage(cases, failures)

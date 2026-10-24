@@ -1,6 +1,6 @@
 # Field Validation
 
-Use this page to report a bounded observation of Axiom in Codex. Current
+Use this page to report a bounded observation of Axiom in Codex or Claude Code. Current
 support and installed-host status are owned by [Compatibility](compatibility.md)
 and [release-status.json](../evidence/release-status.json). A static repository
 check does not establish installation, Skill discovery, routing, or lifecycle
@@ -25,16 +25,18 @@ retired observations remain in the [archive](#archived-experiments).
 | [runtime-identity.json](../evidence/runtime-identity.json) | Current plugin version, policy revision, runtime schema, digest, and input count |
 | [release-status.json](../evidence/release-status.json) | Current candidate binding and host-observation state; derived identity fields must agree with the canonical identity |
 | [repository-policy-revisions-v1.json](../evidence/repository-policy-revisions-v1.json) | Append-only repository policy ledger; older entries retain their original baselines and meaning |
+| [runtime-contract-history-v3.json](../evidence/runtime-contract-history-v3.json) | Immutable release subjects and digests calculated under the current runtime schema v3 |
 | [runtime-contract-history-v2.json](../evidence/runtime-contract-history-v2.json) | Immutable release subjects and digests calculated under runtime schema v2 |
 | [runtime-contract-history-v1.json](../evidence/runtime-contract-history-v1.json) | Preserved release subjects and digests under runtime schema v1 |
-| [schema-v3.json](../evidence/schema-v3.json) | Compatibility-record format supporting runtime schema v1 or v2; use it for current observations |
+| [schema-v4.json](../evidence/schema-v4.json) | Compatibility-record format supporting runtime schema v1, v2, or v3 that records each host's declared `SessionStart` sources; use it for current observations |
+| [schema-v3.json](../evidence/schema-v3.json) | Preserved compatibility-record format supporting runtime schema v1, v2, or v3 with the four-source Hook matcher |
 | [schema-v2.json](../evidence/schema-v2.json) | Preserved compatibility-record format for runtime schema v1 |
-| [schema-v1.json](../evidence/schema-v1.json) | Original compatibility format without a runtime identity; also supplies definitions referenced by v2 and v3 |
+| [schema-v1.json](../evidence/schema-v1.json) | Original compatibility format without a runtime identity; also supplies definitions referenced by v2, v3, and v4 |
 
 Compatibility-format versions and runtime-digest schema versions are separate
 identities. Do not select history from the compatibility-format number alone.
-The two history files are schema-specific bindings, not duplicate release
-catalogs or host observations; neither promises to list every published tag.
+The history files are schema-specific bindings, not duplicate release
+catalogs or host observations; none promises to list every published tag.
 Keep existing schema definitions and history entries unchanged. A new format
 needs its own version rather than repurposing an old filename.
 
@@ -53,9 +55,11 @@ needs its own version rather than repurposing an old filename.
    or the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml).
 
 New machine-readable compatibility records use
-[schema v3](../evidence/schema-v3.json) and bind the exact installed-runtime
-digest. Compatibility format v2 remains accepted for historical runtime-v1
-subjects; original v1 records remain readable without being rewritten.
+[schema v4](../evidence/schema-v4.json) and bind the exact installed-runtime
+digest. Schema v4 records each host's declared `SessionStart` sources; records
+from `0.16.0` need it because both Hooks add `fork`. Format v3
+remains accepted for four-source Hooks, format v2 for historical runtime-v1
+subjects, and original v1 records remain readable without being rewritten.
 Validate an external record against its existing immutable subject:
 
 ```bash

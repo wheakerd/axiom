@@ -1,7 +1,6 @@
 """Focused tests for manifest and marketplace policy."""
 
 import copy
-import json
 import struct
 import tempfile
 import unittest
@@ -21,6 +20,7 @@ from axiom_validation.manifests import (
     JSON_FILES,
     check_branding_image_file,
     check_codex_interface,
+    check_distribution_identity,
     check_manifest_capability_schema,
     check_manifest_versions,
     load_json,
@@ -127,14 +127,25 @@ class ManifestPolicyTests(unittest.TestCase):
     def test_catalog_can_retain_a_published_version_during_development(self):
         documents = self.documents()
         documents[".agents/plugins/marketplace.json"]["plugins"][0]["source"]["ref"] = "v0.13.4"
-        claude_catalog = REPOSITORY_ROOT / CLAUDE_MARKETPLACE_RELATIVE
-        if claude_catalog.is_file():
-            claude = json.loads(claude_catalog.read_text(encoding="utf-8"))
-            claude["plugins"][0]["source"]["ref"] = "v0.13.4"
-            documents[CLAUDE_MARKETPLACE_RELATIVE] = claude
+        documents[CLAUDE_MARKETPLACE_RELATIVE]["plugins"][0]["source"]["ref"] = "v0.13.4"
         failures = []
         check_manifest_capability_schema(documents, failures)
         check_manifest_versions(documents, failures)
+        self.assertEqual([], failures)
+
+    def test_required_catalogs_and_independent_manifest_identity(self):
+        self.assertIn(CLAUDE_MARKETPLACE_RELATIVE, JSON_FILES)
+        self.assertIn(".agents/plugins/marketplace.json", JSON_FILES)
+        documents = self.documents()
+        del documents[".claude-plugin/plugin.json"]
+        documents[".codex-plugin/plugin.json"]["interface"]["displayName"] = "Other"
+        failures = []
+        check_distribution_identity(documents, failures)
+        self.assertTrue(any("interface.displayName" in failure for failure in failures), failures)
+        documents = self.documents()
+        del documents[".codex-plugin/plugin.json"]
+        failures = []
+        check_distribution_identity(documents, failures)
         self.assertEqual([], failures)
 
     def test_official_prompt_scalar_shape_is_accepted_but_is_not_checked_in_contract(self):

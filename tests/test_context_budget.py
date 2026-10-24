@@ -19,6 +19,8 @@ from axiom_validation.context_budget import (
     CONTEXT_BUDGET_RECORD,
     ROUTING_GATE_PATH,
     check_context_budget,
+    check_schema_lifecycle_matrix,
+    context_budget_schema_version,
     measure_markdown,
     previous_context_budget_candidate,
     routing_corpus_metrics,
@@ -47,9 +49,26 @@ class ContextBudgetTests(unittest.TestCase):
                     any("must preserve at least 10% headroom" in failure for failure in failures),
                 )
 
+    def test_fork_scenario_requires_schema_v2_from_0_16_0(self):
+        self.assertEqual("1", context_budget_schema_version("0.15.0"))
+        self.assertEqual("2", context_budget_schema_version("0.16.0"))
+        record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
+        fork = record["scenarios"][-1]
+        self.assertEqual(
+            ("fork-no-route", "forked", "fork", 1),
+            (fork["id"], fork["sessionState"], fork["lifecycleSource"], fork["expectedInjectionCount"]),
+        )
+        schema_root = REPOSITORY_ROOT / "evals" / "context-budget"
+        for name, accepted in (("schema-v2.json", True), ("schema-v1.json", False)):
+            with self.subTest(schema=name):
+                failures = []
+                schema = json.loads((schema_root / name).read_text(encoding="utf-8"))
+                check_schema_lifecycle_matrix(schema, name, failures)
+                self.assertEqual(accepted, failures == [], failures)
+
     def test_current_versioned_record_and_gate(self):
         failures = []
-        self.assertEqual(7, check_context_budget(failures))
+        self.assertEqual(8, check_context_budget(failures))
         self.assertEqual([], failures)
         current_record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
         current_metrics = measure_markdown(ROUTING_GATE_PATH)

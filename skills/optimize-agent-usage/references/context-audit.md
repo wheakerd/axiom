@@ -1,4 +1,4 @@
-# Codex Context Audit
+# Context Audit
 
 Use this reference for a scoped consumption audit or implementation. It is a
 measurement method, not a claim that Axiom can inspect hidden host accounting.
@@ -17,7 +17,8 @@ Resolve the target repository and preserve its current worktree before edits.
 Start with metadata rather than recursive document reads:
 
 - Public Skill names, descriptions, paths, bytes, words, and lines.
-- Always-loaded hooks or routing gates and applicable `AGENTS.md` files.
+- Always-loaded hooks or routing gates and applicable instruction files such
+  as `AGENTS.md` or `CLAUDE.md`.
 - Direct reference edges, broken links, cycles, and references not directly
   discoverable from their owning `SKILL.md`.
 - MCP server and tool-description counts without contacting servers or reading
@@ -108,8 +109,8 @@ Re-run the same representative requests after the change. At minimum cover:
 4. A valid non-English request with an unambiguous canonical route.
 5. One request that could match two routes and needs at most one material
    clarification.
-6. The explicit Codex-usage request that selects this Skill without making it
-   a general coding orchestrator.
+6. An explicit usage-reduction request that selects this Skill without making
+   it a general coding orchestrator.
 
 For each scenario compare selected routes, loaded files, authorized actions,
 required evidence, and stop behavior. Static route-contract checks do not prove

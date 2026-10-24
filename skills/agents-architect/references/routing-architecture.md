@@ -38,7 +38,8 @@ Design the root control plane and finite on-demand routing topology.
 Only root or justified nested files named `AGENTS.md` belong to the native
 auto-load layer Axiom writes. Ordinary `.agents/**` rule resources need an
 explicit next hop. Repo-local `.agents/skills/**/SKILL.md`, including nested
-topics, may be discovered natively as Skill metadata; this is separate from
+topics, may be discovered natively as Skill metadata in Codex, as may
+`.claude/skills/<skill-name>/SKILL.md` in Claude Code; this is separate from
 AGENTS instruction-chain loading and does not prove body loading or selection.
 A declared AGENTS front door remains a project instruction; nesting alone
 does not enforce it.
@@ -133,7 +134,7 @@ permission.
 ## Nested AGENTS.md
 
 Use a nested `AGENTS.md` only when the directory is a stable subproject,
-Codex commonly starts there, and local auto-loaded constraints reduce misloads
+host sessions commonly start there, and local auto-loaded constraints reduce misloads
 more than they duplicate root rules. Keep it tiny or route to canonical rule
 owners.
 

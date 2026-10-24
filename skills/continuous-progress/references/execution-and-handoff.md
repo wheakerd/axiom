@@ -90,10 +90,11 @@ dispatch belongs to the verified owner. A summary alone cannot reestablish
 permissions, successful side effects, or completion.
 
 Wait for the host's compaction turn to finish before submitting recovery input.
-A completed `contextCompaction` item can precede that turn's terminal event.
-If the host reports `ActiveTurnNotSteerable`, preserve the pending recovery,
-observe the same turn until it ends, then submit once. Do not create a second
-coordinator or treat the rejected input as an accepted handoff.
+A compaction event can complete before its turn ends. If the host rejects input
+while a turn is still active, preserve the pending recovery, observe the same
+turn until it ends, then submit once. Do not create a second coordinator or
+treat the rejected input as an accepted handoff. The current host's operations
+reference names its compaction and turn signals.
 
 If a compaction signal is missing, record that observation limit. Neither
 static schema support nor a manually triggered CLI compaction proves automatic

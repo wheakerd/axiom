@@ -1106,10 +1106,11 @@ def verify_release_snapshot(
 def render_marketplace_source(
     plan: dict[str, Any], latest_metadata_path: Path, failures: list[str]
 ) -> str | None:
-    """Render standard Codex source metadata for the verified Latest release.
+    """Render the shared marketplace source for the verified Latest release.
 
-    The publisher calls this after final evidence verification. This renderer
-    neither publishes a catalog nor changes a user's installation or settings.
+    Both host catalogs use this source object. The publisher calls this after
+    final evidence verification. This renderer neither publishes a catalog nor
+    changes a user's installation or settings.
     """
     if not _validate_plan(plan, failures):
         return None
@@ -1352,7 +1353,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     _add_subject_arguments(render_policy)
     marketplace = commands.add_parser(
-        "render-marketplace", help="render the verified Latest release's Codex source entry"
+        "render-marketplace", help="render the verified Latest release's marketplace source entry"
     )
     marketplace.add_argument("--plan", type=Path, required=True)
     marketplace.add_argument("--latest-release-metadata", type=Path, required=True)
@@ -1452,10 +1453,11 @@ def main(argv: list[str] | None = None) -> int:
                 if args.summary:
                     sys.stdout.write(
                         "## Marketplace publication pending\n\n"
-                        "Apply this source to the axiom entry in "
-                        "`.agents/plugins/marketplace.json` through the existing signed PR "
-                        "process. Recheck GitHub Latest before merging and verify the merged "
-                        "catalog. Until then, the catalog retains its previous version. "
+                        "Apply this source to the axiom entry in both "
+                        "`.agents/plugins/marketplace.json` and `.claude-plugin/marketplace.json` "
+                        "through the existing signed PR process. Recheck GitHub Latest before "
+                        "merging and verify both merged catalogs. Until then, both catalogs "
+                        "retain their previous version. "
                         "See [the catalog publication procedure]"
                         "(https://github.com/wheakerd/axiom/blob/main/docs/maintainers/"
                         "release-documentation.md#marketplace-publication).\n\n"

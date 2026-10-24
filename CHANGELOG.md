@@ -9,6 +9,39 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+## 0.16.0 - unreleased
+
+### Added
+
+- Use `delegate-simple-task` in Claude Code. It activates only with the active routing gate, the host's verified top reasoning level, and your consent to invoke it. Each host's model judges which of its settings is the top reasoning level and which of its modes skips permission prompts.
+- Use `continuous-progress` in Claude Code. A Claude Code operations reference covers fresh `claude -p` workers, background sessions, cross-session messaging, compaction hooks, cancellation, and an independent wake mechanism from a Desktop scheduled task, a cloud scheduled task, or a GitHub Actions schedule.
+- Use `optimize-agent-usage` in Codex and Claude Code to reduce or diagnose credit, token, and context usage without weakening required quality or safety.
+- Maintain Claude Code repository skills with `agents-architect`. Claude Code skills live under `.claude/skills/`. A repository that uses both hosts keeps one skill body in the shared `.agents/skills/`, and its Claude Code entry is a symlink to that body or, where symlinks are unavailable, a pointer with the same name and description.
+- Validate Claude Code routing observations against `claude-code-core-v5`, a Claude Code stream-json observer contract, and a Claude Code review suite, which use the same host-neutral cases as the Codex profile and review suite.
+
+### Changed
+
+- Describe the delegation gate and progress supervision in host-neutral terms; the progress skill keeps each host's operations in its own references.
+- Add the Claude Code update commands to the explicit update reference.
+- Run both startup Hooks when a session is forked. Compatibility evidence schema v4 records each host's declared `SessionStart` sources, and routing-context schema v2 adds a forked-session scenario.
+- Model Claude Code instruction loading in `agents-architect` audits beside the Codex model: `CLAUDE.md` files, `AGENTS.md` by default when no `CLAUDE.md` exists, subdirectory files loaded on demand, and `/context` as the loading check. `agent-plugin-architect` no longer treats Codex as the first-class target and prefers each host's native metadata and behavior.
+
+### Removed
+
+- Remove `optimize-codex-usage` in `0.16.0` because its usage workflow is host-neutral. Invoke `optimize-agent-usage` instead in either host.
+- Remove the unavailable-route notice from the Claude Code startup preamble in `0.16.0` because every bundled route is available in both hosts. No replacement or action is needed.
+- Remove the Codex implicit-invocation setting from `using-axiom`, `delegate-simple-task`, and `continuous-progress` in `0.16.0` because each skill's description states its explicit-invocation condition. In both hosts, the model applies that condition instead; no action is needed.
+
+### Behavioral impact
+
+In Claude Code, `delegate-simple-task` stays inactive below the host's top reasoning level or without invocation consent, and `continuous-progress` starts supervision only after an independent wake mechanism is verified. Without a verified Desktop, cloud, or GitHub Actions schedule, it reports that automatic recovery is unavailable and keeps the run waiting instead of simulating a supervisor. An explicit usage-reduction request selects `optimize-agent-usage` in both hosts, and the `optimize-codex-usage` name no longer selects a skill. Codex keeps the same activation conditions with host-neutral wording in the shared skills, and its configuration no longer blocks implicit selection of `using-axiom`, `delegate-simple-task`, or `continuous-progress`; their descriptions require an explicit request, and the startup Hook still loads `using-axiom`. A forked session in either host reloads the routing gate, and `agents-architect` maintains `.claude/skills/` entries when you scope repository skills. Instruction audits check loading claims against the active host's rules, and plugin architecture work no longer favors Codex where the hosts differ.
+
+### Required action
+
+Invoke `optimize-agent-usage` where you invoked `optimize-codex-usage`, and rename any host setting or permission rule that names `axiom:optimize-codex-usage`. Claude Code users receive these routes after the Claude Code catalog selects this release. Review the updated Hook before it runs: in Codex, review and trust it in `/hooks`; in Claude Code, compare the installed copy with the [Hook Reference](docs/reference/hooks.md) before the plugin loads in a new or reloaded session.
+
+See the [version notes](docs/releases/v0.16.0.md) for the delegation gate, the supervision boundary, the usage route migration, and static context evidence.
+
 ## Repository policy revision 69
 
 ### Changed

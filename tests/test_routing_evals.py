@@ -40,6 +40,7 @@ from axiom_validation.routing_evals import (
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     OPTIONAL_RESULT_PATHS,
     PRESERVED_OUTCOME_SHA256,
+    PUBLIC_ROUTES,
     RECOVERY2_CODEX_RUN_ID,
     RECOVERY2_RESULT_PATH,
     RECOVERY3_CODEX_RUN_ID,
@@ -187,6 +188,7 @@ def external_current_observation() -> dict:
                     workspace_unchanged=True,
                     source_unchanged=True,
                     installed_unchanged=True,
+                    allowed_routes=PUBLIC_ROUTES,
                 ),
                 "limitations": [],
             }

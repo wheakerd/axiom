@@ -89,7 +89,7 @@ body:
       placeholder: |
         1. Record the host and Axiom versions.
         2. Review the installed hook.
-        3. Start or reload the session.
+        3. Start a fresh session.
         4. Send the sanitized request above.
         5. Observe ...
     validations:

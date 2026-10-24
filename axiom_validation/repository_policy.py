@@ -44,6 +44,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/schema-v1.json",
     "evidence/schema-v2.json",
     "evidence/schema-v3.json",
+    "evidence/schema-v4.json",
     "evidence/release-status.json",
     "evidence/runtime-identity.json",
     "evidence/runtime-contract-history-v1.json",
@@ -61,10 +62,14 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/review-sequences-v1.json",
     "evals/codex-exec-jsonl-observer-v2.json",
     "evals/codex-exec-jsonl-observer-v3.json",
+    "evals/claude-code-stream-json-observer-v1.json",
+    "evals/benchmarks/claude-code-core-v5.json",
+    "evals/review-sequences-claude-code-v1.json",
     "evals/benchmarks/codex-core-v1.json",
     "evals/benchmarks/codex-core-v2.json",
     "evals/context-budget/README.md",
     "evals/context-budget/schema-v1.json",
+    "evals/context-budget/schema-v2.json",
     f"evals/context-budget/results/v{RELEASE_VERSION}.json",
     "evals/results/v0.7.7/codex/linux.json",
     "evals/results/v0.7.7/codex/linux-recovery-1.json",
@@ -111,7 +116,7 @@ EXPECTED_DIRECT_SKILLS = (
     "continuous-progress",
     "delegate-simple-task",
     "local-web-search",
-    "optimize-codex-usage",
+    "optimize-agent-usage",
     "reversible-system-change",
     "review-axiom-task",
     "task-planning",
@@ -120,7 +125,7 @@ EXPECTED_DIRECT_SKILLS = (
 )
 INSTRUCTION_MAX_BYTES = 8192
 AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
-"Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md or .agents/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight."
+"Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md, .agents/skills, or .claude/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight."
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",
@@ -138,6 +143,7 @@ CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
     "/.github/workflows/",
     "/.codex-plugin/",
+    "/.claude-plugin/",
     "/.agents/plugins/",
     "/hooks/",
     "/skills/using-axiom/",
@@ -381,11 +387,7 @@ def check_skill_contracts(failures: list[str]) -> None:
         else:
             try:
                 metadata = parse_agent_metadata_document(
-                    metadata_text,
-                    display_path(metadata_path),
-                    allow_policy=skill_name in {
-                        "using-axiom", "continuous-progress", "delegate-simple-task"
-                    },
+                    metadata_text, display_path(metadata_path)
                 )
             except CanonicalYamlError as error:
                 failures.append(str(error))

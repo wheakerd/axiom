@@ -31,7 +31,7 @@ Handle long-task state and user-triggered durable instruction updates.
   activation, never an activation signal.
 - A discovery is useful only for the current task.
 - The user wording could map to multiple effective-instructions modes.
-- The task is Axiom repository maintenance; follow the active repository's higher-priority maintenance instructions instead of this target-repository workflow unless the user explicitly invokes `$agents-architect` for a target AGENTS architecture task.
+- The task is Axiom repository maintenance; follow the active repository's higher-priority maintenance instructions instead of this target-repository workflow unless the user explicitly invokes the agents-architect skill for a target AGENTS architecture task.
 - The task would update protected plugin or skill metadata as AGENTS routing content.
 
 ## Runtime capsules
@@ -62,7 +62,7 @@ Delete or mark obsolete when complete. Future sessions must not auto-load old ca
 
 Treat English trigger definitions as the canonical source of truth. User requests may be written in any language. Normalize unambiguous non-English user wording to the matching English trigger before acting. After normalization, refer to the selected mode by its canonical English token. Ask a concise clarification question only when wording could map to multiple modes. Do not maintain localized alias tables or alternate canonical tokens.
 
-Scope these modes to the active target repository's AGENTS instruction system. Do not update protected Codex plugin or skill metadata unless the user explicitly asks for skill or plugin maintenance.
+Scope these modes to the active target repository's AGENTS instruction system. Do not update protected plugin or skill metadata unless the user explicitly asks for skill or plugin maintenance.
 
 Do not use these modes to persist Axiom packaged skill rules, Axiom trigger definitions, load policies, internal routes, validation protocols, or reporting formats into a target repository.
 

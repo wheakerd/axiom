@@ -46,7 +46,7 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
   language, runtime, durable-update, or size rules only when current project
   evidence or the user makes them repository policy.
 - Create `.agents/index.md` only as a next-hop rule index explicitly routed by
-  root `AGENTS.md`; it is not a Codex native discovery entry. Create group
+  root `AGENTS.md`; it is not a native host discovery entry. Create group
   `index.md` files only for evidence-backed branches with reachable rule leaves.
 - Keep indexes limited to purpose, enter conditions, exclusion conditions, next hops, and stop-reading conditions.
 - Sink non-global rules to the closest owning direct domain entry, rule leaf, or
@@ -70,13 +70,13 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 - Do not recursively read all source files or all Markdown before scoping.
 - Do not copy READMEs, full architecture docs, full project trees, changelogs, logs, or issue histories into AGENTS docs.
 - Do not copy Axiom packaged skill protocols into AGENTS docs or repo-local skills.
-- Do not add `$agents-architect`, `$using-axiom`, or Axiom plugin trigger instructions to generated target AGENTS content unless the user explicitly asks for a provenance note.
+- Do not add Axiom skill invocations or plugin trigger instructions to generated target AGENTS content unless the user explicitly asks for a provenance note.
 - Do not invent commands, ownership, frameworks, domains, or validation steps.
 - Do not encode secrets, credentials, personal data, or temporary task discoveries.
 - Do not make AGENTS docs a substitute for checking impacted implementation files and tests.
 - Do not generate a validator harness, test suite, or runtime capsule by default.
-- Do not create nested `AGENTS.md` files unless a stable subproject boundary and Codex start path justify auto-loading them.
-- Do not create, edit, move, delete, migrate, or recommend a Codex native
+- Do not create nested `AGENTS.md` files unless a stable subproject boundary and a common host start path justify auto-loading them.
+- Do not create, edit, move, delete, migrate, or recommend a native host
   auto-load entry whose filename is not `AGENTS.md`.
 - Do not create, move, or rewrite protected plugin or skill metadata during AGENTS initialization.
 

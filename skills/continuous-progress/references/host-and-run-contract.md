@@ -39,7 +39,7 @@ Confirm all of the following for this run's selected environment:
 6. A way to perform coordinator ownership changes without two active owners.
    If the host cannot enforce exclusive ownership, report that limitation.
 
-Use Codex-native scheduling and session tools where available. A heartbeat
+Use the host's native scheduling and session tools where available. A heartbeat
 attached only to an old coordinator is insufficient unless its survival and
 retargeting behavior have been verified. Give the task one independently
 addressable supervision owner. Do not install a daemon, add a startup launcher,

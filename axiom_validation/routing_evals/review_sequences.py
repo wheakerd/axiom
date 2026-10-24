@@ -12,6 +12,9 @@ from .jsonio import exact_object, load_json_object, require_bool, require_string
 
 
 REVIEW_SEQUENCE_RELATIVE_PATH = "evals/review-sequences-v1.json"
+# Claude Code runs the same sanitized cases with its own native settings.
+CLAUDE_CODE_REVIEW_SEQUENCE_RELATIVE_PATH = "evals/review-sequences-claude-code-v1.json"
+CLAUDE_CODE_REVIEW_SEQUENCE_SHA256 = "aa486439396675822530ada73bb45a09185a79ee2ce77984fb52307c8614ccf4"
 REVIEW_RESPONSE_SCHEMA_RELATIVE_PATH = "evals/review-response-schema-v1.json"
 REVIEW_SEQUENCE_SHA256 = (
     "58c3a204be5925a1b3d6095787eb4e0263f09f54b8ae84e331d06374ba1ce91f"
@@ -319,6 +322,7 @@ def _check_documented_review_method(root: Path, failures: list[str]) -> None:
         return
     required = (
         REVIEW_SEQUENCE_RELATIVE_PATH,
+        CLAUDE_CODE_REVIEW_SEQUENCE_RELATIVE_PATH,
         REVIEW_RESPONSE_SCHEMA_RELATIVE_PATH,
         REVIEW_DEVELOPER_INSTRUCTION,
         "same isolated session",
@@ -331,6 +335,54 @@ def _check_documented_review_method(root: Path, failures: list[str]) -> None:
     for fragment in required:
         if fragment not in text:
             failures.append(f"evals/README.md is missing review-sequence contract {fragment!r}")
+
+
+def _check_claude_code_review_profile(
+    suite: dict[str, Any], failures: list[str], root: Path
+) -> None:
+    """Bind the Claude Code suite to the exact Codex cases with its own native settings."""
+    path = root / CLAUDE_CODE_REVIEW_SEQUENCE_RELATIVE_PATH
+    label = CLAUDE_CODE_REVIEW_SEQUENCE_RELATIVE_PATH
+    profile = load_json_object(path, failures, root)
+    if profile is None:
+        return
+    try:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError as error:
+        failures.append(f"cannot hash {label}: {error}")
+    else:
+        if digest != CLAUDE_CODE_REVIEW_SEQUENCE_SHA256:
+            failures.append("Claude Code review sequence digest drifted from the exact sanitized suite")
+    exact_object(profile, frozenset(suite), label, failures)
+    expected_scalars = {
+        "schemaVersion": "1",
+        "kind": "review-axiom-task-sequence-suite",
+        "id": "review-axiom-task-completion-claude-code-v1",
+        "method": "documented-claude-code-same-session-sequence",
+        "model": "claude-opus-5-5",
+        "reasoningEffort": "max",
+        "turnTimeoutSeconds": 300,
+        "repeatCount": 1,
+        "stopOnFirstFailure": True,
+        "developerInstruction": REVIEW_DEVELOPER_INSTRUCTION,
+    }
+    for field, expected in expected_scalars.items():
+        if profile.get(field) != expected:
+            failures.append(f"{label}.{field} drifted")
+    if profile.get("responseSchema") != suite.get("responseSchema"):
+        failures.append(f"{label} must bind the Codex suite's response schema")
+    if profile.get("safety") != {
+        "permissionMode": "dontAsk",
+        "freshSessionPerCase": True,
+        "sameSessionWithinCase": True,
+        "mutationAuthority": False,
+        "externalActions": False,
+        "privateTranscriptRetention": False,
+        "credentialDisclosure": False,
+    }:
+        failures.append("Claude Code review sequence safety envelope drifted")
+    if profile.get("cases") != suite.get("cases"):
+        failures.append(f"{label} must preserve the exact sanitized review cases")
 
 
 def check_review_sequence_contracts(
@@ -498,5 +550,6 @@ def check_review_sequence_contracts(
                 for field, expected_value in expected_fields.items():
                     if expected_response.get(field) != expected_value:
                         failures.append(f"{turn_label}.expectedResponse.{field} drifted")
+    _check_claude_code_review_profile(suite, failures, root)
     _check_documented_review_method(root, failures)
     return len(cases), review_turn_count

@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "1",
+  "taxonomyVersion": "claude-code-stream-json-observer-v1",
+  "host": {
+    "name": "claude-code",
+    "version": "2.1.308"
+  },
+  "source": {
+    "documentation": [
+      {
+        "url": "https://code.claude.com/docs/en/headless",
+        "authority": "stream-json events, session metadata, structured output, and permission denials"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/cli-reference",
+        "authority": "print-mode flags, input and output formats, and hook event inclusion"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/hooks",
+        "authority": "SessionStart sources and command hook execution"
+      }
+    ],
+    "verifiedOn": "2026-10-23"
+  },
+  "invocation": {
+    "required": [
+      "-p",
+      "--output-format stream-json",
+      "--verbose",
+      "--json-schema",
+      "--append-system-prompt",
+      "--permission-mode dontAsk",
+      "--no-session-persistence",
+      "--model",
+      "--effort"
+    ],
+    "multiTurn": "--input-format stream-json",
+    "environment": {
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
+    }
+  },
+  "categories": [
+    "lifecycle",
+    "content-progress",
+    "tool-action-capable",
+    "failure-error",
+    "forbidden-unknown"
+  ],
+  "eventTypes": {
+    "system/hook_started": {
+      "category": "lifecycle",
+      "role": "startup-hook-start"
+    },
+    "system/hook_progress": {
+      "category": "lifecycle",
+      "role": "startup-hook-progress"
+    },
+    "system/hook_response": {
+      "category": "lifecycle",
+      "role": "startup-hook-result"
+    },
+    "system/init": {
+      "category": "lifecycle",
+      "role": "session-start"
+    },
+    "system/thinking_tokens": {
+      "category": "content-progress",
+      "role": "reasoning-progress"
+    },
+    "system/api_retry": {
+      "category": "content-progress",
+      "role": "api-retry"
+    },
+    "system/permission_denied": {
+      "category": "tool-action-capable",
+      "role": "permission-denied"
+    },
+    "rate_limit_event": {
+      "category": "content-progress",
+      "role": "rate-limit-status"
+    },
+    "assistant": {
+      "category": "content-progress",
+      "role": "model-message"
+    },
+    "user": {
+      "category": "content-progress",
+      "role": "tool-result"
+    },
+    "result": {
+      "category": "lifecycle",
+      "role": "terminal-result"
+    }
+  },
+  "toolUse": {
+    "structuredOutputTool": "StructuredOutput",
+    "otherToolUse": "tool-action-capable",
+    "permissionDenial": "tool-action-capable"
+  },
+  "lifecycle": {
+    "startupHookBeforeSessionStart": true,
+    "sessionStartBeforeModelOutput": true,
+    "resultIsTerminal": true,
+    "unknownOrMalformedEvent": "fail-closed",
+    "eventAfterResult": "fail-closed",
+    "missingResult": "fail-closed"
+  },
+  "facts": {
+    "startupHookVerified": "exactly one SessionStart hook_response with outcome success, exit code 0, and output equal to the reviewed preamble and routing gate",
+    "installedPluginVerified": "system/init lists plugin axiom with the expected version, a field Claude Code 2.1.308 emits beside the documented name and path, every bundled axiom skill, and no plugin_errors",
+    "turnCompleted": "one terminal result with subtype success, is_error false, terminal_reason completed, and no api_error_status",
+    "failureEvent": "a result with is_error true or another subtype, or a failed SessionStart hook",
+    "unexpectedTools": "tool_use blocks other than the structured-output tool, plus permission denials",
+    "structuredOutput": "result.structured_output validated against the bound host-response schema"
+  },
+  "retention": {
+    "allowedJournalFields": [
+      "ordinal",
+      "eventType",
+      "category",
+      "role",
+      "toolName"
+    ],
+    "forbidden": [
+      "response text",
+      "reasoning text",
+      "tool arguments",
+      "tool output",
+      "identifiers",
+      "credentials",
+      "paths",
+      "session or config content",
+      "raw payload"
+    ]
+  }
+}

@@ -19,8 +19,8 @@ outcome, constraints, and existing authorization.
   working when the intended result is clear and an ordinary reversible
   implementation choice can be made within the user's constraints.
 - Do not use a question to reopen a settled decision or request authorization
-  already established for the same action. Full Access does not resolve an
-  ambiguous intended result.
+  already established for the same action. A permission-bypass mode does not
+  resolve an ambiguous intended result.
 
 ## Ask One Focused Question
 
@@ -63,4 +63,4 @@ follow-up. Otherwise resume the task without restating a questionnaire.
 | "Maybe fix this typo" with one identified typo | Continue with the clear correction; tentative wording alone is not a trigger |
 | "Use either deployment destination" with different authority boundaries | Ask one destination question; do not pick an action route first |
 | User supplies a custom answer or corrects an option | Preserve that answer and reroute the resolved request |
-| Full Access with an unresolved target | Ask; execution permissions do not identify the intended target |
+| A permission-bypass mode with an unresolved target | Ask; execution permissions do not identify the intended target |

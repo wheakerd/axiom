@@ -5,6 +5,9 @@ instructions and the user's actual authorization remain decisive. Follow the
 linked Skill for full procedures; [Architecture](architecture.md) explains how
 the gate selects and composes owners.
 
+A request that names a skill uses Codex's `$skill-name` form here. In Claude
+Code, type `/axiom:skill-name` or name the skill in plain language.
+
 ## `clarify-intent`
 
 > Clean up the old records.
@@ -13,27 +16,29 @@ If context leaves archiving, deduplication, and deletion as materially different
 outcomes, the gate selects [Clarify Intent](../skills/clarify-intent/SKILL.md).
 Ask one focused question with plausible options and a custom answer before
 dependent work. "Maybe fix this identified typo" needs no clarification when
-the correction is clear. Full Access does not resolve intent.
+the correction is clear. A permission-bypass mode does not resolve
+intent.
 
 ## `delegate-simple-task`
 
 > I authorize $delegate-simple-task to assess this small edit using my ordered
-> model candidates, only with using-axiom active and my Ultra reasoning verified.
+> model candidates, only with using-axiom active and my top reasoning level verified.
 
 [Delegate Simple Task](../skills/delegate-simple-task/SKILL.md) requires an
-enabled, active `using-axiom` gate, current host evidence of user-selected
-`Ultra` reasoning, and consent to invoke the skill. When the gate and Ultra
-are verified but consent is missing, the gate asks once and waits before
-loading it. An inactive or unverified gate, non-Ultra reasoning, or unknown
-effort prevents activation, even for a direct skill request.
+enabled, active `using-axiom` gate, current host evidence of the top
+reasoning level, and consent
+to invoke the skill. When the gate and level are verified but consent is
+missing, the gate asks once and waits before loading it. An inactive or
+unverified gate, a lower reasoning level, or unknown effort prevents
+activation, even for a direct skill request.
 
 After authorized activation, the skill assesses the
 first available candidate whose relevant capability is supported, announces its
 exact model and faithful task brief, and checks the result. The main model stays
 unchanged. Model names alone establish neither price nor suitability.
 
-Verified Full Access cannot replace invocation consent. After activation, it
-permits assignment within existing task authority and host restrictions.
+A verified permission-bypass mode cannot replace invocation consent. After
+activation, it permits assignment within existing task authority and host restrictions.
 Otherwise, use existing assignment approval or obtain it. Missing
 model preferences require a decision; unavailable delegation may fall back to
 the main session. This Skill does not invoke clarification itself: the startup
@@ -51,6 +56,20 @@ scope edits; a dependency that makes the retained goal infeasible needs resoluti
 A migration plan keeps its specialized reversible-change owner. Scheduling,
 status updates, and implementation stay with their own owners. A plan does not
 authorize execution or scheduling.
+
+## `continuous-progress`
+
+> Use continuous-progress to finish this defined migration with fresh workers
+> and an independent supervisor. Stop when its tests pass or I cancel.
+
+[Continuous Progress](../skills/continuous-progress/SKILL.md) starts only from
+an explicit invocation. It first checks whether the current host can start
+fresh workers, address a successor coordinator, and wake an independent
+supervisor, using that host's operations reference. When no independent wake
+mechanism is available, the run waits for that capability and reports that
+automatic recovery is unavailable instead of simulating a supervisor. Ordinary
+requests to continue, a request to use native goals alone, and discussion of
+the skill do not select it.
 
 ## `local-web-search`
 
@@ -99,15 +118,15 @@ bounded decision while remaining read-only.
 Repo-local instruction systems belong to `agents-architect`; ordinary plugin
 source or documentation stays host-native. Installation, publication,
 deployment, and Git submission require their own active-phase ownership and
-authority. An explicit context-cost redesign may add `optimize-codex-usage`.
+authority. An explicit context-cost redesign may add `optimize-agent-usage`.
 See the [route contract](agent-plugin-architect-route-contract.md).
 
-## `optimize-codex-usage`
+## `optimize-agent-usage`
 
-> Reduce Codex credits and context used by these Skills without weakening
-> validation or safety.
+> Reduce the credits, tokens, and context used by these Skills without
+> weakening validation or safety.
 
-[Optimize Codex Usage](../skills/optimize-codex-usage/SKILL.md) inspects metadata
+[Optimize Agent Usage](../skills/optimize-agent-usage/SKILL.md) inspects metadata
 and route chains, measures host metrics when exposed, and labels size or call
 counts as proxies otherwise. Compare the same quality scenarios before and
 after. Do not silently lower model or reasoning settings, remove required
@@ -215,7 +234,7 @@ external-action owner; neither route satisfies the other's gates.
 | "Refactor this parser and run its tests" | Ordinary source work, even in a plugin repository |
 | "What version is running?" or "explain rollback" | Status or conceptual help without a persistent-change task |
 | "Commit the staged change and git push origin main" | Ordinary named-remote non-force Git work |
-| "Make this algorithm use less memory" | Software performance, not Codex usage |
+| "Make this algorithm use less memory" | Software performance, not agent usage |
 | "Draft an email, but do not send" | No requested external effect |
 | "Summarize what changed in this coding task" | Ordinary summary, not an identified Axiom task review |
 

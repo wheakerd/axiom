@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,10 @@ from .constants import (
     BENCHMARK_MODEL,
     BENCHMARK_REASONING_EFFORT,
     BENCHMARK_SAFETY_KEYS,
+    CLAUDE_CODE_BENCHMARK_SAFETY_KEYS,
+    CLAUDE_CODE_OFFICIAL_DOCUMENTATION,
+    CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS,
+    CURRENT_BENCHMARK_PROFILES,
     HIGH_IMPACT_ROUTES,
     HISTORICAL_PUBLIC_ROUTES,
     MAX_JSON_BYTES,
@@ -35,6 +40,10 @@ from .jsonio import (
     require_string,
     require_string_list,
 )
+
+ISO_DATE_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
+
+
 def check_documented_method(root: Path, failures: list[str]) -> None:
     path = root / "evals" / "history" / "codex-core-v1-v2.md"
     if not _inspect_regular_file(path, MAX_JSON_BYTES, failures, root):
@@ -123,6 +132,53 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
     ):
         if forbidden in text:
             failures.append(f"{label} documents unsupported invocation option {forbidden!r}")
+def _check_host_profile(
+    benchmark: dict[str, Any], host: str, label: str, failures: list[str]
+) -> None:
+    """Check a non-Codex schema v5 profile against its own native settings."""
+    profile = CURRENT_BENCHMARK_PROFILES.get(host)
+    if host != "claude-code" or profile is None:
+        failures.append(f"{label} names an unsupported benchmark host {host!r}")
+        return
+    for field in ("method", "model", "reasoningEffort", "caseTimeoutSeconds"):
+        if benchmark.get(field) != profile[field]:
+            failures.append(f"{label}.{field} must be {profile[field]!r}")
+    official = exact_object(
+        benchmark.get("officialReference"),
+        CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS,
+        f"{label}.officialReference",
+        failures,
+    )
+    if official is not None:
+        if official.get("documentation") != CLAUDE_CODE_OFFICIAL_DOCUMENTATION:
+            failures.append(
+                f"{label}.officialReference.documentation must name {CLAUDE_CODE_OFFICIAL_DOCUMENTATION}"
+            )
+        verified = require_string(
+            official.get("verifiedOn"), f"{label}.officialReference.verifiedOn", failures, 10
+        )
+        if verified is not None and ISO_DATE_PATTERN.fullmatch(verified) is None:
+            failures.append(f"{label}.officialReference.verifiedOn must be an ISO date")
+    safety = exact_object(
+        benchmark.get("safety"),
+        CLAUDE_CODE_BENCHMARK_SAFETY_KEYS,
+        f"{label}.safety",
+        failures,
+    )
+    expected_safety = {
+        "permissionMode": "dontAsk",
+        "isolatedSessionPerCase": True,
+        "mutationAuthority": False,
+        "externalActions": False,
+        "privateConversationUpload": False,
+        "credentialDisclosure": False,
+    }
+    if safety is not None:
+        for key, expected in expected_safety.items():
+            if safety.get(key) != expected:
+                failures.append(f"{label}.safety.{key} must be {expected!r}")
+
+
 def validate_benchmark(
     benchmark: dict[str, Any],
     cases: dict[str, dict[str, Any]],
@@ -134,6 +190,7 @@ def validate_benchmark(
     routes: tuple[str, ...] = HISTORICAL_PUBLIC_ROUTES,
     canonical_routes: tuple[str, ...] | None = None,
     expected_case_count: int = 13,
+    host: str = "codex",
 ) -> list[str]:
     label = f"evals/benchmarks/{benchmark_id}.json"
     exact_object(benchmark, BENCHMARK_KEYS, label, failures)
@@ -143,9 +200,11 @@ def validate_benchmark(
         failures.append(f"{label}.id must be {benchmark_id!r}")
     if benchmark.get("corpusSchema") != schema_id:
         failures.append(f"{label}.corpusSchema must bind {schema_id}")
-    if benchmark.get("method") != "documented-codex-cli-equivalent":
+    if host != "codex":
+        _check_host_profile(benchmark, host, label, failures)
+    elif benchmark.get("method") != "documented-codex-cli-equivalent":
         failures.append(f"{label}.method is unsupported")
-    official = exact_object(
+    official = None if host != "codex" else exact_object(
         benchmark.get("officialReference"),
         OFFICIAL_REFERENCE_KEYS,
         f"{label}.officialReference",
@@ -161,13 +220,13 @@ def validate_benchmark(
             failures.append(f"{label}.officialReference.commit must be an immutable Git SHA")
         if official.get("path") != "plugins/plugin-eval":
             failures.append(f"{label}.officialReference.path must name plugins/plugin-eval")
-    if benchmark.get("model") != BENCHMARK_MODEL:
+    if host == "codex" and benchmark.get("model") != BENCHMARK_MODEL:
         failures.append(f"{label}.model must be {BENCHMARK_MODEL!r}")
-    if benchmark.get("reasoningEffort") != BENCHMARK_REASONING_EFFORT:
+    if host == "codex" and benchmark.get("reasoningEffort") != BENCHMARK_REASONING_EFFORT:
         failures.append(
             f"{label}.reasoningEffort must be {BENCHMARK_REASONING_EFFORT!r}"
         )
-    if benchmark.get("caseTimeoutSeconds") != BENCHMARK_CASE_TIMEOUT_SECONDS:
+    if host == "codex" and benchmark.get("caseTimeoutSeconds") != BENCHMARK_CASE_TIMEOUT_SECONDS:
         failures.append(
             f"{label}.caseTimeoutSeconds must be {BENCHMARK_CASE_TIMEOUT_SECONDS}"
         )
@@ -177,7 +236,7 @@ def validate_benchmark(
         failures.append(f"{label}.developerInstruction drifted from the reviewed value")
     if benchmark.get("repeatCount") != 1 or benchmark.get("lifecycle") != "fresh-start":
         failures.append(f"{label} must select one fresh-session repeat")
-    safety = exact_object(
+    safety = None if host != "codex" else exact_object(
         benchmark.get("safety"),
         BENCHMARK_SAFETY_KEYS,
         f"{label}.safety",

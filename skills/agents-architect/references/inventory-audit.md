@@ -19,15 +19,16 @@ Establish repository facts and narrow the reading scope before designing instruc
 
 - Confirm the current directory and whether the target has no Git repository,
   one unambiguous Git root, an unborn branch, or nested roots/worktrees.
-  Inspect Codex version, discovery settings, or `project_doc_max_bytes` only
-  when the task makes a version-sensitive loading or size claim.
+  Inspect the host version, discovery settings, or a size limit such as Codex
+  `project_doc_max_bytes` only when the task makes a version-sensitive loading
+  or size claim.
 - When more than one plausible Git root could own the requested files, stop and
   ask for the exact target instead of selecting a parent or nested root.
 - When edits or Git evidence are in scope, record the branch/ref state and
   classify tracked, modified, staged, untracked, and ignored candidates
   separately. Do not describe an unborn branch as a normal branch with an
   empty history.
-- Use current official Codex documentation only when platform discovery
+- Use the active host's current official documentation only when platform discovery
   behavior affects the outcome; otherwise avoid a network lookup. Record
   version-sensitive uncertainty instead of filling gaps with Axiom policy.
 - Record unverified assumptions instead of treating them as facts.
@@ -49,7 +50,7 @@ Establish repository facts and narrow the reading scope before designing instruc
   proves it. Filesystem presence alone proves only a discovery candidate; it
   does not prove that the current session loaded that content.
 - Apply the parent skill's protected-metadata boundary when classifying the
-  inventory. Record those surfaces as protected Codex plugin or skill metadata,
+  inventory. Record those surfaces as protected plugin or skill metadata,
   not routed rule leaves, unless the user explicitly scopes skill or plugin
   maintenance.
 - Read document bodies in small batches only after metadata narrows scope.
@@ -62,7 +63,14 @@ Establish repository facts and narrow the reading scope before designing instruc
   changed, again afterward. A clean status or tracked diff cannot prove that an
   ignored or untracked instruction is absent, unchanged, or inactive.
 
-## Codex behavior boundaries
+## Host discovery boundaries
+
+Hosts discover and load instruction sources differently. Determine the active
+host's behavior from its current documentation and observable state before
+making a loading claim. The models below summarize Codex and Claude Code; they
+do not replace that check.
+
+### Codex
 
 - Codex builds the instruction chain once per run or TUI session. A new run or
   session rebuilds it; later filesystem or configuration changes do not prove
@@ -84,6 +92,36 @@ Establish repository facts and narrow the reading scope before designing instruc
 - Ordinary Markdown files under `.agents/` are not recursively auto-loaded.
 - Do not assume generic include syntax or recursive imports.
 - User instructions outrank persistent repository instructions.
+
+### Claude Code
+
+- Claude Code loads instruction files at session start: a managed policy file,
+  the user's `~/.claude/CLAUDE.md`, and every `CLAUDE.md` and `CLAUDE.local.md`
+  in the working directory and the directories above it. A project may keep
+  its file at `.claude/CLAUDE.md`.
+- Discovered files are concatenated rather than replaced. Directory content is
+  ordered from the filesystem root down to the working directory, so closer
+  guidance loads later.
+- Subdirectory instruction files load on demand, when Claude works with a file
+  in that subdirectory. Their presence alone does not prove that they loaded.
+- By default, from v2.1.277, Claude Code reads `AGENTS.md` and
+  `.claude/AGENTS.md` only when no `CLAUDE.md`, `.claude/CLAUDE.md`, or
+  `CLAUDE.local.md` exists in the working directory or above it. Its
+  **Project instructions** setting can load both, only `CLAUDE.md`, or only
+  managed instructions. It never reads `AGENTS.override.md`,
+  `AGENTS.local.md`, or files under `.agents/`.
+- `@path` imports expand up to four hops and resolve from the importing file.
+  Imports from outside the working directory need approval.
+- `.claude/rules/` files without `paths` frontmatter load at session start;
+  path-scoped rules load when Claude works with matching files.
+- `claudeMdExcludes` can skip discovered files. Directories added with
+  `--add-dir` contribute instruction files only when the host is configured to
+  load them.
+- After compaction, Claude Code rereads the project-root `CLAUDE.md`; nested
+  files and path-scoped rules load again on demand.
+- `/context` lists the instruction files the session loaded under
+  **Memory files**; use it as the direct loading check. `/memory` also lists
+  `CLAUDE.md` locations that do not exist yet.
 
 ## Prohibited actions
 

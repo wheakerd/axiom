@@ -1,20 +1,20 @@
 ---
-name: optimize-codex-usage
-description: Reduce or diagnose Codex token, credit, and context consumption without weakening task quality or safety. Use only when the user explicitly asks to save Codex credits or tokens, optimize Skills, AGENTS.md, MCP, or context loading, explain unusually high Codex usage, or design a lower-consumption workflow. Do not use for ordinary coding, software performance work, or generic cost questions.
+name: optimize-agent-usage
+description: Reduce or diagnose agent usage of tokens, credits, and context without weakening task quality or safety. Use only when the user explicitly asks to save credits, tokens, or usage limits in the current agent host; optimize Skills, instruction files such as AGENTS.md or CLAUDE.md, MCP, or context loading; explain unusually high usage; or design a lower-consumption workflow. Do not use for ordinary coding, software performance work, or generic cost questions.
 ---
 
-# Optimize Codex Usage
+# Optimize Agent Usage
 
-Reduce total Codex consumption while preserving the requested outcome,
+Reduce total agent consumption while preserving the requested outcome,
 authorization boundaries, safety checks, and completion evidence.
 
 ## Load Policy
 
 - For a conceptual explanation or a narrow current-product fact, use this file
-  and current official OpenAI documentation only. Do not inspect a repository
-  or load the audit reference unless the request needs it.
-- For an audit, design change, or implementation involving Skills,
-  `AGENTS.md`, MCP, context, history, tools, validation, or reporting, read
+  and the current host's official documentation only. Do not inspect a
+  repository or load the audit reference unless the request needs it.
+- For an audit, design change, or implementation involving Skills, instruction
+  files, MCP, context, history, tools, validation, or reporting, read
   `references/context-audit.md` before changing files.
 - Add another Axiom skill only when the requested implementation crosses into
   that skill's distinct owner: an AGENTS instruction system, traceable Git
@@ -29,8 +29,8 @@ authorization boundaries, safety checks, and completion evidence.
   route-chain sizes as proxies or estimates.
 - Do not claim a percentage saving without a repeatable before/after workload
   and equivalent quality acceptance.
-- Fetch current official OpenAI documentation only when a volatile Codex fact
-  affects the decision. Never place current prices, plan limits, or model
+- Fetch the current host's official documentation only when a volatile host
+  fact affects the decision. Never place current prices, plan limits, or model
   quotas in always-loaded instructions.
 
 ## Non-Negotiable Boundaries
