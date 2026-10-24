@@ -4,9 +4,13 @@ Keep contributions focused, evidence-based, and easy to review. Axiom's public
 repository contains the installed Codex and Claude Code plugins, their
 documentation, and the tooling used to validate a proposed change.
 
-Use [GitHub Issues](https://github.com/wheakerd/axiom/issues) for ordinary bug
-reports and feature requests. Follow [SECURITY.md](SECURITY.md) for potentially
-sensitive findings; do not disclose vulnerability details in a public report.
+Ask questions and discuss early ideas in
+[GitHub Discussions](https://github.com/wheakerd/axiom/discussions). Use the
+[GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) forms for
+actionable bug reports, feature requests, routing cases, and compatibility
+reports. Follow [SECURITY.md](SECURITY.md) for potentially sensitive findings;
+do not disclose vulnerability details in a public report. Participation follows
+the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Repository layout
 
@@ -18,12 +22,17 @@ sensitive findings; do not disclose vulnerability details in a public report.
 | [.claude-plugin/](.claude-plugin/) | Claude Code plugin manifest and marketplace catalog |
 | [hooks/](hooks/) | Codex and Claude Code startup Hook declarations and packaged wrappers |
 | [README.md](README.md) | Product landing page and safe-start entry point |
+| [CHANGELOG.md](CHANGELOG.md) | User-visible changes, impact, and required action |
+| [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Private vulnerability reporting and community conduct |
+| [LICENSE](LICENSE) | MIT license |
+| [assets/](assets/) | Codex plugin interface artwork |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
 | [evidence/](evidence/) | Current identity and status, policy ledger, compatibility schemas, and runtime digest histories |
 | [evals/](evals/README.md) | Versioned routing contracts, context budgets, and separately labeled host observations |
 | [axiom_validation/](axiom_validation/) | Standard-library publication policy and installed-runtime input classification |
 | [tests/](tests/) | Focused unit tests and isolated policy fixtures |
-| [scripts/](scripts/) and [.github/workflows/](.github/workflows/) | Stable validation entrypoints and CI wiring |
+| [scripts/](scripts/) | Stable validation entrypoints |
+| [.github/](.github/) | CI workflows, Issue forms, pull-request template, and code owners |
 
 Top-level Skills include the `using-axiom` startup gate and the workflows it
 selects. A Skill's supporting references and agent resources are not separate

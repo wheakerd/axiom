@@ -568,6 +568,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.16.0.",
       "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
+    },
+    {
+      "revision": 72,
+      "recordedOn": "2026-10-24",
+      "baselineCommit": "239e33de083d25cdfeea5f0a208b6596f86d8725",
+      "sourceIssue": null,
+      "summary": "Date published Changelog headings, write host-neutral README usage examples, add a Code of Conduct, and document support channels and the complete repository map.",
+      "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
     }
   ]
 }
