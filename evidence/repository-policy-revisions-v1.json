@@ -576,6 +576,14 @@
       "sourceIssue": null,
       "summary": "Date published Changelog headings, write host-neutral README usage examples, add a Code of Conduct, and document support channels and the complete repository map.",
       "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
+    },
+    {
+      "revision": 73,
+      "recordedOn": "2026-10-24",
+      "baselineCommit": "3b95a59d92bddcaab96c649e0cf4b01438b133d4",
+      "sourceIssue": null,
+      "summary": "Keep README to introduction, installation, updating, and first use; move the bundled-skill inventory and rename notices to a validated Skill Reference; add host, test, and Hook runtime badges.",
+      "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
     }
   ]
 }

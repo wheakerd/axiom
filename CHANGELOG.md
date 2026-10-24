@@ -16,6 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 73
+
+### Changed
+
+- Keep README to the project introduction, installation, updating, and first use, and move the bundled-skill list, copyable examples, and rename notices to the new [Skill Reference](docs/reference/skills.md).
+- Add README badges for the supported hosts, unit and integration tests, and cross-platform Hook runtime results.
+- Validate the bundled-skill inventory in the Skill Reference, and set the preferred README size to 4-8 KiB.
+
+### Behavioral impact
+
+Documentation and repository policy only. Installed Skills, Hooks, manifests, and the runtime digest are unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 72
 
 ### Changed
