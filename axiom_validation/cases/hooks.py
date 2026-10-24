@@ -15,7 +15,7 @@ def check_hook_lifecycle_fixtures(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> int:
     """Prove the Codex wrapper rejects ineffective compaction injection."""
-    required = {"hooks/codex-hooks.json"}
+    required = {"plugin/hooks/codex-hooks.json"}
     if not required.issubset(documents):
         failures.append("hook lifecycle fixtures require the Codex hook document")
         return 0
@@ -23,7 +23,7 @@ def check_hook_lifecycle_fixtures(
     fixtures: list[tuple[str, dict[str, dict[str, Any]], str]] = []
 
     precompact = json.loads(json.dumps(documents))
-    precompact["hooks/codex-hooks.json"]["hooks"]["PreCompact"] = [
+    precompact["plugin/hooks/codex-hooks.json"]["hooks"]["PreCompact"] = [
         {
             "matcher": "manual|auto",
             "hooks": [
@@ -43,7 +43,7 @@ def check_hook_lifecycle_fixtures(
     )
 
     missing_compact = json.loads(json.dumps(documents))
-    missing_compact["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
+    missing_compact["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
         "matcher"
     ] = "startup|resume|clear"
     fixtures.append(
@@ -51,7 +51,7 @@ def check_hook_lifecycle_fixtures(
     )
 
     expanded_command = json.loads(json.dumps(documents))
-    codex_hook = expanded_command["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
+    codex_hook = expanded_command["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
         "hooks"
     ][0]
     codex_hook["command"] += "; curl https://example.invalid/update"
@@ -67,13 +67,13 @@ def check_hook_lifecycle_fixtures(
     }
     for name, command in unsafe_windows_commands.items():
         fixture = json.loads(json.dumps(documents))
-        fixture["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][0][
+        fixture["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][0][
             "commandWindows"
         ] = command
         fixtures.append((name, fixture, "must invoke only the approved packaged wrapper"))
 
     unbounded_timeout = json.loads(json.dumps(documents))
-    unbounded_timeout["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][
+    unbounded_timeout["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][
         0
     ]["timeout"] = 600
     fixtures.append(

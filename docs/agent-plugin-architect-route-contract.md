@@ -4,7 +4,7 @@
 
 `agent-plugin-architect` is an implemented workflow for explicit packaged
 agent-plugin architecture work. This page explains ownership; the
-[packaged Skill](../skills/agent-plugin-architect/SKILL.md) and its directly
+[packaged Skill](../plugin/skills/agent-plugin-architect/SKILL.md) and its directly
 linked references own the executable instructions.
 
 ## Scope
@@ -28,7 +28,7 @@ and runtime support, described in [Compatibility](compatibility.md).
 | Create checkpoints, consolidate history, or perform independently traceable Git submission | `traceable-git-submit` |
 | Commit already-prepared plugin changes, create an exact release tag, and push the branch and tag | `traceable-git-submit`, prepared-release phase |
 
-The [startup gate](../skills/using-axiom/SKILL.md) owns route selection. Words
+The [startup gate](../plugin/skills/using-axiom/SKILL.md) owns route selection. Words
 such as "plugin", "publish", or "push" alone do not select this architecture
 route or grant action authority.
 
@@ -47,7 +47,7 @@ route or grant action authority.
    `UNAVAILABLE`.
 
 For a release-readiness audit, the
-[readiness reference](../skills/agent-plugin-architect/references/release-readiness.md)
+[readiness reference](../plugin/skills/agent-plugin-architect/references/release-readiness.md)
 owns impact classification, target-repository release requirements, available
 evidence, and the next bounded decision. Readiness remains read-only; it does
 not authorize a later commit, tag, install, publication, or deployment.

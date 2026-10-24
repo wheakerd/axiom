@@ -28,10 +28,12 @@ The release tree provides one integration per host over the same Skills:
 
 | Host | Checked-in integration | Lifecycle contract |
 | --- | --- | --- |
-| Codex | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `hooks/codex-hooks.json`, `hooks/codex-session-start.cmd`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; POSIX and Windows command variants are declared |
-| Claude Code | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `hooks/claude-hooks.json`, and `skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; one POSIX shell command, which needs Git Bash on Windows |
+| Codex | `.agents/plugins/marketplace.json`, `plugin/.codex-plugin/plugin.json`, `plugin/hooks/codex-hooks.json`, `plugin/hooks/codex-session-start.cmd`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; POSIX and Windows command variants are declared |
+| Claude Code | `.claude-plugin/marketplace.json`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/claude-hooks.json`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; one POSIX shell command, which needs Git Bash on Windows |
 
-Both manifests point to `./skills/`. Codex and Claude Code are supported
+Both manifests point to `./skills/` inside the installed plugin root `plugin/`.
+A catalog that selects `v0.17.0` or later installs only that subtree through a
+`git-subdir` source; earlier tags hold the plugin at the repository root. Codex and Claude Code are supported
 installation and runtime hosts from `0.15.0`; Claude Code records from
 `0.10.x` and earlier remain historical. From `0.16.0`, both hosts receive
 every bundled route. `continuous-progress` keeps each host's operations detail

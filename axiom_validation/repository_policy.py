@@ -22,6 +22,8 @@ from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, pars
 
 _BASE_REQUIRED_PUBLIC_FILES = (
     "README.md",
+    "LICENSE",
+    "plugin/LICENSE",
     ".github/CODEOWNERS",
     "docs/README.md",
     "docs/getting-started.md",
@@ -51,6 +53,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/runtime-contract-history-v1.json",
     "evidence/runtime-contract-history-v2.json",
     "evidence/runtime-contract-history-v3.json",
+    "evidence/runtime-contract-history-v4.json",
     "evidence/repository-policy-revisions-v1.json",
     "evals/README.md",
     "evals/history/codex-core-v1-v2.md",
@@ -71,6 +74,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/context-budget/README.md",
     "evals/context-budget/schema-v1.json",
     "evals/context-budget/schema-v2.json",
+    "evals/context-budget/schema-v3.json",
     f"evals/context-budget/results/v{RELEASE_VERSION}.json",
     "evals/results/v0.7.7/codex/linux.json",
     "evals/results/v0.7.7/codex/linux-recovery-1.json",
@@ -87,6 +91,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "axiom_validation/runtime-contract-inputs-v1.json",
     "axiom_validation/runtime-contract-inputs-v2.json",
     "axiom_validation/runtime-contract-inputs-v3.json",
+    "axiom_validation/runtime-contract-inputs-v4.json",
     ".github/workflows/publish-immutable-release.yml",
     ".github/workflows/create-protected-release-tag.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -143,11 +148,12 @@ GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
     "/.github/workflows/",
-    "/.codex-plugin/",
+    "/plugin/.codex-plugin/",
+    "/plugin/.claude-plugin/",
     "/.claude-plugin/",
     "/.agents/plugins/",
-    "/hooks/",
-    "/skills/using-axiom/",
+    "/plugin/hooks/",
+    "/plugin/skills/using-axiom/",
     "/scripts/",
     "/axiom_validation/",
     "/tests/",
@@ -358,7 +364,7 @@ def parse_skill_frontmatter(path: Path, failures: list[str]) -> dict[str, str] |
 
 def check_skill_contracts(failures: list[str]) -> None:
     for skill_name in EXPECTED_DIRECT_SKILLS:
-        skill_root = REPOSITORY_ROOT / "skills" / skill_name
+        skill_root = REPOSITORY_ROOT / "plugin" / "skills" / skill_name
         main_path = skill_root / "SKILL.md"
         fields = parse_skill_frontmatter(main_path, failures)
         if fields is None:
@@ -403,7 +409,7 @@ def check_skill_contracts(failures: list[str]) -> None:
                         f"{display_path(metadata_path)} default_prompt must mention ${skill_name}"
                     )
 
-    for path in sorted((REPOSITORY_ROOT / "skills").rglob("*.md")):
+    for path in sorted((REPOSITORY_ROOT / "plugin" / "skills").rglob("*.md")):
         byte_count = len(path.read_bytes())
         if byte_count >= INSTRUCTION_MAX_BYTES:
             failures.append(
@@ -411,7 +417,7 @@ def check_skill_contracts(failures: list[str]) -> None:
                 f"{INSTRUCTION_MAX_BYTES}"
             )
 
-    front_door = (REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md").read_text(
+    front_door = (REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md").read_text(
         encoding="utf-8"
     )
     route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
@@ -425,14 +431,14 @@ def check_skill_contracts(failures: list[str]) -> None:
             + ", ".join(declared_routes)
         )
 
-    architect_root = REPOSITORY_ROOT / "skills" / "agent-plugin-architect"
+    architect_root = REPOSITORY_ROOT / "plugin" / "skills" / "agent-plugin-architect"
     architect_main = architect_root / "SKILL.md"
     architect_fields = parse_skill_frontmatter(architect_main, failures)
     if architect_fields is not None and architect_fields.get(
         "description"
     ) != AGENT_PLUGIN_ARCHITECT_DESCRIPTION:
         failures.append(
-            "skills/agent-plugin-architect/SKILL.md description drifted from the "
+            "plugin/skills/agent-plugin-architect/SKILL.md description drifted from the "
             "accepted narrow route contract"
         )
     actual_references = tuple(
@@ -448,7 +454,7 @@ def check_skill_contracts(failures: list[str]) -> None:
     for reference in AGENT_PLUGIN_ARCHITECT_REFERENCES:
         if architect_text.count(reference) != 1:
             failures.append(
-                "skills/agent-plugin-architect/SKILL.md must expose exactly one direct "
+                "plugin/skills/agent-plugin-architect/SKILL.md must expose exactly one direct "
                 f"next hop for {reference!r}"
             )
     canonical_summary = (
@@ -459,7 +465,7 @@ def check_skill_contracts(failures: list[str]) -> None:
     )
     if canonical_summary not in front_door:
         failures.append(
-            "skills/using-axiom/SKILL.md is missing the accepted agent-plugin-architect "
+            "plugin/skills/using-axiom/SKILL.md is missing the accepted agent-plugin-architect "
             "route summary"
         )
 
@@ -469,7 +475,12 @@ def check_retired_installation_paths(failures: list[str], root: Path = REPOSITOR
     version = release_version(root)
     if version is not None and "claude-code" in supported_hosts(version):
         return
-    for relative in (".claude-plugin", "hooks/claude-hooks.json"):
+    for relative in (
+        ".claude-plugin",
+        "hooks/claude-hooks.json",
+        "plugin/.claude-plugin",
+        "plugin/hooks/claude-hooks.json",
+    ):
         path = root / relative
         if path.exists() or path.is_symlink():
             failures.append(f"retired Axiom installation surface must be absent: {relative}")
@@ -482,6 +493,18 @@ def check_required_files(failures: list[str]) -> None:
             failures.append(
                 f"missing required public file: {relative_path}; restore the accepted publication surface"
             )
+    check_installed_license_copy(failures)
+
+
+def check_installed_license_copy(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
+    """Keep the license notice installed with the plugin identical to the repository's."""
+    try:
+        identical = (root / "plugin" / "LICENSE").read_bytes() == (root / "LICENSE").read_bytes()
+    except OSError as error:
+        failures.append(f"cannot compare plugin/LICENSE with LICENSE: {error}")
+        return
+    if not identical:
+        failures.append("plugin/LICENSE must be a byte-identical copy of LICENSE")
 
 
 def check_repository_governance_documents(
@@ -726,9 +749,9 @@ def check_release_version_surfaces(failures: list[str]) -> None:
 
 
 def check_packaged_skills(failures: list[str]) -> None:
-    skills_root = REPOSITORY_ROOT / "skills"
+    skills_root = REPOSITORY_ROOT / "plugin" / "skills"
     if not skills_root.is_dir():
-        failures.append("missing packaged skills/ directory")
+        failures.append("missing packaged plugin/skills/ directory")
         return
 
     direct = sorted(
@@ -743,7 +766,7 @@ def check_packaged_skills(failures: list[str]) -> None:
         )
 
     expected_paths = {
-        Path("skills") / skill_name / "SKILL.md"
+        Path("plugin") / "skills" / skill_name / "SKILL.md"
         for skill_name in EXPECTED_DIRECT_SKILLS
     }
     unexpected = sorted(

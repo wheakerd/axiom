@@ -134,7 +134,7 @@ class RoutingContractTests(unittest.TestCase):
     def assert_target_source_mutations_rejected(self, scenarios):
         original_read = Path.read_text
         for name, relative, required in scenarios:
-            target = routing_contracts.REPOSITORY_ROOT / "skills" / relative
+            target = routing_contracts.REPOSITORY_ROOT / "plugin" / "skills" / relative
             original = original_read(target, encoding="utf-8")
             self.assertIn(required, original)
 

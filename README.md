@@ -101,7 +101,7 @@ Summarize the purpose of this README. Do not modify files.
 The first request should select `agents-architect`; the second should continue
 normally without another skill. Any explanation of the routing decision is
 optional and follows the
-[invocation notes](skills/using-axiom/SKILL.md#invocation-notes); a quiet
+[invocation notes](plugin/skills/using-axiom/SKILL.md#invocation-notes); a quiet
 response is valid. These are expected behaviors, not a claim that your
 installation has already reproduced them.
 

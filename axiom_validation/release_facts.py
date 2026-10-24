@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from .context import supported_hosts, RELEASE_VERSION, REPOSITORY_ROOT
-from .context_budget import context_budget_schema_version, load_json
+from .context_budget import (
+    context_budget_schema_version,
+    load_json,
+    routing_gate_surface_path,
+)
 from .release_versions import parse_production_release_version
 
 
@@ -170,7 +174,7 @@ def validate_release_facts_record(
         failures.append(f"release facts targetRelease.version must be {version!r}")
     surface = _object(document.get("surface"), "release facts surface", failures)
     if surface is not None:
-        if surface.get("path") != "skills/using-axiom/SKILL.md":
+        if surface.get("path") != routing_gate_surface_path(version):
             failures.append("release facts surface path drifted")
         if surface.get("language") != "en" or surface.get("alwaysLoaded") is not True:
             failures.append("release facts surface must remain always-loaded English Markdown")

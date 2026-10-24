@@ -378,7 +378,7 @@ def check_route_catalog(failures: list[str]) -> int:
     if document is None:
         return 0
 
-    front_door_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+    front_door_path = REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
     try:
         front_door = " ".join(front_door_path.read_text(encoding="utf-8").split()).casefold()
     except OSError as error:

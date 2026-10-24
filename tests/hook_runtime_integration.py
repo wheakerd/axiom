@@ -23,8 +23,11 @@ from pathlib import Path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-CODEX_HOOK_PATH = REPOSITORY_ROOT / "hooks" / "codex-hooks.json"
-CLAUDE_HOOK_PATH = REPOSITORY_ROOT / "hooks" / "claude-hooks.json"
+# The repository keeps the installed plugin under plugin/; the paths below are
+# relative to that plugin root, as each host resolves them after installation.
+PLUGIN_SOURCE_ROOT = REPOSITORY_ROOT / "plugin"
+CODEX_HOOK_PATH = PLUGIN_SOURCE_ROOT / "hooks" / "codex-hooks.json"
+CLAUDE_HOOK_PATH = PLUGIN_SOURCE_ROOT / "hooks" / "claude-hooks.json"
 WINDOWS_WRAPPER = Path("hooks/codex-session-start.cmd")
 SKILL_PATH = Path("skills/using-axiom/SKILL.md")
 HEADING = (
@@ -254,8 +257,8 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
         self.workspace.mkdir()
         self.home.mkdir()
 
-        self.source_skill_bytes = (REPOSITORY_ROOT / SKILL_PATH).read_bytes()
-        self.source_wrapper_bytes = (REPOSITORY_ROOT / WINDOWS_WRAPPER).read_bytes()
+        self.source_skill_bytes = (PLUGIN_SOURCE_ROOT / SKILL_PATH).read_bytes()
+        self.source_wrapper_bytes = (PLUGIN_SOURCE_ROOT / WINDOWS_WRAPPER).read_bytes()
         self.skill_bytes = self.source_skill_bytes
         self.skill_path = self.plugin_root / SKILL_PATH
         self.skill_path.parent.mkdir(parents=True)
@@ -272,11 +275,11 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
         try:
             self.assertEqual(
                 self.source_skill_bytes,
-                (REPOSITORY_ROOT / SKILL_PATH).read_bytes(),
+                (PLUGIN_SOURCE_ROOT / SKILL_PATH).read_bytes(),
             )
             self.assertEqual(
                 self.source_wrapper_bytes,
-                (REPOSITORY_ROOT / WINDOWS_WRAPPER).read_bytes(),
+                (PLUGIN_SOURCE_ROOT / WINDOWS_WRAPPER).read_bytes(),
             )
         finally:
             self.temporary.cleanup()

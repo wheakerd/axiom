@@ -11,9 +11,9 @@ action authority.
 
 ## Skill And Package Ownership
 
-Codex and Claude Code install the same shared [skills/](../../skills/) source.
-Keep the [Codex manifest](../../.codex-plugin/plugin.json) and the
-[Claude Code manifest](../../.claude-plugin/plugin.json) pointed at `./skills/`,
+Codex and Claude Code install the same shared [skills/](../../plugin/skills/) source.
+Keep the [Codex manifest](../../plugin/.codex-plugin/plugin.json) and the
+[Claude Code manifest](../../plugin/.claude-plugin/plugin.json) pointed at `./skills/`,
 with one version bound to the current runtime identity. Do not create a
 platform-specific copy of a shared Skill.
 
@@ -48,7 +48,7 @@ must not become a dependency of the installed plugin.
   host exposes exact scoped usage. Never auto-change the main model or
   reasoning settings.
 - Simple-task child model selection belongs to `delegate-simple-task`. Its
-  [activation conditions](../../skills/delegate-simple-task/SKILL.md#activation)
+  [activation conditions](../../plugin/skills/delegate-simple-task/SKILL.md#activation)
   require the active startup gate, the host's verified top reasoning level,
   and invocation consent. Preserve those conditions in route metadata, direct
   requests, and resume behavior before applying assignment permissions.
@@ -86,11 +86,11 @@ or weaken quality merely to meet a size target.
 
 ## Hook Changes
 
-Codex declares [hooks/codex-hooks.json](../../hooks/codex-hooks.json) and Claude
-Code declares [hooks/claude-hooks.json](../../hooks/claude-hooks.json). Both read
-the [startup routing gate](../../skills/using-axiom/SKILL.md) through
+Codex declares [plugin/hooks/codex-hooks.json](../../plugin/hooks/codex-hooks.json) and Claude
+Code declares [plugin/hooks/claude-hooks.json](../../plugin/hooks/claude-hooks.json). Both read
+the [startup routing gate](../../plugin/skills/using-axiom/SKILL.md) through
 `SessionStart`, including `compact` and `fork`.
-Keep the conventional `hooks/hooks.json` absent. The [Hook Reference](../reference/hooks.md)
+Keep the conventional `plugin/hooks/hooks.json` absent. The [Hook Reference](../reference/hooks.md)
 renders the canonical declarations and packaged wrappers for inspection.
 
 Review any Hook change command by command. A Hook must remain foreground-only,

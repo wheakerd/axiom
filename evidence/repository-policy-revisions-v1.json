@@ -584,6 +584,14 @@
       "sourceIssue": null,
       "summary": "Keep README to introduction, installation, updating, and first use; move the bundled-skill inventory and rename notices to a validated Skill Reference; add host, test, and Hook runtime badges.",
       "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
+    },
+    {
+      "revision": 74,
+      "recordedOn": "2026-10-24",
+      "baselineCommit": "ddb681bbb21bc529ca2ff9b7cfd8c03130d59de5",
+      "sourceIssue": null,
+      "summary": "Install only the plugin/ subtree: move manifests, Hooks, Skills, assets, and a license copy under plugin/, with runtime schema v4 and git-subdir catalogs from v0.17.0.",
+      "runtimeContractDigest": "sha256:bac55fce887cb196b68feaee7b33148deb9812164d0d9b4b2c323f4b5b608e9b"
     }
   ]
 }

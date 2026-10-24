@@ -69,7 +69,7 @@ def check_documented_hook_command_text(
         for command, labels in hook_commands(relative_path, document, failures).items():
             expected.setdefault(command, []).extend(labels)
     expected.setdefault(wrapper_text.strip(), []).append(
-        "hooks/codex-session-start.cmd"
+        "plugin/hooks/codex-session-start.cmd"
     )
 
     blocks, _ = fenced_blocks_and_masked_text(text)

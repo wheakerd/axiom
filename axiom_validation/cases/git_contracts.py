@@ -24,7 +24,7 @@ from .evidence import check_strict_evidence_gate
 
 
 def check_traceable_security_contracts(failures: list[str]) -> int:
-    skill_root = REPOSITORY_ROOT / "skills" / "traceable-git-submit"
+    skill_root = REPOSITORY_ROOT / "plugin" / "skills" / "traceable-git-submit"
     required_anchors = {
         "SKILL.md": (
             "references/direct-submit.md",
@@ -313,9 +313,9 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         failures,
         "lightweight direct-submit",
     )
-    using_axiom_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+    using_axiom_path = REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
     require_ordered_contract_anchors(
-        REPOSITORY_ROOT / "skills" / "confirm-external-action" / "SKILL.md",
+        REPOSITORY_ROOT / "plugin" / "skills" / "confirm-external-action" / "SKILL.md",
         (
             "Keep ordinary Git host-native; select `traceable-git-submit` only under `../using-axiom/SKILL.md`",
             "Persistent install, deployment, migration, promotion, retention, service, or data risk belongs to `reversible-system-change`",

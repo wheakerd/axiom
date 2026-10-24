@@ -21,17 +21,28 @@ def context_budget_schema_version(version: str) -> str:
 
     Both startup Hooks match the fork source from 0.16.0, so those records use
     schema v2 with a forked-session scenario; earlier records keep schema v1.
+    From 0.17.0 the routing gate is installed from the plugin/ subtree, so schema
+    v3 binds that path with the same lifecycle matrix.
     """
     parsed = parse_production_release_version(version)
+    if parsed is not None and parsed >= parse_production_release_version("0.17.0"):
+        return "3"
     fork_since = parse_production_release_version("0.16.0")
     return "2" if parsed is not None and parsed >= fork_since else "1"
+
+
+def routing_gate_surface_path(version: str) -> str:
+    """Return the routing-gate path that the release's record schema binds."""
+    if context_budget_schema_version(version) == "3":
+        return "plugin/skills/using-axiom/SKILL.md"
+    return "skills/using-axiom/SKILL.md"
 
 
 CONTEXT_BUDGET_SCHEMA_VERSION = context_budget_schema_version(RELEASE_VERSION)
 CONTEXT_BUDGET_SCHEMA = CONTEXT_BUDGET_ROOT / f"schema-v{CONTEXT_BUDGET_SCHEMA_VERSION}.json"
 CONTEXT_BUDGET_RESULTS = CONTEXT_BUDGET_ROOT / "results"
 CONTEXT_BUDGET_RECORD = CONTEXT_BUDGET_RESULTS / f"v{RELEASE_VERSION}.json"
-ROUTING_GATE_PATH = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+ROUTING_GATE_PATH = REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
 ROUTING_CORPUS_ROOT = REPOSITORY_ROOT / "evals" / "routing"
 MAX_JSON_BYTES = 256 * 1024
 DIRECT_REFERENCE_PATTERN = re.compile(r"(?<![A-Za-z0-9_.-])references/[A-Za-z0-9._/-]+\.md")
@@ -171,9 +182,9 @@ FORK_SCENARIO = (
     1,
 )
 EXPECTED_SCENARIOS = (
-    SCHEMA_V1_SCENARIOS + (FORK_SCENARIO,)
-    if CONTEXT_BUDGET_SCHEMA_VERSION == "2"
-    else SCHEMA_V1_SCENARIOS
+    SCHEMA_V1_SCENARIOS
+    if CONTEXT_BUDGET_SCHEMA_VERSION == "1"
+    else SCHEMA_V1_SCENARIOS + (FORK_SCENARIO,)
 )
 
 TOP_LEVEL_KEYS = frozenset(
@@ -743,7 +754,7 @@ def check_context_budget(failures: list[str]) -> int:
         failures,
     )
     if surface is not None and surface != {
-        "path": "skills/using-axiom/SKILL.md",
+        "path": routing_gate_surface_path(RELEASE_VERSION),
         "language": "en",
         "alwaysLoaded": True,
     }:
@@ -804,7 +815,7 @@ def check_context_budget(failures: list[str]) -> int:
         current_sha256 = hashlib.sha256(ROUTING_GATE_PATH.read_bytes()).hexdigest()
         current_metrics = measure_markdown(ROUTING_GATE_PATH)
     except (OSError, UnicodeError, ValueError) as error:
-        failures.append(f"cannot measure skills/using-axiom/SKILL.md: {error}")
+        failures.append(f"cannot measure plugin/skills/using-axiom/SKILL.md: {error}")
         current_sha256 = ""
         current_metrics = None
     if current_metrics is not None and current_metrics["utf8Bytes"] > ROUTING_GATE_MAX_BYTES:
@@ -814,7 +825,7 @@ def check_context_budget(failures: list[str]) -> int:
         )
     if candidate is not None:
         if candidate.get("sha256") != current_sha256:
-            failures.append("candidate.sha256 does not match skills/using-axiom/SKILL.md")
+            failures.append("candidate.sha256 does not match plugin/skills/using-axiom/SKILL.md")
         candidate_metrics = _check_metric_shape(
             candidate.get("metrics"), "candidate.metrics", failures
         )

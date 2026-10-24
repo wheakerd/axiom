@@ -9,6 +9,20 @@
       "commit": "690e3f3ffd2c935863a2b32ac127d4068572b93d",
       "runtimeContractDigest": "sha256:51e3373b286506fa71df638b04efacae34fd0979498f8c5a5adb4e2ddc115bec",
       "derivation": "derived-from-immutable-tag-with-schema-v3"
+    },
+    {
+      "pluginVersion": "0.15.0",
+      "tag": "v0.15.0",
+      "commit": "ebc08dfd5bb972ae8f54a86bb3d2eb9d8c348824",
+      "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868",
+      "derivation": "derived-from-immutable-tag-with-schema-v3"
+    },
+    {
+      "pluginVersion": "0.16.0",
+      "tag": "v0.16.0",
+      "commit": "d9ba9d4e7f2cbeb119de1c4328964d74c6a935a2",
+      "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910",
+      "derivation": "derived-from-immutable-tag-with-schema-v3"
     }
   ],
   "characterizations": []

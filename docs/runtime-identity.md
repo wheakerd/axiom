@@ -8,17 +8,17 @@ renders the current identity and explains how to interpret it.
 ## Current Identity
 
 <!-- runtime-identity:current:start -->
-- `pluginVersion`: `0.16.0`
-- `repositoryPolicyRevision`: `73`
-- `runtimeContractDigest` (schema v3): `sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910`
-- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v3.json`](../axiom_validation/runtime-contract-inputs-v3.json)
+- `pluginVersion`: `0.17.0`
+- `repositoryPolicyRevision`: `74`
+- `runtimeContractDigest` (schema v4): `sha256:bac55fce887cb196b68feaee7b33148deb9812164d0d9b4b2c323f4b5b608e9b`
+- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v4.json`](../axiom_validation/runtime-contract-inputs-v4.json)
 <!-- runtime-identity:current:end -->
 
 ## Identity Fields
 
 | Field | Meaning | Canonical source |
 | --- | --- | --- |
-| `pluginVersion` | Installed package version; a candidate label does not prove publication | [Codex manifest](../.codex-plugin/plugin.json) |
+| `pluginVersion` | Installed package version; a candidate label does not prove publication | [Codex manifest](../plugin/.codex-plugin/plugin.json) |
 | `repositoryPolicyRevision` | Contiguous, append-only repository policy history | [Policy ledger](../evidence/repository-policy-revisions-v1.json) |
 | `runtimeContractDigest` | Digest of classified installed behavior inputs under a named schema | [Runtime identity](../evidence/runtime-identity.json) |
 | Release and host status | Immutable binding and observed compatibility, independently of version labels | [Release status](../evidence/release-status.json) |
@@ -30,16 +30,17 @@ requests may use `null`.
 
 ## Current Runtime Contract
 
-The [schema v3 input policy](../axiom_validation/runtime-contract-inputs-v3.json)
-classifies the current Codex and Claude Code package. It includes every file
-under `skills/` and `hooks/`, the Codex manifest's `name`, `skills`, `hooks`,
-`interface.capabilities`, and `interface.defaultPrompt` fields, and the Claude
-Code manifest's `name`, `skills`, and `hooks` fields.
+The [schema v4 input policy](../axiom_validation/runtime-contract-inputs-v4.json)
+classifies the installed `plugin/` subtree for both hosts. It includes every
+file under `plugin/skills/` and `plugin/hooks/`, the Codex manifest's `name`,
+`skills`, `hooks`, `interface.capabilities`, and `interface.defaultPrompt`
+fields, and the Claude Code manifest's `name`, `skills`, and `hooks` fields.
 
 The policy excludes manifest versions, publisher and presentation fields, the
-Codex marketplace wrapper, and branding assets used only by excluded
-presentation fields. The Claude Code marketplace file lies outside the
-installed surface. These exclusions distinguish distribution and presentation from loaded
+license copy, and branding assets used only by excluded presentation fields.
+Both marketplace catalogs lie outside the installed subtree. Schema v3 keeps
+classifying releases before `0.17.0`, whose plugin root was the repository
+root. These exclusions distinguish distribution and presentation from loaded
 behavior; they do not exempt those files from package validation.
 
 Future behavior-bearing assets, MCP or app declarations, settings, executables,

@@ -131,7 +131,7 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "true server-side prevention still depends on a GitHub tag ruleset",
             "async function readJsonAtCommit(path, commitSha)",
             "async function packageVersionAtCommit(commitSha)",
-            '".codex-plugin/plugin.json"',
+            '"plugin/.codex-plugin/plugin.json"',
             "!productionReleaseVersion.test(version)",
             "async function peelRefToCommit(qualifiedRef, expectedObjectSha = null)",
             "object.sha !== expectedObjectSha",

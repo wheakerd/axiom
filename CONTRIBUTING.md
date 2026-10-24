@@ -16,16 +16,18 @@ the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 | Path | Ownership |
 | --- | --- |
-| [skills/](skills/) | Skill source shared by both hosts, with supporting resources loaded on demand |
-| [.codex-plugin/plugin.json](.codex-plugin/plugin.json) | Codex plugin manifest |
+| [plugin/](plugin/) | Installed plugin root that both hosts copy |
+| [plugin/skills/](plugin/skills/) | Skill source shared by both hosts, with supporting resources loaded on demand |
+| [plugin/.codex-plugin/plugin.json](plugin/.codex-plugin/plugin.json) | Codex plugin manifest |
+| [plugin/.claude-plugin/plugin.json](plugin/.claude-plugin/plugin.json) | Claude Code plugin manifest |
+| [plugin/hooks/](plugin/hooks/) | Codex and Claude Code startup Hook declarations and packaged wrappers |
+| [plugin/assets/](plugin/assets/) | Codex plugin interface artwork |
 | [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) | Codex marketplace wrapper |
-| [.claude-plugin/](.claude-plugin/) | Claude Code plugin manifest and marketplace catalog |
-| [hooks/](hooks/) | Codex and Claude Code startup Hook declarations and packaged wrappers |
+| [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) | Claude Code marketplace catalog |
 | [README.md](README.md) | Product landing page and safe-start entry point |
 | [CHANGELOG.md](CHANGELOG.md) | User-visible changes, impact, and required action |
 | [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Private vulnerability reporting and community conduct |
-| [LICENSE](LICENSE) | MIT license |
-| [assets/](assets/) | Codex plugin interface artwork |
+| [LICENSE](LICENSE) | MIT license; `plugin/LICENSE` is a byte-identical copy that installs with the plugin |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
 | [evidence/](evidence/) | Current identity and status, policy ledger, compatibility schemas, and runtime digest histories |
 | [evals/](evals/README.md) | Versioned routing contracts, context budgets, and separately labeled host observations |
@@ -34,8 +36,9 @@ the [Code of Conduct](CODE_OF_CONDUCT.md).
 | [scripts/](scripts/) | Stable validation entrypoints |
 | [.github/](.github/) | CI workflows, Issue forms, pull-request template, and code owners |
 
-Top-level Skills include the `using-axiom` startup gate and the workflows it
-selects. A Skill's supporting references and agent resources are not separate
+Hosts install only `plugin/`; the rest of the repository supports development,
+validation, and release. Top-level Skills include the `using-axiom` startup gate
+and the workflows it selects. A Skill's supporting references and agent resources are not separate
 public routes. Repository validators, tests, and CI are contributor tooling;
 they are not installed plugin dependencies or proof of host behavior.
 

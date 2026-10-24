@@ -133,24 +133,67 @@ class ManifestPolicyTests(unittest.TestCase):
         check_manifest_versions(documents, failures)
         self.assertEqual([], failures)
 
+    def test_catalog_source_matches_the_selected_release_layout(self):
+        codex = ".agents/plugins/marketplace.json"
+        subtree = {
+            codex: {
+                "source": "git-subdir",
+                "url": "https://github.com/wheakerd/axiom.git",
+                "path": "./plugin",
+                "ref": "v0.17.0",
+            },
+            CLAUDE_MARKETPLACE_RELATIVE: {
+                "source": "git-subdir",
+                "url": "https://github.com/wheakerd/axiom.git",
+                "path": "plugin",
+                "ref": "v0.17.0",
+            },
+        }
+
+        def subtree_documents():
+            documents = self.documents()
+            for relative, source in subtree.items():
+                documents[relative]["plugins"][0]["source"] = dict(source)
+            return documents
+
+        failures = []
+        check_manifest_capability_schema(subtree_documents(), failures)
+        self.assertEqual([], failures)
+        rejected = (
+            ("root url after the subtree", {"source": "url", "ref": "v0.17.0"}, "must use git-subdir"),
+            ("subtree before it existed", {"ref": "v0.16.0"}, "must use url for releases before"),
+            ("wrong subtree path", {"path": "plugin"}, "must use git-subdir with path './plugin'"),
+        )
+        for label, change, expected in rejected:
+            with self.subTest(label=label):
+                documents = subtree_documents()
+                source = documents[codex]["plugins"][0]["source"]
+                source.update(change)
+                if source["source"] == "url":
+                    source.pop("path")
+                documents[CLAUDE_MARKETPLACE_RELATIVE]["plugins"][0]["source"]["ref"] = source["ref"]
+                failures = []
+                check_manifest_capability_schema(documents, failures)
+                self.assertTrue(any(expected in failure for failure in failures), failures)
+
     def test_required_catalogs_and_independent_manifest_identity(self):
         self.assertIn(CLAUDE_MARKETPLACE_RELATIVE, JSON_FILES)
         self.assertIn(".agents/plugins/marketplace.json", JSON_FILES)
         documents = self.documents()
-        del documents[".claude-plugin/plugin.json"]
-        documents[".codex-plugin/plugin.json"]["interface"]["displayName"] = "Other"
+        del documents["plugin/.claude-plugin/plugin.json"]
+        documents["plugin/.codex-plugin/plugin.json"]["interface"]["displayName"] = "Other"
         failures = []
         check_distribution_identity(documents, failures)
         self.assertTrue(any("interface.displayName" in failure for failure in failures), failures)
         documents = self.documents()
-        del documents[".codex-plugin/plugin.json"]
+        del documents["plugin/.codex-plugin/plugin.json"]
         failures = []
         check_distribution_identity(documents, failures)
         self.assertEqual([], failures)
 
     def test_official_prompt_scalar_shape_is_accepted_but_is_not_checked_in_contract(self):
         documents = copy.deepcopy(self.documents())
-        documents[".codex-plugin/plugin.json"]["interface"]["defaultPrompt"] = (
+        documents["plugin/.codex-plugin/plugin.json"]["interface"]["defaultPrompt"] = (
             EXPECTED_CODEX_DEFAULT_PROMPTS[0]
         )
 
@@ -164,7 +207,7 @@ class ManifestPolicyTests(unittest.TestCase):
 
     def test_exact_current_interface_values_are_closed(self):
         documents = copy.deepcopy(self.documents())
-        documents[".codex-plugin/plugin.json"]["interface"]["brandColor"] = "#000000"
+        documents["plugin/.codex-plugin/plugin.json"]["interface"]["brandColor"] = "#000000"
 
         schema_failures = []
         check_manifest_capability_schema(documents, schema_failures)

@@ -95,7 +95,7 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
             failures.append(f"{HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH} digest drifted")
 
     installed_routes = {
-        path.parent.name for path in (root / "skills").glob("*/SKILL.md")
+        path.parent.name for path in (root / "plugin" / "skills").glob("*/SKILL.md")
         if path.parent.name != "using-axiom"
     }
     if installed_routes != set(CURRENT_PUBLIC_ROUTES):

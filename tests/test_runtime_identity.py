@@ -64,7 +64,9 @@ class RuntimeIdentityTests(unittest.TestCase):
             "evidence/runtime-contract-history-v1.json",
             "evidence/runtime-contract-history-v2.json",
             "evidence/runtime-contract-history-v3.json",
+            "evidence/runtime-contract-history-v4.json",
             "axiom_validation/runtime-contract-inputs-v1.json",
+            "axiom_validation/runtime-contract-inputs-v3.json",
             V2_INPUT_MANIFEST_RELATIVE,
             "evidence/repository-policy-revisions-v1.json",
             *RUNTIME_IDENTITY_SURFACES,
@@ -98,16 +100,16 @@ class RuntimeIdentityTests(unittest.TestCase):
     def test_each_installed_behavior_class_changes_the_digest(self):
         mutations = {
             "skill": lambda root: self.append_text(
-                root / "skills/agents-architect/SKILL.md", "\nChanged skill contract.\n"
+                root / "plugin/skills/agents-architect/SKILL.md", "\nChanged skill contract.\n"
             ),
             "hook": lambda root: self.append_text(
-                root / "hooks/codex-hooks.json", "\n"
+                root / "plugin/hooks/codex-hooks.json", "\n"
             ),
             "wrapper": lambda root: self.append_text(
-                root / "hooks/codex-session-start.cmd", "\nrem changed wrapper\n"
+                root / "plugin/hooks/codex-session-start.cmd", "\nrem changed wrapper\n"
             ),
             "route-boundary": lambda root: self.append_text(
-                root / "skills/using-axiom/SKILL.md", "\nChanged route boundary.\n"
+                root / "plugin/skills/using-axiom/SKILL.md", "\nChanged route boundary.\n"
             ),
             "manifest-field": self.change_manifest_behavior,
         }
@@ -271,7 +273,7 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.copy_installed_surfaces(root)
             baseline, failures = self.compute(root)
             self.assertEqual([], failures)
-            path = root / "skills/using-axiom/SKILL.md"
+            path = root / "plugin/skills/using-axiom/SKILL.md"
             text = path.read_text(encoding="utf-8")
             path.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
             windows_checkout, windows_failures = self.compute(root)
@@ -371,7 +373,7 @@ class RuntimeIdentityTests(unittest.TestCase):
 
     def test_missing_duplicate_unordered_escaping_symlink_and_unclassified_inputs_fail(self):
         fixtures = (
-            ("missing", self.remove_hook_tree, "cannot inspect hooks"),
+            ("missing", self.remove_hook_tree, "cannot inspect plugin/hooks"),
             ("duplicate", self.duplicate_input, "inputs paths must be unique"),
             ("unordered", self.reverse_inputs, "inputs must be ordered by path"),
             ("escaping", self.escape_input, "traversal segments"),
@@ -398,7 +400,7 @@ class RuntimeIdentityTests(unittest.TestCase):
 
     @staticmethod
     def change_manifest_behavior(root: Path) -> None:
-        path = root / ".codex-plugin/plugin.json"
+        path = root / "plugin/.codex-plugin/plugin.json"
         document = json.loads(path.read_text(encoding="utf-8"))
         document["interface"]["defaultPrompt"][0] += " Review runtime identity."
         path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
@@ -406,7 +408,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     @staticmethod
     def remove_hook_tree(root: Path, manifest: dict) -> None:
         del manifest
-        shutil.rmtree(root / "hooks")
+        shutil.rmtree(root / "plugin" / "hooks")
 
     @staticmethod
     def duplicate_input(root: Path, manifest: dict) -> None:
@@ -426,7 +428,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     @staticmethod
     def symlink_input(root: Path, manifest: dict) -> None:
         del manifest
-        path = root / "skills/using-axiom/SKILL.md"
+        path = root / "plugin/skills/using-axiom/SKILL.md"
         target = root / "outside-skill.md"
         target.write_text("outside\n", encoding="utf-8")
         path.unlink()
@@ -440,7 +442,7 @@ class RuntimeIdentityTests(unittest.TestCase):
     @staticmethod
     def add_unclassified_surface(root: Path, manifest: dict) -> None:
         del manifest
-        (root / ".codex-plugin/unclassified.json").write_text("{}\n", encoding="utf-8")
+        (root / "plugin/.codex-plugin/unclassified.json").write_text("{}\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

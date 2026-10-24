@@ -18,20 +18,20 @@ from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
 from .release_versions import parse_production_release_tag, parse_production_release_version
 
 JSON_FILES = (
-    ".codex-plugin/plugin.json",
+    "plugin/.codex-plugin/plugin.json",
     ".agents/plugins/marketplace.json",
-    "hooks/codex-hooks.json",
-    ".claude-plugin/plugin.json",
+    "plugin/hooks/codex-hooks.json",
+    "plugin/.claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
-    "hooks/claude-hooks.json",
+    "plugin/hooks/claude-hooks.json",
 )
 MANIFEST_FILES = (
-    ".codex-plugin/plugin.json",
-    ".claude-plugin/plugin.json",
+    "plugin/.codex-plugin/plugin.json",
+    "plugin/.claude-plugin/plugin.json",
 )
 EXPECTED_HOOK_DECLARATIONS = {
-    ".codex-plugin/plugin.json": "./hooks/codex-hooks.json",
-    ".claude-plugin/plugin.json": "./hooks/claude-hooks.json",
+    "plugin/.codex-plugin/plugin.json": "./hooks/codex-hooks.json",
+    "plugin/.claude-plugin/plugin.json": "./hooks/claude-hooks.json",
 }
 CLAUDE_MARKETPLACE_RELATIVE = ".claude-plugin/marketplace.json"
 EXPECTED_SKILLS_ROOT = "./skills/"
@@ -728,7 +728,7 @@ def check_branding_image_file(path: Path, label: str, failures: list[str]) -> No
 def check_codex_listing_contract(
     interface: dict[str, Any], repository_root: Path, failures: list[str]
 ) -> None:
-    label = ".codex-plugin/plugin.json.interface"
+    label = "plugin/.codex-plugin/plugin.json.interface"
     validate_single_line_text(
         interface.get("displayName"),
         f"{label}.displayName",
@@ -794,7 +794,9 @@ def check_codex_listing_contract(
     validated_paths: set[Path] = set()
     for field in ("composerIcon", "logo"):
         asset_label = f"{label}.{field}"
-        path = resolve_declared_asset(repository_root, interface.get(field), asset_label, failures)
+        path = resolve_declared_asset(
+            repository_root / "plugin", interface.get(field), asset_label, failures
+        )
         if path is not None and path not in validated_paths:
             check_branding_image_file(path, asset_label, failures)
             validated_paths.add(path)
@@ -819,7 +821,7 @@ def check_manifest_capability_schema(
     repository_root: Path = REPOSITORY_ROOT,
 ) -> None:
     """Reject every manifest capability not owned by Axiom's current package contract."""
-    codex_path = ".codex-plugin/plugin.json"
+    codex_path = "plugin/.codex-plugin/plugin.json"
     codex = documents.get(codex_path)
     if codex is not None:
         exact_json_object(codex, codex_path, CODEX_MANIFEST_KEYS, failures)
@@ -900,21 +902,22 @@ def check_manifest_capability_schema(
                 f"{codex_marketplace_path}.plugins[0]",
                 failures,
             )
+            source_keys = catalog_source_keys(entry.get("source"))
             source = exact_json_object(
                 entry.get("source"),
                 f"{codex_marketplace_path}.plugins[0].source",
-                frozenset({"source", "url", "ref"}),
+                source_keys,
                 failures,
             )
             if source is not None:
                 require_json_strings(
                     source,
-                    frozenset({"source", "url", "ref"}),
+                    source_keys,
                     f"{codex_marketplace_path}.plugins[0].source",
                     failures,
                 )
                 if (
-                    source.get("source") != "url"
+                    source.get("source") not in CATALOG_SOURCE_TYPES
                     or source.get("url") != EXPECTED_PLUGIN_REPOSITORY
                     or parse_production_release_tag(source.get("ref")) is None
                 ):
@@ -922,6 +925,8 @@ def check_manifest_capability_schema(
                         f"{codex_marketplace_path}.plugins[0].source must remain the "
                         "owned Git repository at an immutable production release tag"
                     )
+                elif (layout := catalog_layout_failure(source, "codex")) is not None:
+                    failures.append(f"{codex_marketplace_path}.plugins[0].source {layout}")
             policy = exact_json_object(
                 entry.get("policy"),
                 f"{codex_marketplace_path}.plugins[0].policy",
@@ -941,7 +946,7 @@ def check_manifest_capability_schema(
                         "owned install policy"
                     )
 
-    claude_path = ".claude-plugin/plugin.json"
+    claude_path = "plugin/.claude-plugin/plugin.json"
     claude = documents.get(claude_path)
     if claude is not None:
         exact_json_object(claude, claude_path, CLAUDE_MANIFEST_KEYS, failures)
@@ -959,6 +964,41 @@ def check_manifest_capability_schema(
         require_json_string_list(claude.get("keywords"), f"{claude_path}.keywords", failures)
 
     check_claude_marketplace(documents, failures, repository_root)
+
+
+
+# From v0.17.0 each catalog installs only the plugin/ subtree of the tagged
+# release; earlier tags keep the repository root as the plugin root.
+PLUGIN_SUBTREE_FIRST_TAG = "v0.17.0"
+CATALOG_SUBTREE_PATHS = {"codex": "./plugin", "claude-code": "plugin"}
+CATALOG_SOURCE_TYPES = frozenset({"url", "git-subdir"})
+
+
+def catalog_source_keys(source: Any) -> frozenset[str]:
+    """Return the exact key set of a catalog plugin source for its type."""
+    if isinstance(source, dict) and source.get("source") == "git-subdir":
+        return frozenset({"source", "url", "path", "ref"})
+    return frozenset({"source", "url", "ref"})
+
+
+def catalog_layout_failure(source: dict[str, Any], host: str) -> str | None:
+    """Require the source shape that matches the selected release's plugin root."""
+    if parse_production_release_tag(source["ref"]) >= parse_production_release_tag(
+        PLUGIN_SUBTREE_FIRST_TAG
+    ):
+        expected = CATALOG_SUBTREE_PATHS[host]
+        if source.get("source") != "git-subdir" or source.get("path") != expected:
+            return (
+                f"must use git-subdir with path {expected!r} for "
+                f"{PLUGIN_SUBTREE_FIRST_TAG} and later releases"
+            )
+        return None
+    if source.get("source") != "url":
+        return (
+            f"must use url for releases before {PLUGIN_SUBTREE_FIRST_TAG}, whose "
+            "plugin root is the repository root"
+        )
+    return None
 
 
 def check_claude_marketplace(
@@ -991,13 +1031,13 @@ def check_claude_marketplace(
     source = exact_json_object(
         entry.get("source"),
         f"{label}.plugins[0].source",
-        frozenset({"source", "url", "ref"}),
+        catalog_source_keys(entry.get("source")),
         failures,
     )
     if source is None:
         return
     if (
-        source.get("source") != "url"
+        source.get("source") not in CATALOG_SOURCE_TYPES
         or source.get("url") != EXPECTED_PLUGIN_REPOSITORY
         or parse_production_release_tag(source.get("ref")) is None
     ):
@@ -1005,6 +1045,10 @@ def check_claude_marketplace(
             f"{label}.plugins[0].source must be the owned Git repository at an "
             "immutable production release tag"
         )
+        return
+    layout = catalog_layout_failure(source, "claude-code")
+    if layout is not None:
+        failures.append(f"{label}.plugins[0].source {layout}")
         return
     codex = documents.get(".agents/plugins/marketplace.json")
     codex_entry = None
@@ -1054,7 +1098,7 @@ def check_manifest_versions(
 def check_codex_interface(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> None:
-    relative_path = ".codex-plugin/plugin.json"
+    relative_path = "plugin/.codex-plugin/plugin.json"
     document = documents.get(relative_path)
     if document is None:
         return
@@ -1092,7 +1136,7 @@ def marketplace_plugin(
 def check_distribution_identity(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> None:
-    codex_manifest_path = ".codex-plugin/plugin.json"
+    codex_manifest_path = "plugin/.codex-plugin/plugin.json"
     codex_manifest = documents.get(codex_manifest_path)
     if codex_manifest is not None:
         if codex_manifest.get("name") != EXPECTED_PLUGIN_NAME:
@@ -1109,7 +1153,7 @@ def check_distribution_identity(
                 failures.append(
                     f"{codex_manifest_path} interface.category must be {EXPECTED_CODEX_CATEGORY!r}"
                 )
-    claude_manifest_path = ".claude-plugin/plugin.json"
+    claude_manifest_path = "plugin/.claude-plugin/plugin.json"
     claude_manifest = documents.get(claude_manifest_path)
     if claude_manifest is not None:
         if claude_manifest.get("name") != EXPECTED_PLUGIN_NAME:

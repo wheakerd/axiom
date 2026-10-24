@@ -25,6 +25,7 @@ from axiom_validation.runtime_identity import (  # noqa: E402
     HISTORY_RELATIVE,
     LEGACY_HISTORY_RELATIVE,
     V2_HISTORY_RELATIVE,
+    V3_HISTORY_RELATIVE,
     check_runtime_identity,
 )
 
@@ -39,11 +40,12 @@ RUNTIME_IDENTITY_PATH = EVIDENCE_ROOT / "runtime-identity.json"
 RUNTIME_HISTORY_PATHS = {
     "1": REPOSITORY_ROOT / LEGACY_HISTORY_RELATIVE,
     "2": REPOSITORY_ROOT / V2_HISTORY_RELATIVE,
-    "3": REPOSITORY_ROOT / HISTORY_RELATIVE,
+    "3": REPOSITORY_ROOT / V3_HISTORY_RELATIVE,
+    "4": REPOSITORY_ROOT / HISTORY_RELATIVE,
 }
 POLICY_REVISIONS_PATH = EVIDENCE_ROOT / "repository-policy-revisions-v1.json"
 MANIFEST_PATHS = (
-    REPOSITORY_ROOT / ".codex-plugin" / "plugin.json",
+    REPOSITORY_ROOT / "plugin" / ".codex-plugin" / "plugin.json",
 )
 MAX_JSON_BYTES = 256 * 1024
 MAX_JSON_DEPTH = 64

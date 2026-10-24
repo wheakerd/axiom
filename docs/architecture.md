@@ -23,14 +23,15 @@ flowchart TD
 
 | Source | Responsibility |
 | --- | --- |
-| [Codex manifest](../.codex-plugin/plugin.json) | Codex plugin identity, `./skills/`, and explicit hook path |
+| [Installed plugin root](../plugin/) | The only subtree a host installs: manifests, Hooks, Skills, artwork, and a license copy |
+| [Codex manifest](../plugin/.codex-plugin/plugin.json) | Codex plugin identity, `./skills/`, and explicit hook path |
 | [Codex marketplace descriptor](../.agents/plugins/marketplace.json) | Codex installation and catalog metadata for this repository root |
-| [Codex hook definition](../hooks/codex-hooks.json) | Codex `SessionStart` handler for `startup`, `resume`, `clear`, `compact`, and `fork` |
-| [Claude Code manifest](../.claude-plugin/plugin.json) | Claude Code plugin identity, `./skills/`, and hook path |
+| [Codex hook definition](../plugin/hooks/codex-hooks.json) | Codex `SessionStart` handler for `startup`, `resume`, `clear`, `compact`, and `fork` |
+| [Claude Code manifest](../plugin/.claude-plugin/plugin.json) | Claude Code plugin identity, `./skills/`, and hook path |
 | [Claude Code catalog](../.claude-plugin/marketplace.json) | Claude Code installation and catalog metadata for this repository |
-| [Claude Code hook definition](../hooks/claude-hooks.json) | Claude Code `SessionStart` handler for the same five sources |
-| [Routing gate](../skills/using-axiom/SKILL.md) | Request matching, route ownership, composition, and no-match continuation |
-| [Packaged Skills](../skills/) | Direct public entries with parent-owned references and optional agent metadata |
+| [Claude Code hook definition](../plugin/hooks/claude-hooks.json) | Claude Code `SessionStart` handler for the same five sources |
+| [Routing gate](../plugin/skills/using-axiom/SKILL.md) | Request matching, route ownership, composition, and no-match continuation |
+| [Packaged Skills](../plugin/skills/) | Direct public entries with parent-owned references and optional agent metadata |
 
 Each hook prints a loading message and reads the gate using the host-provided
 plugin root. Its bounded foreground command performs no writes, network
@@ -59,7 +60,7 @@ execution location, including a fallback from cloud search. Select
 
 ## Workflow Ownership
 
-The [Skill sources](../skills/) and [routing gate](../skills/using-axiom/SKILL.md)
+The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using-axiom/SKILL.md)
 are canonical. This table summarizes responsibilities; concrete requests and
 controls are in [Examples](examples.md).
 
@@ -99,7 +100,7 @@ external effect selects both `reversible-system-change` and
 Publishing an already-prepared artifact alone selects the external-action owner.
 
 Machine-credential work uses one shared
-[lifecycle reference](../skills/using-axiom/references/credential-lifecycle.md).
+[lifecycle reference](../plugin/skills/using-axiom/references/credential-lifecycle.md).
 Metadata inventory and persistent consumer activation belong to the reversible
 owner; provider creation, revocation, and disclosure belong to the external
 owner. An end-to-end rotation needs both. Generic authentication help and human

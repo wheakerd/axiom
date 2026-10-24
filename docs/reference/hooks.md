@@ -10,9 +10,9 @@ compaction. Compare the installed copy before the plugin loads. In either host,
 `/hooks` shows the loaded definition.
 
 The canonical sources are
-[`hooks/codex-hooks.json`](../../hooks/codex-hooks.json), the packaged
-[`hooks/codex-session-start.cmd`](../../hooks/codex-session-start.cmd) wrapper,
-and [`hooks/claude-hooks.json`](../../hooks/claude-hooks.json).
+[`plugin/hooks/codex-hooks.json`](../../plugin/hooks/codex-hooks.json), the packaged
+[`plugin/hooks/codex-session-start.cmd`](../../plugin/hooks/codex-session-start.cmd) wrapper,
+and [`plugin/hooks/claude-hooks.json`](../../plugin/hooks/claude-hooks.json).
 This page is a human-readable rendering. The publication validator compares
 every command block below with those sources.
 
