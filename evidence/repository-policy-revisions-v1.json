@@ -592,6 +592,14 @@
       "sourceIssue": null,
       "summary": "Install only the plugin/ subtree: move manifests, Hooks, Skills, assets, and a license copy under plugin/, with runtime schema v4 and git-subdir catalogs from v0.17.0.",
       "runtimeContractDigest": "sha256:bac55fce887cb196b68feaee7b33148deb9812164d0d9b4b2c323f4b5b608e9b"
+    },
+    {
+      "revision": 75,
+      "recordedOn": "2026-10-24",
+      "baselineCommit": "e6bf65fbcf224712e51f952b5ef648be1eee37a1",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.17.0 through git-subdir sources for the plugin/ subtree.",
+      "runtimeContractDigest": "sha256:bac55fce887cb196b68feaee7b33148deb9812164d0d9b4b2c323f4b5b608e9b"
     }
   ]
 }

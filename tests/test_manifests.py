@@ -126,8 +126,12 @@ class ManifestPolicyTests(unittest.TestCase):
 
     def test_catalog_can_retain_a_published_version_during_development(self):
         documents = self.documents()
-        documents[".agents/plugins/marketplace.json"]["plugins"][0]["source"]["ref"] = "v0.13.4"
-        documents[CLAUDE_MARKETPLACE_RELATIVE]["plugins"][0]["source"]["ref"] = "v0.13.4"
+        for relative in (".agents/plugins/marketplace.json", CLAUDE_MARKETPLACE_RELATIVE):
+            documents[relative]["plugins"][0]["source"] = {
+                "source": "url",
+                "url": "https://github.com/wheakerd/axiom.git",
+                "ref": "v0.13.4",
+            }
         failures = []
         check_manifest_capability_schema(documents, failures)
         check_manifest_versions(documents, failures)
