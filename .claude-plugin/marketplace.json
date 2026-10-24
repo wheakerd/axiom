@@ -9,9 +9,10 @@
     {
       "name": "axiom",
       "source": {
-        "source": "url",
+        "source": "git-subdir",
         "url": "https://github.com/wheakerd/axiom.git",
-        "ref": "v0.16.0"
+        "path": "plugin",
+        "ref": "v0.17.0"
       },
       "description": "Think before AI thinks.",
       "category": "productivity"
