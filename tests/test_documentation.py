@@ -15,7 +15,7 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.documentation import (
     check_documentation,
     check_lifecycle_text,
-    check_readme_skill_inventory_text,
+    check_skill_reference_inventory_text,
     check_task_navigation_text,
     is_current_document,
 )
@@ -26,9 +26,9 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         report = check_documentation(failures)
         self.assertEqual([], failures)
-        self.assertEqual(148, report.markdown_count)
-        self.assertEqual(23, report.current_document_count)
-        self.assertEqual(17, report.indexed_document_count)
+        self.assertEqual(149, report.markdown_count)
+        self.assertEqual(24, report.current_document_count)
+        self.assertEqual(18, report.indexed_document_count)
         self.assertEqual(37, report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
         self.assertEqual("within", report.preferred_budget_status)
@@ -52,7 +52,7 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual("", result.stderr)
         self.assertIn(
             f"README {(REPOSITORY_ROOT / 'README.md').stat().st_size} bytes "
-            "(preferred 8-12 KiB: within)", result.stdout
+            "(preferred 4-8 KiB: within)", result.stdout
         )
         self.assertIn("21 negative fixtures", result.stdout)
 
@@ -60,24 +60,24 @@ class DocumentationValidationTests(unittest.TestCase):
         for fence in ("```", "~~~~"):
             with self.subTest(fence=fence):
                 failures: list[str] = []
-                check_readme_skill_inventory_text(
-                    "# A\n\n## Skills\n\n### Shared skills\n\n"
-                    "#### using-axiom\n\n**Usage:**\n\n"
-                    f"{fence}text\n### Shared skills\n#### example-only\n{fence}\n\n"
-                    "#### fixture-route\n\n### Deprecated Skills and Support\n\n"
-                    "#### retired-route\n",
+                check_skill_reference_inventory_text(
+                    "# A\n\n## Shared skills\n\n"
+                    "### using-axiom\n\n**Usage:**\n\n"
+                    f"{fence}text\n## Shared skills\n### example-only\n{fence}\n\n"
+                    "### fixture-route\n\n## Renamed and retired skills\n\n"
+                    "### retired-route\n",
                     "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
                     failures,
                 )
                 self.assertEqual([], failures)
 
     def test_skill_inventory_does_not_leak_into_following_sections(self):
-        for heading in ("# Other", "## Other", "### Other"):
+        for heading in ("# Other", "## Other"):
             with self.subTest(heading=heading):
                 failures: list[str] = []
-                check_readme_skill_inventory_text(
-                    "# A\n\n## Skills\n\n### Shared skills\n\n#### using-axiom\n\n"
-                    f"{heading}\n\n#### fixture-route\n",
+                check_skill_reference_inventory_text(
+                    "# A\n\n## Shared skills\n\n### using-axiom\n\n"
+                    f"{heading}\n\n### fixture-route\n",
                     "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
                     failures,
                 )
@@ -94,9 +94,9 @@ class DocumentationValidationTests(unittest.TestCase):
         ):
             with self.subTest(skills=skills):
                 failures: list[str] = []
-                check_readme_skill_inventory_text(
-                    "# A\n\n## Skills\n\n### Shared skills\n\n"
-                    + "\n\n".join(f"#### {skill}" for skill in skills) + "\n",
+                check_skill_reference_inventory_text(
+                    "# A\n\n## Shared skills\n\n"
+                    + "\n\n".join(f"### {skill}" for skill in skills) + "\n",
                     "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
                     failures,
                 )
@@ -107,9 +107,9 @@ class DocumentationValidationTests(unittest.TestCase):
 
     def test_skill_inventory_rejects_duplicate_shared_sections(self):
         failures: list[str] = []
-        check_readme_skill_inventory_text(
-            "# A\n\n## Skills\n\n### Shared skills\n\n#### using-axiom\n\n"
-            "### Shared skills\n\n#### fixture-route\n",
+        check_skill_reference_inventory_text(
+            "# A\n\n## Shared skills\n\n### using-axiom\n\n"
+            "## Shared skills\n\n### fixture-route\n",
             "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
             failures,
         )

@@ -26,8 +26,8 @@ from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
 
 README_MAX_BYTES = 16 * 1024
-README_PREFERRED_MIN_BYTES = 8 * 1024
-README_PREFERRED_MAX_BYTES = 12 * 1024
+README_PREFERRED_MIN_BYTES = 4 * 1024
+README_PREFERRED_MAX_BYTES = 8 * 1024
 
 ROOT_CURRENT_DOCUMENTS = (
     "README.md",
@@ -51,7 +51,8 @@ GENERATED_MARKER = re.compile(
     r"<!--\s*([a-z0-9][a-z0-9._:-]*?):(start|end)\s*-->"
 )
 SETEXT_HEADING = re.compile(r"^[ \t]{0,3}(=+|-+)[ \t]*$")
-README_SHARED_HEADING = "### Shared skills"
+SKILL_REFERENCE_PATH = "docs/reference/skills.md"
+SKILL_REFERENCE_SHARED_HEADING = "## Shared skills"
 FRONT_DOOR_ROUTE_HEADING = "## Bundled Routes"
 TASK_NAVIGATION_HEADING = "## Start By Task"
 FORBIDDEN_TASK_PREFIXES = (
@@ -427,23 +428,23 @@ def check_guidance_boundaries(root: Path, failures: list[str]) -> None:
         check_task_navigation_text(index, index_text, root, failures)
 
 
-def _readme_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
+def _skill_reference_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
     _, masked = fenced_blocks_and_masked_text(text)
     lines = masked.splitlines()
     starts = [
         index for index, line in enumerate(lines)
-        if line.rstrip() == README_SHARED_HEADING
+        if line.rstrip() == SKILL_REFERENCE_SHARED_HEADING
     ]
     if len(starts) != 1:
         failures.append(
-            "README.md must contain exactly one parseable Shared skills heading"
+            f"{SKILL_REFERENCE_PATH} must contain exactly one parseable Shared skills heading"
         )
         return ()
     inventory = []
     for line in lines[starts[0] + 1:]:
-        if re.match(r"^[ \t]{0,3}#{1,3}(?:[ \t]+|$)", line):
+        if re.match(r"^[ \t]{0,3}#{1,2}(?:[ \t]+|$)", line):
             break
-        skill = re.fullmatch(r"#### ([a-z0-9-]+)[ \t]*", line)
+        skill = re.fullmatch(r"### ([a-z0-9-]+)[ \t]*", line)
         if skill is not None:
             inventory.append(skill.group(1))
     return tuple(inventory)
@@ -462,27 +463,27 @@ def _front_door_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
     return ("using-axiom", *routes)
 
 
-def check_readme_skill_inventory_text(
-    readme_text: str,
+def check_skill_reference_inventory_text(
+    reference_text: str,
     front_door_text: str,
     failures: list[str],
 ) -> None:
     expected = _front_door_inventory(front_door_text, failures)
-    actual = _readme_inventory(readme_text, failures)
+    actual = _skill_reference_inventory(reference_text, failures)
     if expected and actual != expected:
         failures.append(
-            "README Shared skills inventory differs from the canonical front door: "
+            "Skill Reference Shared skills inventory differs from the canonical front door: "
             + ", ".join(actual)
         )
 
 
-def check_readme_skill_inventory(root: Path, failures: list[str]) -> None:
-    readme = _read_text(root / "README.md", root, failures)
+def check_skill_reference_inventory(root: Path, failures: list[str]) -> None:
+    reference = _read_text(root / SKILL_REFERENCE_PATH, root, failures)
     front_door = _read_text(
         root / "skills" / "using-axiom" / "SKILL.md", root, failures
     )
-    if readme is not None and front_door is not None:
-        check_readme_skill_inventory_text(readme, front_door, failures)
+    if reference is not None and front_door is not None:
+        check_skill_reference_inventory_text(reference, front_door, failures)
 
 
 def check_hook_reference(root: Path, failures: list[str]) -> None:
@@ -541,7 +542,7 @@ def check_documentation(
     check_lifecycle_metadata(root, failures)
     generated_count = check_generated_markers(root, failures)
     check_guidance_boundaries(root, failures)
-    check_readme_skill_inventory(root, failures)
+    check_skill_reference_inventory(root, failures)
     check_hook_reference(root, failures)
     if include_canonical_owners:
         if root != REPOSITORY_ROOT.resolve():
@@ -566,6 +567,7 @@ __all__ = (
     "README_MAX_BYTES",
     "README_PREFERRED_MAX_BYTES",
     "README_PREFERRED_MIN_BYTES",
+    "SKILL_REFERENCE_PATH",
     "check_current_headings",
     "check_docs_index_and_orphans",
     "check_documentation",
@@ -576,7 +578,7 @@ __all__ = (
     "check_lifecycle_text",
     "check_private_guidance_text",
     "check_readme_budget",
-    "check_readme_skill_inventory_text",
+    "check_skill_reference_inventory_text",
     "check_task_navigation_text",
     "current_documents",
     "discover_markdown",

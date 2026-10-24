@@ -97,7 +97,8 @@ Place optional metadata near the document H1 using this exact form:
 The current repository assigns these responsibilities:
 
 - `README.md` owns the bounded public introduction, installation and update
-  quick start, skill summaries and examples, and retired-support notice;
+  quick start, and first-use example; `docs/reference/skills.md` owns the
+  bundled-skill summaries, copyable examples, and rename notices;
 - `CONTRIBUTING.md` owns contribution intake and the repository map;
   `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and
   `docs/maintainers/validation.md` owns contributor check procedures;
@@ -148,8 +149,12 @@ evals/
 Topical current references may remain directly under `docs/` when another
 directory would create artificial fragmentation.
 
-Under README `### Shared skills`, give each skill a `#### skill-name` heading
-in canonical startup-route order. Each entry contains **Link**, **Description**,
+README stays a landing page: identity, installation, updating, first use, and
+links. It links to the Skill Reference instead of listing skills or rename
+notices.
+
+Under the Skill Reference `## Shared skills`, give each skill a
+`### skill-name` heading in canonical startup-route order. Each entry contains **Link**, **Description**,
 and **Usage** fields: a repository-relative link to its `SKILL.md`, a concise
 summary, and a copyable prompt in a fenced `text` block. Keep detailed
 requirements in the linked source. New entries use the same structure; add
@@ -165,7 +170,7 @@ optional detail within an entry without creating another skill-level heading.
 | Contributor check procedures | `docs/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
-| Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; README keeps a validated rendering |
+| Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering |
 | Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Codex plugin manifest | Current |
@@ -237,7 +242,7 @@ Every documentation change must, at minimum:
   separate release history, schema selectors, and observed evidence from
   current capability claims;
 - keep `README.md` at or below the enforced 16 KiB ceiling, and report the
-  preferred 8--12 KiB range;
+  preferred 4--8 KiB range;
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and
   avoid skipped heading levels;
@@ -251,8 +256,9 @@ Every documentation change must, at minimum:
   owners, while the Changelog and selected version note retain exact release
   bindings; a repeated version number is not a substitute for those links;
 - keep current public guidance from linking to non-public sources;
-- keep README `### Shared skills` and its per-skill level-four headings
-  parseable, with the inventory matching the canonical startup front door;
+- keep the Skill Reference `## Shared skills` section and its per-skill
+  level-three headings parseable, with the inventory matching the canonical
+  startup front door;
 - validate the public Hook reference against checked-in declarations and
   wrappers; and
 - keep historical and project-plan documents, including `evals/history/`, out

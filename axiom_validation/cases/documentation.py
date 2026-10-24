@@ -16,7 +16,7 @@ from axiom_validation.documentation import (
     check_lifecycle_text,
     check_private_guidance_text,
     check_readme_budget,
-    check_readme_skill_inventory_text,
+    check_skill_reference_inventory_text,
     check_task_navigation_text,
 )
 from axiom_validation.markdown import check_markdown_links
@@ -242,8 +242,8 @@ def _historical_directory_task_navigation() -> list[str]:
 
 def _skill_inventory_drift() -> list[str]:
     failures: list[str] = []
-    check_readme_skill_inventory_text(
-        "# A\n\n## Skills\n\n### Shared skills\n\n#### using-axiom\n",
+    check_skill_reference_inventory_text(
+        "# A\n\n## Shared skills\n\n### using-axiom\n",
         "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
         failures,
     )

@@ -28,6 +28,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "docs/guides/getting-started.md",
     "docs/guides/managing-installation.md",
     "docs/reference/hooks.md",
+    "docs/reference/skills.md",
     "docs/maintainers/documentation-policy.md",
     "docs/maintainers/runtime-changes.md",
     "docs/maintainers/validation.md",

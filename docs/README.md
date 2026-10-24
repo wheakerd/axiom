@@ -15,6 +15,7 @@ when comparing the source tree, a published release, and an installed package.
 | Install Axiom and try one routed request | [Getting Started](guides/getting-started.md) | Users |
 | Update, disable, remove, or troubleshoot Axiom | [Managing an Installation](guides/managing-installation.md) | Users |
 | Inspect exact Hook commands | [Hook Reference](reference/hooks.md) | Users and auditors |
+| Find a skill and copy an example | [Skill Reference](reference/skills.md) | Users |
 | Understand what Axiom does | [Architecture](architecture.md) | Users and reviewers |
 | Review permissions and trust boundaries | [Trust Model](trust-model.md) | Users and security reviewers |
 | Check current host support | [Compatibility](compatibility.md) | Users and auditors |
@@ -69,14 +70,14 @@ establish current host support nor impose retired procedures on current work.
 
 | Location | Responsibility |
 | --- | --- |
-| Root `README.md` | Product introduction, installation and update quick start, skill usage, and host-support notice |
+| Root `README.md` | Product introduction, installation and update quick start, and first use |
 | Root `CONTRIBUTING.md` | Contribution intake, repository map, and review checklist |
 | Root `SECURITY.md` | Supported security scope and private vulnerability reporting |
 | Root `CODE_OF_CONDUCT.md` | Community conduct expectations and enforcement contact |
 | Root `CHANGELOG.md` | User-visible changes, impact, and required action |
 | `docs/guides/` | First use and host-managed installation lifecycle |
 | Topical documents in `docs/` | Architecture, examples, trust, compatibility, identity, and dated governance evidence |
-| `docs/reference/` | Exact public technical references, including the checked Hook rendering |
+| `docs/reference/` | Exact public technical references: the Skill Reference and the checked Hook rendering |
 | `docs/maintainers/` | Runtime authoring, validation, documentation, and release procedures |
 | `docs/releases/` | Preserved version-specific notes and candidate evidence |
 | `evals/README.md` and `evals/context-budget/README.md` | Current evaluation contracts and interpretation of static measurements |
