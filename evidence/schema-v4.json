@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:axiom:compatibility-evidence:schema:v4",
+  "title": "Axiom compatibility evidence record with host lifecycle sources",
+  "description": "A privacy-safe host observation bound to an immutable plugin release and deterministic installed-runtime contract, recording the SessionStart sources its host declares.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "release",
+    "runtimeIdentity",
+    "observationSubject",
+    "host",
+    "installation",
+    "hook",
+    "reporter",
+    "recordedAt",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "4"
+    },
+    "release": {
+      "$ref": "schema-v1.json#/$defs/release"
+    },
+    "runtimeIdentity": {
+      "$ref": "#/$defs/runtimeIdentity"
+    },
+    "observationSubject": {
+      "const": "installed-runtime-contract"
+    },
+    "host": {
+      "$ref": "schema-v1.json#/$defs/host"
+    },
+    "installation": {
+      "$ref": "schema-v1.json#/$defs/installation"
+    },
+    "hook": {
+      "$ref": "#/$defs/hook"
+    },
+    "reporter": {
+      "$ref": "schema-v1.json#/$defs/reporter"
+    },
+    "recordedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "schema-v1.json#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "runtimeIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginVersion",
+        "runtimeContractSchemaVersion",
+        "runtimeContractDigest"
+      ],
+      "properties": {
+        "pluginVersion": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+        },
+        "runtimeContractSchemaVersion": {
+          "enum": [
+            "1",
+            "2",
+            "3"
+          ]
+        },
+        "runtimeContractDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "hook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "matcher",
+        "expectedCommandSha256",
+        "installedCommandSha256",
+        "installedCommandVerified"
+      ],
+      "properties": {
+        "event": {
+          "const": "SessionStart"
+        },
+        "matcher": {
+          "enum": [
+            "startup|resume|clear|compact",
+            "startup|resume|clear|compact|fork"
+          ]
+        },
+        "expectedCommandSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "installedCommandSha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "installedCommandVerified": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

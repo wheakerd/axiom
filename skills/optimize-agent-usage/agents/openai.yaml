@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimize Agent Usage"
+  short_description: "Reduce agent context and workflow overhead"
+  default_prompt: "Use $optimize-agent-usage to reduce this workflow's credits, tokens, and context without weakening quality or safety."

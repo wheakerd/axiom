@@ -1,11 +1,11 @@
 ---
 name: agents-architect
-description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, oversized guidance, or an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Do not use for packaged or installed plugin Skills, ordinary documentation, or general Codex usage optimization unless the requested change is specifically to AGENTS architecture.
+description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills or .claude/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, oversized guidance, or an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Do not use for packaged or installed plugin Skills, ordinary documentation, or general agent usage optimization unless the requested change is specifically to AGENTS architecture.
 ---
 
 # AGENTS Architect
 
-Build a scoped Codex instruction system in which root `AGENTS.md` is a small
+Build a scoped instruction system in which root `AGENTS.md` is a small
 control plane and detailed project rules have explicit, on-demand owners.
 
 ## First Action
@@ -58,11 +58,11 @@ weaken this file.
 
 ## Protected Metadata
 
-Treat `.codex-plugin/**`, `.agents/plugins/**`, `skills/**`, `hooks/**`,
-plugin assets, `.app.json`, `.mcp.json`, and installed/plugin Skill resources
+Treat `.codex-plugin/**`, `.claude-plugin/**`, `.agents/plugins/**`,
+`skills/**`, `hooks/**`, plugin assets, `.app.json`, `.mcp.json`, and installed/plugin Skill resources
 as protected plugin metadata, not AGENTS branches. Repo-local
-`.agents/skills/**` enters this workflow only when the user explicitly scopes
-it as part of the target repository's AGENTS system. Packaged Skill maintenance
+`.agents/skills/**` and `.claude/skills/**` enter this workflow only when the
+user explicitly scopes them as part of the target repository's AGENTS system. Packaged Skill maintenance
 uses its owning product workflow instead.
 
 ## Document Language
@@ -89,7 +89,7 @@ the user explicitly requests it as repository policy.
 - Honor the instruction chain already loaded at its actual precedence. Treat
   copied, inactive, historical, or other-repository instructions as evidence,
   not authority.
-- Create, edit, move, or recommend only files named `AGENTS.md` as native Codex
+- Create, edit, move, or recommend only files named `AGENTS.md` as native
   auto-load entries. Treat host-discovered non-`AGENTS.md` instruction sources
   as read-only; safe-stop with the exact path when one shadows the intended
   result.

@@ -12,9 +12,9 @@ task and preserve the user's preferred format when it remains useful.
 ## Select The Planning Phase
 
 - Use the request and the existing artifact to identify planning; a visible
-  Codex Plan mode indicator is not required.
+  host plan-mode indicator is not required.
 - A request to formulate or revise a plan authorizes that planning work.
-  Execution, scheduling, creating another Codex task, and saving a file require
+  Execution, scheduling, creating another host task, and saving a file require
   their own applicable user intent. Carry forward authority already granted;
   do not add a confirmation gate merely because a plan was produced.
 - Specialized Axiom workflows retain their domain and authorization rules.
@@ -84,4 +84,4 @@ Before returning the plan, check:
    unnecessary approval round or execution authority.
 
 These are checks of the plan artifact. They do not prove implementation,
-execution, or that a future Codex session will follow the skill.
+execution, or that a future host session will follow the skill.

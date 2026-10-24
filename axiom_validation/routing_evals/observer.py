@@ -1,4 +1,4 @@
-"""Codex JSONL observer taxonomy and fail-closed classification."""
+"""Codex JSONL and Claude Code stream-json observer taxonomies and fail-closed classification."""
 
 from __future__ import annotations
 
@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .constants import (
+    CLAUDE_CODE_STREAM_JSON_CATEGORIES,
+    CLAUDE_CODE_STREAM_JSON_EVENT_TYPES,
+    CLAUDE_CODE_STREAM_JSON_TAXONOMY_PATH,
+    CLAUDE_CODE_STREAM_JSON_TAXONOMY_VERSION,
+    CLAUDE_CODE_STRUCTURED_OUTPUT_TOOL,
     CODEX_EXEC_JSONL_CATEGORIES,
     CODEX_EXEC_JSONL_ITEM_TYPES,
     CODEX_EXEC_JSONL_TAXONOMY_PATH,
@@ -372,6 +377,297 @@ def classify_codex_exec_jsonl_lines(lines: Iterable[bytes | str]) -> dict[str, A
     }
     tool_ids.clear()
     seen_item_phases.clear()
+    event = None
+    text = None
+    return result
+
+
+def _expected_claude_code_stream_json_taxonomy() -> dict[str, Any]:
+    return {
+        "schemaVersion": "1",
+        "taxonomyVersion": CLAUDE_CODE_STREAM_JSON_TAXONOMY_VERSION,
+        "host": {"name": "claude-code", "version": "2.1.308"},
+        "source": {
+            "documentation": [
+                {
+                    "url": "https://code.claude.com/docs/en/headless",
+                    "authority": "stream-json events, session metadata, structured output, and permission denials",
+                },
+                {
+                    "url": "https://code.claude.com/docs/en/cli-reference",
+                    "authority": "print-mode flags, input and output formats, and hook event inclusion",
+                },
+                {
+                    "url": "https://code.claude.com/docs/en/hooks",
+                    "authority": "SessionStart sources and command hook execution",
+                },
+            ],
+            "verifiedOn": "2026-10-23",
+        },
+        "invocation": {
+            "required": [
+                "-p",
+                "--output-format stream-json",
+                "--verbose",
+                "--json-schema",
+                "--append-system-prompt",
+                "--permission-mode dontAsk",
+                "--no-session-persistence",
+                "--model",
+                "--effort",
+            ],
+            "multiTurn": "--input-format stream-json",
+            "environment": {"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"},
+        },
+        "categories": list(CLAUDE_CODE_STREAM_JSON_CATEGORIES),
+        "eventTypes": {
+            event_key: {"category": category, "role": role}
+            for event_key, (category, role) in CLAUDE_CODE_STREAM_JSON_EVENT_TYPES.items()
+        },
+        "toolUse": {
+            "structuredOutputTool": CLAUDE_CODE_STRUCTURED_OUTPUT_TOOL,
+            "otherToolUse": "tool-action-capable",
+            "permissionDenial": "tool-action-capable",
+        },
+        "lifecycle": {
+            "startupHookBeforeSessionStart": True,
+            "sessionStartBeforeModelOutput": True,
+            "resultIsTerminal": True,
+            "unknownOrMalformedEvent": "fail-closed",
+            "eventAfterResult": "fail-closed",
+            "missingResult": "fail-closed",
+        },
+        "facts": {
+            "startupHookVerified": "exactly one SessionStart hook_response with outcome success, exit code 0, and output equal to the reviewed preamble and routing gate",
+            "installedPluginVerified": "system/init lists plugin axiom with the expected version, a field Claude Code 2.1.308 emits beside the documented name and path, every bundled axiom skill, and no plugin_errors",
+            "turnCompleted": "one terminal result with subtype success, is_error false, terminal_reason completed, and no api_error_status",
+            "failureEvent": "a result with is_error true or another subtype, or a failed SessionStart hook",
+            "unexpectedTools": "tool_use blocks other than the structured-output tool, plus permission denials",
+            "structuredOutput": "result.structured_output validated against the bound host-response schema",
+        },
+        "retention": {
+            "allowedJournalFields": ["ordinal", "eventType", "category", "role", "toolName"],
+            "forbidden": [
+                "response text",
+                "reasoning text",
+                "tool arguments",
+                "tool output",
+                "identifiers",
+                "credentials",
+                "paths",
+                "session or config content",
+                "raw payload",
+            ],
+        },
+    }
+
+
+def check_claude_code_stream_json_taxonomy(root: Path, failures: list[str]) -> None:
+    """Validate the reviewed Claude Code stream contract."""
+    path = root / "evals" / CLAUDE_CODE_STREAM_JSON_TAXONOMY_PATH.name
+    taxonomy = load_json_object(path, failures, root)
+    if taxonomy is not None and taxonomy != _expected_claude_code_stream_json_taxonomy():
+        failures.append(
+            f"evals/{CLAUDE_CODE_STREAM_JSON_TAXONOMY_PATH.name} drifted from the reviewed Claude Code 2.1.308 contract"
+        )
+
+
+def classify_claude_code_stream_json_lines(
+    lines: Iterable[bytes | str],
+    *,
+    expected_startup_output: str | None = None,
+    expected_plugin_version: str | None = None,
+    expected_skills: Iterable[str] = (),
+) -> dict[str, Any]:
+    """Fail closed on a Claude Code stream-json run, keeping public discriminators only.
+
+    Startup output and session metadata are compared in memory and discarded;
+    the result retains only booleans, counts, and the closed journal fields.
+    """
+    journal: list[dict[str, Any]] = []
+    event_counts: Counter[str] = Counter()
+    category_counts: Counter[str] = Counter()
+    required_skills = frozenset(expected_skills)
+    hook_responses = 0
+    hook_succeeded = False
+    hook_output_matches = False
+    session_started = False
+    plugin_verified = False
+    terminal = False
+    outcome: str | None = None
+    terminal_reason: str | None = None
+    turn_completed = False
+    failure_seen = False
+    forbidden_seen = False
+    other_tool_uses = 0
+    structured_output_calls = 0
+    denial_events = 0
+    result_denials = 0
+
+    def record(event_key: str, category: str, role: str, *, tool_name: str | None = None) -> None:
+        entry: dict[str, Any] = {
+            "ordinal": len(journal) + 1,
+            "eventType": event_key,
+            "category": category,
+            "role": role,
+        }
+        if tool_name is not None:
+            entry["toolName"] = tool_name
+        journal.append(entry)
+        event_counts[event_key] += 1
+        category_counts[category] += 1
+
+    def stop(next_outcome: str, reason: str) -> None:
+        nonlocal terminal, outcome, terminal_reason
+        terminal = True
+        outcome = next_outcome
+        terminal_reason = reason
+
+    def forbid(event_key: str, role: str) -> None:
+        nonlocal forbidden_seen
+        record(event_key, "forbidden-unknown", role)
+        forbidden_seen = True
+        stop("unknown", role)
+
+    for raw_line in lines:
+        try:
+            if isinstance(raw_line, bytes):
+                text = raw_line.decode("utf-8", errors="strict")
+            elif type(raw_line) is str:
+                text = raw_line
+            else:
+                raise TypeError
+            event = json.loads(text, object_pairs_hook=reject_duplicate_json_keys)
+        except (UnicodeDecodeError, json.JSONDecodeError, DuplicateJsonKeyError, TypeError):
+            forbid("malformed", "malformed-json-event")
+            break
+        finally:
+            raw_line = None
+
+        if terminal:
+            forbid("unknown", "event-after-terminal")
+            break
+        if type(event) is not dict:
+            forbid("malformed", "wrong-top-level-shape")
+            break
+        event_type = event.get("type")
+        if type(event_type) is not str or not event_type:
+            forbid("malformed", "missing-top-level-discriminator")
+            break
+        if event_type == "system":
+            subtype = event.get("subtype")
+            if type(subtype) is not str or not subtype:
+                forbid("malformed", "missing-system-subtype")
+                break
+            event_key = f"system/{subtype}"
+        else:
+            event_key = event_type
+        if event_key not in CLAUDE_CODE_STREAM_JSON_EVENT_TYPES:
+            forbid("unknown", "unknown-top-level-discriminator")
+            break
+        category, role = CLAUDE_CODE_STREAM_JSON_EVENT_TYPES[event_key]
+
+        if event_key in {"system/hook_started", "system/hook_progress", "system/hook_response"}:
+            if event.get("hook_event") != "SessionStart" or session_started:
+                forbid(event_key, "hook-outside-startup")
+                break
+            if event_key == "system/hook_response":
+                hook_responses += 1
+                hook_succeeded = event.get("outcome") == "success" and event.get("exit_code") == 0
+                hook_output_matches = (
+                    expected_startup_output is not None
+                    and event.get("output") == expected_startup_output
+                )
+                if not hook_succeeded:
+                    failure_seen = True
+            record(event_key, category, role)
+            continue
+        if event_key == "system/init":
+            if session_started:
+                forbid(event_key, "duplicate-session-start")
+                break
+            session_started = True
+            plugins = event.get("plugins")
+            skills = event.get("skills")
+            plugin_verified = (
+                expected_plugin_version is not None
+                and "plugin_errors" not in event
+                and type(plugins) is list
+                and any(
+                    type(plugin) is dict
+                    and plugin.get("name") == "axiom"
+                    and plugin.get("version") == expected_plugin_version
+                    for plugin in plugins
+                )
+                and type(skills) is list
+                and required_skills <= {skill for skill in skills if type(skill) is str}
+            )
+            record(event_key, category, role)
+            continue
+        if not session_started:
+            forbid(event_key, "event-before-session-start")
+            break
+        if event_key == "assistant":
+            message = event.get("message")
+            content = message.get("content") if type(message) is dict else None
+            if type(content) is not list:
+                forbid(event_key, "malformed-model-message")
+                break
+            record(event_key, category, role)
+            for block in content:
+                if type(block) is not dict or block.get("type") != "tool_use":
+                    continue
+                tool_name = block.get("name") if type(block.get("name")) is str else None
+                if tool_name == CLAUDE_CODE_STRUCTURED_OUTPUT_TOOL and event.get("parent_tool_use_id") is None:
+                    structured_output_calls += 1
+                    record(event_key, category, "structured-output", tool_name=tool_name)
+                else:
+                    other_tool_uses += 1
+                    record(event_key, "tool-action-capable", "tool-action", tool_name=tool_name)
+            continue
+        if event_key == "system/permission_denied":
+            denial_events += 1
+            record(event_key, category, role)
+            continue
+        if event_key == "result":
+            denials = event.get("permission_denials")
+            result_denials = len(denials) if type(denials) is list else 0
+            if (
+                event.get("subtype") == "success"
+                and event.get("is_error") is False
+                and event.get("terminal_reason") == "completed"
+                and event.get("api_error_status") is None
+            ):
+                turn_completed = True
+                record(event_key, category, role)
+                stop("pass", "terminal-success")
+            else:
+                failure_seen = True
+                record(event_key, "failure-error", "terminal-failure")
+                stop("fail", "terminal-failure")
+            continue
+        record(event_key, category, role)
+
+    if not terminal:
+        forbidden_seen = True
+        outcome = "unknown"
+        terminal_reason = "abrupt-input"
+
+    result = {
+        "taxonomyVersion": CLAUDE_CODE_STREAM_JSON_TAXONOMY_VERSION,
+        "outcome": outcome,
+        "terminalReason": terminal_reason,
+        "turnCompleted": turn_completed,
+        "startupHookVerified": hook_responses == 1 and hook_succeeded and hook_output_matches,
+        "installedPluginVerified": plugin_verified,
+        "structuredOutputCalls": structured_output_calls,
+        "unexpectedTools": other_tool_uses + max(denial_events, result_denials),
+        "eventTypeCounts": dict(sorted(event_counts.items())),
+        "categoryCounts": dict(sorted(category_counts.items())),
+        "failureSeen": failure_seen,
+        "forbiddenUnknownSeen": forbidden_seen,
+        "journal": journal,
+    }
     event = None
     text = None
     return result

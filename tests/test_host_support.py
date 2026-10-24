@@ -54,6 +54,39 @@ class HostSupportTests(unittest.TestCase):
         self.evidence.validate_record(record, None, failures)
         self.assertEqual([], failures)
 
+    def test_fork_source_requires_evidence_schema_v4_from_0_16_0(self):
+        record = json.loads((REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json").read_text())
+        record["release"].update(version="0.16.0", tag="v0.16.0")
+        record["installation"]["targetPluginVersion"] = "0.16.0"
+        record["runtimeIdentity"] = {
+            "pluginVersion": "0.16.0",
+            "runtimeContractSchemaVersion": "3",
+            "runtimeContractDigest": "sha256:" + "0" * 64,
+        }
+        record["observationSubject"] = "installed-runtime-contract"
+        record["hook"]["matcher"] = "startup|resume|clear|compact|fork"
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                record.update(schemaVersion="4", host=dict(record["host"], name=host))
+                failures = []
+                self.evidence.validate_record(record, None, failures)
+                self.assertEqual([], failures)
+                record["schemaVersion"] = "3"
+                self.evidence.validate_record(record, None, failures)
+                self.assertTrue(any("must use evidence schema 4" in value for value in failures))
+        failures = []
+        four_source = dict(record, schemaVersion="4", hook=dict(record["hook"], matcher="startup|resume|clear|compact"))
+        self.evidence.validate_record(four_source, None, failures)
+        self.assertTrue(any("exact lifecycle sources" in value for value in failures))
+        failures = []
+        earlier = json.loads(json.dumps(record))
+        earlier.update(schemaVersion="4")
+        earlier["release"].update(version="0.15.0", tag="v0.15.0")
+        earlier["installation"]["targetPluginVersion"] = "0.15.0"
+        earlier["runtimeIdentity"]["pluginVersion"] = "0.15.0"
+        self.evidence.validate_record(earlier, None, failures)
+        self.assertTrue(any("exact lifecycle sources" in value for value in failures))
+
     def test_successor_evidence_accepts_current_runtime_and_rejects_retired_host(self):
         record = json.loads((REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json").read_text())
         record["schemaVersion"] = "3"
@@ -257,6 +290,8 @@ class HostSupportTests(unittest.TestCase):
             runtimeContractSchemaVersion=identity["runtimeContract"]["schemaVersion"],
             runtimeContractDigest=identity["runtimeContract"]["digest"],
         )
+        record["schemaVersion"] = "4"
+        record["hook"]["matcher"] = "startup|resume|clear|compact|fork"
         self.assertEqual([], self.validate_external_fixture(record))
         failures = self.validate_external_fixture(record, expected_commit="3" * 40)
         self.assertIn("external record commit does not match --expected-commit", failures)

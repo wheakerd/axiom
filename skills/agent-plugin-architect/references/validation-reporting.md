@@ -23,7 +23,8 @@ an Axiom-named suite or undeclared ASCII policy.
 
 Report the exact validated revision or tree, commands and outcomes, context
 metrics, compatibility class, and any expected legacy-validator exception.
-List Codex host, lifecycle, model, marketplace, portal, authenticated Claude,
-or other checks as `NOT-RUN` or `UNAVAILABLE` when direct evidence is absent.
+List Codex or Claude Code host, lifecycle, model, marketplace, portal,
+authentication, or other checks as `NOT-RUN` or `UNAVAILABLE` when direct
+evidence is absent.
 Do not install, activate, publish, deploy, or contact external services merely
 to improve a validation label.

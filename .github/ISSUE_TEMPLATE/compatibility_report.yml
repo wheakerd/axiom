@@ -58,6 +58,7 @@ body:
       label: Installation method
       options:
         - Codex Git marketplace
+        - Claude Code Git marketplace
         - Local development marketplace
         - Other (explain in Evidence)
     validations:

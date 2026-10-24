@@ -27,6 +27,11 @@ from .constants import (
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
     CURRENT_CORPUS_RELATIVE_PATH,
+    V4_PUBLIC_ROUTES, V4_BENCHMARK_CASE_COUNT, V4_CORPUS_RELATIVE_PATH,
+    SCHEMA_V5_ID, BENCHMARK_V5_ID, HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
+    CLAUDE_CODE_BENCHMARK_V5_ID, CURRENT_BENCHMARK_IDS, CURRENT_BENCHMARK_PROFILES,
+    CLAUDE_CODE_STREAM_JSON_TAXONOMY_PATH, CLAUDE_CODE_STREAM_JSON_TAXONOMY_VERSION,
+    CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256, RENAMED_PUBLIC_ROUTES,
     SCHEMA_V3_ID,
     BENCHMARK_V3_ID,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
@@ -162,6 +167,9 @@ from .acceptance import (
     validate_host_response_v5_structure,
     classify_host_response_v5_acceptance,
     validate_host_response_v5,
+    validate_host_response_v6_structure,
+    classify_host_response_v6_acceptance,
+    validate_host_response_v6,
     validate_host_response_v4_structure,
     classify_host_response_v4_acceptance,
     validate_host_response_v4,
@@ -173,13 +181,17 @@ from .schemas import (
     check_schema_contract_v3,
     check_schema_contract_v4,
     check_host_response_schema_v5,
+    check_schema_contract_v5,
+    check_host_response_schema_v6,
     check_host_response_schema,
     check_host_response_schema_v2,
     check_host_response_schema_v3,
     check_host_response_schema_v4,
 )
 from .observer import (
+    check_claude_code_stream_json_taxonomy,
     check_codex_exec_jsonl_taxonomy,
+    classify_claude_code_stream_json_lines,
     classify_codex_exec_jsonl_lines,
 )
 from .benchmark import (
@@ -213,6 +225,8 @@ from .external import (
 from .review_sequences import (
     REVIEW_SEQUENCE_RELATIVE_PATH,
     REVIEW_SEQUENCE_SHA256,
+    CLAUDE_CODE_REVIEW_SEQUENCE_RELATIVE_PATH,
+    CLAUDE_CODE_REVIEW_SEQUENCE_SHA256,
     REVIEW_RESPONSE_SCHEMA_RELATIVE_PATH,
     REVIEW_DEVELOPER_INSTRUCTION,
     REVIEW_RESPONSE_FIELDS,

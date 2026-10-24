@@ -22,6 +22,7 @@ JSON_FILES = (
     ".agents/plugins/marketplace.json",
     "hooks/codex-hooks.json",
     ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
     "hooks/claude-hooks.json",
 )
 MANIFEST_FILES = (
@@ -965,14 +966,11 @@ def check_claude_marketplace(
     failures: list[str],
     repository_root: Path = REPOSITORY_ROOT,
 ) -> None:
-    """Validate the optional Claude Code catalog once a verified handoff adds it."""
+    """Validate the required Claude Code catalog."""
     label = CLAUDE_MARKETPLACE_RELATIVE
     document = documents.get(label)
     if document is None:
-        path = repository_root / label
-        if not path.exists() and not path.is_symlink():
-            return
-        document = load_json(path, failures)
+        document = load_json(repository_root / label, failures)
         if document is None:
             return
     exact_json_object(document, label, CLAUDE_MARKETPLACE_KEYS, failures)
@@ -1101,13 +1099,6 @@ def check_distribution_identity(
             failures.append(f"{codex_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
         if codex_manifest.get("description") != EXPECTED_TAGLINE:
             failures.append(f"{codex_manifest_path} description must be {EXPECTED_TAGLINE!r}")
-    claude_manifest_path = ".claude-plugin/plugin.json"
-    claude_manifest = documents.get(claude_manifest_path)
-    if claude_manifest is not None:
-        if claude_manifest.get("name") != EXPECTED_PLUGIN_NAME:
-            failures.append(f"{claude_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
-        if claude_manifest.get("description") != EXPECTED_TAGLINE:
-            failures.append(f"{claude_manifest_path} description must be {EXPECTED_TAGLINE!r}")
         interface = codex_manifest.get("interface")
         if isinstance(interface, dict):
             if interface.get("displayName") != EXPECTED_DISPLAY_NAME:
@@ -1118,6 +1109,13 @@ def check_distribution_identity(
                 failures.append(
                     f"{codex_manifest_path} interface.category must be {EXPECTED_CODEX_CATEGORY!r}"
                 )
+    claude_manifest_path = ".claude-plugin/plugin.json"
+    claude_manifest = documents.get(claude_manifest_path)
+    if claude_manifest is not None:
+        if claude_manifest.get("name") != EXPECTED_PLUGIN_NAME:
+            failures.append(f"{claude_manifest_path} name must be {EXPECTED_PLUGIN_NAME!r}")
+        if claude_manifest.get("description") != EXPECTED_TAGLINE:
+            failures.append(f"{claude_manifest_path} description must be {EXPECTED_TAGLINE!r}")
 
     codex_marketplace_path = ".agents/plugins/marketplace.json"
     codex_marketplace = documents.get(codex_marketplace_path)

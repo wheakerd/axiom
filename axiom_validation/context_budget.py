@@ -10,10 +10,25 @@ from pathlib import Path
 from typing import Any
 
 from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path, supported_hosts
+from .release_versions import parse_production_release_version
 
 
 CONTEXT_BUDGET_ROOT = REPOSITORY_ROOT / "evals" / "context-budget"
-CONTEXT_BUDGET_SCHEMA = CONTEXT_BUDGET_ROOT / "schema-v1.json"
+
+
+def context_budget_schema_version(version: str) -> str:
+    """Select the record schema whose lifecycle matrix matches the release's Hooks.
+
+    Both startup Hooks match the fork source from 0.16.0, so those records use
+    schema v2 with a forked-session scenario; earlier records keep schema v1.
+    """
+    parsed = parse_production_release_version(version)
+    fork_since = parse_production_release_version("0.16.0")
+    return "2" if parsed is not None and parsed >= fork_since else "1"
+
+
+CONTEXT_BUDGET_SCHEMA_VERSION = context_budget_schema_version(RELEASE_VERSION)
+CONTEXT_BUDGET_SCHEMA = CONTEXT_BUDGET_ROOT / f"schema-v{CONTEXT_BUDGET_SCHEMA_VERSION}.json"
 CONTEXT_BUDGET_RESULTS = CONTEXT_BUDGET_ROOT / "results"
 CONTEXT_BUDGET_RECORD = CONTEXT_BUDGET_RESULTS / f"v{RELEASE_VERSION}.json"
 ROUTING_GATE_PATH = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
@@ -81,11 +96,11 @@ EXPECTED_HOST_METRICS = {
         "wallClockMilliseconds": None,
         "reason": (
             "Current Claude Code host, usage and lifecycle observation remain NOT-RUN; "
-            "the Claude Code plugin delivers the same unchanged routing gate."
+            "the Claude Code plugin delivers the same routing gate as the Codex plugin."
         ),
     },
 }
-EXPECTED_SCENARIOS = (
+SCHEMA_V1_SCENARIOS = (
     (
         "fresh-startup-no-route",
         "fresh",
@@ -146,6 +161,19 @@ EXPECTED_SCENARIOS = (
         ),
         1,
     ),
+)
+FORK_SCENARIO = (
+    "fork-no-route",
+    "forked",
+    "fork",
+    "not-applicable",
+    ("no-route-readme-summary-001",),
+    1,
+)
+EXPECTED_SCENARIOS = (
+    SCHEMA_V1_SCENARIOS + (FORK_SCENARIO,)
+    if CONTEXT_BUDGET_SCHEMA_VERSION == "2"
+    else SCHEMA_V1_SCENARIOS
 )
 
 TOP_LEVEL_KEYS = frozenset(
@@ -639,23 +667,58 @@ def previous_context_budget_candidate(
     return sha256, metrics
 
 
+def check_schema_lifecycle_matrix(
+    schema: dict[str, Any], schema_name: str, failures: list[str]
+) -> None:
+    """Bind the schema's scenario count and lifecycle vocabularies to the matrix."""
+    label = f"evals/context-budget/{schema_name}"
+    properties = schema.get("properties")
+    definitions = schema.get("$defs")
+    if type(properties) is not dict or type(definitions) is not dict:
+        failures.append(f"{label} must define properties and $defs")
+        return
+    count = len(EXPECTED_SCENARIOS)
+    scenarios = properties.get("scenarios")
+    if (
+        type(scenarios) is not dict
+        or scenarios.get("minItems") != count
+        or scenarios.get("maxItems") != count
+    ):
+        failures.append(f"{label} must fix exactly {count} scenarios")
+    sources = {"enum": list(dict.fromkeys(item[2] for item in EXPECTED_SCENARIOS))}
+    states = {"enum": list(dict.fromkeys(item[1] for item in EXPECTED_SCENARIOS))}
+    for name in ("injection", "scenario"):
+        definition = definitions.get(name)
+        fields = definition.get("properties") if type(definition) is dict else None
+        if type(fields) is not dict or fields.get("lifecycleSource") != sources:
+            failures.append(f"{label} {name}.lifecycleSource must match the lifecycle matrix")
+    scenario = definitions.get("scenario")
+    fields = scenario.get("properties") if type(scenario) is dict else None
+    if type(fields) is not dict or fields.get("sessionState") != states:
+        failures.append(f"{label} scenario.sessionState must match the lifecycle matrix")
+
+
 def check_context_budget(failures: list[str]) -> int:
     """Validate the current release's routing-context budget and observations."""
+    schema_name = CONTEXT_BUDGET_SCHEMA.name
     schema = load_json(CONTEXT_BUDGET_SCHEMA, failures)
     if schema is not None:
-        if schema.get("$id") != "https://github.com/wheakerd/axiom/evals/context-budget/schema-v1.json":
-            failures.append("evals/context-budget/schema-v1.json has an unexpected $id")
+        if schema.get("$id") != f"https://github.com/wheakerd/axiom/evals/context-budget/{schema_name}":
+            failures.append(f"evals/context-budget/{schema_name} has an unexpected $id")
         if schema.get("type") != "object" or schema.get("additionalProperties") is not False:
-            failures.append("evals/context-budget/schema-v1.json must close the top-level object")
+            failures.append(f"evals/context-budget/{schema_name} must close the top-level object")
+        check_schema_lifecycle_matrix(schema, schema_name, failures)
 
     document = load_json(CONTEXT_BUDGET_RECORD, failures)
     if document is None:
         return 0
     exact_object(document, display_path(CONTEXT_BUDGET_RECORD), TOP_LEVEL_KEYS, failures)
-    if document.get("$schema") != "../schema-v1.json":
-        failures.append("context-budget record must reference ../schema-v1.json")
-    if document.get("schemaVersion") != "1":
-        failures.append("context-budget record schemaVersion must be '1'")
+    if document.get("$schema") != f"../{schema_name}":
+        failures.append(f"context-budget record must reference ../{schema_name}")
+    if document.get("schemaVersion") != CONTEXT_BUDGET_SCHEMA_VERSION:
+        failures.append(
+            f"context-budget record schemaVersion must be {CONTEXT_BUDGET_SCHEMA_VERSION!r}"
+        )
     expected_record_id = f"routing-context-budget-v{RELEASE_VERSION.replace('.', '-')}"
     if document.get("recordId") != expected_record_id:
         failures.append(f"context-budget recordId must be {expected_record_id!r}")

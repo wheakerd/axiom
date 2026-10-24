@@ -20,6 +20,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from axiom_validation.context import supported_hosts
+from axiom_validation.release_versions import parse_production_release_version
 from axiom_validation.runtime_identity import (  # noqa: E402
     HISTORY_RELATIVE,
     LEGACY_HISTORY_RELATIVE,
@@ -32,6 +33,7 @@ EVIDENCE_ROOT = REPOSITORY_ROOT / "evidence"
 SCHEMA_V1_PATH = EVIDENCE_ROOT / "schema-v1.json"
 SCHEMA_V2_PATH = EVIDENCE_ROOT / "schema-v2.json"
 SCHEMA_V3_PATH = EVIDENCE_ROOT / "schema-v3.json"
+SCHEMA_V4_PATH = EVIDENCE_ROOT / "schema-v4.json"
 STATUS_PATH = EVIDENCE_ROOT / "release-status.json"
 RUNTIME_IDENTITY_PATH = EVIDENCE_ROOT / "runtime-identity.json"
 RUNTIME_HISTORY_PATHS = {
@@ -78,6 +80,10 @@ HOOK_KEYS = frozenset(
         "installedCommandVerified",
     }
 )
+FOUR_SOURCE_MATCHER = "startup|resume|clear|compact"
+# Both hosts also declare the fork source from 0.16.0; evidence schema 4 records it.
+FORK_SOURCE_MATCHER = "startup|resume|clear|compact|fork"
+FORK_SOURCE_SINCE = parse_production_release_version("0.16.0")
 REPORTER_KEYS = frozenset({"identity", "anonymous"})
 CASE_KEYS = frozenset(
     {
@@ -361,7 +367,7 @@ def check_schema_v2_contract(schema: dict[str, Any], failures: list[str], schema
             "runtimeIdentity": "#/$defs/runtimeIdentity",
             "host": "schema-v1.json#/$defs/host",
             "installation": "schema-v1.json#/$defs/installation",
-            "hook": "schema-v1.json#/$defs/hook",
+            "hook": "#/$defs/hook" if schema_version == "4" else "schema-v1.json#/$defs/hook",
             "reporter": "schema-v1.json#/$defs/reporter",
         }
         for name, reference in expected_references.items():
@@ -373,6 +379,18 @@ def check_schema_v2_contract(schema: dict[str, Any], failures: list[str], schema
         }:
             failures.append(f"evidence/schema-v{schema_version}.json cases reference drifted")
     definitions = schema.get("$defs")
+    if schema_version == "4":
+        hook = definitions.get("hook") if type(definitions) is dict else None
+        hook_properties = hook.get("properties") if type(hook) is dict else None
+        if (
+            type(hook_properties) is not dict
+            or hook.get("additionalProperties") is not False
+            or set(hook.get("required", [])) != HOOK_KEYS
+            or set(hook_properties) != HOOK_KEYS
+        ):
+            failures.append("evidence/schema-v4.json hook definition drifted")
+        elif hook_properties.get("matcher") != {"enum": [FOUR_SOURCE_MATCHER, FORK_SOURCE_MATCHER]}:
+            failures.append("evidence/schema-v4.json hook lifecycle sources drifted")
     runtime = definitions.get("runtimeIdentity") if type(definitions) is dict else None
     if type(runtime) is not dict:
         failures.append(f"evidence/schema-v{schema_version}.json must define runtimeIdentity")
@@ -470,6 +488,14 @@ def validate_case(case: Any, label: str, hook_verified: bool, failures: list[str
             failures.append(f"{label} must explain result {result!r}")
     elif result == "fail" and not (limitations or supporting):
         failures.append(f"{label} must preserve evidence for a failure")
+def declared_hook_matcher(host_name: str | None, version: str | None) -> str:
+    """Return the SessionStart sources the observed release declared for its host."""
+    parsed = parse_production_release_version(version) if type(version) is str else None
+    if host_name in {"codex", "claude-code"} and parsed is not None and parsed >= FORK_SOURCE_SINCE:
+        return FORK_SOURCE_MATCHER
+    return FOUR_SOURCE_MATCHER
+
+
 def validate_record(
     record: dict[str, Any],
     path: Path | None,
@@ -479,8 +505,8 @@ def validate_record(
     schema_version = require_string(record.get("schemaVersion"), f"{label}.schemaVersion", failures)
     expected_keys = RECORD_KEYS if schema_version == "1" else RECORD_V2_KEYS
     exact_object(record, expected_keys, label, failures)
-    if schema_version not in {"1", "2", "3"}:
-        failures.append(f"{label}.schemaVersion must be '1', '2', or '3'")
+    if schema_version not in {"1", "2", "3", "4"}:
+        failures.append(f"{label}.schemaVersion must be '1', '2', '3', or '4'")
         return
 
     release = exact_object(record.get("release"), RELEASE_KEYS, f"{label}.release", failures)
@@ -575,8 +601,11 @@ def validate_record(
     if hook is not None:
         if hook.get("event") != "SessionStart":
             failures.append(f"{label}.hook.event must be 'SessionStart'")
-        if hook.get("matcher") != "startup|resume|clear|compact":
+        expected_matcher = declared_hook_matcher(host_name, version)
+        if hook.get("matcher") != expected_matcher:
             failures.append(f"{label}.hook.matcher must cover the exact lifecycle sources")
+        elif schema_version != "4" and expected_matcher != FOUR_SOURCE_MATCHER:
+            failures.append(f"{label} must use evidence schema 4 for its declared lifecycle sources")
         expected_digest = require_string(
             hook.get("expectedCommandSha256"),
             f"{label}.hook.expectedCommandSha256",
@@ -943,6 +972,7 @@ def collect_records(failures: list[str]) -> dict[str, dict[str, Any]]:
         SCHEMA_V1_PATH.resolve(),
         SCHEMA_V2_PATH.resolve(),
         SCHEMA_V3_PATH.resolve(),
+        SCHEMA_V4_PATH.resolve(),
         STATUS_PATH.resolve(),
         RUNTIME_IDENTITY_PATH.resolve(),
         *(path.resolve() for path in RUNTIME_HISTORY_PATHS.values()),
@@ -1103,6 +1133,9 @@ def validate_repository(run_self_tests: bool) -> tuple[list[str], int, int, str 
     schema_v3 = load_json(SCHEMA_V3_PATH, failures)
     if schema_v3 is not None:
         check_schema_v2_contract(schema_v3, failures, "3")
+    schema_v4 = load_json(SCHEMA_V4_PATH, failures)
+    if schema_v4 is not None:
+        check_schema_v2_contract(schema_v4, failures, "4")
     records = collect_records(failures)
     current_version = manifest_version(failures)
     runtime_identity = load_json(RUNTIME_IDENTITY_PATH, failures) or {}
@@ -1145,8 +1178,8 @@ def validate_external_record(
     failures.extend(record_failures)
     if record_failures:
         return failures
-    if record.get("schemaVersion") not in {"2", "3"}:
-        failures.append("new external observations must use evidence/schema-v2.json or evidence/schema-v3.json")
+    if record.get("schemaVersion") not in {"2", "3", "4"}:
+        failures.append("new external observations must use evidence/schema-v2.json, evidence/schema-v3.json, or evidence/schema-v4.json")
     release = record.get("release", {})
     if release.get("tag") != expected_tag:
         failures.append("external record tag does not match --expected-tag")

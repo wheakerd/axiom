@@ -6,7 +6,7 @@ the plugin's shared `skills/` tree:
 ```text
 skills/<skill-name>/
 |-- SKILL.md
-|-- agents/openai.yaml
+|-- agents/openai.yaml   # optional Codex UI metadata
 `-- references/*.md
 ```
 
@@ -17,9 +17,11 @@ hidden routing layers. Load the smallest relevant reference set.
 
 Use lowercase kebab-case identifiers and canonical English metadata. Keep
 instruction files below the repository's byte limit. Prefer one shared Skill
-tree for Codex and Claude Code; do not copy the Skill per host.
+tree for Codex and Claude Code; do not copy the Skill per host. Claude Code
+does not read `agents/openai.yaml`, so a plugin for Claude Code alone can omit
+it.
 
 Packaged Skills govern distributed plugin capability. Repository-local
-`AGENTS.md` and `.agents/skills` govern a target repository and remain owned by
+`AGENTS.md`, `.agents/skills`, and `.claude/skills` govern a target repository and remain owned by
 `agents-architect`. Do not move private maintenance instructions into the
 publishable plugin.

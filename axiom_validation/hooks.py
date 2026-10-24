@@ -20,9 +20,7 @@ HOOK_FILES = (
 )
 CLAUDE_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door "
-    "before deciding whether any Axiom skill applies. The Codex-only routes "
-    "delegate-simple-task, optimize-codex-usage, and continuous-progress are not "
-    "available in Claude Code; say so instead of simulating them:'; "
+    "before deciding whether any Axiom skill applies:'; "
     "cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
 CLAUDE_HOOK_TIMEOUT_SECONDS = 5
@@ -44,7 +42,7 @@ CODEX_HOOK_TIMEOUT_SECONDS = 5
 APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
     "hooks/codex-hooks.json": {
         "SessionStart": {
-            "matcher": "startup|resume|clear|compact",
+            "matcher": "startup|resume|clear|compact|fork",
             "handler": {
                 "type": "command",
                 "command": CODEX_COMMAND,
@@ -56,7 +54,7 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
     },
     "hooks/claude-hooks.json": {
         "SessionStart": {
-            "matcher": "startup|resume|clear|compact",
+            "matcher": "startup|resume|clear|compact|fork",
             "handler": {
                 "type": "command",
                 "command": CLAUDE_COMMAND,

@@ -20,7 +20,7 @@ class RoutingContractTests(unittest.TestCase):
     def test_all_routing_fixtures(self):
         failures = []
         check_routing_scenarios(ROUTING_SCENARIOS, failures)
-        self.assertEqual(68 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
+        self.assertEqual(69 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
         self.assertEqual(10, len(ROUTE_BOUNDARY_SCENARIOS))
         self.assertEqual([], failures)
 
@@ -207,7 +207,7 @@ class RoutingContractTests(unittest.TestCase):
             ("nesting-does-not-enforce-selection", topology, "nesting alone\ndoes not enforce it"),
             ("catalog-is-not-a-body-loading-receipt", topology, "does not prove body loading or selection"),
             ("discovery-is-not-explicit-route-reachability", validation, "Discovery proves neither\n  explicit-route reachability nor body loading"),
-            ("filesystem-presence-is-not-observed-loading", validation, "claim actual\nCodex loading without direct evidence"),
+            ("filesystem-presence-is-not-observed-loading", validation, "claim actual\nhost loading without direct evidence"),
             ("protected-plugin-metadata-stays-outside-agents", topology, "Do not create AGENTS branches inside protected plugin metadata"),
         ))
 

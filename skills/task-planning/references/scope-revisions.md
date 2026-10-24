@@ -1,7 +1,7 @@
 # Scope Revisions
 
 Use these cases to distinguish current work, effective constraints, and edit
-history. They describe expected plan behavior, not observed Codex results.
+history. They describe expected plan behavior, not observed host results.
 
 ## Ordinary Removal
 

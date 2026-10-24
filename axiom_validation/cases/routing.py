@@ -448,7 +448,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
         "name": "explicit-usage-optimization",
         "request": "Reduce the Codex credits and context used by these Skills without weakening validation.",
-        "route": "optimize-codex-usage",
+        "route": "optimize-agent-usage",
         "phase": "audit-implementation",
         "references": ("references/context-audit.md",),
         "authorization": frozenset({"read", "edit", "test"}),
@@ -534,9 +534,17 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "authorization": frozenset({"read"}),
     },
     {
+        "name": "agents-architect-claude-code-skill",
+        "request": "Create a repo-local .claude/skills entry for this repository's release checklist.",
+        "route": "agents-architect",
+        "phase": "audit",
+        "references": ("references/inventory-audit.md",),
+        "authorization": frozenset({"read"}),
+    },
+    {
         "name": "agent-plugin-context-owner",
         "request": "Measure and reduce this installed plugin gate's Codex context usage without changing architecture.",
-        "route": "optimize-codex-usage",
+        "route": "optimize-agent-usage",
         "phase": "audit-implementation",
         "references": ("references/context-audit.md",),
         "authorization": frozenset({"read", "edit", "test"}),
@@ -607,7 +615,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     {
         "name": "agent-plugin-architecture-context-overlap",
         "request": "Redesign this packaged plugin's shared route architecture and measure its Codex context usage.",
-        "route": ("agent-plugin-architect", "optimize-codex-usage"),
+        "route": ("agent-plugin-architect", "optimize-agent-usage"),
         "phase": "cross-route-ownership",
         "references": (),
         "authorization": frozenset({"read", "edit", "test"}),

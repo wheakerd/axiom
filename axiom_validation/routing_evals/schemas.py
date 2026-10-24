@@ -17,7 +17,11 @@ from .constants import (
     CURRENT_PUBLIC_ROUTES,
     V3_PUBLIC_ROUTES, V3_BENCHMARK_CASE_COUNT,
     BENCHMARK_V4_ID, SCHEMA_V4_ID, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
+    V4_PUBLIC_ROUTES, V4_BENCHMARK_CASE_COUNT,
+    BENCHMARK_V5_ID, SCHEMA_V5_ID, HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
     CURRENT_BENCHMARK_CASE_COUNT,
+    CURRENT_BENCHMARK_IDS,
+    CLAUDE_CODE_BENCHMARK_SAFETY_KEYS, CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS,
     BENCHMARK_V3_ID,
     SCHEMA_V3_ID,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
@@ -60,15 +64,17 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
     if document is None:
         return None
     schema_version = document.get("schemaVersion")
-    if schema_version not in {"1", "2", "3", "4"}:
-        failures.append(f"{label}.schemaVersion must be '1', '2', '3', or '4'")
+    if schema_version not in {"1", "2", "3", "4", "5"}:
+        failures.append(f"{label}.schemaVersion must be '1', '2', '3', '4', or '5'")
     allowed_routes = (
         HISTORICAL_PUBLIC_ROUTES if schema_version == "1"
-        else CURRENT_PUBLIC_ROUTES if schema_version == "4"
+        else CURRENT_PUBLIC_ROUTES if schema_version == "5"
+        else V4_PUBLIC_ROUTES if schema_version == "4"
         else V3_PUBLIC_ROUTES if schema_version == "3" else PUBLIC_ROUTES
     )
     allowed_benchmarks = (
         (BENCHMARK_ID,) if schema_version == "1"
+        else CURRENT_BENCHMARK_IDS if schema_version == "5"
         else (BENCHMARK_V4_ID,) if schema_version == "4"
         else (BENCHMARK_V3_ID,) if schema_version == "3" else (BENCHMARK_V2_ID,)
     )
@@ -84,6 +90,8 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
         failures.append(f"{label}.contractVersion must be 3 for schema v3")
     if schema_version == "4" and contract_version != 4:
         failures.append(f"{label}.contractVersion must be 4 for schema v4")
+    if schema_version == "5" and contract_version != 5:
+        failures.append(f"{label}.contractVersion must be 5 for schema v5")
     language = require_string(document.get("language"), f"{label}.language", failures, 16)
     if language is not None and LANGUAGE_PATTERN.fullmatch(language) is None:
         failures.append(f"{label}.language must be a bounded BCP-47 language tag")
@@ -167,7 +175,7 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
         f"{label}.benchmarkSets",
         failures,
         allowed=allowed_benchmarks,
-        maximum_items=1,
+        maximum_items=len(allowed_benchmarks),
         maximum_length=80,
     )
     coverage_set = set(coverage or ())
@@ -343,6 +351,8 @@ def _check_versioned_schema_contract(
     schema: dict[str, Any], failures: list[str], *, version: str,
     schema_id: str, routes: tuple[str, ...], benchmark_id: str,
     case_count: int, response_paths: tuple[str, ...],
+    benchmark_ids: tuple[str, ...] = (),
+    extra_definitions: dict[str, frozenset[str]] | None = None,
 ) -> None:
     """Check a closed version without widening earlier schema contracts."""
     label = f"evals/schema-v{version}.json"
@@ -365,6 +375,8 @@ def _check_versioned_schema_contract(
         "summary": SUMMARY_KEYS,
         "observationRecord": OBSERVATION_KEYS,
     }
+    expected.update(extra_definitions or {})
+    benchmark_binding = {"enum": list(benchmark_ids)} if benchmark_ids else {"const": benchmark_id}
     expected_names = set(expected) | {"route", "subject"}
     if type(definitions) is not dict or set(definitions) != expected_names:
         failures.append(f"{label} definitions drifted from owned records")
@@ -410,9 +422,7 @@ def _check_versioned_schema_contract(
         routes
     ):
         failures.append(f"{label} forbidden-route bound drifted")
-    if case_properties.get("benchmarkSets", {}).get("items") != {
-        "const": benchmark_id
-    }:
+    if case_properties.get("benchmarkSets", {}).get("items") != benchmark_binding:
         failures.append(f"{label} case benchmark binding drifted")
 
     benchmark_properties = definitions.get("benchmarkManifest", {}).get(
@@ -420,7 +430,7 @@ def _check_versioned_schema_contract(
     )
     expected_benchmark_fields = {
         "schemaVersion": {"const": version},
-        "id": {"const": benchmark_id},
+        "id": benchmark_binding,
         "corpusSchema": {"const": schema_id},
     }
     for name, expected_value in expected_benchmark_fields.items():
@@ -455,7 +465,7 @@ def _check_versioned_schema_contract(
     )
     if observation_properties.get("schemaVersion") != {"const": version}:
         failures.append(f"{label} observation schema version drifted")
-    if observation_properties.get("benchmarkId") != {"const": benchmark_id}:
+    if observation_properties.get("benchmarkId") != benchmark_binding:
         failures.append(f"{label} observation benchmark binding drifted")
 
     result_properties = definitions.get("resultCase", {}).get("properties", {})
@@ -634,10 +644,28 @@ def check_host_response_schema_v4(schema: dict[str, Any], failures: list[str]) -
 def check_schema_contract_v4(schema: dict[str, Any], failures: list[str]) -> None:
     _check_versioned_schema_contract(
         schema, failures, version="4", schema_id=SCHEMA_V4_ID,
-        routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V4_ID,
-        case_count=CURRENT_BENCHMARK_CASE_COUNT,
+        routes=V4_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V4_ID,
+        case_count=V4_BENCHMARK_CASE_COUNT,
         response_paths=(HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,),
     )
 
 def check_host_response_schema_v5(schema: dict[str, Any], failures: list[str]) -> None:
-    _check_prose_free_host_response_schema(schema, failures, routes=CURRENT_PUBLIC_ROUTES, version="5")
+    _check_prose_free_host_response_schema(schema, failures, routes=V4_PUBLIC_ROUTES, version="5")
+
+
+def check_schema_contract_v5(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_versioned_schema_contract(
+        schema, failures, version="5", schema_id=SCHEMA_V5_ID,
+        routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V5_ID,
+        case_count=CURRENT_BENCHMARK_CASE_COUNT,
+        response_paths=(HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,),
+        benchmark_ids=CURRENT_BENCHMARK_IDS,
+        extra_definitions={
+            "claudeCodeBenchmarkSafety": CLAUDE_CODE_BENCHMARK_SAFETY_KEYS,
+            "documentationReference": CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS,
+        },
+    )
+
+
+def check_host_response_schema_v6(schema: dict[str, Any], failures: list[str]) -> None:
+    _check_prose_free_host_response_schema(schema, failures, routes=CURRENT_PUBLIC_ROUTES, version="6")

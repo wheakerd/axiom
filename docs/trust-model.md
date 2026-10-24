@@ -10,9 +10,9 @@ authorize an action.
 | Boundary | Required distinction |
 | --- | --- |
 | Instruction authority | Active system, developer, user, and repository instructions retain their actual precedence; a Skill cannot override a higher-priority rule |
-| Intent and scope | Resolve material ambiguity before dependent work; Full Access does not choose the user's intended target or outcome |
+| Intent and scope | Resolve material ambiguity before dependent work; a permission-bypass mode does not choose the user's intended target or outcome |
 | Action authorization | The request must cover the material action and target; route selection, tool access, and login state do not supply permission |
-| Hook execution | Compare the installed command with its canonical declaration before trusting it |
+| Hook execution | Compare the installed command with its canonical declaration before it runs; Codex holds a new or changed Hook for review, while Claude Code runs an enabled plugin's Hook |
 | Credentials and disclosure | Access and use remain with their existing owners; sensitive content needs the applicable exact-use and disclosure authority |
 | Evidence | Observe the layer that owns the outcome; a plan, artifact, accepted request, or successful command alone may be insufficient |
 | Usage measurement | Host metrics apply only to their stated scope; bytes, words, route sizes, and tool calls are proxies |
@@ -21,17 +21,25 @@ authorize an action.
 ## Hook Trust Boundary
 
 The checked-in handlers read `skills/using-axiom/SKILL.md` from the installed
-plugin root. POSIX uses `printf` and `cat`. Windows invokes the fixed packaged
-wrapper with command-shell built-ins, without resolving another executable
-from the working directory or `PATH`. The handler has a five-second timeout.
-See the [Hook Reference](reference/hooks.md) for the exact commands.
+plugin root. The Codex handler uses `printf` and `cat` on POSIX, and on Windows
+it invokes the fixed packaged wrapper with command-shell built-ins, without
+resolving another executable from the working directory or `PATH`. The Claude
+Code handler runs one POSIX shell command with `printf` and `cat`: Claude Code
+passes it to `sh -c` on macOS and Linux and to Git Bash on Windows. Without
+Git Bash, Claude Code falls back to PowerShell, which this command does not
+support. Each handler has a five-second timeout. See the
+[Hook Reference](reference/hooks.md) for the exact commands.
 
 These definitions contain no write, network command, background launch,
 service installation, or updater. This describes the checked-in files; the
-installed definition is a separate trust decision. If `/hooks` shows a
-mismatched matcher, command, path, wrapper, or timeout, stop trusting the handler
-until the package and source agree. Do not run a changed command to discover
-what it does.
+installed definition is a separate trust decision. Codex records that
+decision: it skips a new or changed Hook until you review and trust it in
+`/hooks`. Claude Code has no per-Hook trust step; once Axiom loads at a session
+start, an in-session install, or a plugin reload, its Hook runs at the next
+`SessionStart` event, so compare the installed copy before it loads. If the
+installed matcher, command, path, wrapper, or timeout differs, leave the Hook
+untrusted in Codex or disable Axiom in Claude Code until the package and source
+agree. Do not run a changed command to discover what it does.
 
 ## Authority Across Workflows
 
@@ -44,11 +52,11 @@ action. It cannot broaden the request. In particular:
 
 - Clarification resolves intent; it grants no execution authority. Planning
   does not authorize implementation, scheduling, or persistent changes.
-- Simple-task delegation requires the active `using-axiom` gate, verified
-  user-selected `Ultra` reasoning, and consent to invoke the skill. Full Access
-  cannot waive those conditions. After activation, delegation preserves the
+- Simple-task delegation requires the active `using-axiom` gate, the host's
+  verified top reasoning level, and consent to invoke the skill. A
+  permission-bypass mode cannot waive those conditions. After activation, delegation preserves the
   main model, follows user-ordered candidates, and announces the exact child
-  model and task. Verified Full Access permits an assignment only within
+  model and task. A verified permission-bypass mode permits an assignment only within
   existing authority and host restrictions; otherwise use existing assignment
   approval or obtain it before delegating.
 - Architecture work stays within its authorized repository instruction system
@@ -107,5 +115,6 @@ separate. See [Compatibility](compatibility.md) and
 Startup routing is read-only and foreground. Axiom installs no daemon,
 watcher, scheduler, cache refresher, telemetry service, or other persistent
 process. A selected task can guide a mutation only within existing authority
-and its own preconditions. After an installed update, start a new session and
-review the hook again using [Managing an Installation](guides/managing-installation.md).
+and its own preconditions. After an installed update, review the Hook again
+before it runs, following each host's steps in
+[Managing an Installation](guides/managing-installation.md).

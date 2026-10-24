@@ -86,7 +86,7 @@ Reject rules that fail any gate.
 Create or keep nested `AGENTS.md` only when:
 
 - The directory is a stable subproject, package, or service boundary.
-- Codex often starts from that directory.
+- Host sessions often start from that directory.
 - Local hard rules must auto-load.
 - The nested file reduces misload more than it adds duplication.
 

@@ -2,7 +2,7 @@
 
 This directory records Axiom's repeatable budget for the always-loaded
 `skills/using-axiom/SKILL.md` routing gate. It measures a repository surface;
-it does not expose hidden Codex accounting and does not invoke a
+it does not expose hidden host accounting and does not invoke a
 model, start a host session, contact a network service, or collect telemetry.
 
 ## Measurement Boundary
@@ -40,16 +40,19 @@ guide's prose cannot make stale measurements valid.
 The versioned record represents all required paths: fresh startup with a no-route
 request, fresh startup with a routed request, resume with no route, clear with
 a routed request, manual compaction with no route, automatic compaction with a
-routed request, and three repeated no-route requests in one otherwise unchanged
-session. The checked-in hook contract expects one gate injection in each
-scenario. That expected count is static configuration evidence, not an observed
+routed request, three repeated no-route requests in one otherwise unchanged
+session, and a forked session with no route. The forked-session scenario
+starts with `0.16.0`, when both startup Hooks gained the `fork` source; earlier
+records keep the seven-scenario schema v1 matrix. The checked-in hook contract
+expects one gate injection in each scenario. That expected count is static configuration evidence, not an observed
 host event. Routed slots bind canonical, paraphrased, and post-compaction
 observable-refusal and independent-audit `review-axiom-task` contracts,
 plus the post-compaction `agent-plugin-architect` contract; this does not turn
 them into host results. The context-budget comparison retains the fixed
 95-case corpus in `evals/routing/`: 69 routed cases and 26 no-route controls.
-This workload identity is separate from the current Codex routing corpus and
-benchmark described in [Routing Evaluations](../README.md).
+This workload identity is separate from the current routing corpus and its
+Codex and Claude Code benchmark profiles described in
+[Routing Evaluations](../README.md).
 
 Each host observation stores its injection events and observed count. The
 validator derives `duplicateInjectionDetected` as observed count greater than
@@ -58,8 +61,8 @@ and no duplicate. Unrun or unavailable observations must retain null counts,
 null duplicate state, and an empty event list. Read the manifest-selected
 record for each scenario's actual status; the presence of a scenario or a
 passing static check does not turn `NOT-RUN` into a host observation.
-Historical Claude Code entries retain their original status; current Axiom
-installation and runtime support is Codex-only.
+Claude Code entries recorded before `0.15.0` retain their original status;
+current Axiom installation and runtime support covers Codex and Claude Code.
 
 Prior observations remain separate evidence and cannot be copied into a new
 candidate's host metrics. Static measurement is local and telemetry-free;
@@ -111,8 +114,9 @@ is not a ceiling.
 Passing this check does not replace routing and safety acceptance or permit
 lower model or reasoning settings.
 
-The machine-readable record format is [schema v1](schema-v1.json); the current
-semantic checks are implemented in
+Records from `0.16.0` use [schema v2](schema-v2.json), which adds the
+forked-session scenario; earlier records keep [schema v1](schema-v1.json). The
+current semantic checks are implemented in
 [context_budget.py](../../axiom_validation/context_budget.py). Preserve earlier
 records with their original metrics, workload identities, host vocabulary,
 and evidence boundaries. Do not rewrite them to match the present gate or

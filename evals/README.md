@@ -9,11 +9,12 @@ evidence, use [Compatibility](../docs/compatibility.md).
 
 | Source | Responsibility |
 | --- | --- |
-| [schema-v4.json](schema-v4.json) | Current twelve-route corpus and observation format |
-| [routing-v4/current.jsonl](routing-v4/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
-| [codex-core-v4.json](benchmarks/codex-core-v4.json) | Ordered 33-case benchmark, model settings, developer instruction, timeout, and stop policy |
-| [host-response-schema-v5.json](host-response-schema-v5.json) | Current five-field, prose-free model response with all twelve routes |
-| [review-sequences-v1.json](review-sequences-v1.json) and [review-response-schema-v1.json](review-response-schema-v1.json) | Bounded review sequences and their structured response contract |
+| [schema-v5.json](schema-v5.json) | Current twelve-route corpus and observation format |
+| [routing-v5/current.jsonl](routing-v5/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
+| [codex-core-v5.json](benchmarks/codex-core-v5.json) and [claude-code-core-v5.json](benchmarks/claude-code-core-v5.json) | Codex and Claude Code profiles of one ordered 33-case benchmark and developer instruction, each with its own invocation method, model, effort, timeout, and permission settings |
+| [host-response-schema-v6.json](host-response-schema-v6.json) | Current five-field, prose-free model response with all twelve routes |
+| [codex-exec-jsonl-observer-v3.json](codex-exec-jsonl-observer-v3.json) and [claude-code-stream-json-observer-v1.json](claude-code-stream-json-observer-v1.json) | How each host's event stream yields the fixed observer facts |
+| [review-sequences-v1.json](review-sequences-v1.json), [review-sequences-claude-code-v1.json](review-sequences-claude-code-v1.json), and [review-response-schema-v1.json](review-response-schema-v1.json) | Bounded review sequences for Codex and Claude Code and their shared structured response contract |
 | [Routing Context Budget](context-budget/README.md) | Deterministic instruction-size measurement and its limits |
 
 All evaluation requests set `mutationAuthorized` to `false`. A route-positive
@@ -23,27 +24,40 @@ ambiguity selects `clarify-intent` before an action route. English route
 definitions remain canonical; non-English fixture requests test normalization
 and do not define localized aliases.
 
-The preserved `codex-core-v4` benchmark uses `medium` reasoning and includes
-the delegation-positive expectation from `0.14.0`. That expectation does not
+Schema v5 keeps the v4 cases, renames the usage route to
+`optimize-agent-usage`, drops host names from two usage requests and one goals
+control, states explicit invocations in plain language instead of Codex's
+`$skill-name` form, replaces the delegation request's OpenAI model IDs with a
+host-neutral ordered candidate list, and adds a Claude Code profile. The
+`codex-core-v5` and `claude-code-core-v5` profiles
+select the same ordered cases with the same developer instruction and response
+schema. Each keeps its own host's invocation method, model, effort, timeout,
+and permission settings; neither maps onto the other. These profiles and the
+preserved `codex-core-v4` benchmark include the delegation-positive
+expectation from `0.14.0`. That expectation does not
 verify the stricter [delegation activation conditions](../skills/delegate-simple-task/SKILL.md#activation)
-introduced in `0.14.1`. Do not use it as current Ultra-gate evidence. A future
-host observation of that changed behavior needs a successor contract with
-explicit gate, effort, and invocation-consent cases. Static checks continue to
-validate the frozen assets without claiming current host behavior.
+introduced in `0.14.1`. Do not use these benchmarks as current delegation-gate
+evidence. A future host observation of that changed behavior needs a successor
+contract with explicit gate, reasoning-level, and invocation-consent cases.
+Static checks continue to validate the frozen assets without claiming current
+host behavior.
 
 ## Contract changes
 
 Case IDs are stable and cannot be repurposed. A change to the request, expected
 or forbidden route, clarification count, lifecycle precondition, or risk class
 requires a new `contractVersion` and an explanation in the pull request. The
-current schema fixes that version to `4`, so a successor must version the
+current schema fixes that version to `5`, so a successor must version the
 schema and its consumers together. Preserve the exact corpus, response schema,
 and benchmark bound to existing observations; do not edit an expectation after
 a failure to make that result pass. An ordered benchmark change receives a new
 manifest ID.
 
-Keep the model-facing schema within the documented
-[Structured Outputs subset](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas).
+Keep the model-facing schema within OpenAI's documented
+[Structured Outputs subset](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas)
+for Codex. For Claude Code `--json-schema`, it must also validate as JSON Schema
+draft-07 and declare no newer `$schema`, as described in Claude Code
+[structured outputs](https://code.claude.com/docs/en/agent-sdk/structured-outputs).
 Apply omitted uniqueness, string-length, privacy, and semantic checks in the
 deterministic validator and its negative fixtures.
 
@@ -77,13 +91,14 @@ reports current counts from checked-in contracts; historical totals belong to
 their original records.
 
 For a separately produced current observation, external validation accepts one
-content-addressed schema v4 record against `codex-core-v4` and response schema
-V5. This optional observation is separate from required publication checks:
+content-addressed schema v5 record against the profile its host names,
+`codex-core-v5` for Codex or `claude-code-core-v5` for Claude Code, and response
+schema V6. This optional observation is separate from required publication checks:
 
 ```bash
 python3 scripts/check-publication.py \
   --post-tag-routing-observation \
-  /absolute/path/axiom-vX.Y.Z-codex-core-v4-<full-sha256>.json \
+  /absolute/path/axiom-vX.Y.Z-<benchmark-id>-<full-sha256>.json \
   --expected-version X.Y.Z \
   --expected-tag vX.Y.Z \
   --expected-commit <40-character-commit> \
@@ -102,18 +117,24 @@ remote service to establish publication or create an observation.
 
 The asset may supplement release evidence; it never edits or promotes the
 checked-in `STATIC-ONLY` [release status](../evidence/release-status.json).
-Historical schema v3 records remain verifiable against `codex-core-v3` and
-response V4; schema v2 records remain verifiable only against their original
-`codex-core-v2` and response V3 contract; they do not cover the current routes.
+Historical schema v4 records remain verifiable against `codex-core-v4` and
+response V5, and schema v3 records against `codex-core-v3` and response V4.
+Schema v2 records remain verifiable only against their original
+`codex-core-v2` and response V3 contract. None of them cover the current
+routes.
 
 ## Host Observation Boundaries
 
 Live observation requires its own authorized scope. Use an immutable installed
-subject, a fresh disposable workspace and isolated session per routing case,
-a read-only sandbox, approvals disabled, no web or external-service tools, and
-the reviewed response schema. Verify the installed plugin and startup delivery
-separately from static validation. Read model settings, the exact developer
-instruction, timeout, repeat count, and stop policy from the selected benchmark.
+subject, a fresh disposable workspace and isolated session per routing case, no
+web or external-service tools, and the reviewed response schema. Codex runs use
+a read-only sandbox with approvals disabled. Claude Code runs use `claude -p`
+with `stream-json` output, `--permission-mode dontAsk`, no session persistence,
+and auto memory turned off; [the Claude Code observer contract](claude-code-stream-json-observer-v1.json)
+defines how that stream yields the observer facts. Verify the installed plugin
+and startup delivery separately from static validation. Read model settings,
+the exact developer instruction, timeout, repeat count, and stop policy from the
+selected benchmark profile.
 A retained historical CLI recipe is not proof that a newer host supports it.
 
 Keep the isolation owner-only and compare protected workspace, immutable-source,
@@ -147,7 +168,9 @@ artificial load, or promote a fresh-session pass to compaction evidence.
 sanitized, host-executed regression sequences for observable explanation after
 refusal, explicit chain-of-thought exclusion, independent audit, read-only
 narrowing, criticism, recursive refusal termination, four-step non-expansion,
-and historical assistant-message zero authority. Each case begins in a fresh
+and historical assistant-message zero authority.
+[`evals/review-sequences-claude-code-v1.json`](review-sequences-claude-code-v1.json)
+runs the same cases with Claude Code settings. Each case begins in a fresh
 isolated session, and every turn in that case continues in the same isolated
 session. The suite is data, not a stored transcript or an installed runtime
 capability.
@@ -160,9 +183,11 @@ This is an Axiom bounded-review evaluation. Execute the sanitized user turns in 
 
 For each case, the evaluator must:
 
-1. Use the same immutable installed Axiom, owner-only isolation, read-only
-   sandbox, approval policy `never`, disabled external services, and protected
-   before/after snapshots as the routing observation boundaries above.
+1. Use the same immutable installed Axiom, owner-only isolation, the selected
+   suite's read-only settings (a read-only sandbox with approval policy `never`
+   in Codex, `--permission-mode dontAsk` in Claude Code), disabled external
+   services, and protected before/after snapshots as the routing observation
+   boundaries above.
 2. Submit the setup request unchanged. Compare the setup response with
    `expectedExactResponse` in memory, then destroy the raw response after the
    comparison. A mismatch, tool event, mutation, timeout, or unavailable
@@ -182,7 +207,8 @@ For each case, the evaluator must:
 
 No persistent runner, daemon, trace, telemetry path, or session store belongs
 to this repository. An executor uses the host's ordinary ephemeral same-thread
-continuation mechanism. Static validation proves only the suite, response
+continuation mechanism; in Claude Code, that is one `claude -p` process with
+`--input-format stream-json` and no session persistence. Static validation proves only the suite, response
 schema, sanitization, expected invariants, and documented method are internally
 consistent; it does not prove installed-host completion behavior.
 

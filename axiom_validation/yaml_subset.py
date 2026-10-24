@@ -12,27 +12,19 @@ class CanonicalYamlError(ValueError):
     """Raised when a protected YAML file leaves Axiom's strict tiny schema."""
 
 
-def parse_agent_metadata_document(
-    text: str,
-    label: str,
-    *,
-    allow_policy: bool,
-) -> dict[str, dict[str, Any]]:
+def parse_agent_metadata_document(text: str, label: str) -> dict[str, dict[str, Any]]:
     """Consume agents/openai.yaml through its exact canonical tiny schema."""
     quoted = r'"[^\r\n]*"'
     pattern = re.compile(
         rf"interface:\n"
         rf"  display_name: (?P<display_name>{quoted})\n"
         rf"  short_description: (?P<short_description>{quoted})\n"
-        rf"  default_prompt: (?P<default_prompt>{quoted})"
-        rf"(?P<policy>\npolicy:\n  allow_implicit_invocation: false)?\n?"
+        rf"  default_prompt: (?P<default_prompt>{quoted})\n?"
     )
     match = pattern.fullmatch(text)
-    policy_present = match is not None and match.group("policy") is not None
-    if match is None or policy_present != allow_policy:
+    if match is None:
         raise CanonicalYamlError(
-            f"{label} must match the complete canonical interface"
-            + (" plus non-implicit policy schema" if allow_policy else " schema with no tail")
+            f"{label} must match the complete canonical interface schema with no tail"
         )
     try:
         interface = {
@@ -41,10 +33,7 @@ def parse_agent_metadata_document(
         }
     except json.JSONDecodeError as error:
         raise CanonicalYamlError(f"{label} has an invalid quoted string: {error.msg}") from error
-    result: dict[str, dict[str, Any]] = {"interface": interface}
-    if allow_policy:
-        result["policy"] = {"allow_implicit_invocation": False}
-    return result
+    return {"interface": interface}
 
 
 def parse_skill_frontmatter_document(text: str, label: str) -> dict[str, str]:

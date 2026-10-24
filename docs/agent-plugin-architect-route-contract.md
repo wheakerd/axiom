@@ -18,10 +18,10 @@ and runtime support, described in [Compatibility](compatibility.md).
 | Request | Owner |
 | --- | --- |
 | Design or audit a packaged plugin's control plane | `agent-plugin-architect` |
-| Maintain repo-local `AGENTS.md` and `.agents/skills/` | `agents-architect` |
+| Maintain repo-local `AGENTS.md`, `.agents/skills/`, and `.claude/skills/` | `agents-architect` |
 | Edit ordinary plugin source or documentation | Host-native workflow unless another description clearly matches |
 | Audit a packaged candidate's release readiness | `agent-plugin-architect`, read-only readiness phase |
-| Explicitly reduce Codex usage while redesigning the package | `agent-plugin-architect` plus `optimize-codex-usage` |
+| Explicitly reduce agent usage while redesigning the package | `agent-plugin-architect` plus `optimize-agent-usage` |
 | Install, deploy, or migrate a persistent system | Reassess for `reversible-system-change` and any independently necessary external-action owner |
 | Publish an already-prepared artifact | `confirm-external-action` |
 | Make ordinary named-remote, non-force Git commits or pushes | Host-native Git |

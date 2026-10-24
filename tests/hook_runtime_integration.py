@@ -33,9 +33,7 @@ HEADING = (
 )
 CLAUDE_HEADING = (
     "You have Axiom in Claude Code. Load this startup front door before deciding "
-    "whether any Axiom skill applies. The Codex-only routes delegate-simple-task, "
-    "optimize-codex-usage, and continuous-progress are not available in Claude "
-    "Code; say so instead of simulating them:"
+    "whether any Axiom skill applies:"
 )
 UTF8_SENTINEL = "Runtime UTF-8 sentinel: caf\u00e9 \u0394\n".encode()
 TIMEOUT_FIXTURE_SECONDS = 0.25

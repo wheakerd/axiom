@@ -394,10 +394,77 @@ V3_CORPUS_RELATIVE_PATH = "evals/routing-v3/current.jsonl"
 HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH = "evals/host-response-schema-v4.json"
 CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256 = "637b9bcd2825d2286db4d4ff2228d3611f43845f9999418f48c3e16aae3799fc"
 
-CURRENT_PUBLIC_ROUTES = (*V3_PUBLIC_ROUTES[:4], "continuous-progress", *V3_PUBLIC_ROUTES[4:])
+V4_PUBLIC_ROUTES = (*V3_PUBLIC_ROUTES[:4], "continuous-progress", *V3_PUBLIC_ROUTES[4:])
 SCHEMA_V4_ID = "urn:axiom:routing-evals:schema:v4"
 BENCHMARK_V4_ID = "codex-core-v4"
-CURRENT_BENCHMARK_CASE_COUNT = 33
-CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v4/current.jsonl"
+V4_BENCHMARK_CASE_COUNT = 33
+V4_CORPUS_RELATIVE_PATH = "evals/routing-v4/current.jsonl"
 HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH = "evals/host-response-schema-v5.json"
 CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256 = "0cf3f61e2f5a5300bfc399906dd351a90e0b891eda91940704b9929fcc065a8a"
+
+# Schema v5 renames the usage route; the v4 route set and bindings stay immutable.
+RENAMED_PUBLIC_ROUTES = {"optimize-codex-usage": "optimize-agent-usage"}
+CURRENT_PUBLIC_ROUTES = tuple(RENAMED_PUBLIC_ROUTES.get(route, route) for route in V4_PUBLIC_ROUTES)
+SCHEMA_V5_ID = "urn:axiom:routing-evals:schema:v5"
+BENCHMARK_V5_ID = "codex-core-v5"
+CURRENT_BENCHMARK_CASE_COUNT = 33
+CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v5/current.jsonl"
+HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH = "evals/host-response-schema-v6.json"
+CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256 = "c1fc12821dc99723da17093507b2be6fa2adc794dd9de66b907be21fe7a90a14"
+
+# Schema v5 binds each host to its own benchmark profile over the shared corpus.
+# Each profile keeps its host's native settings; neither maps onto the other.
+CLAUDE_CODE_BENCHMARK_V5_ID = "claude-code-core-v5"
+CURRENT_BENCHMARK_IDS = (BENCHMARK_V5_ID, CLAUDE_CODE_BENCHMARK_V5_ID)
+CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS = frozenset({"documentation", "verifiedOn"})
+CLAUDE_CODE_OFFICIAL_DOCUMENTATION = "https://code.claude.com/docs/en/headless"
+CLAUDE_CODE_STREAM_JSON_TAXONOMY_PATH = EVAL_ROOT / "claude-code-stream-json-observer-v1.json"
+CLAUDE_CODE_STREAM_JSON_TAXONOMY_VERSION = "claude-code-stream-json-observer-v1"
+CLAUDE_CODE_STREAM_JSON_CATEGORIES = (
+    "lifecycle",
+    "content-progress",
+    "tool-action-capable",
+    "failure-error",
+    "forbidden-unknown",
+)
+# Documented message types, observed with Claude Code 2.1.308 on 2026-10-23.
+CLAUDE_CODE_STREAM_JSON_EVENT_TYPES = {
+    "system/hook_started": ("lifecycle", "startup-hook-start"),
+    "system/hook_progress": ("lifecycle", "startup-hook-progress"),
+    "system/hook_response": ("lifecycle", "startup-hook-result"),
+    "system/init": ("lifecycle", "session-start"),
+    "system/thinking_tokens": ("content-progress", "reasoning-progress"),
+    "system/api_retry": ("content-progress", "api-retry"),
+    "system/permission_denied": ("tool-action-capable", "permission-denied"),
+    "rate_limit_event": ("content-progress", "rate-limit-status"),
+    "assistant": ("content-progress", "model-message"),
+    "user": ("content-progress", "tool-result"),
+    "result": ("lifecycle", "terminal-result"),
+}
+CLAUDE_CODE_STRUCTURED_OUTPUT_TOOL = "StructuredOutput"
+CLAUDE_CODE_BENCHMARK_SAFETY_KEYS = frozenset(
+    {
+        "permissionMode",
+        "isolatedSessionPerCase",
+        "mutationAuthority",
+        "externalActions",
+        "privateConversationUpload",
+        "credentialDisclosure",
+    }
+)
+CURRENT_BENCHMARK_PROFILES = {
+    "codex": {
+        "id": BENCHMARK_V5_ID,
+        "method": "documented-codex-cli-equivalent",
+        "model": BENCHMARK_MODEL,
+        "reasoningEffort": BENCHMARK_REASONING_EFFORT,
+        "caseTimeoutSeconds": BENCHMARK_CASE_TIMEOUT_SECONDS,
+    },
+    "claude-code": {
+        "id": CLAUDE_CODE_BENCHMARK_V5_ID,
+        "method": "documented-claude-code-cli-equivalent",
+        "model": "claude-opus-5-5",
+        "reasoningEffort": "max",
+        "caseTimeoutSeconds": 300,
+    },
+}

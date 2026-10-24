@@ -16,8 +16,8 @@ For each host, distinguish:
 
 Static parity proves only static parity. It does not prove installation,
 activation, host discovery, runtime routing, authentication, marketplace
-acceptance, or cross-model compatibility. Prefer Codex-native metadata and
-behavior when a portable abstraction would weaken the Codex experience.
+acceptance, or cross-model compatibility. Prefer each host's native metadata
+and behavior when a portable abstraction would weaken that host's experience.
 
 Do not install or activate a plugin, contact a marketplace, sign in, publish,
 or deploy under this route. Those are separate effects with separate owners

@@ -11,6 +11,7 @@ from .constants import (
     PUBLIC_ROUTES,
     CURRENT_PUBLIC_ROUTES,
     V3_PUBLIC_ROUTES,
+    V4_PUBLIC_ROUTES,
 )
 from .evidence import _privacy_check
 from .jsonio import (
@@ -344,7 +345,7 @@ def validate_host_response_v4(
 def validate_host_response_v5_structure(
     response: Any, label: str, failures: list[str]
 ) -> dict[str, Any] | None:
-    """Apply exactly the current-route V5 model-facing JSON Schema constraints."""
+    """Apply exactly the V4-route V5 model-facing JSON Schema constraints."""
     document = exact_object(response, HOST_RESPONSE_V2_KEYS, label, failures)
     if document is None:
         return None
@@ -359,7 +360,7 @@ def validate_host_response_v5_structure(
         failures,
         minimum_items=0,
         maximum_items=2,
-        allowed=CURRENT_PUBLIC_ROUTES,
+        allowed=V4_PUBLIC_ROUTES,
     )
     clarification = require_int(
         document.get("clarificationCount"),
@@ -414,5 +415,82 @@ def validate_host_response_v5(
     if diagnostic != "valid":
         failures.append(
             f"{label} fails the V5 response acceptance gate: {diagnostic}"
+        )
+    return document
+
+
+def validate_host_response_v6_structure(
+    response: Any, label: str, failures: list[str]
+) -> dict[str, Any] | None:
+    """Apply exactly the current-route V6 model-facing JSON Schema constraints."""
+    document = exact_object(response, HOST_RESPONSE_V2_KEYS, label, failures)
+    if document is None:
+        return None
+    require_bool(
+        document.get("routingGateObserved"),
+        f"{label}.routingGateObserved",
+        failures,
+    )
+    require_model_string_list(
+        document.get("selectedRoutes"),
+        f"{label}.selectedRoutes",
+        failures,
+        minimum_items=0,
+        maximum_items=2,
+        allowed=CURRENT_PUBLIC_ROUTES,
+    )
+    clarification = require_int(
+        document.get("clarificationCount"),
+        f"{label}.clarificationCount",
+        failures,
+    )
+    if clarification is not None and clarification > 1:
+        failures.append(f"{label}.clarificationCount must be <= 1")
+    require_bool(
+        document.get("mutationAttempted"),
+        f"{label}.mutationAttempted",
+        failures,
+    )
+    require_bool(
+        document.get("mutationObserved"),
+        f"{label}.mutationObserved",
+        failures,
+    )
+    return document
+
+
+def classify_host_response_v6_acceptance(response: Any) -> str:
+    """Classify duplicate routes omitted from the V6 model-facing schema."""
+    structural_failures: list[str] = []
+    document = validate_host_response_v6_structure(
+        response,
+        "bounded response",
+        structural_failures,
+    )
+    if document is None or structural_failures:
+        return "not-evaluated"
+    routes = document["selectedRoutes"]
+    if len(routes) != len(set(routes)):
+        return "selected-routes-duplicate"
+    return "valid"
+
+
+def validate_host_response_v6(
+    response: Any, label: str, failures: list[str]
+) -> dict[str, Any] | None:
+    """Validate V6 model structure and its independent acceptance gate."""
+    structural_failures: list[str] = []
+    document = validate_host_response_v6_structure(
+        response,
+        label,
+        structural_failures,
+    )
+    failures.extend(structural_failures)
+    if document is None or structural_failures:
+        return document
+    diagnostic = classify_host_response_v6_acceptance(document)
+    if diagnostic != "valid":
+        failures.append(
+            f"{label} fails the V6 response acceptance gate: {diagnostic}"
         )
     return document

@@ -1,13 +1,13 @@
 ---
 name: agent-plugin-architect
-description: Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md or .agents/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight.
+description: Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for repository-local AGENTS.md, .agents/skills, or .claude/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight.
 ---
 
 # Agent Plugin Architect
 
 Design or audit the smallest coherent packaged-plugin control plane for Codex
-and Claude Code. Treat Codex as the first-class target and preserve a single
-shared Skill tree when both hosts can discover it without weakening Codex.
+and Claude Code. Keep each host's experience native and preserve a single
+shared Skill tree when both hosts can discover it without weakening either host.
 
 ## Route The Work
 
@@ -28,7 +28,7 @@ shared Skill tree when both hosts can discover it without weakening Codex.
    material conflict.
 
    Confirm that the selected request explicitly concerns packaged agent-plugin
-   architecture. Repo-local `AGENTS.md` or `.agents/skills` work belongs to
+   architecture. Repo-local `AGENTS.md`, `.agents/skills`, or `.claude/skills` work belongs to
    `agents-architect`; ordinary plugin code or documentation has no Axiom
    route solely because it lives in a plugin repository.
 2. Inventory the package before editing. Read
@@ -51,7 +51,7 @@ shared Skill tree when both hosts can discover it without weakening Codex.
 
 Load only references needed for the active phase. A request may compose this
 route with at most one other Axiom route when both contracts are independently
-necessary. An explicit usage-cost goal may add `optimize-codex-usage`;
+necessary. An explicit usage-cost goal may add `optimize-agent-usage`;
 retrospective review may add `review-axiom-task`. Git submission, installation,
 publication, deployment, and consequential external effects remain separate
 active phases and select their owning route instead of inheriting authority

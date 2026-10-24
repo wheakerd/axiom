@@ -46,31 +46,49 @@ claude plugin marketplace add wheakerd/axiom
 claude plugin install axiom@axiom
 ```
 
-Inside a running session, use `/plugin marketplace add wheakerd/axiom` and
-`/plugin install axiom@axiom`, then `/reload-plugins`. The Claude Code catalog
-in `.claude-plugin/marketplace.json` selects the same published version as the
-Codex catalog through a Git source `ref`; development commits on `main` do not
-change it.
+Inside a running session, use `/plugin marketplace add wheakerd/axiom`, then
+`/plugin install axiom@axiom` to open Axiom's details and choose an install
+scope; the install summary says whether a reload is needed. An install that is
+active at once, or that reloads, loads the Hook into that session, where it runs
+at the next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an
+automatic or manual compaction; install from a terminal to compare it first.
+The Claude Code
+catalog in `.claude-plugin/marketplace.json` selects the same published version
+as the Codex catalog through a Git source `ref`; development commits on `main`
+do not change it.
 
-Start a new Claude Code session or run `/reload-plugins`. A running session
-keeps the plugin snapshot loaded at launch. On Windows, Claude Code needs Git
-Bash to run the startup Hook.
+After you [inspect the Hook](#inspect-the-hook), start a new Claude Code
+session so its `SessionStart` Hook delivers the routing gate;
+`/reload-plugins` applies plugin changes to a running session but does not
+rerun that Hook. On Windows, the startup Hook needs Git Bash.
 
-The Claude Code plugin loads the same skills. `delegate-simple-task`,
-`continuous-progress`, and `optimize-codex-usage` depend on Codex-only
-features; in Claude Code they report that they are not available instead of
-running. Invoke any other skill in plain language or as `/axiom:<skill-name>`.
+The Claude Code plugin loads the same skills and routes. Invoke any skill in
+plain language or as `/axiom:<skill-name>`.
 
 ## Inspect The Hook
 
-Open `/hooks` in the host and compare the installed `SessionStart` definition
-with the [Hook Reference](../reference/hooks.md). Verify the matcher, command,
-host root variable, and any packaged wrapper before trusting it.
+Compare the installed `SessionStart` definition with the
+[Hook Reference](../reference/hooks.md) before it runs. Verify the matcher,
+command, host root variable, and any packaged wrapper.
 
-Stop if the installed definition differs. Do not repair the mismatch by
-editing installed files, deleting caches, or adding another context-loading
-Hook. Reconcile the installed version with the repository through the host's
-normal plugin lifecycle.
+- Codex skips a new or changed Hook until you review and trust its exact
+  definition. In the new session, open `/hooks`, compare the entry, and trust
+  it only if it matches.
+- Claude Code has no separate Hook trust step: once the plugin loads, its Hook
+  runs at the next `SessionStart` event, such as a new session, `/clear`,
+  `/resume`, `/branch`, or an automatic or manual compaction. After a terminal
+  install or update, read the installed `hooks/claude-hooks.json` under
+  `~/.claude/plugins/cache/axiom/axiom/<version>/` before you start a session
+  or run `/reload-plugins`. An install or update inside a session loads the
+  Hook there at once or when closing the `/plugin` panel reloads plugins, so
+  install or update from a terminal to compare it first. `/hooks` shows the
+  loaded entry.
+
+Stop if the installed definition differs: leave the Hook untrusted in Codex,
+or disable Axiom in Claude Code before the Hook runs. Do not repair
+the mismatch by editing installed files, deleting caches, or adding another
+context-loading Hook. Reconcile the installed version with the repository
+through the host's normal plugin lifecycle.
 
 ## Try One Routed Request
 

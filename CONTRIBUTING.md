@@ -15,7 +15,7 @@ sensitive findings; do not disclose vulnerability details in a public report.
 | [skills/](skills/) | Skill source shared by both hosts, with supporting resources loaded on demand |
 | [.codex-plugin/plugin.json](.codex-plugin/plugin.json) | Codex plugin manifest |
 | [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) | Codex marketplace wrapper |
-| [.claude-plugin/](.claude-plugin/) | Claude Code plugin manifest and, after a verified release, its marketplace |
+| [.claude-plugin/](.claude-plugin/) | Claude Code plugin manifest and marketplace catalog |
 | [hooks/](hooks/) | Codex and Claude Code startup Hook declarations and packaged wrappers |
 | [README.md](README.md) | Product landing page and safe-start entry point |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |

@@ -9,11 +9,11 @@ For `agent-plugin-architect`, require explicit packaged Codex or Claude Code
 plugin architecture involving shared Skills, routes, manifests, wrappers,
 hooks, or version-bound evidence. Keep these boundaries:
 
-- repo-local `AGENTS.md` and `.agents/skills` systems select
+- repo-local `AGENTS.md`, `.agents/skills`, and `.claude/skills` systems select
   `agents-architect`;
 - ordinary plugin source code, parsers, extensions, README edits, and generic
   requests such as "improve this plugin" do not select this route;
-- explicit context-cost work may compose with `optimize-codex-usage`;
+- explicit context-cost work may compose with `optimize-agent-usage`;
 - retrospective Axiom review may compose with `review-axiom-task`;
 - Git submission, installation, publication, deployment, and consequential
   external actions select their owner in the active phase.

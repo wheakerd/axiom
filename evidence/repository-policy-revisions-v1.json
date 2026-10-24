@@ -552,6 +552,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex marketplace source to verified Latest v0.15.0, publish the Claude Code marketplace catalog at the same immutable release, and validate catalog agreement against supplied documents.",
       "runtimeContractDigest": "sha256:c754c9c29d59e9c8f5e9fa23b9e67a467b901f1358dafe87770b1548cdb03868"
+    },
+    {
+      "revision": 70,
+      "recordedOn": "2026-10-22",
+      "baselineCommit": "feb440e8786fabda358c0b67b8bed022a1cac1dd",
+      "sourceIssue": null,
+      "summary": "Run every route, repository skill workflow, startup Hook source, and routing evaluation profile in Codex and Claude Code, renaming optimize-codex-usage to host-neutral optimize-agent-usage.",
+      "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
     }
   ]
 }

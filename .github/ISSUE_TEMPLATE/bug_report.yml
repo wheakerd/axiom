@@ -22,8 +22,8 @@ body:
     id: host_version
     attributes:
       label: Host version
-      description: Provide the exact Codex version when available.
-      placeholder: "Example: Codex 0.153.0"
+      description: Provide the exact host version when available.
+      placeholder: "Example: Codex CLI 0.149.0 or Claude Code 2.1.292"
     validations:
       required: true
 
@@ -41,7 +41,7 @@ body:
     attributes:
       label: Installation method
       description: State whether you used a Git marketplace, local checkout, or another method.
-      placeholder: "Example: Codex Git marketplace"
+      placeholder: "Example: Codex Git marketplace or Claude Code Git marketplace"
     validations:
       required: true
 
@@ -96,12 +96,13 @@ body:
     id: reproduction
     attributes:
       label: Minimal reproduction
-      description: List the shortest sequence from a new or reloaded session to the issue.
+      description: List the shortest sequence from a new session to the issue.
       placeholder: |
-        1. Install or reload Axiom.
-        2. Review the hook.
-        3. Send the sanitized request above.
-        4. Observe ...
+        1. Install or update Axiom.
+        2. Review the installed hook.
+        3. Start a new session.
+        4. Send the sanitized request above.
+        5. Observe ...
     validations:
       required: true
 
@@ -123,7 +124,7 @@ body:
     id: cross_platform
     attributes:
       label: Cross-platform observation
-      description: If possible, say whether the same request behaves differently on another operating system or Codex version.
+      description: If possible, say whether the same request behaves differently on another operating system, host, or host version.
 
   - type: checkboxes
     id: secret_review

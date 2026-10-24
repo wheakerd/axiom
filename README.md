@@ -17,9 +17,8 @@ smallest matching skill set and its relevant references; everyday requests
 continue through the host normally. The skills use the host's existing tools
 and permissions, with no background service or automatic updater.
 
-**Supported hosts:** Codex and Claude Code. Both share the same skills;
-`delegate-simple-task`, `continuous-progress`, and `optimize-codex-usage`
-need Codex features and are not available in Claude Code.
+**Supported hosts:** Codex and Claude Code. Both share the same skills and
+routes.
 
 [Install](#installation) | [Update](#updating) | [Use a skill](#skills) |
 [Documentation](docs/README.md)
@@ -47,10 +46,15 @@ claude plugin install axiom@axiom
 Each marketplace selects an immutable published version. Development commits
 on `main` do not advance that selection.
 
-Start a new session. Open `/hooks` and compare the installed entry with the
-[Hook Reference](docs/reference/hooks.md) before trusting it.
-Stop if the definitions differ. The [Getting Started guide](docs/guides/getting-started.md)
-owns the full installation and first-use procedure.
+Compare the installed startup Hook with the
+[Hook Reference](docs/reference/hooks.md) before it runs, and stop if the
+definitions differ. In Codex, start a new session and review the Hook in
+`/hooks`; Codex skips a new or changed Hook until you trust it. Claude Code has
+no separate Hook trust step and runs the Hook at the next `SessionStart` after
+the plugin loads, so compare the installed `hooks/claude-hooks.json` before
+starting a session or running `/reload-plugins`. The
+[Getting Started guide](docs/guides/getting-started.md) owns the full
+installation and first-use procedure.
 
 ## Updating
 
@@ -65,11 +69,11 @@ claude plugin marketplace update axiom
 claude plugin update axiom@axiom
 ```
 
-In a supported Codex workspace plugin UI, use **Refresh**. After updating,
-start a new session and inspect `/hooks` again. Automatic update behavior is
-controlled by each host and your settings. See [Managing an Installation](docs/guides/managing-installation.md)
-for disabling, removal, and troubleshooting.
-For a marketplace clone timeout, follow the guide's
+After updating, repeat the Hook comparison above before the updated Hook
+runs. Automatic update behavior is controlled by each host and your settings.
+See [Managing an Installation](docs/guides/managing-installation.md) for in-app
+updates, disabling, removal, and troubleshooting.
+For a marketplace clone timeout in either host, follow the guide's
 [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts).
 
 ## First Use
@@ -121,7 +125,7 @@ more requests and expected behavior.
 **Link:** [Startup routing skill](skills/using-axiom/SKILL.md)
 
 **Description:** Finds the smallest matching skill set and leaves unmatched
-work with Codex. It loads through the startup hook.
+work with the host. It loads through the startup hook.
 
 **Usage:**
 
@@ -147,17 +151,15 @@ before making changes.
 
 **Link:** [Bounded task delegation](skills/delegate-simple-task/SKILL.md)
 
-**Host:** Codex only.
-
 **Description:** Assesses simple work against your ordered model preferences
-while preserving the main model. Requires the active `using-axiom` gate,
-verified `Ultra` reasoning, and your consent to invoke the skill.
+while preserving the main model. Requires the active `using-axiom` gate, the
+host's verified top reasoning level, and your consent to invoke the skill.
 
 **Usage:**
 
 ```text
 I authorize $delegate-simple-task to assess this typo fix using my model
-preferences, only with the using-axiom gate active and my Ultra reasoning verified.
+preferences, only with the using-axiom gate active and my top reasoning level verified.
 ```
 
 #### task-planning
@@ -178,12 +180,10 @@ Do not implement it yet.
 
 **Link:** [Supervised progress across sessions](skills/continuous-progress/SKILL.md)
 
-**Host:** Codex only.
-
 **Description:** Explicitly invoked progress through fresh workers and
 coordinator handoffs, with a verified native supervisor. Stops after verified
-completion or cancellation; local scheduling requires Codex and the machine
-to remain available.
+completion or cancellation; local scheduling requires the owning host
+application and the machine to remain available.
 
 **Usage:**
 
@@ -231,15 +231,13 @@ compatibility evidence for a packaged agent plugin.
 **Usage:**
 
 ```text
-Use $agent-plugin-architect to audit this Codex plugin's package architecture
+Use $agent-plugin-architect to audit this plugin's package architecture
 without editing it.
 ```
 
-#### optimize-codex-usage
+#### optimize-agent-usage
 
-**Link:** [Codex usage analysis](skills/optimize-codex-usage/SKILL.md)
-
-**Host:** Codex only.
+**Link:** [Agent usage analysis](skills/optimize-agent-usage/SKILL.md)
 
 **Description:** Finds ways to reduce context, token, and tool overhead while
 preserving required quality.
@@ -247,7 +245,7 @@ preserving required quality.
 **Usage:**
 
 ```text
-Use $optimize-codex-usage to review this workflow's context overhead
+Use $optimize-agent-usage to review this workflow's context overhead
 and recommend reductions.
 ```
 
@@ -313,6 +311,10 @@ No current top-level bundled skill is marked deprecated. Earlier nested
 AGENTS Architect topics are now supporting references within
 [`agents-architect`](skills/agents-architect/SKILL.md), not separate skills to
 install or invoke.
+
+`optimize-codex-usage` was renamed `optimize-agent-usage` in
+[v0.16.0](docs/releases/v0.16.0.md) and now runs in both hosts. Invoke the new
+name; the old name is no longer bundled.
 
 Claude Code support, removed in [v0.11.0](docs/releases/v0.11.0.md), returned in
 [v0.15.0](docs/releases/v0.15.0.md). A cached pre-0.11.0 Claude Code

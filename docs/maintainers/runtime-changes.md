@@ -11,9 +11,10 @@ action authority.
 
 ## Skill And Package Ownership
 
-Codex installs the shared [skills/](../../skills/) source. Keep the
-[Codex manifest](../../.codex-plugin/plugin.json) pointed at `./skills/` and
-bind its version to the current runtime identity. Do not create a
+Codex and Claude Code install the same shared [skills/](../../skills/) source.
+Keep the [Codex manifest](../../.codex-plugin/plugin.json) and the
+[Claude Code manifest](../../.claude-plugin/plugin.json) pointed at `./skills/`,
+with one version bound to the current runtime identity. Do not create a
 platform-specific copy of a shared Skill.
 
 The top-level `using-axiom` Skill is the startup routing gate. Other top-level
@@ -22,7 +23,7 @@ Skills provide the focused workflows it selects. Supporting `references/` and
 not independent public routes.
 
 Axiom installs Markdown Skills and foreground Hook definitions. Explicit
-continuous-progress runs may use Codex-owned native scheduling. Axiom has no
+continuous-progress runs may use host-owned native scheduling. Axiom has no
 installed daemon, background updater, network update check, or bundled runtime
 dependency. Repository validation may use a host-provided interpreter, but it
 must not become a dependency of the installed plugin.
@@ -34,8 +35,8 @@ must not become a dependency of the installed plugin.
   normally when no Axiom route applies.
 - Do not turn Axiom into a catch-all for ordinary coding, documentation, Git,
   or status requests.
-- Route `optimize-codex-usage` only from an explicit Codex credit, token,
-  context, Skill/AGENTS/MCP-loading, or consumption-diagnosis goal. Software
+- Route `optimize-agent-usage` only from an explicit credit, token, context,
+  Skill/instruction-file/MCP-loading, or consumption-diagnosis goal. Software
   performance wording alone is not a trigger.
 - Keep route definitions and triggers in English. Unambiguous requests in
   other languages may normalize to the canonical English route; they do not
@@ -48,8 +49,8 @@ must not become a dependency of the installed plugin.
   reasoning settings.
 - Simple-task child model selection belongs to `delegate-simple-task`. Its
   [activation conditions](../../skills/delegate-simple-task/SKILL.md#activation)
-  require the active startup gate, verified user-selected Ultra reasoning, and
-  invocation consent. Preserve those conditions in route metadata, direct
+  require the active startup gate, the host's verified top reasoning level,
+  and invocation consent. Preserve those conditions in route metadata, direct
   requests, and resume behavior before applying assignment permissions.
 - `continuous-progress` inherits the observed model and effort for its workers
   and successors. Its explicit activation, host capability checks, independent
@@ -59,8 +60,8 @@ must not become a dependency of the installed plugin.
 When editing a route, review its direct references and examples for accidental
 permission expansion. State separately whether the change affects matching,
 planning, mutation authority, stop conditions, rollback, or completion
-evidence. Review the installed behavior in Codex when the runtime changes, and
-report unobserved behavior as `NOT-RUN`.
+evidence. Review the installed behavior on each supported host when the runtime
+changes, and report unobserved behavior as `NOT-RUN`.
 
 ## Always-Loaded Context
 
@@ -85,9 +86,10 @@ or weaken quality merely to meet a size target.
 
 ## Hook Changes
 
-Codex declares [hooks/codex-hooks.json](../../hooks/codex-hooks.json) and reads
+Codex declares [hooks/codex-hooks.json](../../hooks/codex-hooks.json) and Claude
+Code declares [hooks/claude-hooks.json](../../hooks/claude-hooks.json). Both read
 the [startup routing gate](../../skills/using-axiom/SKILL.md) through
-`SessionStart`, including `compact`.
+`SessionStart`, including `compact` and `fork`.
 Keep the conventional `hooks/hooks.json` absent. The [Hook Reference](../reference/hooks.md)
 renders the canonical declarations and packaged wrappers for inspection.
 
@@ -98,6 +100,6 @@ automatic update behavior. Update the relevant manifest and public trust
 documentation whenever a declared Hook path or command changes.
 
 Hook and Hook-workflow changes require the
-[native integration checks](validation.md#hook-runtime-integration) on every
-available target host, in addition to the ordinary contributor checks. A pass
-on one operating system does not establish behavior on another.
+[native integration checks](validation.md#hook-runtime-integration) on at least
+one supported operating system, in addition to the ordinary contributor checks.
+The required CI matrix covers the other systems' command variants.

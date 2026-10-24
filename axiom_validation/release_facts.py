@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .context import supported_hosts, RELEASE_VERSION, REPOSITORY_ROOT
-from .context_budget import load_json
+from .context_budget import context_budget_schema_version, load_json
 from .release_versions import parse_production_release_version
 
 
@@ -159,8 +159,9 @@ def validate_release_facts_record(
     """Validate the evidence labels and arithmetic used by rendered claims."""
     initial_count = len(failures)
     label = f"v{version} release-facts record"
-    if document.get("schemaVersion") != "1":
-        failures.append(f"{label} schemaVersion must be '1'")
+    expected_schema = context_budget_schema_version(version)
+    if document.get("schemaVersion") != expected_schema:
+        failures.append(f"{label} schemaVersion must be {expected_schema!r}")
     expected_record_id = f"routing-context-budget-v{version.replace('.', '-')}"
     if document.get("recordId") != expected_record_id:
         failures.append(f"{label} recordId drifted")
@@ -358,6 +359,12 @@ def _legacy_dual_host(version: str) -> bool:
     return parsed is not None and parsed < parse_production_release_version("0.11.0")
 
 
+def _equal_host_facts(version: str) -> bool:
+    """From 0.16.0, state host and lifecycle observation for both hosts alike."""
+    parsed = parse_production_release_version(version)
+    return parsed is not None and parsed >= parse_production_release_version("0.16.0")
+
+
 def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
     """Render exact static facts while preserving proxy and observation labels."""
     version = document["targetRelease"]["version"]
@@ -374,11 +381,21 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
     )
     review_status = comparison["reviewStatus"]
     if "claude-code" not in supported_hosts(version):
-        host_status = "`NOT-RUN`. "
+        host_status = "Codex host and lifecycle observation remains `NOT-RUN`. "
     elif _legacy_dual_host(version):
-        host_status = "`NOT-RUN`; authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. "
+        host_status = (
+            "Codex host and lifecycle observation remains `NOT-RUN`; "
+            "authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`. "
+        )
+    elif not _equal_host_facts(version):
+        host_status = (
+            "Codex host and lifecycle observation remains `NOT-RUN`; "
+            "Claude Code host observation also remains `NOT-RUN`. "
+        )
     else:
-        host_status = "`NOT-RUN`; Claude Code host observation also remains `NOT-RUN`. "
+        host_status = (
+            "Codex and Claude Code host and lifecycle observations remain `NOT-RUN`. "
+        )
     return (
         f"The [v{version} routing-context record]({link}) uses the immutable "
         "v0.7.9 `using-axiom` gate as its cumulative baseline. The baseline has "
@@ -401,7 +418,7 @@ def render_release_facts(relative_path: str, document: dict[str, Any]) -> str:
         f"threshold `{relative_status}`, and review status `{review_status}`. "
         "The exact static counts are context proxies, and each `ceil(UTF-8 bytes / 4)` "
         "figure is only an estimate for the same English Markdown surface, not an "
-        "exact token or credit count. Codex host and lifecycle observation remains "
+        "exact token or credit count. "
         f"{host_status}No host "
         "observation is inferred from these static values."
     )

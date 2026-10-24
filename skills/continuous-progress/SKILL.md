@@ -1,6 +1,6 @@
 ---
 name: continuous-progress
-description: Supervised progress across Codex sessions by explicit invocation only. Use when the human invokes this skill to pursue a defined outcome through fresh execution sessions, coordinator handoffs, compaction, and independent recovery. Do not select it for ordinary requests to continue, one-off work, skill evaluation or authoring, or a request to use native Goals alone. Activation requires verified native scheduling, a supported independent supervisor, and existing authority for the requested coordination.
+description: Supervised progress across host sessions by explicit invocation only. Use when the human invokes this skill to pursue a defined outcome through fresh execution sessions, coordinator handoffs, compaction, and independent recovery. Do not select it for ordinary requests to continue, one-off work, skill evaluation or authoring, or a request to use native Goals or /goal alone. Activation requires verified native scheduling, a supported independent supervisor, and existing authority for the requested coordination.
 ---
 
 # Continuous Progress
@@ -18,8 +18,9 @@ as active, and never silently reduce the request to a foreground-only loop.
 ## Select The Phase
 
 - Before activation, read [Host and run contract](references/host-and-run-contract.md).
-- When binding Codex sessions, scheduling, or cancellation, read
-  [Codex operations](references/codex-operations.md).
+- When binding sessions, scheduling, or cancellation, read the current host's
+  reference: [Codex operations](references/codex-operations.md) or
+  [Claude Code operations](references/claude-code-operations.md).
 - When coordinating work or transferring ownership, read
   [Execution and handoff](references/execution-and-handoff.md).
 - When supervising, recovering a failure, accepting completion, or stopping,
