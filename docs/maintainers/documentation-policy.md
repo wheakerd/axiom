@@ -103,6 +103,8 @@ The current repository assigns these responsibilities:
   `docs/maintainers/validation.md` owns contributor check procedures;
 - `SECURITY.md` owns vulnerability reporting and security boundaries, while
   `CHANGELOG.md` owns user-visible changes and required action;
+- `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement
+  contact;
 - `docs/guides/` owns installation, first use, update, removal, and
   troubleshooting;
 - `docs/reference/hooks.md` renders the canonical Hook declarations and
@@ -130,6 +132,7 @@ short documents:
 ```text
 README.md
 CHANGELOG.md
+CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 SECURITY.md
 docs/
@@ -161,6 +164,7 @@ optional detail within an entry without creating another skill-level heading.
 | Runtime-authoring requirements | `docs/maintainers/runtime-changes.md` | Contributor policy; installed behavior remains owned by Skills, hooks, and manifests |
 | Contributor check procedures | `docs/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
+| Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
 | Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; README keeps a validated rendering |
 | Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |

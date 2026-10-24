@@ -28,6 +28,13 @@ Every new version after `0.10.0` has one entry whose heading is
 - `### Behavioral impact`; and
 - `### Required action`, using `None` when users need do nothing.
 
+Keep the heading state `unreleased` until the GitHub Release is published; the
+tagged entry therefore always reads `unreleased`, and the rendered body omits
+the heading. After publication, replace the state with the Release's UTC
+publication date in the marketplace-publication pull request, or in the next
+repository-policy change when that handoff does not apply. A version tagged
+without a GitHub Release states that instead of a date.
+
 Keep the entry concise and user-facing. Case-level results, commit and tree
 IDs, timing, token counts, candidate investigations, workflow internals, and
 historical run ledgers belong in version notes or evidence rather than the
@@ -145,7 +152,8 @@ process:
    catalog change; a Release event alone does not prove a Latest transition.
 2. On a task branch from current `main`, replace only the Axiom entry's source
    in each catalog with the verified Git URL and version tag. Preserve other
-   catalog metadata.
+   catalog metadata, and date the released version's Changelog heading as the
+   [Changelog Contract](#changelog-contract) describes.
    Record the next repository-policy revision and its baseline, retain the
    installed runtime identity, and run the contributor checks. This catalog
    operation requires publication scope; a policy revision does not grant it.

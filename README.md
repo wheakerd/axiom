@@ -58,11 +58,15 @@ installation and first-use procedure.
 
 ## Updating
 
-Refresh the installed marketplace snapshot from a terminal:
+Refresh the installed marketplace snapshot from a terminal.
+
+**Codex:**
 
 ```bash
 codex plugin marketplace upgrade axiom
 ```
+
+**Claude Code:**
 
 ```bash
 claude plugin marketplace update axiom
@@ -81,8 +85,8 @@ For a marketplace clone timeout in either host, follow the guide's
 Try a read-only request that matches a skill:
 
 ```text
-Use $agents-architect to audit this repository's AGENTS.md instruction system.
-Report findings only; do not modify files.
+Use the agents-architect skill to audit this repository's AGENTS.md
+instruction system. Report findings only; do not modify files.
 ```
 
 Then try an ordinary request:
@@ -92,15 +96,11 @@ Summarize the purpose of this README. Do not modify files.
 ```
 
 The first request should select `agents-architect`; the second should continue
-normally without another skill. When the startup gate is enabled or you
-explicitly invoke `using-axiom`, its
-[optional notice guidance](skills/using-axiom/SKILL.md#invocation-notes)
-leaves explanations and layout to the model and host under your output-verbosity
-preferences. Explanations identify Axiom skills as `Axiom:<skill-name>` and
-external skills (including repository-local skills), plugins, or MCP capabilities
-by their own inline-code names,
-with a brief reason. A quiet response is valid. These are expected behaviors,
-not a claim that your installation has already reproduced them.
+normally without another skill. Any explanation of the routing decision is
+optional and follows the
+[invocation notes](skills/using-axiom/SKILL.md#invocation-notes); a quiet
+response is valid. These are expected behaviors, not a claim that your
+installation has already reproduced them.
 
 > [!IMPORTANT]
 > A request that matches no Axiom skill still follows your host's permissions
@@ -114,9 +114,10 @@ not a claim that your installation has already reproduced them.
 
 Use natural language, include `$skill-name` in Codex, or type
 `/axiom:skill-name` in Claude Code. The examples below are chat prompts, not
-terminal commands. Each linked source describes
-the skill's full scope and requirements; [Examples](docs/examples.md) gives
-more requests and expected behavior.
+terminal commands; they name each skill in plain words, which reads the same in
+both hosts. Each linked source describes the skill's full scope and
+requirements; [Examples](docs/examples.md) gives more requests and expected
+behavior.
 
 ### Shared skills
 
@@ -130,7 +131,7 @@ work with the host. It loads through the startup hook.
 **Usage:**
 
 ```text
-Use $using-axiom to identify the skill that fits this request.
+Use the using-axiom skill to identify the skill that fits this request.
 ```
 
 #### clarify-intent
@@ -143,7 +144,7 @@ question and useful options.
 **Usage:**
 
 ```text
-Use $clarify-intent to clarify what "clean up this project" should mean
+Use the clarify-intent skill to clarify what "clean up this project" should mean
 before making changes.
 ```
 
@@ -158,8 +159,9 @@ host's verified top reasoning level, and your consent to invoke the skill.
 **Usage:**
 
 ```text
-I authorize $delegate-simple-task to assess this typo fix using my model
-preferences, only with the using-axiom gate active and my top reasoning level verified.
+I authorize the delegate-simple-task skill to assess this typo fix using my
+model preferences, only with the using-axiom gate active and my top reasoning
+level verified.
 ```
 
 #### task-planning
@@ -172,7 +174,7 @@ criteria, or updates an existing plan.
 **Usage:**
 
 ```text
-Use $task-planning to plan this settings-page change.
+Use the task-planning skill to plan this settings-page change.
 Do not implement it yet.
 ```
 
@@ -188,9 +190,10 @@ application and the machine to remain available.
 **Usage:**
 
 ```text
-Use $continuous-progress to finish this task. Create fresh execution and
-successor chats as needed, register an independent native supervisor,
-and stop its schedule when the task is verified complete or I cancel.
+Use the continuous-progress skill to finish this task. Create fresh
+execution and successor chats as needed, register an independent native
+supervisor, and stop its schedule when the task is verified complete or I
+cancel.
 ```
 
 #### local-web-search
@@ -203,7 +206,7 @@ challenges through a user handoff.
 **Usage:**
 
 ```text
-Use $local-web-search to find official migration guidance
+Use the local-web-search skill to find official migration guidance
 through my local browser.
 ```
 
@@ -217,7 +220,7 @@ and repository skills.
 **Usage:**
 
 ```text
-Use $agents-architect to audit this repository's instruction system.
+Use the agents-architect skill to audit this repository's instruction system.
 Report findings only.
 ```
 
@@ -231,7 +234,7 @@ compatibility evidence for a packaged agent plugin.
 **Usage:**
 
 ```text
-Use $agent-plugin-architect to audit this plugin's package architecture
+Use the agent-plugin-architect skill to audit this plugin's package architecture
 without editing it.
 ```
 
@@ -245,7 +248,7 @@ preserving required quality.
 **Usage:**
 
 ```text
-Use $optimize-agent-usage to review this workflow's context overhead
+Use the optimize-agent-usage skill to review this workflow's context overhead
 and recommend reductions.
 ```
 
@@ -259,7 +262,7 @@ evidence for an identified task.
 **Usage:**
 
 ```text
-Use $review-axiom-task to review why Axiom paused the previous task.
+Use the review-axiom-task skill to review why Axiom paused the previous task.
 Do not retry it.
 ```
 
@@ -273,8 +276,8 @@ authorization before execution and verification.
 **Usage:**
 
 ```text
-Use $confirm-external-action to prepare this announcement for publication.
-Show the exact destination and text; do not publish yet.
+Use the confirm-external-action skill to prepare this announcement for
+publication. Show the exact destination and text; do not publish yet.
 ```
 
 #### traceable-git-submit
@@ -287,7 +290,7 @@ submissions that need traceability.
 **Usage:**
 
 ```text
-Use $traceable-git-submit to create a checkpoint of the README changes.
+Use the traceable-git-submit skill to create a checkpoint of the README changes.
 Do not push.
 ```
 
@@ -301,40 +304,28 @@ verified recovery and outcome checks.
 **Usage:**
 
 ```text
-Use $reversible-system-change to plan this database migration and its rollback.
-Do not execute it.
+Use the reversible-system-change skill to plan this database migration
+and its rollback. Do not execute it.
 ```
 
-### Deprecated Skills and Support
-
-No current top-level bundled skill is marked deprecated. Earlier nested
-AGENTS Architect topics are now supporting references within
-[`agents-architect`](skills/agents-architect/SKILL.md), not separate skills to
-install or invoke.
+### Renamed and retired skills
 
 `optimize-codex-usage` was renamed `optimize-agent-usage` in
 [v0.16.0](docs/releases/v0.16.0.md) and now runs in both hosts. Invoke the new
-name; the old name is no longer bundled.
-
-Claude Code support, removed in [v0.11.0](docs/releases/v0.11.0.md), returned in
-[v0.15.0](docs/releases/v0.15.0.md). A cached pre-0.11.0 Claude Code
-installation updates through the commands above.
+name; the old name is no longer bundled. A Claude Code installation cached
+before v0.11.0 updates through the commands above. The
+[Changelog](CHANGELOG.md) records earlier removals and restored host support.
 
 ---
 
 ## Security and Checks
 
-The release badge follows GitHub Releases automatically. The other status
-badges link to the repository's live workflow results:
-
-- **Distribution and publication guards** validate the package, documentation,
-  and repository publication rules.
-- **CodeQL** scans Python and GitHub Actions workflows for potential
-  vulnerabilities. Its configuration is in [the security workflow](.github/workflows/codeql.yml).
-- **MIT** identifies the project's license.
-
-A workflow badge reports a run result, not a guarantee that the project is
-free of vulnerabilities. Axiom is a public beta, and its instructions do not
+The release badge follows GitHub Releases. The workflow badges show live
+results: **Distribution and publication guards** validate the package,
+documentation, and publication rules, and **CodeQL** scans Python and GitHub
+Actions workflows ([configuration](.github/workflows/codeql.yml)). A badge
+reports a run result, not a guarantee that the project is free of
+vulnerabilities. Axiom is a public beta, and its instructions do not
 replace host permissions or provide a sandbox. Read the
 [Trust Model](docs/trust-model.md) for the security boundaries and
 [SECURITY.md](SECURITY.md) to report a vulnerability privately.
@@ -346,7 +337,10 @@ replace host permissions or provide a sandbox. Read the
   backed by the [release-status record](evidence/release-status.json).
 - [Architecture](docs/architecture.md): how routing and skills fit together.
 - [Changelog](CHANGELOG.md): changes and migration notices.
-- [GitHub Issues](https://github.com/wheakerd/axiom/issues): help and bug reports.
+- [GitHub Discussions](https://github.com/wheakerd/axiom/discussions): questions and early ideas.
+- [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose): bug reports,
+  feature requests, routing cases, and compatibility reports.
+- [Code of Conduct](CODE_OF_CONDUCT.md): community expectations and reporting.
 - [Contributing](CONTRIBUTING.md): contribution and validation guidance.
 
 ## License

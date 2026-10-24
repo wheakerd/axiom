@@ -9,6 +9,30 @@ Release body is rendered deterministically from that entry at the exact tag;
 version notes and candidate evidence remain separate detail surfaces. Existing
 entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
+A version heading names the UTC date on which its GitHub Release was
+published, or states that the version was tagged without a GitHub Release. An
+entry keeps `unreleased` until that Release is published, so the tagged entry
+still reads `unreleased`; the rendered Release body omits the heading, and
+dating it later changes neither the entry nor that body. Headings before 0.8.3
+keep the dates recorded when they were written.
+
+## Repository policy revision 72
+
+### Changed
+
+- Date each published version's Changelog heading with its GitHub Release publication date, and keep `unreleased` only until that Release is published.
+- Write README usage examples in plain words that read the same in Codex and Claude Code, and label the update commands by host.
+- Add a Code of Conduct and state where questions, ideas, and actionable reports belong.
+- Complete the contributor repository map and record the latest verification of private vulnerability reporting.
+
+### Behavioral impact
+
+Documentation and repository policy only. Installed Skills, Hooks, manifests, and the runtime digest are unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 71
 
 ### Changed
@@ -24,7 +48,7 @@ Codex and Claude Code marketplace refresh now select the release that runs every
 
 None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
 
-## 0.16.0 - unreleased
+## 0.16.0 - 2026-10-24
 
 ### Added
 
@@ -72,7 +96,7 @@ Codex marketplace refresh now selects the release with Claude Code support and t
 
 None for existing Codex clients, which follow Codex's native marketplace refresh and update controls. Claude Code users install through the commands in the README.
 
-## 0.15.0 - unreleased
+## 0.15.0 - 2026-10-18
 
 ### Added
 
@@ -103,7 +127,7 @@ None for Codex. To use Axiom in Claude Code, add the `wheakerd/axiom` marketplac
 
 See the [version notes](docs/releases/v0.15.0.md) for the host boundary, runtime schema, and static context evidence.
 
-## 0.14.6 - unreleased
+## 0.14.6 - tagged 2026-10-18; no GitHub Release
 
 ### Fixed
 
@@ -156,7 +180,7 @@ Marketplace refresh now selects the release with shorter Bundled Routes summarie
 
 None. Existing clients follow Codex's native marketplace refresh and update controls.
 
-## 0.14.5 - unreleased
+## 0.14.5 - 2026-10-15
 
 ### Changed
 
@@ -186,7 +210,7 @@ Marketplace refresh now selects the release with optional invocation explanation
 
 None. Existing clients follow Codex's native marketplace refresh and update controls.
 
-## 0.14.4 - unreleased
+## 0.14.4 - 2026-10-14
 
 ### Fixed
 
@@ -225,7 +249,7 @@ Marketplace refresh now selects the release with inline-code skill markers, brie
 
 Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
 
-## 0.14.3 - unreleased
+## 0.14.3 - 2026-10-14
 
 ### Fixed
 
@@ -260,7 +284,7 @@ Marketplace refresh now selects the release that displays `Axiom:<skill-name>` f
 
 Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
 
-## 0.14.2 - unreleased
+## 0.14.2 - 2026-10-14
 
 ### Fixed
 
@@ -295,7 +319,7 @@ Marketplace refresh now selects the release containing the Ultra, active-gate, a
 
 Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
 
-## 0.14.1 - unreleased
+## 0.14.1 - 2026-10-14
 
 ### Fixed
 
@@ -348,7 +372,7 @@ Marketplace refresh resolves the published plugin reference instead of the devel
 
 Existing default-source users can refresh through Codex's native marketplace upgrade and inspect the installed version. Preserve deliberate source pins. Maintainers complete the catalog PR after verified Latest publication; see [Managing an Installation](docs/guides/managing-installation.md#version-selection) and [Marketplace Publication](docs/maintainers/release-documentation.md#marketplace-publication).
 
-## 0.14.0 - unreleased
+## 0.14.0 - 2026-10-13
 
 ### Added
 
@@ -445,7 +469,7 @@ This repository-only documentation and validation change preserves plugin versio
 
 Use documentation from the same release or source snapshot as the package being inspected. Contributors should follow the [source and version rules](docs/maintainers/documentation-policy.md#source-and-version-scope); no configuration or installation change is required.
 
-## 0.13.4 - unreleased candidate
+## 0.13.4 - 2026-10-10
 
 ### Changed
 
@@ -483,7 +507,7 @@ This repository-only change improves navigation and contributor checks. Plugin v
 
 Contributors should use the linked runtime-authoring and validation guides from `CONTRIBUTING.md`, the current `evals/README.md` for evaluation contracts, and `evals/history/codex-core-v1-v2.md` for earlier methods and run narratives. The publication-check command and plugin installation paths are unchanged.
 
-## 0.13.3 - unreleased candidate
+## 0.13.3 - 2026-10-08
 
 ### Added
 
@@ -515,7 +539,7 @@ AGENTS authoring now explicitly rejects task language as an implicit document-la
 
 Repository consumers must replace `scripts/check-distribution-drift.py` with `scripts/check-publication.py`, use `evals/routing-history-v1.json` for the history index, and retire links to the removed `project/` documents. Consult Git history when those historical documents are needed. Retire no-Hook builder and observation command invocations; use the [experiment archive](docs/field-validation.md#archived-experiments) for explicitly scoped historical reproduction. Plugin installation paths are unchanged. Request another language explicitly when it is intended for generated instruction documents. If a research site requires manual handling, resolve it yourself and explicitly indicate readiness before automated browsing can resume.
 
-## 0.13.2 - unreleased candidate
+## 0.13.2 - 2026-09-20
 
 ### Fixed
 
@@ -532,7 +556,7 @@ These compatible corrections make existing Git, reversible-change, and plugin ar
 
 None. Existing release and recovery records retain their original evidence; resume interrupted work only after the workflow's current-state checks pass.
 
-## 0.13.1 - unreleased candidate
+## 0.13.1 - 2026-09-18
 
 ### Fixed
 
@@ -562,7 +586,7 @@ These corrections affect repository validation tools. Plugin version `0.13.0`, i
 
 Contributors collecting a new optional routing observation must use the current versioned contract described in [Routing Evaluations](evals/README.md). Installed plugin users do not need an update for this repository revision.
 
-## 0.13.0 - unreleased candidate
+## 0.13.0 - 2026-09-16
 
 ### Added
 
@@ -587,7 +611,7 @@ Provide exact model IDs in priority order to use model-aware delegation. Existin
 
 Contributors must replace calls to the retired validator with `python3 scripts/check-publication.py` or the equivalent Python 3 launcher.
 
-## 0.12.0 - unreleased candidate
+## 0.12.0 - 2026-09-15
 
 ### Added
 
@@ -601,7 +625,7 @@ Plan revisions remove canceled work from goals, steps, dependencies, and accepta
 
 None. Update Axiom in Codex and start a new session to use the new skill.
 
-## 0.11.0 - unreleased candidate
+## 0.11.0 - 2026-09-15
 
 ### Removed
 
@@ -620,7 +644,7 @@ Axiom installs and runs in Codex. The plugin architecture skill retains guidance
 
 Existing Claude Code users must disable or uninstall their old Axiom installation in that host; cached installations are not removed by a repository update. For continued Axiom use, follow the [Codex installation guide](docs/guides/getting-started.md) and start a new session. See [v0.11.0 notes](docs/releases/v0.11.0.md) for details.
 
-## 0.10.1 - unreleased candidate
+## 0.10.1 - 2026-09-15
 
 ### Fixed
 
@@ -651,7 +675,7 @@ and version-specific host observations remain distinct evidence categories.
 None. See [the v0.10.1 release notes](docs/releases/v0.10.1.md) for migration
 and compatibility evidence boundaries.
 
-## 0.10.0 - unreleased candidate
+## 0.10.0 - 2026-08-31
 
 ### Added
 
@@ -735,7 +759,7 @@ Current installed Codex host and lifecycle observation is `NOT-RUN`;
 authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See
 [the v0.9.0 release notes](docs/releases/v0.9.0.md).
 
-## 0.8.20 - unreleased candidate
+## 0.8.20 - 2026-08-29
 
 ### Security
 
@@ -922,7 +946,7 @@ See [the v0.8.15 release notes](docs/releases/v0.8.15.md).
 
 See [the v0.8.14 release notes](docs/releases/v0.8.14.md).
 
-## 0.8.13 - unreleased candidate
+## 0.8.13 - 2026-08-27
 
 ### Security
 
@@ -956,7 +980,7 @@ See [the v0.8.14 release notes](docs/releases/v0.8.14.md).
 
 See [the v0.8.13 release notes](docs/releases/v0.8.13.md).
 
-## 0.8.12 - unreleased candidate
+## 0.8.12 - 2026-08-27
 
 ### Changed
 
@@ -991,7 +1015,7 @@ See [the v0.8.13 release notes](docs/releases/v0.8.13.md).
 
 See [the v0.8.12 release notes](docs/releases/v0.8.12.md).
 
-## 0.8.11 - unreleased candidate
+## 0.8.11 - 2026-08-27
 
 ### Performance
 
@@ -1024,7 +1048,7 @@ See [the v0.8.12 release notes](docs/releases/v0.8.12.md).
 
 See [the v0.8.11 release notes](docs/releases/v0.8.11.md).
 
-## 0.8.10 - unreleased candidate
+## 0.8.10 - 2026-08-27
 
 ### Fixed
 
@@ -1069,7 +1093,7 @@ See [the v0.8.11 release notes](docs/releases/v0.8.11.md).
 
 See [the v0.8.10 release notes](docs/releases/v0.8.10.md).
 
-## 0.8.9 - unreleased candidate
+## 0.8.9 - 2026-08-27
 
 ### Security
 
@@ -1101,7 +1125,7 @@ See [the v0.8.10 release notes](docs/releases/v0.8.10.md).
 
 See [the v0.8.9 release notes](docs/releases/v0.8.9.md).
 
-## 0.8.8 - unreleased candidate
+## 0.8.8 - 2026-08-27
 
 ### Fixed
 
@@ -1135,7 +1159,7 @@ See [the v0.8.9 release notes](docs/releases/v0.8.9.md).
 
 See [the v0.8.8 release notes](docs/releases/v0.8.8.md).
 
-## 0.8.7 - unreleased candidate
+## 0.8.7 - 2026-08-27
 
 ### Fixed
 
@@ -1220,7 +1244,7 @@ GitHub Release exists; v0.8.7 carries the publication repair.
 
 See [the v0.8.6 release notes](docs/releases/v0.8.6.md).
 
-## 0.8.5 - unreleased candidate
+## 0.8.5 - 2026-08-26
 
 ### Security
 
@@ -1255,7 +1279,7 @@ See [the v0.8.6 release notes](docs/releases/v0.8.6.md).
 
 See [the v0.8.5 release notes](docs/releases/v0.8.5.md).
 
-## 0.8.4 - unreleased candidate
+## 0.8.4 - 2026-08-25
 
 ### Changed
 
@@ -1288,7 +1312,7 @@ See [the v0.8.5 release notes](docs/releases/v0.8.5.md).
 
 See [the v0.8.4 release notes](docs/releases/v0.8.4.md).
 
-## 0.8.3 - unreleased candidate
+## 0.8.3 - 2026-08-25
 
 ### Changed
 

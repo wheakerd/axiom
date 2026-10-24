@@ -36,8 +36,11 @@ when comparing the source tree, a published release, and an installed package.
 | Maintain routing cases or collect an optional observation | [Routing Evaluations](../evals/README.md) | Contributors and evaluators |
 | Interpret routing-gate size and growth | [Routing Context Budget](../evals/context-budget/README.md) | Contributors and reviewers |
 
-For help, use [GitHub Issues](https://github.com/wheakerd/axiom/issues). Report
-security concerns through the process in [SECURITY.md](../SECURITY.md).
+Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussions)
+and file actionable reports through the
+[GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) forms.
+Report security concerns through the process in [SECURITY.md](../SECURITY.md),
+and see the [Code of Conduct](../CODE_OF_CONDUCT.md) for community expectations.
 
 ## Candidate And Historical Records
 
@@ -69,6 +72,7 @@ establish current host support nor impose retired procedures on current work.
 | Root `README.md` | Product introduction, installation and update quick start, skill usage, and host-support notice |
 | Root `CONTRIBUTING.md` | Contribution intake, repository map, and review checklist |
 | Root `SECURITY.md` | Supported security scope and private vulnerability reporting |
+| Root `CODE_OF_CONDUCT.md` | Community conduct expectations and enforcement contact |
 | Root `CHANGELOG.md` | User-visible changes, impact, and required action |
 | `docs/guides/` | First use and host-managed installation lifecycle |
 | Topical documents in `docs/` | Architecture, examples, trust, compatibility, identity, and dated governance evidence |
