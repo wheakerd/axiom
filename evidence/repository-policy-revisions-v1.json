@@ -560,6 +560,14 @@
       "sourceIssue": null,
       "summary": "Run every route, repository skill workflow, startup Hook source, and routing evaluation profile in Codex and Claude Code, renaming optimize-codex-usage to host-neutral optimize-agent-usage.",
       "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
+    },
+    {
+      "revision": 71,
+      "recordedOn": "2026-10-24",
+      "baselineCommit": "d9ba9d4e7f2cbeb119de1c4328964d74c6a935a2",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.16.0.",
+      "runtimeContractDigest": "sha256:d3212a3f93bf6a5df8803314e19f002b42015f30637febd23760819023318910"
     }
   ]
 }
