@@ -16,6 +16,23 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.17.0 - unreleased
+
+### Changed
+
+- Install only the `plugin/` subtree. Both manifests, the startup Hooks and the Codex wrapper, the shared Skills, the Codex interface artwork, and a license copy now live in `plugin/`; documentation, evaluation records, evidence, tests, and validators stay in the repository and are no longer copied by either host.
+- Prepare both marketplace catalogs to install that subtree through a `git-subdir` source once they select `v0.17.0`; catalogs that select earlier tags keep the `url` source.
+
+### Behavioral impact
+
+Skills, routes, Hooks, and manifest fields are unchanged inside the installed plugin root, so routing behaves as in `0.16.0`. After the catalogs select this release, an update replaces the installed copy of the whole repository with the much smaller plugin subtree.
+
+### Required action
+
+Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`. Review the updated Hook before it runs.
+
+See the [version notes](docs/releases/v0.17.0.md) for the catalog migration and the runtime identity schema.
+
 ## Repository policy revision 73
 
 ### Changed

@@ -254,8 +254,8 @@ def _hook_reference_drift() -> list[str]:
     temporary, root = _temporary_root()
     try:
         for relative_path in (
-            "hooks/codex-hooks.json",
-            "hooks/codex-session-start.cmd",
+            "plugin/hooks/codex-hooks.json",
+            "plugin/hooks/codex-session-start.cmd",
             "docs/reference/hooks.md",
         ):
             destination = root / relative_path

@@ -35,7 +35,7 @@ schema. Each keeps its own host's invocation method, model, effort, timeout,
 and permission settings; neither maps onto the other. These profiles and the
 preserved `codex-core-v4` benchmark include the delegation-positive
 expectation from `0.14.0`. That expectation does not
-verify the stricter [delegation activation conditions](../skills/delegate-simple-task/SKILL.md#activation)
+verify the stricter [delegation activation conditions](../plugin/skills/delegate-simple-task/SKILL.md#activation)
 introduced in `0.14.1`. Do not use these benchmarks as current delegation-gate
 evidence. A future host observation of that changed behavior needs a successor
 contract with explicit gate, reasoning-level, and invocation-consent cases.

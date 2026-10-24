@@ -226,10 +226,10 @@ def main() -> int:
         failures,
     )
 
-    conventional_hook = REPOSITORY_ROOT / "hooks" / "hooks.json"
+    conventional_hook = REPOSITORY_ROOT / "plugin" / "hooks" / "hooks.json"
     if conventional_hook.exists():
         failures.append(
-            "[hooks] hooks/hooks.json must remain absent so platform-specific hooks "
+            "[hooks] plugin/hooks/hooks.json must remain absent so platform-specific hooks "
             "are not auto-discovered"
         )
 

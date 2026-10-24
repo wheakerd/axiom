@@ -98,7 +98,7 @@ jobs:
 
             async function packageVersionAtCommit(commitSha) {
               const paths = [
-                ".codex-plugin/plugin.json",
+                "plugin/.codex-plugin/plugin.json",
               ];
               const manifests = await Promise.all(
                 paths.map((path) => readJsonAtCommit(path, commitSha)),

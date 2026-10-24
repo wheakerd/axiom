@@ -122,7 +122,7 @@ Use this ordinary request:
 The expected contract is normal host execution with no additional Axiom route.
 Startup and a no-route result receive no notice. A no-route result is not
 a safety certification; host permissions and repository instructions remain
-in force. See the [notice guidance](../../skills/using-axiom/SKILL.md#invocation-notes)
+in force. See the [notice guidance](../../plugin/skills/using-axiom/SKILL.md#invocation-notes)
 for activation and naming boundaries.
 
 ## Interpret And Report The Result

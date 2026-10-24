@@ -11,7 +11,7 @@ hosts. Each linked source describes the skill's full scope and requirements;
 
 ### using-axiom
 
-**Link:** [Startup routing skill](../../skills/using-axiom/SKILL.md)
+**Link:** [Startup routing skill](../../plugin/skills/using-axiom/SKILL.md)
 
 **Description:** Finds the smallest matching skill set and leaves unmatched
 work with the host. It loads through the startup hook.
@@ -24,7 +24,7 @@ Use the using-axiom skill to identify the skill that fits this request.
 
 ### clarify-intent
 
-**Link:** [Request clarification](../../skills/clarify-intent/SKILL.md)
+**Link:** [Request clarification](../../plugin/skills/clarify-intent/SKILL.md)
 
 **Description:** Resolves materially different interpretations with a focused
 question and useful options.
@@ -38,7 +38,7 @@ before making changes.
 
 ### delegate-simple-task
 
-**Link:** [Bounded task delegation](../../skills/delegate-simple-task/SKILL.md)
+**Link:** [Bounded task delegation](../../plugin/skills/delegate-simple-task/SKILL.md)
 
 **Description:** Assesses simple work against your ordered model preferences
 while preserving the main model. Requires the active `using-axiom` gate, the
@@ -54,7 +54,7 @@ level verified.
 
 ### task-planning
 
-**Link:** [Task planning and revision](../../skills/task-planning/SKILL.md)
+**Link:** [Task planning and revision](../../plugin/skills/task-planning/SKILL.md)
 
 **Description:** Turns requirements into steps, dependencies, and acceptance
 criteria, or updates an existing plan.
@@ -68,7 +68,7 @@ Do not implement it yet.
 
 ### continuous-progress
 
-**Link:** [Supervised progress across sessions](../../skills/continuous-progress/SKILL.md)
+**Link:** [Supervised progress across sessions](../../plugin/skills/continuous-progress/SKILL.md)
 
 **Description:** Explicitly invoked progress through fresh workers and
 coordinator handoffs, with a verified native supervisor. Stops after verified
@@ -86,7 +86,7 @@ cancel.
 
 ### local-web-search
 
-**Link:** [Research through a local browser or client](../../skills/local-web-search/SKILL.md)
+**Link:** [Research through a local browser or client](../../plugin/skills/local-web-search/SKILL.md)
 
 **Description:** Limits information disclosed in requests and handles site
 challenges through a user handoff.
@@ -100,7 +100,7 @@ through my local browser.
 
 ### agents-architect
 
-**Link:** [Repository instruction architecture](../../skills/agents-architect/SKILL.md)
+**Link:** [Repository instruction architecture](../../plugin/skills/agents-architect/SKILL.md)
 
 **Description:** Audits and maintains `AGENTS.md`, routed `.agents/` guidance,
 and repository skills.
@@ -114,7 +114,7 @@ Report findings only.
 
 ### agent-plugin-architect
 
-**Link:** [Packaged plugin architecture](../../skills/agent-plugin-architect/SKILL.md)
+**Link:** [Packaged plugin architecture](../../plugin/skills/agent-plugin-architect/SKILL.md)
 
 **Description:** Designs or audits skills, routes, manifests, hooks, and
 compatibility evidence for a packaged agent plugin.
@@ -128,7 +128,7 @@ without editing it.
 
 ### optimize-agent-usage
 
-**Link:** [Agent usage analysis](../../skills/optimize-agent-usage/SKILL.md)
+**Link:** [Agent usage analysis](../../plugin/skills/optimize-agent-usage/SKILL.md)
 
 **Description:** Finds ways to reduce context, token, and tool overhead while
 preserving required quality.
@@ -142,7 +142,7 @@ and recommend reductions.
 
 ### review-axiom-task
 
-**Link:** [Axiom task review](../../skills/review-axiom-task/SKILL.md)
+**Link:** [Axiom task review](../../plugin/skills/review-axiom-task/SKILL.md)
 
 **Description:** Reviews observable routing, authorization, actions, and
 evidence for an identified task.
@@ -156,7 +156,7 @@ Do not retry it.
 
 ### confirm-external-action
 
-**Link:** [Consequential external actions](../../skills/confirm-external-action/SKILL.md)
+**Link:** [Consequential external actions](../../plugin/skills/confirm-external-action/SKILL.md)
 
 **Description:** Checks the actor, destination, exact content, and existing
 authorization before execution and verification.
@@ -170,7 +170,7 @@ publication. Show the exact destination and text; do not publish yet.
 
 ### traceable-git-submit
 
-**Link:** [Traceable Git work](../../skills/traceable-git-submit/SKILL.md)
+**Link:** [Traceable Git work](../../plugin/skills/traceable-git-submit/SKILL.md)
 
 **Description:** Handles explicit checkpoints, consolidation, recovery, and
 submissions that need traceability.
@@ -184,7 +184,7 @@ Do not push.
 
 ### reversible-system-change
 
-**Link:** [Changes with recovery planning](../../skills/reversible-system-change/SKILL.md)
+**Link:** [Changes with recovery planning](../../plugin/skills/reversible-system-change/SKILL.md)
 
 **Description:** Plans, rehearses, or executes persistent changes with
 verified recovery and outcome checks.

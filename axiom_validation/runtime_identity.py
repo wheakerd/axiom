@@ -16,20 +16,24 @@ from .context import REPOSITORY_ROOT, release_version
 from .release_versions import parse_production_release_version
 
 
-CURRENT_SCHEMA_VERSION = "3"
-INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v3.json"
+CURRENT_SCHEMA_VERSION = "4"
+INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v4.json"
 IDENTITY_RELATIVE = "evidence/runtime-identity.json"
-HISTORY_RELATIVE = "evidence/runtime-contract-history-v3.json"
+HISTORY_RELATIVE = "evidence/runtime-contract-history-v4.json"
 LEGACY_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v1.json"
 LEGACY_HISTORY_RELATIVE = "evidence/runtime-contract-history-v1.json"
 V2_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v2.json"
 V2_HISTORY_RELATIVE = "evidence/runtime-contract-history-v2.json"
+V3_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v3.json"
+V3_HISTORY_RELATIVE = "evidence/runtime-contract-history-v3.json"
 SCHEMA_FILES = {
     "1": (LEGACY_INPUT_MANIFEST_RELATIVE, LEGACY_HISTORY_RELATIVE),
     "2": (V2_INPUT_MANIFEST_RELATIVE, V2_HISTORY_RELATIVE),
+    "3": (V3_INPUT_MANIFEST_RELATIVE, V3_HISTORY_RELATIVE),
     CURRENT_SCHEMA_VERSION: (INPUT_MANIFEST_RELATIVE, HISTORY_RELATIVE),
 }
 SCHEMA_V3_FIRST_VERSION = "0.15.0"
+SCHEMA_V4_FIRST_VERSION = "0.17.0"
 POLICY_REVISIONS_RELATIVE = "evidence/repository-policy-revisions-v1.json"
 RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
@@ -316,8 +320,11 @@ def _manifest_shape(
         "exclusions",
     }
     _exact_object(document, expected_keys, "runtime input manifest", failures)
-    if document.get("schemaVersion") not in {"1", "2", "3"}:
-        failures.append("runtime input manifest schemaVersion must be '1', '2', or '3'")
+    if document.get("schemaVersion") not in set(SCHEMA_FILES):
+        failures.append(
+            "runtime input manifest schemaVersion must be one of "
+            + ", ".join(repr(version) for version in sorted(SCHEMA_FILES))
+        )
     if document.get("digestAlgorithm") != "sha256":
         failures.append("runtime input manifest digestAlgorithm must be 'sha256'")
     canonical = _exact_object(
@@ -415,6 +422,9 @@ def compute_runtime_contract(
         ):
             failures.append(f"{label}.path is outside installedSurfaceRoots")
         if kind == "tree":
+            if historical and _path_entry_is_missing(root / relative_path):
+                # A tree classified after an old tag contributes no record there.
+                continue
             files = _walk_regular_files(root, relative_path, failures)
             if not files:
                 failures.append(f"runtime input tree {relative_path!r} must contain a file")
@@ -551,6 +561,8 @@ def runtime_schema_for_version(version: str | None) -> str:
     parsed = parse_production_release_version(version) if version is not None else None
     if parsed is not None and parsed < parse_production_release_version(SCHEMA_V3_FIRST_VERSION):
         return "2"
+    if parsed is not None and parsed < parse_production_release_version(SCHEMA_V4_FIRST_VERSION):
+        return "3"
     return CURRENT_SCHEMA_VERSION
 
 

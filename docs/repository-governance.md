@@ -474,11 +474,12 @@ critical paths to the repository owner `@wheakerd`:
 
 - `/.github/CODEOWNERS`
 - `/.github/workflows/`
-- `/.codex-plugin/`
+- `/plugin/.codex-plugin/`
+- `/plugin/.claude-plugin/`
 - `/.claude-plugin/`
 - `/.agents/plugins/`
-- `/hooks/`
-- `/skills/using-axiom/`
+- `/plugin/hooks/`
+- `/plugin/skills/using-axiom/`
 - `/scripts/`
 - `/axiom_validation/`
 - `/tests/`

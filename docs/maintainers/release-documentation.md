@@ -128,10 +128,14 @@ existing Releases and their evidence are not migrated.
 
 ## Marketplace Publication
 
-The default [marketplace](../../.agents/plugins/marketplace.json) uses the
-official Codex Git `url` source and an immutable production `v<version>` ref.
-The [Claude Code catalog](../../.claude-plugin/marketplace.json) uses the same
-Git `url` and ref, and both catalogs advance together. Their selected plugin may
+The default [marketplace](../../.agents/plugins/marketplace.json) and the
+[Claude Code catalog](../../.claude-plugin/marketplace.json) select the same
+repository and immutable production `v<version>` ref, and both catalogs advance
+together. From `v0.17.0` each catalog uses a `git-subdir` source whose `path`
+is the installed plugin root, `./plugin` for Codex and `plugin` for Claude Code,
+so hosts install only that subtree. A catalog that selects an earlier tag keeps
+the Git `url` source, because those tags hold the plugin at the repository
+root. Their selected plugin may
 precede the development manifest version. Keep the
 selection unchanged during ordinary `main` development and for releases that
 are not Latest. The client and user own refresh and automatic-update policy;
@@ -151,7 +155,8 @@ process:
    outside the publisher, perform the same verification before preparing the
    catalog change; a Release event alone does not prove a Latest transition.
 2. On a task branch from current `main`, replace only the Axiom entry's source
-   in each catalog with the verified Git URL and version tag. Preserve other
+   in each catalog with the verified Git URL, version tag, and the source type
+   and subtree path that tag requires. Preserve other
    catalog metadata, and date the released version's Changelog heading as the
    [Changelog Contract](#changelog-contract) describes.
    Record the next repository-policy revision and its baseline, retain the
@@ -170,13 +175,14 @@ publication or a generated job summary alone does not update the directory or
 an installed client. A failed or delayed handoff leaves the previous catalog
 selection available; resume it without republishing the immutable Release.
 
-The Codex catalog format was last verified on 2026-10-13 against the official
-[marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata).
-The Claude Code catalog format was last verified on 2026-10-24 against the
+The Codex catalog format was last verified on 2026-10-24 against the official
+[marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata),
+whose `git-subdir` plugin source takes `url`, `path`, and `ref` or `sha`. The
+Claude Code catalog format was last verified on 2026-10-24 against the
 official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources),
-whose `url` plugin source takes `url` and `ref`. Use each format's native
-`url`/`ref` fields; do not add an Axiom update channel or schedule to either
-plugin manifest.
+whose `git-subdir` plugin source takes `url`, `path`, `ref`, and `sha` and
+checks out only that subdirectory. Use each format's native fields; do not add
+an Axiom update channel or schedule to either plugin manifest.
 
 ## Candidate And Final Evidence
 

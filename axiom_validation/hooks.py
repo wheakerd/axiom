@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -10,13 +10,13 @@ from .context import README_PATH, REPOSITORY_ROOT, display_path
 from .manifests import MANIFEST_FILES, exact_json_object
 
 EXPECTED_HOOK_DECLARATIONS = {
-    ".codex-plugin/plugin.json": "./hooks/codex-hooks.json",
-    ".claude-plugin/plugin.json": "./hooks/claude-hooks.json",
+    "plugin/.codex-plugin/plugin.json": "./hooks/codex-hooks.json",
+    "plugin/.claude-plugin/plugin.json": "./hooks/claude-hooks.json",
 }
 AUTHOR_KEYS = frozenset({"name", "url"})
 HOOK_FILES = (
-    "hooks/codex-hooks.json",
-    "hooks/claude-hooks.json",
+    "plugin/hooks/codex-hooks.json",
+    "plugin/hooks/claude-hooks.json",
 )
 CLAUDE_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door "
@@ -28,7 +28,7 @@ CODEX_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom. Load this startup front door before deciding "
     "whether any Axiom skill applies:'; cat \"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
-CODEX_WINDOWS_WRAPPER_PATH = Path("hooks/codex-session-start.cmd")
+CODEX_WINDOWS_WRAPPER_PATH = Path("plugin/hooks/codex-session-start.cmd")
 CODEX_WINDOWS_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-session-start.cmd"'
 CODEX_WINDOWS_WRAPPER_TEXT = (
     "@echo off\n"
@@ -40,7 +40,7 @@ CODEX_WINDOWS_WRAPPER_TEXT = (
 )
 CODEX_HOOK_TIMEOUT_SECONDS = 5
 APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
-    "hooks/codex-hooks.json": {
+    "plugin/hooks/codex-hooks.json": {
         "SessionStart": {
             "matcher": "startup|resume|clear|compact|fork",
             "handler": {
@@ -52,7 +52,7 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
             },
         },
     },
-    "hooks/claude-hooks.json": {
+    "plugin/hooks/claude-hooks.json": {
         "SessionStart": {
             "matcher": "startup|resume|clear|compact|fork",
             "handler": {
@@ -76,11 +76,13 @@ def resolve_declared_hook(
         )
         return None
 
-    candidate = (REPOSITORY_ROOT / parsed.path).resolve()
+    # Manifest component paths resolve from the plugin root that holds the manifest.
+    plugin_root = (REPOSITORY_ROOT / PurePosixPath(manifest_path).parents[1]).resolve()
+    candidate = (plugin_root / parsed.path).resolve()
     try:
-        candidate.relative_to(REPOSITORY_ROOT)
+        candidate.relative_to(plugin_root)
     except ValueError:
-        failures.append(f"{manifest_path} hooks path escapes the repository: {raw_path!r}")
+        failures.append(f"{manifest_path} hooks path escapes the plugin root: {raw_path!r}")
         return None
 
     if not candidate.is_file():
@@ -196,7 +198,7 @@ def check_codex_windows_hook_security(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> None:
     """Pin the Windows hook to its packaged wrapper and a short timeout."""
-    document = documents.get("hooks/codex-hooks.json")
+    document = documents.get("plugin/hooks/codex-hooks.json")
     if not isinstance(document, dict):
         return
     try:
@@ -206,7 +208,7 @@ def check_codex_windows_hook_security(
     if not isinstance(handler, dict):
         return
 
-    label = "hooks/codex-hooks.json hooks.SessionStart[0].hooks[0]"
+    label = "plugin/hooks/codex-hooks.json hooks.SessionStart[0].hooks[0]"
     windows_command = handler.get("commandWindows")
     if windows_command != CODEX_WINDOWS_COMMAND:
         failures.append(

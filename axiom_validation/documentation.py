@@ -453,7 +453,7 @@ def _skill_reference_inventory(text: str, failures: list[str]) -> tuple[str, ...
 def _front_door_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
     if text.count(FRONT_DOOR_ROUTE_HEADING) != 1:
         failures.append(
-            "skills/using-axiom/SKILL.md must contain one Bundled Routes section"
+            "plugin/skills/using-axiom/SKILL.md must contain one Bundled Routes section"
         )
         return ()
     section = text.split(FRONT_DOOR_ROUTE_HEADING, 1)[1].split("\n## ", 1)[0]
@@ -480,7 +480,7 @@ def check_skill_reference_inventory_text(
 def check_skill_reference_inventory(root: Path, failures: list[str]) -> None:
     reference = _read_text(root / SKILL_REFERENCE_PATH, root, failures)
     front_door = _read_text(
-        root / "skills" / "using-axiom" / "SKILL.md", root, failures
+        root / "plugin" / "skills" / "using-axiom" / "SKILL.md", root, failures
     )
     if reference is not None and front_door is not None:
         check_skill_reference_inventory_text(reference, front_door, failures)
@@ -504,7 +504,7 @@ def check_hook_reference(root: Path, failures: list[str]) -> None:
             continue
         documents[relative_path] = document
 
-    wrapper_path = root / "hooks" / "codex-session-start.cmd"
+    wrapper_path = root / "plugin" / "hooks" / "codex-session-start.cmd"
     wrapper = _read_text(wrapper_path, root, failures)
 
     reference_path = root / "docs" / "reference" / "hooks.md"

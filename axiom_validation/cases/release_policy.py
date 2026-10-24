@@ -55,7 +55,7 @@ const github = Object.freeze({
       },
       async getContent({ path, ref }) {
         if (
-          ![".codex-plugin/plugin.json"].includes(path) ||
+          !["plugin/.codex-plugin/plugin.json"].includes(path) ||
           typeof ref !== "string" ||
           ref.length === 0
         ) {

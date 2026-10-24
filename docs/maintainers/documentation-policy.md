@@ -170,8 +170,8 @@ optional detail within an entry without creating another skill-level heading.
 | Contributor check procedures | `docs/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
-| Public Skill inventory | `skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering |
-| Hook declarations and executable commands | `hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
+| Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering |
+| Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Codex plugin manifest | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |

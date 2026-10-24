@@ -15,7 +15,7 @@ def check_reversible_safety_scenarios(failures: list[str]) -> int:
         failures,
     )
 
-    skill_root = REPOSITORY_ROOT / "skills" / "reversible-system-change"
+    skill_root = REPOSITORY_ROOT / "plugin" / "skills" / "reversible-system-change"
     contract_text = "\n".join(
         path.read_text(encoding="utf-8")
         for path in (

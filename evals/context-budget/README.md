@@ -1,7 +1,8 @@
 # Routing Context Budget
 
 This directory records Axiom's repeatable budget for the always-loaded
-`skills/using-axiom/SKILL.md` routing gate. It measures a repository surface;
+`plugin/skills/using-axiom/SKILL.md` routing gate; records before `0.17.0`
+measured the same gate at `skills/using-axiom/SKILL.md`. It measures a repository surface;
 it does not expose hidden host accounting and does not invoke a
 model, start a host session, contact a network service, or collect telemetry.
 
@@ -14,7 +15,7 @@ figure is `ceil(UTF-8 bytes / 4)`, explicitly labeled as an estimate suitable
 only for before/after comparison of the same English Markdown surface. It must
 not be compared with billed, cached, or host-reported tokens as if equivalent.
 
-The [Codex manifest](../../.codex-plugin/plugin.json) selects the
+The [Codex manifest](../../plugin/.codex-plugin/plugin.json) selects the
 `results/v<version>.json` record in [results/](results/). That record owns the
 candidate's measured values and its comparison with the immutable v0.7.9
 cumulative baseline. This guide explains the current measurement contract;

@@ -43,7 +43,7 @@ agree. Do not run a changed command to discover what it does.
 
 ## Authority Across Workflows
 
-The [routing gate](../skills/using-axiom/SKILL.md) owns matching and composition;
+The [routing gate](../plugin/skills/using-axiom/SKILL.md) owns matching and composition;
 [Architecture](architecture.md#workflow-ownership) maps the workflows and
 [Examples](examples.md) shows their boundaries in concrete requests.
 
@@ -96,7 +96,7 @@ browser's identity. A challenge, CAPTCHA, or rate limit stops automatic access
 to that site. Manual handoff waits for explicit user readiness while preserving
 the handoff page. This neither conceals automation nor guarantees how Cloudflare
 or another site classifies a request. The
-[local research Skill](../skills/local-web-search/SKILL.md) owns these constraints.
+[local research Skill](../plugin/skills/local-web-search/SKILL.md) owns these constraints.
 
 ## Evidence And Persistence
 

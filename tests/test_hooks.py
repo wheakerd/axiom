@@ -46,7 +46,7 @@ class HookPolicyTests(unittest.TestCase):
         self.assertEqual([], failures)
 
     def test_windows_hook_uses_packaged_wrapper_with_bounded_timeout(self):
-        handler = self.documents()["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
+        handler = self.documents()["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
             "hooks"
         ][0]
         self.assertEqual(CODEX_WINDOWS_COMMAND, handler["commandWindows"])
@@ -60,7 +60,7 @@ class HookPolicyTests(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "requires a real Windows command shell")
     def test_checked_in_windows_hook_ignores_workspace_executable_canaries(self):
-        handler = self.documents()["hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
+        handler = self.documents()["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
             "hooks"
         ][0]
         heading = (

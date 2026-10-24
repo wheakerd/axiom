@@ -706,7 +706,7 @@ def check_routing_source_contracts(failures: list[str]) -> None:
         if route_catalog is not None
         else ()
     )
-    front_door_path = REPOSITORY_ROOT / "skills" / "using-axiom" / "SKILL.md"
+    front_door_path = REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
     front_door = front_door_path.read_text(encoding="utf-8")
     route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
 
@@ -724,7 +724,7 @@ def check_routing_source_contracts(failures: list[str]) -> None:
             continue
         route_entries[route] = match.group(1)
 
-        skill_path = REPOSITORY_ROOT / "skills" / route / "SKILL.md"
+        skill_path = REPOSITORY_ROOT / "plugin" / "skills" / route / "SKILL.md"
         fields = parse_skill_frontmatter(skill_path, failures)
         if fields is None:
             continue
@@ -740,7 +740,7 @@ def check_routing_source_contracts(failures: list[str]) -> None:
                     )
 
     traceable_entry = route_entries.get("traceable-git-submit")
-    traceable_path = REPOSITORY_ROOT / "skills" / "traceable-git-submit" / "SKILL.md"
+    traceable_path = REPOSITORY_ROOT / "plugin" / "skills" / "traceable-git-submit" / "SKILL.md"
     traceable_fields = parse_skill_frontmatter(traceable_path, failures)
     if traceable_entry is not None and traceable_fields is not None:
         for label, surface in (
@@ -770,7 +770,7 @@ def check_routing_source_contracts(failures: list[str]) -> None:
                 )
 
     agents_entry = route_entries.get("agents-architect")
-    agents_path = REPOSITORY_ROOT / "skills" / "agents-architect" / "SKILL.md"
+    agents_path = REPOSITORY_ROOT / "plugin" / "skills" / "agents-architect" / "SKILL.md"
     agents_fields = parse_skill_frontmatter(agents_path, failures)
     if agents_entry is None or agents_fields is None:
         return
@@ -875,7 +875,7 @@ def check_target_instruction_contracts(failures: list[str]) -> None:
         ),
     )
     for relative, name, anchors, stale in contracts:
-        path = REPOSITORY_ROOT / "skills" / relative
+        path = REPOSITORY_ROOT / "plugin" / "skills" / relative
         require_ordered_contract_anchors(path, anchors, failures, name)
         text = " ".join(path.read_text(encoding="utf-8").split()).casefold()
         for phrase in stale:
@@ -885,7 +885,7 @@ def check_target_instruction_contracts(failures: list[str]) -> None:
 
 def check_cross_route_resume_contracts(failures: list[str]) -> int:
     """Lock dual-route authority and fail-closed resume to their source owners."""
-    skills = REPOSITORY_ROOT / "skills"
+    skills = REPOSITORY_ROOT / "plugin" / "skills"
     contracts = (
         (
             skills / "agents-architect/references/maintenance/authorization-and-safety.md",
@@ -1057,7 +1057,7 @@ def check_routing_scenarios(
             continue
         routes = route_value if isinstance(route_value, tuple) else (route_value,)
         for route in routes:
-            main_path = REPOSITORY_ROOT / "skills" / route / "SKILL.md"
+            main_path = REPOSITORY_ROOT / "plugin" / "skills" / route / "SKILL.md"
             try:
                 main_text = main_path.read_text(encoding="utf-8")
             except OSError as error:

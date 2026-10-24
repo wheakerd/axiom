@@ -8,7 +8,7 @@ from .evidence import check_strict_evidence_gate
 
 
 def check_external_action_scenarios(failures: list[str]) -> int:
-    skill_path = REPOSITORY_ROOT / "skills" / "confirm-external-action" / "SKILL.md"
+    skill_path = REPOSITORY_ROOT / "plugin" / "skills" / "confirm-external-action" / "SKILL.md"
     contract = skill_path.read_text(encoding="utf-8")
     for anchor in (
         "acting account",

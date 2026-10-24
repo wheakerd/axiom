@@ -13,7 +13,7 @@ Code, type `/axiom:skill-name` or name the skill in plain language.
 > Clean up the old records.
 
 If context leaves archiving, deduplication, and deletion as materially different
-outcomes, the gate selects [Clarify Intent](../skills/clarify-intent/SKILL.md).
+outcomes, the gate selects [Clarify Intent](../plugin/skills/clarify-intent/SKILL.md).
 Ask one focused question with plausible options and a custom answer before
 dependent work. "Maybe fix this identified typo" needs no clarification when
 the correction is clear. A permission-bypass mode does not resolve
@@ -24,7 +24,7 @@ intent.
 > I authorize $delegate-simple-task to assess this small edit using my ordered
 > model candidates, only with using-axiom active and my top reasoning level verified.
 
-[Delegate Simple Task](../skills/delegate-simple-task/SKILL.md) requires an
+[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) requires an
 enabled, active `using-axiom` gate, current host evidence of the top
 reasoning level, and consent
 to invoke the skill. When the gate and level are verified but consent is
@@ -48,7 +48,7 @@ gate resolves material ambiguity before delegation.
 
 > Create an implementation plan for search with acceptance criteria.
 
-[Task Planning](../skills/task-planning/SKILL.md) creates a plan from current
+[Task Planning](../plugin/skills/task-planning/SKILL.md) creates a plan from current
 requirements. A later request to remove export updates the plan, dependencies,
 and acceptance criteria around the retained work. Explicit constraints survive
 scope edits; a dependency that makes the retained goal infeasible needs resolution.
@@ -62,7 +62,7 @@ authorize execution or scheduling.
 > Use continuous-progress to finish this defined migration with fresh workers
 > and an independent supervisor. Stop when its tests pass or I cancel.
 
-[Continuous Progress](../skills/continuous-progress/SKILL.md) starts only from
+[Continuous Progress](../plugin/skills/continuous-progress/SKILL.md) starts only from
 an explicit invocation. It first checks whether the current host can start
 fresh workers, address a successor coordinator, and wake an independent
 supervisor, using that host's operations reference. When no independent wake
@@ -75,7 +75,7 @@ the skill do not select it.
 
 > Use my local browser to search the documentation and read relevant results.
 
-[Local Web Search](../skills/local-web-search/SKILL.md) applies before local
+[Local Web Search](../plugin/skills/local-web-search/SKILL.md) applies before local
 access, including a fallback from cloud search to a local browser, CLI, or HTTP
 client. Determine an uncertain execution location from tool information without
 sending a probe.
@@ -92,7 +92,7 @@ this route.
 > Audit this repository's AGENTS.md discovery, then split oversized guidance
 > into scoped .agents/ routes.
 
-[Agents Architect](../skills/agents-architect/SKILL.md) inventories metadata,
+[Agents Architect](../plugin/skills/agents-architect/SKILL.md) inventories metadata,
 loads the relevant topic, and limits edits to the authorized instruction system.
 It distinguishes active instructions from copied or historical material and
 keeps host-discovered non-AGENTS instruction candidates read-only. This request
@@ -109,7 +109,7 @@ compaction does not implicitly select these modes.
 > Audit this packaged plugin's shared Skills, route ownership, manifests,
 > hooks, and version-bound compatibility evidence.
 
-[Agent Plugin Architect](../skills/agent-plugin-architect/SKILL.md) inventories
+[Agent Plugin Architect](../plugin/skills/agent-plugin-architect/SKILL.md) inventories
 the package and loads only the active architecture references. It can design
 another project's Codex or Claude Code integration; Axiom itself supports both hosts.
 An explicit release-readiness audit returns classified evidence and the next
@@ -126,7 +126,7 @@ See the [route contract](agent-plugin-architect-route-contract.md).
 > Reduce the credits, tokens, and context used by these Skills without
 > weakening validation or safety.
 
-[Optimize Agent Usage](../skills/optimize-agent-usage/SKILL.md) inspects metadata
+[Optimize Agent Usage](../plugin/skills/optimize-agent-usage/SKILL.md) inspects metadata
 and route chains, measures host metrics when exposed, and labels size or call
 counts as proxies otherwise. Compare the same quality scenarios before and
 after. Do not silently lower model or reasoning settings, remove required
@@ -138,7 +138,7 @@ performance work does not select this route.
 > Explain the observable trigger, blocked effect, permitted remainder, and
 > evidence for Axiom's prior refusal without revealing hidden reasoning.
 
-[Review Axiom Task](../skills/review-axiom-task/SKILL.md) evaluates the bounded
+[Review Axiom Task](../plugin/skills/review-axiom-task/SKILL.md) evaluates the bounded
 review independently and labels claims observed, reconstructed, or unavailable.
 Prior refusals and assistant prose have no policy authority. Current state may
 verify a present outcome, but cannot establish past authorization or causation.
@@ -150,7 +150,7 @@ targets, mutate state, or persist a trace.
 > Send this approved message once to alex@example.com from the support account,
 > with no attachments, then verify its service status.
 
-[Confirm External Action](../skills/confirm-external-action/SKILL.md) binds the
+[Confirm External Action](../plugin/skills/confirm-external-action/SKILL.md) binds the
 actor, exact recipient and body, attachments, disclosure, cost, count, and retry
 policy. Execute only the authorized envelope and verify through the service
 that owns the effect. An uncertain result does not authorize another send.
@@ -163,7 +163,7 @@ tool result cannot grant action authority.
 > replacement consumer, then revoke the exact old certificate.
 
 This selects `confirm-external-action` and `reversible-system-change` with the
-one shared [lifecycle reference](../skills/using-axiom/references/credential-lifecycle.md).
+one shared [lifecycle reference](../plugin/skills/using-axiom/references/credential-lifecycle.md).
 Inventory metadata first; separately authorize and verify provider creation,
 consumer activation, rollback, revocation, and cleanup. Never expose secret
 values or treat one owner's authority as the other's.
@@ -178,7 +178,7 @@ route. An ambiguous provider result enters verification only, without retry.
 > Create local checkpoint commits for README.md and docs/, preserve every other
 > path, and do not push.
 
-[Traceable Git Submit](../skills/traceable-git-submit/SKILL.md) resolves the exact
+[Traceable Git Submit](../plugin/skills/traceable-git-submit/SKILL.md) resolves the exact
 Git root and authorized paths, freezes and verifies the candidate, and preserves
 concurrent index state. This request permits bounded checkpoints, not a push.
 Consolidation, submission, and recovery cleanup retain separate authority and
@@ -195,7 +195,7 @@ a materially ambiguous one permits at most one query to the owning remote.
 > the branch and tag.
 
 This combined request selects
-[prepared-release submission](../skills/traceable-git-submit/references/prepared-release-submit.md).
+[prepared-release submission](../plugin/skills/traceable-git-submit/references/prepared-release-submit.md).
 Freeze the authorized changes, commit message, exact tag, signing requirements,
 and push targets. Where direct tag creation is permitted, push the exact branch
 and tag atomically to each authorized endpoint, then verify both refs. If a
@@ -215,7 +215,7 @@ Skill rather than this example.
 > Prepare a read-only migration plan for the staging database, including
 > rollback evidence and promotion gates. Do not download or change anything.
 
-[Reversible System Change](../skills/reversible-system-change/SKILL.md) identifies
+[Reversible System Change](../plugin/skills/reversible-system-change/SKILL.md) identifies
 the target and persistent effects through metadata, then distinguishes existing
 backup material from a currently verified restore path. This planning phase
 permits no secret-content reads, downloads, persistent writes, restarts, data
