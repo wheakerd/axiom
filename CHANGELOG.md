@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 82
+
+### Added
+
+- Add the maintainers' Distribution Channels page: observed discoverability facts (topics, homepage, Agent Skills specification compliance of every bundled `SKILL.md`, catalog sources, README links) and a registry of external channels with their observed requirements and submission status, including the lifecycle-hook blocker for the OpenAI plugin directory. The documentation index and the documentation policy name the page.
+
+### Behavioral impact
+
+Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged. No external submission was made.
+
+### Required action
+
+None.
+
 ## Repository policy revision 81
 
 ### Fixed
