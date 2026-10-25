@@ -18,6 +18,7 @@ For plugin execution and permissions, use the [Trust Model](trust-model.md).
 | Understand immutable-release guarantees | [Immutable Release Policy](#immutable-release-policy) | Dated setting observation and verification limits |
 | Assess ownership and independent review | [Critical-Path Ownership](#critical-path-ownership) and [Human Review Trust Boundary](#human-review-trust-boundary) | CODEOWNERS plus dated remote evidence |
 | Verify live settings for a new decision | [Manual Re-verification](#manual-re-verification) and [Availability And Limits](#availability-and-limits) | Read-only procedure and observation limits |
+| Understand the star-history data branch | [Stats Branch Policy](#stats-branch-policy) | Checked-in workflow and script; the live branch is the only data evidence |
 
 Release preparation and evidence responsibilities belong to
 [Release Documentation And Evidence](maintainers/release-documentation.md).
@@ -446,6 +447,32 @@ start another workflow for an ordinary event created by a workflow's
 `GITHUB_TOKEN`, so the publication workflow fails closed on direct signature
 readback and the release operator explicitly dispatches `Release signature
 guard` with `phase=published-release` on the exact published tag afterward.
+
+## Stats Branch Policy
+
+The `stats` branch holds only the star-history data `stars.csv`, the rendered
+chart `stars.svg`, and a short README. The rulesets above target
+`refs/heads/main` and `refs/tags/v*`, so `stats` has no required checks,
+signature requirement, or deletion protection. It is not a release or
+distribution surface, and nothing under `plugin/**` reads it.
+
+`Record star history` (`.github/workflows/record-star-history.yml`) owns the
+branch. It runs daily and on manual dispatch, grants only `contents: write` to
+its job, uses no other secret, and runs the standard-library script
+`scripts/record-star-history.py`. The script reads `stargazers_count` and
+`forks_count` from the repository API, replaces or appends the row for the
+current UTC date, renders the chart, and commits both files only when the data
+changed. On the first run it creates the branch from a parentless root commit
+that holds the branch README; that root commit is created through the Git Data
+API with the workflow token and is not signed. Every data commit uses the
+GraphQL `createCommitOnBranch` mutation, so GitHub signs it and attributes it
+to `github-actions[bot]`.
+
+Commits made with `GITHUB_TOKEN` start no other workflow run. A manual push to
+`stats` would start the distribution guards and fail on that tree, so
+maintainers do not push to `stats` by hand. The README embeds the chart from
+the raw `stats` URL; a missing or stale chart means the workflow has not run
+and says nothing about the plugin or a release.
 
 ## Immutable Release Policy
 

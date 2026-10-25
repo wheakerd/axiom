@@ -115,6 +115,14 @@ The [Skill Reference](docs/reference/skills.md) lists every bundled skill with a
 copyable example and notes renamed skills; [Examples](docs/examples.md) shows
 more requests and expected behavior.
 
+## Star History
+
+![Star history of wheakerd/axiom](https://raw.githubusercontent.com/wheakerd/axiom/stats/stars.svg)
+
+The chart is re-rendered daily from [`stars.csv` on the `stats` branch](https://github.com/wheakerd/axiom/blob/stats/stars.csv)
+by the [Record star history workflow](.github/workflows/record-star-history.yml);
+see the [stats branch policy](docs/repository-governance.md#stats-branch-policy).
+
 ## Documentation and Support
 
 - [Documentation index](docs/README.md): guides and references by task.
