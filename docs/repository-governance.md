@@ -463,10 +463,12 @@ its job, uses no other secret, and runs the standard-library script
 `forks_count` from the repository API, replaces or appends the row for the
 current UTC date, renders the chart, and commits both files only when the data
 changed. On the first run it creates the branch from a parentless root commit
-that holds the branch README; that root commit is created through the Git Data
-API with the workflow token and is not signed. Every data commit uses the
-GraphQL `createCommitOnBranch` mutation, so GitHub signs it and attributes it
-to `github-actions[bot]`.
+that holds the branch README through the Git Data API; every data commit uses
+the GraphQL `createCommitOnBranch` mutation. GitHub signs commits that the
+workflow token creates through either API and attributes them to
+`github-actions[bot]`: the first run on 2026-10-25 produced root commit
+`e5fa8d69e01fd534c03fd9b7e57bc2de91b0dd9d` and data commit
+`cb25df7d1487b010ff9912bde3326fe0ae5df791`, both verified by GitHub.
 
 Commits made with `GITHUB_TOKEN` start no other workflow run. A manual push to
 `stats` would start the distribution guards and fail on that tree, so

@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 81
+
+### Fixed
+
+- Correct the stats branch policy in Repository Governance: the parentless root commit that the workflow creates through the Git Data API is also GitHub-signed, as the first run on 2026-10-25 showed; the earlier text called it unsigned.
+
+### Behavioral impact
+
+Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 80
 
 ### Changed
