@@ -648,6 +648,14 @@
       "sourceIssue": 167,
       "summary": "Correct the stats branch policy: the observed root commit is also GitHub-signed and attributed to github-actions[bot].",
       "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
+    },
+    {
+      "revision": 82,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "1dff99fc85dda9f5e6302f70bb43548c45ec2b85",
+      "sourceIssue": 168,
+      "summary": "Add the maintainers' distribution channels page with observed discoverability facts and the submission status of each external channel.",
+      "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
     }
   ]
 }

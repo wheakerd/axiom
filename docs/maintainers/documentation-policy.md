@@ -168,6 +168,7 @@ optional detail within an entry without creating another skill-level heading.
 | Contribution intake and repository map | `CONTRIBUTING.md` | Current; links to detailed authoring and validation owners |
 | Runtime-authoring requirements | `docs/maintainers/runtime-changes.md` | Contributor policy; installed behavior remains owned by Skills, hooks, and manifests |
 | Contributor check procedures | `docs/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
+| Discoverability facts and external listing status | `docs/maintainers/distribution-channels.md` | Dated observations; a submission is recorded only when it was made |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
 | Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering |
