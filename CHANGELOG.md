@@ -16,6 +16,21 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 79
+
+### Changed
+
+- Define the release standard under Runtime and Repository Identity: the exact final installed-runtime change selects the next minor version (new Skill, route, mode, trigger, Hook event, widened matching, new protocol or storage location, packaging change requiring user action, route deprecation or removal) or the next patch version (fixes without new capability), repository-only changes append a policy revision, and bundling rules decide when tasks share one release.
+- Link the standard from the contributor workflow, the runtime-changes guide, and the documentation index.
+
+### Behavioral impact
+
+Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 78
 
 ### Changed

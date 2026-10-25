@@ -624,6 +624,14 @@
       "sourceIssue": null,
       "summary": "Describe the git-subdir catalog sources and the installed plugin root in the installation management guide.",
       "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
+    },
+    {
+      "revision": 79,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "0db32ee5bcf5d893e5f9c0404b281fb9b225c70a",
+      "sourceIssue": 166,
+      "summary": "Define the release standard: version increments by final installed-runtime change, repository policy revisions without a version change, and bundling rules.",
+      "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
     }
   ]
 }

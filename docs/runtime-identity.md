@@ -9,7 +9,7 @@ renders the current identity and explains how to interpret it.
 
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.17.1`
-- `repositoryPolicyRevision`: `78`
+- `repositoryPolicyRevision`: `79`
 - `runtimeContractDigest` (schema v4): `sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v4.json`](../axiom_validation/runtime-contract-inputs-v4.json)
 <!-- runtime-identity:current:end -->
@@ -71,10 +71,43 @@ schema.
 | A mixture of both | Follow the installed-runtime path; repository-only files do not make the whole change policy-only |
 
 A tree whose version already names an immutable tag must retain that version's
-recorded runtime digest. New public capabilities use the next minor version;
-compatible fixes use the next patch. An already assigned, uncreated candidate
-remains the working version until completed. Preserve defective immutable tags
-and fix forward instead of rewriting release history.
+recorded runtime digest. An already assigned, uncreated candidate remains the
+working version until completed. Preserve defective immutable tags and fix
+forward instead of rewriting release history.
+
+### Version Increment
+
+Classification selects the path; the exact final diff selects the increment.
+Labels, Issue titles, and planned files do not. Reclassify the final candidate
+tree before assigning a version.
+
+| Exact final installed-runtime change | Increment |
+| --- | --- |
+| A new Skill, route, mode, trigger, or Hook event; matching widened to requests a route did not select before; a new protocol, storage location, or evidence format; a packaging or layout change that alters the installed path or requires user action; deprecation or removal of a route | Next minor version |
+| A fix without new capability: narrowing a wrongly selected route, wording or reference corrections, Hook defect fixes, size or security hardening, evaluation-driven false-positive or false-negative fixes | Next patch version |
+| Repository-only documentation, CI, validators, evidence, governance, README, marketplace catalogs, release scripts, or this standard | Next policy revision; no version change |
+
+The major version stays `0` until a separate maintainer decision declares the
+1.0 criteria. Before 1.0, a change that breaks a documented invocation advances
+the minor version and states its migration in the version note and Changelog.
+
+### Bundling
+
+- One release carries one coherent change set of one identity class whose
+  acceptance fits one candidate tree. Items that change the same Skill or
+  depend on each other ship together.
+- A fix for a defect in a published release ships as a patch from `main`
+  before an in-progress minor release continues; the minor candidate then
+  rebuilds on that patch.
+- A new Skill ships in its own minor release unless it depends on a redesign
+  in the same cycle. Independent new capabilities share one minor release only
+  when each has passed its own acceptance and the routing-gate review covers
+  both.
+- Use the immediate next version in SemVer order; never skip or reorder.
+- Every release requires the validated candidate tree, fresh-session routing
+  observations on both supported hosts for the changed routes, and the
+  always-loaded context review in [Runtime Changes](maintainers/runtime-changes.md#always-loaded-context)
+  when the routing gate grows.
 
 Advancing a version without changing the digest is normally rejected. The
 explicit [v0.13.1 repository-tooling exception](releases/v0.13.1.md) is bound by

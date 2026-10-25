@@ -27,6 +27,7 @@ when comparing the source tree, a published release, and an installed package.
 | Research through a local browser or client | [Local Web Search example](examples.md#local-web-search) | Users |
 | Interpret evidence files or report a host result | [Field Validation](field-validation.md) | Testers and auditors |
 | Understand package identity | [Runtime and Repository Identity](runtime-identity.md) | Maintainers and auditors |
+| Decide the version increment or bundling for a change | [Version Increment](runtime-identity.md#version-increment) | Maintainers |
 | Review repository controls | [Repository Governance](repository-governance.md) | Maintainers |
 | Contribute documentation | [Documentation Policy](maintainers/documentation-policy.md) | Contributors |
 | Prepare release documentation and evidence | [Release Documentation And Evidence](maintainers/release-documentation.md) | Maintainers and auditors |

@@ -3,7 +3,8 @@
 Use this guide when changing installed Skills, route matching, always-loaded
 context, package declarations, or Hooks. Start with the contributor workflow in
 [CONTRIBUTING.md](../../CONTRIBUTING.md) and classify the exact final diff under
-[Runtime and Repository Identity](../runtime-identity.md#classify-a-change).
+[Runtime and Repository Identity](../runtime-identity.md#classify-a-change),
+which also assigns the version increment and governs bundling.
 
 This is contributor guidance. The checked-in Skills, declarations, and wrappers
 remain the executable or instruction sources; documentation does not grant
