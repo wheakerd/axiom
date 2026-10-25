@@ -640,6 +640,14 @@
       "sourceIssue": 167,
       "summary": "Record star history on the stats branch with a scheduled workflow and chart it in the README.",
       "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
+    },
+    {
+      "revision": 81,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "eb3517c073cfb1882250b9943fad586a5b41b083",
+      "sourceIssue": 167,
+      "summary": "Correct the stats branch policy: the observed root commit is also GitHub-signed and attributed to github-actions[bot].",
+      "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
     }
   ]
 }
