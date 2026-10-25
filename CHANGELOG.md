@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 78
+
+### Changed
+
+- Describe the `git-subdir` catalog sources in the installation management guide: both catalogs select the installed plugin root through `path` (`./plugin` for Codex, `plugin` for Claude Code) and an immutable release-tag `ref`, and catalogs that select a tag before `v0.17.0` keep the Git `url` source.
+
+### Behavioral impact
+
+Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 77
 
 ### Changed

@@ -46,13 +46,17 @@ provides versioned source metadata and has no update scheduler.
 ## Version Selection
 
 The [marketplace entry](../../.agents/plugins/marketplace.json) uses Codex's
-official Git `url` source with an immutable release-tag `ref`. The default
+official `git-subdir` source: the repository `url`, the installed plugin root
+`./plugin` as its `path`, and an immutable release-tag `ref`. The default
 marketplace remains discoverable from the repository's default branch, while
 the entry selects the plugin's published source independently. A normal
 `main` commit leaves that selection unchanged.
 
-The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same Git
-`url` source and immutable release-tag `ref`. Both catalogs advance together.
+The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same
+repository and release-tag `ref` through its `git-subdir` source with `path`
+`plugin`. Both catalogs advance together. Catalogs that select a tag before
+`v0.17.0` use the Git `url` source instead, because those tags keep the plugin
+at the repository root.
 
 After a stable release becomes GitHub Latest, maintainers publish the matching
 catalog references through the existing signed PR process. Until that catalog
@@ -81,12 +85,14 @@ Inspect the entry before assuming that a catalog tag and the plugin version
 match. For a workspace-managed installation, the workspace administrator owns
 the configured repository, path, ref, and native sync policy.
 
-These source and lifecycle semantics were last verified on 2026-10-13 against
-the official [marketplace format](https://developers.openai.com/plugins/build/plugins#marketplace-metadata),
+The Codex source format was last verified on 2026-10-25 and the lifecycle
+semantics on 2026-10-13 against the official [marketplace format](https://developers.openai.com/plugins/build/plugins#marketplace-metadata),
 [marketplace configuration](https://learn.chatgpt.com/docs/config-file/config-reference),
 and [workspace sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management).
 Workspace sync timing is not a promise about personal Codex installations.
-The Claude Code statements were last verified on 2026-10-22 against the official
+The Claude Code source format was last verified on 2026-10-25 against the
+official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources),
+and the other Claude Code statements on 2026-10-22 against the official
 [plugin installation guide](https://code.claude.com/docs/en/discover-plugins)
 and [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
 
@@ -95,8 +101,8 @@ and [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-refe
 In Codex, an error containing `git clone marketplace source timed out after 30s`
 identifies a failure to download the marketplace catalog. Codex supports
 `--sparse` for Git marketplaces to reduce the catalog checkout. Axiom's current
-catalog needs only `.agents/plugins`: its plugin entry uses a separate Git
-`url` source with an immutable release ref. The steps below apply to Codex;
+catalog needs only `.agents/plugins`: its plugin entry uses a separate
+`git-subdir` source with an immutable release ref. The steps below apply to Codex;
 [Claude Code](#claude-code-clone-timeouts) has its own.
 
 ### Inspect The Registration
@@ -178,7 +184,7 @@ claude plugin marketplace update axiom
 In PowerShell, set `$env:CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS = "300000"` instead.
 For a new registration, `claude plugin marketplace add wheakerd/axiom --sparse
 .claude-plugin` fetches only the catalog, because its plugin entry uses a
-separate Git `url` source. Removing a marketplace also uninstalls its plugins,
+separate `git-subdir` source. Removing a marketplace also uninstalls its plugins,
 so do not re-register an existing installation only to add sparse checkout.
 These options were last verified on 2026-10-22 against the official
 [plugin troubleshooting](https://code.claude.com/docs/en/plugins/troubleshooting)
