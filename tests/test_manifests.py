@@ -18,6 +18,9 @@ from axiom_validation.manifests import (
     BRANDING_IMAGE_MAX_BYTES,
     EXPECTED_CODEX_DEFAULT_PROMPTS,
     JSON_FILES,
+    catalog_layout_failure,
+    catalog_source,
+    catalog_source_keys,
     check_branding_image_file,
     check_codex_interface,
     check_distribution_identity,
@@ -179,6 +182,15 @@ class ManifestPolicyTests(unittest.TestCase):
                 failures = []
                 check_manifest_capability_schema(documents, failures)
                 self.assertTrue(any(expected in failure for failure in failures), failures)
+
+    def test_rendered_catalog_source_satisfies_the_layout_rule(self):
+        for tag in ("v0.16.0", "v0.17.0", "v0.17.1"):
+            for host in ("codex", "claude-code"):
+                with self.subTest(tag=tag, host=host):
+                    source = catalog_source(tag, host)
+                    self.assertEqual(tag, source["ref"])
+                    self.assertEqual(catalog_source_keys(source), frozenset(source))
+                    self.assertIsNone(catalog_layout_failure(source, host))
 
     def test_required_catalogs_and_independent_manifest_identity(self):
         self.assertIn(CLAUDE_MARKETPLACE_RELATIVE, JSON_FILES)

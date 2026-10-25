@@ -142,8 +142,8 @@ are not Latest. The client and user own refresh and automatic-update policy;
 there is no repository-side client updater or `main`-triggered release check.
 
 After verifying final immutable publication and GitHub Latest, the
-[publisher](../../.github/workflows/publish-immutable-release.yml) renders the
-standard source object in its job summary. The same handoff runs during
+[publisher](../../.github/workflows/publish-immutable-release.yml) renders
+each catalog's source object in its job summary. The same handoff runs during
 final-only recovery. It reports **Marketplace publication pending** because
 the workflow does not write to protected `main` or bypass its PR rules.
 

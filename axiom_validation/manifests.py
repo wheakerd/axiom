@@ -981,6 +981,20 @@ def catalog_source_keys(source: Any) -> frozenset[str]:
     return frozenset({"source", "url", "ref"})
 
 
+def catalog_source(tag: str, host: str) -> dict[str, str]:
+    """Return the catalog plugin source that selects ``tag`` for ``host``."""
+    if parse_production_release_tag(tag) >= parse_production_release_tag(
+        PLUGIN_SUBTREE_FIRST_TAG
+    ):
+        return {
+            "source": "git-subdir",
+            "url": EXPECTED_PLUGIN_REPOSITORY,
+            "path": CATALOG_SUBTREE_PATHS[host],
+            "ref": tag,
+        }
+    return {"source": "url", "url": EXPECTED_PLUGIN_REPOSITORY, "ref": tag}
+
+
 def catalog_layout_failure(source: dict[str, Any], host: str) -> str | None:
     """Require the source shape that matches the selected release's plugin root."""
     if parse_production_release_tag(source["ref"]) >= parse_production_release_tag(
