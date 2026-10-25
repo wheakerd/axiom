@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
-from .manifests import EXPECTED_PLUGIN_REPOSITORY
+from .manifests import CLAUDE_MARKETPLACE_RELATIVE, catalog_source
 from .release_versions import (
     PRODUCTION_RELEASE_TAG_ERE_PATTERN,
     PRODUCTION_RELEASE_VERSION_CASES,
@@ -1103,14 +1103,21 @@ def verify_release_snapshot(
                 failures.append("GitHub Latest does not identify the immutable release")
 
 
+MARKETPLACE_CATALOGS = (
+    ("codex", ".agents/plugins/marketplace.json"),
+    ("claude-code", CLAUDE_MARKETPLACE_RELATIVE),
+)
+
+
 def render_marketplace_source(
     plan: dict[str, Any], latest_metadata_path: Path, failures: list[str]
 ) -> str | None:
-    """Render the shared marketplace source for the verified Latest release.
+    """Render each host catalog's source for the verified Latest release.
 
-    Both host catalogs use this source object. The publisher calls this after
-    final evidence verification. This renderer neither publishes a catalog nor
-    changes a user's installation or settings.
+    From v0.17.0 each catalog selects the plugin subtree through its own
+    git-subdir path; earlier tags use the same url source in both catalogs. The
+    publisher calls this after final evidence verification. This renderer
+    neither publishes a catalog nor changes a user's installation or settings.
     """
     if not _validate_plan(plan, failures):
         return None
@@ -1131,7 +1138,7 @@ def render_marketplace_source(
     if failures:
         return None
     return json.dumps(
-        {"source": "url", "url": EXPECTED_PLUGIN_REPOSITORY, "ref": subject["tag"]},
+        {path: catalog_source(subject["tag"], host) for host, path in MARKETPLACE_CATALOGS},
         indent=2,
     ) + "\n"
 
@@ -1453,7 +1460,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.summary:
                     sys.stdout.write(
                         "## Marketplace publication pending\n\n"
-                        "Apply this source to the axiom entry in both "
+                        "Apply each catalog's source below to the axiom entry in "
                         "`.agents/plugins/marketplace.json` and `.claude-plugin/marketplace.json` "
                         "through the existing signed PR process. Recheck GitHub Latest before "
                         "merging and verify both merged catalogs. Until then, both catalogs "

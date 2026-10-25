@@ -600,6 +600,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.17.0 through git-subdir sources for the plugin/ subtree.",
       "runtimeContractDigest": "sha256:bac55fce887cb196b68feaee7b33148deb9812164d0d9b4b2c323f4b5b608e9b"
+    },
+    {
+      "revision": 76,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "c7df629e206ff9ea2b5c4ea7d0245dcbd1c36a22",
+      "sourceIssue": null,
+      "summary": "Limit agent-plugin-architect to packaged plugin architecture, excluding evaluation of an individual Skill or Skill proposal, and render each catalog's own source in the publisher summary.",
+      "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
     }
   ]
 }

@@ -138,7 +138,20 @@ class ReleaseEvidenceTests(unittest.TestCase):
             rendered = render_marketplace_source(plan, latest_path, failures)
             self.assertEqual([], failures)
             self.assertEqual(
-                {"source": "url", "url": "https://github.com/wheakerd/axiom.git", "ref": TAG},
+                {
+                    ".agents/plugins/marketplace.json": {
+                        "source": "git-subdir",
+                        "url": "https://github.com/wheakerd/axiom.git",
+                        "path": "./plugin",
+                        "ref": TAG,
+                    },
+                    ".claude-plugin/marketplace.json": {
+                        "source": "git-subdir",
+                        "url": "https://github.com/wheakerd/axiom.git",
+                        "path": "plugin",
+                        "ref": TAG,
+                    },
+                },
                 json.loads(rendered),
             )
             for field, value in (
@@ -168,7 +181,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             before = {path.name: path.read_bytes() for path in directory.iterdir()}
             result = subprocess.run(arguments, capture_output=True, text=True, check=False)
             self.assertEqual(0, result.returncode, result.stderr)
-            self.assertEqual(TAG, json.loads(result.stdout)["ref"])
+            self.assertEqual({TAG}, {source["ref"] for source in json.loads(result.stdout).values()})
             summary = subprocess.run(arguments + ["--summary"], capture_output=True, text=True, check=False)
             self.assertEqual(0, summary.returncode, summary.stderr)
             self.assertIn("Marketplace publication pending", summary.stdout)

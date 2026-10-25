@@ -16,6 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.17.1 - unreleased
+
+### Fixed
+
+- Limit `agent-plugin-architect` to packaged plugin architecture. Its description now covers a plugin's architecture across shared Skills, routes, manifests, wrappers, hooks, and compatibility evidence and excludes evaluating or reviewing an individual Skill or Skill proposal, so a request such as "Evaluate the proposed continuous-progress skill." no longer selects it.
+
+### Behavioral impact
+
+A request to evaluate or review one Skill or Skill proposal continues in the host without an Axiom route. Packaged plugin architecture work still selects `agent-plugin-architect`; the startup routing gate, Hooks, and other Skills are unchanged.
+
+### Required action
+
+Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
+
+See the [version notes](docs/releases/v0.17.1.md) for the routing boundary and the publisher's catalog sources.
+
 ## Repository policy revision 75
 
 ### Changed
