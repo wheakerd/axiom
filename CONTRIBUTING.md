@@ -53,7 +53,8 @@ they are not installed plugin dependencies or proof of host behavior.
    [Runtime and Repository Identity](docs/runtime-identity.md#classify-a-change).
    An included runtime change must alter the digest and advance
    `pluginVersion`; a repository-only change appends
-   `repositoryPolicyRevision` and must retain the digest.
+   `repositoryPolicyRevision` and must retain the digest. The same section
+   owns the version increment and bundling standard.
 4. Separate route selection from action authorization. Loading a Skill never
    grants permission to commit, push, deploy, delete, promote, read a secret,
    or mutate a remote system.
