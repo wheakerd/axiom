@@ -1,0 +1,36 @@
+name: Record star history
+
+on:
+  schedule:
+    # Daily at 00:17 UTC. GitHub may delay or skip scheduled runs.
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: record-star-history
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Record today's counts and commit the chart to the stats branch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -B scripts/record-star-history.py --repository "$GITHUB_REPOSITORY" --branch stats

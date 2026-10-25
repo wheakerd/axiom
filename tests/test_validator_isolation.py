@@ -26,7 +26,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"version {RELEASE_VERSION}, 0 compatibility evidence records, "
     "12 compatibility evidence negative fixtures, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
-    "55 release-provenance fixtures, 18 immutable external action and image pins "
+    "55 release-provenance fixtures, 20 immutable external action and image pins "
     "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "
     "packaged skills."
 )

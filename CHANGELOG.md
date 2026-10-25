@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 80
+
+### Changed
+
+- Add the `Record star history` workflow and its standard-library script: a daily run records the repository's star and fork counts in `stars.csv` on the `stats` data branch, renders `stars.svg`, and commits both through GitHub-signed `createCommitOnBranch` commits. The README embeds the chart and Repository Governance documents the branch policy.
+
+### Behavioral impact
+
+Repository infrastructure and documentation only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged; the `stats` branch is outside every release and distribution surface.
+
+### Required action
+
+None.
+
 ## Repository policy revision 79
 
 ### Changed
