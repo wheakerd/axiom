@@ -36,27 +36,12 @@ Handle long-task state and user-triggered durable instruction updates.
 
 ## Runtime capsules
 
-Use `.agents/.runtime/session-<unique-id>.md` only for a mutating, long-running
-AGENTS task that risks losing critical state. Do not create a capsule during a
-strictly read-only task.
-
-Target under 2 KiB; hard target 4 KiB.
-
-Include only:
-
-- Current user goal.
-- Confirmed scope.
-- Active instruction files.
-- Critical constraints.
-- Modified files.
-- Completed validation.
-- Failed validation and brief reason.
-- Open decisions.
-- Next action.
-
-Do not include full chats, long logs, large code, whole document summaries, unverified guesses, secrets, or sensitive data.
-
-Delete or mark obsolete when complete. Future sessions must not auto-load old capsules.
+Create a capsule only for a mutating, long-running AGENTS task that risks
+losing critical state, never during a strictly read-only task. Its location,
+contents, size target, and lifecycle are defined once in `memory-and-state.md`:
+resolve the state directory through Git metadata, never under `.agents/`.
+Delete or mark obsolete when complete. Future sessions must not auto-load old
+capsules.
 
 ## Effective instruction modes
 
@@ -131,6 +116,7 @@ For every triggered update, report:
 - Affected routes.
 - Byte changes.
 - Git tracking or ignore state.
+- Task-state location when a capsule or generated file was created or removed.
 - Validation results.
 - Current-run versus later-run activation status, including whether fresh host
   loading was verified, `NOT-RUN`, or unavailable.

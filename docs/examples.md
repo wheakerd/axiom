@@ -99,6 +99,11 @@ keeps host-discovered non-AGENTS instruction candidates read-only. This request
 does not authorize unrelated source edits, protected plugin metadata, commits,
 or pushes.
 
+Task state such as a session capsule lives in the repository's Git metadata,
+outside the indexed working tree; the
+[memory-and-state reference](../plugin/skills/agents-architect/references/memory-and-state.md)
+owns that location, the memory tiers, and the flat registry.
+
 Explicit `effective-instructions:reconcile-preview` requests a read-only
 comparison with implementation; `effective-instructions:reconcile` requests an
 authorized instruction-system update. Ordinary maintenance, rollback, or

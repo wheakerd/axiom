@@ -3,7 +3,8 @@
 ## Purpose
 
 Define canonical content, ownership, metadata, and size rules for root
-`AGENTS.md` and its routed documents.
+`AGENTS.md` and its routed documents. These are defaults: keep a repository's
+established shape when it already routes reliably, and record each departure.
 
 ## Apply When
 

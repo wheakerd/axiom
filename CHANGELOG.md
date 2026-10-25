@@ -16,6 +16,27 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.18.0 - unreleased
+
+### Added
+
+- `agents-architect` gains the `memory-and-state` reference: three memory tiers (durable rules, a dated decision ledger, and task state), growth signals with a decision table (consolidate, demote, archive, split by signal, expire, re-route), and a flat registry that reaches every owner in at most two hops.
+
+### Changed
+
+- `agents-architect` treats its topology, document contracts, and field lists as defaults the model departs from with a recorded reason; the ten-step routing algorithm becomes a short list of routing decisions.
+- Task state such as session capsules and generated inventories moves from `.agents/.runtime/` and `.agents/.generated/` inside the target repository to the Git-metadata directory resolved with `git rev-parse --path-format=absolute --git-path axiom/agents-architect/`, outside the indexed working tree.
+
+### Behavioral impact
+
+Routing is unchanged: the same requests select `agents-architect`, and the startup routing gate and Hooks are unchanged. Inside the route the model has more latitude and records its departures, and IDE indexers no longer see Axiom's task state in target repositories.
+
+### Required action
+
+Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`. In target repositories, delete leftover `.agents/.runtime/` and `.agents/.generated/` directories after moving anything still needed.
+
+See the [version notes](docs/releases/v0.18.0.md) for the decision latitude, the memory model, and the task-state migration.
+
 ## Repository policy revision 82
 
 ### Added

@@ -1,6 +1,6 @@
 ---
 name: agents-architect
-description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills or .claude/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, oversized guidance, or an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Do not use for packaged or installed plugin Skills, ordinary documentation, or general agent usage optimization unless the requested change is specifically to AGENTS architecture.
+description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills or .claude/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, oversized guidance, instruction-memory growth, task-state placement, or an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Do not use for packaged or installed plugin Skills, ordinary documentation, or general agent usage optimization unless the requested change is specifically to AGENTS architecture.
 ---
 
 # AGENTS Architect
@@ -45,9 +45,12 @@ discoverable here; do not scan siblings for background.
   `references/maintenance/implementation-reconciliation.md`. This route may
   begin in a later fresh session.
 - Handle runtime capsules or a durable update trigger during or after ordinary
-  work in the current task: `references/runtime-and-updates.md`. For
+  work in the current task: `references/runtime-and-updates.md`; capsules live
+  where `references/memory-and-state.md` places them. For
   `effective-instructions` and its preview, also read the context-evidence
   reference to establish the review window before selecting a terminal owner.
+- Decide where task state lives, size a grown instruction memory, or simplify
+  addressing: `references/memory-and-state.md`.
 - Validate completed file changes or an explicitly requested route audit:
   `references/validation-reporting.md`, plus only the changed surface's
   contract owner.
@@ -83,6 +86,14 @@ Preserve canonical identifiers, paths, commands, and exact source literals.
 Do not translate unchanged or unrelated content merely for consistency. This is
 an Axiom authoring rule, not a rule to copy into the target repository unless
 the user explicitly requests it as repository policy.
+
+## Decision Latitude
+
+References supply defaults, options, signals, and trade-offs. The rules under
+Always-On Rules are invariants; every other shape, count, field list, or byte
+target is a default to depart from when repository evidence favors another
+shape. Decide, then record the departure and its reason in the report. Axiom
+supplies the options; the host's model makes the decision.
 
 ## Always-On Rules
 

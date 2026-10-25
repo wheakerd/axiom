@@ -656,6 +656,14 @@
       "sourceIssue": 168,
       "summary": "Add the maintainers' distribution channels page with observed discoverability facts and the submission status of each external channel.",
       "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
+    },
+    {
+      "revision": 83,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "bf8319c91d00e54e56e4bf3f550945f391c284aa",
+      "sourceIssue": 170,
+      "summary": "Release 0.18.0: agents-architect decision latitude, memory tiers with a flat registry, and task state relocated to Git metadata (Issues #169 and #170).",
+      "runtimeContractDigest": "sha256:1570ea7f0f7329c5e9a04ec6624f5e90665520a23080564ad39d7850ac563512"
     }
   ]
 }
