@@ -616,6 +616,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.17.1.",
       "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
+    },
+    {
+      "revision": 78,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "c7856c73b070ca839c426181f193382b761df15c",
+      "sourceIssue": null,
+      "summary": "Describe the git-subdir catalog sources and the installed plugin root in the installation management guide.",
+      "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
     }
   ]
 }
