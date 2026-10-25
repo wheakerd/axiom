@@ -664,6 +664,14 @@
       "sourceIssue": 170,
       "summary": "Release 0.18.0: agents-architect decision latitude, memory tiers with a flat registry, and task state relocated to Git metadata (Issues #169 and #170).",
       "runtimeContractDigest": "sha256:1570ea7f0f7329c5e9a04ec6624f5e90665520a23080564ad39d7850ac563512"
+    },
+    {
+      "revision": 84,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "123ecda41999f51a4758bb97c6257c716f6f5da5",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.18.0.",
+      "runtimeContractDigest": "sha256:1570ea7f0f7329c5e9a04ec6624f5e90665520a23080564ad39d7850ac563512"
     }
   ]
 }
