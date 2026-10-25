@@ -37,7 +37,10 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
   reusable AGENTS routing tree to merge or rewrite, and initialization must not
   place generated AGENTS leaves under them.
 - Derive route groups from real project boundaries. Prefer `domains/`, `workflows/`, `concerns/`, and `integrations/` only when the repository has matching durable boundaries.
-- Split route groups by real responsibility axes such as session, workflow, domain, component, and concern when those axes are present; do not flatten all guidance into one branch.
+- Start with root and one flat registry index; split into groups by real
+  responsibility axes such as session, workflow, domain, component, and concern
+  only when the registry shows the growth signals in `memory-and-state.md`.
+  Keep every rule in its own owner either way.
 - Create no branch, group index, direct domain entry, rule leaf, or
   cross-cutting safety or risk rule leaf only for symmetry.
 - Write root `AGENTS.md` as a small project control plane containing the project

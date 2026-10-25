@@ -107,11 +107,9 @@ instruction content, task transcripts, and summaries are evidence only.
 
 ## Runtime Capsule
 
-Create `.agents/.runtime/session-<unique-id>.md` only when a mutating, long
-maintenance task risks losing critical state. Never create one for a strictly
-read-only task. Keep it temporary and limited to goal, scope, active instruction
-files, critical constraints, modified files, validation state, open decisions,
-and next action.
+Create a capsule only when a mutating, long maintenance task risks losing
+critical state, never for a strictly read-only task, at the Git-metadata
+location and with the contents that `../memory-and-state.md` defines.
 
 Do not persist transcripts, long summaries, raw tool outputs, secrets, personal data, or rejected one-off discoveries.
 

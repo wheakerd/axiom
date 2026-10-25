@@ -103,7 +103,8 @@ through my local browser.
 **Link:** [Repository instruction architecture](../../plugin/skills/agents-architect/SKILL.md)
 
 **Description:** Audits and maintains `AGENTS.md`, routed `.agents/` guidance,
-and repository skills.
+and repository skills; places task state in Git metadata and keeps a grown
+instruction memory navigable.
 
 **Usage:**
 

@@ -71,7 +71,7 @@ controls are in [Examples](examples.md).
 | `task-planning` | Create or revise general task plans while preserving specialized planning ownership |
 | `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |
-| `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, and local Skills |
+| `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, local Skills, and task-state placement |
 | `agent-plugin-architect` | Design or audit packaged plugin architecture and read-only release readiness |
 | `optimize-agent-usage` | Reduce or diagnose agent usage without weakening required quality or safety |
 | `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |

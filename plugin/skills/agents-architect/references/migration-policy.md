@@ -32,7 +32,8 @@ Classify each candidate into exactly one category:
 - Cross-cutting safety or risk rule leaf: an evidence-backed concern or risk
   route.
 - Project fact or human documentation: keep in canonical docs and link from `.agents/`.
-- Temporary task information: `.agents/.runtime/` only when needed.
+- Temporary task information: the Git-metadata state directory in
+  `memory-and-state.md`, only when needed; never under `.agents/`.
 - Invalid or redundant content: delete, merge, or leave outside AGENTS.
 - Axiom packaged skill protocol or trigger content: leave in the installed Axiom plugin, not in the target AGENTS system.
 
@@ -102,7 +103,10 @@ safe-stop and report its exact path and observed precedence.
 - Track team-shared durable root and `.agents/**` instructions when they are meant for the repository.
 - Put personal rules under `.agents/local/`.
 - Prefer `.git/info/exclude` for user-local ignores.
-- Put runtime and generated artifacts under `.agents/.runtime/` or `.agents/.generated/`.
+- Put runtime and generated artifacts in the Git-metadata state directory that
+  `memory-and-state.md` resolves, never under `.agents/`; treat leftover
+  `.agents/.runtime/` or `.agents/.generated/` directories as migration
+  candidates.
 - Add ignores to `.gitignore` only when all contributors should ignore them.
 
 ## Prohibited actions

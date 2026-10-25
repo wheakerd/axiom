@@ -22,13 +22,18 @@ Design the root control plane and finite on-demand routing topology.
 
 ## Architecture Layers
 
+The layers, roles, and axes below are vocabulary and defaults;
+`memory-and-state.md` owns the flat registry and the growth signals that
+justify more structure.
+
 - Native auto-load layer: root `AGENTS.md` plus rare tiny nested
   `AGENTS.md` files for stable subprojects.
 - On-demand rule layer: ordinary `.agents/` group indexes, direct domain entries,
   and rule leaves reached through explicit `AGENTS.md` routing.
 - Cross-cutting layer: safety or risk rule leaves selected only by explicit
   concern or risk signals.
-- Runtime layer: `.agents/.runtime/` for temporary session capsules only.
+- Runtime layer: task state outside the working tree, placed by
+  `memory-and-state.md`; it is never an AGENTS branch.
 - Protected metadata layer: the parent skill's canonical protected-metadata
   boundary. It is not an AGENTS routing branch.
 - Plugin capability layer: installed Axiom skills own Axiom triggers, load
@@ -87,7 +92,8 @@ to complete a template.
 
 - Put each durable rule in the closest route where it always applies.
 - Keep root `AGENTS.md` for repository-wide constraints and routing only.
-- Create a group index only when one stable axis has multiple reachable owners.
+- Create a group index only when one stable axis has multiple reachable owners
+  and the flat registry shows the growth signals in `memory-and-state.md`.
 - Give every direct domain entry and rule leaf concrete scope evidence: paths,
   packages, entry points, commands, source docs, owners, or risk signals.
 - Split a rule leaf when it mixes independent owners, unrelated triggers,
@@ -99,29 +105,27 @@ to complete a template.
   at that boundary instead of reducing precision, deleting executable detail,
   or merging independent responsibilities.
 
-## Routing Algorithm
+## Routing Decisions
 
-1. Parse task type, expected paths, domains, languages, frameworks, and risk
-   signals.
-2. Prefer high-signal evidence: user paths, Git diff, stack traces, entry files,
-   manifests, build configuration, tests, and direct dependencies.
-3. Exclude protected plugin and skill metadata unless the user explicitly
-   scopes skill or plugin maintenance.
-4. Route a unique signal directly to its domain entry or rule leaf; otherwise
-   select at most two top-level axes for genuinely cross-axis work.
-5. Within each selected axis, let a low-signal task read at most one group index
-   before entering one terminal owner.
-6. Load `requires` dependencies only when relevant. If any exact target is
-   missing, unreachable from the current route, or ambiguous, report it. The
-   safe subset is read-only assessment only: do not create, edit, move, or
-   delete instruction structure and do not pass final structural acceptance.
-   Writing or accepting structure requires every exact target to exist and be
-   proven reachable from the current route.
-7. Trigger cross-cutting safety or risk rule leaves only from explicit signals.
-8. Continue with root rules when no terminal owner matches.
-9. Route incrementally when scope expands.
-10. Track loaded paths, load reasons, and key constraints in the active
-    instruction set.
+- Read high-signal evidence first: user paths, Git diff, stack traces, entry
+  files, manifests, build configuration, tests, and direct dependencies.
+- Exclude protected plugin and skill metadata unless the user explicitly scopes
+  skill or plugin maintenance.
+- Route a unique signal directly to its owner. Otherwise enter the flat
+  registry, or at most one group index per selected axis, and stop at one
+  terminal owner; take a second axis only for genuinely cross-axis work.
+- Load `requires` dependencies only when relevant. If any exact target is
+  missing, unreachable from the current route, or ambiguous, report it. The
+  safe subset is read-only assessment only: do not create, edit, move, or
+  delete instruction structure and do not pass final structural acceptance.
+  Writing or accepting structure requires every exact target to exist and be
+  proven reachable from the current route.
+- Trigger cross-cutting safety or risk rule leaves only from explicit signals;
+  continue with root rules when no terminal owner matches; route incrementally
+  when scope expands.
+- Track loaded paths, load reasons, and key constraints in the active
+  instruction set, and record each departure from these defaults with its
+  reason.
 
 Route target repository context from project signals. Never create a target
 AGENTS route whose purpose is to trigger an installed Axiom skill.

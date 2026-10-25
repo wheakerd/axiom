@@ -68,8 +68,10 @@ project constraints, and removal of avoidable rediscovery.
 
 - Root `AGENTS.md`: true global constraints, priority, routing entry points, and minimum verification.
 - `.agents/**`: routed group indexes, direct domain entries, rule leaves,
-  cross-cutting safety or risk rule leaves, parent-owned references, and
-  temporary runtime capsules.
+  cross-cutting safety or risk rule leaves, parent-owned references, the flat
+  registry, and the decision ledger.
+- Task state: the Git-metadata directory that `../memory-and-state.md`
+  resolves; never a canonical home for rules.
 - `.agents/skills/<skill-name>/SKILL.md` for Codex or
   `.claude/skills/<skill-name>/SKILL.md` for Claude Code: repo-local skills for repeatable repository workflows only when explicitly requested or already part of the target repository design.
 - Project docs: human source-of-truth facts that are not agent-executable guidance.
