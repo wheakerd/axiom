@@ -608,6 +608,14 @@
       "sourceIssue": null,
       "summary": "Limit agent-plugin-architect to packaged plugin architecture, excluding evaluation of an individual Skill or Skill proposal, and render each catalog's own source in the publisher summary.",
       "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
+    },
+    {
+      "revision": 77,
+      "recordedOn": "2026-10-25",
+      "baselineCommit": "33df0454aedf7ab2d0d81235cb7e2c3eda12d90c",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.17.1.",
+      "runtimeContractDigest": "sha256:def23a9d9c971a80983a971592c85d743715b8a8b4561f6d7c38548eca1b72dc"
     }
   ]
 }

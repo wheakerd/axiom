@@ -16,7 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
-## 0.17.1 - unreleased
+## Repository policy revision 77
+
+### Changed
+
+- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.17.1`.
+- Advance the Claude Code marketplace plugin source to the same immutable release `v0.17.1`.
+
+### Behavioral impact
+
+Codex and Claude Code marketplace refresh now select the release whose `agent-plugin-architect` route no longer matches a request to evaluate an individual Skill. This catalog handoff preserves plugin version `0.17.1` and its installed runtime digest.
+
+### Required action
+
+None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
+
+## 0.17.1 - 2026-10-25
 
 ### Fixed
 
