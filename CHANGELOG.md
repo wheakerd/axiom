@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 88
+
+### Changed
+
+- The offline route contract model selects `verify-completion` for evidence-bound completion verification requests, including post-compaction regrounding, when no earlier route applies. Seven routing scenario fixtures cover the canonical, post-compaction, Chinese, status near-miss, continuation near-miss, and `review-axiom-task` overlap cases, and the current-corpus bridge now compares the offline model with every `verify-completion` case.
+
+### Behavioral impact
+
+None for installed plugins: validators and fixtures only. Plugin version `0.19.0` and the runtime digest are unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 87
 
 ### Added

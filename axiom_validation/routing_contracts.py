@@ -674,7 +674,54 @@ def route_contract(request: str) -> dict[str, Any]:
         ):
             return {"route": route, "phase": phase, "references": references,
                     "authorization": frozenset({"read"})}
+    if contract["route"] is None:
+        completion = _verify_completion_contract(request, normalized)
+        if completion is not None:
+            return completion
     return _with_current_route_names(contract)
+
+
+VERIFY_COMPLETION_ZH_MARKERS = ("\u6838\u5b9e", "\u9a8c\u6536\u6761\u4ef6")  # verify, acceptance criteria
+VERIFY_COMPLETION_ZH_CONTEXT = ("\u538b\u7f29", "\u6458\u8981")  # compaction, summary
+
+
+def _verify_completion_contract(request: str, normalized: str) -> dict[str, Any] | None:
+    """Select verify-completion only for evidence-bound completion verification requests.
+
+    The rule stays bounded: a verification verb, a completion or progress claim, and an
+    evidence or summary context must all be present. Status questions and routine
+    continuation carry none of them; identified Axiom task reviews are resolved earlier by
+    the historical model and never reach this rule.
+    """
+    if all(marker in request for marker in VERIFY_COMPLETION_ZH_MARKERS) and any(
+        marker in request for marker in VERIFY_COMPLETION_ZH_CONTEXT
+    ):
+        normalized = (
+            "after compaction verify each acceptance criterion is actually complete "
+            "against current evidence and report which conclusions come only from the summary"
+        )
+    verification = re.search(r"\b(?:verif\w*|audit|re-?check|confirm|validate)\b", normalized)
+    claim = re.search(
+        r"\b(?:complet\w*|done|finished|success\w*|claims?|criteri\w*|achieved|accomplish\w*)\b",
+        normalized,
+    )
+    evidence = re.search(
+        r"\b(?:evidence|observed|observe|summar\w*|compact\w*|recall\w*|current (?:state|evidence|repository))\b",
+        normalized,
+    )
+    if not (verification and claim and evidence):
+        return None
+    regrounding = bool(re.search(r"\b(?:compact\w*|resum\w*|fork\w*|hand-?off)\b", normalized))
+    return {
+        "route": "verify-completion",
+        "phase": "reground-and-verify" if regrounding else "verify",
+        "references": (
+            ("references/evidence-ledger.md", "references/regrounding-after-compaction.md")
+            if regrounding
+            else ("references/evidence-ledger.md",)
+        ),
+        "authorization": frozenset({"read"}),
+    }
 
 
 # The historical model keeps its original route names; current routes rename them.
