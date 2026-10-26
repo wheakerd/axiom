@@ -696,6 +696,14 @@
       "sourceIssue": 180,
       "summary": "Add the deterministic hook-less Codex directory listing variant builder and document the variant's boundary and required observation.",
       "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
+    },
+    {
+      "revision": 88,
+      "recordedOn": "2026-10-26",
+      "baselineCommit": "8637c348b131c81321981328bd2930856b7d3ce2",
+      "sourceIssue": 181,
+      "summary": "Add offline route contract coverage for verify-completion: a bounded current-model rule, seven scenario fixtures, and the current-corpus bridge.",
+      "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
     }
   ]
 }
