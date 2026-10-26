@@ -88,6 +88,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "scripts/create-release-tag.py",
     "scripts/measure-routing-context.py",
     "scripts/render-release-facts.py",
+    "scripts/build-listing-variant.py",
     "axiom_validation/route-boundaries-v1.json",
     "axiom_validation/runtime-contract-inputs-v1.json",
     "axiom_validation/runtime-contract-inputs-v2.json",
