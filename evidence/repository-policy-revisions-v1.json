@@ -680,6 +680,14 @@
       "sourceIssue": 171,
       "summary": "Release 0.19.0: add the verify-completion skill, its route in the startup gate, and the thirteen-route evaluation generation.",
       "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
+    },
+    {
+      "revision": 86,
+      "recordedOn": "2026-10-26",
+      "baselineCommit": "344422cfc7af8b734f5ef0efa93710832a7fc020",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.19.0.",
+      "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
     }
   ]
 }
