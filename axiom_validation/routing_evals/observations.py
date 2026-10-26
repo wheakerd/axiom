@@ -29,6 +29,9 @@ from .constants import (
     CURRENT_BENCHMARK_CASE_COUNT,
     V4_PUBLIC_ROUTES, V4_BENCHMARK_CASE_COUNT, BENCHMARK_V5_ID,
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
+    V5_PUBLIC_ROUTES, V5_BENCHMARK_CASE_COUNT, V5_BENCHMARK_PROFILES,
+    HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+    HOST_BENCHMARK_PROFILES_BY_VERSION,
     BENCHMARK_V3_ID,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
@@ -98,6 +101,12 @@ def validate_observation(
         allowed_routes = V4_PUBLIC_ROUTES
         maximum_call_count = V4_BENCHMARK_CASE_COUNT
     elif schema_version == "5":
+        expected_benchmark_id = V5_BENCHMARK_PROFILES.get(
+            expected_host, V5_BENCHMARK_PROFILES["codex"]
+        )["id"]
+        allowed_routes = V5_PUBLIC_ROUTES
+        maximum_call_count = V5_BENCHMARK_CASE_COUNT
+    elif schema_version == "6":
         expected_benchmark_id = CURRENT_BENCHMARK_PROFILES.get(
             expected_host, CURRENT_BENCHMARK_PROFILES["codex"]
         )["id"]
@@ -107,7 +116,9 @@ def validate_observation(
         expected_benchmark_id = None
         allowed_routes = PUBLIC_ROUTES
         maximum_call_count = 17
-        failures.append(f"{label}.schemaVersion must be '1', '2', '3', '4', or '5'")
+        failures.append(f"{label}.schemaVersion must be '1', '2', '3', '4', '5', or '6'")
+    # Only schema v5 and v6 bind a benchmark profile per host.
+    host_profiles = HOST_BENCHMARK_PROFILES_BY_VERSION.get(schema_version)
     if record.get("kind") != "routing-observation":
         failures.append(f"{label}.kind must be routing-observation")
     if record.get("benchmarkId") != expected_benchmark_id:
@@ -120,8 +131,11 @@ def validate_observation(
         response_schema_value,
         f"{label}.responseSchema",
         failures,
-        current=schema_version in {"3", "4", "5"},
-        response_version="6" if schema_version == "5" else "5" if schema_version == "4" else "4",
+        current=schema_version in {"3", "4", "5", "6"},
+        response_version=(
+            "7" if schema_version == "6" else "6" if schema_version == "5"
+            else "5" if schema_version == "4" else "4"
+        ),
     )
     response_schema_path = (
         response_schema.get("path") if response_schema is not None else None
@@ -141,6 +155,11 @@ def validate_observation(
         "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
     }:
         failures.append(f"{label}.responseSchema must bind the exact V6 schema")
+    if schema_version == "6" and response_schema is not None and response_schema != {
+        "path": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+    }:
+        failures.append(f"{label}.responseSchema must bind the exact V7 schema")
     subject = validate_subject(record.get("axiom"), f"{label}.axiom", failures)
     candidate_evidence = subject is not None and subject.get("tag") is None
     host = exact_object(record.get("host"), HOST_KEYS, f"{label}.host", failures)
@@ -203,7 +222,7 @@ def validate_observation(
                 failures.append(
                     f"{label}.run.callCount must be <= {maximum_call_count}"
                 )
-        elif candidate_evidence or schema_version in {"2", "3", "4", "5"}:
+        elif candidate_evidence or schema_version in {"2", "3", "4", "5", "6"}:
             failures.append(
                 f"{label}.run.callCount is required for candidate or versioned evidence"
             )
@@ -230,8 +249,8 @@ def validate_observation(
         if run.get("lifecycle") != "fresh-start":
             failures.append(f"{label}.run.lifecycle must match the benchmark manifest")
         expected_method = (
-            CURRENT_BENCHMARK_PROFILES[expected_host]["method"]
-            if schema_version == "5" and expected_host in CURRENT_BENCHMARK_PROFILES
+            host_profiles[expected_host]["method"]
+            if host_profiles is not None and expected_host in host_profiles
             else "documented-codex-cli-equivalent"
         )
         if run.get("method") != expected_method:
@@ -262,7 +281,7 @@ def validate_observation(
                     )
                 profile = (
                     CURRENT_BENCHMARK_PROFILES["codex"] if expected_host == "codex"
-                    else CURRENT_BENCHMARK_PROFILES.get(expected_host) if schema_version == "5"
+                    else host_profiles.get(expected_host) if host_profiles is not None
                     else None
                 )
                 if profile is not None:
@@ -357,7 +376,7 @@ def validate_observation(
             document.get("responseDiagnostic"),
             status,
             run_id,
-            candidate_evidence or schema_version in {"2", "3", "4", "5"},
+            candidate_evidence or schema_version in {"2", "3", "4", "5", "6"},
             f"{case_label}.responseDiagnostic",
             failures,
         )
@@ -365,7 +384,7 @@ def validate_observation(
             document.get("acceptanceDiagnostic"),
             status,
             response_diagnostic,
-            schema_version in {"2", "3", "4", "5"}
+            schema_version in {"2", "3", "4", "5", "6"}
             or run_id
             in {
                 CANDIDATE2_CODEX_RUN_ID,
@@ -379,14 +398,17 @@ def validate_observation(
             document.get("evidenceSource"),
             status=status,
             response_schema_path=response_schema_path,
-            required=schema_version in {"2", "3", "4", "5"} or run_id == CANDIDATE4_CODEX_RUN_ID,
+            required=schema_version in {"2", "3", "4", "5", "6"} or run_id == CANDIDATE4_CODEX_RUN_ID,
             observer_required=(
-                schema_version in {"2", "3", "4", "5"} or run_id == CANDIDATE4_CODEX_RUN_ID
+                schema_version in {"2", "3", "4", "5", "6"} or run_id == CANDIDATE4_CODEX_RUN_ID
             ),
             label=f"{case_label}.evidenceSource",
             failures=failures,
         )
-        if response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH}:
+        if response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS | {
+            HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
+            HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+        }:
             if response_diagnostic == "schema-evidence":
                 failures.append(
                     f"{case_label}.responseDiagnostic cannot classify absent model evidence"
@@ -558,7 +580,7 @@ def validate_observation(
         failures.append(f"{label}.run.callCount disagrees with attempted cases")
     if evaluated and (installed is not True or hook is not True):
         failures.append(f"{label}.run attempted cases without verified plugin and hook")
-    if schema_version in {"2", "3", "4", "5"} and run_status != "pass":
+    if schema_version in {"2", "3", "4", "5", "6"} and run_status != "pass":
         # A stopped versioned batch publishes no partial aggregate as a benchmark
         # quality result. Per-case facts remain available without implying
         # coverage for the unattempted suffix.

@@ -51,7 +51,7 @@ EXPECTED_CODEX_INTERFACE = {
     "shortDescription": "Guardrails for agent actions",
     "longDescription": (
         "Axiom routes focused workflows for intent clarification, simple-task delegation, task planning, explicitly supervised progress across sessions, local web research, repository instructions, plugin architecture, usage optimization, "
-        "task review, confirmed external actions, traceable Git submission, and reversible "
+        "task review, evidence-bound completion verification, confirmed external actions, traceable Git submission, and reversible "
         "persistent system changes. Route selection never grants mutation authority."
     ),
     "developerName": "wheakerd",

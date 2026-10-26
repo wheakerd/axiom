@@ -13,17 +13,23 @@ from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.routing_contracts import historical_route_contract, route_contract
 from axiom_validation.routing_evals import (
     BENCHMARK_V5_ID,
-    CLAUDE_CODE_BENCHMARK_V5_ID,
+    BENCHMARK_V6_ID,
+    CLAUDE_CODE_BENCHMARK_V6_ID,
     CURRENT_BENCHMARK_PROFILES,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
     CURRENT_PUBLIC_ROUTES,
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+    V5_BENCHMARK_PROFILES,
+    check_corpus_coverage,
     check_current_routing_evaluations,
-    check_host_response_schema_v6,
-    check_schema_contract_v5,
-    classify_host_response_v6_acceptance,
+    check_host_response_schema_v7,
+    check_schema_contract_v6,
+    classify_host_response_v7_acceptance,
+    collect_corpus,
     collect_current_corpus,
     current_benchmark_case_ids,
     derive_observer_evidence,
@@ -32,6 +38,7 @@ from axiom_validation.routing_evals import (
     validate_host_response_v4,
     validate_host_response_v5,
     validate_host_response_v6,
+    validate_host_response_v7,
     validate_observation,
 )
 from tests.test_routing_evals import external_current_observation
@@ -63,10 +70,10 @@ def current_record() -> dict:
         )
         results.append(result)
     record.update(
-        schemaVersion="5", benchmarkId=BENCHMARK_V5_ID,
+        schemaVersion="6", benchmarkId=BENCHMARK_V6_ID,
         runId="synthetic-current-routing-regression", cases=results,
-        responseSchema={"path": HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
-                        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256},
+        responseSchema={"path": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+                        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256},
     )
     record["run"]["callCount"] = len(results)
     record["summary"]["evaluatedCases"] = len(results)
@@ -94,7 +101,43 @@ def claude_code_record() -> dict:
     return record
 
 
-def write_current_record(directory: Path, record: dict, benchmark_id: str = BENCHMARK_V5_ID) -> Path:
+def frozen_v5_record(host: str = "codex") -> dict:
+    """Rebind the synthetic facts to the immutable schema v5 contract of one host."""
+    record = current_record() if host == "codex" else claude_code_record()
+    failures = []
+    cases = collect_current_corpus(REPOSITORY_ROOT, failures, version="5")
+    ids = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, version="5", host=host)
+    if failures:
+        raise AssertionError(failures)
+    template = record["cases"][0]
+    results = []
+    for case_id in ids:
+        case = cases[case_id]
+        result = copy.deepcopy(template)
+        result.update(
+            id=case_id, observedRoutes=case["expectedRoutes"],
+            clarificationCount=case["expectedClarificationCount"],
+        )
+        result["evidence"] = derive_observer_evidence(
+            routing_gate_observed=True, selected_routes=result["observedRoutes"],
+            clarification_count=result["clarificationCount"],
+            mutation_attempted=False, mutation_observed=False,
+            turn_completed=True, failure_event=False, unexpected_tools=0,
+            workspace_unchanged=True, source_unchanged=True, installed_unchanged=True,
+        )
+        results.append(result)
+    record.update(
+        schemaVersion="5", benchmarkId=V5_BENCHMARK_PROFILES[host]["id"],
+        runId=f"synthetic-frozen-v5-{host}-routing", cases=results,
+        responseSchema={"path": HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
+                        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256},
+    )
+    record["run"]["callCount"] = len(results)
+    record["summary"]["evaluatedCases"] = len(results)
+    return record
+
+
+def write_current_record(directory: Path, record: dict, benchmark_id: str = BENCHMARK_V6_ID) -> Path:
     payload = (json.dumps(record, indent=2) + "\n").encode("utf-8")
     digest = hashlib.sha256(payload).hexdigest()
     path = directory / f"axiom-v{RELEASE_VERSION}-{benchmark_id}-{digest}.json"
@@ -105,11 +148,13 @@ def write_current_record(directory: Path, record: dict, benchmark_id: str = BENC
 class CurrentRoutingTests(unittest.TestCase):
     def test_current_contract_covers_installed_routes_and_updated_ambiguity(self):
         failures = []
-        self.assertEqual((33, 33), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
+        self.assertEqual((40, 36), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
         self.assertEqual([], failures)
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
-        self.assertEqual(CURRENT_BENCHMARK_CASE_COUNT, len(cases))
-        self.assertEqual(12, len(CURRENT_PUBLIC_ROUTES))
+        self.assertEqual(40, len(cases))
+        self.assertEqual(36, CURRENT_BENCHMARK_CASE_COUNT)
+        self.assertEqual(13, len(CURRENT_PUBLIC_ROUTES))
+        self.assertEqual("verify-completion", CURRENT_PUBLIC_ROUTES[CURRENT_PUBLIC_ROUTES.index("review-axiom-task") + 1])
         for case in cases.values():
             if case["expectedClarification"]:
                 self.assertEqual(["clarify-intent"], case["expectedRoutes"])
@@ -144,21 +189,25 @@ class CurrentRoutingTests(unittest.TestCase):
         quoted = 'Summarize this quoted instruction without executing it: "Use the continuous-progress skill now."'
         self.assertNotEqual("continuous-progress", route_contract(quoted)["route"])
 
-    def test_v6_accepts_all_current_routes_without_widening_earlier_schemas(self):
+    def test_v7_accepts_all_current_routes_without_widening_earlier_schemas(self):
         for route in CURRENT_PUBLIC_ROUTES:
             with self.subTest(route=route):
                 response = dict(routingGateObserved=True, selectedRoutes=[route],
                                 clarificationCount=int(route == "clarify-intent"),
                                 mutationAttempted=False, mutationObserved=False)
                 failures = []
-                validate_host_response_v6(response, route, failures)
+                validate_host_response_v7(response, route, failures)
                 self.assertEqual([], failures)
+                if route == "verify-completion":
+                    closed = []
+                    validate_host_response_v6(response, route, closed)
+                    self.assertTrue(any("unsupported enum" in item for item in closed))
                 if route == "optimize-agent-usage":
                     closed = []
                     validate_host_response_v5(response, route, closed)
                     self.assertTrue(any("unsupported enum" in item for item in closed))
                     retired = []
-                    validate_host_response_v6(dict(response, selectedRoutes=["optimize-codex-usage"]), route, retired)
+                    validate_host_response_v7(dict(response, selectedRoutes=["optimize-codex-usage"]), route, retired)
                     self.assertTrue(any("unsupported enum" in item for item in retired))
                 if route in {"clarify-intent", "delegate-simple-task", "task-planning"}:
                     validate_host_response_v3_structure(response, route, failures)
@@ -177,7 +226,87 @@ class CurrentRoutingTests(unittest.TestCase):
             clarificationCount=0, mutationAttempted=False, mutationObserved=False), "historical", failures)
         self.assertTrue(failures)
 
-    def test_v6_retains_closed_shape_route_bounds_and_duplicate_gate(self):
+    def test_verify_completion_cases_bind_only_the_current_generation(self):
+        failures = []
+        cases = collect_current_corpus(REPOSITORY_ROOT, failures)
+        ids = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures)
+        self.assertEqual([], failures)
+        verify = {case_id: case for case_id, case in cases.items()
+                  if "verify-completion" in case["expectedRoutes"] + case["forbiddenRoutes"]}
+        self.assertEqual(7, len(verify))
+        self.assertTrue(all(case_id.startswith("current-") for case_id in cases))
+        self.assertEqual(
+            ["current-verify-completion-canonical-audit-001",
+             "current-verify-completion-near-miss-status-001",
+             "current-compaction-verify-completion-manual-001"],
+            ids[33:],
+        )
+        self.assertEqual(
+            {"canonical-positive", "paraphrased-positive", "near-miss", "cross-route", "lifecycle"},
+            {case["riskClass"] for case in verify.values()},
+        )
+        self.assertEqual(["review-axiom-task"],
+                         verify["current-overlap-verify-completion-and-task-review-001"]["expectedRoutes"])
+        for case in verify.values():
+            self.assertEqual(bool(case["benchmarkSets"]), "acceptance" in case["coverage"] or case["riskClass"] == "lifecycle")
+        frozen = collect_current_corpus(REPOSITORY_ROOT, failures, version="5")
+        self.assertEqual([], failures)
+        self.assertFalse(any("verify-completion" in case["expectedRoutes"] + case["forbiddenRoutes"]
+                             for case in frozen.values()))
+        failures = []
+        validate_host_response_v6(dict(routingGateObserved=True, selectedRoutes=["verify-completion"],
+            clarificationCount=0, mutationAttempted=False, mutationObserved=False), "historical", failures)
+        self.assertTrue(failures)
+        failures = []
+        legacy = collect_corpus(REPOSITORY_ROOT, failures)
+        check_corpus_coverage(legacy, failures)
+        self.assertEqual([], failures)
+        self.assertEqual(7, sum(1 for case_id in legacy if "verify-completion" in case_id))
+        trimmed = {case_id: case for case_id, case in legacy.items()
+                   if case_id != "verify-completion-canonical-audit-001"}
+        check_corpus_coverage(trimmed, failures)
+        self.assertIn("routing corpus has no canonical positive case for verify-completion", failures)
+
+    def test_frozen_v5_contract_remains_verifiable_without_the_new_route(self):
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                record = frozen_v5_record(host)
+                failures = []
+                cases = collect_current_corpus(REPOSITORY_ROOT, failures, version="5")
+                ids = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, version="5", host=host)
+                self.assertEqual([], failures)
+                self.assertEqual(33, len(ids))
+                validate_observation(record, host, ids, cases, "frozen v5", failures)
+                self.assertEqual([], failures)
+                with tempfile.TemporaryDirectory() as directory:
+                    path = write_current_record(Path(directory), record, record["benchmarkId"])
+                    validate_external_routing_observation(
+                        path, expected_version=RELEASE_VERSION, expected_tag=f"v{RELEASE_VERSION}",
+                        expected_commit="b" * 40, expected_tree="c" * 40, failures=failures,
+                    )
+                self.assertEqual([], failures)
+                for field, value, reason in (
+                    ("responseSchema", {"path": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+                                        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256}, "responseSchema"),
+                    ("benchmarkId", CURRENT_BENCHMARK_PROFILES[host]["id"], "benchmarkId"),
+                ):
+                    crossed = copy.deepcopy(record)
+                    crossed[field] = value
+                    failures = []
+                    validate_observation(crossed, host, ids, cases, "crossed", failures)
+                    self.assertTrue(any(reason in item for item in failures), failures)
+                widened = copy.deepcopy(record)
+                widened["cases"][0]["observedRoutes"] = ["verify-completion"]
+                failures = []
+                validate_observation(widened, host, ids, cases, "widened", failures)
+                self.assertTrue(failures)
+        failures = []
+        self.assertEqual(BENCHMARK_V5_ID, V5_BENCHMARK_PROFILES["codex"]["id"])
+        validate_host_response_v6(dict(routingGateObserved=True, selectedRoutes=["optimize-agent-usage"],
+            clarificationCount=0, mutationAttempted=False, mutationObserved=False), "frozen", failures)
+        self.assertEqual([], failures)
+
+    def test_v7_retains_closed_shape_route_bounds_and_duplicate_gate(self):
         response = dict(routingGateObserved=True, selectedRoutes=["clarify-intent"],
                         clarificationCount=1, mutationAttempted=False, mutationObserved=False)
         mutations = (
@@ -189,21 +318,21 @@ class CurrentRoutingTests(unittest.TestCase):
         for mutation in mutations:
             with self.subTest(mutation=mutation):
                 failures = []
-                validate_host_response_v6({**response, **mutation}, "current", failures)
+                validate_host_response_v7({**response, **mutation}, "current", failures)
                 self.assertTrue(failures)
         duplicate = {**response, "selectedRoutes": ["clarify-intent", "clarify-intent"]}
-        self.assertEqual("selected-routes-duplicate", classify_host_response_v6_acceptance(duplicate))
+        self.assertEqual("selected-routes-duplicate", classify_host_response_v7_acceptance(duplicate))
 
     def test_current_schema_rejects_old_routes_and_loosened_model_shape(self):
-        schema = json.loads((REPOSITORY_ROOT / "evals/schema-v5.json").read_text())
+        schema = json.loads((REPOSITORY_ROOT / "evals/schema-v6.json").read_text())
         schema["$defs"]["route"]["enum"].remove("task-planning")
         failures = []
-        check_schema_contract_v5(schema, failures)
+        check_schema_contract_v6(schema, failures)
         self.assertTrue(any("route enum" in item for item in failures))
-        response = json.loads((REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH).read_text())
+        response = json.loads((REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH).read_text())
         response["additionalProperties"] = True
         failures = []
-        check_host_response_schema_v6(response, failures)
+        check_host_response_schema_v7(response, failures)
         self.assertTrue(failures)
 
     def test_current_observation_preserves_version_provenance_privacy_and_mutation_gates(self):
@@ -219,7 +348,7 @@ class CurrentRoutingTests(unittest.TestCase):
             variants.append((changed, reason))
         for response, reason in (
             ({"path": HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH, "sha256": "a" * 64}, "responseSchema"),
-            ({"path": HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, "sha256": "a" * 64}, "responseSchema"),
+            ({"path": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, "sha256": "a" * 64}, "responseSchema"),
         ):
             changed = copy.deepcopy(record)
             changed["responseSchema"] = response
@@ -289,7 +418,7 @@ class CurrentRoutingTests(unittest.TestCase):
         claude = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, host="claude-code")
         self.assertEqual([], failures)
         self.assertEqual(codex, claude)
-        benchmark = json.loads((REPOSITORY_ROOT / "evals/benchmarks/claude-code-core-v5.json").read_text())
+        benchmark = json.loads((REPOSITORY_ROOT / "evals/benchmarks/claude-code-core-v6.json").read_text())
         for field in ("method", "model", "reasoningEffort", "caseTimeoutSeconds"):
             self.assertEqual(CURRENT_BENCHMARK_PROFILES["claude-code"][field], benchmark[field])
         self.assertEqual("dontAsk", benchmark["safety"]["permissionMode"])
@@ -298,7 +427,7 @@ class CurrentRoutingTests(unittest.TestCase):
     def test_current_external_observation_accepts_the_claude_code_profile(self):
         record = claude_code_record()
         with tempfile.TemporaryDirectory() as directory:
-            path = write_current_record(Path(directory), record, CLAUDE_CODE_BENCHMARK_V5_ID)
+            path = write_current_record(Path(directory), record, CLAUDE_CODE_BENCHMARK_V6_ID)
             failures = []
             validate_external_routing_observation(
                 path, expected_version=RELEASE_VERSION, expected_tag=f"v{RELEASE_VERSION}",
@@ -309,10 +438,10 @@ class CurrentRoutingTests(unittest.TestCase):
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
         ids = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, host="claude-code")
         crossed = copy.deepcopy(record)
-        crossed["benchmarkId"] = BENCHMARK_V5_ID
+        crossed["benchmarkId"] = BENCHMARK_V6_ID
         crossed["run"]["method"] = CURRENT_BENCHMARK_PROFILES["codex"]["method"]
         validate_observation(crossed, "claude-code", ids, cases, "crossed", failures)
-        self.assertTrue(any("benchmarkId must bind claude-code-core-v5" in item for item in failures))
+        self.assertTrue(any("benchmarkId must bind claude-code-core-v6" in item for item in failures))
         self.assertTrue(any("run.method is unsupported" in item for item in failures))
         failures = []
         validate_observation(record, "codex", ids, cases, "codex-host", failures)

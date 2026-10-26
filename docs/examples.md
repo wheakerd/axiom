@@ -150,6 +150,21 @@ verify a present outcome, but cannot establish past authorization or causation.
 The review does not rerun the task, invent missing history, open unrelated
 targets, mutate state, or persist a trace.
 
+## `verify-completion`
+
+> Verify that this task is actually complete against current evidence before I
+> accept the summary. List each criterion with what you observed now.
+
+[Verify Completion](../plugin/skills/verify-completion/SKILL.md) freezes the
+original criteria, re-checks each one directly, and reports `met`, `not met`,
+or `unverifiable` per criterion with the fact class of every input. After
+compaction it treats the carried summary as an index of what to check and
+re-reads the recorded artifacts before any new mutation. When evidence
+conflicts with the request it states the conflict and a recommendation first,
+then acts within the user's authority. A status question or routine
+continuation does not select this route; reviewing an identified Axiom task's
+routing stays with `review-axiom-task`.
+
 ## `confirm-external-action`
 
 > Send this approved message once to alex@example.com from the support account,

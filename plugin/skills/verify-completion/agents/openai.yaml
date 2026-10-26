@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Completion"
+  short_description: "Check completion claims against current evidence"
+  default_prompt: "Use $verify-completion to verify that this task is actually complete against current evidence and report observed versus summarized facts."

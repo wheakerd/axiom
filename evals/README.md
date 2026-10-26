@@ -9,10 +9,10 @@ evidence, use [Compatibility](../docs/compatibility.md).
 
 | Source | Responsibility |
 | --- | --- |
-| [schema-v5.json](schema-v5.json) | Current twelve-route corpus and observation format |
-| [routing-v5/current.jsonl](routing-v5/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
-| [codex-core-v5.json](benchmarks/codex-core-v5.json) and [claude-code-core-v5.json](benchmarks/claude-code-core-v5.json) | Codex and Claude Code profiles of one ordered 33-case benchmark and developer instruction, each with its own invocation method, model, effort, timeout, and permission settings |
-| [host-response-schema-v6.json](host-response-schema-v6.json) | Current five-field, prose-free model response with all twelve routes |
+| [schema-v6.json](schema-v6.json) | Current thirteen-route corpus and observation format |
+| [routing-v6/current.jsonl](routing-v6/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
+| [codex-core-v6.json](benchmarks/codex-core-v6.json) and [claude-code-core-v6.json](benchmarks/claude-code-core-v6.json) | Codex and Claude Code profiles of one ordered 36-case benchmark and developer instruction, each with its own invocation method, model, effort, timeout, and permission settings |
+| [host-response-schema-v7.json](host-response-schema-v7.json) | Current five-field, prose-free model response with all thirteen routes |
 | [codex-exec-jsonl-observer-v3.json](codex-exec-jsonl-observer-v3.json) and [claude-code-stream-json-observer-v1.json](claude-code-stream-json-observer-v1.json) | How each host's event stream yields the fixed observer facts |
 | [review-sequences-v1.json](review-sequences-v1.json), [review-sequences-claude-code-v1.json](review-sequences-claude-code-v1.json), and [review-response-schema-v1.json](review-response-schema-v1.json) | Bounded review sequences for Codex and Claude Code and their shared structured response contract |
 | [Routing Context Budget](context-budget/README.md) | Deterministic instruction-size measurement and its limits |
@@ -24,17 +24,26 @@ ambiguity selects `clarify-intent` before an action route. English route
 definitions remain canonical; non-English fixture requests test normalization
 and do not define localized aliases.
 
-Schema v5 keeps the v4 cases, renames the usage route to
-`optimize-agent-usage`, drops host names from two usage requests and one goals
-control, states explicit invocations in plain language instead of Codex's
-`$skill-name` form, replaces the delegation request's OpenAI model IDs with a
-host-neutral ordered candidate list, and adds a Claude Code profile. The
-`codex-core-v5` and `claude-code-core-v5` profiles
-select the same ordered cases with the same developer instruction and response
-schema. Each keeps its own host's invocation method, model, effort, timeout,
-and permission settings; neither maps onto the other. These profiles and the
-preserved `codex-core-v4` benchmark include the delegation-positive
-expectation from `0.14.0`. That expectation does not
+Schema v6 keeps the v5 cases and adds seven `verify-completion` cases: a
+canonical and a paraphrased positive, two near-miss no-route controls for a
+status question and routine continuation, a cross-route case owned by
+`review-axiom-task`, a Chinese positive, and a post-compaction positive. The
+`codex-core-v6` and `claude-code-core-v6` profiles select the `codex-core-v5`
+order plus the canonical positive, the status near-miss, and the
+post-compaction case; the other four cases stay outside both profiles. The
+per-route corpus under [routing/](routing/) carries the same seven cases in
+`verify-completion.jsonl` without benchmark membership, so its coverage check
+also enforces the new route. Schema v5 kept the v4 cases, renamed the usage
+route to `optimize-agent-usage`, dropped host names from two usage requests
+and one goals control, stated explicit invocations in plain language instead
+of Codex's `$skill-name` form, replaced the delegation request's OpenAI model
+IDs with a host-neutral ordered candidate list, and added a Claude Code
+profile. The two current profiles select the same ordered cases with the same
+developer instruction and response schema. Each keeps its own host's
+invocation method, model, effort, timeout, and permission settings; neither
+maps onto the other. These profiles and the preserved `codex-core-v4`,
+`codex-core-v5`, and `claude-code-core-v5` benchmarks include the
+delegation-positive expectation from `0.14.0`. That expectation does not
 verify the stricter [delegation activation conditions](../plugin/skills/delegate-simple-task/SKILL.md#activation)
 introduced in `0.14.1`. Do not use these benchmarks as current delegation-gate
 evidence. A future host observation of that changed behavior needs a successor
@@ -47,7 +56,7 @@ host behavior.
 Case IDs are stable and cannot be repurposed. A change to the request, expected
 or forbidden route, clarification count, lifecycle precondition, or risk class
 requires a new `contractVersion` and an explanation in the pull request. The
-current schema fixes that version to `5`, so a successor must version the
+current schema fixes that version to `6`, so a successor must version the
 schema and its consumers together. Preserve the exact corpus, response schema,
 and benchmark bound to existing observations; do not edit an expectation after
 a failure to make that result pass. An ordered benchmark change receives a new
@@ -91,9 +100,9 @@ reports current counts from checked-in contracts; historical totals belong to
 their original records.
 
 For a separately produced current observation, external validation accepts one
-content-addressed schema v5 record against the profile its host names,
-`codex-core-v5` for Codex or `claude-code-core-v5` for Claude Code, and response
-schema V6. This optional observation is separate from required publication checks:
+content-addressed schema v6 record against the profile its host names,
+`codex-core-v6` for Codex or `claude-code-core-v6` for Claude Code, and response
+schema V7. This optional observation is separate from required publication checks:
 
 ```bash
 python3 scripts/check-publication.py \
@@ -108,8 +117,8 @@ python3 scripts/check-publication.py \
 Use the independently verified version, tag, commit, and tree of the observed
 subject in place of the placeholders. The checked-in manifest does not prove
 that its candidate has been published or observed. Acceptance requires the
-exact 33 unique cases in benchmark order,
-repeat count one, call count 33, 33/33 `PASS`, verified local installation and
+exact 36 unique cases in benchmark order,
+repeat count one, call count 36, 36/36 `PASS`, verified local installation and
 startup delivery, no unavailable or `NOT-RUN` suffix, and zero routing,
 clarification, or mutation regressions. The file stays outside the repository
 and exposes its full SHA-256 in its filename. Validation does not query a
@@ -117,11 +126,12 @@ remote service to establish publication or create an observation.
 
 The asset may supplement release evidence; it never edits or promotes the
 checked-in `STATIC-ONLY` [release status](../evidence/release-status.json).
-Historical schema v4 records remain verifiable against `codex-core-v4` and
-response V5, and schema v3 records against `codex-core-v3` and response V4.
-Schema v2 records remain verifiable only against their original
-`codex-core-v2` and response V3 contract. None of them cover the current
-routes.
+Historical schema v5 records remain verifiable against `codex-core-v5` or
+`claude-code-core-v5` and response V6, schema v4 records against
+`codex-core-v4` and response V5, and schema v3 records against `codex-core-v3`
+and response V4. Schema v2 records remain verifiable only against their
+original `codex-core-v2` and response V3 contract. None of them cover the
+current routes.
 
 ## Host Observation Boundaries
 

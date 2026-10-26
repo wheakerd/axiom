@@ -75,6 +75,7 @@ controls are in [Examples](examples.md).
 | `agent-plugin-architect` | Design or audit packaged plugin architecture and read-only release readiness |
 | `optimize-agent-usage` | Reduce or diagnose agent usage without weakening required quality or safety |
 | `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |
+| `verify-completion` | Verify completion or progress claims against current direct evidence after compaction or resume, advising before complying |
 | `confirm-external-action` | Bind, authorize, execute once, and verify a consequential external effect |
 | `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared plugin releases, and explicitly traceable or hardened Git submission |
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |

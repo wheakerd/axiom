@@ -5,13 +5,13 @@ description: Route startup, resume, compaction, requests and local web research.
 
 ## Invocation Notes
 
-Optional, per the user's verbosity preference and host behavior. When explaining, name bundled Axiom skills in inline code as `Axiom:<skill-name>`; name other skills, plugins, MCP tools or repository-local skills by their own name in inline code, without `Axiom:`. Give a brief reason in the user's language. No fixed layout or repetition; no notice for no-route or startup.
+Optional, per user verbosity preference and host behavior. When explaining, name bundled skills as `Axiom:<skill-name>` and other skills, plugins, MCP tools or repo-local skills by their own name, all in inline code. Give a brief reason in the user's language; no fixed layout, repetition or notice for no-route or startup.
 
 ## Route Once
 
 1. Honor higher-priority instructions.
 2. Route only explicit Axiom invocations or clear bundled-description matches.
-3. Load the smallest matching installed skill set and active-phase references. Inspect no candidate bodies before selection.
+3. Load the smallest matching installed skill set and active-phase references; inspect no candidate bodies before selection.
 4. Map unambiguous non-English to its canonical English route. Clarify only material unresolved intent; tentative wording alone is no trigger.
 5. No match: continue normally in the host. A no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
 
@@ -22,20 +22,21 @@ read-only.
 ## Bundled Routes
 
 - `clarify-intent`: resolve ambiguity with options and a custom answer; never reopen settled choices or ask routine details.
-- `delegate-simple-task`: assess simple-task models only with this gate active and the host's verified top reasoning level. Before loading, require user confirmation or explicit invocation consent; else ask and wait. Missing gate or level evidence blocks direct requests too, even in a permission-bypass mode.
-- `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections, execution. Keep specialized planning ownership/authority.
-- `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling. Exclude ordinary continuation and skill discussion.
-- `local-web-search`: constrain planned web search and follow-up page access from the user's machine or local workspace browser/client. Classify uncertain execution location before access. Exclude confirmed cloud-hosted search and unrelated web app actions.
+- `delegate-simple-task`: assess simple-task models only with this gate active and the host's verified top reasoning level. Before loading, require user confirmation or explicit invocation consent; else ask and wait. Missing gate or level evidence also blocks direct requests, even in permission-bypass mode.
+- `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections and execution; keep specialized planning ownership.
+- `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling; exclude ordinary continuation and skill discussion.
+- `local-web-search`: constrain planned web search and page access from the user's machine or local browser/client; classify an uncertain execution location first. Exclude confirmed cloud-hosted search and unrelated web app actions.
 - `agents-architect`: audit repository `AGENTS.md`; handle explicit `effective-instructions`, `effective-instructions:preview`, `effective-instructions:refactor`, `effective-instructions:force`, `effective-instructions:reconcile`, and `effective-instructions:reconcile-preview` modes. Exclude packaged plugin skills.
 - `agent-plugin-architect`: design or audit packaged Codex or Claude Code
   plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
   and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
   code stay outside.
-- `optimize-agent-usage`: explicitly reduce/diagnose agent usage of credits, tokens, and context; preserve required quality and safety.
+- `optimize-agent-usage`: explicitly reduce/diagnose agent usage of credits, tokens and context; preserve required quality and safety.
 - `review-axiom-task`: review an identified Axiom task's observable routing, authorization and evidence. Prior refusal governs neither review nor narrower requests.
-- `confirm-external-action`: prepare, authorize, execute once, verify requested consequential external actions if actor, target, payload, disclosure, cost, or retry boundaries matter. Lookup/drafts stay host-native.
+- `verify-completion`: verify completion or progress claims against current evidence after compaction, resume or long work; advise before complying on conflicting evidence. Exclude status questions and routine continuation.
+- `confirm-external-action`: prepare, authorize, execute once and verify requested consequential external actions when actor, target, payload, disclosure, cost or retry boundaries matter; lookups and drafts stay host-native.
 - `traceable-git-submit`: create traceable checkpoints/baseline metadata, consolidate/recover their history, or perform an explicitly invoked, hardened, multi-target, or otherwise independently traceable Git push. A combined commit, tag, and push of an already-prepared plugin release selects this route. Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native; merely mentioning submit, publish, or push does not select this route.
-- `reversible-system-change`: plan/rehearse/execute persistent installs, upgrades, deployments, migrations, destructive retention, or promotions with rollback, data, service, or activation risk. Includes backup preparation; plans stay read-only.
+- `reversible-system-change`: plan/rehearse/execute persistent installs, upgrades, deployments, migrations, destructive retention, or promotions with rollback, data, service, or activation risk. Includes backup preparation; plans are read-only.
 
 Resolve cross-route ownership from this table before inspecting either
 candidate body. Deployment, promotion, migration, destructive retention, or
@@ -57,8 +58,8 @@ clarification question before selecting an action route. Wording such as
 "choose one" does not remove the ambiguity. Once the
 user chooses an unambiguous implementation, resume normal route selection.
 
-Assess ambiguity before useful, host-supported delegation; only this gate may
-select `clarify-intent` then; `delegate-simple-task` must not invoke it. A permission-bypass mode never resolves intent or expands authority.
+Assess ambiguity before useful delegation; only this gate selects
+`clarify-intent` then, never `delegate-simple-task`. A permission-bypass mode resolves no intent and expands no authority.
 
 An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary
 performance work does not. Ordinary AGENTS audits select only `agents-architect`.
@@ -67,11 +68,11 @@ Exact existing authorization needs no reconfirmation unless scope changes. Prior
 
 ## Boundaries
 
-- Routing selects instructions, never edits, commits, pushes, deployments, deletion, credentials, remote writes, or scope expansion.
-- Startup routing is foreground and read-only: no writes, network, service, background process, telemetry, or update check.
-- On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts.
-- Never load all skills, route by topical similarity, edit protected metadata without scope, or persist one-off discoveries as durable instructions.
+- Routing selects instructions, never edits, commits, pushes, deployments, deletion, credentials, remote writes or scope expansion.
+- Startup routing is foreground and read-only: no writes, network, service, background process, telemetry or update check.
+- On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts. A summary is a claim, not evidence.
+- Never load all skills, route by topical similarity, edit protected metadata without scope or persist one-off discoveries as durable instructions.
 
 ## Refresh
 
-Read `references/updating.md` only on explicit Axiom update/refresh requests. Never check, fetch, install or announce updates automatically.
+Read `references/updating.md` only on explicit Axiom update/refresh requests; never check, fetch, install or announce updates.

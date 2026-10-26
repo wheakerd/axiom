@@ -155,6 +155,21 @@ Use the review-axiom-task skill to review why Axiom paused the previous task.
 Do not retry it.
 ```
 
+### verify-completion
+
+**Link:** [Completion verification](../../plugin/skills/verify-completion/SKILL.md)
+
+**Description:** Verifies completion, progress, or success claims against
+current direct evidence, especially after compaction or resume, and advises
+before complying when evidence conflicts.
+
+**Usage:**
+
+```text
+Use the verify-completion skill to check whether this task is actually
+complete. List each criterion with what you observed now, not what you recall.
+```
+
 ### confirm-external-action
 
 **Link:** [Consequential external actions](../../plugin/skills/confirm-external-action/SKILL.md)

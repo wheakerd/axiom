@@ -133,10 +133,11 @@ def check_documented_method(root: Path, failures: list[str]) -> None:
         if forbidden in text:
             failures.append(f"{label} documents unsupported invocation option {forbidden!r}")
 def _check_host_profile(
-    benchmark: dict[str, Any], host: str, label: str, failures: list[str]
+    benchmark: dict[str, Any], host: str, label: str, failures: list[str],
+    profiles: dict[str, dict[str, Any]] = CURRENT_BENCHMARK_PROFILES,
 ) -> None:
-    """Check a non-Codex schema v5 profile against its own native settings."""
-    profile = CURRENT_BENCHMARK_PROFILES.get(host)
+    """Check a non-Codex schema v5 or v6 profile against its own native settings."""
+    profile = profiles.get(host)
     if host != "claude-code" or profile is None:
         failures.append(f"{label} names an unsupported benchmark host {host!r}")
         return
@@ -191,6 +192,7 @@ def validate_benchmark(
     canonical_routes: tuple[str, ...] | None = None,
     expected_case_count: int = 13,
     host: str = "codex",
+    profiles: dict[str, dict[str, Any]] = CURRENT_BENCHMARK_PROFILES,
 ) -> list[str]:
     label = f"evals/benchmarks/{benchmark_id}.json"
     exact_object(benchmark, BENCHMARK_KEYS, label, failures)
@@ -201,7 +203,7 @@ def validate_benchmark(
     if benchmark.get("corpusSchema") != schema_id:
         failures.append(f"{label}.corpusSchema must bind {schema_id}")
     if host != "codex":
-        _check_host_profile(benchmark, host, label, failures)
+        _check_host_profile(benchmark, host, label, failures, profiles)
     elif benchmark.get("method") != "documented-codex-cli-equivalent":
         failures.append(f"{label}.method is unsupported")
     official = None if host != "codex" else exact_object(
