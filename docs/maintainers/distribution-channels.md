@@ -16,7 +16,7 @@ below only help people and crawlers find the repository.
 | --- | --- | --- |
 | Repository topics | Twenty topics, the GitHub maximum, covering both hosts, plugin and skill terms, and workflow terms | 2026-10-25 |
 | Repository homepage | The [documentation index](../README.md) | Set 2026-10-25 |
-| `SKILL.md` frontmatter | All thirteen bundled skills satisfy the [Agent Skills specification](https://agentskills.io/specification): `name` matches its directory and its character rules, `description` is 1 to 1024 characters, and no field outside the specification is used | 2026-10-25 |
+| `SKILL.md` frontmatter | All fourteen bundled skills satisfy the [Agent Skills specification](https://agentskills.io/specification): `name` matches its directory and its character rules, `description` is 1 to 1024 characters, and no field outside the specification is used | 2026-10-25 |
 | Marketplace catalogs | Both catalogs select the installed `plugin/` subtree at the immutable release tag; see [marketplace publication](release-documentation.md#marketplace-publication) | Per release |
 | README links and badges | Every absolute link and badge in the README returned HTTP 200 | 2026-10-25 |
 

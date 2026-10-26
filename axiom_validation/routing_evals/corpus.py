@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .constants import CASE_FILES, PUBLIC_ROUTES
+from .constants import CASE_FILES, CORPUS_COVERAGE_ROUTES
 from .jsonio import _display, load_jsonl_cases
 from .schemas import validate_case
 
@@ -60,7 +60,7 @@ def check_corpus_coverage(
     cases: dict[str, dict[str, Any]], failures: list[str]
 ) -> None:
     values = tuple(cases.values())
-    for route in PUBLIC_ROUTES:
+    for route in CORPUS_COVERAGE_ROUTES:
         canonical = [
             case
             for case in values

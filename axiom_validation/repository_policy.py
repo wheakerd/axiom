@@ -68,6 +68,7 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/codex-exec-jsonl-observer-v3.json",
     "evals/claude-code-stream-json-observer-v1.json",
     "evals/benchmarks/claude-code-core-v5.json",
+    "evals/benchmarks/claude-code-core-v6.json",
     "evals/review-sequences-claude-code-v1.json",
     "evals/benchmarks/codex-core-v1.json",
     "evals/benchmarks/codex-core-v2.json",
@@ -128,6 +129,7 @@ EXPECTED_DIRECT_SKILLS = (
     "task-planning",
     "traceable-git-submit",
     "using-axiom",
+    "verify-completion",
 )
 INSTRUCTION_MAX_BYTES = 8192
 AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (

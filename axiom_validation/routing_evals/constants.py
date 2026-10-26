@@ -22,6 +22,7 @@ CASE_FILES = (
     "agent-plugin-architect.jsonl",
     "optimize-codex-usage.jsonl",
     "review-axiom-task.jsonl",
+    "verify-completion.jsonl",
     "confirm-external-action.jsonl",
     "credential-lifecycle.jsonl",
     "traceable-git-submit.jsonl",
@@ -112,6 +113,10 @@ PUBLIC_ROUTES = (
     "review-axiom-task",
     "traceable-git-submit",
 )
+# The legacy per-route corpus also covers verify-completion. PUBLIC_ROUTES stays
+# bound to the frozen schema v2 and response V3 contracts, so corpus coverage
+# enumerates its own route tuple.
+CORPUS_COVERAGE_ROUTES = (*PUBLIC_ROUTES, "verify-completion")
 HIGH_IMPACT_ROUTES = (
     "confirm-external-action",
     "reversible-system-change",
@@ -404,18 +409,18 @@ CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256 = "0cf3f61e2f5a5300bfc399906dd351a90e0b89
 
 # Schema v5 renames the usage route; the v4 route set and bindings stay immutable.
 RENAMED_PUBLIC_ROUTES = {"optimize-codex-usage": "optimize-agent-usage"}
-CURRENT_PUBLIC_ROUTES = tuple(RENAMED_PUBLIC_ROUTES.get(route, route) for route in V4_PUBLIC_ROUTES)
+V5_PUBLIC_ROUTES = tuple(RENAMED_PUBLIC_ROUTES.get(route, route) for route in V4_PUBLIC_ROUTES)
 SCHEMA_V5_ID = "urn:axiom:routing-evals:schema:v5"
 BENCHMARK_V5_ID = "codex-core-v5"
-CURRENT_BENCHMARK_CASE_COUNT = 33
-CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v5/current.jsonl"
+V5_BENCHMARK_CASE_COUNT = 33
+V5_CORPUS_RELATIVE_PATH = "evals/routing-v5/current.jsonl"
 HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH = "evals/host-response-schema-v6.json"
 CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256 = "c1fc12821dc99723da17093507b2be6fa2adc794dd9de66b907be21fe7a90a14"
 
 # Schema v5 binds each host to its own benchmark profile over the shared corpus.
 # Each profile keeps its host's native settings; neither maps onto the other.
 CLAUDE_CODE_BENCHMARK_V5_ID = "claude-code-core-v5"
-CURRENT_BENCHMARK_IDS = (BENCHMARK_V5_ID, CLAUDE_CODE_BENCHMARK_V5_ID)
+V5_BENCHMARK_IDS = (BENCHMARK_V5_ID, CLAUDE_CODE_BENCHMARK_V5_ID)
 CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS = frozenset({"documentation", "verifiedOn"})
 CLAUDE_CODE_OFFICIAL_DOCUMENTATION = "https://code.claude.com/docs/en/headless"
 CLAUDE_CODE_STREAM_JSON_TAXONOMY_PATH = EVAL_ROOT / "claude-code-stream-json-observer-v1.json"
@@ -452,7 +457,7 @@ CLAUDE_CODE_BENCHMARK_SAFETY_KEYS = frozenset(
         "credentialDisclosure",
     }
 )
-CURRENT_BENCHMARK_PROFILES = {
+V5_BENCHMARK_PROFILES = {
     "codex": {
         "id": BENCHMARK_V5_ID,
         "method": "documented-codex-cli-equivalent",
@@ -468,3 +473,25 @@ CURRENT_BENCHMARK_PROFILES = {
         "caseTimeoutSeconds": 300,
     },
 }
+
+# Schema v6 adds the verify-completion route directly after review-axiom-task, in
+# gate order, over the same two host profiles; the v5 route set, corpus, and
+# bindings stay immutable.
+_V6_ROUTE_INDEX = V5_PUBLIC_ROUTES.index("review-axiom-task") + 1
+CURRENT_PUBLIC_ROUTES = (
+    *V5_PUBLIC_ROUTES[:_V6_ROUTE_INDEX], "verify-completion", *V5_PUBLIC_ROUTES[_V6_ROUTE_INDEX:]
+)
+SCHEMA_V6_ID = "urn:axiom:routing-evals:schema:v6"
+BENCHMARK_V6_ID = "codex-core-v6"
+CLAUDE_CODE_BENCHMARK_V6_ID = "claude-code-core-v6"
+CURRENT_BENCHMARK_IDS = (BENCHMARK_V6_ID, CLAUDE_CODE_BENCHMARK_V6_ID)
+CURRENT_BENCHMARK_CASE_COUNT = 36
+CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v6/current.jsonl"
+HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH = "evals/host-response-schema-v7.json"
+CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256 = "c6705369bfb965ce3bd6b9239acdd6a3325b5b36a9d31fc537f3a876d8270ff8"
+CURRENT_BENCHMARK_PROFILES = {
+    "codex": {**V5_BENCHMARK_PROFILES["codex"], "id": BENCHMARK_V6_ID},
+    "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V6_ID},
+}
+# Schema versions that bind a benchmark profile per host, with their profiles.
+HOST_BENCHMARK_PROFILES_BY_VERSION = {"5": V5_BENCHMARK_PROFILES, "6": CURRENT_BENCHMARK_PROFILES}

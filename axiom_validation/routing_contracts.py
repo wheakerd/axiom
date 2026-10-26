@@ -30,6 +30,7 @@ ROUTE_SOURCE_ANCHORS = {
     "confirm-external-action": ("external", "target", "verify"),
     "optimize-agent-usage": ("usage", "credits", "context"),
     "review-axiom-task": ("routing", "authorization", "evidence"),
+    "verify-completion": ("completion", "evidence"),
     "traceable-git-submit": ("checkpoint", "push"),
     "reversible-system-change": ("plan", "persistent", "rollback"),
 }

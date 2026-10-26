@@ -8,37 +8,42 @@ from typing import Any
 
 from .benchmark import validate_benchmark
 from .constants import (
-    BENCHMARK_V3_ID, BENCHMARK_V4_ID, BENCHMARK_V5_ID,
+    BENCHMARK_V3_ID, BENCHMARK_V4_ID, BENCHMARK_V5_ID, BENCHMARK_V6_ID,
     CURRENT_BENCHMARK_PROFILES,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_CORPUS_RELATIVE_PATH,
-    CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
     CURRENT_PUBLIC_ROUTES,
-    HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
-    SCHEMA_V3_ID, SCHEMA_V4_ID, SCHEMA_V5_ID,
+    HOST_BENCHMARK_PROFILES_BY_VERSION,
+    HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+    SCHEMA_V3_ID, SCHEMA_V4_ID, SCHEMA_V5_ID, SCHEMA_V6_ID,
     V3_BENCHMARK_CASE_COUNT, V3_CORPUS_RELATIVE_PATH, V3_PUBLIC_ROUTES,
     V4_BENCHMARK_CASE_COUNT, V4_CORPUS_RELATIVE_PATH, V4_PUBLIC_ROUTES,
+    V5_BENCHMARK_CASE_COUNT, V5_CORPUS_RELATIVE_PATH, V5_PUBLIC_ROUTES,
 )
 from .jsonio import load_json_object, load_jsonl_cases
 from .schemas import (
-    check_host_response_schema_v6,
-    check_schema_contract_v5,
+    check_host_response_schema_v7,
+    check_schema_contract_v6,
     validate_case,
 )
 
 _CANONICAL_V3 = ("agent-plugin-architect", "clarify-intent", "delegate-simple-task", "task-planning")
+_CANONICAL_V4 = (*_CANONICAL_V3, "continuous-progress")
 # version: (corpus, benchmark ID, schema ID, routes, case count, canonical routes)
 VERSIONED_CONTRACTS = {
     "3": (V3_CORPUS_RELATIVE_PATH, BENCHMARK_V3_ID, SCHEMA_V3_ID, V3_PUBLIC_ROUTES,
           V3_BENCHMARK_CASE_COUNT, _CANONICAL_V3),
     "4": (V4_CORPUS_RELATIVE_PATH, BENCHMARK_V4_ID, SCHEMA_V4_ID, V4_PUBLIC_ROUTES,
-          V4_BENCHMARK_CASE_COUNT, (*_CANONICAL_V3, "continuous-progress")),
-    "5": (CURRENT_CORPUS_RELATIVE_PATH, BENCHMARK_V5_ID, SCHEMA_V5_ID, CURRENT_PUBLIC_ROUTES,
-          CURRENT_BENCHMARK_CASE_COUNT, (*_CANONICAL_V3, "continuous-progress")),
+          V4_BENCHMARK_CASE_COUNT, _CANONICAL_V4),
+    "5": (V5_CORPUS_RELATIVE_PATH, BENCHMARK_V5_ID, SCHEMA_V5_ID, V5_PUBLIC_ROUTES,
+          V5_BENCHMARK_CASE_COUNT, _CANONICAL_V4),
+    "6": (CURRENT_CORPUS_RELATIVE_PATH, BENCHMARK_V6_ID, SCHEMA_V6_ID, CURRENT_PUBLIC_ROUTES,
+          CURRENT_BENCHMARK_CASE_COUNT, (*_CANONICAL_V4, "verify-completion")),
 }
 
 
-def collect_current_corpus(root: Path, failures: list[str], *, version: str = "5") -> dict[str, dict[str, Any]]:
+def collect_current_corpus(root: Path, failures: list[str], *, version: str = "6") -> dict[str, dict[str, Any]]:
     """Read one versioned corpus; do not reinterpret the historical corpus."""
     if version not in VERSIONED_CONTRACTS:
         raise ValueError("unsupported versioned corpus")
@@ -62,16 +67,17 @@ def collect_current_corpus(root: Path, failures: list[str], *, version: str = "5
 
 
 def current_benchmark_case_ids(
-    root: Path, cases: dict[str, dict[str, Any]], failures: list[str], *, version: str = "5",
+    root: Path, cases: dict[str, dict[str, Any]], failures: list[str], *, version: str = "6",
     host: str = "codex",
 ) -> list[str]:
     if version not in VERSIONED_CONTRACTS:
         raise ValueError("unsupported versioned benchmark")
     _, benchmark_id, schema_id, routes, case_count, canonical = VERSIONED_CONTRACTS[version]
+    profiles = HOST_BENCHMARK_PROFILES_BY_VERSION.get(version)
     if host != "codex":
-        if version != "5" or host not in CURRENT_BENCHMARK_PROFILES:
+        if profiles is None or host not in profiles:
             raise ValueError("unsupported host benchmark")
-        benchmark_id = CURRENT_BENCHMARK_PROFILES[host]["id"]
+        benchmark_id = profiles[host]["id"]
     benchmark = load_json_object(root / f"evals/benchmarks/{benchmark_id}.json", failures, root)
     if benchmark is None:
         return []
@@ -79,20 +85,21 @@ def current_benchmark_case_ids(
         benchmark, cases, failures, schema_version=version,
         benchmark_id=benchmark_id, schema_id=schema_id, routes=routes,
         canonical_routes=canonical, expected_case_count=case_count, host=host,
+        profiles=profiles or CURRENT_BENCHMARK_PROFILES,
     )
 
 
 def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[int, int]:
     """Validate current schemas, source coverage, and bounded offline contracts."""
-    schema = load_json_object(root / "evals/schema-v5.json", failures, root)
+    schema = load_json_object(root / "evals/schema-v6.json", failures, root)
     if schema is not None:
-        check_schema_contract_v5(schema, failures)
-    response_path = root / HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH
+        check_schema_contract_v6(schema, failures)
+    response_path = root / HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH
     response = load_json_object(response_path, failures, root)
     if response is not None:
-        check_host_response_schema_v6(response, failures)
-        if hashlib.sha256(response_path.read_bytes()).hexdigest() != CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256:
-            failures.append(f"{HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH} digest drifted")
+        check_host_response_schema_v7(response, failures)
+        if hashlib.sha256(response_path.read_bytes()).hexdigest() != CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256:
+            failures.append(f"{HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH} digest drifted")
 
     installed_routes = {
         path.parent.name for path in (root / "plugin" / "skills").glob("*/SKILL.md")
@@ -103,7 +110,7 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
     cases = collect_current_corpus(root, failures)
     case_ids = current_benchmark_case_ids(root, cases, failures)
     if current_benchmark_case_ids(root, cases, failures, host="claude-code") != case_ids:
-        failures.append("claude-code-core-v5 must select the codex-core-v5 cases in the same order")
+        failures.append("claude-code-core-v6 must select the codex-core-v6 cases in the same order")
     covered = {route for case in cases.values() for route in case.get("expectedRoutes", ())}
     if covered != set(CURRENT_PUBLIC_ROUTES):
         failures.append("current routing corpus must cover every current public task route")

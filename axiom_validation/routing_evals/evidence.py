@@ -22,6 +22,7 @@ from .constants import (
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
     RESPONSE_DIAGNOSTICS,
     RESPONSE_SCHEMA_KEYS,
     SEMVER_PATTERN,
@@ -194,7 +195,8 @@ def validate_evidence_source(
             failures.append(f"{label} must be observer-derived for this contract")
     if (
         response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS
-        | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH}
+        | {HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
+           HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH}
         and value == "model-provided"
     ):
         failures.append(f"{label} cannot claim model-provided evidence under a prose-free schema")
@@ -217,9 +219,11 @@ def validate_response_schema_binding(
     }
     if current:
         supported_paths = {
-            {"6": HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, "5": HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH}.get(
-                response_version, HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH
-            )
+            {
+                "7": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+                "6": HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
+                "5": HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
+            }.get(response_version, HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH)
         }
     if path is not None and path not in supported_paths:
         failures.append(

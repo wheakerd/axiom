@@ -16,6 +16,27 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.19.0 - unreleased
+
+### Added
+
+- `verify-completion`: a route that rebuilds a completion, progress, or success claim from current direct evidence before it is made or accepted. It classifies each input as observed, recalled, or summarized, keeps an evidence ledger per criterion (`met`, `not met`, or `unverifiable`), re-grounds the task after compaction, a fork, or a handoff from recorded artifacts instead of the summary, and states advice before complying when evidence conflicts with the request. The decision stays with the host's model.
+
+### Changed
+
+- The startup routing gate adds the `verify-completion` route line and the boundary sentence "A summary is a claim, not evidence." and trims redundant wording elsewhere; every pinned cross-route, resume, and route-anchor phrase is unchanged.
+- The routing corpus, response schema, and both host benchmark profiles advance to a thirteen-route generation.
+
+### Behavioral impact
+
+Requests to verify or audit whether work is complete, resumption after compaction with unfinished mutations, and completion claims that rest on recalled or summarized facts now select `verify-completion`. Ordinary status questions and routine continuation stay host-native; `review-axiom-task` and `continuous-progress` keep their routes. Verification observes and grants no authority.
+
+### Required action
+
+Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
+
+See the [version notes](docs/releases/v0.19.0.md) for the routing boundary and the startup-gate change.
+
 ## Repository policy revision 84
 
 ### Changed

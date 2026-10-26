@@ -18,6 +18,9 @@ from .constants import (
     BENCHMARK_V5_ID, V4_BENCHMARK_CASE_COUNT,
     CURRENT_BENCHMARK_PROFILES,
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
+    BENCHMARK_V6_ID, V5_BENCHMARK_CASE_COUNT,
+    HOST_BENCHMARK_PROFILES_BY_VERSION,
+    HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
     CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
@@ -91,9 +94,11 @@ def validate_external_routing_observation(
     if record is None:
         return None
     schema_version = record.get("schemaVersion")
-    versioned = schema_version in {"3", "4", "5"}
+    versioned = schema_version in {"3", "4", "5", "6"}
     benchmark_id, case_count, response_path, response_digest = {
-        "5": (BENCHMARK_V5_ID, CURRENT_BENCHMARK_CASE_COUNT,
+        "6": (BENCHMARK_V6_ID, CURRENT_BENCHMARK_CASE_COUNT,
+              HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256),
+        "5": (BENCHMARK_V5_ID, V5_BENCHMARK_CASE_COUNT,
               HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256),
         "4": (BENCHMARK_V4_ID, V4_BENCHMARK_CASE_COUNT,
               HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256),
@@ -101,18 +106,19 @@ def validate_external_routing_observation(
               HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256),
     }.get(schema_version, (BENCHMARK_V2_ID, 17,
                            HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256))
-    # Only schema v5 has a profile per host; earlier versions stay Codex-only.
+    # Only schema v5 and v6 have a profile per host; earlier versions stay Codex-only.
+    host_profiles = HOST_BENCHMARK_PROFILES_BY_VERSION.get(schema_version)
     host_value = record.get("host")
     host_name = host_value.get("name") if type(host_value) is dict else None
-    host = host_name if schema_version == "5" and host_name in CURRENT_BENCHMARK_PROFILES else "codex"
-    profile = CURRENT_BENCHMARK_PROFILES[host]
-    if schema_version == "5":
+    host = host_name if host_profiles is not None and host_name in host_profiles else "codex"
+    profile = (host_profiles or CURRENT_BENCHMARK_PROFILES)[host]
+    if host_profiles is not None:
         benchmark_id = profile["id"]
     if versioned:
         cases = collect_current_corpus(root, failures, version=schema_version)
         benchmark_case_ids = current_benchmark_case_ids(
             root, cases, failures, version=schema_version,
-            host=host if schema_version == "5" else "codex",
+            host=host if host_profiles is not None else "codex",
         )
     else:
         cases = collect_corpus(root, failures)
@@ -148,8 +154,8 @@ def validate_external_routing_observation(
         label,
         failures,
     )
-    if schema_version not in {"2", "3", "4", "5"}:
-        failures.append("external routing observation must use schemaVersion '2', '3', '4', or '5'")
+    if schema_version not in {"2", "3", "4", "5", "6"}:
+        failures.append("external routing observation must use schemaVersion '2', '3', '4', '5', or '6'")
     if record.get("benchmarkId") != benchmark_id:
         failures.append(f"external routing observation must use {benchmark_id}")
     if record.get("responseSchema") != {
@@ -181,11 +187,11 @@ def validate_external_routing_observation(
         "lifecycle": "fresh-start",
         "repeatCount": 1,
         "callCount": case_count,
-        "reasoningEffort": profile["reasoningEffort"] if schema_version == "5" else BENCHMARK_REASONING_EFFORT,
-        "caseTimeoutSeconds": profile["caseTimeoutSeconds"] if schema_version == "5" else BENCHMARK_CASE_TIMEOUT_SECONDS,
+        "reasoningEffort": profile["reasoningEffort"] if host_profiles is not None else BENCHMARK_REASONING_EFFORT,
+        "caseTimeoutSeconds": profile["caseTimeoutSeconds"] if host_profiles is not None else BENCHMARK_CASE_TIMEOUT_SECONDS,
         "installedPluginVerified": True,
         "startupHookVerified": True,
-        "method": profile["method"] if schema_version == "5" else "documented-codex-cli-equivalent",
+        "method": profile["method"] if host_profiles is not None else "documented-codex-cli-equivalent",
         "limitations": [],
     }
     if type(run) is not dict:

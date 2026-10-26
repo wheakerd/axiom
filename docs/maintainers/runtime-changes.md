@@ -39,6 +39,10 @@ must not become a dependency of the installed plugin.
 - Route `optimize-agent-usage` only from an explicit credit, token, context,
   Skill/instruction-file/MCP-loading, or consumption-diagnosis goal. Software
   performance wording alone is not a trigger.
+- Route `verify-completion` only from an explicit request to verify or audit
+  completion, from resumption after compaction with unfinished mutations, or
+  from a completion claim that rests on recalled or summarized facts. Status
+  questions and routine continuation stay host-native.
 - Keep route definitions and triggers in English. Unambiguous requests in
   other languages may normalize to the canonical English route; they do not
   create localized aliases.
