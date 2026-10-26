@@ -16,6 +16,24 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 87
+
+### Added
+
+- `scripts/build-listing-variant.py`: build the hook-less Codex directory listing variant from the `plugin/` tree of one tree-ish as a deterministic ZIP with a JSON build manifest; `tests/test_listing_variant.py` proves the exclusions and the byte-identical rebuild.
+
+### Changed
+
+- `docs/maintainers/distribution-channels.md` documents the variant's identity, behavioral boundary, required no-hook observation, and submission steps, and moves the OpenAI plugin directory row from `blocked` to `not submitted` with the variant path.
+
+### Behavioral impact
+
+None for installed plugins. The marketplace package, its startup Hook, plugin version `0.19.0`, and the runtime digest are unchanged; the variant is built on demand and this change publishes nothing.
+
+### Required action
+
+None.
+
 ## Repository policy revision 86
 
 ### Changed

@@ -688,6 +688,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.19.0.",
       "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
+    },
+    {
+      "revision": 87,
+      "recordedOn": "2026-10-26",
+      "baselineCommit": "c2fb32260aa3c523372454d5551281f2b5bf7f40",
+      "sourceIssue": 180,
+      "summary": "Add the deterministic hook-less Codex directory listing variant builder and document the variant's boundary and required observation.",
+      "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
     }
   ]
 }
