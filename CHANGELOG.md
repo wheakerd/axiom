@@ -16,6 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.19.1 - unreleased
+
+### Changed
+
+- The startup routing gate `plugin/skills/using-axiom/SKILL.md` trims redundant wording from 7361 to 7213 UTF-8 bytes, restoring headroom below the 7372-byte publication maximum. Routes, trigger conditions, safety rules, authorization boundaries, stop conditions, and every pinned anchor are unchanged, as are the Hooks and every manifest field other than the version.
+
+### Behavioral impact
+
+None intended. Both hosts load the same routes under the same conditions from a shorter gate. The runtime digest changes because the gate is an installed input.
+
+### Required action
+
+Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
+
+See the [version notes](docs/releases/v0.19.1.md) for the trimmed passages and the reduction evidence.
+
 ## Repository policy revision 88
 
 ### Changed

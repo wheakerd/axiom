@@ -704,6 +704,14 @@
       "sourceIssue": 181,
       "summary": "Add offline route contract coverage for verify-completion: a bounded current-model rule, seven scenario fixtures, and the current-corpus bridge.",
       "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
+    },
+    {
+      "revision": 89,
+      "recordedOn": "2026-10-26",
+      "baselineCommit": "0a1b55ff666a3f9122db8945518c29bb1e5e7a45",
+      "sourceIssue": 182,
+      "summary": "Release 0.19.1: trim redundant wording in the startup routing gate to restore headroom below the publication maximum.",
+      "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da"
     }
   ]
 }

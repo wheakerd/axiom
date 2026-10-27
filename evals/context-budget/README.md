@@ -50,7 +50,8 @@ host event. Routed slots bind canonical, paraphrased, and post-compaction
 observable-refusal and independent-audit `review-axiom-task` contracts,
 plus the post-compaction `agent-plugin-architect` contract; this does not turn
 them into host results. The context-budget comparison retains the fixed
-95-case corpus in `evals/routing/`: 69 routed cases and 26 no-route controls.
+corpus in `evals/routing/`; the manifest-selected record states its current
+file, case, routed, and no-route counts.
 This workload identity is separate from the current routing corpus and its
 Codex and Claude Code benchmark profiles described in
 [Routing Evaluations](../README.md).
