@@ -712,6 +712,14 @@
       "sourceIssue": 182,
       "summary": "Release 0.19.1: trim redundant wording in the startup routing gate to restore headroom below the publication maximum.",
       "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da"
+    },
+    {
+      "revision": 90,
+      "recordedOn": "2026-10-27",
+      "baselineCommit": "9fc169755b3c2f4ae74fea1e6d666e17d9cac86e",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.19.1.",
+      "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da"
     }
   ]
 }
