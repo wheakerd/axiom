@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "4",
+  "release": {
+    "version": "0.19.0",
+    "tag": "v0.19.0",
+    "commit": "344422cfc7af8b734f5ef0efa93710832a7fc020"
+  },
+  "runtimeIdentity": {
+    "pluginVersion": "0.19.0",
+    "runtimeContractSchemaVersion": "4",
+    "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a"
+  },
+  "observationSubject": "installed-runtime-contract",
+  "host": {
+    "name": "claude-code",
+    "version": "2.1.308",
+    "operatingSystem": "linux",
+    "architecture": "x86_64",
+    "shell": "sh"
+  },
+  "installation": {
+    "method": "claude plugin marketplace add (local catalog pinned to tag v0.19.0, git-subdir plugin/) and claude plugin install axiom@axiom in an isolated CLAUDE_CONFIG_DIR; files byte-identical to the tag; cwd an empty temp dir outside any repository",
+    "targetPluginVersion": "0.19.0",
+    "installedSnapshotVerified": true
+  },
+  "hook": {
+    "event": "SessionStart",
+    "matcher": "startup|resume|clear|compact|fork",
+    "expectedCommandSha256": "dae5f9f5231fa0b60d2559beb5af61d17cc9c9483f48d37dcdc0bca49fd7391d",
+    "installedCommandSha256": "dae5f9f5231fa0b60d2559beb5af61d17cc9c9483f48d37dcdc0bca49fd7391d",
+    "installedCommandVerified": true
+  },
+  "reporter": {
+    "identity": "anonymous",
+    "anonymous": true
+  },
+  "recordedAt": "2026-10-26T16:53:31Z",
+  "cases": [
+    {
+      "id": "startup-routed",
+      "sessionKind": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "request": "Perform a read-only audit of this repository's AGENTS.md instruction system. Report findings only; do not modify files.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": "agents-architect",
+      "noRouteControl": false,
+      "inspected": [
+        "stream-json SessionStart hook_response receipt",
+        "stream-json result structured_output",
+        "fixture directory contents after the session"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Headless stream-json session with the benchmark developer instruction and response schema v7; the model returned the routing decision instead of carrying out the request."
+      ],
+      "supportingOutput": [
+        "SessionStart:startup hook_response outcome success exit 0; delivered gate SHA-256 equals the installed gate",
+        "structured observation: selectedRoutes ['agents-architect'], routingGateObserved True, clarificationCount 0"
+      ]
+    },
+    {
+      "id": "startup-no-route",
+      "sessionKind": "fresh",
+      "lifecycleSource": "startup",
+      "compactionMode": "not-applicable",
+      "request": "Summarize the purpose of this README. Do not modify files.",
+      "expectedRoute": "none",
+      "observedRoute": "none",
+      "noRouteControl": true,
+      "inspected": [
+        "stream-json SessionStart hook_response receipt",
+        "stream-json result structured_output",
+        "fixture directory contents after the session"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Headless stream-json session with the benchmark developer instruction and response schema v7; the model returned the routing decision instead of carrying out the request."
+      ],
+      "supportingOutput": [
+        "SessionStart:startup hook_response outcome success exit 0; delivered gate SHA-256 equals the installed gate",
+        "structured observation: selectedRoutes [], routingGateObserved True, clarificationCount 0"
+      ]
+    },
+    {
+      "id": "manual-compaction-routed",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "request": "After compaction, continue the read-only AGENTS.md instruction audit and do not edit files.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": "agents-architect",
+      "noRouteControl": false,
+      "inspected": [
+        "stream-json SessionStart hook_response receipt",
+        "stream-json result structured_output",
+        "fixture directory contents after the session"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Headless stream-json session with the benchmark developer instruction and response schema v7; the model returned the routing decision instead of carrying out the request.",
+        "Manual compaction was requested with the /compact command through stream-json input before the recorded request."
+      ],
+      "supportingOutput": [
+        "SessionStart:compact hook_response outcome success exit 0; delivered gate SHA-256 equals the installed gate",
+        "structured observation: selectedRoutes ['agents-architect'], routingGateObserved True, clarificationCount 0"
+      ]
+    },
+    {
+      "id": "manual-compaction-no-route",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "manual",
+      "request": "After compaction, summarize the visible README paragraph and do not modify files.",
+      "expectedRoute": "none",
+      "observedRoute": "none",
+      "noRouteControl": true,
+      "inspected": [
+        "stream-json SessionStart hook_response receipt",
+        "stream-json result structured_output",
+        "fixture directory contents after the session"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Headless stream-json session with the benchmark developer instruction and response schema v7; the model returned the routing decision instead of carrying out the request.",
+        "Manual compaction was requested with the /compact command through stream-json input before the recorded request."
+      ],
+      "supportingOutput": [
+        "SessionStart:compact hook_response outcome success exit 0; delivered gate SHA-256 equals the installed gate",
+        "structured observation: selectedRoutes [], routingGateObserved True, clarificationCount 0"
+      ]
+    },
+    {
+      "id": "automatic-compaction-routed",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "request": "After compaction, continue the read-only AGENTS.md instruction audit and do not edit files.",
+      "expectedRoute": "agents-architect",
+      "observedRoute": "agents-architect",
+      "noRouteControl": false,
+      "inspected": [
+        "stream-json SessionStart hook_response receipt",
+        "stream-json result structured_output",
+        "fixture directory contents after the session"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Headless stream-json session with the benchmark developer instruction and response schema v7; the model returned the routing decision instead of carrying out the request.",
+        "Automatic compaction was reached with a 100k-token auto-compact window after 4 long filler turns fed one per turn; the next message carried the recorded request.",
+        "An earlier automatic attempt reported too_few_groups and did not compact; 2 later compactions completed, each followed by one SessionStart:compact receipt."
+      ],
+      "supportingOutput": [
+        "SessionStart:compact hook_response outcome success exit 0 once per compaction (2 compactions); delivered gate SHA-256 equals the installed gate",
+        "structured observation: selectedRoutes ['agents-architect'], routingGateObserved True, clarificationCount 0"
+      ]
+    },
+    {
+      "id": "automatic-compaction-no-route",
+      "sessionKind": "post-compaction",
+      "lifecycleSource": "compact",
+      "compactionMode": "automatic",
+      "request": "After compaction, summarize the visible README paragraph and do not modify files.",
+      "expectedRoute": "none",
+      "observedRoute": "none",
+      "noRouteControl": true,
+      "inspected": [
+        "stream-json SessionStart hook_response receipt",
+        "stream-json result structured_output",
+        "fixture directory contents after the session"
+      ],
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "result": "pass",
+      "limitations": [
+        "Headless stream-json session with the benchmark developer instruction and response schema v7; the model returned the routing decision instead of carrying out the request.",
+        "Automatic compaction was reached with a 100k-token auto-compact window after 4 long filler turns fed one per turn; the next message carried the recorded request.",
+        "An earlier automatic attempt reported too_few_groups and did not compact; 2 later compactions completed, each followed by one SessionStart:compact receipt."
+      ],
+      "supportingOutput": [
+        "SessionStart:compact hook_response outcome success exit 0 once per compaction (2 compactions); delivered gate SHA-256 equals the installed gate",
+        "structured observation: selectedRoutes [], routingGateObserved True, clarificationCount 0"
+      ]
+    }
+  ]
+}

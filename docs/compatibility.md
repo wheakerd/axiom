@@ -142,6 +142,8 @@ Current sources:
 
 Historical sources:
 
+- [v0.19.0 Codex host observation record](../evidence/v0.19.0/codex/linux.json) (prior-release evidence, schema v4);
+- [v0.19.0 Claude Code host observation record](../evidence/v0.19.0/claude-code/linux.json) (prior-release evidence, schema v4);
 - [archived version-bound host records and no-Hook experiments](field-validation.md#archived-experiments);
 - [routing observation records](../evals/results/);
 - [routing-context history](../evals/context-budget/results/); and

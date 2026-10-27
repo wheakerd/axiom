@@ -126,14 +126,15 @@ class HostSupportTests(unittest.TestCase):
                 check_retired_installation_paths(failures, root)
                 self.assertEqual(expected, len(failures), failures)
 
-    def test_empty_host_history_is_valid_without_promoting_synthetic_fixtures(self):
+    def test_checked_in_host_history_is_valid_without_promoting_synthetic_fixtures(self):
         failures, records, fixtures, version = self.evidence.validate_repository(True)
         self.assertEqual([], failures)
-        self.assertEqual(0, records)
+        self.assertEqual(2, records)
         self.assertEqual(12, fixtures)
         self.assertEqual(release_version(), version)
         status = json.loads((REPOSITORY_ROOT / "evidence/release-status.json").read_text())
-        self.assertEqual([], status["priorReleaseEvidence"])
+        self.assertEqual(2, len(status["priorReleaseEvidence"]))
+        self.assertTrue(all(item["status"] == "partial-host-observed" for item in status["priorReleaseEvidence"]))
         self.assertEqual("STATIC-ONLY", status["status"])
         self.assertTrue(all(item["status"] == "not-run" for item in status["currentHostEvidence"]))
 
@@ -297,7 +298,7 @@ class HostSupportTests(unittest.TestCase):
         self.assertIn("external record commit does not match --expected-commit", failures)
         status = json.loads((REPOSITORY_ROOT / "evidence/release-status.json").read_text())
         self.assertEqual("STATIC-ONLY", status["status"])
-        self.assertEqual([], status["priorReleaseEvidence"])
+        self.assertEqual(2, len(status["priorReleaseEvidence"]))
 
     def test_malformed_record_fields_produce_validation_errors(self):
         record, _ = self.historical_record("2")
