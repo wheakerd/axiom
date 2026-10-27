@@ -16,9 +16,11 @@ its original version, commit, host, lifecycle, date, and evidence limits.
 ## Evidence Directory
 
 `evidence/` contains current identity and status, the policy ledger, immutable
-compatibility formats, and runtime digest history. It currently contains no
-checked-in host-observation records. Synthetic fixtures live under `tests/`;
-retired observations remain in the [archive](#archived-experiments).
+compatibility formats, runtime digest history, and the checked-in
+host-observation records that `priorReleaseEvidence` in the release status
+indexes: currently the v0.19.0 Codex and Claude Code records under
+`evidence/v0.19.0/`. Synthetic fixtures live under `tests/`; retired
+observations remain in the [archive](#archived-experiments).
 
 | File | Role and lifecycle |
 | --- | --- |

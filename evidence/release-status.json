@@ -8,7 +8,7 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.19.1",
-    "repositoryPolicyRevision": 90,
+    "repositoryPolicyRevision": 91,
     "runtimeContractSchemaVersion": "4",
     "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v4.json",
@@ -39,7 +39,38 @@
       "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
     }
   ],
-  "priorReleaseEvidence": [],
+  "priorReleaseEvidence": [
+    {
+      "path": "evidence/v0.19.0/claude-code/linux.json",
+      "tag": "v0.19.0",
+      "commit": "344422cfc7af8b734f5ef0efa93710832a7fc020",
+      "host": "claude-code",
+      "hostVersion": "2.1.308",
+      "recordedAt": "2026-10-26T16:53:31Z",
+      "lifecycleSources": [
+        "compact",
+        "startup"
+      ],
+      "observationSubject": "installed-runtime-contract",
+      "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a",
+      "status": "partial-host-observed"
+    },
+    {
+      "path": "evidence/v0.19.0/codex/linux.json",
+      "tag": "v0.19.0",
+      "commit": "344422cfc7af8b734f5ef0efa93710832a7fc020",
+      "host": "codex",
+      "hostVersion": "codex-cli 0.164.0",
+      "recordedAt": "2026-10-27T12:07:15Z",
+      "lifecycleSources": [
+        "compact",
+        "startup"
+      ],
+      "observationSubject": "installed-runtime-contract",
+      "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a",
+      "status": "partial-host-observed"
+    }
+  ],
   "rules": {
     "priorEvidenceIsCurrent": false,
     "hostPassRequiresImmutableBinding": true,

@@ -720,6 +720,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.19.1.",
       "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da"
+    },
+    {
+      "revision": 91,
+      "recordedOn": "2026-10-27",
+      "baselineCommit": "17b13cfc13522bea66e4ee573a65a1b1ee82659b",
+      "sourceIssue": 183,
+      "summary": "Check in the v0.19.0 codex and claude code host observation records as prior-release evidence; record the codex no-hook observation of the v0.19.0 listing variant.",
+      "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da"
     }
   ]
 }

@@ -16,6 +16,24 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 91
+
+### Added
+
+- `evidence/v0.19.0/`: schema v4 host observation records for Codex and Claude Code against the immutable `v0.19.0` runtime (startup and compaction lifecycle cases with the delivered gate digest compared with the installed gate), indexed by `priorReleaseEvidence` in the release status as `partial-host-observed` prior-release evidence.
+
+### Changed
+
+- Field Validation and Compatibility name the checked-in records; the host support tests and the publication summary count them. The OpenAI plugin directory row records the Codex no-hook observation of the v0.19.0 listing variant.
+
+### Behavioral impact
+
+None for installed plugins. The current target release keeps its `STATIC-ONLY` status and `not-run` host fields; prior-release evidence never promotes it.
+
+### Required action
+
+None.
+
 ## Repository policy revision 90
 
 ### Changed
