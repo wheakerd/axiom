@@ -125,6 +125,9 @@ telemetry, or persistent handoff tool to reconstruct the handoff.
 - Preserve unrelated state and the only working copy. Do not reset, stash,
   clean, install adjacent tools, change global configuration, or widen remote
   permissions to make a gate pass.
+- A host-mode denial is a stop, never a retry by another tool, flag or path;
+  present the exact action for the user's grant first. Read
+  `../using-axiom/references/host-permission.md`.
 - Dispose of failed preparation output only through its frozen disposal gate.
   Delete other candidate or rollback material only under explicit cleanup
   authority after required postconditions pass and another required recovery

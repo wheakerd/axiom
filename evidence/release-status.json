@@ -1,16 +1,16 @@
 {
   "schemaVersion": "2",
   "targetRelease": {
-    "version": "0.19.2",
-    "tag": "v0.19.2",
+    "version": "0.19.3",
+    "tag": "v0.19.3",
     "commit": null,
     "binding": "pending-immutable-tag"
   },
   "runtimeIdentity": {
-    "pluginVersion": "0.19.2",
-    "repositoryPolicyRevision": 94,
+    "pluginVersion": "0.19.3",
+    "repositoryPolicyRevision": 95,
     "runtimeContractSchemaVersion": "4",
-    "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1",
+    "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v4.json",
     "history": "evidence/runtime-contract-history-v4.json"
   },
@@ -22,8 +22,8 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.19.2",
-      "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1",
+      "pluginVersion": "0.19.3",
+      "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913",
       "status": "not-run",
       "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
     },
@@ -33,8 +33,8 @@
       "lifecycleSource": null,
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
-      "pluginVersion": "0.19.2",
-      "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1",
+      "pluginVersion": "0.19.3",
+      "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913",
       "status": "not-run",
       "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
     }

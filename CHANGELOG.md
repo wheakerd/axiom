@@ -16,6 +16,26 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.19.3 - unreleased
+
+### Added
+
+- The startup routing gate states the host permission boundary: where a host mode may deny an action, present the exact action for the user's grant first; a denial is a stop, never a retry by another tool, flag, or path. The new `using-axiom` reference `references/host-permission.md` carries the host-neutral rule, the record of the stop and the granted scope, and the labeled Claude Code and Codex mechanics; the `confirm-external-action` stop conditions and the `reversible-system-change` safety rules point to it.
+
+### Changed
+
+- Three trims in the gate (one filler word, one clause its skill description already states, one list its route entry already enumerates) and the move of one credential-lifecycle composition sentence into its own reference make room for the boundary. Every route condition, safety rule, stop condition, and pinned anchor stays; the gate ends at 7371 of its 7372-byte maximum.
+
+### Behavioral impact
+
+Under a host mode that may deny an action, an Axiom-guided consequential action is presented with its exact command and target and waits for the user's grant, and a denial ends in a stated stop with no alternate attempt and no change to any host permission setting. The boundary reduces unprompted attempts and workarounds; it does not make the host's decision predictable. The runtime digest changes because the gate, the new reference, the credential-lifecycle reference, and two skills are installed inputs.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.19.3.md) for the changed passages, the host mechanics, and the evidence boundary.
+
 ## Repository policy revision 94
 
 ### Changed

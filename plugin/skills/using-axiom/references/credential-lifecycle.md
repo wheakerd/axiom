@@ -30,6 +30,7 @@ Keep the existing owners and load this reference once:
 
 Add no `credential-lifecycle` route unless later fixed-corpus and host evidence
 prove this composition materially incomplete. Routing authorizes no transition.
+Each owner keeps its authority, write-set, rollback and verification gates.
 
 ## Frozen Lifecycle Record
 

@@ -77,6 +77,13 @@ action. It cannot broaden the request. In particular:
 - Persistent-change plans and non-mutating rehearsals remain read-only.
   Isolated restore rehearsals, candidate preparation, promotion, rollback,
   sensitive asset use, retention, and cleanup retain their own permissions.
+- Where a host permission mode may deny an action, the exact action and its
+  target are presented for the user's grant before the first attempt. A denial
+  is a stop, never a retry by another tool, flag, path, or configuration
+  change, and it is not evidence of a routing or repository-state conflict.
+  The host's own decision stays mandatory; the
+  [host permission reference](../plugin/skills/using-axiom/references/host-permission.md)
+  labels each host's mechanics.
 
 Exact existing authorization needs no repeated confirmation unless material
 conditions change. An unresolved target or destructive effect must not become

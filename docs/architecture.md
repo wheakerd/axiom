@@ -133,7 +133,12 @@ Ordinary source edits, tests, explanations, status queries, local staging or
 commits, and named-remote non-force pushes stay host-native unless a specific
 description matches. No match is a normal result, not a denial or evidence of a
 repository conflict. Active instructions and user authority still govern the
-work. See the [Trust Model](trust-model.md).
+work. A host permission denial is likewise a stop, not a conflict: the gate's
+boundary presents the exact action for the user's grant before the first
+attempt and never retries by another tool, flag, path, or configuration
+change; the
+[host permission reference](../plugin/skills/using-axiom/references/host-permission.md)
+labels each host's mechanics. See the [Trust Model](trust-model.md).
 
 ## Identity, Lifecycle, And Evidence
 

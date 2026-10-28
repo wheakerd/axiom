@@ -752,6 +752,14 @@
       "sourceIssue": 192,
       "summary": "Add routing response schema V8 with one reviewed description per field and record the #192 clarification-count decision.",
       "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1"
+    },
+    {
+      "revision": 95,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "75fc5cd5a5582bb45ff6cd743be6418d19b44cf2",
+      "sourceIssue": 193,
+      "summary": "Release 0.19.3: state the host permission boundary in the startup gate, the action owners, and a new using-axiom reference.",
+      "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913"
     }
   ]
 }

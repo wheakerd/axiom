@@ -141,4 +141,5 @@ payload, unexpected disclosure or cost, missing exact authority, expired
 envelope, unsafe transport, unavailable required host approval, unsupported
 deduplication for a requested retry, or a conflict with another route's safety
 contract. Preserve the prepared preview and ask only for the decision needed to
-continue.
+continue. A host permission-mode denial is such a stop; read
+`../using-axiom/references/host-permission.md`.
