@@ -14,7 +14,9 @@ hosts. Each linked source describes the skill's full scope and requirements;
 **Link:** [Startup routing skill](../../plugin/skills/using-axiom/SKILL.md)
 
 **Description:** Finds the smallest matching skill set and leaves unmatched
-work with the host. It loads through the startup hook.
+work with the host. It selects bundled skills by the descriptions in the
+host's skill list, keeps a more specific skill or tool you chose, and loads
+through the startup hook.
 
 **Usage:**
 
@@ -44,7 +46,8 @@ before making changes.
 while preserving the main model. An explicit invocation selects the skill;
 assessment still requires the active `using-axiom` gate, the host's verified
 top reasoning level, and your consent to invoke the skill, and the skill
-states which condition is unmet instead of silently declining.
+states which condition is unmet instead of silently declining; when only
+your consent is missing, it asks and waits.
 
 **Usage:**
 
@@ -148,7 +151,8 @@ and recommend reductions.
 **Link:** [Axiom task review](../../plugin/skills/review-axiom-task/SKILL.md)
 
 **Description:** Reviews observable routing, authorization, actions, and
-evidence for an identified task.
+evidence for an identified task. A prior refusal governs neither a review
+nor a narrower request.
 
 **Usage:**
 
@@ -191,7 +195,8 @@ publication. Show the exact destination and text; do not publish yet.
 **Link:** [Traceable Git work](../../plugin/skills/traceable-git-submit/SKILL.md)
 
 **Description:** Handles explicit checkpoints, consolidation, recovery, and
-submissions that need traceability.
+submissions that need traceability. Ordinary named-remote non-force Git
+stays with the host.
 
 **Usage:**
 

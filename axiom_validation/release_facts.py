@@ -273,7 +273,12 @@ def validate_release_facts_record(
                 meaningful = expected_absolute or expected_relative
                 if comparison.get("meaningfulIncrease") is not meaningful:
                     failures.append("release facts comparison.meaningfulIncrease drifted")
-                expected_status = "reviewed" if meaningful else "below-threshold"
+                if meaningful:
+                    expected_status = "reviewed"
+                elif byte_delta > 0:
+                    expected_status = "below-threshold"
+                else:
+                    expected_status = "not-required"
                 if comparison.get("reviewStatus") != expected_status:
                     failures.append(
                         "release facts comparison.reviewStatus must match threshold results"

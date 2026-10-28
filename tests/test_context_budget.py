@@ -92,11 +92,17 @@ class ContextBudgetTests(unittest.TestCase):
         self.assertIsNone(codex_metric["wallClockMilliseconds"])
         self.assertIsNone(codex_metric["credits"])
         comparison = current_record["comparison"]
-        self.assertTrue(comparison["absoluteThresholdReached"])
-        self.assertTrue(comparison["relativeThresholdReached"])
-        self.assertTrue(comparison["meaningfulIncrease"])
-        self.assertEqual("reviewed", comparison["reviewStatus"])
-        self.assertIsInstance(comparison["justification"], str)
+        self.assertLess(comparison["utf8ByteDelta"], 0)
+        self.assertFalse(comparison["absoluteThresholdReached"])
+        self.assertFalse(comparison["relativeThresholdReached"])
+        self.assertFalse(comparison["meaningfulIncrease"])
+        self.assertEqual("not-required", comparison["reviewStatus"])
+        self.assertIsNone(comparison["justification"])
+        experiment = current_record["routingQuality"]["reductionExperiment"]
+        self.assertEqual("static-contract-validation", experiment["before"]["classification"])
+        self.assertEqual(
+            current_record["candidate"]["sha256"], experiment["after"]["surfaceSha256"]
+        )
         self.assertTrue(
             all(
                 scenario["hostObservations"][0]["status"] == "not-run"

@@ -43,7 +43,12 @@ Codex Windows wrapper, for comparison with the installed definition.
 ## Route Selection
 
 The gate honors the active instruction hierarchy, then matches explicit
-invocations or clear bundled descriptions. It normalizes unambiguous
+invocations or clear bundled descriptions. Each host's native skill list is
+the selection surface: the gate selects a bundled skill by the description
+that list shows, carries only the composition and boundary rules, and does
+not restate the catalog. An explicit `Axiom:<skill-name>` invocation selects
+that skill, and a more specific installed skill, MCP tool, or host tool the
+user chose is not displaced by a bundled route. It normalizes unambiguous
 non-English wording to canonical routes without introducing localized aliases.
 Material ambiguity is resolved before action routing; tentative wording alone
 does not require a question. Useful, host-supported delegation is assessed only

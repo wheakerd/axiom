@@ -1,6 +1,6 @@
 ---
 name: delegate-simple-task
-description: Assess clear, simple, bounded work using the user's ordered subagent candidates while preserving the main model. An explicit invocation or the using-axiom gate selects this skill; its activation check then requires an enabled using-axiom gate, the host's verified top reasoning level, and the user's confirmation or explicit authorization to invoke this skill. A disabled, absent, or unverified gate, a lower or unknown reasoning level, or missing invocation consent prevents activation, including direct requests and any permission-bypass mode; the skill then stops before assessment and states the unmet condition instead of silently declining. Keep invocation consent separate from assignment authority.
+description: Assess clear, simple, bounded work using the user's ordered subagent candidates while preserving the main model. An explicit invocation or the using-axiom gate selects this skill; its activation check then requires an enabled using-axiom gate, the host's verified top reasoning level, and the user's confirmation or explicit authorization to invoke this skill. A disabled, absent, or unverified gate, a lower or unknown reasoning level, or missing invocation consent prevents activation, including direct requests and any permission-bypass mode; the skill then stops before assessment and states the unmet condition instead of silently declining; when only consent is missing, it asks and waits. Keep invocation consent separate from assignment authority.
 ---
 
 # Delegate Simple Task

@@ -51,6 +51,13 @@
       "commit": "db96ae307385495993b6f44119fbeb1afec82c17",
       "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1",
       "derivation": "derived-from-immutable-tag-with-schema-v4"
+    },
+    {
+      "pluginVersion": "0.19.3",
+      "tag": "v0.19.3",
+      "commit": "dad3f174509f93d338cd524ecd49e1f539a2aab6",
+      "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913",
+      "derivation": "derived-from-immutable-tag-with-schema-v4"
     }
   ],
   "characterizations": [
@@ -74,6 +81,13 @@
       "changeClass": "installed-runtime-change",
       "expectedDigestRelation": "different",
       "rationale": "The immutable v0.19.2 runtime makes an explicit delegate-simple-task invocation route deterministically: the gate entry, the skill description and activation section, and two of its references change; Hooks and manifest fields other than the version are unchanged."
+    },
+    {
+      "fromVersion": "0.19.2",
+      "toVersion": "0.19.3",
+      "changeClass": "installed-runtime-change",
+      "expectedDigestRelation": "different",
+      "rationale": "The immutable v0.19.3 runtime states the host permission boundary: the gate, a new using-axiom reference, the credential-lifecycle reference, and the two action-owner skills change; Hooks and manifest fields other than the version are unchanged."
     }
   ]
 }
