@@ -776,6 +776,14 @@
       "sourceIssue": 194,
       "summary": "Release 0.20.0: make each host's skill list the startup gate's selection surface; the catalog entries leave the gate and three descriptions carry their selection conditions.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 98,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "91750ab44a71a02204a05a65f60fb410c5e52366",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.20.0.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }
