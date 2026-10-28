@@ -728,6 +728,14 @@
       "sourceIssue": 183,
       "summary": "Check in the v0.19.0 codex and claude code host observation records as prior-release evidence; record the codex no-hook observation of the v0.19.0 listing variant.",
       "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da"
+    },
+    {
+      "revision": 92,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "9df6eba27d5ec7af0f6dfd9449e08522c28dc1b5",
+      "sourceIssue": 186,
+      "summary": "Release 0.19.2: route an explicit delegate-simple-task invocation deterministically and stop inside the skill with the unmet activation condition stated.",
+      "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1"
     }
   ]
 }

@@ -37,6 +37,13 @@
       "commit": "344422cfc7af8b734f5ef0efa93710832a7fc020",
       "runtimeContractDigest": "sha256:40b37abc2633ce4ff7674f4e78004b68300b7b73b05759deac56fc13ad371b6a",
       "derivation": "derived-from-immutable-tag-with-schema-v4"
+    },
+    {
+      "pluginVersion": "0.19.1",
+      "tag": "v0.19.1",
+      "commit": "9fc169755b3c2f4ae74fea1e6d666e17d9cac86e",
+      "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da",
+      "derivation": "derived-from-immutable-tag-with-schema-v4"
     }
   ],
   "characterizations": [
@@ -46,6 +53,13 @@
       "changeClass": "installed-runtime-change",
       "expectedDigestRelation": "different",
       "rationale": "The immutable v0.17.1 runtime narrows the agent-plugin-architect description to packaged plugin architecture; the startup routing gate, Hooks, and manifest fields are unchanged."
+    },
+    {
+      "fromVersion": "0.19.0",
+      "toVersion": "0.19.1",
+      "changeClass": "installed-runtime-change",
+      "expectedDigestRelation": "different",
+      "rationale": "The immutable v0.19.1 runtime trims redundant wording in the startup routing gate to restore headroom below the publication maximum; routes, conditions, Hooks, and manifest fields other than the version are unchanged."
     }
   ]
 }

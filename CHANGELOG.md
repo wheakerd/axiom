@@ -16,6 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.19.2 - unreleased
+
+### Fixed
+
+- An explicit `delegate-simple-task` invocation now always selects that route. The startup routing gate entry and the skill description state that route selection comes first and that the skill's own activation check then requires the active gate, the host's verified top reasoning level, and invocation consent. When the host exposes no reasoning-level fact, the skill stops before assessment and states the unmet condition instead of silently returning no route. The activation conditions, the consent question, and the permission-bypass boundary are unchanged, as are the Hooks and every manifest field other than the version.
+
+### Behavioral impact
+
+On Codex, where a session exposes no verifiable reasoning-level setting, an explicit invocation routes deterministically and ends in a stated stop instead of an unexplained no-route answer. On Claude Code the routed outcome is unchanged. The runtime digest changes because the gate, the skill, and its references are installed inputs.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.19.2.md) for the selection-then-activation order, the changed passages, and the evidence boundary.
+
 ## Repository policy revision 91
 
 ### Added

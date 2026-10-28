@@ -41,8 +41,10 @@ before making changes.
 **Link:** [Bounded task delegation](../../plugin/skills/delegate-simple-task/SKILL.md)
 
 **Description:** Assesses simple work against your ordered model preferences
-while preserving the main model. Requires the active `using-axiom` gate, the
-host's verified top reasoning level, and your consent to invoke the skill.
+while preserving the main model. An explicit invocation selects the skill;
+assessment still requires the active `using-axiom` gate, the host's verified
+top reasoning level, and your consent to invoke the skill, and the skill
+states which condition is unmet instead of silently declining.
 
 **Usage:**
 

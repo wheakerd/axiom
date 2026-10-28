@@ -24,13 +24,15 @@ intent.
 > I authorize $delegate-simple-task to assess this small edit using my ordered
 > model candidates, only with using-axiom active and my top reasoning level verified.
 
-[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) requires an
-enabled, active `using-axiom` gate, current host evidence of the top
-reasoning level, and consent
-to invoke the skill. When the gate and level are verified but consent is
-missing, the gate asks once and waits before loading it. An inactive or
-unverified gate, a lower reasoning level, or unknown effort prevents
-activation, even for a direct skill request.
+[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) is
+selected by an explicit invocation or the startup gate and then checks three
+activation conditions before assessing anything: an enabled, active
+`using-axiom` gate, current host evidence of the top reasoning level, and
+consent to invoke the skill. When the gate and level are verified but consent
+is missing, the skill asks once and waits. An inactive or unverified gate, a
+lower reasoning level, or unknown effort prevents activation, even for a
+direct skill request; the skill then says which condition is unmet and
+continues in the main session instead of answering with no route.
 
 After authorized activation, the skill assesses the
 first available candidate whose relevant capability is supported, announces its

@@ -54,7 +54,8 @@ action. It cannot broaden the request. In particular:
   does not authorize implementation, scheduling, or persistent changes.
 - Simple-task delegation requires the active `using-axiom` gate, the host's
   verified top reasoning level, and consent to invoke the skill. A
-  permission-bypass mode cannot waive those conditions. After activation, delegation preserves the
+  permission-bypass mode cannot waive those conditions, and an unmet condition
+  stops the skill with its reason stated rather than silently. After activation, delegation preserves the
   main model, follows user-ordered candidates, and announces the exact child
   model and task. A verified permission-bypass mode permits an assignment only within
   existing authority and host restrictions; otherwise use existing assignment
