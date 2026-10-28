@@ -5,7 +5,7 @@ description: Route startup, resume, compaction, requests and local web research.
 
 ## Invocation Notes
 
-Optional, per user verbosity and host behavior. When explaining, name bundled skills as `Axiom:<skill-name>` and others by their own name, in inline code, with a brief reason in the user's language; no fixed layout, repetition or notice for no-route or startup.
+Optional, per user verbosity and host behavior. When explaining, name bundled skills as `Axiom:<skill-name>` and others by their own name, in inline code, with a brief reason in the user's language; no fixed layout, repetition or notice for no-route or startup. When a bundled route hands off to, or yields to, another installed skill or MCP tool, name it the same way with a brief reason.
 
 ## Route Once
 
@@ -20,24 +20,13 @@ cloud-search fallbacks, select `local-web-search`; routing stays read-only.
 
 ## Bundled Routes
 
-- `clarify-intent`: resolve ambiguity with options and a custom answer; never reopen settled choices or ask routine details.
-- `delegate-simple-task`: an explicit invocation selects this route. Assess simple-task models only with this gate active, the host's verified top reasoning level, and prior user confirmation or explicit invocation consent; without consent ask and wait. Unknown gate or level evidence stops inside the skill with the unmet condition stated, never a silent no-route, and blocks even direct requests in permission-bypass mode.
-- `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections and execution; keep specialized planning ownership.
-- `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling; exclude ordinary continuation and skill discussion.
-- `local-web-search`: constrain web search and page access from the user's machine or local browser/client; classify an uncertain execution location first. Exclude confirmed cloud-hosted search and unrelated web app actions.
-- `agents-architect`: audit repository `AGENTS.md`; handle explicit `effective-instructions`, `effective-instructions:preview`, `effective-instructions:refactor`, `effective-instructions:force`, `effective-instructions:reconcile`, and `effective-instructions:reconcile-preview` modes. Exclude packaged plugin skills.
-- `agent-plugin-architect`: design or audit packaged Codex or Claude Code
-  plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
-  and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
-  code stay outside.
-- `optimize-agent-usage`: explicitly reduce/diagnose agent usage of credits, tokens and context.
-- `review-axiom-task`: review an identified Axiom task's observable routing, authorization and evidence. Prior refusal governs neither review nor narrower requests.
-- `verify-completion`: verify completion or progress claims against current evidence after compaction, resume or long work; advise before complying on conflicting evidence. Exclude status questions and routine continuation.
-- `confirm-external-action`: prepare, authorize, execute once and verify consequential external actions when actor, target, payload, disclosure, cost or retry boundaries matter; lookups and drafts stay host-native.
-- `traceable-git-submit`: create traceable checkpoints/baseline metadata, consolidate/recover their history, or perform an explicitly invoked, hardened, multi-target, or otherwise independently traceable Git push. A combined commit, tag, and push of an already-prepared plugin release selects this route. Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native; merely mentioning submit, publish, or push does not select this route.
-- `reversible-system-change`: plan/rehearse/execute persistent installs, upgrades, deployments, migrations, destructive retention or promotions with rollback, data, service or activation risk, including backup preparation; plans are read-only.
+Select a bundled skill from the host's listed skills by its description; the
+descriptions are the selection surface, and this gate adds only the rules
+below. An explicit `Axiom:<skill-name>` invocation selects that skill. A more
+specific installed skill, MCP tool, or host tool the user chose is not
+displaced by a bundled route. No match continues host-native.
 
-Resolve cross-route ownership from this table before inspecting either
+Resolve cross-route ownership from these rules before inspecting either
 candidate body. Persistent changes with consequential external app/account
 effects, including publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`. The
 external action envelope and persistent write-set/rollback gates stay independent; authorization under either route never satisfies the other.

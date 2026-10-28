@@ -343,12 +343,21 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "A no-match result is not a denial",
             "does not create authorization",
             "does not manufacture a repository-state conflict",
-            "Ordinary named-remote non-force staging, commits, and pushes",
-            "stay host-native",
+            "No match continues host-native.",
             "ordinary named-remote Git remains host-native",
         ),
         failures,
         "ordinary no-route Git boundary",
+    )
+    require_ordered_contract_anchors(
+        skill_root / "SKILL.md",
+        (
+            "Ordinary named-remote non-force staging, commits, and pushes",
+            "stay host-native",
+            "merely mentioning submit, publish, or push does not select this route",
+        ),
+        failures,
+        "ordinary no-route Git description",
     )
     require_ordered_contract_anchors(
         skill_root / "references/direct-submit.md",

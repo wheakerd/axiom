@@ -12,13 +12,13 @@ from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 
 
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 147 required files, 6 JSON files, "
-    "163 Markdown files, 21 documentation negative fixtures, "
+    "Publication validation passed: 148 required files, 6 JSON files, "
+    "164 Markdown files, 21 documentation negative fixtures, "
     "87 offline route contract fixtures, "
     "142 black-box routing cases, 66 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 8 routing-context lifecycle scenarios, "
-    "41 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
+    "42 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
     "92 canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 241 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "

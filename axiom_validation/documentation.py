@@ -21,7 +21,7 @@ from .markdown import (
     mask_inline_code,
 )
 from .release_facts import check_release_facts
-from .repository_policy import check_release_version_surfaces
+from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
 from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
 
@@ -53,7 +53,6 @@ GENERATED_MARKER = re.compile(
 SETEXT_HEADING = re.compile(r"^[ \t]{0,3}(=+|-+)[ \t]*$")
 SKILL_REFERENCE_PATH = "docs/reference/skills.md"
 SKILL_REFERENCE_SHARED_HEADING = "## Shared skills"
-FRONT_DOOR_ROUTE_HEADING = "## Bundled Routes"
 TASK_NAVIGATION_HEADING = "## Start By Task"
 FORBIDDEN_TASK_PREFIXES = (
     "docs/releases/",
@@ -450,40 +449,23 @@ def _skill_reference_inventory(text: str, failures: list[str]) -> tuple[str, ...
     return tuple(inventory)
 
 
-def _front_door_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
-    if text.count(FRONT_DOOR_ROUTE_HEADING) != 1:
-        failures.append(
-            "plugin/skills/using-axiom/SKILL.md must contain one Bundled Routes section"
-        )
-        return ()
-    section = text.split(FRONT_DOOR_ROUTE_HEADING, 1)[1].split("\n## ", 1)[0]
-    routes = tuple(
-        re.findall(r"^- `([a-z0-9-]+)`: ", section, re.MULTILINE)
-    )
-    return ("using-axiom", *routes)
-
-
 def check_skill_reference_inventory_text(
     reference_text: str,
-    front_door_text: str,
     failures: list[str],
+    inventory: tuple[str, ...] = SKILL_REFERENCE_ORDER,
 ) -> None:
-    expected = _front_door_inventory(front_door_text, failures)
     actual = _skill_reference_inventory(reference_text, failures)
-    if expected and actual != expected:
+    if actual != inventory:
         failures.append(
-            "Skill Reference Shared skills inventory differs from the canonical front door: "
+            "Skill Reference Shared skills inventory differs from the canonical skill order: "
             + ", ".join(actual)
         )
 
 
 def check_skill_reference_inventory(root: Path, failures: list[str]) -> None:
     reference = _read_text(root / SKILL_REFERENCE_PATH, root, failures)
-    front_door = _read_text(
-        root / "plugin" / "skills" / "using-axiom" / "SKILL.md", root, failures
-    )
-    if reference is not None and front_door is not None:
-        check_skill_reference_inventory_text(reference, front_door, failures)
+    if reference is not None:
+        check_skill_reference_inventory_text(reference, failures)
 
 
 def check_hook_reference(root: Path, failures: list[str]) -> None:

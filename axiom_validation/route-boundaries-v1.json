@@ -240,8 +240,8 @@
     }
   ],
   "usingAxiomAnchors": [
-    "perform an explicitly invoked, hardened, multi-target, or otherwise independently traceable Git push",
-    "A combined commit, tag, and push of an already-prepared plugin release selects this route",
+    "hardened/multi-target/history-replacing Git",
+    "combined commit, tag, and push of an already-prepared plugin release",
     "Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native",
     "merely mentioning submit, publish, or push does not select this route"
   ]

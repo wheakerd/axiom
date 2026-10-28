@@ -16,6 +16,24 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## 0.20.0 - unreleased
+
+### Changed
+
+- The startup routing gate selects bundled skills from the host's listed skills by their descriptions: one selection paragraph replaces the thirteen Bundled Routes entries, an explicit `Axiom:<skill-name>` invocation selects that skill, a more specific installed skill, MCP tool, or host tool the user chose is not displaced by a bundled route, and a bundled route that hands off to or yields to another installed skill or MCP tool names it with a brief reason. Every composition rule, boundary, resume rule, and refresh rule stays; the gate shrinks from 7368 to 4648 bytes. (The 0.19.3 entry's 7371 bytes was a draft figure; the tagged v0.19.3 gate measures 7368.)
+- Three descriptions carry the selection conditions their gate entries held: `delegate-simple-task` asks and waits when only consent is missing, `review-axiom-task` states that a prior refusal governs neither a review nor a narrower request, and `traceable-git-submit` states the full ordinary-Git exclusion.
+- The validators pin the descriptions instead of the gate catalog, and the Skill Reference inventory is checked against the canonical skill order.
+
+### Behavioral impact
+
+Routing rests on the skill descriptions each host already shows its model, and a more specific skill or tool the user chose keeps its place. In the same-batch fresh-session benchmarks, the thin gate matched the current gate on Claude Code (39 of 39 on both) and on Codex (38 of 39 current, 39 of 39 thin; see the version notes for the differing cases). Each session start injects about 2.7 KB less text. The runtime digest changes because the gate and three skills are installed inputs.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.20.0.md) for the measurement, the precedence rule, and the evidence boundary.
+
 ## Repository policy revision 96
 
 ### Changed

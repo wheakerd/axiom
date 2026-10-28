@@ -34,6 +34,16 @@ ROUTE_SOURCE_ANCHORS = {
     "traceable-git-submit": ("checkpoint", "push"),
     "reversible-system-change": ("plan", "persistent", "rollback"),
 }
+# The startup gate selects from the host's skill list by description; it carries
+# these selection rules instead of a catalog that restates the descriptions.
+GATE_SELECTION_ANCHORS = (
+    "Route only explicit Axiom invocations or clear bundled-description matches.",
+    "Select a bundled skill from the host's listed skills by its description",
+    "the descriptions are the selection surface",
+    "An explicit `Axiom:<skill-name>` invocation selects that skill.",
+    "is not displaced by a bundled route.",
+    "No match continues host-native.",
+)
 LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
 LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
@@ -758,48 +768,43 @@ def check_routing_source_contracts(failures: list[str]) -> None:
     front_door = front_door_path.read_text(encoding="utf-8")
     route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
 
-    route_entries: dict[str, str] = {}
-    for route in ROUTE_SOURCE_ANCHORS:
-        match = re.search(
-            rf"^- `{re.escape(route)}`:(.*?)(?=^- `[a-z0-9-]+`:\s|\Z)",
-            route_section,
-            re.MULTILINE | re.DOTALL,
+    # The descriptions are the selection surface: the gate carries the selection
+    # rules and may not re-declare a catalog that restates them.
+    catalog_entries = re.findall(r"^- `([a-z0-9-]+)`:", route_section, re.MULTILINE)
+    if catalog_entries:
+        failures.append(
+            f"{display_path(front_door_path)} re-declares a route catalog for "
+            f"{', '.join(catalog_entries)}; descriptions are the selection surface"
         )
-        if match is None:
-            failures.append(
-                f"{display_path(front_door_path)} has no parseable source contract for {route!r}"
-            )
-            continue
-        route_entries[route] = match.group(1)
+    require_ordered_contract_anchors(
+        front_door_path, GATE_SELECTION_ANCHORS, failures, "description selection"
+    )
 
+    descriptions: dict[str, str] = {}
+    for route in ROUTE_SOURCE_ANCHORS:
         skill_path = REPOSITORY_ROOT / "plugin" / "skills" / route / "SKILL.md"
         fields = parse_skill_frontmatter(skill_path, failures)
         if fields is None:
             continue
-        surfaces = {
-            f"{display_path(front_door_path)} route entry": match.group(1),
-            f"{display_path(skill_path)} description": fields["description"],
-        }
-        for label, surface in surfaces.items():
-            for anchor in ROUTE_SOURCE_ANCHORS[route]:
-                if " ".join(anchor.split()).casefold() not in " ".join(surface.split()).casefold():
-                    failures.append(
-                        f"{label} for {route!r} is missing selection anchor {anchor!r}"
-                    )
+        descriptions[route] = fields["description"]
+        normalized = " ".join(fields["description"].split()).casefold()
+        for anchor in ROUTE_SOURCE_ANCHORS[route]:
+            if " ".join(anchor.split()).casefold() not in normalized:
+                failures.append(
+                    f"{display_path(skill_path)} description for {route!r} is missing "
+                    f"selection anchor {anchor!r}"
+                )
 
-    traceable_entry = route_entries.get("traceable-git-submit")
+    traceable_description = descriptions.get("traceable-git-submit")
     traceable_path = REPOSITORY_ROOT / "plugin" / "skills" / "traceable-git-submit" / "SKILL.md"
-    traceable_fields = parse_skill_frontmatter(traceable_path, failures)
-    if traceable_entry is not None and traceable_fields is not None:
-        for label, surface in (
-            (f"{display_path(front_door_path)} traceable route entry", traceable_entry),
-            (f"{display_path(traceable_path)} description", traceable_fields["description"]),
-        ):
-            for anchor in shared_boundary_anchors:
-                if " ".join(anchor.split()).casefold() not in " ".join(surface.split()).casefold():
-                    failures.append(
-                        f"{label} is missing tagged-release boundary anchor {anchor!r}"
-                    )
+    if traceable_description is not None:
+        normalized = " ".join(traceable_description.split()).casefold()
+        for anchor in shared_boundary_anchors:
+            if " ".join(anchor.split()).casefold() not in normalized:
+                failures.append(
+                    f"{display_path(traceable_path)} description is missing tagged-release "
+                    f"boundary anchor {anchor!r}"
+                )
 
         traceable_body = " ".join(
             traceable_path.read_text(encoding="utf-8").split()
@@ -817,20 +822,16 @@ def check_routing_source_contracts(failures: list[str]) -> None:
                     f"{display_path(traceable_path)} is missing tagged-release phase anchor {anchor!r}"
                 )
 
-    agents_entry = route_entries.get("agents-architect")
+    agents_description = descriptions.get("agents-architect")
     agents_path = REPOSITORY_ROOT / "plugin" / "skills" / "agents-architect" / "SKILL.md"
-    agents_fields = parse_skill_frontmatter(agents_path, failures)
-    if agents_entry is None or agents_fields is None:
+    if agents_description is None:
         return
-    for label, surface in (
-        (f"{display_path(front_door_path)} agents-architect route entry", agents_entry),
-        (f"{display_path(agents_path)} description", agents_fields["description"]),
-    ):
-        for token in EFFECTIVE_INSTRUCTION_TOKENS:
-            if not has_exact_route_token(surface, token):
-                failures.append(
-                    f"{label} is missing canonical trigger token {token!r}"
-                )
+    for token in EFFECTIVE_INSTRUCTION_TOKENS:
+        if not has_exact_route_token(agents_description, token):
+            failures.append(
+                f"{display_path(agents_path)} description is missing canonical trigger "
+                f"token {token!r}"
+            )
 
 
 def require_ordered_contract_anchors(
@@ -947,7 +948,7 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
             skills / "using-axiom/SKILL.md",
             "cross-route and resume",
             (
-                "Resolve cross-route ownership from this table before inspecting either candidate body.",
+                "Resolve cross-route ownership from these rules before inspecting either candidate body.",
                 "confirm-external-action",
                 "reversible-system-change",
                 "authorization under either route never satisfies the other.",

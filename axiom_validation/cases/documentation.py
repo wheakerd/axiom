@@ -244,8 +244,8 @@ def _skill_inventory_drift() -> list[str]:
     failures: list[str] = []
     check_skill_reference_inventory_text(
         "# A\n\n## Shared skills\n\n### using-axiom\n",
-        "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
         failures,
+        inventory=("using-axiom", "fixture-route"),
     )
     return failures
 
@@ -294,7 +294,7 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("historical-evaluation-task-navigation", _historical_evaluation_task_navigation, "historical or project-plan"),
     ("historical-evaluation-labeled-current", _historical_evaluation_labeled_current, "conflicts with its document class"),
     ("historical-directory-task-navigation", _historical_directory_task_navigation, "historical or project-plan"),
-    ("skill-inventory-drift", _skill_inventory_drift, "differs from the canonical front door"),
+    ("skill-inventory-drift", _skill_inventory_drift, "differs from the canonical skill order"),
     ("hook-reference-drift", _hook_reference_drift, "not present in the checked-in declarations"),
 )
 

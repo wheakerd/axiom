@@ -132,6 +132,24 @@ EXPECTED_DIRECT_SKILLS = (
     "using-axiom",
     "verify-completion",
 )
+# The order in which the public Skill Reference lists the bundled skills: the
+# startup gate first, then the routes in their reviewed order.
+SKILL_REFERENCE_ORDER = (
+    "using-axiom",
+    "clarify-intent",
+    "delegate-simple-task",
+    "task-planning",
+    "continuous-progress",
+    "local-web-search",
+    "agents-architect",
+    "agent-plugin-architect",
+    "optimize-agent-usage",
+    "review-axiom-task",
+    "verify-completion",
+    "confirm-external-action",
+    "traceable-git-submit",
+    "reversible-system-change",
+)
 INSTRUCTION_MAX_BYTES = 8192
 AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
 "Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's architecture across shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for evaluating or reviewing an individual Skill or Skill proposal, repository-local AGENTS.md, .agents/skills, or .claude/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight."
@@ -420,18 +438,10 @@ def check_skill_contracts(failures: list[str]) -> None:
                 f"{INSTRUCTION_MAX_BYTES}"
             )
 
-    front_door = (REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    route_section = front_door.split("## Bundled Routes", 1)[-1].split("\n## ", 1)[0]
-    declared_routes = tuple(re.findall(r"^- `([a-z0-9-]+)`: ", route_section, re.MULTILINE))
-    expected_routes = tuple(
-        skill_name for skill_name in EXPECTED_DIRECT_SKILLS if skill_name != "using-axiom"
-    )
-    if tuple(sorted(declared_routes)) != expected_routes:
+    if tuple(sorted(SKILL_REFERENCE_ORDER)) != EXPECTED_DIRECT_SKILLS:
         failures.append(
-            "using-axiom route list is not the exact direct task-skill set: "
-            + ", ".join(declared_routes)
+            "canonical skill order is not the exact direct skill set: "
+            + ", ".join(SKILL_REFERENCE_ORDER)
         )
 
     architect_root = REPOSITORY_ROOT / "plugin" / "skills" / "agent-plugin-architect"
@@ -460,17 +470,6 @@ def check_skill_contracts(failures: list[str]) -> None:
                 "plugin/skills/agent-plugin-architect/SKILL.md must expose exactly one direct "
                 f"next hop for {reference!r}"
             )
-    canonical_summary = (
-        "- `agent-plugin-architect`: design or audit packaged Codex or Claude Code\n"
-        "  plugin architecture across shared Skills, routes, manifests, wrappers, hooks,\n"
-        "  and compatibility evidence. Repo-local AGENTS systems and ordinary plugin\n"
-        "  code stay outside."
-    )
-    if canonical_summary not in front_door:
-        failures.append(
-            "plugin/skills/using-axiom/SKILL.md is missing the accepted agent-plugin-architect "
-            "route summary"
-        )
 
 
 def check_retired_installation_paths(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:

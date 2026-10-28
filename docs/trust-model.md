@@ -50,6 +50,11 @@ The [routing gate](../plugin/skills/using-axiom/SKILL.md) owns matching and comp
 A selected Skill may narrow scope, require evidence, or stop before a material
 action. It cannot broaden the request. In particular:
 
+- Bundled skills are selected by their descriptions from the host's skill
+  list; an explicit `Axiom:<skill-name>` invocation selects that skill. A
+  more specific installed skill, MCP tool, or host tool the user chose is not
+  displaced by a bundled route, and a hand-off to one is named with its
+  reason. The host owns that list's content, order, and truncation.
 - Clarification resolves intent; it grants no execution authority. Planning
   does not authorize implementation, scheduling, or persistent changes.
 - Simple-task delegation requires the active `using-axiom` gate, the host's

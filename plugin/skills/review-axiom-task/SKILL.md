@@ -1,6 +1,6 @@
 ---
 name: review-axiom-task
-description: Review an Axiom task's routing, scope, authorization, actions, evidence, stops and outcome; explain, audit, criticize, appeal or narrow its decisions, including why it selected, allowed or refused an action. Ordinary summaries, code review, execution and retry stay outside. Clarify mutually exclusive review versus execution/retry before routing; review grants no action authority.
+description: Review an Axiom task's routing, scope, authorization, actions, evidence, stops and outcome; explain, audit, criticize, appeal or narrow its decisions, including why it selected, allowed or refused an action. Ordinary summaries, code review, execution and retry stay outside. Clarify mutually exclusive review versus execution/retry before routing; review grants no action authority. A prior refusal governs neither a review nor a narrower request.
 ---
 
 # Review Axiom Task

@@ -7,6 +7,7 @@ from typing import Any
 
 from .context import REPOSITORY_ROOT, display_path
 from .context_budget import load_json
+from .yaml_subset import CanonicalYamlError, parse_skill_frontmatter_document
 
 
 ROUTE_CATALOG_PATH = REPOSITORY_ROOT / "axiom_validation" / "route-boundaries-v1.json"
@@ -378,16 +379,24 @@ def check_route_catalog(failures: list[str]) -> int:
     if document is None:
         return 0
 
-    front_door_path = REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
+    # The hosts list the traceable-git-submit description as the selection surface;
+    # the structured anchors bind that description, not a gate catalog entry.
+    description_path = REPOSITORY_ROOT / "plugin" / "skills" / "traceable-git-submit" / "SKILL.md"
     try:
-        front_door = " ".join(front_door_path.read_text(encoding="utf-8").split()).casefold()
+        fields = parse_skill_frontmatter_document(
+            description_path.read_text(encoding="utf-8"), display_path(description_path)
+        )
     except OSError as error:
-        failures.append(f"cannot read {display_path(front_door_path)}: {error}")
+        failures.append(f"cannot read {display_path(description_path)}: {error}")
+    except CanonicalYamlError as error:
+        failures.append(str(error))
     else:
+        description = " ".join(fields["description"].split()).casefold()
         for anchor in document["usingAxiomAnchors"]:
-            if " ".join(anchor.split()).casefold() not in front_door:
+            if " ".join(anchor.split()).casefold() not in description:
                 failures.append(
-                    f"{display_path(front_door_path)} drifted from route catalog anchor {anchor!r}"
+                    f"{display_path(description_path)} description drifted from route "
+                    f"catalog anchor {anchor!r}"
                 )
 
     for relative_path in (*ROUTE_SURFACES, *HISTORICAL_ROUTE_SURFACES):

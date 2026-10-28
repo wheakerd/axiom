@@ -26,10 +26,10 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         report = check_documentation(failures)
         self.assertEqual([], failures)
-        self.assertEqual(163, report.markdown_count)
+        self.assertEqual(164, report.markdown_count)
         self.assertEqual(25, report.current_document_count)
         self.assertEqual(19, report.indexed_document_count)
-        self.assertEqual(44, report.generated_region_count)
+        self.assertEqual(45, report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
         self.assertEqual("within", report.preferred_budget_status)
 
@@ -66,8 +66,8 @@ class DocumentationValidationTests(unittest.TestCase):
                     f"{fence}text\n## Shared skills\n### example-only\n{fence}\n\n"
                     "### fixture-route\n\n## Renamed and retired skills\n\n"
                     "### retired-route\n",
-                    "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
                     failures,
+                    inventory=("using-axiom", "fixture-route"),
                 )
                 self.assertEqual([], failures)
 
@@ -78,11 +78,11 @@ class DocumentationValidationTests(unittest.TestCase):
                 check_skill_reference_inventory_text(
                     "# A\n\n## Shared skills\n\n### using-axiom\n\n"
                     f"{heading}\n\n### fixture-route\n",
-                    "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
                     failures,
+                    inventory=("using-axiom", "fixture-route"),
                 )
                 self.assertTrue(any(
-                    "differs from the canonical front door" in failure
+                    "differs from the canonical skill order" in failure
                     for failure in failures
                 ))
 
@@ -97,11 +97,11 @@ class DocumentationValidationTests(unittest.TestCase):
                 check_skill_reference_inventory_text(
                     "# A\n\n## Shared skills\n\n"
                     + "\n\n".join(f"### {skill}" for skill in skills) + "\n",
-                    "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
                     failures,
+                    inventory=("using-axiom", "fixture-route"),
                 )
                 self.assertTrue(any(
-                    "differs from the canonical front door" in failure
+                    "differs from the canonical skill order" in failure
                     for failure in failures
                 ))
 
@@ -110,8 +110,8 @@ class DocumentationValidationTests(unittest.TestCase):
         check_skill_reference_inventory_text(
             "# A\n\n## Shared skills\n\n### using-axiom\n\n"
             "## Shared skills\n\n### fixture-route\n",
-            "# Gate\n\n## Bundled Routes\n\n- `fixture-route`: route.\n",
             failures,
+            inventory=("using-axiom", "fixture-route"),
         )
         self.assertTrue(any(
             "exactly one parseable Shared skills heading" in failure
