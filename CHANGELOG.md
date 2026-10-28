@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 100
+
+### Changed
+
+- The `Record star history` script also commits when the rendered chart differs from the `stats` branch, not only when the data changed, so a renderer change reaches the README on the next run instead of waiting for the next data row.
+
+### Behavioral impact
+
+None for installed plugin workflows. The next scheduled or dispatched run commits the restyled `stars.svg` of revision 99.
+
+### Required action
+
+None.
+
 ## Repository policy revision 99
 
 ### Changed
