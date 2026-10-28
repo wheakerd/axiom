@@ -784,6 +784,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.20.0.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 99,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "4a5afcacfdfae552f6ad5ca18d0ab490195b427a",
+      "sourceIssue": null,
+      "summary": "Render the README star-history chart in a sketched, hand-lettered style with an embedded open-licensed font subset.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }
