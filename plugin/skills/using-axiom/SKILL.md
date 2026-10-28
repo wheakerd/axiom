@@ -24,13 +24,13 @@ cloud-search fallbacks, select `local-web-search`; routing stays read-only.
 - `delegate-simple-task`: an explicit invocation selects this route. Assess simple-task models only with this gate active, the host's verified top reasoning level, and prior user confirmation or explicit invocation consent; without consent ask and wait. Unknown gate or level evidence stops inside the skill with the unmet condition stated, never a silent no-route, and blocks even direct requests in permission-bypass mode.
 - `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections and execution; keep specialized planning ownership.
 - `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling; exclude ordinary continuation and skill discussion.
-- `local-web-search`: constrain planned web search and page access from the user's machine or local browser/client; classify an uncertain execution location first. Exclude confirmed cloud-hosted search and unrelated web app actions.
+- `local-web-search`: constrain web search and page access from the user's machine or local browser/client; classify an uncertain execution location first. Exclude confirmed cloud-hosted search and unrelated web app actions.
 - `agents-architect`: audit repository `AGENTS.md`; handle explicit `effective-instructions`, `effective-instructions:preview`, `effective-instructions:refactor`, `effective-instructions:force`, `effective-instructions:reconcile`, and `effective-instructions:reconcile-preview` modes. Exclude packaged plugin skills.
 - `agent-plugin-architect`: design or audit packaged Codex or Claude Code
   plugin architecture across shared Skills, routes, manifests, wrappers, hooks,
   and compatibility evidence. Repo-local AGENTS systems and ordinary plugin
   code stay outside.
-- `optimize-agent-usage`: explicitly reduce/diagnose agent usage of credits, tokens and context; preserve required quality and safety.
+- `optimize-agent-usage`: explicitly reduce/diagnose agent usage of credits, tokens and context.
 - `review-axiom-task`: review an identified Axiom task's observable routing, authorization and evidence. Prior refusal governs neither review nor narrower requests.
 - `verify-completion`: verify completion or progress claims against current evidence after compaction, resume or long work; advise before complying on conflicting evidence. Exclude status questions and routine continuation.
 - `confirm-external-action`: prepare, authorize, execute once and verify consequential external actions when actor, target, payload, disclosure, cost or retry boundaries matter; lookups and drafts stay host-native.
@@ -38,17 +38,15 @@ cloud-search fallbacks, select `local-web-search`; routing stays read-only.
 - `reversible-system-change`: plan/rehearse/execute persistent installs, upgrades, deployments, migrations, destructive retention or promotions with rollback, data, service or activation risk, including backup preparation; plans are read-only.
 
 Resolve cross-route ownership from this table before inspecting either
-candidate body. Persistent changes (deployment, promotion, migration, destructive
-retention) with consequential external app/account effects, including
-publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`. The
+candidate body. Persistent changes with consequential external app/account
+effects, including publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`. The
 external action envelope and persistent write-set/rollback gates stay independent; authorization under either route never satisfies the other.
 Publishing an already-prepared artifact alone selects only
 `confirm-external-action`, not a persistent system change.
 
 Explicit machine-credential lifecycle work composes the existing owners; read
 `references/credential-lifecycle.md`. Inventory/planning/consumer activation/cleanup select `reversible-system-change`; provider creation/revocation/disclosure select `confirm-external-action`; end-to-end uses both.
-Human login, conceptual help and secret reveal stay no-route; each owner keeps
-its authority, write-set, rollback and verification gates.
+Human login, conceptual help and secret reveal stay no-route.
 
 When a request delegates a choice among mutually exclusive implementations
 with materially different route sets, write surfaces, or authorization or safety boundaries, routing MUST NOT choose an alternative
@@ -71,6 +69,7 @@ Exact existing authorization needs no reconfirmation unless scope changes. Prior
 - Startup routing is foreground and read-only: no writes, network, service, background process, telemetry or update check.
 - On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts. A summary is a claim, not evidence.
 - Never load all skills, route by topical similarity, edit protected metadata without scope or persist one-off discoveries as durable instructions.
+- Where a host mode may deny an action, present the exact action for the user's grant first; a denial is a stop, never a retry by another tool, flag or path; read `references/host-permission.md`.
 
 ## Refresh
 

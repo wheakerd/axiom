@@ -44,6 +44,13 @@
       "commit": "9fc169755b3c2f4ae74fea1e6d666e17d9cac86e",
       "runtimeContractDigest": "sha256:c8fe70ef5f2b6bcf48b8f62224d7a86f9caaad542cdf949211b93526aef557da",
       "derivation": "derived-from-immutable-tag-with-schema-v4"
+    },
+    {
+      "pluginVersion": "0.19.2",
+      "tag": "v0.19.2",
+      "commit": "db96ae307385495993b6f44119fbeb1afec82c17",
+      "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1",
+      "derivation": "derived-from-immutable-tag-with-schema-v4"
     }
   ],
   "characterizations": [
@@ -60,6 +67,13 @@
       "changeClass": "installed-runtime-change",
       "expectedDigestRelation": "different",
       "rationale": "The immutable v0.19.1 runtime trims redundant wording in the startup routing gate to restore headroom below the publication maximum; routes, conditions, Hooks, and manifest fields other than the version are unchanged."
+    },
+    {
+      "fromVersion": "0.19.1",
+      "toVersion": "0.19.2",
+      "changeClass": "installed-runtime-change",
+      "expectedDigestRelation": "different",
+      "rationale": "The immutable v0.19.2 runtime makes an explicit delegate-simple-task invocation route deterministically: the gate entry, the skill description and activation section, and two of its references change; Hooks and manifest fields other than the version are unchanged."
     }
   ]
 }

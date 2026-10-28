@@ -1,0 +1,369 @@
+{
+  "$schema": "../schema-v3.json",
+  "baseline": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "directReferenceCount": 1,
+      "directReferences": [
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "method": "ceil(utf8-bytes/4)",
+        "value": 1475
+      },
+      "logicalLines": 107,
+      "utf8Bytes": 5899,
+      "whitespaceDelimitedWords": 757
+    },
+    "release": {
+      "commit": "4c24ba6c016945038778475ce6b69ac9e9a5ce3b",
+      "tag": "v0.7.9",
+      "tree": "719622eff9654dd1050863213d2bf81d3455d6f6",
+      "version": "0.7.9"
+    },
+    "sha256": "1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011"
+  },
+  "candidate": {
+    "metrics": {
+      "classification": "exact-static-counts-used-as-context-proxies",
+      "utf8Bytes": 7368,
+      "whitespaceDelimitedWords": 914,
+      "logicalLines": 76,
+      "directReferenceCount": 3,
+      "directReferences": [
+        "references/credential-lifecycle.md",
+        "references/host-permission.md",
+        "references/updating.md"
+      ],
+      "estimatedTokens": {
+        "classification": "estimate",
+        "method": "ceil(utf8-bytes/4)",
+        "comparisonScope": "same-English-Markdown-surface-only",
+        "value": 1842
+      }
+    },
+    "sha256": "83e73bf47f23b7edf61bdfeae6e3ddbccce37142c5b19711d7ac2bcf978f1d4a"
+  },
+  "comparison": {
+    "method": "same-English-Markdown-surface",
+    "utf8ByteDelta": 1469,
+    "absoluteThresholdReached": true,
+    "relativeThresholdReached": true,
+    "meaningfulIncrease": true,
+    "reviewStatus": "reviewed",
+    "wordDelta": 157,
+    "lineDelta": -31,
+    "referenceDelta": 2,
+    "estimatedTokenDelta": 367,
+    "justification": "The cumulative 1469-byte increase over v0.7.9 retains explicit route ownership, consent, authorization, independent external and persistent-change gates, fail-closed resume, credential lifecycle routing, and optional invocation guidance. Those cross-route decisions belong at startup; detailed protocols remain on demand. This version adds 16 bytes to the 7352-byte v0.19.2 gate: one Boundaries bullet states the host permission boundary (present the exact action for the user's grant before the first attempt; a denial is a stop, never a retry by another tool, flag or path), which only the always-loaded gate can reach for host-native work; three trims (a filler word, a clause its skill description already states, a list its route entry already enumerates) and the move of one credential-lifecycle composition sentence into its existing reference pay for it. No route condition, safety rule, authorization boundary, stop condition, or pinned anchor changes. The gate is 4 byte(s) below the 7372-byte maximum. No new host observation is claimed."
+  },
+  "hostMetrics": [
+    {
+      "cachedInputTokens": null,
+      "credits": null,
+      "exactUsageExposed": false,
+      "host": "codex",
+      "inputTokens": null,
+      "reason": "Current Codex host, usage and lifecycle observation remain NOT-RUN; prior no-Hook observations bind their original runtime only.",
+      "status": "not-run",
+      "wallClockMilliseconds": null
+    },
+    {
+      "cachedInputTokens": null,
+      "credits": null,
+      "exactUsageExposed": false,
+      "host": "claude-code",
+      "inputTokens": null,
+      "reason": "Current Claude Code host, usage and lifecycle observation remain NOT-RUN; the Claude Code plugin delivers the same routing gate as the Codex plugin.",
+      "status": "not-run",
+      "wallClockMilliseconds": null
+    }
+  ],
+  "measurementBoundary": {
+    "estimatedTokens": "estimate",
+    "exactHostUsage": "not-run",
+    "modelOrReasoningChanged": false,
+    "networkOrTelemetryUsed": false,
+    "staticCounts": "proxy",
+    "volatilePricingIncluded": false
+  },
+  "recordId": "routing-context-budget-v0-19-3",
+  "reviewThreshold": {
+    "absoluteUtf8Bytes": 256,
+    "comparison": "cumulative-from-immutable-baseline",
+    "effect": "review-and-justify-not-automatic-rejection",
+    "operator": "either",
+    "relativeBasisPoints": 500
+  },
+  "routingQuality": {
+    "reductionExperiment": null,
+    "reductionPolicy": {
+      "requiredForAnyReduction": true,
+      "requiredResults": [
+        "routing",
+        "no-route"
+      ],
+      "requiredStatus": "pass",
+      "sameWorkloadRequired": true,
+      "staticAndHostEvidenceRemainDistinct": true
+    },
+    "workload": {
+      "classification": "static-contract-workload-identity",
+      "path": "evals/routing",
+      "fileCount": 13,
+      "caseCount": 102,
+      "routedCaseCount": 74,
+      "noRouteCaseCount": 28,
+      "sha256": "6b11fe9f7568d08845d8492089d8ee1f3f00f230e73ae8328060beb574967c45"
+    }
+  },
+  "scenarios": [
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "fresh-startup-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "fresh-startup-routed",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "review-axiom-task-observable-refusal-001"
+      ],
+      "sessionState": "fresh"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "resume-no-route",
+      "lifecycleSource": "resume",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "resumed"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "clear-routed",
+      "lifecycleSource": "clear",
+      "requestCaseIds": [
+        "review-axiom-task-independent-audit-001"
+      ],
+      "sessionState": "cleared"
+    },
+    {
+      "compactionMode": "manual",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "manual-compaction-no-route",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-no-route-manual-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "automatic",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "automatic-compaction-routed",
+      "lifecycleSource": "compact",
+      "requestCaseIds": [
+        "compaction-plugin-architecture-001"
+      ],
+      "sessionState": "post-compaction"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "unchanged-session-repeated-no-route",
+      "lifecycleSource": "startup",
+      "requestCaseIds": [
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001",
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "unchanged-session"
+    },
+    {
+      "compactionMode": "not-applicable",
+      "expectationSource": "checked-in-hook-contract-not-host-observation",
+      "expectedInjectionCount": 1,
+      "hostObservations": [
+        {
+          "duplicateInjectionDetected": null,
+          "host": "codex",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current lifecycle behavior is unobserved; the scenario remains a declared expectation for this candidate.",
+          "status": "not-run"
+        },
+        {
+          "duplicateInjectionDetected": null,
+          "host": "claude-code",
+          "injections": [],
+          "observedInjectionCount": null,
+          "reason": "Current Claude Code lifecycle behavior is unobserved; the scenario remains a declared expectation for this release.",
+          "status": "not-run"
+        }
+      ],
+      "id": "fork-no-route",
+      "lifecycleSource": "fork",
+      "requestCaseIds": [
+        "no-route-readme-summary-001"
+      ],
+      "sessionState": "forked"
+    }
+  ],
+  "schemaVersion": "3",
+  "surface": {
+    "alwaysLoaded": true,
+    "language": "en",
+    "path": "plugin/skills/using-axiom/SKILL.md"
+  },
+  "targetRelease": {
+    "binding": "pending-immutable-release",
+    "commit": null,
+    "version": "0.19.3"
+  }
+}
