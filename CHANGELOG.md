@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 99
+
+### Changed
+
+- Render the README star-history chart in a sketched, hand-lettered style: wobbly axes, line, and legend box through one SVG displacement filter, a legend naming the repository, `GitHub Stars` and `Date` axis titles, month or day ticks chosen from the recorded span, and a dark-mode variant. The text uses a printable-ASCII subset of the Patrick Hand typeface (SIL Open Font License 1.1) added under `scripts/fonts/` and embedded in the SVG, so the chart renders the same in every viewer; the output stays deterministic for the same data.
+
+### Behavioral impact
+
+None for installed plugin workflows. The `Record star history` workflow, the `stats` branch layout, and the README embed are unchanged; the next scheduled run commits the restyled `stars.svg`.
+
+### Required action
+
+None.
+
 ## Repository policy revision 98
 
 ### Changed

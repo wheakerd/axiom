@@ -462,7 +462,12 @@ its job, uses no other secret, and runs the standard-library script
 `scripts/record-star-history.py`. The script reads `stargazers_count` and
 `forks_count` from the repository API, replaces or appends the row for the
 current UTC date, renders the chart, and commits both files only when the data
-changed. On the first run it creates the branch from a parentless root commit
+changed. The chart is drawn in a sketched, hand-lettered style: axes, line,
+and legend pass through one SVG displacement filter, and the text uses a
+printable-ASCII subset of the Patrick Hand typeface embedded in the SVG from
+`scripts/fonts/` (SIL Open Font License 1.1, `PatrickHand-OFL.txt`), so the
+chart renders the same in every viewer and the output is deterministic for
+the same data. On the first run it creates the branch from a parentless root commit
 that holds the branch README through the Git Data API; every data commit uses
 the GraphQL `createCommitOnBranch` mutation. GitHub signs commits that the
 workflow token creates through either API and attributes them to
