@@ -13,9 +13,11 @@ from .constants import (
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_CORPUS_RELATIVE_PATH,
     CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256,
     CURRENT_PUBLIC_ROUTES,
     HOST_BENCHMARK_PROFILES_BY_VERSION,
     HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
     SCHEMA_V3_ID, SCHEMA_V4_ID, SCHEMA_V5_ID, SCHEMA_V6_ID,
     V3_BENCHMARK_CASE_COUNT, V3_CORPUS_RELATIVE_PATH, V3_PUBLIC_ROUTES,
     V4_BENCHMARK_CASE_COUNT, V4_CORPUS_RELATIVE_PATH, V4_PUBLIC_ROUTES,
@@ -24,6 +26,7 @@ from .constants import (
 from .jsonio import load_json_object, load_jsonl_cases
 from .schemas import (
     check_host_response_schema_v7,
+    check_host_response_schema_v8,
     check_schema_contract_v6,
     validate_case,
 )
@@ -94,12 +97,17 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
     schema = load_json_object(root / "evals/schema-v6.json", failures, root)
     if schema is not None:
         check_schema_contract_v6(schema, failures)
-    response_path = root / HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH
-    response = load_json_object(response_path, failures, root)
-    if response is not None:
-        check_host_response_schema_v7(response, failures)
-        if hashlib.sha256(response_path.read_bytes()).hexdigest() != CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256:
-            failures.append(f"{HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH} digest drifted")
+    # V7 stays frozen for the records that bind it; V8 is the current model-facing schema.
+    for relative, expected_digest, check in (
+        (HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256, check_host_response_schema_v7),
+        (HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256, check_host_response_schema_v8),
+    ):
+        response_path = root / relative
+        response = load_json_object(response_path, failures, root)
+        if response is not None:
+            check(response, failures)
+            if hashlib.sha256(response_path.read_bytes()).hexdigest() != expected_digest:
+                failures.append(f"{relative} digest drifted")
 
     installed_routes = {
         path.parent.name for path in (root / "plugin" / "skills").glob("*/SKILL.md")

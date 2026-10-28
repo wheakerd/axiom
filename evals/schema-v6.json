@@ -509,7 +509,8 @@
       "properties": {
         "path": {
           "enum": [
-            "evals/host-response-schema-v7.json"
+            "evals/host-response-schema-v7.json",
+            "evals/host-response-schema-v8.json"
           ]
         },
         "sha256": {

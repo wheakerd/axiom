@@ -21,6 +21,7 @@ from .constants import (
     BENCHMARK_V6_ID, V5_BENCHMARK_CASE_COUNT,
     HOST_BENCHMARK_PROFILES_BY_VERSION,
     HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+    HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256,
     CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
@@ -95,9 +96,15 @@ def validate_external_routing_observation(
         return None
     schema_version = record.get("schemaVersion")
     versioned = schema_version in {"3", "4", "5", "6"}
+    bound = record.get("responseSchema")
+    # A schema v6 record binds response V7 or, from repository policy revision 94, V8.
+    current_response = (
+        (HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256)
+        if type(bound) is dict and bound.get("path") == HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH
+        else (HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256)
+    )
     benchmark_id, case_count, response_path, response_digest = {
-        "6": (BENCHMARK_V6_ID, CURRENT_BENCHMARK_CASE_COUNT,
-              HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256),
+        "6": (BENCHMARK_V6_ID, CURRENT_BENCHMARK_CASE_COUNT, *current_response),
         "5": (BENCHMARK_V5_ID, V5_BENCHMARK_CASE_COUNT,
               HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256),
         "4": (BENCHMARK_V4_ID, V4_BENCHMARK_CASE_COUNT,

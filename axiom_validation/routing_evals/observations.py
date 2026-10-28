@@ -31,6 +31,7 @@ from .constants import (
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
     V5_PUBLIC_ROUTES, V5_BENCHMARK_CASE_COUNT, V5_BENCHMARK_PROFILES,
     HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+    HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256,
     HOST_BENCHMARK_PROFILES_BY_VERSION,
     BENCHMARK_V3_ID,
     HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH,
@@ -127,13 +128,20 @@ def validate_observation(
     if run_id is not None and CASE_ID_PATTERN.fullmatch(run_id) is None:
         failures.append(f"{label}.runId must be lowercase kebab-case")
     response_schema_value = record.get("responseSchema")
+    bound_response_path = (
+        response_schema_value.get("path") if type(response_schema_value) is dict else None
+    )
+    # Schema v6 records bind response V7 or, from repository policy revision 94, V8.
+    current_response_version = (
+        "8" if bound_response_path == HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH else "7"
+    )
     response_schema = validate_response_schema_binding(
         response_schema_value,
         f"{label}.responseSchema",
         failures,
         current=schema_version in {"3", "4", "5", "6"},
         response_version=(
-            "7" if schema_version == "6" else "6" if schema_version == "5"
+            current_response_version if schema_version == "6" else "6" if schema_version == "5"
             else "5" if schema_version == "4" else "4"
         ),
     )
@@ -155,11 +163,17 @@ def validate_observation(
         "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
     }:
         failures.append(f"{label}.responseSchema must bind the exact V6 schema")
-    if schema_version == "6" and response_schema is not None and response_schema != {
-        "path": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
-        "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
-    }:
-        failures.append(f"{label}.responseSchema must bind the exact V7 schema")
+    if schema_version == "6" and response_schema is not None and response_schema not in (
+        {
+            "path": HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+            "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+        },
+        {
+            "path": HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
+            "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256,
+        },
+    ):
+        failures.append(f"{label}.responseSchema must bind the exact V7 or V8 schema")
     subject = validate_subject(record.get("axiom"), f"{label}.axiom", failures)
     candidate_evidence = subject is not None and subject.get("tag") is None
     host = exact_object(record.get("host"), HOST_KEYS, f"{label}.host", failures)
@@ -408,6 +422,7 @@ def validate_observation(
         if response_schema_path in PROSE_FREE_HOST_RESPONSE_SCHEMA_PATHS | {
             HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH,
             HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+            HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
         }:
             if response_diagnostic == "schema-evidence":
                 failures.append(

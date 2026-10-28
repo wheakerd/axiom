@@ -16,6 +16,21 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 94
+
+### Changed
+
+- Add routing response schema V8: the V7 fields and constraints plus one reviewed description per field, so each host's model reads `clarificationCount` as the number of clarification questions the selected routing asks before any action route (`1` whenever `clarify-intent` is selected, otherwise `0`) even though an evaluation session asks no question. V7 stays frozen for the records that bind it, schema v6 records accept either response schema path, and the ambiguity control's corpus expectation is unchanged.
+- Record the #192 decision: four fresh Codex sessions and two Claude Code sessions on the published v0.19.2 reported `clarificationCount` `1` for the ambiguity control, so the single earlier `0` was one-run variance under an undefined field, not a gate or `clarify-intent` wording defect.
+
+### Behavioral impact
+
+None for installed plugin workflows. Contributors collecting routing observations use response schema V8 with the unchanged `codex-core-v6` and `claude-code-core-v6` profiles.
+
+### Required action
+
+None.
+
 ## Repository policy revision 93
 
 ### Changed
