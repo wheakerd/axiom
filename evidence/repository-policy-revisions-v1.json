@@ -760,6 +760,14 @@
       "sourceIssue": 193,
       "summary": "Release 0.19.3: state the host permission boundary in the startup gate, the action owners, and a new using-axiom reference.",
       "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913"
+    },
+    {
+      "revision": 96,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "dad3f174509f93d338cd524ecd49e1f539a2aab6",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.19.3.",
+      "runtimeContractDigest": "sha256:4633c6f046a4eb668d821e8a29e6b046ce715795082aa22365ffdb6c5baee913"
     }
   ]
 }
