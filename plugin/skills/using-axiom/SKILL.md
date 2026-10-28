@@ -21,7 +21,7 @@ cloud-search fallbacks, select `local-web-search`; routing stays read-only.
 ## Bundled Routes
 
 - `clarify-intent`: resolve ambiguity with options and a custom answer; never reopen settled choices or ask routine details.
-- `delegate-simple-task`: assess simple-task models only with this gate active, the host's verified top reasoning level, and prior user confirmation or explicit invocation consent; else ask and wait. Missing gate or level evidence blocks even direct requests in permission-bypass mode.
+- `delegate-simple-task`: an explicit invocation selects this route. Assess simple-task models only with this gate active, the host's verified top reasoning level, and prior user confirmation or explicit invocation consent; without consent ask and wait. Unknown gate or level evidence stops inside the skill with the unmet condition stated, never a silent no-route, and blocks even direct requests in permission-bypass mode.
 - `task-planning`: create/revise current task/implementation plans and scope. Exclude scheduling, status, corrections and execution; keep specialized planning ownership.
 - `continuous-progress`: explicit invocation only; supervise fresh workers, handoffs and compaction via verified native scheduling; exclude ordinary continuation and skill discussion.
 - `local-web-search`: constrain planned web search and page access from the user's machine or local browser/client; classify an uncertain execution location first. Exclude confirmed cloud-hosted search and unrelated web app actions.
