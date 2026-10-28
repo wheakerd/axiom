@@ -462,7 +462,7 @@ its job, uses no other secret, and runs the standard-library script
 `scripts/record-star-history.py`. The script reads `stargazers_count` and
 `forks_count` from the repository API, replaces or appends the row for the
 current UTC date, renders the chart, and commits both files only when the data
-changed. The chart is drawn in a sketched, hand-lettered style: axes, line,
+or the rendered chart differs from the branch. The chart is drawn in a sketched, hand-lettered style: axes, line,
 and legend pass through one SVG displacement filter, and the text uses a
 printable-ASCII subset of the Patrick Hand typeface embedded in the SVG from
 `scripts/fonts/` (SIL Open Font License 1.1, `PatrickHand-OFL.txt`), so the

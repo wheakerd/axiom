@@ -5,7 +5,9 @@ Standard library only. The script reads the repository's current star and fork
 counts from the GitHub REST API, appends or replaces today's row in a CSV file
 held on a data branch, renders a date/star line chart as a hand-drawn SVG, and
 commits both files to that branch through the GraphQL ``createCommitOnBranch``
-mutation so that every data commit is GitHub-signed.
+mutation so that every data commit is GitHub-signed. It commits when the data
+or the rendered chart differs from the branch, so a renderer change reaches
+the README on the next run.
 
 The chart embeds a printable-ASCII subset of the Patrick Hand typeface
 (``scripts/fonts/``, SIL Open Font License 1.1, copyright Patrick Wagesreiter)
@@ -324,15 +326,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.offline_stars is not None:
         stars, forks = args.offline_stars, args.offline_forks
         existing = open(args.offline_csv, encoding="utf-8").read() if args.offline_csv else None
+        existing_svg = None
     else:
         stars, forks = fetch_counts(args.repository, token)
         existing = fetch_branch_file(args.repository, args.branch, args.csv_path, token)
+        existing_svg = fetch_branch_file(args.repository, args.branch, args.svg_path, token)
 
     rows = read_rows(existing) if existing else []
     updated = upsert(rows, date, stars, forks)
     csv_text = write_rows(updated)
     svg_text = render_svg(updated, args.repository)
-    changed = csv_text != (existing or "")
+    changed = csv_text != (existing or "") or svg_text != (existing_svg or "")
 
     if args.write_dir:
         os.makedirs(args.write_dir, exist_ok=True)
@@ -340,7 +344,8 @@ def main(argv: list[str] | None = None) -> int:
             with open(os.path.join(args.write_dir, os.path.basename(name)), "w", encoding="utf-8", newline="\n") as handle:
                 handle.write(text)
 
-    print(f"{date} stars={stars} forks={forks} rows={len(updated)} changed={changed}")
+    print(f"{date} stars={stars} forks={forks} rows={len(updated)} changed={changed} "
+          f"(data {'changed' if csv_text != (existing or '') else 'unchanged'}, chart {'changed' if svg_text != (existing_svg or '') else 'unchanged'})")
     if args.offline_stars is not None or args.no_commit:
         return 0
     if not changed:
