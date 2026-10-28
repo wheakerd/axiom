@@ -736,6 +736,14 @@
       "sourceIssue": 186,
       "summary": "Release 0.19.2: route an explicit delegate-simple-task invocation deterministically and stop inside the skill with the unmet activation condition stated.",
       "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1"
+    },
+    {
+      "revision": 93,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "db96ae307385495993b6f44119fbeb1afec82c17",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.19.2.",
+      "runtimeContractDigest": "sha256:503bc48f1bcc2a6fbea449e0f1428601e14d0d540395b9005aa0b970928ec3a1"
     }
   ]
 }
