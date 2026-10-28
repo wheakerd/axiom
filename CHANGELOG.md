@@ -16,7 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
-## 0.19.2 - unreleased
+## Repository policy revision 93
+
+### Changed
+
+- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.19.2`.
+- Advance the Claude Code marketplace plugin source to the same immutable release `v0.19.2`.
+
+### Behavioral impact
+
+Codex and Claude Code marketplace refresh now select the release in which an explicit `delegate-simple-task` invocation routes deterministically. This catalog handoff preserves plugin version `0.19.2` and its installed runtime digest.
+
+### Required action
+
+None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
+
+## 0.19.2 - 2026-10-28
 
 ### Fixed
 
