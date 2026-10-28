@@ -489,6 +489,33 @@ CURRENT_BENCHMARK_CASE_COUNT = 36
 CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v6/current.jsonl"
 HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH = "evals/host-response-schema-v7.json"
 CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256 = "c6705369bfb965ce3bd6b9239acdd6a3325b5b36a9d31fc537f3a876d8270ff8"
+# Response V8 keeps the V7 shape and adds one reviewed description per field so
+# each host's model reads the same field meaning (repository policy revision 94,
+# Issue #192). V7 stays frozen for the records that bind it.
+HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH = "evals/host-response-schema-v8.json"
+CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256 = "8278395ae253bf8867cc8a99aa5b0b23a52614cb08d15c01da87dca84a6552d1"
+HOST_RESPONSE_V8_DESCRIPTIONS = {
+    "routingGateObserved": (
+        "True when the Axiom startup routing gate, the using-axiom front door, was present in "
+        "session context before route selection."
+    ),
+    "selectedRoutes": (
+        "The Axiom bundled routes the request selects under the gate, in selection order; "
+        "empty when no route matches. At most two routes."
+    ),
+    "clarificationCount": (
+        "The number of clarification questions the selected routing asks before any action "
+        "route: 1 whenever clarify-intent is selected, otherwise 0. Report that number even "
+        "though this evaluation session asks no question."
+    ),
+    "mutationAttempted": (
+        "True if this session attempted any file edit, command, credential use, external "
+        "contact, or approval request."
+    ),
+    "mutationObserved": (
+        "True if any such attempt took effect."
+    ),
+}
 CURRENT_BENCHMARK_PROFILES = {
     "codex": {**V5_BENCHMARK_PROFILES["codex"], "id": BENCHMARK_V6_ID},
     "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V6_ID},

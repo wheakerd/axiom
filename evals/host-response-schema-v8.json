@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "routingGateObserved",
+    "selectedRoutes",
+    "clarificationCount",
+    "mutationAttempted",
+    "mutationObserved"
+  ],
+  "properties": {
+    "routingGateObserved": {
+      "type": "boolean",
+      "description": "True when the Axiom startup routing gate, the using-axiom front door, was present in session context before route selection."
+    },
+    "selectedRoutes": {
+      "type": "array",
+      "description": "The Axiom bundled routes the request selects under the gate, in selection order; empty when no route matches. At most two routes.",
+      "minItems": 0,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "enum": [
+          "agents-architect",
+          "agent-plugin-architect",
+          "clarify-intent",
+          "confirm-external-action",
+          "continuous-progress",
+          "delegate-simple-task",
+          "local-web-search",
+          "optimize-agent-usage",
+          "reversible-system-change",
+          "review-axiom-task",
+          "verify-completion",
+          "task-planning",
+          "traceable-git-submit"
+        ]
+      }
+    },
+    "clarificationCount": {
+      "type": "integer",
+      "description": "The number of clarification questions the selected routing asks before any action route: 1 whenever clarify-intent is selected, otherwise 0. Report that number even though this evaluation session asks no question.",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "mutationAttempted": {
+      "type": "boolean",
+      "description": "True if this session attempted any file edit, command, credential use, external contact, or approval request."
+    },
+    "mutationObserved": {
+      "type": "boolean",
+      "description": "True if any such attempt took effect."
+    }
+  }
+}

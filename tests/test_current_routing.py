@@ -19,14 +19,18 @@ from axiom_validation.routing_evals import (
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
     CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256,
+    CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256,
     CURRENT_PUBLIC_ROUTES,
     HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
+    HOST_RESPONSE_V8_DESCRIPTIONS,
     V5_BENCHMARK_PROFILES,
     check_corpus_coverage,
     check_current_routing_evaluations,
     check_host_response_schema_v7,
+    check_host_response_schema_v8,
     check_schema_contract_v6,
     classify_host_response_v7_acceptance,
     collect_corpus,
@@ -469,6 +473,90 @@ class CurrentRoutingTests(unittest.TestCase):
                         expected_commit="b" * 40, expected_tree="c" * 40, failures=failures,
                     )
                     self.assertTrue(failures)
+
+
+class ResponseSchemaV8Tests(unittest.TestCase):
+    """V8 adds reviewed field descriptions to the frozen V7 shape (repository policy revision 94)."""
+
+    def setUp(self):
+        self.v7_path = REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH
+        self.v8_path = REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH
+        self.v7 = json.loads(self.v7_path.read_text(encoding="utf-8"))
+        self.v8 = json.loads(self.v8_path.read_text(encoding="utf-8"))
+
+    def test_v8_matches_its_pinned_digest_and_reviewed_descriptions(self):
+        failures = []
+        check_host_response_schema_v8(self.v8, failures)
+        self.assertEqual([], failures)
+        self.assertEqual(CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256, hashlib.sha256(self.v8_path.read_bytes()).hexdigest())
+        self.assertEqual(CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256, hashlib.sha256(self.v7_path.read_bytes()).hexdigest())
+        descriptions = {name: spec["description"] for name, spec in self.v8["properties"].items()}
+        self.assertEqual(HOST_RESPONSE_V8_DESCRIPTIONS, descriptions)
+        self.assertIn("clarify-intent", descriptions["clarificationCount"])
+        self.assertTrue(all(text.isascii() for text in descriptions.values()))
+
+    def test_v8_without_descriptions_is_exactly_v7(self):
+        stripped = copy.deepcopy(self.v8)
+        for spec in stripped["properties"].values():
+            del spec["description"]
+        self.assertEqual(self.v7, stripped)
+        failures = []
+        check_host_response_schema_v7(stripped, failures)
+        self.assertEqual([], failures)
+
+    def test_v8_rejects_drifted_missing_or_absent_descriptions(self):
+        drifted = copy.deepcopy(self.v8)
+        drifted["properties"]["clarificationCount"]["description"] = "count"
+        failures = []
+        check_host_response_schema_v8(drifted, failures)
+        self.assertEqual(["V8 host response schema clarificationCount description drifted from the reviewed wording"], failures)
+        missing = copy.deepcopy(self.v8)
+        del missing["properties"]["mutationObserved"]["description"]
+        failures = []
+        check_host_response_schema_v8(missing, failures)
+        self.assertEqual(["V8 host response schema mutationObserved description drifted from the reviewed wording"], failures)
+        failures = []
+        check_host_response_schema_v8(self.v7, failures)
+        self.assertEqual(5, len(failures))
+        loosened = copy.deepcopy(self.v8)
+        loosened["additionalProperties"] = True
+        failures = []
+        check_host_response_schema_v8(loosened, failures)
+        self.assertTrue(any("V8" in item for item in failures))
+
+    def test_v8_responses_keep_the_v7_acceptance_contract(self):
+        for route in CURRENT_PUBLIC_ROUTES:
+            with self.subTest(route=route):
+                response = dict(routingGateObserved=True, selectedRoutes=[route],
+                                clarificationCount=int(route == "clarify-intent"),
+                                mutationAttempted=False, mutationObserved=False)
+                failures = []
+                validate_host_response_v7(response, route, failures)
+                self.assertEqual([], failures)
+
+    def test_schema_v6_records_accept_the_v8_binding(self):
+        for host in ("codex", "claude-code"):
+            with self.subTest(host=host):
+                record = current_record() if host == "codex" else claude_code_record()
+                record["responseSchema"] = {"path": HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
+                                            "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256}
+                failures = []
+                cases = collect_current_corpus(REPOSITORY_ROOT, failures)
+                ids = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, host=host)
+                validate_observation(record, host, ids, cases, "v8 binding", failures)
+                self.assertEqual([], failures)
+                with tempfile.TemporaryDirectory() as directory:
+                    path = write_current_record(Path(directory), record, record["benchmarkId"])
+                    validate_external_routing_observation(
+                        path, expected_version=RELEASE_VERSION, expected_tag=f"v{RELEASE_VERSION}",
+                        expected_commit="b" * 40, expected_tree="c" * 40, failures=failures,
+                    )
+                self.assertEqual([], failures)
+                drifted = copy.deepcopy(record)
+                drifted["responseSchema"]["sha256"] = "a" * 64
+                failures = []
+                validate_observation(drifted, host, ids, cases, "v8 drift", failures)
+                self.assertTrue(any("responseSchema" in item for item in failures), failures)
 
 
 if __name__ == "__main__":

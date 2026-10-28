@@ -21,6 +21,7 @@ from .constants import (
     BENCHMARK_V5_ID, SCHEMA_V5_ID, HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
     V5_PUBLIC_ROUTES, V5_BENCHMARK_CASE_COUNT, V5_BENCHMARK_IDS,
     BENCHMARK_V6_ID, SCHEMA_V6_ID, HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
+    HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, HOST_RESPONSE_V8_DESCRIPTIONS,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_BENCHMARK_IDS,
     CLAUDE_CODE_BENCHMARK_SAFETY_KEYS, CLAUDE_CODE_OFFICIAL_REFERENCE_KEYS,
@@ -686,7 +687,7 @@ def check_schema_contract_v6(schema: dict[str, Any], failures: list[str]) -> Non
         schema, failures, version="6", schema_id=SCHEMA_V6_ID,
         routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V6_ID,
         case_count=CURRENT_BENCHMARK_CASE_COUNT,
-        response_paths=(HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,),
+        response_paths=(HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH),
         benchmark_ids=CURRENT_BENCHMARK_IDS,
         extra_definitions=_HOST_PROFILE_DEFINITIONS,
     )
@@ -694,3 +695,23 @@ def check_schema_contract_v6(schema: dict[str, Any], failures: list[str]) -> Non
 
 def check_host_response_schema_v7(schema: dict[str, Any], failures: list[str]) -> None:
     _check_prose_free_host_response_schema(schema, failures, routes=CURRENT_PUBLIC_ROUTES, version="7")
+
+
+def check_host_response_schema_v8(schema: dict[str, Any], failures: list[str]) -> None:
+    """Check the V8 model-facing schema: the V7 shape plus one reviewed description per field."""
+    stripped = dict(schema)
+    properties = schema.get("properties")
+    if type(properties) is dict:
+        stripped["properties"] = {}
+        for name, spec in properties.items():
+            if type(spec) is not dict:
+                stripped["properties"][name] = spec
+                continue
+            if spec.get("description") != HOST_RESPONSE_V8_DESCRIPTIONS.get(name):
+                failures.append(
+                    f"V8 host response schema {name} description drifted from the reviewed wording"
+                )
+            stripped["properties"][name] = {
+                key: value for key, value in spec.items() if key != "description"
+            }
+    _check_prose_free_host_response_schema(stripped, failures, routes=CURRENT_PUBLIC_ROUTES, version="8")

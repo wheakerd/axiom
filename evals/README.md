@@ -12,7 +12,7 @@ evidence, use [Compatibility](../docs/compatibility.md).
 | [schema-v6.json](schema-v6.json) | Current thirteen-route corpus and observation format |
 | [routing-v6/current.jsonl](routing-v6/current.jsonl) | Current requests, expected and forbidden routes, clarification, lifecycle, and risk contracts |
 | [codex-core-v6.json](benchmarks/codex-core-v6.json) and [claude-code-core-v6.json](benchmarks/claude-code-core-v6.json) | Codex and Claude Code profiles of one ordered 36-case benchmark and developer instruction, each with its own invocation method, model, effort, timeout, and permission settings |
-| [host-response-schema-v7.json](host-response-schema-v7.json) | Current five-field, prose-free model response with all thirteen routes |
+| [host-response-schema-v8.json](host-response-schema-v8.json) | Current five-field, prose-free model response with all thirteen routes and one reviewed description per field; [V7](host-response-schema-v7.json) is the same shape without descriptions and stays frozen for the records that bind it |
 | [codex-exec-jsonl-observer-v3.json](codex-exec-jsonl-observer-v3.json) and [claude-code-stream-json-observer-v1.json](claude-code-stream-json-observer-v1.json) | How each host's event stream yields the fixed observer facts |
 | [review-sequences-v1.json](review-sequences-v1.json), [review-sequences-claude-code-v1.json](review-sequences-claude-code-v1.json), and [review-response-schema-v1.json](review-response-schema-v1.json) | Bounded review sequences for Codex and Claude Code and their shared structured response contract |
 | [Routing Context Budget](context-budget/README.md) | Deterministic instruction-size measurement and its limits |
@@ -62,6 +62,14 @@ and benchmark bound to existing observations; do not edit an expectation after
 a failure to make that result pass. An ordered benchmark change receives a new
 manifest ID.
 
+Response schema V8 (repository policy revision 94, Issue #192) adds one reviewed
+description to each of the five V7 fields and changes nothing else, so a V8
+response has exactly the V7 shape. `clarificationCount` is the number of
+clarification questions the selected routing asks before any action route: `1`
+whenever `clarify-intent` is selected, otherwise `0`, reported even though an
+evaluation session asks no question. Schema v6 records accept either response
+schema path; new observations use V8, and records bound to V7 stay verifiable.
+
 Keep the model-facing schema within OpenAI's documented
 [Structured Outputs subset](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas)
 for Codex. For Claude Code `--json-schema`, it must also validate as JSON Schema
@@ -102,7 +110,8 @@ their original records.
 For a separately produced current observation, external validation accepts one
 content-addressed schema v6 record against the profile its host names,
 `codex-core-v6` for Codex or `claude-code-core-v6` for Claude Code, and response
-schema V7. This optional observation is separate from required publication checks:
+schema V8, or V7 for a record produced before revision 94. This optional
+observation is separate from required publication checks:
 
 ```bash
 python3 scripts/check-publication.py \
