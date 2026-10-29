@@ -824,6 +824,14 @@
       "sourceIssue": null,
       "summary": "Keep public documentation prose on one line per paragraph and list item without changing rendering; drop an unused validator import.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 104,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "aa4d38febdf6c65e0b046eff1f2af0ecb8aa92e9",
+      "sourceIssue": null,
+      "summary": "Pin the release signature guard to the fixed ubuntu-24.04 runner instead of the moving ubuntu-latest label, and validate that pin.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }

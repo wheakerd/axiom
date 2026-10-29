@@ -94,6 +94,9 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     job_name = job.get("name") if isinstance(job, dict) else None
     if not isinstance(job_name, CanonicalYamlScalar) or job_name.value != context_name:
         failures.append(f"{label} must map events to four distinct stable check contexts")
+    runner = job.get("runs-on") if isinstance(job, dict) else None
+    if not isinstance(runner, CanonicalYamlScalar) or runner.value != "ubuntu-24.04":
+        failures.append(f"{label} must use the fixed ubuntu-24.04 runner")
     for check_context in (
         "Verify signed main history",
         "Verify release candidate",
