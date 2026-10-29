@@ -864,6 +864,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.21.0.",
       "runtimeContractDigest": "sha256:86c24e3f707ee34c07ac33f37ed73e5651af8617201635db6fdf41c92e8c1a2f"
+    },
+    {
+      "revision": 109,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "4cd29a7eb1aee01162bb9b0df9036617f4fd14b3",
+      "sourceIssue": null,
+      "summary": "Release 0.22.0: the model settles a delegated choice within given authority, skills name adaptable defaults, clarify-intent counts relax, and an informed waiver lifts only named rollback effects.",
+      "runtimeContractDigest": "sha256:4517f7cf4e974c5168d03a821b635e2d19518a2a194b7d2614d099f8f2081d18"
     }
   ]
 }

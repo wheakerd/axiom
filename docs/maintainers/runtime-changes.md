@@ -10,6 +10,8 @@ Codex and Claude Code install the same shared [skills/](../../plugin/skills/) so
 
 The top-level `using-axiom` Skill is the startup routing gate. Other top-level Skills provide the focused workflows it selects. Supporting `references/` and `agents/` resources belong to their owning Skill and load on demand; they are not independent public routes.
 
+Each of those other Skills opens with a short paragraph naming the narrow defaults the model may adapt, saying so, such as step order where no gate depends on it or report layout; every other rule in the Skill and in the references its active phase loads binds. `agents-architect` states its defaults in its Decision Latitude section. Never list as a default a rule that protects authority, prevents an irreversible or duplicated effect, handles untrusted input, or reports failed, partial, unknown, or `NOT-RUN` states.
+
 Axiom installs Markdown Skills and foreground Hook definitions. Explicit continuous-progress runs may use host-owned native scheduling. Axiom has no installed daemon, background updater, network update check, or bundled runtime dependency. Repository validation may use a host-provided interpreter, but it must not become a dependency of the installed plugin.
 
 ## Routing Invariants

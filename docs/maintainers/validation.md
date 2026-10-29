@@ -57,6 +57,8 @@ The native matrix and its stable `hook-runtime-gate` aggregate are described in 
 
 Focused `unittest` modules under [tests/](../../tests/) own domain-local assertions. [tests/fixtures/](../../tests/fixtures/) holds test-specific mutations and synthetic data, not all aggregate fixtures.
 
+Source-contract anchors pin authority, safety, and evidence invariants in skill text, such as an authorization boundary or the rule that routing never silently picks among alternatives. Do not pin procedural counts, formats, orderings, or phrasing; cover procedure, such as when the startup gate asks a clarification question or lets the model settle a delegated choice, with offline route scenarios in [axiom_validation/cases/routing.py](../../axiom_validation/cases/routing.py).
+
 Keep fixture names in failure messages, and let the aggregate reporter add the policy domain. Keep fixture payloads separate from production policy modules, and do not add a third-party test or runtime dependency. Prefer focused validation using Python's standard library, without third-party Python packages; the host executable prerequisites above still apply.
 
 The aggregate summary's `immutable external action and image pins` total adds one for each validated full-SHA GitHub Action, digest-pinned `docker://` action, workflow job or service image, and digest-pinned remote Dockerfile source. Its parenthetical breakdown reports remote `FROM` sources as `Dockerfile base-image pins` and digest-pinned `COPY --from` or `RUN --mount=from` sources as `other Dockerfile input pins`. `FROM scratch`, references to an already validated local build stage, and validated action-local `COPY` or `ADD` sources are accepted but do not increase either Dockerfile count.

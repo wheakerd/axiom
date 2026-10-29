@@ -1,18 +1,15 @@
 ---
 name: traceable-git-submit
-description: Clarify unresolved material either/or choices before routing; delegation or checkpoint options do not select. Route an explicit invocation of this skill, checkpoint/baseline, consolidation/recovery, hardened/multi-target/history-replacing Git; combined commit, tag, and push of an already-prepared plugin release. Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native; merely mentioning submit, publish, or push does not select this route.
+description: Run traceable Git workflows for an explicit invocation of this skill, checkpoint/baseline, consolidation/recovery, hardened/multi-target/history-replacing Git; combined commit, tag, and push of an already-prepared plugin release. Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native; merely mentioning submit, publish, or push does not select this route.
 ---
 
 # Traceable Git Submit
 
+Defaults you may adapt, saying so: the order of read-only inspections where no gate depends on it, and report layout. Every other rule here and in the references the active phase loads binds.
+
 ## Intent Gate
 
-Distinguish unresolved workflow choice from a selected phase before Git
-inspection. If mutually exclusive options materially change route ownership,
-persistent metadata, write surfaces or authority, ask one concise
-clarification before selecting; do not choose for the user. Delegated choice,
-read-only scope or a lighter option cannot resolve it. Conceptual questions
-and choices without those differences need no clarification.
+Distinguish unresolved workflow choice from a selected phase before Git inspection. If mutually exclusive options materially change route ownership, persistent metadata, write surfaces or authority, ask one concise clarification before selecting; never choose silently. A delegated choice resolves it only when every option is reversible and already authorized, and a read-only or lighter option never silently replaces the stated goal. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost. Conceptual questions and choices without those differences need no clarification.
 
 After selection, never reconfirm an unchanged envelope. Ask only for missing
 necessary input or a material conflict, including checkpoint history that

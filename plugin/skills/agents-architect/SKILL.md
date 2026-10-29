@@ -89,11 +89,7 @@ the user explicitly requests it as repository policy.
 
 ## Decision Latitude
 
-References supply defaults, options, signals, and trade-offs. The rules under
-Always-On Rules are invariants; every other shape, count, field list, or byte
-target is a default to depart from when repository evidence favors another
-shape. Decide, then record the departure and its reason in the report. Axiom
-supplies the options; the host's model makes the decision.
+References supply defaults, options, signals, and trade-offs, but an authority, safety, or evidence rule in a reference still binds. The rules under Always-On Rules are invariants; every other shape, count, field list, or byte target is a default to depart from when repository evidence favors another shape. Decide, then record the departure and its reason in the report. Axiom supplies the options; the host's model makes the decision.
 
 ## Always-On Rules
 

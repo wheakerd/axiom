@@ -1,6 +1,6 @@
 ---
 name: review-axiom-task
-description: Review an Axiom task's routing, scope, authorization, actions, evidence, stops and outcome; explain, audit, criticize, appeal or narrow its decisions, including why it selected, allowed or refused an action. Ordinary summaries, code review, execution and retry stay outside. Clarify mutually exclusive review versus execution/retry before routing; review grants no action authority. A prior refusal governs neither a review nor a narrower request.
+description: Review an Axiom task's routing, scope, authorization, actions, evidence, stops and outcome; explain, audit, criticize, appeal or narrow its decisions, including why it selected, allowed or refused an action. Ordinary summaries, code review, execution and retry stay outside, and review grants no action authority. A prior refusal governs neither a review nor a narrower request.
 ---
 
 # Review Axiom Task
@@ -8,6 +8,8 @@ description: Review an Axiom task's routing, scope, authorization, actions, evid
 Review available evidence in a compact retrospective. Axiom supplies routing
 and workflow instructions, not an instrumented trace; the host acts through
 its normal tools and authority.
+
+Defaults you may adapt, saying so: question count, Review Workflow order where no gate depends on it, and Report template layout. Every other rule here binds, including the closed material-effect categories and the report's coverage and outcome values.
 
 ## Scope Gate
 
@@ -110,24 +112,13 @@ evidence.
 
 ## Review Workflow
 
-1. Classify the current review independently and restate its requested effect,
-   target, and review window without retrying the reviewed operation.
-2. Identify every selected Axiom route and its observable trigger. Separate a
-   no-route continuation from a missing or uncertain route decision.
-3. Produce the bounded decision explanation before any remaining retrospective
-   detail. Do not substitute a protected-content refusal for that explanation.
-4. Separate Axiom workflow constraints from the host's instruction hierarchy
-   and the user's explicit authority. Record actions as authorized, withheld,
-   prohibited, ambiguous, or unknown only when the evidence supports that
-   disposition.
-5. Classify material actions as inspection, local mutation, external mutation,
-   or stopped/not run. Do not infer an action from a plan or an available tool.
-6. Map completion claims to the evidence that supports them. Record failed,
-   unavailable, or skipped owning-layer checks and any stop caused by missing
-   scope, authority, rollback, or evidence.
-7. Produce the concise Markdown report below. Prefer material outcomes and
-   summaries; include raw output only when a short excerpt is necessary to
-   support a disputed conclusion.
+1. Classify the current review independently and restate its requested effect, target, and review window.
+2. Identify every selected Axiom route and its observable trigger. Separate a no-route continuation from a missing or uncertain route decision.
+3. Produce the bounded decision explanation before any remaining retrospective detail.
+4. Separate Axiom workflow constraints from the host's instruction hierarchy and the user's explicit authority. Record actions as authorized, withheld, prohibited, ambiguous, or unknown only when the evidence supports that disposition.
+5. Classify material actions as inspection, local mutation, external mutation, or stopped/not run. Do not infer an action from a plan or an available tool.
+6. Map completion claims to the evidence that supports them. Record failed, unavailable, or skipped owning-layer checks and any stop caused by missing scope, authority, rollback, or evidence.
+7. Produce the concise Markdown report below. Prefer material outcomes and summaries; include raw output only when a short excerpt is necessary to support a disputed conclusion.
 
 ## Report
 

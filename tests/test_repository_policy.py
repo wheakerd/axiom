@@ -21,7 +21,10 @@ from axiom_validation.repository_policy import (
     discover_release_documents,
 )
 from axiom_validation.cases.external_action import check_external_action_scenarios
-from axiom_validation.cases.rollback import check_reversible_safety_scenarios
+from axiom_validation.cases.rollback import (
+    ROLLBACK_WAIVER_ANCHORS,
+    check_reversible_safety_scenarios,
+)
 
 
 class RepositoryPolicyTests(unittest.TestCase):
@@ -426,6 +429,21 @@ class RepositoryPolicyTests(unittest.TestCase):
         failures = []
         self.assertEqual(127, check_reversible_safety_scenarios(failures))
         self.assertEqual([], failures)
+
+    def test_rollback_waiver_pins_its_invariants(self):
+        original_read = Path.read_text
+        for anchor in ROLLBACK_WAIVER_ANCHORS:
+
+            def read_without_anchor(path, *args, **kwargs):
+                return original_read(path, *args, **kwargs).replace(anchor, "REMOVED CONTRACT")
+
+            with self.subTest(anchor=anchor), patch.object(Path, "read_text", read_without_anchor):
+                failures = []
+                check_reversible_safety_scenarios(failures)
+                self.assertTrue(
+                    any("rollback waiver contract" in failure for failure in failures),
+                    failures,
+                )
 
 
 if __name__ == "__main__":

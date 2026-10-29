@@ -26,7 +26,7 @@ The [startup gate](../plugin/skills/using-axiom/SKILL.md) owns route selection. 
 
 ## Workflow And Deliverable
 
-1. Resolve material ambiguity before selecting an implementation. When architecture and installation are mutually exclusive choices, preserve both original goals and ask one focused question. Permission or feasibility limits cannot silently substitute an audit for installation.
+1. Resolve material ambiguity before selecting an implementation. When architecture and installation are mutually exclusive choices, preserve both original goals and ask one focused question, unless the user explicitly delegated the choice and both are reversible and already authorized. Permission or feasibility limits cannot silently substitute an audit for installation.
 2. Inventory the package and its canonical sources before editing.
 3. Load only the references needed for the active phase. Keep public Skill entries directly discoverable and references reachable from their parent; preserve a shared tree when supported by the target hosts.
 4. Return the inventory, ownership and trust decisions, changed surfaces, validation evidence, compatibility class, and checks that were `NOT-RUN` or `UNAVAILABLE`.
