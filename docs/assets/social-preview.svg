@@ -1,37 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
-  <title id="title">Axiom workflow guardrails social preview</title>
-  <desc id="description">A dark static card reading Axiom, Workflow guardrails for Codex and Claude Code, and Scope, Authority, Evidence, Rollback.</desc>
+  <title id="title">Axiom social preview</title>
+  <desc id="description">Axiom, workflow guardrails for Codex and Claude Code, with the tagline Think before AI thinks. The letter A is drawn as Euclid's first construction, and its four points are labeled scope, authority, evidence, and rollback.</desc>
   <rect width="1280" height="640" fill="#111827"/>
-  <path d="M0 0H1280V12H0Z" fill="#5EEAD4"/>
-  <path d="M0 628H1280V640H0Z" fill="#38BDF8"/>
-
-  <g opacity="0.14" stroke="#E5E7EB" stroke-width="1">
-    <path d="M80 80H1200"/>
-    <path d="M80 560H1200"/>
-    <path d="M80 80V560"/>
-    <path d="M1200 80V560"/>
+  <g stroke="#1F2A3C" stroke-width="1">
+    <path d="M32 0V640" opacity="0.35"/>
+    <path d="M64 0V640" opacity="0.35"/>
+    <path d="M96 0V640" opacity="0.35"/>
+    <path d="M128 0V640" opacity="0.35"/>
+    <path d="M160 0V640" opacity="0.7"/>
+    <path d="M192 0V640" opacity="0.35"/>
+    <path d="M224 0V640" opacity="0.35"/>
+    <path d="M256 0V640" opacity="0.35"/>
+    <path d="M288 0V640" opacity="0.35"/>
+    <path d="M320 0V640" opacity="0.7"/>
+    <path d="M352 0V640" opacity="0.35"/>
+    <path d="M384 0V640" opacity="0.35"/>
+    <path d="M416 0V640" opacity="0.35"/>
+    <path d="M448 0V640" opacity="0.35"/>
+    <path d="M480 0V640" opacity="0.7"/>
+    <path d="M512 0V640" opacity="0.35"/>
+    <path d="M544 0V640" opacity="0.35"/>
+    <path d="M576 0V640" opacity="0.35"/>
+    <path d="M608 0V640" opacity="0.35"/>
+    <path d="M640 0V640" opacity="0.7"/>
+    <path d="M672 0V640" opacity="0.35"/>
+    <path d="M704 0V640" opacity="0.35"/>
+    <path d="M736 0V640" opacity="0.35"/>
+    <path d="M768 0V640" opacity="0.35"/>
+    <path d="M800 0V640" opacity="0.7"/>
+    <path d="M832 0V640" opacity="0.35"/>
+    <path d="M864 0V640" opacity="0.35"/>
+    <path d="M896 0V640" opacity="0.35"/>
+    <path d="M928 0V640" opacity="0.35"/>
+    <path d="M960 0V640" opacity="0.7"/>
+    <path d="M992 0V640" opacity="0.35"/>
+    <path d="M1024 0V640" opacity="0.35"/>
+    <path d="M1056 0V640" opacity="0.35"/>
+    <path d="M1088 0V640" opacity="0.35"/>
+    <path d="M1120 0V640" opacity="0.7"/>
+    <path d="M1152 0V640" opacity="0.35"/>
+    <path d="M1184 0V640" opacity="0.35"/>
+    <path d="M1216 0V640" opacity="0.35"/>
+    <path d="M1248 0V640" opacity="0.35"/>
+    <path d="M0 32H1280" opacity="0.35"/>
+    <path d="M0 64H1280" opacity="0.35"/>
+    <path d="M0 96H1280" opacity="0.35"/>
+    <path d="M0 128H1280" opacity="0.35"/>
+    <path d="M0 160H1280" opacity="0.7"/>
+    <path d="M0 192H1280" opacity="0.35"/>
+    <path d="M0 224H1280" opacity="0.35"/>
+    <path d="M0 256H1280" opacity="0.35"/>
+    <path d="M0 288H1280" opacity="0.35"/>
+    <path d="M0 320H1280" opacity="0.7"/>
+    <path d="M0 352H1280" opacity="0.35"/>
+    <path d="M0 384H1280" opacity="0.35"/>
+    <path d="M0 416H1280" opacity="0.35"/>
+    <path d="M0 448H1280" opacity="0.35"/>
+    <path d="M0 480H1280" opacity="0.7"/>
+    <path d="M0 512H1280" opacity="0.35"/>
+    <path d="M0 544H1280" opacity="0.35"/>
+    <path d="M0 576H1280" opacity="0.35"/>
+    <path d="M0 608H1280" opacity="0.35"/>
   </g>
 
-  <g transform="translate(905 143)">
-    <path d="M24 177H271M24 177L95 76M24 177L104 280M95 76L271 177M104 280L271 177" fill="none" stroke="#94A3B8" stroke-width="4" opacity="0.55"/>
-    <circle cx="24" cy="177" r="19" fill="#5EEAD4"/>
-    <circle cx="95" cy="76" r="19" fill="#38BDF8"/>
-    <circle cx="104" cy="280" r="19" fill="#A78BFA"/>
-    <circle cx="271" cy="177" r="19" fill="#FBBF24"/>
-    <circle cx="24" cy="177" r="7" fill="#111827"/>
-    <circle cx="95" cy="76" r="7" fill="#111827"/>
-    <circle cx="104" cy="280" r="7" fill="#111827"/>
-    <circle cx="271" cy="177" r="7" fill="#111827"/>
+  <g fill="none" stroke="#5EEAD4" stroke-width="1.5" stroke-dasharray="6 8" opacity="0.45">
+    <path d="M744 450.17H1180"/>
+    <path d="M962 149.83V474.17"/>
+  </g>
+  <g fill="none" stroke="#5EEAD4" stroke-width="3" opacity="0.6">
+    <circle cx="888" cy="322" r="148"/>
+    <circle cx="1036" cy="322" r="148"/>
+  </g>
+  <g fill="none" stroke="#F1F5F9" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M814 450.17L962 193.83L1110 450.17"/>
+    <path d="M888 322H1036"/>
+  </g>
+  <circle cx="962" cy="193.83" r="26" fill="none" stroke="#FBBF24" stroke-width="2.5" opacity="0.6"/>
+  <circle cx="962" cy="193.83" r="40" fill="none" stroke="#FBBF24" stroke-width="1.5" opacity="0.3"/>
+  <g stroke="#111827" stroke-width="4">
+    <circle cx="888" cy="322" r="10" fill="#5EEAD4"/>
+    <circle cx="1036" cy="322" r="10" fill="#38BDF8"/>
+    <circle cx="962" cy="450.17" r="10" fill="#A78BFA"/>
+    <circle cx="962" cy="193.83" r="13" fill="#FBBF24"/>
   </g>
 
-  <g fill="#F8FAFC" font-family="Noto Sans, DejaVu Sans, sans-serif">
-    <text x="92" y="150" font-size="32" font-weight="700" letter-spacing="9">AXIOM</text>
-    <text x="88" y="274" font-size="60" font-weight="700">Workflow guardrails for</text>
-    <text x="88" y="350" font-size="60" font-weight="700">Codex &amp; Claude Code</text>
+  <g font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="16" font-weight="600" letter-spacing="2.5" stroke="#111827" stroke-width="8" stroke-linejoin="round" paint-order="stroke">
+    <text x="866" y="306" text-anchor="end"><tspan fill="#64748B">I </tspan><tspan fill="#5EEAD4">SCOPE</tspan></text>
+    <text x="962" y="141.83" text-anchor="middle"><tspan fill="#64748B">II </tspan><tspan fill="#FBBF24">AUTHORITY</tspan></text>
+    <text x="1058" y="306"><tspan fill="#64748B">III </tspan><tspan fill="#38BDF8">EVIDENCE</tspan></text>
+    <text x="962" y="494.17" text-anchor="middle"><tspan fill="#64748B">IV </tspan><tspan fill="#A78BFA">ROLLBACK</tspan></text>
   </g>
 
-  <rect x="90" y="412" width="696" height="2" fill="#334155"/>
-  <text x="90" y="474" fill="#CBD5E1" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="27" font-weight="500" letter-spacing="0.5">Scope  ·  Authority  ·  Evidence  ·  Rollback</text>
-  <text x="91" y="530" fill="#94A3B8" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="20">Think before AI thinks.</text>
+  <text x="96" y="152" fill="#E2E8F0" font-family="Noto Serif, DejaVu Serif, serif" font-size="30" font-weight="600" letter-spacing="14">AXIOM</text>
+  <path d="M97 176H157" stroke="#5EEAD4" stroke-width="3"/>
+  <g fill="#F8FAFC" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="48" font-weight="700">
+    <text x="92" y="268">Workflow guardrails for</text>
+    <text x="92" y="330">Codex &amp; Claude Code</text>
+  </g>
+  <text x="94" y="430" fill="#FBBF24" font-family="Noto Serif, DejaVu Serif, serif" font-size="34" font-style="italic" font-weight="500">Think before AI thinks.</text>
 </svg>

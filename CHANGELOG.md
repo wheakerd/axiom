@@ -6,6 +6,20 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## Repository policy revision 105
+
+### Changed
+
+- The README hero image, which is also the social preview, and the Codex plugin mark now draw the letter A as the first construction of Euclid's Elements: two circles that pass through each other's centers. Its four construction points mark scope, authority, evidence, and rollback in the existing brand colors.
+
+### Behavioral impact
+
+None for installed plugin workflows. Codex shows the new mark once a later release includes it.
+
+### Required action
+
+None.
+
 ## Repository policy revision 104
 
 ### Changed
