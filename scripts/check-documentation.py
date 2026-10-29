@@ -15,8 +15,7 @@ from axiom_validation.cases.documentation import (  # noqa: E402
     check_documentation_negative_fixtures,
 )
 from axiom_validation.documentation import (  # noqa: E402
-    README_PREFERRED_MAX_BYTES,
-    README_PREFERRED_MIN_BYTES,
+    README_MAX_BYTES,
     check_documentation,
 )
 
@@ -33,8 +32,7 @@ def main() -> int:
     print(
         "Documentation validation passed: "
         f"README {report.readme_bytes} bytes "
-        f"(preferred {README_PREFERRED_MIN_BYTES // 1024}-"
-        f"{README_PREFERRED_MAX_BYTES // 1024} KiB: {report.preferred_budget_status}), "
+        f"(ceiling {README_MAX_BYTES // 1024} KiB), "
         f"{report.markdown_count} Markdown files, "
         f"{report.current_document_count} current documents, "
         f"{report.indexed_document_count} indexed documents, "

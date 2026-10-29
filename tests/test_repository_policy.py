@@ -354,7 +354,7 @@ class RepositoryPolicyTests(unittest.TestCase):
             encoding="utf-8"
         )
         mutated = governance.replace(
-            "only `administration: read` plus `contents: write`; administration write is not\n"
+            "only `administration: read` plus `contents: write`; administration write is not "
             "granted.",
             "`administration: write` and `contents: write`.",
             1,

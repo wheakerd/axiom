@@ -20,14 +20,13 @@ from .markdown import (
     link_destination,
     mask_inline_code,
 )
+from .readme_facts import check_readme_facts
 from .release_facts import check_release_facts
 from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
 from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
 
 README_MAX_BYTES = 16 * 1024
-README_PREFERRED_MIN_BYTES = 4 * 1024
-README_PREFERRED_MAX_BYTES = 8 * 1024
 
 ROOT_CURRENT_DOCUMENTS = (
     "README.md",
@@ -65,14 +64,13 @@ FORBIDDEN_TASK_PREFIXES = (
 
 @dataclass(frozen=True)
 class DocumentationReport:
-    """Counts and advisory budget status for one validation run."""
+    """Counts and README size for one validation run."""
 
     markdown_count: int
     current_document_count: int
     indexed_document_count: int
     generated_region_count: int
     readme_bytes: int
-    preferred_budget_status: str
 
 
 def _label(path: Path, root: Path) -> str:
@@ -153,27 +151,19 @@ def _local_target(
         return None
 
 
-def check_readme_budget(
-    root: Path, failures: list[str]
-) -> tuple[int, str]:
+def check_readme_budget(root: Path, failures: list[str]) -> int:
     path = root / "README.md"
     try:
         byte_count = len(path.read_bytes())
     except OSError as error:
         failures.append(f"cannot read README.md for size validation: {error}")
-        return 0, "unavailable"
+        return 0
     if byte_count > README_MAX_BYTES:
         failures.append(
             f"README.md is {byte_count} bytes; the migration ceiling is "
             f"{README_MAX_BYTES} bytes"
         )
-    if byte_count < README_PREFERRED_MIN_BYTES:
-        status = "below"
-    elif byte_count <= README_PREFERRED_MAX_BYTES:
-        status = "within"
-    else:
-        status = "above"
-    return byte_count, status
+    return byte_count
 
 
 def _heading_levels(searchable: str) -> tuple[int, ...]:
@@ -506,6 +496,7 @@ def check_machine_derived_documentation(failures: list[str]) -> None:
     check_runtime_identity(failures)
     check_release_facts(failures)
     check_route_catalog(failures)
+    check_readme_facts(failures)
     check_release_version_surfaces(failures)
 
 
@@ -517,7 +508,7 @@ def check_documentation(
 ) -> DocumentationReport:
     """Validate the complete public documentation architecture."""
     root = root.resolve()
-    readme_bytes, budget_status = check_readme_budget(root, failures)
+    readme_bytes = check_readme_budget(root, failures)
     markdown_count = check_markdown_links(failures, root=root)
     current_count = check_current_headings(root, failures)
     indexed_count = check_docs_index_and_orphans(root, failures)
@@ -539,7 +530,6 @@ def check_documentation(
         indexed_document_count=indexed_count,
         generated_region_count=generated_count,
         readme_bytes=readme_bytes,
-        preferred_budget_status=budget_status,
     )
 
 
@@ -547,8 +537,6 @@ __all__ = (
     "DocumentationReport",
     "LIFECYCLE_VALUES",
     "README_MAX_BYTES",
-    "README_PREFERRED_MAX_BYTES",
-    "README_PREFERRED_MIN_BYTES",
     "SKILL_REFERENCE_PATH",
     "check_current_headings",
     "check_docs_index_and_orphans",

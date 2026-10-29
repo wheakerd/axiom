@@ -16,6 +16,22 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 101
+
+### Changed
+
+- A new `Release pipeline` workflow publishes each version from CI. Only a pull request that changes the plugin version in the Codex manifest starts it. On the pull request it checks the version step and previews the Release body. After the merge it waits for the required checks, dispatches the protected tag controller, stages the Draft, dispatches the immutable publisher and the published-release observation, and opens and merges the marketplace catalog handoff. Maintainers no longer dispatch those workflows or prepare the catalog pull request by hand; the workflows remain available for recovery. The pipeline runs no AI model or agent.
+- The README opens with a centered header: identity and CI badges, a hero image, and one plain request to star the repository. A generated skill index and the badge that counts the bundled skills are rendered from each skill's `agents/openai.yaml` short description, so the introduction always matches the bundled skills.
+- The documentation validator drops the README's preferred 4 to 8 KiB band and keeps the 16 KiB ceiling.
+
+### Behavioral impact
+
+None for installed plugin workflows. A merged release pull request now publishes its version, and both marketplace catalogs advance once that release is verified. The catalog job needs the release App's Pull requests read and write permission; without it, the job stops before any write and publication still completes.
+
+### Required action
+
+None for users. Before the next release, maintainers grant the `axiom-release-tag-controller` App the Pull requests read and write permission.
+
 ## Repository policy revision 100
 
 ### Changed
@@ -104,7 +120,7 @@ None. Existing Codex and Claude Code clients follow each host's native marketpla
 
 ### Behavioral impact
 
-Under a host mode that may deny an action, an Axiom-guided consequential action is presented with its exact command and target and waits for the user's grant, and a denial ends in a stated stop with no alternate attempt and no change to any host permission setting. The boundary reduces unprompted attempts and workarounds; it does not make the host's decision predictable. The runtime digest changes because the gate, the new reference, the credential-lifecycle reference, and two skills are installed inputs.
+Under a host mode that may deny an action, an Axiom-guided consequential action is presented with its exact command and target and waits for the user's grant. A denial ends in a stated stop with no alternate attempt and no change to any host permission setting. The boundary reduces unprompted attempts and workarounds; it does not make the host's decision predictable. The runtime digest changes because the gate, the new reference, the credential-lifecycle reference, and two skills are installed inputs.
 
 ### Required action
 
@@ -211,7 +227,7 @@ See the [version notes](docs/releases/v0.19.1.md) for the trimmed passages and t
 
 ### Changed
 
-- The offline route contract model selects `verify-completion` for evidence-bound completion verification requests, including post-compaction regrounding, when no earlier route applies. Seven routing scenario fixtures cover the canonical, post-compaction, Chinese, status near-miss, continuation near-miss, and `review-axiom-task` overlap cases, and the current-corpus bridge now compares the offline model with every `verify-completion` case.
+- The offline route contract model selects `verify-completion` for evidence-bound completion verification requests, including post-compaction re-grounding, when no earlier route applies. Seven routing scenario fixtures cover the canonical, post-compaction, Chinese, status near-miss, continuation near-miss, and `review-axiom-task` overlap cases, and the current-corpus bridge now compares the offline model with every `verify-completion` case.
 
 ### Behavioral impact
 
@@ -258,7 +274,7 @@ None. Existing Codex and Claude Code clients follow each host's native marketpla
 
 ### Added
 
-- `verify-completion`: a route that rebuilds a completion, progress, or success claim from current direct evidence before it is made or accepted. It classifies each input as observed, recalled, or summarized, keeps an evidence ledger per criterion (`met`, `not met`, or `unverifiable`), re-grounds the task after compaction, a fork, or a handoff from recorded artifacts instead of the summary, and states advice before complying when evidence conflicts with the request. The decision stays with the host's model.
+- `verify-completion`: a route that rebuilds a completion, progress, or success claim from current direct evidence before it is made or accepted. It classifies each input as observed, recalled, or summarized and keeps an evidence ledger per criterion (`met`, `not met`, or `unverifiable`). After compaction, a fork, or a handoff, it re-grounds the task from recorded artifacts instead of the summary, and it states advice before complying when evidence conflicts with the request. The decision stays with the host's model.
 
 ### Changed
 
@@ -550,7 +566,7 @@ None for existing Codex clients, which follow Codex's native marketplace refresh
 ### Fixed
 
 - Stop explicit simple Git submission when effective configuration would add tags, push options, submodule pushes, or mirroring; check immediately before every direct push, including push-only requests, and additionally before a combined request's commit. The pre-push check detects drift.
-- Resolve source-only refspec mappings at both checks; stop on a mapped force update, a destination different from the frozen branch, or any remote group, including one that shadows a configured remote.
+- Resolve source-only `refspec` mappings at both checks; stop on a mapped force update, a destination different from the frozen branch, or any remote group, including one that shadows a configured remote.
 - Resolve both recursion keys in Git's configuration traversal order; the last entry decides. `submodule.recurse=true` selects `on-demand`, while `false` resets to `no`; only a final `no` or `check` mode avoids submodule pushes. Stop on a nonempty inherited `GIT_NAMESPACE`, uncertain receiving-side propagation, or any other effective setting or inherited environment that changes the frozen push.
 - Align secondary Git guidance with ordinary host-native Git and the selected direct or hardened submission phase.
 - Derive plugin validation requirements from the target repository's contract and distinguish native repo-local Skill discovery from AGENTS routing.
@@ -576,23 +592,11 @@ See the [version notes](docs/releases/v0.15.0.md) for the host boundary, runtime
 
 ### Fixed
 
-- Stop explicit simple Git submission when effective configuration would add
-  tags, push options, submodule pushes, or mirroring; check immediately before
-  every direct push, including push-only requests, and additionally before a
-  combined request's commit. The pre-push check detects drift.
-- Resolve source-only refspec mappings at both checks; stop on a mapped force
-  update, a destination different from the frozen branch, or any remote group,
-  including one that shadows a configured remote.
-- Resolve both recursion keys in Git's configuration traversal order; the last
-  entry decides. `submodule.recurse=true` selects `on-demand`, while `false`
-  resets to `no`; only a final `no` or `check` mode avoids submodule pushes.
-  Stop on nonempty inherited
-  `GIT_NAMESPACE` or uncertain receiving-side propagation, and on any other
-  effective setting or inherited environment that changes the frozen push.
-- Align secondary Git guidance with ordinary host-native Git and the selected
-  direct or hardened submission phase.
-- Derive plugin validation requirements from the target repository's contract
-  and distinguish native repo-local Skill discovery from AGENTS routing.
+- Stop explicit simple Git submission when effective configuration would add tags, push options, submodule pushes, or mirroring; check immediately before every direct push, including push-only requests, and additionally before a combined request's commit. The pre-push check detects drift.
+- Resolve source-only `refspec` mappings at both checks; stop on a mapped force update, a destination different from the frozen branch, or any remote group, including one that shadows a configured remote.
+- Resolve both recursion keys in Git's configuration traversal order; the last entry decides. `submodule.recurse=true` selects `on-demand`, while `false` resets to `no`; only a final `no` or `check` mode avoids submodule pushes. Stop on nonempty inherited `GIT_NAMESPACE` or uncertain receiving-side propagation, and on any other effective setting or inherited environment that changes the frozen push.
+- Align secondary Git guidance with ordinary host-native Git and the selected direct or hardened submission phase.
+- Derive plugin validation requirements from the target repository's contract and distinguish native repo-local Skill discovery from AGENTS routing.
 
 ### Behavioral impact
 
@@ -957,7 +961,7 @@ Contributors should use the linked runtime-authoring and validation guides from 
 ### Added
 
 - Added `local-web-search` for searches and follow-up page access from a local browser or client, including a fallback from cloud search.
-- Added execution-location checks, limits on machine-information disclosure, serial browsing, and a stop-and-handoff boundary for challenges, CAPTCHAs, and rate limits.
+- Added execution-location checks, limits on machine-information disclosure, serial browsing, and a stop-and-handoff boundary for challenges, CAPTCHA prompts, and rate limits.
 
 ### Changed
 
@@ -1512,29 +1516,11 @@ See [the v0.8.11 release notes](docs/releases/v0.8.11.md).
 
 ### Evidence Boundary
 
-- Corrected the current release-bound Codex observer contract so model-process
-  stderr is bounded, privacy-safe, diagnostic-only, and non-causal. Process
-  exit, JSONL lifecycle and unknown-event handling, structured response,
-  semantic routing, mutation, protected-snapshot, and cleanup gates remain
-  fail closed.
-- Preserved the pre-correction full-batch Case 1 failure and the separately
-  authorized diagnostic Case 1 failure as distinct terminal evidence. Neither
-  result is retried or reclassified; the corrected signed merge requires a new
-  complete 17-case batch.
-- The complete 109-test suite, focused 6-test parser run, focused 17-test
-  action and release-contract run, publication guard, distribution drift guard,
-  compatibility self-test, context-budget and canonical-facts checks, JSON
-  parsing, English-only scan, and whitespace checks pass locally on the
-  candidate tree.
-- Existing canonical workflows, action metadata, installed Skills, hooks,
-  route selection, benchmark membership, models, reasoning settings,
-  workflows, and action authority are unchanged.
-- The checked-in release status remains `STATIC-ONLY`. Codex host and
-  release-bound lifecycle evidence for this corrected tree is `NOT-RUN`;
-  authenticated Claude Code host
-  and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks,
-  signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain
-  future external gates.
+- Corrected the current release-bound Codex observer contract so model-process stderr is bounded, privacy-safe, diagnostic-only, and non-causal. Process exit, JSON Lines lifecycle and unknown-event handling, structured response, semantic routing, mutation, protected-snapshot, and cleanup gates remain fail closed.
+- Preserved the pre-correction full-batch Case 1 failure and the separately authorized diagnostic Case 1 failure as distinct terminal evidence. Neither result is retried or reclassified; the corrected signed merge requires a new complete 17-case batch.
+- The complete 109-test suite, focused 6-test parser run, focused 17-test action and release-contract run, publication guard, distribution drift guard, compatibility self-test, context-budget and canonical-facts checks, JSON parsing, English-only scan, and whitespace checks pass locally on the candidate tree.
+- Existing canonical workflows, action metadata, installed Skills, hooks, route selection, benchmark membership, models, reasoning settings, workflows, and action authority are unchanged.
+- The checked-in release status remains `STATIC-ONLY`. Codex host and release-bound lifecycle evidence for this corrected tree is `NOT-RUN`; authenticated Claude Code host and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks, signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain future external gates.
 
 See [the v0.8.10 release notes](docs/releases/v0.8.10.md).
 
@@ -1645,31 +1631,12 @@ GitHub Release exists; v0.8.7 carries the publication repair.
 
 ### Security
 
-- Added a manual, main-only `Publish immutable release` workflow that accepts
-  only one strict SemVer tag, checks out the exact dispatch commit without
-  persisted credentials, serializes all repository-wide Latest publication,
-  and rejects a different equal-or-newer current Latest SemVer.
-- Added a standard-library release-evidence validator that uniquely selects a
-  draft or already-immutable Release, freezes its numeric ID and evidence
-  assets, downloads the exact GitHub bytes, requires the filename SHA-256,
-  size, asset ID, and exposed API digest, then applies the existing 17-case
-  external observation validator.
-- Added a deterministic content-addressed attestation that binds the Release,
-  version, tag, commit, tree, asset identity, digest, size, and validator result.
-  The workflow uploads it to the frozen Release ID without replacement,
-  downloads both remote assets, resumes safely after an earlier upload or
-  publication, and verifies `immutable=true` plus GitHub Latest.
-- Added fail-closed live preflights for the immutable-release setting, `main`
-  and tag targets, and REST plus GraphQL GitHub-made signature evidence before
-  mutation, immediately before publication, and after publication.
-- Enabled immutable releases for `wheakerd/axiom`. GitHub directly reported
-  `enabled: true` and `enforced_by_owner: false`; the setting applies to future
-  releases and does not rewrite the mutable state of earlier Releases.
-- Kept `Verify GitHub-signed release target` unchanged and separate: it still
-  owns signed tag/history provenance, while the new stable check owns exact
-  evidence-asset validity and publication immutability. The operator explicitly
-  dispatches the unchanged guard after publication because `GITHUB_TOKEN`
-  mutations do not trigger an ordinary `release: published` workflow run.
+- Added a manual, main-only `Publish immutable release` workflow that accepts only one strict SemVer tag, checks out the exact dispatch commit without persisted credentials, serializes all repository-wide Latest publication, and rejects a different equal-or-newer current Latest SemVer.
+- Added a standard-library release-evidence validator that uniquely selects a draft or already-immutable Release, freezes its numeric ID and evidence assets, and downloads the exact GitHub bytes. It requires the filename SHA-256, size, asset ID, and exposed API digest, then applies the existing 17-case external observation validator.
+- Added a deterministic content-addressed attestation that binds the Release, version, tag, commit, tree, asset identity, digest, size, and validator result. The workflow uploads it to the frozen Release ID without replacement, downloads both remote assets, resumes safely after an earlier upload or publication, and verifies `immutable=true` plus GitHub Latest.
+- Added fail-closed live preflights for the immutable-release setting, `main` and tag targets, and REST plus GraphQL GitHub-made signature evidence before mutation, immediately before publication, and after publication.
+- Enabled immutable releases for `wheakerd/axiom`. GitHub directly reported `enabled: true` and `enforced_by_owner: false`; the setting applies to future releases and does not rewrite the mutable state of earlier Releases.
+- Kept `Verify GitHub-signed release target` unchanged and separate: it still owns signed tag/history provenance, while the new stable check owns exact evidence-asset validity and publication immutability. The operator explicitly dispatches the unchanged guard after publication because `GITHUB_TOKEN` mutations do not trigger an ordinary `release: published` workflow run.
 
 ### Evidence Boundary
 
@@ -1778,14 +1745,9 @@ See [the v0.8.4 release notes](docs/releases/v0.8.4.md).
 
 ### Evidence Boundary
 
-- The earlier signed v0.8.3 candidate and its two external terminal `UNKNOWN`
-  records remain immutable unreleased history; neither is relabeled or used as
-  current evidence.
-- The stale-tracking route case is static contract evidence only. A separate
-  single-case Codex diagnostic and a fresh complete release-bound observation
-  remain required before release.
-- Authenticated Claude Code remained `UNAVAILABLE / NOT-RUN`, and actual
-  post-compaction behavior remained `NOT-RUN`.
+- The earlier signed v0.8.3 candidate and its two external terminal `UNKNOWN` records remain immutable unreleased history; neither is relabeled nor used as current evidence.
+- The stale-tracking route case is static contract evidence only. A separate single-case Codex diagnostic and a fresh complete release-bound observation remain required before release.
+- Authenticated Claude Code remained `UNAVAILABLE / NOT-RUN`, and actual post-compaction behavior remained `NOT-RUN`.
 
 See [the v0.8.3 release notes](docs/releases/v0.8.3.md) for the diagnostic
 boundary and release gate.
@@ -1794,49 +1756,19 @@ boundary and release gate.
 
 ### Changed
 
-- Clarified that publishing an already-prepared artifact selects only
-  `confirm-external-action`. A separate persistent installation, deployment,
-  migration, activation, or retention change still selects
-  `reversible-system-change` as well when it has an external effect.
-- Advanced both manifests together to `0.8.2` without changing route names,
-  hooks, marketplace wrappers, corpus records, benchmarks, or authorization.
-- Added a reviewed v0.8.2 routing-context record and an explicit validator mode
-  for a content-addressed, external post-merge `codex-core-v2` observation.
-- Added the exact Codex CLI 0.149.1 public JSONL discriminator taxonomy under
-  the existing routing-evaluation validator. Items are classified before
-  lifecycle sequencing; tool/action, error, unknown, malformed, invalid-status,
-  and post-terminal events fail closed without retaining private payload.
-- Replaced the warning-producing hook-trust bypass in the documented
-  release-bound setup with a native zero-model `hooks/list` and
-  `config/batchWrite` trust handshake after installed-hook byte verification.
-  The disposable `CODEX_HOME` must now use an owner-only runtime root outside
-  the system temporary directory.
+- Clarified that publishing an already-prepared artifact selects only `confirm-external-action`. A separate persistent installation, deployment, migration, activation, or retention change still selects `reversible-system-change` as well when it has an external effect.
+- Advanced both manifests together to `0.8.2` without changing route names, hooks, marketplace wrappers, corpus records, benchmarks, or authorization.
+- Added a reviewed v0.8.2 routing-context record and an explicit validator mode for a content-addressed, external post-merge `codex-core-v2` observation.
+- Added the exact Codex CLI 0.149.1 public JSON Lines discriminator taxonomy under the existing routing-evaluation validator. Items are classified before lifecycle sequencing; tool/action, error, unknown, malformed, invalid-status, and post-terminal events fail closed without retaining private payload.
+- Replaced the warning-producing hook-trust bypass in the documented release-bound setup with a native zero-model `hooks/list` and `config/batchWrite` trust handshake after installed-hook byte verification. The disposable `CODEX_HOME` must now use an owner-only runtime root outside the system temporary directory.
 
 ### Evidence Boundary
 
-- Preserved the F4 terminal `FAIL` after eight calls: the publication-only case
-  incorrectly selected both routes. A later candidate-only F5 batch passed all
-  19 planned calls, including three Case 1 variance samples, with zero tool
-  events and unchanged protected snapshots.
-- F5 is bound to the unreleased 0.8.1 candidate commit
-  `298268ac0cfcaac84af22d7117e126f57e72152c`; it is not final v0.8.2 evidence.
-  Actual post-compaction lifecycle remains `NOT-RUN`, and authenticated Claude
-  Code remains `UNAVAILABLE / NOT-RUN`.
-- The signed v0.8.2 release-bound batch remains terminal `FAIL` at Case 1 after
-  unexpected tool use. A separate corrected-preflight Case 1 diagnostic passed
-  once with zero tool events, but it is variance evidence rather than Stage 3
-  acceptance. The signed v0.8.3 candidate and both external terminal `UNKNOWN`
-  attempts remain distinct unreleased history.
-- A later complete-batch attempt against signed v0.8.2 repair commit
-  `9dbc2592dc2e544d3f62aafb2788af7efc503840` also stopped at Case 1 without
-  retry. Its route, V3 response, mutation fields, zero-tool observation, and
-  protected snapshots were valid, but the old hook-trust bypass necessarily
-  emitted a startup `ConfigWarning`; the fail-closed JSONL observer correctly
-  treated the resulting error item as terminal. Cases 2-17 remain `NOT-RUN`.
-- The final signed repair merge received a complete 17-call Codex pass. The
-  immutable `v0.8.2` tag, GitHub Release, and content-addressed observation
-  asset bind that result to the released commit and tree; Issue #34 closed only
-  after those checks succeeded.
+- Preserved the F4 terminal `FAIL` after eight calls: the publication-only case incorrectly selected both routes. A later candidate-only F5 batch passed all 19 planned calls, including three Case 1 variance samples, with zero tool events and unchanged protected snapshots.
+- F5 is bound to the unreleased 0.8.1 candidate commit `298268ac0cfcaac84af22d7117e126f57e72152c`; it is not final v0.8.2 evidence. Actual post-compaction lifecycle remains `NOT-RUN`, and authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`.
+- The signed v0.8.2 release-bound batch remains terminal `FAIL` at Case 1 after unexpected tool use. A separate corrected-preflight Case 1 diagnostic passed once with zero tool events, but it is variance evidence rather than Stage 3 acceptance. The signed v0.8.3 candidate and both external terminal `UNKNOWN` attempts remain distinct unreleased history.
+- A later complete-batch attempt against signed v0.8.2 repair commit `9dbc2592dc2e544d3f62aafb2788af7efc503840` also stopped at Case 1 without retry. Its route, V3 response, mutation fields, zero-tool observation, and protected snapshots were valid, but the old hook-trust bypass necessarily emitted a startup `ConfigWarning`; the fail-closed JSON Lines observer correctly treated the resulting error item as terminal. Cases 2-17 remain `NOT-RUN`.
+- The final signed repair merge received a complete 17-call Codex pass. The immutable `v0.8.2` tag, GitHub Release, and content-addressed observation asset bind that result to the released commit and tree; Issue #34 closed only after those checks succeeded.
 
 See [the v0.8.2 release notes](docs/releases/v0.8.2.md) for the preserved
 candidate evidence, context review, and completed acceptance sequence.
@@ -2011,15 +1943,9 @@ security boundary, validation evidence, and explicitly unavailable controls.
 
 ### Added
 
-- Added a versioned, host-independent JSONL routing corpus with 47 reviewed
-  cases covering every public route, near misses, overlap, ambiguity,
-  multilingual requests, lifecycle states, and untrusted input.
-- Added a fixed 13-case Codex acceptance and safety manifest, a strict host
-  response schema, and separately labeled Codex and Claude Code observation
-  records bound to immutable Axiom source identities.
-- Added standard-library publication policy and focused negative fixtures for
-  corpus coverage, stable IDs, result arithmetic, privacy, lifecycle, route,
-  clarification, mutation-attempt, and status fields.
+- Added a versioned, host-independent JSON Lines routing corpus with 47 reviewed cases covering every public route, near misses, overlap, ambiguity, multilingual requests, lifecycle states, and untrusted input.
+- Added a fixed 13-case Codex acceptance and safety manifest, a strict host response schema, and separately labeled Codex and Claude Code observation records bound to immutable Axiom source identities.
+- Added standard-library publication policy and focused negative fixtures for corpus coverage, stable IDs, result arithmetic, privacy, lifecycle, route, clarification, mutation-attempt, and status fields.
 
 ### Changed
 
@@ -2176,17 +2102,10 @@ and known limits.
 
 ### Fixed
 
-- Bound checkpoint commits to the frozen staged tree and installed them with
-  compare-and-swap ref updates, preserving concurrently staged paths instead
-  of committing them outside the authorized path set.
-- Resolved the effective Git push destination independently from the fetch
-  upstream, added a one-time later-push target binding, and rejected hostile
-  commit metadata before it can reach a terminal or public commit message.
-- Extended Action-pin validation through local composite actions and reusable
-  workflows, and restricted protected manifests to their exact owned schemas.
-- Required strict, version-matched, creation-only release tags and made the
-  publication guard execute the exact workflow gate against positive,
-  negative, and mutation-bypass fixtures.
+- Bound checkpoint commits to the frozen staged tree and installed them with compare-and-swap ref updates, preserving concurrently staged paths instead of committing them outside the authorized path set.
+- Resolved the effective Git push destination independently of the fetch upstream, added a one-time later-push target binding, and rejected hostile commit metadata before it can reach a terminal or public commit message.
+- Extended Action-pin validation through local composite actions and reusable workflows, and restricted protected manifests to their exact owned schemas.
+- Required strict, version-matched, creation-only release tags and made the publication guard execute the exact workflow gate against positive, negative, and mutation-bypass fixtures.
 
 ## 0.7.2 - 2026-08-20
 

@@ -127,3 +127,5 @@ GitHub-signed contributor commit or a same-repository head, establish release
 provenance, or authorize publication. Review the separate
 [pull-request and release trust boundaries](docs/repository-governance.md#pull-request-validation-and-release-provenance)
 when a change affects CI or release controls.
+
+A pull request that changes the plugin version in the Codex manifest is a release pull request: once it merges, the [Release pipeline](docs/maintainers/release-documentation.md#release-pipeline) publishes that version. Leave the version unchanged in other contributions.

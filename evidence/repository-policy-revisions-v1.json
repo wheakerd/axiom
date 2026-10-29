@@ -800,6 +800,14 @@
       "sourceIssue": null,
       "summary": "Commit the star-history chart whenever its rendering changes, not only when the data changes.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 101,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "90004d7f886846cf3e8b13eb08fcef1657e383eb",
+      "sourceIssue": null,
+      "summary": "Publish merged versions from a CI release pipeline that only version-changing pull requests start; generate the README skill index and badges; drop the README preferred size band.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }

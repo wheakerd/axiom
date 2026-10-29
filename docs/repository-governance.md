@@ -14,6 +14,7 @@ For plugin execution and permissions, use the [Trust Model](trust-model.md).
 | Inspect merge and tag restrictions | [Main Branch Policy](#main-branch-policy) and [Release Tag Policy](#release-tag-policy) | Dated remote snapshot |
 | Understand release-controller permissions | [Release Tag Controller Migration](#release-tag-controller-migration) | Original migration record and controller contract |
 | Check version syntax | [Production Release Version Policy](#production-release-version-policy) | Checked-in parser and consumers |
+| Follow how CI publishes a version | [Release Pipeline](#release-pipeline) | Checked-in workflow, script, and validator |
 | Inspect CI and publication boundaries | [Pull-Request Validation And Release Provenance](#pull-request-validation-and-release-provenance) | Checked-in contracts, with dated promotion evidence |
 | Understand immutable-release guarantees | [Immutable Release Policy](#immutable-release-policy) | Dated setting observation and verification limits |
 | Assess ownership and independent review | [Critical-Path Ownership](#critical-path-ownership) and [Human Review Trust Boundary](#human-review-trust-boundary) | CODEOWNERS plus dated remote evidence |
@@ -165,13 +166,9 @@ requires only `Verify signed main history`. A break-glass operation remains a
 separately authorized, audited ruleset change; no permanent interactive-user
 bypass is retained merely for convenience.
 
-The `release-tag-creation` Actions environment owns
-`AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric
-`AXIOM_RELEASE_APP_ID`. The workflow runs only when manually dispatched on
-`refs/heads/main`. Its ordinary `GITHUB_TOKEN` has only `contents: read` and
-`checks: read`. The minted App token is scoped to this repository and requests
-only `administration: read` plus `contents: write`; administration write is not
-granted. Pull-request code never receives the private key or App token.
+The `release-tag-creation` Actions environment owns `AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric `AXIOM_RELEASE_APP_ID`. The workflow runs only when dispatched on `refs/heads/main`: the Release pipeline dispatches it after a release pull request merges, and a maintainer may dispatch it to recover. Its ordinary `GITHUB_TOKEN` has only `contents: read` and `checks: read`. The minted App token is scoped to this repository and requests only `administration: read` plus `contents: write`; administration write is not granted. Pull-request code never receives the private key or App token.
+
+The Release pipeline's catalog job uses the same environment to mint a separate repository-scoped App token that requests only `contents: write` and `pull_requests: write`. It opens and merges the catalog handoff pull request under the unchanged `main` rules. The App therefore needs the Pull requests read and write permission in addition to its tag-creation permissions. This page does not verify that live installation setting; without it, publication still completes and the catalog job stops before any write.
 
 Before one exact `POST /git/refs`, the controller binds the requested version
 and tag, live protected-main commit and tree, the Codex manifest version, the three
@@ -404,6 +401,18 @@ reinterpreted; the later complete sequence supplies the promotion evidence.
 
 ## Release Workflow Boundaries
 
+### Release Pipeline
+
+`Release pipeline` (`.github/workflows/release-pipeline.yml`) publishes a version from CI. Its `pull_request` and `push` triggers both filter on `plugin/.codex-plugin/plugin.json`, the only file that declares the plugin version, so a pull request or `main` commit that leaves the manifest untouched never starts it. A manual dispatch on `main` resumes an interrupted release of the version `main` declares. The workflow runs only the Python standard library, Git, and the GitHub API through [`scripts/release-pipeline.py`](../scripts/release-pipeline.py); it runs no AI model or agent, and its validator rejects any Action beyond the pinned checkout, Python and Node.js setup, and App-token Actions.
+
+- `Release candidate` runs on a pull request with `contents: read` and no secret. It reports whether the manifest version changed. A changed version must be the next patch, minor, or major version after a base version that is already a published immutable Release, with an absent tag and Release. It previews the exact Release body in the job summary.
+- `Publish release` runs on `main` with `actions: write`, `checks: read`, and `contents: write`. It requires the exact pushed commit to remain `main` before tag creation and waits for `repository-guards`, `unit-and-integration-tests`, `hook-runtime-gate`, and `Verify signed main history` on that commit. It then dispatches `Create protected release tag`, waits for `Verify created release tag`, stages the exact Draft with its release-policy asset, dispatches `Publish immutable release` on the tag, and dispatches the published-release observation. It identifies each dispatched run by its new run ID and exact head commit, and requires that run to succeed.
+- `Advance marketplace catalogs` runs only when the catalogs on `main` do not yet select the verified Latest tag. It validates the rendered handoff with `python -B scripts/check-publication.py`, commits it through the GitHub API as a GitHub-signed commit, and opens a pull request. After the required checks pass on that commit and Latest is rechecked, it squash-merges the pull request and reads back the merged tree, signature, and both catalogs.
+
+Each job reads current GitHub state before acting, so rerunning a failed job resumes the earliest unfinished step. It stops without guessing when `main` moved before tag creation, a required check fails, or more than one new dispatched run appears. It also stops when a Release is published but mutable, an existing Draft or asset differs from the expected one, or a catalog branch from an earlier attempt exists. Merging other pull requests while a release is in progress makes the publisher's exact-main gate fail closed.
+
+### Evidence Boundaries
+
 The checked-in `Release signature guard` maps each evidence boundary to
 one stable name: `Verify signed main history`, `Verify release candidate`,
 `Verify created release tag`, and `Observe published immutable release`. A
@@ -415,38 +424,13 @@ migration established the `Verify signed main history` integrity context.
 The main-check promotion does not change those release-tag contexts
 or reinterpret the historical release observations.
 
-`Create protected release tag` is separate from the read-only signature guard
-and from immutable publication. It is manual-only on current `main`, consumes
-the dedicated App credential only after validating non-secret inputs, rereads
-all drift-sensitive state twice, and owns the sole normal tag-creation attempt.
-It has no pull-request, push, release, schedule, update, delete, publication, or
-ruleset-write path.
+`Create protected release tag` is separate from the read-only signature guard and from immutable publication. It is dispatch-only on current `main`, consumes the dedicated App credential only after validating non-secret inputs, rereads all drift-sensitive state twice, and owns the sole normal tag-creation attempt. It has no pull-request, push, release, schedule, update, delete, publication, or ruleset-write path.
 
-`Publish immutable release` is a separate manually dispatched workflow. It
-accepts only one stable numeric production release tag from the current `main`
-commit, grants only `contents: write`, and has no pull-request, push, release,
-schedule, secret, or arbitrary repository input. It globally serializes Latest
-publication, verifies the live immutable setting, main/tag identity, and REST
-plus GraphQL GitHub-made signature, and rejects a different equal-or-newer
-current stable release version, then uniquely freezes one numeric Release ID.
-From v0.11.0, it validates one downloaded release-policy asset; earlier versions
-retain their original observation contract. It uploads one deterministic attestation without
-replacement, downloads both remote assets, publishes the same draft, and
-requires the final Release to be immutable and GitHub Latest. It can resume a
-draft after the exact attestation already exists and can perform final-only
-readback without a second publication mutation.
+`Publish immutable release` is a separate dispatch-only workflow. It accepts only one stable numeric production release tag from the current `main` commit, grants only `contents: write`, and has no pull-request, push, release, schedule, secret, or arbitrary repository input. It globally serializes Latest publication, verifies the live immutable setting, main/tag identity, and REST plus GraphQL GitHub-made signature, and rejects a different equal-or-newer current stable release version, then uniquely freezes one numeric Release ID. From v0.11.0, it validates one downloaded release-policy asset; earlier versions retain their original observation contract. It uploads one deterministic attestation without replacement, downloads both remote assets, publishes the same draft, and requires the final Release to be immutable and GitHub Latest. It can resume a draft after the exact attestation already exists and can perform final-only readback without a second publication mutation.
 
-After successful final verification, including final-only recovery, it emits
-the standard marketplace source that both host catalogs use for the verified
-Latest version. The summary explicitly leaves both catalogs pending the
-[signed catalog update](maintainers/release-documentation.md#marketplace-publication).
-This handoff adds no `main` push trigger, branch write, or client update policy.
+After successful final verification, including final-only recovery, it emits the standard marketplace source that both host catalogs use for the verified Latest version. The summary explicitly leaves both catalogs pending the [signed catalog update](maintainers/release-documentation.md#marketplace-publication). The publisher itself adds no `main` push trigger, branch write, or client update policy; the Release pipeline's catalog job completes the handoff through a pull request.
 
-The release-target guard remains a separate policy owner. GitHub does not
-start another workflow for an ordinary event created by a workflow's
-`GITHUB_TOKEN`, so the publication workflow fails closed on direct signature
-readback and the release operator explicitly dispatches `Release signature
-guard` with `phase=published-release` on the exact published tag afterward.
+The release-target guard remains a separate policy owner. GitHub does not start another workflow for an ordinary event created by a workflow's `GITHUB_TOKEN`, so the publication workflow fails closed on direct signature readback. GitHub does start a run for a `workflow_dispatch` event made with that token, so the Release pipeline dispatches `Release signature guard` with `phase=published-release` on the exact published tag and waits for it to pass.
 
 ## Stats Branch Policy
 
