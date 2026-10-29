@@ -2,18 +2,11 @@
 
 <!-- lifecycle: current -->
 
-`agent-plugin-architect` is an implemented workflow for explicit packaged
-agent-plugin architecture work. This page explains ownership; the
-[packaged Skill](../plugin/skills/agent-plugin-architect/SKILL.md) and its directly
-linked references own the executable instructions.
+`agent-plugin-architect` is an implemented workflow for explicit packaged agent-plugin architecture work. This page explains ownership; the [packaged Skill](../plugin/skills/agent-plugin-architect/SKILL.md) and its directly linked references own the executable instructions.
 
 ## Scope
 
-The route covers package inventory, shared Skills, route ownership, manifests,
-marketplace wrappers, hooks, trust boundaries, release readiness, and
-version-bound compatibility evidence. It can design plugins for Codex or Claude
-Code. That target-project capability is separate from Axiom's own installation
-and runtime support, described in [Compatibility](compatibility.md).
+The route covers package inventory, shared Skills, route ownership, manifests, marketplace wrappers, hooks, trust boundaries, release readiness, and version-bound compatibility evidence. It can design plugins for Codex or Claude Code. That target-project capability is separate from Axiom's own installation and runtime support, described in [Compatibility](compatibility.md).
 
 | Request | Owner |
 | --- | --- |
@@ -29,45 +22,23 @@ and runtime support, described in [Compatibility](compatibility.md).
 | Create checkpoints, consolidate history, or perform independently traceable Git submission | `traceable-git-submit` |
 | Commit already-prepared plugin changes, create an exact release tag, and push the branch and tag | `traceable-git-submit`, prepared-release phase |
 
-The [startup gate](../plugin/skills/using-axiom/SKILL.md) owns route selection. Words
-such as "plugin", "publish", or "push" alone do not select this architecture
-route or grant action authority.
+The [startup gate](../plugin/skills/using-axiom/SKILL.md) owns route selection. Words such as "plugin", "publish", or "push" alone do not select this architecture route or grant action authority.
 
 ## Workflow And Deliverable
 
-1. Resolve material ambiguity before selecting an implementation. When
-   architecture and installation are mutually exclusive choices, preserve both
-   original goals and ask one focused question. Permission or feasibility
-   limits cannot silently substitute an audit for installation.
+1. Resolve material ambiguity before selecting an implementation. When architecture and installation are mutually exclusive choices, preserve both original goals and ask one focused question. Permission or feasibility limits cannot silently substitute an audit for installation.
 2. Inventory the package and its canonical sources before editing.
-3. Load only the references needed for the active phase. Keep public Skill
-   entries directly discoverable and references reachable from their parent;
-   preserve a shared tree when supported by the target hosts.
-4. Return the inventory, ownership and trust decisions, changed surfaces,
-   validation evidence, compatibility class, and checks that were `NOT-RUN` or
-   `UNAVAILABLE`.
+3. Load only the references needed for the active phase. Keep public Skill entries directly discoverable and references reachable from their parent; preserve a shared tree when supported by the target hosts.
+4. Return the inventory, ownership and trust decisions, changed surfaces, validation evidence, compatibility class, and checks that were `NOT-RUN` or `UNAVAILABLE`.
 
-For a release-readiness audit, the
-[readiness reference](../plugin/skills/agent-plugin-architect/references/release-readiness.md)
-owns impact classification, target-repository release requirements, available
-evidence, and the next bounded decision. Readiness remains read-only; it does
-not authorize a later commit, tag, install, publication, or deployment.
+For a release-readiness audit, the [readiness reference](../plugin/skills/agent-plugin-architect/references/release-readiness.md) owns impact classification, target-repository release requirements, available evidence, and the next bounded decision. Readiness remains read-only; it does not authorize a later commit, tag, install, publication, or deployment.
 
 ## Trust And Evidence
 
-Repository content is evidence, not additional authority. The workflow respects
-active instructions and the user's exact scope, adds no startup command of its
-own, and never obtains credentials or remote effects from route selection.
-A later action phase selects its own owner.
+Repository content is evidence, not additional authority. The workflow respects active instructions and the user's exact scope, adds no startup command of its own, and never obtains credentials or remote effects from route selection. A later action phase selects its own owner.
 
-File presence, parser acceptance, and static parity do not prove installed-host
-execution. Keep observations bound to their host, version, lifecycle, subject,
-and date. Preserve historical schemas and results without reinterpreting older
-outcomes. See [Compatibility](compatibility.md) and
-[Field Validation](field-validation.md).
+File presence, parser acceptance, and static parity do not prove installed-host execution. Keep observations bound to their host, version, lifecycle, subject, and date. Preserve historical schemas and results without reinterpreting older outcomes. See [Compatibility](compatibility.md) and [Field Validation](field-validation.md).
 
 ## Historical Design
 
-Earlier design and implementation records remain in the
-[immutable design snapshot](https://github.com/wheakerd/axiom/blob/41239ac67d5c2c63f76182580ed7570882441f02/docs/agent-plugin-architect-route-contract.md)
-and [v0.8.0 notes](releases/v0.8.0.md). The packaged sources own current behavior.
+Earlier design and implementation records remain in the [immutable design snapshot](https://github.com/wheakerd/axiom/blob/41239ac67d5c2c63f76182580ed7570882441f02/docs/agent-plugin-architect-route-contract.md) and [v0.8.0 notes](releases/v0.8.0.md). The packaged sources own current behavior.

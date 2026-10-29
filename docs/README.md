@@ -1,12 +1,8 @@
 # Axiom Documentation
 
-Use this index to find the document that owns the task or fact you need. The
-locations below are the current canonical public structure; historical
-evidence remains distinct from current user guidance.
+Use this index to find the document that owns the task or fact you need. The locations below are the current canonical public structure; historical evidence remains distinct from current user guidance.
 
-Current guidance describes the same source snapshot as the document. See
-[Source And Version Scope](maintainers/documentation-policy.md#source-and-version-scope)
-when comparing the source tree, a published release, and an installed package.
+Current guidance describes the same source snapshot as the document. See [Source And Version Scope](maintainers/documentation-policy.md#source-and-version-scope) when comparing the source tree, a published release, and an installed package.
 
 ## Start By Task
 
@@ -39,34 +35,19 @@ when comparing the source tree, a published release, and an installed package.
 | Maintain routing cases or collect an optional observation | [Routing Evaluations](../evals/README.md) | Contributors and evaluators |
 | Interpret routing-gate size and growth | [Routing Context Budget](../evals/context-budget/README.md) | Contributors and reviewers |
 
-Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussions)
-and file actionable reports through the
-[GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) forms.
-Report security concerns through the process in [SECURITY.md](../SECURITY.md),
-and see the [Code of Conduct](../CODE_OF_CONDUCT.md) for community expectations.
+Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussions) and file actionable reports through the [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) forms. Report security concerns through the process in [SECURITY.md](../SECURITY.md), and see the [Code of Conduct](../CODE_OF_CONDUCT.md) for community expectations.
 
 ## Candidate And Historical Records
 
-The [checked-in release status](../evidence/release-status.json) owns the source
-candidate's version, binding, and host-observation status. Candidate wording is
-preserved at its original source state; consult the
-[published Releases](https://github.com/wheakerd/axiom/releases) for publication
-facts. Publication alone does not establish installed-host behavior.
+The [checked-in release status](../evidence/release-status.json) owns the source candidate's version, binding, and host-observation status. Candidate wording is preserved at its original source state; consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
 
 - [Changelog](../CHANGELOG.md) records user-visible changes and required action.
-- [Version notes](releases/) preserve version-specific migrations, architecture,
-  compatibility, security, and evidence. Earlier candidate wording describes
-  its original source state, not the current publication state.
-- [Evidence](../evidence/) and [evaluation results](../evals/) contain machine
-  facts and observations with their own version, subject, and date.
-- [Archived experiments](field-validation.md#archived-experiments) link the
-  retired host snapshots and no-Hook work at verified immutable sources.
-- [Historical routing methods](../evals/history/codex-core-v1-v2.md) preserve
-  earlier benchmark procedures and run narratives; use the current
-  [evaluation entry point](../evals/README.md) for present contracts.
+- [Version notes](releases/) preserve version-specific migrations, architecture, compatibility, security, and evidence. Earlier candidate wording describes its original source state, not the current publication state.
+- [Evidence](../evidence/) and [evaluation results](../evals/) contain machine facts and observations with their own version, subject, and date.
+- [Archived experiments](field-validation.md#archived-experiments) link the retired host snapshots and no-Hook work at verified immutable sources.
+- [Historical routing methods](../evals/history/codex-core-v1-v2.md) preserve earlier benchmark procedures and run narratives; use the current [evaluation entry point](../evals/README.md) for present contracts.
 
-Use the task references above for current guidance. Historical records neither
-establish current host support nor impose retired procedures on current work.
+Use the task references above for current guidance. Historical records neither establish current host support nor impose retired procedures on current work.
 
 ## Current Structure
 
@@ -87,10 +68,6 @@ establish current host support nor impose retired procedures on current work.
 | `evals/history/` and `evals/results/` | Historical methods and version-bound observation records |
 | `evidence/` | Machine-readable identity, status, policy revisions, schemas, and runtime histories |
 
-`docs/getting-started.md` remains a compatibility entry for historical links.
-Use [Getting Started](guides/getting-started.md) for the maintained guide and
-[Contributing](../CONTRIBUTING.md#repository-layout) for the full repository map.
+`docs/getting-started.md` remains a compatibility entry for historical links. Use [Getting Started](guides/getting-started.md) for the maintained guide and [Contributing](../CONTRIBUTING.md#repository-layout) for the full repository map.
 
-See the [Documentation Policy](maintainers/documentation-policy.md) for the
-document classes, lifecycle vocabulary, canonical owners, migration rules, and
-validation expectations.
+See the [Documentation Policy](maintainers/documentation-policy.md) for the document classes, lifecycle vocabulary, canonical owners, migration rules, and validation expectations.

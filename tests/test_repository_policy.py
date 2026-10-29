@@ -246,20 +246,20 @@ class RepositoryPolicyTests(unittest.TestCase):
         )
         transition = (
             "That test must prove that the approval counts without author "
-            "self-approval or a\nruleset bypass."
+            "self-approval or a ruleset bypass."
         )
         hardware_limit = (
-            "Hardware-backed\nauthentication and an independently controlled release "
-            "identity were not\nverified by the repository or API evidence used for "
-            "this snapshot and are not\nclaimed as current compensating controls."
+            "Hardware-backed authentication and an independently controlled release "
+            "identity were not verified by the repository or API evidence used for "
+            "this snapshot and are not claimed as current compensating controls."
         )
         audit_limit = (
             "Emergency or administrative ruleset changes remain separately "
-            "auditable\nthrough GitHub's ruleset version history. Every currently "
-            "observed history\nentry identifies `actor_id: 78034820` and "
-            "`actor_type: User`, which maps to the\nsame `wheakerd` identity. That "
-            "audit trail is detective evidence; because the\ngoverning administrator "
-            "remains the same identity, it does not constitute an\nindependent trust "
+            "auditable through GitHub's ruleset version history. Every currently "
+            "observed history entry identifies `actor_id: 78034820` and "
+            "`actor_type: User`, which maps to the same `wheakerd` identity. That "
+            "audit trail is detective evidence; because the governing administrator "
+            "remains the same identity, it does not constitute an independent trust "
             "domain."
         )
         fixtures = (
@@ -281,8 +281,8 @@ class RepositoryPolicyTests(unittest.TestCase):
             (
                 "demoted hook aggregate",
                 governance.replace(
-                    "The three native\nhook-runtime matrix jobs supply the required "
-                    "aggregate; they are not separate\nrequired check contexts.",
+                    "The three native hook-runtime matrix jobs supply the required "
+                    "aggregate; they are not separate required check contexts.",
                     "The three hook-runtime matrix checks plus `hook-runtime-gate` "
                     "remain non-required review evidence.",
                     1,
@@ -403,7 +403,7 @@ class RepositoryPolicyTests(unittest.TestCase):
         for anchor in (
             "`hook-runtime-gate` is required",
             "The observation gate is **SATISFIED**",
-            "Fork execution remains\n**NOT-RUN**",
+            "Fork execution remains **NOT-RUN**",
             "The release-tag controller now requires the same three exact main checks",
         ):
             with self.subTest(anchor=anchor):

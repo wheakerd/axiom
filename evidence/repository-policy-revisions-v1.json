@@ -816,6 +816,14 @@
       "sourceIssue": null,
       "summary": "Describe Axiom in the Claude Code marketplace catalog with the README positioning instead of an outdated partial list of workflows.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 103,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "eaced84e3ee8937906870f1c75ee04edf51aed15",
+      "sourceIssue": null,
+      "summary": "Keep public documentation prose on one line per paragraph and list item without changing rendering; drop an unused validator import.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }
