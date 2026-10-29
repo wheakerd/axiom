@@ -1,10 +1,6 @@
 # Repository Governance
 
-This reference is for maintainers and auditors reviewing repository controls.
-It keeps checked-in enforcement contracts and their dated GitHub observations
-in one canonical place. Remote-state claims apply only to their stated
-verification dates; editing this page does not re-verify the live repository.
-For plugin execution and permissions, use the [Trust Model](trust-model.md).
+This reference is for maintainers and auditors reviewing repository controls. It keeps checked-in enforcement contracts and their dated GitHub observations in one canonical place. Remote-state claims apply only to their stated verification dates; editing this page does not re-verify the live repository. For plugin execution and permissions, use the [Trust Model](trust-model.md).
 
 ## Find The Relevant Boundary
 
@@ -21,332 +17,119 @@ For plugin execution and permissions, use the [Trust Model](trust-model.md).
 | Verify live settings for a new decision | [Manual Re-verification](#manual-re-verification) and [Availability And Limits](#availability-and-limits) | Read-only procedure and observation limits |
 | Understand the star-history data branch | [Stats Branch Policy](#stats-branch-policy) | Checked-in workflow and script; the live branch is the only data evidence |
 
-Release preparation and evidence responsibilities belong to
-[Release Documentation And Evidence](maintainers/release-documentation.md).
-The migration narrative and completed hook-promotion sequence below retain
-their original dates and outcomes; neither implies a new live verification.
+Release preparation and evidence responsibilities belong to [Release Documentation And Evidence](maintainers/release-documentation.md). The migration narrative and completed hook-promotion sequence below retain their original dates and outcomes; neither implies a new live verification.
 
 ## Repository Policy Identity
 
-Repository governance has an identity separate from the installed plugin.
-[`repository-policy-revisions-v1.json`](../evidence/repository-policy-revisions-v1.json)
-is an append-only, contiguous record. CI, validator, release-automation,
-governance-documentation, and evidence-policy changes append a revision when
-the installed
-[`runtimeContractDigest`](../evidence/runtime-identity.json) remains unchanged.
-The signed merge commit containing the entry and its required checks are the
-durable record; a repository-policy revision does not create an installed
-package Release by default.
+Repository governance has an identity separate from the installed plugin. [`repository-policy-revisions-v1.json`](../evidence/repository-policy-revisions-v1.json) is an append-only, contiguous record. CI, validator, release-automation, governance-documentation, and evidence-policy changes append a revision when the installed [`runtimeContractDigest`](../evidence/runtime-identity.json) remains unchanged. The signed merge commit containing the entry and its required checks are the durable record; a repository-policy revision does not create an installed package Release by default.
 
-An installed Skill, hook, wrapper, route, action-authority contract, or other
-classified runtime input instead changes the digest and requires a new
-`pluginVersion`. See [Runtime And Repository Identity](runtime-identity.md) for
-the complete classification and release decision.
+An installed Skill, hook, wrapper, route, action-authority contract, or other classified runtime input instead changes the digest and requires a new `pluginVersion`. See [Runtime And Repository Identity](runtime-identity.md) for the complete classification and release decision.
 
-This document is a dated, read-only observation of GitHub repository policy.
-It does not configure GitHub, grant authority, or replace server-side rulesets.
-A failed workflow is detection evidence, not server-side mutation prevention.
+This document is a dated, read-only observation of GitHub repository policy. It does not configure GitHub, grant authority, or replace server-side rulesets. A failed workflow is detection evidence, not server-side mutation prevention.
 
 Last verified (UTC): `2026-10-02`
 
-The 2026-10-02 verification used authenticated GitHub REST queries for the public
-`wheakerd/axiom` repository and the separately approved Issue #91 main-ruleset
-promotion. Only the `hook-runtime-gate` prerequisite was added; all existing
-protections and both release-tag rulesets were preserved. The immediate
-administrator-visible read-back binds the updated main-ruleset timestamp below.
+The 2026-10-02 verification used authenticated GitHub REST queries for the public `wheakerd/axiom` repository and the separately approved Issue #91 main-ruleset promotion. Only the `hook-runtime-gate` prerequisite was added; all existing protections and both release-tag rulesets were preserved. The immediate administrator-visible read-back binds the updated main-ruleset timestamp below.
 
-The release-App migration recorded on `2026-08-29` remains historical evidence.
-It added and read back the App bypass while the owner-user bypass remained
-active, removed and read back only the owner-user bypass, then migrated only
-the integrity check context. At least one server-side creation restriction
-remained active throughout. Its follow-up verification was read-only. The
-[ruleset REST API](https://docs.github.com/en/rest/repos/rules),
-[ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets),
-and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
-are the external interpretation references.
+The release-App migration recorded on `2026-08-29` remains historical evidence. It added and read back the App bypass while the owner-user bypass remained active, removed and read back only the owner-user bypass, then migrated only the integrity check context. At least one server-side creation restriction remained active throughout. Its follow-up verification was read-only. The [ruleset REST API](https://docs.github.com/en/rest/repos/rules), [ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) are the external interpretation references.
 
 ## Main Branch Policy
 
-The active repository ruleset `require-signed-commits-on-main`, ID `20677005`
-and updated at `2026-10-18T05:00:36.457Z`, targets exactly
-`refs/heads/main`. Its administrator-visible REST response reported
-`bypass_actors: []` and `current_user_can_bypass: never`. It contains:
+The active repository ruleset `require-signed-commits-on-main`, ID `20677005` and updated at `2026-10-18T05:00:36.457Z`, targets exactly `refs/heads/main`. Its administrator-visible REST response reported `bypass_actors: []` and `current_user_can_bypass: never`. It contains:
 
-- `pull_request`, with `required_approving_review_count: 0`,
-  `dismiss_stale_reviews_on_push: false`, `required_reviewers: []`,
-  `require_code_owner_review: false`, `require_last_push_approval: false`,
-  `required_review_thread_resolution: false`,
-  `require_extra_approval_for_unattributed_changes: true`, and
-  `allowed_merge_methods: [squash]`;
+- `pull_request`, with `required_approving_review_count: 0`, `dismiss_stale_reviews_on_push: false`, `required_reviewers: []`, `require_code_owner_review: false`, `require_last_push_approval: false`, `required_review_thread_resolution: false`, `require_extra_approval_for_unattributed_changes: true`, and `allowed_merge_methods: [squash]`;
 - `non_fast_forward`, which blocks force pushes; and
 - `required_signatures`, which requires signed commits; and
-- `required_status_checks`, with exact GitHub Actions checks
-  `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate`,
-  all bound to `integration_id: 15368`,
-  `strict_required_status_checks_policy: true`, and
-  `do_not_enforce_on_create: false`.
+- `required_status_checks`, with exact GitHub Actions checks `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate`, all bound to `integration_id: 15368`, `strict_required_status_checks_policy: true`, and `do_not_enforce_on_create: false`.
 
-Required checks on `main`: `repository-guards`, `unit-and-integration-tests`,
-and `hook-runtime-gate`. All three must pass before merge, and strict mode
-requires the pull-request branch to be current with `main` before their final
-results are accepted. Only the stable hook aggregate is required; the three
-native platform jobs remain directly visible for diagnosis.
+Required checks on `main`: `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate`. All three must pass before merge, and strict mode requires the pull-request branch to be current with `main` before their final results are accepted. Only the stable hook aggregate is required; the three native platform jobs remain directly visible for diagnosis.
 
-The ruleset contains no `deletion` rule. `main` was the repository's default
-branch at verification time, but no destructive deletion probe was attempted
-and no repository-specific deletion rule was observed. Default-branch deletion
-rule: **UNAVAILABLE / NOT-RUN**. This absence must not be rewritten as an
-enforced deletion restriction.
+The ruleset contains no `deletion` rule. `main` was the repository's default branch at verification time, but no destructive deletion probe was attempted and no repository-specific deletion rule was observed. Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**. This absence must not be rewritten as an enforced deletion restriction.
 
-On 2026-10-18, with the repository owner's explicit approval, this ruleset's
-enforcement was disabled for one lease-guarded update that reset `main` from
-`33cf1a9` to its parent `e0de645`, and was then restored. The identical reviewed
-tree was re-landed through signed pull request #152 as `81317b7`, removing a
-co-author trailer from `main` history. The restored ruleset was read back
-identical to the reviewed snapshot except for its server update instant, which
-the release-tag controller now binds.
+On 2026-10-18, with the repository owner's explicit approval, this ruleset's enforcement was disabled for one lease-guarded update that reset `main` from `33cf1a9` to its parent `e0de645`, and was then restored. The identical reviewed tree was re-landed through signed pull request #152 as `81317b7`, removing a co-author trailer from `main` history. The restored ruleset was read back identical to the reviewed snapshot except for its server update instant, which the release-tag controller now binds.
 
 ## Release Tag Policy
 
-The active repository ruleset `require-github-signed-release-tags` targets
-exactly `refs/tags/v*`. The administrator-visible REST response for ruleset
-`20724385`, updated at `2026-08-29T01:53:08.312Z`, reported
-`bypass_actors: []` and `current_user_can_bypass: never`. It contains:
+The active repository ruleset `require-github-signed-release-tags` targets exactly `refs/tags/v*`. The administrator-visible REST response for ruleset `20724385`, updated at `2026-08-29T01:53:08.312Z`, reported `bypass_actors: []` and `current_user_can_bypass: never`. It contains:
 
 - `required_signatures`;
-- `required_status_checks`, with the exact required GitHub Actions check
-  `Verify signed main history`,
-  `strict_required_status_checks_policy: false`, and
-  `do_not_enforce_on_create: false`;
+- `required_status_checks`, with the exact required GitHub Actions check `Verify signed main history`, `strict_required_status_checks_policy: false`, and `do_not_enforce_on_create: false`;
 - `deletion`, which prevents ordinary actors from deleting matching tags; and
-- `non_fast_forward`, which blocks the forced update needed to replace an
-  existing Git tag.
+- `non_fast_forward`, which blocks the forced update needed to replace an existing Git tag.
 
-It contains no `creation` rule. Its empty bypass list applies to every
-integrity rule in this ruleset, including the required signature, required
-check, deletion, and non-fast-forward controls.
+It contains no `creation` rule. Its empty bypass list applies to every integrity rule in this ruleset, including the required signature, required check, deletion, and non-fast-forward controls.
 
-The separate active ruleset `restrict-release-tag-creation` also targets
-exactly `refs/tags/v*`. Ruleset `21703772`, updated at
-`2026-08-29T01:52:49.941Z`, contains exactly one `creation` rule. Its only
-administrator-visible bypass entry is `actor_id: 4756785`,
-`actor_type: Integration`, and `bypass_mode: always`, which identifies the
-dedicated `axiom-release-tag-controller` GitHub App. The owner-visible response
-reported `current_user_can_bypass: never`. Because the App bypass is scoped to
-this creation-only ruleset, it does not bypass any rule in
-`require-github-signed-release-tags`.
+The separate active ruleset `restrict-release-tag-creation` also targets exactly `refs/tags/v*`. Ruleset `21703772`, updated at `2026-08-29T01:52:49.941Z`, contains exactly one `creation` rule. Its only administrator-visible bypass entry is `actor_id: 4756785`, `actor_type: Integration`, and `bypass_mode: always`, which identifies the dedicated `axiom-release-tag-controller` GitHub App. The owner-visible response reported `current_user_can_bypass: never`. Because the App bypass is scoped to this creation-only ruleset, it does not bypass any rule in `require-github-signed-release-tags`.
 
-Together, the observed deletion and non-fast-forward rules prevent ordinary
-actors from deleting or updating an existing `v*` tag. This conclusion is
-derived from the active rule types and GitHub's documented semantics; no tag
-mutation was attempted. The empty bypass list means no bypass actor was
-observed with the write-visible response used for this verification.
+Together, the observed deletion and non-fast-forward rules prevent ordinary actors from deleting or updating an existing `v*` tag. This conclusion is derived from the active rule types and GitHub's documented semantics; no tag mutation was attempted. The empty bypass list means no bypass actor was observed with the write-visible response used for this verification.
 
-Only the exact bypass actor may create a matching upstream tag. Other
-contributors can continue to fork the repository, create branches and tags in
-their forks, and propose pull requests; repository write access alone does not
-authorize formal release-tag creation.
-Release-tag creator allowlist: **GitHub App `axiom-release-tag-controller` only**.
+Only the exact bypass actor may create a matching upstream tag. Other contributors can continue to fork the repository, create branches and tags in their forks, and propose pull requests; repository write access alone does not authorize formal release-tag creation. Release-tag creator allowlist: **GitHub App `axiom-release-tag-controller` only**.
 
-The required status check remains commit-level evidence and may be reusable for
-the same commit independently of the event that produced it. Commit-level
-required-check evidence is defense in depth, not exact tag-creation
-authorization. The authenticated actor on the exact ref-create operation is
-the server-side creation authorization boundary.
+The required status check remains commit-level evidence and may be reusable for the same commit independently of the event that produced it. Commit-level required-check evidence is defense in depth, not exact tag-creation authorization. The authenticated actor on the exact ref-create operation is the server-side creation authorization boundary.
 
 ## Release Tag Controller Migration
 
-The v0.8.20 migration registered GitHub App ID `4756785` with slug
-`axiom-release-tag-controller`, installed it only on `wheakerd/axiom`, and
-created the `release-tag-creation` Actions environment. The administrator
-read-back above confirms that the App is the only `Integration` / `always`
-bypass actor in `restrict-release-tag-creation`, the former owner-user bypass
-is absent, and `require-github-signed-release-tags` has no bypass actor and
-requires only `Verify signed main history`. A break-glass operation remains a
-separately authorized, audited ruleset change; no permanent interactive-user
-bypass is retained merely for convenience.
+The v0.8.20 migration registered GitHub App ID `4756785` with slug `axiom-release-tag-controller`, installed it only on `wheakerd/axiom`, and created the `release-tag-creation` Actions environment. The administrator read-back above confirms that the App is the only `Integration` / `always` bypass actor in `restrict-release-tag-creation`, the former owner-user bypass is absent, and `require-github-signed-release-tags` has no bypass actor and requires only `Verify signed main history`. A break-glass operation remains a separately authorized, audited ruleset change; no permanent interactive-user bypass is retained merely for convenience.
 
 The `release-tag-creation` Actions environment owns `AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric `AXIOM_RELEASE_APP_ID`. The workflow runs only when dispatched on `refs/heads/main`: the Release pipeline dispatches it after a release pull request merges, and a maintainer may dispatch it to recover. Its ordinary `GITHUB_TOKEN` has only `contents: read` and `checks: read`. The minted App token is scoped to this repository and requests only `administration: read` plus `contents: write`; administration write is not granted. Pull-request code never receives the private key or App token.
 
 The Release pipeline's catalog job uses the same environment to mint a separate repository-scoped App token that requests only `contents: write` and `pull_requests: write`. It opens and merges the catalog handoff pull request under the unchanged `main` rules. The App therefore needs the Pull requests read and write permission in addition to its tag-creation permissions. This page does not verify that live installation setting; without it, publication still completes and the catalog job stops before any write.
 
-Before one exact `POST /git/refs`, the controller binds the requested version
-and tag, live protected-main commit and tree, the Codex manifest version, the three
-main ruleset checks, `Verify signed main history`, REST and GraphQL GitHub-made
-signature evidence, tag and Release absence, App installation identity and
-repository scope, and all three live rulesets. It performs the same complete
-read a second time, rejects any difference, creates only the exact absent tag,
-and immediately reads the ref back. After a valid creation response, only a GET
-returning HTTP 404 may be retried: at most four exact-ref reads, with waits of
-1, 2, and 4 seconds. Each read uses the same read-only credential, frozen tag
-and commit, and existing request timeout. Other HTTP or transport errors,
-malformed responses, and ref, type, or commit mismatches stop immediately.
-Exhausted reads leave verification failed; the tag is never recreated.
+Before one exact `POST /git/refs`, the controller binds the requested version and tag, live protected-main commit and tree, the Codex manifest version, the three main ruleset checks, `Verify signed main history`, REST and GraphQL GitHub-made signature evidence, tag and Release absence, App installation identity and repository scope, and all three live rulesets. It performs the same complete read a second time, rejects any difference, creates only the exact absent tag, and immediately reads the ref back. After a valid creation response, only a GET returning HTTP 404 may be retried: at most four exact-ref reads, with waits of 1, 2, and 4 seconds. Each read uses the same read-only credential, frozen tag and commit, and existing request timeout. Other HTTP or transport errors, malformed responses, and ref, type, or commit mismatches stop immediately. Exhausted reads leave verification failed; the tag is never recreated.
 
-The controller has no update or delete operation. An uncertain creation
-response is read back once and reported as a failure without retry; a rerun
-rejects the existing ref with zero mutation. Bounded visibility reads apply
-only after the single creation response has passed its exact-ref validation;
-they do not repeat the creation request, pre-creation gates, or workflow.
+The controller has no update or delete operation. An uncertain creation response is read back once and reported as a failure without retry; a rerun rejects the existing ref with zero mutation. Bounded visibility reads apply only after the single creation response has passed its exact-ref validation; they do not repeat the creation request, pre-creation gates, or workflow.
 
-GitHub returns `bypass_actors` only to a caller with ruleset write access. The
-controller deliberately retains `administration: read`, so its App-token view
-must omit the `bypass_actors` property. It binds ruleset IDs `20677005`, `20724385`,
-and `21703772` plus their normalized server update instants to the reviewed
-administrator-visible snapshot, then requires the App's effective bypass
-states to be `never`, `never`, and `always` for main, tag integrity, and tag
-creation respectively. Any actor or rule edit changes the server-owned update
-instant and fails before tag mutation; no workflow receives ruleset-write
-permission merely to reveal the actor arrays.
+GitHub returns `bypass_actors` only to a caller with ruleset write access. The controller deliberately retains `administration: read`, so its App-token view must omit the `bypass_actors` property. It binds ruleset IDs `20677005`, `20724385`, and `21703772` plus their normalized server update instants to the reviewed administrator-visible snapshot, then requires the App's effective bypass states to be `never`, `never`, and `always` for main, tag integrity, and tag creation respectively. Any actor or rule edit changes the server-owned update instant and fails before tag mutation; no workflow receives ruleset-write permission merely to reveal the actor arrays.
 
-The checked-in `Release signature guard` assigns distinct stable check names:
-`Verify signed main history`, `Verify release candidate`,
-`Verify created release tag`, and `Observe published immutable release`.
-`release/v<version>` runs can produce candidate evidence only. The controller
-accepts only the exact current `main` SHA and the main-history context, so a
-candidate result cannot authorize production tag creation.
+The checked-in `Release signature guard` assigns distinct stable check names: `Verify signed main history`, `Verify release candidate`, `Verify created release tag`, and `Observe published immutable release`. `release/v<version>` runs can produce candidate evidence only. The controller accepts only the exact current `main` SHA and the main-history context, so a candidate result cannot authorize production tag creation.
 
-The App, environment names, repository scope, ruleset actors, ruleset update
-instants, and migrated check context were read back directly before tag
-creation. At this dated snapshot `v0.8.20` remained absent after fail-closed
-controller refusals; repository code and offline tests alone are not used as
-evidence of those external facts.
+The App, environment names, repository scope, ruleset actors, ruleset update instants, and migrated check context were read back directly before tag creation. At this dated snapshot `v0.8.20` remained absent after fail-closed controller refusals; repository code and offline tests alone are not used as evidence of those external facts.
 
 ## Production Release Version Policy
 
-Axiom production releases use stable numeric `MAJOR.MINOR.PATCH` versions.
-Each component is either `0` or a nonzero decimal digit followed by decimal
-digits. Manifest versions contain no `v` prefix; formal upstream tags and
-release-candidate branches use `v<version>` and `release/v<version>`
-respectively. Prerelease identifiers, build metadata, leading-zero components,
-missing or extra components, and prefixed manifest versions are rejected.
+Axiom production releases use stable numeric `MAJOR.MINOR.PATCH` versions. Each component is either `0` or a nonzero decimal digit followed by decimal digits. Manifest versions contain no `v` prefix; formal upstream tags and release-candidate branches use `v<version>` and `release/v<version>` respectively. Prerelease identifiers, build metadata, leading-zero components, missing or extra components, and prefixed manifest versions are rejected.
 
-`axiom_validation/release_versions.py` owns the canonical parser, derived Bash
-tag pattern, and shared regression corpus. The Codex manifest, the exact JavaScript
-signed-target guard, the Bash publication gate, release evidence, GitHub Latest
-comparison, and attestation subjects must remain equivalent to that policy.
-The signed-target guard binds the version named by `release/v<version>` to the Codex
-manifest before formal tag creation; it later requires the same version from
-the exact `v<version>` tag and GitHub Release.
+`axiom_validation/release_versions.py` owns the canonical parser, derived Bash tag pattern, and shared regression corpus. The Codex manifest, the exact JavaScript signed-target guard, the Bash publication gate, release evidence, GitHub Latest comparison, and attestation subjects must remain equivalent to that policy. The signed-target guard binds the version named by `release/v<version>` to the Codex manifest before formal tag creation; it later requires the same version from the exact `v<version>` tag and GitHub Release.
 
-Historical tags and Releases remain immutable records and are not rewritten.
-Prerelease or build-metadata support requires a separately reviewed design for
-GitHub prerelease state, Latest selection, precedence and duplicate-build
-semantics, evidence asset names, release recovery, and compatibility claims.
+Historical tags and Releases remain immutable records and are not rewritten. Prerelease or build-metadata support requires a separately reviewed design for GitHub prerelease state, Latest selection, precedence and duplicate-build semantics, evidence asset names, release recovery, and compatibility claims.
 
 ## Pull-Request Validation And Release Provenance
 
-`Distribution and publication guards` produces the `repository-guards` check.
-It validates a proposed pull-request tree with read-only repository checks. It
-does not establish release provenance, prevent a Git ref mutation, or authorize
-publication.
+`Distribution and publication guards` produces the `repository-guards` check. It validates a proposed pull-request tree with read-only repository checks. It does not establish release provenance, prevent a Git ref mutation, or authorize publication.
 
 ### Repository Guards Canonical Environment
 
-The checked-in workflow contract pins the required `repository-guards` job to
-the exact `ubuntu-24.04` runner. Full-commit-SHA setup Actions select Python
-`3.14.7` and Node.js `24.19.0`; the exact `package-manager-cache: false`
-setting keeps package-manager caching disabled. Checkout credentials remain
-non-persistent. Before validation, the job reports `/etc/os-release`, `python --version`,
-`node --version`, and `git --version`. Distribution agreement and publication
-policy run through one read-only aggregate: `python -B scripts/check-publication.py`.
-The aggregate validates the manifest, marketplace, and README skill inventory
-alongside the remaining publication invariants.
+The checked-in workflow contract pins the required `repository-guards` job to the exact `ubuntu-24.04` runner. Full-commit-SHA setup Actions select Python `3.14.7` and Node.js `24.19.0`; the exact `package-manager-cache: false` setting keeps package-manager caching disabled. Checkout credentials remain non-persistent. Before validation, the job reports `/etc/os-release`, `python --version`, `node --version`, and `git --version`. Distribution agreement and publication policy run through one read-only aggregate: `python -B scripts/check-publication.py`. The aggregate validates the manifest, marketplace, and README skill inventory alongside the remaining publication invariants.
 
-Fork pull requests use ordinary `pull_request`, receive only `contents: read`,
-and receive no repository secret. The job ID and stable required-check name
-remain `repository-guards`; the workflow performs no repository or external
-mutation.
+Fork pull requests use ordinary `pull_request`, receive only `contents: read`, and receive no repository secret. The job ID and stable required-check name remain `repository-guards`; the workflow performs no repository or external mutation.
 
-No moving `ubuntu-latest` compatibility canary is currently defined. This
-omission is deliberate: without reviewed ownership, cadence, failure triage,
-and runner-upgrade criteria, a non-required canary would create an unowned
-signal that could be mistaken for canonical acceptance. Any future canary must
-define those responsibilities in a separate reviewed contract, remain
-read-only with a distinct non-required check name, and never be described as
-release provenance or installed-host evidence.
+No moving `ubuntu-latest` compatibility canary is currently defined. This omission is deliberate: without reviewed ownership, cadence, failure triage, and runner-upgrade criteria, a non-required canary would create an unowned signal that could be mistaken for canonical acceptance. Any future canary must define those responsibilities in a separate reviewed contract, remain read-only with a distinct non-required check name, and never be described as release provenance or installed-host evidence.
 
-`Unit and integration tests` produces the exact
-`unit-and-integration-tests` check. It runs the complete standard-library
-unittest discovery command in the fixed blocking environment and remains
-separate from package and publication-policy validation. The active `main`
-ruleset requires these two checks plus `hook-runtime-gate` and accepts all
-three only from GitHub Actions.
+`Unit and integration tests` produces the exact `unit-and-integration-tests` check. It runs the complete standard-library unittest discovery command in the fixed blocking environment and remains separate from package and publication-policy validation. The active `main` ruleset requires these two checks plus `hook-runtime-gate` and accepts all three only from GitHub Actions.
 
-`Cross-platform hook runtime integration` separately executes the exact
-checked-in Codex and Claude Code `SessionStart` command strings on
-`ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix
-checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and
-`hook-runtime-macos-15`. They use no repository secret, do not persist checkout
-credentials, and exercise only temporary roots through `cmd.exe` or
-no-profile Bash, as applicable to the checked-in command.
+`Cross-platform hook runtime integration` separately executes the exact checked-in Codex and Claude Code `SessionStart` command strings on `ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and `hook-runtime-macos-15`. They use no repository secret, do not persist checkout credentials, and exercise only temporary roots through `cmd.exe` or no-profile Bash, as applicable to the checked-in command.
 
 ### Hook Runtime Promotion Gate
 
-The same workflow defines one stable aggregate job and check,
-`hook-runtime-gate`. It uses `if: always()`, depends on the complete
-`hook-runtime` matrix job, and accepts only the current workflow run's
-`needs.hook-runtime.result == success`. Failed, cancelled, skipped, neutral, or
-missing current-run evidence therefore cannot produce a successful aggregate
-check. Because the dependency is the matrix job ID rather than a list of
-platform check names, an approved matrix expansion is included without
-changing the public aggregate name. The aggregate job performs no checkout,
-receives no secret, and has no repository mutation step.
+The same workflow defines one stable aggregate job and check, `hook-runtime-gate`. It uses `if: always()`, depends on the complete `hook-runtime` matrix job, and accepts only the current workflow run's `needs.hook-runtime.result == success`. Failed, cancelled, skipped, neutral, or missing current-run evidence therefore cannot produce a successful aggregate check. Because the dependency is the matrix job ID rather than a list of platform check names, an approved matrix expansion is included without changing the public aggregate name. The aggregate job performs no checkout, receives no secret, and has no repository mutation step.
 
-The workflow also runs at `17 6 * * 1`, a bounded weekly compatibility
-observation on the default branch. A scheduled failure reports runner-image,
-shell, runtime, setup-action, or command drift through ordinary Actions state;
-it does not mutate repository settings and is not installed-host or
-model-session evidence. Pull requests continue to use ordinary
-`pull_request`, global `contents: read`, and checkout with credential
-persistence disabled; `pull_request_target` and repository secrets remain
-absent.
+The workflow also runs at `17 6 * * 1`, a bounded weekly compatibility observation on the default branch. A scheduled failure reports runner-image, shell, runtime, setup-action, or command drift through ordinary Actions state; it does not mutate repository settings and is not installed-host or model-session evidence. Pull requests continue to use ordinary `pull_request`, global `contents: read`, and checkout with credential persistence disabled; `pull_request_target` and repository secrets remain absent.
 
-The criteria and observations below document the one-time promotion completed
-on `2026-10-02`. They retain their historical scope; a new change or release
-does not restart this observation period. Main merges and protected tag
-creation require `hook-runtime-gate` under the contracts described here.
+The criteria and observations below document the one-time promotion completed on `2026-10-02`. They retain their historical scope; a new change or release does not restart this observation period. Main merges and protected tag creation require `hook-runtime-gate` under the contracts described here.
 
-The observation period exits only when direct GitHub Actions history satisfies
-all of these conditions:
+The observation period exits only when direct GitHub Actions history satisfies all of these conditions:
 
-- at least 30 consecutive completed `push` runs on `main` have a successful
-  workflow conclusion and successful Ubuntu, Windows, and macOS matrix jobs;
-- the interval from the first qualifying run to the last is at least 14 full
-  days;
-- there is no unresolved runner-specific false failure or scheduled
-  compatibility failure;
-- the three platform check names and `hook-runtime-gate` remain stable, and at
-  least one successful aggregate result has been observed on `main` before
-  ruleset promotion; and
-- when an eligible fork pull request is available during the observation
-  period, its ordinary read-only `pull_request` run succeeds. Without such a
-  run, fork execution remains **NOT-RUN** and same-repository pull requests are
-  not represented as fork evidence.
+- at least 30 consecutive completed `push` runs on `main` have a successful workflow conclusion and successful Ubuntu, Windows, and macOS matrix jobs;
+- the interval from the first qualifying run to the last is at least 14 full days;
+- there is no unresolved runner-specific false failure or scheduled compatibility failure;
+- the three platform check names and `hook-runtime-gate` remain stable, and at least one successful aggregate result has been observed on `main` before ruleset promotion; and
+- when an eligible fork pull request is available during the observation period, its ordinary read-only `pull_request` run succeeds. Without such a run, fork execution remains **NOT-RUN** and same-repository pull requests are not represented as fork evidence.
 
-Any failed, cancelled, skipped, neutral, stale, or missing required platform
-result breaks the consecutive sequence. Promotion then requires a new
-qualifying sequence, a separately authorized main-ruleset edit that requires
-only `hook-runtime-gate` in addition to the existing checks, and an immediate
-administrator-visible read-back of the exact ruleset.
+Any failed, cancelled, skipped, neutral, stale, or missing required platform result breaks the consecutive sequence. Promotion then requires a new qualifying sequence, a separately authorized main-ruleset edit that requires only `hook-runtime-gate` in addition to the existing checks, and an immediate administrator-visible read-back of the exact ruleset.
 
-The observation gate is **SATISFIED** as of `2026-10-02`. Authenticated,
-complete Actions pagination found exactly 30 consecutive successful `main`
-push runs from `2026-08-28T08:55:43Z` through `2026-09-20T06:31:35Z`: 22 days,
-21 hours, 35 minutes, and 52 seconds. Direct job reads verified successful
-Ubuntu, Windows, and macOS execution in every run, with stable platform check
-names and no rerun attempts. The aggregate succeeded in all 23 main runs after
-its introduction by [PR #102](https://github.com/wheakerd/axiom/pull/102).
-The first seven runs predate that job and are not claimed as aggregate evidence.
+The observation gate is **SATISFIED** as of `2026-10-02`. Authenticated, complete Actions pagination found exactly 30 consecutive successful `main` push runs from `2026-08-28T08:55:43Z` through `2026-09-20T06:31:35Z`: 22 days, 21 hours, 35 minutes, and 52 seconds. Direct job reads verified successful Ubuntu, Windows, and macOS execution in every run, with stable platform check names and no rerun attempts. The aggregate succeeded in all 23 main runs after its introduction by [PR #102](https://github.com/wheakerd/axiom/pull/102). The first seven runs predate that job and are not claimed as aggregate evidence.
 
-The five scheduled runs through `2026-09-28` also completed successfully, with
-all native jobs and the aggregate passing: [33399164877](https://github.com/wheakerd/axiom/actions/runs/33399164877), [34122423756](https://github.com/wheakerd/axiom/actions/runs/34122423756), [34845330141](https://github.com/wheakerd/axiom/actions/runs/34845330141), [35601659701](https://github.com/wheakerd/axiom/actions/runs/35601659701), [36432042976](https://github.com/wheakerd/axiom/actions/runs/36432042976). All 93 retained
-hook-workflow pull-request runs succeeded. The complete 88-object PR inventory
-contained 30 main-targeting PRs overlapping this observation window, all from
-the same repository. No eligible fork PR was available. Fork execution remains
-**NOT-RUN**; the conditional fork criterion was not triggered, and same-repository
-results are not substituted for it. No unresolved runner-specific or scheduled
-compatibility failure was found.
+The five scheduled runs through `2026-09-28` also completed successfully, with all native jobs and the aggregate passing: [33399164877](https://github.com/wheakerd/axiom/actions/runs/33399164877), [34122423756](https://github.com/wheakerd/axiom/actions/runs/34122423756), [34845330141](https://github.com/wheakerd/axiom/actions/runs/34845330141), [35601659701](https://github.com/wheakerd/axiom/actions/runs/35601659701), [36432042976](https://github.com/wheakerd/axiom/actions/runs/36432042976). All 93 retained hook-workflow pull-request runs succeeded. The complete 88-object PR inventory contained 30 main-targeting PRs overlapping this observation window, all from the same repository. No eligible fork PR was available. Fork execution remains **NOT-RUN**; the conditional fork criterion was not triggered, and same-repository results are not substituted for it. No unresolved runner-specific or scheduled compatibility failure was found.
 
 | Main push run | Created (UTC) | Commit | Three native jobs | Aggregate |
 | --- | --- | --- | --- | --- |
@@ -381,23 +164,11 @@ compatibility failure was found.
 | [35300999159](https://github.com/wheakerd/axiom/actions/runs/35300999159) | `2026-09-18T02:51:41Z` | `98624d806bee` | PASS | PASS |
 | [35494455081](https://github.com/wheakerd/axiom/actions/runs/35494455081) | `2026-09-20T06:31:35Z` | `0fe187a8206c` | PASS | PASS |
 
-After separate approval, ruleset `20677005` was updated and read back:
-`hook-runtime-gate` is required, bound to GitHub Actions `integration_id: 15368`,
-with the two existing checks, strict mode, signature and PR requirements,
-force-push prohibition, exact `main` target, and empty bypass list preserved.
-A platform-specific hook failure therefore blocks the normal `main` merge
-path. This is native process and server-side policy evidence, not installed-host
-or model-session evidence; no deliberately broken production merge was attempted.
+After separate approval, ruleset `20677005` was updated and read back: `hook-runtime-gate` is required, bound to GitHub Actions `integration_id: 15368`, with the two existing checks, strict mode, signature and PR requirements, force-push prohibition, exact `main` target, and empty bypass list preserved. A platform-specific hook failure therefore blocks the normal `main` merge path. This is native process and server-side policy evidence, not installed-host or model-session evidence; no deliberately broken production merge was attempted.
 
-The release-tag controller now requires the same three exact main checks and
-binds the reviewed new ruleset timestamp. Missing, duplicate, failed, cancelled,
-skipped, neutral, pending, wrong-commit, or wrong-App aggregate evidence fails
-before tag creation. The controller retains its read-only administration scope
-and all existing signature, tag-integrity, and creation-only App restrictions.
+The release-tag controller now requires the same three exact main checks and binds the reviewed new ruleset timestamp. Missing, duplicate, failed, cancelled, skipped, neutral, pending, wrong-commit, or wrong-App aggregate evidence fails before tag creation. The controller retains its read-only administration scope and all existing signature, tag-integrity, and creation-only App restrictions.
 
-The earlier `2026-08-29` inspection correctly left this Issue open at seven
-qualifying runs over less than one day. That historical finding has not been
-reinterpreted; the later complete sequence supplies the promotion evidence.
+The earlier `2026-08-29` inspection correctly left this Issue open at seven qualifying runs over less than one day. That historical finding has not been reinterpreted; the later complete sequence supplies the promotion evidence.
 
 ## Release Workflow Boundaries
 
@@ -413,16 +184,7 @@ Each job reads current GitHub state before acting, so rerunning a failed job res
 
 ### Evidence Boundaries
 
-The checked-in `Release signature guard` maps each evidence boundary to
-one stable name: `Verify signed main history`, `Verify release candidate`,
-`Verify created release tag`, and `Observe published immutable release`. A
-manual candidate run accepts only `release/v<version>` and requires the stable
-numeric branch version to match the Codex manifest. A manual published-release run
-accepts only the exact tag and requires the live Release to be final,
-non-prerelease, immutable, and commit-bound. The separately observed release-App
-migration established the `Verify signed main history` integrity context.
-The main-check promotion does not change those release-tag contexts
-or reinterpret the historical release observations.
+The checked-in `Release signature guard` maps each evidence boundary to one stable name: `Verify signed main history`, `Verify release candidate`, `Verify created release tag`, and `Observe published immutable release`. A manual candidate run accepts only `release/v<version>` and requires the stable numeric branch version to match the Codex manifest. A manual published-release run accepts only the exact tag and requires the live Release to be final, non-prerelease, immutable, and commit-bound. The separately observed release-App migration established the `Verify signed main history` integrity context. The main-check promotion does not change those release-tag contexts or reinterpret the historical release observations.
 
 `Create protected release tag` is separate from the read-only signature guard and from immutable publication. It is dispatch-only on current `main`, consumes the dedicated App credential only after validating non-secret inputs, rereads all drift-sensitive state twice, and owns the sole normal tag-creation attempt. It has no pull-request, push, release, schedule, update, delete, publication, or ruleset-write path.
 
@@ -434,61 +196,23 @@ The release-target guard remains a separate policy owner. GitHub does not start 
 
 ## Stats Branch Policy
 
-The `stats` branch holds only the star-history data `stars.csv`, the rendered
-chart `stars.svg`, and a short README. The rulesets above target
-`refs/heads/main` and `refs/tags/v*`, so `stats` has no required checks,
-signature requirement, or deletion protection. It is not a release or
-distribution surface, and nothing under `plugin/**` reads it.
+The `stats` branch holds only the star-history data `stars.csv`, the rendered chart `stars.svg`, and a short README. The rulesets above target `refs/heads/main` and `refs/tags/v*`, so `stats` has no required checks, signature requirement, or deletion protection. It is not a release or distribution surface, and nothing under `plugin/**` reads it.
 
-`Record star history` (`.github/workflows/record-star-history.yml`) owns the
-branch. It runs daily and on manual dispatch, grants only `contents: write` to
-its job, uses no other secret, and runs the standard-library script
-`scripts/record-star-history.py`. The script reads `stargazers_count` and
-`forks_count` from the repository API, replaces or appends the row for the
-current UTC date, renders the chart, and commits both files only when the data
-or the rendered chart differs from the branch. The chart is drawn in a sketched, hand-lettered style: axes, line,
-and legend pass through one SVG displacement filter, and the text uses a
-printable-ASCII subset of the Patrick Hand typeface embedded in the SVG from
-`scripts/fonts/` (SIL Open Font License 1.1, `PatrickHand-OFL.txt`), so the
-chart renders the same in every viewer and the output is deterministic for
-the same data. On the first run it creates the branch from a parentless root commit
-that holds the branch README through the Git Data API; every data commit uses
-the GraphQL `createCommitOnBranch` mutation. GitHub signs commits that the
-workflow token creates through either API and attributes them to
-`github-actions[bot]`: the first run on 2026-10-25 produced root commit
-`e5fa8d69e01fd534c03fd9b7e57bc2de91b0dd9d` and data commit
-`cb25df7d1487b010ff9912bde3326fe0ae5df791`, both verified by GitHub.
+`Record star history` (`.github/workflows/record-star-history.yml`) owns the branch. It runs daily and on manual dispatch, grants only `contents: write` to its job, uses no other secret, and runs the standard-library script `scripts/record-star-history.py`. The script reads `stargazers_count` and `forks_count` from the repository API, replaces or appends the row for the current UTC date, renders the chart, and commits both files only when the data or the rendered chart differs from the branch. The chart is drawn in a sketched, hand-lettered style: axes, line, and legend pass through one SVG displacement filter, and the text uses a printable-ASCII subset of the Patrick Hand typeface embedded in the SVG from `scripts/fonts/` (SIL Open Font License 1.1, `PatrickHand-OFL.txt`), so the chart renders the same in every viewer and the output is deterministic for the same data. On the first run it creates the branch from a parentless root commit that holds the branch README through the Git Data API; every data commit uses the GraphQL `createCommitOnBranch` mutation. GitHub signs commits that the workflow token creates through either API and attributes them to `github-actions[bot]`: the first run on 2026-10-25 produced root commit `e5fa8d69e01fd534c03fd9b7e57bc2de91b0dd9d` and data commit `cb25df7d1487b010ff9912bde3326fe0ae5df791`, both verified by GitHub.
 
-Commits made with `GITHUB_TOKEN` start no other workflow run. A manual push to
-`stats` would start the distribution guards and fail on that tree, so
-maintainers do not push to `stats` by hand. The README embeds the chart from
-the raw `stats` URL; a missing or stale chart means the workflow has not run
-and says nothing about the plugin or a release.
+Commits made with `GITHUB_TOKEN` start no other workflow run. A manual push to `stats` would start the distribution guards and fail on that tree, so maintainers do not push to `stats` by hand. The README embeds the chart from the raw `stats` URL; a missing or stale chart means the workflow has not run and says nothing about the plugin or a release.
 
 ## Immutable Release Policy
 
-On 2026-08-26 UTC, an authenticated repository-owner REST request enabled
-immutable releases for `wheakerd/axiom`; the immediate read-back returned
-`enabled: true` and `enforced_by_owner: false`. This repository-level setting
-applies only to future Releases. Existing Releases, including v0.8.5, remain in
-their previously reported mutable state and are not retroactively relabeled.
+On 2026-08-26 UTC, an authenticated repository-owner REST request enabled immutable releases for `wheakerd/axiom`; the immediate read-back returned `enabled: true` and `enforced_by_owner: false`. This repository-level setting applies only to future Releases. Existing Releases, including v0.8.5, remain in their previously reported mutable state and are not retroactively relabeled.
 
-The checkout cannot prove that this remote setting remains enabled. The release
-workflow reads it before any mutation, immediately before publication, and
-after publication. Final acceptance also requires GitHub's Release response
-itself to report `immutable: true`.
+The checkout cannot prove that this remote setting remains enabled. The release workflow reads it before any mutation, immediately before publication, and after publication. Final acceptance also requires GitHub's Release response itself to report `immutable: true`.
 
-GitHub's documented immutable-release guarantees cover the associated tag and
-uploaded assets. They do not document the Release title, body, Latest marker,
-or Release object as immutable. Axiom's content-addressed attestation binds the
-exact title and release-notes SHA-256, and later verification fails on metadata
-drift. That is durable detection, not a claim that the platform blocks every
-metadata edit or Release deletion.
+GitHub's documented immutable-release guarantees cover the associated tag and uploaded assets. They do not document the Release title, body, Latest marker, or Release object as immutable. Axiom's content-addressed attestation binds the exact title and release-notes SHA-256, and later verification fails on metadata drift. That is durable detection, not a claim that the platform blocks every metadata edit or Release deletion.
 
 ## Critical-Path Ownership
 
-The checked-in [CODEOWNERS file](../.github/CODEOWNERS) assigns the following
-critical paths to the repository owner `@wheakerd`:
+The checked-in [CODEOWNERS file](../.github/CODEOWNERS) assigns the following critical paths to the repository owner `@wheakerd`:
 
 - `/.github/CODEOWNERS`
 - `/.github/workflows/`
@@ -504,89 +228,43 @@ critical paths to the repository owner `@wheakerd`:
 - `/SECURITY.md`
 - `/docs/repository-governance.md`
 
-The validator and tests are covered because the stable scripts delegate policy
-decisions to those paths. Ownership of only the wrapper script would leave a
-sibling path able to change the accepted result.
+The validator and tests are covered because the stable scripts delegate policy decisions to those paths. Ownership of only the wrapper script would leave a sibling path able to change the accepted result.
 
-CODEOWNERS declares responsibility and requests review. It does not require an
-approval by itself. The current branch ruleset explicitly reports
-`require_code_owner_review: false`, so critical-path code-owner approval is not
-server-side enforced as of the verification date.
+CODEOWNERS declares responsibility and requests review. It does not require an approval by itself. The current branch ruleset explicitly reports `require_code_owner_review: false`, so critical-path code-owner approval is not server-side enforced as of the verification date.
 
 ## Human Review Trust Boundary
 
-`Path B: document the single-maintainer trust boundary` is the selected policy
-for this snapshot. `wheakerd` is the current ultimate repository trust root,
-and the absence of independent human review is a known limitation. The
-authenticated collaborator query returned only `wheakerd`, and every
-critical-path CODEOWNERS entry names that same account. CODEOWNERS is advisory
-under the live rule: it assigns responsibility and requests review, but it does
-not block an unapproved merge while `require_code_owner_review: false` and
-`required_approving_review_count: 0`.
+`Path B: document the single-maintainer trust boundary` is the selected policy for this snapshot. `wheakerd` is the current ultimate repository trust root, and the absence of independent human review is a known limitation. The authenticated collaborator query returned only `wheakerd`, and every critical-path CODEOWNERS entry names that same account. CODEOWNERS is advisory under the live rule: it assigns responsibility and requests review, but it does not block an unapproved merge while `require_code_owner_review: false` and `required_approving_review_count: 0`.
 
-The current directly observed preventive controls are the server-side
-pull-request requirement, required signatures, non-fast-forward protection,
-strict required checks, squash-only main merges, and the release-tag creation
-and integrity rules. Server-side enforcement of the three required check contexts
-is preventive, while the repository-owned validator and test content behind
-those results remains controlled by the same ultimate trust root.
+The current directly observed preventive controls are the server-side pull-request requirement, required signatures, non-fast-forward protection, strict required checks, squash-only main merges, and the release-tag creation and integrity rules. Server-side enforcement of the three required check contexts is preventive, while the repository-owned validator and test content behind those results remains controlled by the same ultimate trust root.
 
-The current directly observed detective controls are the repository validators
-and tests, GitHub Actions and check output, signed-target and release
-observations, content-addressed release attestations, manual read-only API
-re-verification, and ruleset-history entries. They can expose drift or preserve
-provenance, but they do not supply an independent human approval. Hardware-backed
-authentication and an independently controlled release identity were not
-verified by the repository or API evidence used for this snapshot and are not
-claimed as current compensating controls.
+The current directly observed detective controls are the repository validators and tests, GitHub Actions and check output, signed-target and release observations, content-addressed release attestations, manual read-only API re-verification, and ruleset-history entries. They can expose drift or preserve provenance, but they do not supply an independent human approval. Hardware-backed authentication and an independently controlled release identity were not verified by the repository or API evidence used for this snapshot and are not claimed as current compensating controls.
 
-Emergency or administrative ruleset changes remain separately auditable
-through GitHub's ruleset version history. Every currently observed history
-entry identifies `actor_id: 78034820` and `actor_type: User`, which maps to the
-same `wheakerd` identity. That audit trail is detective evidence; because the
-governing administrator remains the same identity, it does not constitute an
-independent trust domain.
+Emergency or administrative ruleset changes remain separately auditable through GitHub's ruleset version history. Every currently observed history entry identifies `actor_id: 78034820` and `actor_type: User`, which maps to the same `wheakerd` identity. That audit trail is detective evidence; because the governing administrator remains the same identity, it does not constitute an independent trust domain.
 
-`Path A: enforce independent review` must not be enabled until a different
-trusted GitHub principal has direct write access, is added alongside
-`@wheakerd` as a code owner for every critical path listed above, and has
-approved a protected test pull request that changes at least one such path.
-That test must prove that the approval counts without author self-approval or a
-ruleset bypass. Only after that proof and a live API read-back should the main
-ruleset require an approving review, code-owner review, last-push approval,
-stale-review dismissal, and review-thread resolution.
+`Path A: enforce independent review` must not be enabled until a different trusted GitHub principal has direct write access, is added alongside `@wheakerd` as a code owner for every critical path listed above, and has approved a protected test pull request that changes at least one such path. That test must prove that the approval counts without author self-approval or a ruleset bypass. Only after that proof and a live API read-back should the main ruleset require an approving review, code-owner review, last-push approval, stale-review dismissal, and review-thread resolution.
 
-Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator
-permission, or required check. The single-maintainer review policy does not
-alter the required checks recorded in Main Branch Policy: `repository-guards`,
-`unit-and-integration-tests`, and `hook-runtime-gate`. The three native
-hook-runtime matrix jobs supply the required aggregate; they are not separate
-required check contexts.
+Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator permission, or required check. The single-maintainer review policy does not alter the required checks recorded in Main Branch Policy: `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate`. The three native hook-runtime matrix jobs supply the required aggregate; they are not separate required check contexts.
 
 ## Manual Re-verification
 
-Use read-only calls and compare the returned values with this document. Do not
-copy tokens or full administrative API responses into the repository.
+Use read-only calls and compare the returned values with this document. Do not copy tokens or full administrative API responses into the repository.
 
-1. List active repository rulesets. For this public repository, GitHub permits
-   an unauthenticated request; a fine-grained token needs only repository
-   metadata read permission.
+1. List active repository rulesets. For this public repository, GitHub permits an unauthenticated request; a fine-grained token needs only repository metadata read permission.
 
    ```bash
    gh api -X GET 'repos/wheakerd/axiom/rulesets?includes_parents=true' \
      --jq '.[] | [.id, .name, .target, .enforcement] | @tsv'
    ```
 
-2. For each returned ID, inspect the exact target, ref conditions, rules, and
-   enforcement without writing the ruleset.
+2. For each returned ID, inspect the exact target, ref conditions, rules, and enforcement without writing the ruleset.
 
    ```bash
    gh api -X GET 'repos/wheakerd/axiom/rulesets/RULESET_ID?includes_parents=true' \
      --jq '{name,target,enforcement,conditions,rules,bypass_actors,current_user_can_bypass}'
    ```
 
-3. Confirm the effective rules on `main`, the default branch, workflow names,
-   and the exact check-run names on the current commit.
+3. Confirm the effective rules on `main`, the default branch, workflow names, and the exact check-run names on the current commit.
 
    ```bash
    gh api -X GET repos/wheakerd/axiom/rules/branches/main
@@ -597,22 +275,9 @@ copy tokens or full administrative API responses into the repository.
      --jq '.check_runs[] | [.name, .app.slug, .status, .conclusion] | @tsv'
    ```
 
-4. With a repository administrator present, repeat the individual ruleset GET
-   and verify that `require-github-signed-release-tags` has no bypass actors or
-   `creation` rule, while `restrict-release-tag-creation` has exactly one
-   `creation` rule and only App ID `4756785` as an `Integration` / `always`
-   bypass. The same read-back must show no owner-user bypass, no integrity
-   bypass, and only `Verify signed main history` as the integrity required
-   context. GitHub omits bypass details from callers without ruleset write
-   visibility. The controller therefore binds the administrator-verified IDs
-   and update instants while requiring the read-only App's effective bypass
-   states to remain `never`, `never`, and `always`; no workflow receives
-   administration write.
+4. With a repository administrator present, repeat the individual ruleset GET and verify that `require-github-signed-release-tags` has no bypass actors or `creation` rule, while `restrict-release-tag-creation` has exactly one `creation` rule and only App ID `4756785` as an `Integration` / `always` bypass. The same read-back must show no owner-user bypass, no integrity bypass, and only `Verify signed main history` as the integrity required context. GitHub omits bypass details from callers without ruleset write visibility. The controller therefore binds the administrator-verified IDs and update instants while requiring the read-only App's effective bypass states to remain `never`, `never`, and `always`; no workflow receives administration write.
 
-5. With repository administration read access, list direct collaborators and
-   inspect every active ruleset's history. Confirm that a second trusted
-   write-capable principal has not appeared and preserve each history actor as
-   detective evidence rather than independent review.
+5. With repository administration read access, list direct collaborators and inspect every active ruleset's history. Confirm that a second trusted write-capable principal has not appeared and preserve each history actor as detective evidence rather than independent review.
 
    ```bash
    gh api --paginate -X GET \
@@ -623,33 +288,13 @@ copy tokens or full administrative API responses into the repository.
      --jq '.[] | [.version_id, .actor.id, .actor.type, .updated_at] | @tsv'
    ```
 
-6. Review `.github/CODEOWNERS` on the protected base branch, run the repository
-   static checks, record every unavailable field as unavailable, and update the
-   verification date only in the same reviewed change as any corrected policy
-   value.
+6. Review `.github/CODEOWNERS` on the protected base branch, run the repository static checks, record every unavailable field as unavailable, and update the verification date only in the same reviewed change as any corrected policy value.
 
 ## Availability And Limits
 
-- The detailed ruleset APIs succeeded for the authenticated repository owner.
-  Anonymous listing also succeeded because the repository is public. A
-  lower-permission detailed check of bypass actors was **NOT-RUN**.
-- GitHub's legacy `branches/main/protection` endpoint returned `404 Branch not
-  protected`; active protection was observed through repository rulesets and
-  the effective branch-rules endpoint instead.
-- The authenticated direct-collaborator query reported only `wheakerd`. The
-  administrator-visible creation ruleset reported the dedicated release App
-  as its only bypass actor; the earlier owner-user bypass was removed in the
-  dated migration above. No destructive proof of branch or tag rejection was
-  attempted.
-- Repository-plan capability was not inferred from documentation. The three
-  named rulesets were directly observed as active; unavailable fields remain
-  unavailable if a future plan or API response hides them.
-- No scheduled or manually dispatched governance-audit workflow was added.
-  The manual method already exposes the relevant public settings, while an
-  automated job could not prove hidden bypass actors without elevated
-  permission. A workflow must never receive ruleset-write permission merely to
-  perform an audit.
-- The repository's static validator checks that this dated snapshot retains
-  its required facts, migration target, and exact critical-path owner set. It
-  cannot contact GitHub or prove that remote configuration has not drifted;
-  manual re-verification remains required.
+- The detailed ruleset APIs succeeded for the authenticated repository owner. Anonymous listing also succeeded because the repository is public. A lower-permission detailed check of bypass actors was **NOT-RUN**.
+- GitHub's legacy `branches/main/protection` endpoint returned `404 Branch not protected`; active protection was observed through repository rulesets and the effective branch-rules endpoint instead.
+- The authenticated direct-collaborator query reported only `wheakerd`. The administrator-visible creation ruleset reported the dedicated release App as its only bypass actor; the earlier owner-user bypass was removed in the dated migration above. No destructive proof of branch or tag rejection was attempted.
+- Repository-plan capability was not inferred from documentation. The three named rulesets were directly observed as active; unavailable fields remain unavailable if a future plan or API response hides them.
+- No scheduled or manually dispatched governance-audit workflow was added. The manual method already exposes the relevant public settings, while an automated job could not prove hidden bypass actors without elevated permission. A workflow must never receive ruleset-write permission merely to perform an audit.
+- The repository's static validator checks that this dated snapshot retains its required facts, migration target, and exact critical-path owner set. It cannot contact GitHub or prove that remote configuration has not drifted; manual re-verification remains required.

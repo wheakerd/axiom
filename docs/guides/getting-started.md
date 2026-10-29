@@ -1,15 +1,10 @@
 # Getting Started
 
-This guide owns Axiom installation, first use, and the initial safe comparison
-between one routed request and one ordinary control request. Axiom supports
-Codex and Claude Code through separate host manifests, marketplaces, and Hooks
-over the same checked-in Skills.
+This guide owns Axiom installation, first use, and the initial safe comparison between one routed request and one ordinary control request. Axiom supports Codex and Claude Code through separate host manifests, marketplaces, and Hooks over the same checked-in Skills.
 
 ## Before Installing
 
-Use a test repository that contains no sensitive material. Review the current
-[compatibility boundary](../compatibility.md) and remember that checked-in or
-statically validated support is not a fresh observation of your host.
+Use a test repository that contains no sensitive material. Review the current [compatibility boundary](../compatibility.md) and remember that checked-in or statically validated support is not a fresh observation of your host.
 
 ## Install For Codex
 
@@ -20,22 +15,11 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-The [marketplace entry](../../.agents/plugins/marketplace.json) selects a
-published version through its Git source `ref`. Fetching the marketplace from
-the default branch does not install that branch's development plugin files.
-See [version selection](managing-installation.md#version-selection) for fixed
-sources and existing installations.
+The [marketplace entry](../../.agents/plugins/marketplace.json) selects a published version through its Git source `ref`. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
 
-The official `--sparse` option limits the marketplace checkout to its catalog
-directory. The catalog's Git `url` entry fetches the plugin separately, so the
-plugin's Skills and Hook do not need additional marketplace sparse paths.
-This CLI option was last verified on 2026-10-13 against the official
-[marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli).
-If `axiom` is already registered without sparse checkout, follow the
-[migration procedure](managing-installation.md#marketplace-clone-timeouts).
+The official `--sparse` option limits the marketplace checkout to its catalog directory. The catalog's Git `url` entry fetches the plugin separately, so the plugin's Skills and Hook do not need additional marketplace sparse paths. This CLI option was last verified on 2026-10-13 against the official [marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If `axiom` is already registered without sparse checkout, follow the [migration procedure](managing-installation.md#marketplace-clone-timeouts).
 
-Start a new Codex chat or CLI session. An existing session may retain an older
-Hook or Skill snapshot.
+Start a new Codex chat or CLI session. An existing session may retain an older Hook or Skill snapshot.
 
 ## Install For Claude Code
 
@@ -46,72 +30,34 @@ claude plugin marketplace add wheakerd/axiom
 claude plugin install axiom@axiom
 ```
 
-Inside a running session, use `/plugin marketplace add wheakerd/axiom`, then
-`/plugin install axiom@axiom` to open Axiom's details and choose an install
-scope; the install summary says whether a reload is needed. An install that is
-active at once, or that reloads, loads the Hook into that session, where it runs
-at the next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an
-automatic or manual compaction; install from a terminal to compare it first.
-The Claude Code
-catalog in `.claude-plugin/marketplace.json` selects the same published version
-as the Codex catalog through a Git source `ref`; development commits on `main`
-do not change it.
+Inside a running session, use `/plugin marketplace add wheakerd/axiom`, then `/plugin install axiom@axiom` to open Axiom's details and choose an install scope; the install summary says whether a reload is needed. An install that is active at once, or that reloads, loads the Hook into that session, where it runs at the next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an automatic or manual compaction; install from a terminal to compare it first. The Claude Code catalog in `.claude-plugin/marketplace.json` selects the same published version as the Codex catalog through a Git source `ref`; development commits on `main` do not change it.
 
-After you [inspect the Hook](#inspect-the-hook), start a new Claude Code
-session so its `SessionStart` Hook delivers the routing gate;
-`/reload-plugins` applies plugin changes to a running session but does not
-rerun that Hook. On Windows, the startup Hook needs Git Bash.
+After you [inspect the Hook](#inspect-the-hook), start a new Claude Code session so its `SessionStart` Hook delivers the routing gate; `/reload-plugins` applies plugin changes to a running session but does not rerun that Hook. On Windows, the startup Hook needs Git Bash.
 
-The Claude Code plugin loads the same skills and routes. Invoke any skill in
-plain language or as `/axiom:<skill-name>`.
+The Claude Code plugin loads the same skills and routes. Invoke any skill in plain language or as `/axiom:<skill-name>`.
 
 ## Inspect The Hook
 
-Compare the installed `SessionStart` definition with the
-[Hook Reference](../reference/hooks.md) before it runs. Verify the matcher,
-command, host root variable, and any packaged wrapper.
+Compare the installed `SessionStart` definition with the [Hook Reference](../reference/hooks.md) before it runs. Verify the matcher, command, host root variable, and any packaged wrapper.
 
-- Codex skips a new or changed Hook until you review and trust its exact
-  definition. In the new session, open `/hooks`, compare the entry, and trust
-  it only if it matches.
-- Claude Code has no separate Hook trust step: once the plugin loads, its Hook
-  runs at the next `SessionStart` event, such as a new session, `/clear`,
-  `/resume`, `/branch`, or an automatic or manual compaction. After a terminal
-  install or update, read the installed `hooks/claude-hooks.json` under
-  `~/.claude/plugins/cache/axiom/axiom/<version>/` before you start a session
-  or run `/reload-plugins`. An install or update inside a session loads the
-  Hook there at once or when closing the `/plugin` panel reloads plugins, so
-  install or update from a terminal to compare it first. `/hooks` shows the
-  loaded entry.
+- Codex skips a new or changed Hook until you review and trust its exact definition. In the new session, open `/hooks`, compare the entry, and trust it only if it matches.
+- Claude Code has no separate Hook trust step: once the plugin loads, its Hook runs at the next `SessionStart` event, such as a new session, `/clear`, `/resume`, `/branch`, or an automatic or manual compaction. After a terminal install or update, read the installed `hooks/claude-hooks.json` under `~/.claude/plugins/cache/axiom/axiom/<version>/` before you start a session or run `/reload-plugins`. An install or update inside a session loads the Hook there at once or when closing the `/plugin` panel reloads plugins, so install or update from a terminal to compare it first. `/hooks` shows the loaded entry.
 
-Stop if the installed definition differs: leave the Hook untrusted in Codex,
-or disable Axiom in Claude Code before the Hook runs. Do not repair
-the mismatch by editing installed files, deleting caches, or adding another
-context-loading Hook. Reconcile the installed version with the repository
-through the host's normal plugin lifecycle.
+Stop if the installed definition differs: leave the Hook untrusted in Codex, or disable Axiom in Claude Code before the Hook runs. Do not repair the mismatch by editing installed files, deleting caches, or adding another context-loading Hook. Reconcile the installed version with the repository through the host's normal plugin lifecycle.
 
 ## Try One Routed Request
 
 Use this read-only request:
 
-> Audit this repository's AGENTS.md instruction system. Report findings only;
-> do not modify files.
+> Audit this repository's AGENTS.md instruction system. Report findings only; do not modify files.
 
-The expected contract is selection of `agents-architect`, a read-only evidence
-report, and no file mutation. A route selection is not permission to change the
-repository. With `using-axiom` active, the model and host may explain the
-invocation according to your output-verbosity preferences. For example:
+The expected contract is selection of `agents-architect`, a read-only evidence report, and no file mutation. A route selection is not permission to change the repository. With `using-axiom` active, the model and host may explain the invocation according to your output-verbosity preferences. For example:
 
 `Axiom:agents-architect` Review the repository's instruction structure.
 
-The entire Axiom skill marker is inline code. An external or repository-local
-skill, plugin, or MCP capability keeps its own inline-code name and a
-brief reason, without an `Axiom:` prefix. The model chooses whether to explain
-the invocation and how to arrange the surrounding output.
+The entire Axiom skill marker is inline code. An external or repository-local skill, plugin, or MCP capability keeps its own inline-code name and a brief reason, without an `Axiom:` prefix. The model chooses whether to explain the invocation and how to arrange the surrounding output.
 
-This optional guidance belongs to `using-axiom`: it applies through the enabled
-startup gate or an explicit invocation of that skill. With the gate disabled,
-invoking a different Axiom skill alone does not activate notice guidance.
+This optional guidance belongs to `using-axiom`: it applies through the enabled startup gate or an explicit invocation of that skill. With the gate disabled, invoking a different Axiom skill alone does not activate notice guidance.
 
 ## Try One Control Request
 
@@ -119,31 +65,16 @@ Use this ordinary request:
 
 > Summarize the purpose of this README. Do not modify files.
 
-The expected contract is normal host execution with no additional Axiom route.
-Startup and a no-route result receive no notice. A no-route result is not
-a safety certification; host permissions and repository instructions remain
-in force. See the [notice guidance](../../plugin/skills/using-axiom/SKILL.md#invocation-notes)
-for activation and naming boundaries.
+The expected contract is normal host execution with no additional Axiom route. Startup and a no-route result receive no notice. A no-route result is not a safety certification; host permissions and repository instructions remain in force. See the [notice guidance](../../plugin/skills/using-axiom/SKILL.md#invocation-notes) for activation and naming boundaries.
 
 ## Interpret And Report The Result
 
-The expected results above are contracts, not claims that your installation
-has already reproduced them. Record the host name and version, operating
-system, Axiom version or immutable commit, installation method, lifecycle
-source, exact request, selected route, clarification count, and whether any
-mutation was attempted.
+The expected results above are contracts, not claims that your installation has already reproduced them. Record the host name and version, operating system, Axiom version or immutable commit, installation method, lifecycle source, exact request, selected route, clarification count, and whether any mutation was attempted.
 
-Keep reports free of credentials, private conversation text, and sensitive
-repository content. If a result may expose a vulnerability or unauthorized
-action, use the private reporting process in [SECURITY.md](../../SECURITY.md)
-before sharing details publicly.
+Keep reports free of credentials, private conversation text, and sensitive repository content. If a result may expose a vulnerability or unauthorized action, use the private reporting process in [SECURITY.md](../../SECURITY.md) before sharing details publicly.
 
-- Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml)
-  for a bounded host result.
-- Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml)
-  for a false positive, false negative, or unexpected clarification.
-- Follow [Field Validation](../field-validation.md) for evidence labels and the
-  non-destructive observation protocol.
+- Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) for a bounded host result.
+- Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml) for a false positive, false negative, or unexpected clarification.
+- Follow [Field Validation](../field-validation.md) for evidence labels and the non-destructive observation protocol.
 
-For update, removal, disable, or troubleshooting procedures, continue with
-[Managing an Installation](managing-installation.md).
+For update, removal, disable, or troubleshooting procedures, continue with [Managing an Installation](managing-installation.md).

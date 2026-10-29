@@ -1,11 +1,6 @@
 # Skill Reference
 
-Axiom bundles the skills below for both Codex and Claude Code. Describe what
-you want in natural language, include `$skill-name` in Codex, or type
-`/axiom:skill-name` in Claude Code. The examples are chat prompts, not terminal
-commands; they name each skill in plain words, which reads the same in both
-hosts. Each linked source describes the skill's full scope and requirements;
-[Examples](../examples.md) shows more requests and expected behavior.
+Axiom bundles the skills below for both Codex and Claude Code. Describe what you want in natural language, include `$skill-name` in Codex, or type `/axiom:skill-name` in Claude Code. The examples are chat prompts, not terminal commands; they name each skill in plain words, which reads the same in both hosts. Each linked source describes the skill's full scope and requirements; [Examples](../examples.md) shows more requests and expected behavior.
 
 ## Shared skills
 
@@ -13,10 +8,7 @@ hosts. Each linked source describes the skill's full scope and requirements;
 
 **Link:** [Startup routing skill](../../plugin/skills/using-axiom/SKILL.md)
 
-**Description:** Finds the smallest matching skill set and leaves unmatched
-work with the host. It selects bundled skills by the descriptions in the
-host's skill list, keeps a more specific skill or tool you chose, and loads
-through the startup hook.
+**Description:** Finds the smallest matching skill set and leaves unmatched work with the host. It selects bundled skills by the descriptions in the host's skill list, keeps a more specific skill or tool you chose, and loads through the startup hook.
 
 **Usage:**
 
@@ -28,8 +20,7 @@ Use the using-axiom skill to identify the skill that fits this request.
 
 **Link:** [Request clarification](../../plugin/skills/clarify-intent/SKILL.md)
 
-**Description:** Resolves materially different interpretations with a focused
-question and useful options.
+**Description:** Resolves materially different interpretations with a focused question and useful options.
 
 **Usage:**
 
@@ -42,12 +33,7 @@ before making changes.
 
 **Link:** [Bounded task delegation](../../plugin/skills/delegate-simple-task/SKILL.md)
 
-**Description:** Assesses simple work against your ordered model preferences
-while preserving the main model. An explicit invocation selects the skill;
-assessment still requires the active `using-axiom` gate, the host's verified
-top reasoning level, and your consent to invoke the skill, and the skill
-states which condition is unmet instead of silently declining; when only
-your consent is missing, it asks and waits.
+**Description:** Assesses simple work against your ordered model preferences while preserving the main model. An explicit invocation selects the skill; assessment still requires the active `using-axiom` gate, the host's verified top reasoning level, and your consent to invoke the skill, and the skill states which condition is unmet instead of silently declining; when only your consent is missing, it asks and waits.
 
 **Usage:**
 
@@ -61,8 +47,7 @@ level verified.
 
 **Link:** [Task planning and revision](../../plugin/skills/task-planning/SKILL.md)
 
-**Description:** Turns requirements into steps, dependencies, and acceptance
-criteria, or updates an existing plan.
+**Description:** Turns requirements into steps, dependencies, and acceptance criteria, or updates an existing plan.
 
 **Usage:**
 
@@ -75,10 +60,7 @@ Do not implement it yet.
 
 **Link:** [Supervised progress across sessions](../../plugin/skills/continuous-progress/SKILL.md)
 
-**Description:** Explicitly invoked progress through fresh workers and
-coordinator handoffs, with a verified native supervisor. Stops after verified
-completion or cancellation; local scheduling requires the owning host
-application and the machine to remain available.
+**Description:** Explicitly invoked progress through fresh workers and coordinator handoffs, with a verified native supervisor. Stops after verified completion or cancellation; local scheduling requires the owning host application and the machine to remain available.
 
 **Usage:**
 
@@ -93,8 +75,7 @@ cancel.
 
 **Link:** [Research through a local browser or client](../../plugin/skills/local-web-search/SKILL.md)
 
-**Description:** Limits information disclosed in requests and handles site
-challenges through a user handoff.
+**Description:** Limits information disclosed in requests and handles site challenges through a user handoff.
 
 **Usage:**
 
@@ -107,9 +88,7 @@ through my local browser.
 
 **Link:** [Repository instruction architecture](../../plugin/skills/agents-architect/SKILL.md)
 
-**Description:** Audits and maintains `AGENTS.md`, routed `.agents/` guidance,
-and repository skills; places task state in Git metadata and keeps a grown
-instruction memory navigable.
+**Description:** Audits and maintains `AGENTS.md`, routed `.agents/` guidance, and repository skills; places task state in Git metadata and keeps a grown instruction memory navigable.
 
 **Usage:**
 
@@ -122,8 +101,7 @@ Report findings only.
 
 **Link:** [Packaged plugin architecture](../../plugin/skills/agent-plugin-architect/SKILL.md)
 
-**Description:** Designs or audits skills, routes, manifests, hooks, and
-compatibility evidence for a packaged agent plugin.
+**Description:** Designs or audits skills, routes, manifests, hooks, and compatibility evidence for a packaged agent plugin.
 
 **Usage:**
 
@@ -136,8 +114,7 @@ without editing it.
 
 **Link:** [Agent usage analysis](../../plugin/skills/optimize-agent-usage/SKILL.md)
 
-**Description:** Finds ways to reduce context, token, and tool overhead while
-preserving required quality.
+**Description:** Finds ways to reduce context, token, and tool overhead while preserving required quality.
 
 **Usage:**
 
@@ -150,9 +127,7 @@ and recommend reductions.
 
 **Link:** [Axiom task review](../../plugin/skills/review-axiom-task/SKILL.md)
 
-**Description:** Reviews observable routing, authorization, actions, and
-evidence for an identified task. A prior refusal governs neither a review
-nor a narrower request.
+**Description:** Reviews observable routing, authorization, actions, and evidence for an identified task. A prior refusal governs neither a review nor a narrower request.
 
 **Usage:**
 
@@ -165,9 +140,7 @@ Do not retry it.
 
 **Link:** [Completion verification](../../plugin/skills/verify-completion/SKILL.md)
 
-**Description:** Verifies completion, progress, or success claims against
-current direct evidence, especially after compaction or resume, and advises
-before complying when evidence conflicts.
+**Description:** Verifies completion, progress, or success claims against current direct evidence, especially after compaction or resume, and advises before complying when evidence conflicts.
 
 **Usage:**
 
@@ -180,8 +153,7 @@ complete. List each criterion with what you observed now, not what you recall.
 
 **Link:** [Consequential external actions](../../plugin/skills/confirm-external-action/SKILL.md)
 
-**Description:** Checks the actor, destination, exact content, and existing
-authorization before execution and verification.
+**Description:** Checks the actor, destination, exact content, and existing authorization before execution and verification.
 
 **Usage:**
 
@@ -194,9 +166,7 @@ publication. Show the exact destination and text; do not publish yet.
 
 **Link:** [Traceable Git work](../../plugin/skills/traceable-git-submit/SKILL.md)
 
-**Description:** Handles explicit checkpoints, consolidation, recovery, and
-submissions that need traceability. Ordinary named-remote non-force Git
-stays with the host.
+**Description:** Handles explicit checkpoints, consolidation, recovery, and submissions that need traceability. Ordinary named-remote non-force Git stays with the host.
 
 **Usage:**
 
@@ -209,8 +179,7 @@ Do not push.
 
 **Link:** [Changes with recovery planning](../../plugin/skills/reversible-system-change/SKILL.md)
 
-**Description:** Plans, rehearses, or executes persistent changes with
-verified recovery and outcome checks.
+**Description:** Plans, rehearses, or executes persistent changes with verified recovery and outcome checks.
 
 **Usage:**
 
@@ -221,10 +190,4 @@ and its rollback. Do not execute it.
 
 ## Renamed and retired skills
 
-`optimize-codex-usage` was renamed `optimize-agent-usage` in
-[v0.16.0](../releases/v0.16.0.md) and now runs in both hosts. Invoke the new
-name; the old name is no longer bundled. A Claude Code installation cached
-before v0.11.0 updates through the
-[README update commands](../../README.md#updating). The
-[Changelog](../../CHANGELOG.md) records earlier removals and restored host
-support.
+`optimize-codex-usage` was renamed `optimize-agent-usage` in [v0.16.0](../releases/v0.16.0.md) and now runs in both hosts. Invoke the new name; the old name is no longer bundled. A Claude Code installation cached before v0.11.0 updates through the [README update commands](../../README.md#updating). The [Changelog](../../CHANGELOG.md) records earlier removals and restored host support.

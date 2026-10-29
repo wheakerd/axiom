@@ -1,37 +1,21 @@
 # Documentation Policy
 
-This policy defines how Axiom's public documentation is organized and kept
-accurate. It governs repository documentation only; it does not change an
-installed Skill, route, authorization boundary, Hook, wrapper, manifest, or
-runtime contract.
+This policy defines how Axiom's public documentation is organized and kept accurate. It governs repository documentation only; it does not change an installed Skill, route, authorization boundary, Hook, wrapper, manifest, or runtime contract.
 
 ## Principles
 
 1. Each document has one primary audience and responsibility.
-2. Each durable fact has one canonical owner. Other documents link, summarize,
-   or render that fact instead of maintaining a competing manual copy.
-3. Current guidance, historical evidence, generated facts, and project plans
-   remain visibly distinct.
-4. Static validation is not host-observed evidence, and a plan is not an
-   implemented capability.
+2. Each durable fact has one canonical owner. Other documents link, summarize, or render that fact instead of maintaining a competing manual copy.
+3. Current guidance, historical evidence, generated facts, and project plans remain visibly distinct.
+4. Static validation is not host-observed evidence, and a plan is not an implemented capability.
 5. Navigation favors user tasks without hiding maintainer and audit material.
-6. Documentation must not grant action authority or imply behavior that the
-   checked-in runtime does not provide.
+6. Documentation must not grant action authority or imply behavior that the checked-in runtime does not provide.
 
 ## Source And Version Scope
 
-Current guides, concepts, references, and contributor procedures describe the
-implementation and contracts in the same repository snapshot. Write the
-supported workflow in the present tense, verify it against its source owner,
-and replace obsolete instructions in place. Put release-by-release additions,
-removals, and migration narratives in the Changelog or version notes.
+Current guides, concepts, references, and contributor procedures describe the implementation and contracts in the same repository snapshot. Write the supported workflow in the present tense, verify it against its source owner, and replace obsolete instructions in place. Put release-by-release additions, removals, and migration narratives in the Changelog or version notes.
 
-"Current" means the checked-in tree that accompanies the document. `main` may
-contain unreleased changes; its documentation does not prove that the latest
-published or installed package has those changes. Users checking an installed
-release should use the documentation at that release's tag. Source inspection
-establishes declared behavior; installation, host observations, and remote
-publication still require evidence from their own owners.
+"Current" means the checked-in tree that accompanies the document. `main` may contain unreleased changes; its documentation does not prove that the latest published or installed package has those changes. Users checking an installed release should use the documentation at that release's tag. Source inspection establishes declared behavior; installation, host observations, and remote publication still require evidence from their own owners.
 
 | Content | Version rule |
 | --- | --- |
@@ -41,17 +25,9 @@ publication still require evidence from their own owners.
 | Observations, failures, evaluation results, and historical methods | Preserve the exact original subject, version, date, schema, and outcome; never relabel them as current |
 | Supported schema or protocol selectors, compatibility limits, and prerequisites | Keep exact versions when they determine valid behavior; update their current selection only with the owning implementation |
 
-Version information is therefore not limited to change history. A format such
-as `schema-v3.json`, an immutable evidence link, or an exact compatibility
-boundary is part of a usable contract. Do not remove it merely to make prose
-appear version-neutral. Conversely, a heading such as "Current vX.Y.Z" or a
-manually copied measurement table does not belong in a maintained guide when
-its canonical source already supplies that value.
+Version information is therefore not limited to change history. A format such as `schema-v3.json`, an immutable evidence link, or an exact compatibility boundary is part of a usable contract. Do not remove it merely to make prose appear version-neutral. Conversely, a heading such as "Current vX.Y.Z" or a manually copied measurement table does not belong in a maintained guide when its canonical source already supplies that value.
 
-When reviewing a current document, distinguish an implemented capability from
-a plan, an example, and an observed result. Update the capability description
-from source, keep examples tied to their actual contract, and preserve
-`NOT-RUN` or other evidence limits until new observations justify a change.
+When reviewing a current document, distinguish an implemented capability from a plan, an example, and an observed result. Update the capability description from source, keep examples tied to their actual contract, and preserve `NOT-RUN` or other evidence limits until new observations justify a change.
 
 ## Document Classes
 
@@ -63,12 +39,9 @@ from source, keep examples tied to their actual contract, and preserve
 | Maintainer | Contributors and maintainers | Documentation, governance, release, and validator policy |
 | Evidence or generated | Auditors and automation | Machine facts, host observations, digests, and bounded summaries |
 
-A document may link across classes, but it must not silently acquire another
-class's ownership.
+A document may link across classes, but it must not silently acquire another class's ownership.
 
-Project-operation plans, marketing drafts, and channel-status ledgers belong
-outside the plugin release tree. Retired material remains in Git history and
-does not establish current product guidance or external state.
+Project-operation plans, marketing drafts, and channel-status ledgers belong outside the plugin release tree. Retired material remains in Git history and does not establish current product guidance or external state.
 
 ## Lifecycle States
 
@@ -82,11 +55,7 @@ Use this vocabulary when a document's role is not obvious from its location:
 | `project-plan` | Intended work or channel activity, not product capability |
 | `archived` | Retained for traceability and excluded from current navigation |
 
-Lifecycle metadata is optional when the directory and index make the state
-unambiguous. If metadata is present, it must use one of these values. A claim
-about an external platform or channel must include an absolute
-`last_verified` date; conceptual prose does not need an artificial timestamp.
-Place optional metadata near the document H1 using this exact form:
+Lifecycle metadata is optional when the directory and index make the state unambiguous. If metadata is present, it must use one of these values. A claim about an external platform or channel must include an absolute `last_verified` date; conceptual prose does not need an artificial timestamp. Place optional metadata near the document H1 using this exact form:
 
 ```markdown
 <!-- lifecycle: current -->
@@ -108,14 +77,11 @@ The current repository assigns these responsibilities:
 - `evidence/` and `evals/results/` retain machine records and observations; `docs/field-validation.md` indexes retired records at immutable archive sources;
 - `evals/README.md` and `evals/context-budget/README.md` own current evaluation guidance; `evals/history/` retains earlier methods and run narratives.
 
-[The documentation index](../README.md) describes these current locations by
-audience and task. A proposed path does not become canonical until the content,
-inbound links, and lifecycle classification move in one merged change.
+[The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content, inbound links, and lifecycle classification move in one merged change.
 
 ## Canonical Structure
 
-The repository uses this responsibility split without creating unnecessary
-short documents:
+The repository uses this responsibility split without creating unnecessary short documents:
 
 ```text
 README.md
@@ -133,17 +99,11 @@ evidence/
 evals/
 ```
 
-Topical current references may remain directly under `docs/` when another
-directory would create artificial fragmentation.
+Topical current references may remain directly under `docs/` when another directory would create artificial fragmentation.
 
 README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. The Skill Reference keeps each skill's full description, copyable usage, and rename notices. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
 
-Under the Skill Reference `## Shared skills`, give each skill a
-`### skill-name` heading in canonical startup-route order. Each entry contains **Link**, **Description**,
-and **Usage** fields: a repository-relative link to its `SKILL.md`, a concise
-summary, and a copyable prompt in a fenced `text` block. Keep detailed
-requirements in the linked source. New entries use the same structure; add
-optional detail within an entry without creating another skill-level heading.
+Under the Skill Reference `## Shared skills`, give each skill a `### skill-name` heading in canonical startup-route order. Each entry contains **Link**, **Description**, and **Usage** fields: a repository-relative link to its `SKILL.md`, a concise summary, and a copyable prompt in a fenced `text` block. Keep detailed requirements in the linked source. New entries use the same structure; add optional detail within an entry without creating another skill-level heading.
 
 ## Canonical Ownership
 
@@ -173,9 +133,7 @@ optional detail within an entry without creating another skill-level heading.
 | Routing evaluation contracts and optional observation method | `evals/README.md` with versioned cases, schemas, and benchmark manifests | Current; earlier methods remain under `evals/history/` |
 | Routing-context measurements | Versioned `evals/context-budget/results/` records with `evals/context-budget/README.md` | Counts are static proxies; historical records keep their original bindings |
 
-Machine-derived facts should use bounded generated regions or deterministic
-checks where practical. Human prose may explain their meaning but must not
-redefine their values.
+Machine-derived facts should use bounded generated regions or deterministic checks where practical. Human prose may explain their meaning but must not redefine their values.
 
 ## Update Triggers
 
@@ -195,30 +153,14 @@ redefine their values.
 ## Migration And Move Rules
 
 - Use staged, reviewable changes and keep links valid at every merged phase.
-- Describe the current repository before the target state; do not claim a later
-  phase has completed.
-- Move a fact only after identifying its canonical owner. Remove the competing
-  copy or replace it with a concise link in the same change.
-- Preserve Git history where practical and never delete or rewrite immutable
-  evidence, evaluation results, failure records, or historical Release facts
-  to simplify navigation. Retired experiments may leave the current tree after
-  their exact bytes are verified at an immutable Git commit and the canonical
-  evidence owner links to that archive. Retire their active commands, default
-  checks, and CI dependencies together; preserve applicable generic regression
-  coverage with synthetic fixtures.
-- Keep project plans and channel status outside the plugin release tree.
-  Preserve retired records in Git history with their absolute verification
-  dates and truthful planned, submitted, or published state.
-- Do not copy candidate-only absence or future-tense publication text into a
-  final Release body. Render future bodies from the tagged Changelog entry and
-  establish final evidence only from the immutable remote objects.
-- Use repository-relative links for checked-in files. External URLs are
-  permitted when the external destination is the actual owner.
-- Keep public documentation free of non-public repository content,
-  credentials, internal endpoints, and operational coordination detail.
-- Reclassify the exact final diff against the runtime-identity contract. A
-  documentation reorganization must not assume that a changed runtime input is
-  policy-only.
+- Describe the current repository before the target state; do not claim a later phase has completed.
+- Move a fact only after identifying its canonical owner. Remove the competing copy or replace it with a concise link in the same change.
+- Preserve Git history where practical and never delete or rewrite immutable evidence, evaluation results, failure records, or historical Release facts to simplify navigation. Retired experiments may leave the current tree after their exact bytes are verified at an immutable Git commit and the canonical evidence owner links to that archive. Retire their active commands, default checks, and CI dependencies together; preserve applicable generic regression coverage with synthetic fixtures.
+- Keep project plans and channel status outside the plugin release tree. Preserve retired records in Git history with their absolute verification dates and truthful planned, submitted, or published state.
+- Do not copy candidate-only absence or future-tense publication text into a final Release body. Render future bodies from the tagged Changelog entry and establish final evidence only from the immutable remote objects.
+- Use repository-relative links for checked-in files. External URLs are permitted when the external destination is the actual owner.
+- Keep public documentation free of non-public repository content, credentials, internal endpoints, and operational coordination detail.
+- Reclassify the exact final diff against the runtime-identity contract. A documentation reorganization must not assume that a changed runtime input is policy-only.
 
 ## Validation Expectations
 
@@ -237,14 +179,10 @@ Every documentation change must, at minimum:
 - validate the public Hook reference against checked-in declarations and wrappers; and
 - keep historical and project-plan documents, including `evals/history/`, out of current task navigation.
 
-Run the deterministic, Python-standard-library-only documentation validator
-from the repository root:
+Run the deterministic, Python-standard-library-only documentation validator from the repository root:
 
 ```bash
 python3 scripts/check-documentation.py
 ```
 
-It runs offline checks for repository-owned facts and is included in the
-publication aggregate and full unit suite. External URL availability, spelling,
-and prose style remain advisory or scheduled signals rather than unstable
-required gates.
+It runs offline checks for repository-owned facts and is included in the publication aggregate and full unit suite. External URL availability, spelling, and prose style remain advisory or scheduled signals rather than unstable required gates.
