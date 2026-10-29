@@ -856,6 +856,14 @@
       "sourceIssue": null,
       "summary": "Make the catalog handoff test select an earlier release in its copied catalogs, so it no longer depends on the checked-in catalogs; this unblocks the 0.21.0 catalog handoff.",
       "runtimeContractDigest": "sha256:86c24e3f707ee34c07ac33f37ed73e5651af8617201635db6fdf41c92e8c1a2f"
+    },
+    {
+      "revision": 108,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "7634a1108d347fef197e850c7ce0f05252aa555a",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.21.0.",
+      "runtimeContractDigest": "sha256:86c24e3f707ee34c07ac33f37ed73e5651af8617201635db6fdf41c92e8c1a2f"
     }
   ]
 }
