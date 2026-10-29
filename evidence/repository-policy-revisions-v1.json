@@ -832,6 +832,14 @@
       "sourceIssue": null,
       "summary": "Pin the release signature guard to the fixed ubuntu-24.04 runner instead of the moving ubuntu-latest label, and validate that pin.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 105,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "40cd9954fb200e4a9b1bfcbecb601fbe3ac00e77",
+      "sourceIssue": null,
+      "summary": "Redraw the README hero, social preview, and Codex plugin mark as the letter A from Euclid's first construction, with its four points for scope, authority, evidence, and rollback.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }
