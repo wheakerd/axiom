@@ -16,6 +16,20 @@ still reads `unreleased`; the rendered Release body omits the heading, and
 dating it later changes neither the entry nor that body. Headings before 0.8.3
 keep the dates recorded when they were written.
 
+## Repository policy revision 102
+
+### Changed
+
+- The Claude Code marketplace catalog description now follows the README positioning instead of an outdated partial list of workflows.
+
+### Behavioral impact
+
+None for installed plugin workflows. Only the catalog's description text changes; the catalog still selects the same release.
+
+### Required action
+
+None.
+
 ## Repository policy revision 101
 
 ### Changed

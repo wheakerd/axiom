@@ -808,6 +808,14 @@
       "sourceIssue": null,
       "summary": "Publish merged versions from a CI release pipeline that only version-changing pull requests start; generate the README skill index and badges; drop the README preferred size band.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 102,
+      "recordedOn": "2026-10-28",
+      "baselineCommit": "b9ef9161e0bd7d5a92b050f99fabc00c7cac02dd",
+      "sourceIssue": null,
+      "summary": "Describe Axiom in the Claude Code marketplace catalog with the README positioning instead of an outdated partial list of workflows.",
+      "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
     }
   ]
 }

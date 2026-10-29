@@ -4,7 +4,7 @@
     "name": "wheakerd",
     "url": "https://github.com/wheakerd"
   },
-  "description": "Axiom workflow skills for Claude Code: clarify intent, plan tasks, maintain repository instructions, and handle actions that need explicit authorization or a recovery plan.",
+  "description": "Focused workflow skills for Claude Code that turn requests into clear, actionable work.",
   "plugins": [
     {
       "name": "axiom",
