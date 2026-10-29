@@ -848,6 +848,14 @@
       "sourceIssue": null,
       "summary": "Release 0.21.0: delegate-simple-task drops the top-reasoning-level activation condition, lets the main session judge fit, and merges consent into one confirmation.",
       "runtimeContractDigest": "sha256:86c24e3f707ee34c07ac33f37ed73e5651af8617201635db6fdf41c92e8c1a2f"
+    },
+    {
+      "revision": 107,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "b0633cfc124afafc21c610af028b911319c07893",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.21.0.",
+      "runtimeContractDigest": "sha256:86c24e3f707ee34c07ac33f37ed73e5651af8617201635db6fdf41c92e8c1a2f"
     }
   ]
 }
