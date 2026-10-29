@@ -262,7 +262,7 @@ def main() -> int:
         f"{traceable_security_scenarios} traceable-Git contract fixtures, "
         f"{external_action_scenarios} external-action gate fixtures, "
         f"{rollback_scenarios} rollback gate fixtures, "
-        f"{cross_route_contract_count} source-linked cross-route/resume contracts, "
+        f"{cross_route_contract_count} source-linked cross-route, resume, and delegated-choice contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
         f"{evidence_record_count} compatibility evidence records, "
         f"{evidence_fixture_count} compatibility evidence negative fixtures, "

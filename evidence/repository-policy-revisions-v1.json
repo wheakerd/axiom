@@ -880,6 +880,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.22.0.",
       "runtimeContractDigest": "sha256:4517f7cf4e974c5168d03a821b635e2d19518a2a194b7d2614d099f8f2081d18"
+    },
+    {
+      "revision": 111,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "387bb561ab756b12c7a22876f6a5bffcb583f4c4",
+      "sourceIssue": null,
+      "summary": "Release 0.22.1: delegated choices follow the user's environment, clarify-intent asks from need, situational handling is the model's, and skill bodies pin delegated-choice conditions.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }

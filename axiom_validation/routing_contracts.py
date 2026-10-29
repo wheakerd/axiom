@@ -49,6 +49,10 @@ GATE_SELECTION_ANCHORS = (
 # when every alternative is reversible and already authorized; otherwise the gate
 # selects clarify-intent. Offering an alternative authorizes no persistent system
 # change, external or remote-state change, deletion, credential use, or material cost.
+# This offline model recognizes one literal "either ... or" pair to regression-test that
+# boundary. It neither defines nor limits how the host's model handles more alternatives
+# or the situation around them; the model decides that within the binding rules,
+# pinned or not.
 CHOICE_ALTERNATIVES = re.compile(
     r"\beither\s+(?P<first>.+?)\s+or\s+(?P<second>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
 )
@@ -1004,7 +1008,7 @@ def check_target_instruction_contracts(failures: list[str]) -> None:
 
 
 def check_cross_route_resume_contracts(failures: list[str]) -> int:
-    """Lock dual-route authority and fail-closed resume to their source owners."""
+    """Lock dual-route authority, fail-closed resume, and delegated-choice conditions to their owners."""
     skills = REPOSITORY_ROOT / "plugin" / "skills"
     contracts = (
         (
@@ -1079,6 +1083,73 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "Never adopt post-change state as the prior rollback baseline.",
                 "An unknown external outcome enters Verify only and must not be resent.",
                 "Do not add a daemon, cache, telemetry, or persistent handoff tool",
+            ),
+        ),
+        # Every body that accepts a delegated choice pins its rule to ask or keep the choice
+        # open otherwise and the gate's authority and safety conditions; how the model
+        # chooses among the alternatives stays its decision.
+        (
+            skills / "traceable-git-submit/SKILL.md",
+            "delegated choice",
+            (
+                "write surfaces or authority, ask",
+                "before selecting; never choose silently.",
+                "A delegated choice resolves it only when every option is reversible and already authorized",
+                "state which and why before acting.",
+                "A read-only or lighter option never silently replaces the stated goal.",
+                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
+            ),
+        ),
+        (
+            skills / "task-planning/SKILL.md",
+            "delegated choice",
+            (
+                "resolving a material workflow choice for the user",
+                "unless the user explicitly delegated that choice and every alternative is reversible and already authorized",
+                "state the choice and why before acting.",
+                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
+            ),
+        ),
+        (
+            skills / "clarify-intent/SKILL.md",
+            "delegated answer",
+            (
+                "never an undelegated choice between alternatives with different route sets, write surfaces, or authority or safety boundaries",
+                "A default, recommendation, silence, or elapsed time is not a submitted decision",
+                "counts only when every alternative is reversible and already authorized",
+                "say which and why before acting.",
+                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
+                "Wait before work that depends on a material choice.",
+            ),
+        ),
+        (
+            skills / "agent-plugin-architect/SKILL.md",
+            "delegated choice",
+            (
+                "keep the workflow unselected until the user chooses",
+                "unless the user explicitly delegated the choice and every option is reversible and already authorized",
+                "state the chosen option and why before acting.",
+                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
+                "cannot replace it without the user's choice.",
+            ),
+        ),
+        (
+            skills / "agent-plugin-architect/references/route-and-trigger-contracts.md",
+            "delegated choice",
+            (
+                "rather than choosing for the user",
+                "unless the user explicitly delegated the choice and every alternative is reversible and already authorized",
+                "state which and why before acting.",
+                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
+            ),
+        ),
+        (
+            skills / "reversible-system-change/SKILL.md",
+            "delegated target choice",
+            (
+                "question only when target, environment, destructive scope, credentials, sensitive asset use, promotion, or rollback authority would change execution.",
+                "Settle an explicitly delegated target or environment choice only if every alternative is reversible and already authorized",
+                "state which and why before acting.",
             ),
         ),
         (

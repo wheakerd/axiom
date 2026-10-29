@@ -140,4 +140,4 @@ The alternatives change owners, write surfaces, and authority, and offering the 
 
 > Audit either this repository's AGENTS.md instructions or this packaged plugin's hook architecture; your call.
 
-Both alternatives are read-only audits within the request's authority, so no question is needed. The model picks one, says which and why before starting so you can redirect, and routes it to its owner.
+Both alternatives are read-only audits that the request already authorizes, so no question is needed. The model picks the one that fits your environment and goal, for example the surface this repository actually has, says which and why before starting so you can redirect, and routes it to its owner.

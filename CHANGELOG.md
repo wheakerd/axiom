@@ -6,6 +6,26 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## 0.22.1 - unreleased
+
+### Changed
+
+- When you explicitly delegate a choice and every alternative is reversible and already authorized, the model picks the alternative that fits your environment and goal and says which and why before acting. `reversible-system-change` applies the same rule to a delegated choice of target or environment instead of always asking when the environment would change execution.
+- `clarify-intent` asks from need, not caution. Your request, context, environment, and the project's files may settle facts and a choice you delegated among alternatives that are all reversible and already authorized, never a choice between alternatives with different authority that you did not delegate, and it never asks for reassurance. A follow-up still needs a new material ambiguity that your answer introduced; the conflicting "never add rounds" clause is gone.
+- The startup routing gate states that, within every binding rule, the model decides how to handle the request's specifics, problems that arise, deviations from the expected result, external interference, and gaps between a plan and the ideal behavior.
+- The documentation uses one authority wording: a delegated choice settles only when every alternative is "already authorized".
+- Validation pins, in every skill body that accepts a delegated choice, both its rule to ask otherwise and its delegated-choice conditions, not only in the startup gate. `traceable-git-submit` and the `agent-plugin-architect` route contract now also state the pick and why before acting.
+
+### Behavioral impact
+
+Delegated choices follow your environment, and you get fewer defensive or repeated questions. Authority does not widen: a delegated choice still settles only when every alternative is reversible and already authorized, a choice you did not delegate between alternatives with different authority is still yours, an offered option still authorizes no persistent or external effect, and every authority, safety, and evidence rule still binds. The startup gate grows from 5309 to 5569 bytes, still 330 bytes below the v0.7.9 baseline. The runtime digest changes because the gate and five other skills are installed inputs.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.22.1.md) for the reasoning, the changed passages, and the evidence boundary.
+
 ## Repository policy revision 110
 
 ### Changed
