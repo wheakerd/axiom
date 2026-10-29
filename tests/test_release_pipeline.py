@@ -31,6 +31,7 @@ from axiom_validation.release_pipeline import (
     run_catalog,
     run_publish,
 )
+from axiom_validation.release_evidence import MARKETPLACE_CATALOGS
 from axiom_validation.release_tag_controller import GITHUB_ACTIONS_APP_ID
 
 
@@ -495,7 +496,7 @@ class ReleasePipelineTests(unittest.TestCase):
         self.assertNotIn("v0.21.0", api.tags)
 
 
-def prepare_handoff_repository(root: Path, version: str) -> str:
+def prepare_handoff_repository(root: Path, version: str, previous_tag: str = "v0.20.0") -> str:
     """Copy the checked-in handoff files and declare an unreleased next version."""
     for relative in HANDOFF_FILES:
         target = root / relative
@@ -505,6 +506,14 @@ def prepare_handoff_repository(root: Path, version: str) -> str:
     identity = json.loads(identity_path.read_text())
     identity["pluginVersion"] = version
     identity_path.write_text(json.dumps(identity, indent=2) + "\n")
+    # Select an earlier release, so the handoff has catalogs to advance whatever release
+    # the checked-in catalogs already select.
+    for host, relative in MARKETPLACE_CATALOGS:
+        catalog_path = root / relative
+        catalog = json.loads(catalog_path.read_text())
+        (entry,) = [plugin for plugin in catalog["plugins"] if plugin.get("name") == "axiom"]
+        entry["source"] = catalog_source(previous_tag, host)
+        catalog_path.write_text(json.dumps(catalog, indent=2) + "\n")
     changelog = root / "CHANGELOG.md"
     text = changelog.read_text()
     if f"\n## {version} - unreleased\n" not in text:

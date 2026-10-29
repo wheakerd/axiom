@@ -6,6 +6,20 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## Repository policy revision 107
+
+### Fixed
+
+- The catalog handoff test no longer depends on the checked-in marketplace catalogs. Its fixture now selects an earlier release in the copied catalogs, so the test still has catalogs to advance after they select the newest release. The 0.21.0 catalog handoff stopped on this test because its pull request already selected `v0.21.0`.
+
+### Behavioral impact
+
+None for installed plugin workflows. The Release pipeline can complete the 0.21.0 catalog handoff.
+
+### Required action
+
+None.
+
 ## 0.21.0 - unreleased
 
 ### Changed
