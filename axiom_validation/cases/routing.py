@@ -792,7 +792,7 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
     },
     {
         "name": "explicit-delegation-without-host-level-fact",
-        "request": "Use the delegate-simple-task skill: Assess this bounded typo correction for a subagent using my ordered candidate models; this host exposes no reasoning-level setting, so stop at the activation check if the level stays unknown.",
+        "request": "Use the delegate-simple-task skill: Assess this bounded typo correction for a subagent using my ordered candidate models; this host exposes no reasoning-level setting.",
         "route": "delegate-simple-task",
         "phase": "assess",
         "references": ("references/delegation-contract.md",),

@@ -33,7 +33,7 @@ Describe the outcome you want, or name a skill. Axiom selects a bundled skill fr
 | --- | --- |
 | [`using-axiom`](docs/reference/skills.md#using-axiom) | Route installed Axiom skills from a session bootstrap |
 | [`clarify-intent`](docs/reference/skills.md#clarify-intent) | Resolve unclear requests with options or a custom answer |
-| [`delegate-simple-task`](docs/reference/skills.md#delegate-simple-task) | Assess delegation with top reasoning, the gate, and consent |
+| [`delegate-simple-task`](docs/reference/skills.md#delegate-simple-task) | Delegate simple work to your ordered candidate models |
 | [`task-planning`](docs/reference/skills.md#task-planning) | Create and revise plans around current requirements |
 | [`continuous-progress`](docs/reference/skills.md#continuous-progress) | Supervised progress across fresh sessions |
 | [`local-web-search`](docs/reference/skills.md#local-web-search) | Constrain local searches and stop at site challenges |

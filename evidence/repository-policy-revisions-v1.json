@@ -840,6 +840,14 @@
       "sourceIssue": null,
       "summary": "Redraw the README hero, social preview, and Codex plugin mark as the letter A from Euclid's first construction, with its four points for scope, authority, evidence, and rollback.",
       "runtimeContractDigest": "sha256:6852a0b9101693f3c410b84d445ad04d1e55696cf8bcf8da61d5c96bfcac25a3"
+    },
+    {
+      "revision": 106,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "0cfc661bab0802105fcb65ff7837c2ffd30ae997",
+      "sourceIssue": null,
+      "summary": "Release 0.21.0: delegate-simple-task drops the top-reasoning-level activation condition, lets the main session judge fit, and merges consent into one confirmation.",
+      "runtimeContractDigest": "sha256:86c24e3f707ee34c07ac33f37ed73e5651af8617201635db6fdf41c92e8c1a2f"
     }
   ]
 }
