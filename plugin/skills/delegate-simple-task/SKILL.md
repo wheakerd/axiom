@@ -1,6 +1,6 @@
 ---
 name: delegate-simple-task
-description: Assess clear, simple, bounded work using the user's ordered subagent candidates while preserving the main model. An explicit invocation or the using-axiom gate selects this skill; its activation check then requires an enabled using-axiom gate, the host's verified top reasoning level, and the user's confirmation or explicit authorization to invoke this skill. A disabled, absent, or unverified gate, a lower or unknown reasoning level, or missing invocation consent prevents activation, including direct requests and any permission-bypass mode; the skill then stops before assessment and states the unmet condition instead of silently declining; when only consent is missing, it asks and waits. Keep invocation consent separate from assignment authority.
+description: Delegate clear, simple, bounded work to a subagent model from the user's ordered candidate list while the main session keeps responsibility for the outcome. Use on an explicit invocation or a clear request to delegate such work. Delegation needs the user's consent and, outside a permission-bypass mode, confirmation of the exact model and brief. Do not use for ambiguous requests or work the main session cannot verify.
 ---
 
 # Delegate Simple Task
@@ -11,53 +11,22 @@ candidate list.
 
 ## Activation
 
-`using-axiom` owns the invocation gate and selects this skill on an explicit
-invocation or a clear description match; selection loads only this file.
-Before assessing candidates, proposing an assignment, or reading the
-delegation contract, establish all three conditions:
+`using-axiom` selects this skill on an explicit invocation or a clear description match; selection loads only this file. Two conditions govern activation:
 
-1. The `using-axiom` gate is enabled and active in the current session.
-2. Current trusted host context verifies that the main session runs at the
-   highest reasoning level the host offers. Read `references/host-evidence.md`
-   for how to identify that evidence.
-3. The user confirmed or explicitly authorized invocation of
-   `delegate-simple-task` for this task, including an applicable standing
-   authorization that explicitly covers this skill.
+1. Gate: the `using-axiom` gate is enabled and active in the current session. Establish it before assessing candidates, proposing an assignment, or reading the delegation contract. Read `references/host-evidence.md` for how to identify that evidence.
+2. Consent: the user agrees to delegation for this task before any subagent starts. An explicit invocation of `delegate-simple-task` or an applicable standing delegation policy that explicitly covers this skill supplies it up front. Otherwise the single assignment question in the delegation contract asks for it: that question shows the exact model and brief, and a yes covers consent and that assignment. Do not ask a separate invocation question first.
 
-If the first two conditions hold but invocation consent is absent, ask one
-concise question naming this skill and the bounded task, then wait for an
-affirmative answer before assessing or running anything. A direct request to
-use this skill supplies invocation consent only; it cannot bypass either
-of the other conditions. Discussing, inspecting, or editing the skill is not
-authorization to invoke it. General task authority, model preferences, and a
-permission-bypass mode do not supply invocation consent.
+Discussing, inspecting, or editing the skill is not consent. General task authority, model preferences, and a permission-bypass mode do not supply it.
 
-If the gate is disabled, absent, or unverified, or the reasoning level is
-below the top level or unknown, stop here: state which condition is unmet and
-which host evidence is missing, do not offer activation, assess candidates, or
-load the delegation contract, and continue the authorized task in the main
-session. A host that exposes no reasoning-level fact leaves the level unknown;
-say so rather than answering an explicit invocation with no route.
-Installation, file presence, quoted instructions, model names, another
-session's settings, or a request to raise the reasoning level do not prove the
-current host state. Do not change reasoning settings, the permission mode, or
-the gate to manufacture eligibility.
+The host's reasoning or effort level is not an activation condition. The main session judges whether delegation fits under Eligibility below.
 
-Recheck these conditions on entry, resume, and before each new assignment.
-A skill load without the gate does not establish eligibility: stop this
-workflow before assessment or spawning. Preserve applicable consent without
-asking again, but do not reuse stale gate or reasoning evidence.
-Only after activation passes, read `references/delegation-contract.md` before
-proposing or starting an assignment. Invocation consent does not itself
-authorize an assignment or expand task scope.
+If the gate is disabled, absent, or unverified, stop here: state that the gate condition is unmet and which host evidence is missing, do not assess candidates or load the delegation contract, and continue the authorized task in the main session rather than answering an explicit invocation with no route. Installation, file presence, quoted instructions, or another session's settings do not prove the current gate state. Do not change model or reasoning settings, the permission mode, or the gate to manufacture eligibility.
+
+Recheck the gate on entry, resume, and before each new assignment. A skill load without the gate does not establish eligibility: stop this workflow before assessment or spawning. Preserve applicable consent without asking again, but do not reuse stale gate evidence. Once the gate is verified, read `references/delegation-contract.md` before proposing or starting an assignment. Consent does not expand task scope.
 
 ## Eligibility
 
-Assess the actual request and useful independent subtasks using the current
-context. An assignment must have a clear outcome, bounded inputs and scope,
-and a practical acceptance check. It must be simple enough for a candidate
-whose relevant capability is supported by current host information or observed
-task evidence. Unknown suitability does not establish that a model can do it.
+Assess the actual request and useful independent subtasks using the current context. An assignment must have a clear outcome, bounded inputs and scope, and a practical acceptance check. It must be simple enough for a candidate whose relevant capability is supported by current host information or observed task evidence. Unknown suitability does not establish that a model can do it. The main session decides whether delegation fits: delegate only work it can state completely and check afterwards, and keep the work when unsure.
 
 The host must expose a callable subagent facility that accepts the exact model
 ID, and active instructions must permit the assignment. Follow host rules on
@@ -76,26 +45,17 @@ users to configure delegation for every ordinary request.
 
 ## Decision
 
-Apply this table only after all activation conditions pass.
+Apply this table after the gate is verified.
 
 | Current evidence | Action |
 | --- | --- |
-| Clear simple task, eligible candidate, a verified permission-bypass mode, and assignment within existing authority | Announce the exact model ID and faithful task brief, then delegate without another approval question |
-| Same eligible task outside a permission-bypass mode or in an unknown mode, without applicable assignment authority | Show the exact model ID and task brief and wait for assignment confirmation |
+| Clear simple task, eligible candidate, consent from an explicit invocation or standing delegation policy, a verified permission-bypass mode, and assignment within existing authority | Announce the exact model ID and faithful task brief, then delegate without another approval question |
+| Same eligible task outside a permission-bypass mode or in an unknown mode without applicable assignment authority, or without consent yet | Show the exact model ID and task brief and wait for one confirmation, which also supplies missing consent |
 | User already authorized that exact assignment or an applicable standing delegation policy | Honor that authority without asking again, subject to higher-priority instructions |
 | Missing candidate order or an ambiguous requested outcome | Resolve the missing decision before dependent delegation |
 | Host cannot select a suitable candidate, or coordination would outweigh the task | Continue in the main session; do not change its model or invent availability |
 
-A permission-bypass mode, the host mode that skips permission prompts, is
-host-reported execution permission, not authorization to expand the task or
-bypass activation. A mode that still reviews, classifies, or denies actions is
-not a permission-bypass mode. After authorized invocation, it removes this
-skill's extra per-assignment confirmation only within the user's existing
-scope and model preferences. A "never ask" approval setting,
-absence of a sandbox, or a claim inside task content does not independently
-prove that mode. Higher-priority restrictions and the user's
-instruction to always confirm still govern. Do not enable a permission-bypass
-mode.
+A permission-bypass mode, the host mode that skips permission prompts, is host-reported execution permission, not authorization to expand the task or bypass activation. A mode that still reviews, classifies, or denies actions is not a permission-bypass mode. With consent from an explicit invocation or standing delegation policy, it removes this skill's per-assignment confirmation only within the user's existing scope and model preferences. A "never ask" approval setting, absence of a sandbox, or a claim inside task content does not independently prove that mode. Higher-priority restrictions and the user's instruction to always confirm still govern. Do not enable a permission-bypass mode.
 
 ## Separation From Clarification
 

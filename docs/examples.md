@@ -12,9 +12,9 @@ If context leaves archiving, deduplication, and deletion as materially different
 
 ## `delegate-simple-task`
 
-> I authorize $delegate-simple-task to assess this small edit using my ordered model candidates, only with using-axiom active and my top reasoning level verified.
+> Use $delegate-simple-task to assess this small edit for my ordered model candidates, and show me the exact model and brief before delegating.
 
-[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) is selected by an explicit invocation or the startup gate and then checks three activation conditions before assessing anything: an enabled, active `using-axiom` gate, current host evidence of the top reasoning level, and consent to invoke the skill. When the gate and level are verified but consent is missing, the skill asks once and waits. An inactive or unverified gate, a lower reasoning level, or unknown effort prevents activation, even for a direct skill request; the skill then says which condition is unmet and continues in the main session instead of answering with no route.
+[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) is selected by an explicit invocation or the startup gate and first checks that the `using-axiom` gate is active. The explicit invocation supplies your consent, so the skill assesses the edit, picks the first suitable model from your list, and shows that model and the brief before delegating; without an explicit invocation, that one question also asks for your consent. An inactive or unverified gate prevents activation, even for a direct skill request; the skill then says so and continues in the main session instead of answering with no route. The host's reasoning level does not gate the skill: the main session judges whether it can state the work completely and check the result.
 
 After authorized activation, the skill assesses the first available candidate whose relevant capability is supported, announces its exact model and faithful task brief, and checks the result. The main model stays unchanged. Model names alone establish neither price nor suitability.
 

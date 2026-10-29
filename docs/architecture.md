@@ -46,7 +46,7 @@ The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using
 | Route | Responsibility |
 | --- | --- |
 | `clarify-intent` | Resolve material ambiguity with a focused question, plausible options, and a custom answer |
-| `delegate-simple-task` | Select on explicit invocation, then assess clear bounded work only with the active gate, the host's verified top reasoning level, and invocation consent, stating any unmet condition; preserve the main model and assignment boundaries |
+| `delegate-simple-task` | Select on explicit invocation, then assess clear bounded work only with the active gate, stating an unmet gate; take consent from the invocation, a standing policy, or the one model-and-brief confirmation; let the main session judge fit; preserve the main model and assignment boundaries |
 | `task-planning` | Create or revise general task plans while preserving specialized planning ownership |
 | `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |

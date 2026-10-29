@@ -98,11 +98,7 @@ class ContextBudgetTests(unittest.TestCase):
         self.assertFalse(comparison["meaningfulIncrease"])
         self.assertEqual("not-required", comparison["reviewStatus"])
         self.assertIsNone(comparison["justification"])
-        experiment = current_record["routingQuality"]["reductionExperiment"]
-        self.assertEqual("static-contract-validation", experiment["before"]["classification"])
-        self.assertEqual(
-            current_record["candidate"]["sha256"], experiment["after"]["surfaceSha256"]
-        )
+        self.assertIsNone(current_record["routingQuality"]["reductionExperiment"])
         self.assertTrue(
             all(
                 scenario["hostObservations"][0]["status"] == "not-run"

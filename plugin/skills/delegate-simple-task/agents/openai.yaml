@@ -1,4 +1,4 @@
 interface:
   display_name: "Delegate Simple Task"
-  short_description: "Assess delegation with top reasoning, the gate, and consent"
-  default_prompt: "I authorize $delegate-simple-task for this task only if the using-axiom gate is active and my current top reasoning level is verified. Assess my ordered model candidates, preserve the main model, and disclose the exact model and task before delegation."
+  short_description: "Delegate simple work to your ordered candidate models"
+  default_prompt: "Use $delegate-simple-task to assess this bounded work for my ordered candidate models, show the exact model and brief before delegating, and keep the main model responsible for checking the result."

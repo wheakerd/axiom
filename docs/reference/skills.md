@@ -33,14 +33,13 @@ before making changes.
 
 **Link:** [Bounded task delegation](../../plugin/skills/delegate-simple-task/SKILL.md)
 
-**Description:** Assesses simple work against your ordered model preferences while preserving the main model. An explicit invocation selects the skill; assessment still requires the active `using-axiom` gate, the host's verified top reasoning level, and your consent to invoke the skill, and the skill states which condition is unmet instead of silently declining; when only your consent is missing, it asks and waits.
+**Description:** Delegates clear, simple, bounded work to a model from your ordered candidate list while the main session keeps responsibility for the outcome. An explicit invocation selects the skill. It requires the active `using-axiom` gate and states the unmet condition instead of silently declining. Before delegating it shows the exact model and brief and asks once, unless an explicit invocation or standing delegation policy already gave consent within a permission-bypass mode; that one answer covers both consent and the assignment. The host's reasoning level is not a condition: the main session judges whether it can state the work completely and check the result.
 
 **Usage:**
 
 ```text
-I authorize the delegate-simple-task skill to assess this typo fix using my
-model preferences, only with the using-axiom gate active and my top reasoning
-level verified.
+Use the delegate-simple-task skill to assess this typo fix for my ordered
+model candidates, and show me the exact model and brief before delegating.
 ```
 
 ### task-planning

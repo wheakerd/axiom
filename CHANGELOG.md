@@ -6,6 +6,28 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## 0.21.0 - unreleased
+
+### Changed
+
+- `delegate-simple-task` lets the main session judge whether delegation fits: it delegates only work it can state completely and check afterwards, and keeps the work when unsure.
+- Consent and assignment confirmation share one question. Without an explicit invocation or a standing delegation policy, the skill assesses the work and asks once, showing the exact model and brief, and a yes covers both. An explicit invocation and a permission-bypass mode behave as before.
+- The skill description states what the skill does, when to use it, and when not to; the activation logic moves into the skill body.
+
+### Removed
+
+- From 0.21.0, the host's verified top reasoning level is no longer an activation condition of `delegate-simple-task`. It used a host setting as a stand-in for the model's own judgment, and Codex sessions exposed no verifiable reasoning-level fact (recorded in 0.19.2), so the skill could not activate there. The main session's fit judgment above replaces it; the active `using-axiom` gate and your consent remain required.
+
+### Behavioral impact
+
+On Codex, an explicit invocation now reaches assessment instead of stopping at the activation check, and on any host a session below the top reasoning level can delegate. Without an explicit invocation, the skill asks one question instead of two. Authority is unchanged: a permission-bypass mode still cannot supply consent, and the gate, your ordered model list, and the assignment boundaries stay. The runtime digest changes because the skill, its two references, and its UI metadata are installed inputs.
+
+### Required action
+
+None. If you want delegation only at your host's top reasoning level, say so in your request or standing instructions; the skill no longer enforces it.
+
+See the [version notes](docs/releases/v0.21.0.md) for the reasoning, the changed passages, and the evidence boundary.
+
 ## Repository policy revision 105
 
 ### Changed

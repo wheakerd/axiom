@@ -507,13 +507,14 @@ def prepare_handoff_repository(root: Path, version: str) -> str:
     identity_path.write_text(json.dumps(identity, indent=2) + "\n")
     changelog = root / "CHANGELOG.md"
     text = changelog.read_text()
-    first = text.index("\n## ")
-    changelog.write_text(
-        text[: first + 1]
-        + f"## {version} - unreleased\n\n### Changed\n\n- Fixture change.\n\n"
-        + "### Behavioral impact\n\nNone.\n\n### Required action\n\nNone.\n\n"
-        + text[first + 1 :]
-    )
+    if f"\n## {version} - unreleased\n" not in text:
+        first = text.index("\n## ")
+        changelog.write_text(
+            text[: first + 1]
+            + f"## {version} - unreleased\n\n### Changed\n\n- Fixture change.\n\n"
+            + "### Behavioral impact\n\nNone.\n\n### Required action\n\nNone.\n\n"
+            + text[first + 1 :]
+        )
     git(root, "init", "-q", "-b", "main")
     git(root, "add", "-A")
     git(root, "commit", "-q", "-m", "fixture")
