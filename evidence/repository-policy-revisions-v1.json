@@ -888,6 +888,14 @@
       "sourceIssue": null,
       "summary": "Release 0.22.1: delegated choices follow the user's environment, clarify-intent asks from need, situational handling is the model's, and skill bodies pin delegated-choice conditions.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 112,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "0ae2d9af612f02c0aa3abad6e2c0e5c74921995d",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.22.1.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }
