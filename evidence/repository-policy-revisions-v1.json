@@ -872,6 +872,14 @@
       "sourceIssue": null,
       "summary": "Release 0.22.0: the model settles a delegated choice within given authority, skills name adaptable defaults, clarify-intent counts relax, and an informed waiver lifts only named rollback effects.",
       "runtimeContractDigest": "sha256:4517f7cf4e974c5168d03a821b635e2d19518a2a194b7d2614d099f8f2081d18"
+    },
+    {
+      "revision": 110,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "56d3d8e2ecb8079c23ba127d5094c2ce80ee65bb",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.22.0.",
+      "runtimeContractDigest": "sha256:4517f7cf4e974c5168d03a821b635e2d19518a2a194b7d2614d099f8f2081d18"
     }
   ]
 }

@@ -6,7 +6,22 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
-## 0.22.0 - unreleased
+## Repository policy revision 110
+
+### Changed
+
+- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.22.0`.
+- Advance the Claude Code marketplace plugin source to the same immutable release `v0.22.0`.
+
+### Behavioral impact
+
+Codex and Claude Code marketplace refresh now select release `v0.22.0`. This catalog handoff preserves plugin version `0.22.0` and its installed runtime digest.
+
+### Required action
+
+None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
+
+## 0.22.0 - 2026-10-29
 
 ### Changed
 
