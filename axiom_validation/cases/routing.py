@@ -550,9 +550,98 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "references": (),
         "authorization": frozenset({"read"}),
     },
+    # The explicit delegation cannot settle this choice: one alternative needs
+    # deployment authority the user has not given.
     {
         "name": "material-multi-route-ambiguity",
         "request": "Reduce Codex usage by either rewriting AGENTS.md or changing deployment defaults; choose one.",
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    # A delegated choice between reversible, already-authorized alternatives needs no
+    # question: the host's model selects one of the acceptable routes after stating it.
+    {
+        "name": "delegated-choice-within-authority",
+        "request": (
+            "Audit either this repository's AGENTS.md instruction discovery or this "
+            "packaged Codex and Claude Code plugin's hook architecture; your call."
+        ),
+        "route": frozenset({"agents-architect", "agent-plugin-architect"}),
+        "phase": "delegated-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "undelegated-choice-between-owners",
+        "request": (
+            "Audit either this repository's AGENTS.md instruction discovery or this "
+            "packaged Codex and Claude Code plugin's hook architecture."
+        ),
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        # A negated delegation is no delegation, so the owners still need a question.
+        "name": "negated-choice-delegation",
+        "request": (
+            "Audit either this repository's AGENTS.md instruction discovery or this "
+            "packaged Codex and Claude Code plugin's hook architecture; do not pick one yourself."
+        ),
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        # The irreversible verb comes before "either", so it applies to both alternatives.
+        "name": "delegated-choice-irreversible-shared-verb",
+        "request": "Delete either the stale release backups or the stale build caches; decide yourself.",
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        # A remote-state change is not authorized by being offered, even if easy to undo.
+        "name": "delegated-choice-remote-state-change",
+        "request": "Either show me the branch protection settings on main or turn off required reviews on main; your call.",
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        # An irreversible verb after the alternatives still applies to both of them.
+        "name": "delegated-choice-irreversible-trailing-verb",
+        "request": "Either the stale release backups or the stale build caches, delete one; decide yourself.",
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "delegated-choice-same-owner-within-authority",
+        "request": "Reduce Codex usage by either rewriting AGENTS.md or trimming the Skill descriptions; choose one.",
+        "route": "optimize-agent-usage",
+        "phase": "audit-implementation",
+        "references": ("references/context-audit.md",),
+        "authorization": frozenset({"read", "edit", "test"}),
+    },
+    {
+        "name": "delegated-choice-needing-installation-authority",
+        "request": "Either redesign this plugin's architecture or install it in production; choose one.",
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    },
+    {
+        "name": "delegated-choice-irreversible-alternative",
+        "request": "Either delete the stale release backups or archive them; decide yourself.",
         "route": "clarify-intent",
         "phase": "route-choice",
         "references": (),

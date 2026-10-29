@@ -122,25 +122,16 @@ For a pointer-only rollback with no irreversible data effect, an isolated
 equivalent switch plus a behavior check may serve as the rehearsal. Merely
 resolving the prior target proves only presence or readability.
 
-An isolated restore rehearsal is itself a persistent write. Use the parent's
-isolated-restore-rehearsal phase, freeze its exact non-active target and effects,
-and obtain exact rehearsal-write authority before running it. It may establish
-`rehearsed` evidence only; it does not authorize candidate preparation, active
-promotion, the complete change, or cleanup. Prove that the rehearsal cannot
-affect active state or data and can be abandoned or recreated on failure;
-otherwise require the complete execution gate. A plan-only or non-mutating
-workflow rehearsal cannot perform this restore rehearsal.
+An isolated restore rehearsal is itself a persistent write, bounded by the parent's isolated-restore-rehearsal phase. Before running it, prove that its non-active target cannot affect active state or data and that a failed rehearsal can be abandoned or recreated within its authorized write set; otherwise require the complete execution gate. A plan-only or non-mutating workflow rehearsal cannot perform it.
 
 The following never prove a verified rollback by themselves: a successful
 backup or copy command, a present snapshot, an existing rollback script,
 documentation of restore commands, a checksum, a historical rehearsal, user
 confidence, or a mutable artifact that would need to be downloaded later.
 
-If the complete evidence set cannot be verified, stop before candidate or
-active-state mutation. Plan-only work may report the gap, but user acceptance
-of irreversible risk does not satisfy the contract. Continue only by explicitly
-re-routing to another applicable workflow that does not promise verified
-rollback and independently satisfies its authority and safety gates.
+If the complete evidence set cannot be verified, stop before candidate or active-state mutation and name the missing evidence and the specific effects that would stay unrecoverable. Plan-only work may report the gap, but user acceptance of irreversible risk does not satisfy the contract.
+
+Only an informed waiver lifts this rollback requirement, and only for its exact target and scope; `informed-waiver.md` owns its conditions and limits.
 
 ## Candidate And Dry Run
 

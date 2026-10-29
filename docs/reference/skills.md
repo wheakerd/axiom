@@ -8,7 +8,7 @@ Axiom bundles the skills below for both Codex and Claude Code. Describe what you
 
 **Link:** [Startup routing skill](../../plugin/skills/using-axiom/SKILL.md)
 
-**Description:** Finds the smallest matching skill set and leaves unmatched work with the host. It selects bundled skills by the descriptions in the host's skill list, keeps a more specific skill or tool you chose, and loads through the startup hook.
+**Description:** Finds the smallest matching skill set and leaves unmatched work with the host. It selects bundled skills by the descriptions in the host's skill list, keeps a more specific skill or tool you chose, and loads through the startup hook. When you explicitly delegate a choice and every alternative is reversible and already within your authority, the model picks one and says which and why before acting; otherwise the gate asks first.
 
 **Usage:**
 
@@ -20,7 +20,7 @@ Use the using-axiom skill to identify the skill that fits this request.
 
 **Link:** [Request clarification](../../plugin/skills/clarify-intent/SKILL.md)
 
-**Description:** Resolves materially different interpretations with a focused question and useful options.
+**Description:** Resolves materially different interpretations with one focused question per open decision, useful options, and room for your own answer.
 
 **Usage:**
 
@@ -178,7 +178,7 @@ Do not push.
 
 **Link:** [Changes with recovery planning](../../plugin/skills/reversible-system-change/SKILL.md)
 
-**Description:** Plans, rehearses, or executes persistent changes with verified recovery and outcome checks.
+**Description:** Plans, rehearses, or executes persistent changes with verified recovery and outcome checks. If recovery cannot be verified, it stops before candidate or active-state mutation; if you then knowingly choose to proceed without it, that informed waiver lifts the rollback requirement only for the effects you were told about, every other effect, rule, and check still applies, and the change is never called reversible.
 
 **Usage:**
 

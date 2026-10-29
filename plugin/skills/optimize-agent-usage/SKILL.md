@@ -8,6 +8,8 @@ description: Reduce or diagnose agent usage of tokens, credits, and context with
 Reduce total agent consumption while preserving the requested outcome,
 authorization boundaries, safety checks, and completion evidence.
 
+Defaults you may adapt, saying so: the Optimization Order sequence where no check depends on it, and report layout. Every other rule here and in the references this skill loads binds.
+
 ## Load Policy
 
 - For a conceptual explanation or a narrow current-product fact, use this file

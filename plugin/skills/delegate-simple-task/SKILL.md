@@ -9,6 +9,8 @@ Keep the main session model and its responsibility for the user's outcome.
 Assign suitable work only to a model the user has included in an ordered
 candidate list.
 
+Defaults you may adapt, saying so: wording, the order of eligibility checks where no gate depends on it, and report layout. Every other rule here and in the references this skill loads binds.
+
 ## Activation
 
 `using-axiom` selects this skill on an explicit invocation or a clear description match; selection loads only this file. Two conditions govern activation:

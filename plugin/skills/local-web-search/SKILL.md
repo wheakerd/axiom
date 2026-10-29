@@ -10,6 +10,8 @@ stop automated access when a site challenges or limits it. These constraints
 cannot guarantee that Cloudflare or another service will not classify a
 request as automated.
 
+Defaults you may adapt, saying so: query wording and report layout. Every other rule here and in the references this skill loads binds.
+
 ## Select The Execution Boundary
 
 Before the first request, use available tool documentation and host context to

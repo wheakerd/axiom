@@ -2,9 +2,7 @@
 
 ## Purpose
 
-After full rollback validation, apply the authorized mutation, verify its real
-postconditions, and restore the prior state when a pre-authorized failure gate
-is reached. Missing recovery material is prepared through its own phase first.
+After full rollback validation, apply the authorized mutation, verify its real postconditions, and restore the prior state when a pre-authorized failure gate is reached. Missing recovery material is prepared through its own phase first. Under an informed waiver, `informed-waiver.md` replaces only the rollback validation and the restore.
 
 ## Final Gate
 
@@ -57,18 +55,12 @@ then delete only that exact set. Re-inventory survivors afterward.
 Verify with fresh direct evidence at each affected layer. Select only relevant
 layers, but do not skip a layer that owns part of the requested outcome:
 
-1. Materialization: expected files, package records, database state, or remote
-   objects exist with the intended identity.
-2. Selection: active pointer, configuration, deployment revision, or routing
-   state resolves to the candidate.
-3. Runtime: service or process loaded that selection and reached required
-   readiness.
-4. Delivery: remote receiver, orchestrator, queue consumer, or rollout layer
-   applied the change rather than merely accepting it.
-5. Behavior: an affected command, health check, query, or user-visible path
-   demonstrates the requested result.
-6. Preservation: unrelated state and the verified rollback point remain intact
-   until cleanup is safe.
+1. Materialization: expected files, package records, database state, or remote objects exist with the intended identity.
+2. Selection: active pointer, configuration, deployment revision, or routing state resolves to the candidate.
+3. Runtime: service or process loaded that selection and reached required readiness.
+4. Delivery: remote receiver, orchestrator, queue consumer, or rollout layer applied the change rather than merely accepting it.
+5. Behavior: an affected command, health check, query, or user-visible path demonstrates the requested result.
+6. Preservation: unrelated state and every verified rollback point remain intact until cleanup is safe.
 
 Use current authoritative queries after the change. Cached output, a prior dry
 run, expected configuration text, or one successful lower layer cannot prove a

@@ -1,4 +1,4 @@
 interface:
   display_name: "Clarify Intent"
   short_description: "Resolve unclear requests with options or a custom answer"
-  default_prompt: "Use $clarify-intent to identify the material ambiguity in this request and ask one focused question with plausible options and room for my own answer."
+  default_prompt: "Use $clarify-intent to identify what is materially unresolved in this request and ask one focused question per open decision, with plausible options and room for my own answer."

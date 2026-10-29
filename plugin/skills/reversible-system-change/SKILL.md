@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, prepare recovery material, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, active-version promotion, or explicit machine-credential lifecycle inventory, plan, activation, or retirement with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; recovery preparation and isolated restore rehearsals require bounded write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, generic status queries, or conceptual explanations. When installation or deployment and architecture work are mutually exclusive alternatives, clarify before routing; do not select a different write scope on the user's behalf.
+description: Plan, prepare recovery material, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, active-version promotion, or explicit machine-credential lifecycle inventory, plan, activation, or retirement with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; recovery preparation and isolated restore rehearsals require bounded write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, generic status queries, or conceptual explanations.
 ---
 
 # Reversible System Change
@@ -8,36 +8,16 @@ description: Plan, prepare recovery material, rehearse, or execute persistent sy
 Make one authorized persistent change without losing the ability to identify,
 restore, and verify the prior working state.
 
+Defaults you may adapt, saying so: step order where no gate depends on it, and report layout. Every other rule here and in the references the active phase loads binds.
+
 ## Select One Phase
 
-- Explicit machine-credential lifecycle: read
-  `../using-axiom/references/credential-lifecycle.md` first. A metadata-only
-  inventory stops there. For persistent activation, rollout, retirement, or
-  cleanup, continue into the applicable phase below; provider-side creation,
-  revocation, or secret disclosure also loads `confirm-external-action` under
-  an independent envelope.
-- Plan or non-mutating workflow rehearsal: read
-  `references/preflight-and-rollback.md`. Keep the entire phase read-only; do
-  not create a candidate, backup, capsule, cache, remote record, or sensitive
-  content access.
-- Prepare missing recovery material: read `references/preflight-and-rollback.md`
-  and `references/recovery-material-preparation.md`. This bounded authorized
-  phase may create an isolated backup before restore validation, but cannot
-  prepare a candidate, overwrite prior material, or alter active state.
-- Authorized isolated restore rehearsal: read
-  `references/preflight-and-rollback.md` only. Freeze an isolated non-active
-  target and its complete write set, obtain exact rehearsal-write authority,
-  and verify only the restore outcome. This phase may establish `rehearsed`
-  evidence; it never authorizes candidate preparation, active promotion, the
-  complete change, or cleanup.
-- Execute a complete authorized change: read
-  `references/preflight-and-rollback.md` first. If recovery material must be
-  created, enter its preparation phase within the current authority. Read
-  `references/execution-and-verification.md` only after the exact target,
-  write set, promotion authority, rollback coverage, and current restore
-  validation pass.
-- Conceptual explanations and pure status/version/availability queries do not
-  select this skill or load its references.
+- Explicit machine-credential lifecycle: read `../using-axiom/references/credential-lifecycle.md` first. A metadata-only inventory stops there. For persistent activation, rollout, retirement, or cleanup, continue into the applicable phase below; provider-side creation, revocation, or secret disclosure also loads `confirm-external-action` under an independent envelope.
+- Plan or non-mutating workflow rehearsal: read `references/preflight-and-rollback.md`. Keep the entire phase read-only; do not create a candidate, backup, capsule, cache, remote record, or sensitive content access.
+- Prepare missing recovery material: read `references/preflight-and-rollback.md` and `references/recovery-material-preparation.md`. This bounded authorized phase may create an isolated backup before restore validation, but cannot prepare a candidate, overwrite prior material, or alter active state.
+- Authorized isolated restore rehearsal: read `references/preflight-and-rollback.md` only. Freeze an isolated non-active target and its complete write set, obtain exact rehearsal-write authority, and verify only the restore outcome. This phase may establish `rehearsed` evidence; it never authorizes candidate preparation, active promotion, the complete change, or cleanup.
+- Execute a complete authorized change: read `references/preflight-and-rollback.md` first. If recovery material must be created, enter its preparation phase within the current authority. Read `references/execution-and-verification.md` only after the exact target, write set, promotion authority, rollback coverage, and current restore validation pass, or after an informed waiver under `references/informed-waiver.md` replaces the last two.
+- Conceptual explanations and pure status/version/availability queries do not select this skill or load its references.
 
 ## Authority Boundary
 
@@ -68,18 +48,13 @@ prerequisites present, and must have passed a target-native restore validation
 or an authorized isolated rehearsal.
 Recheck that evidence immediately before mutation.
 
-Recovery-material preparation uses its directly routed isolation and failure
-disposal gate. It does not require an already validated backup. For an isolated
-restore rehearsal, first prove that its non-active target cannot affect active
-state or data and that a failed rehearsal can be abandoned or recreated within
-its authorized write set. If that isolation is
-unproven, treat the rehearsal as complete execution and require this full gate.
-
 Keep `identified`, `present`, `readable`, `restore-validated`, and `rehearsed`
 as distinct evidence states. A backup job, artifact, script, manifest,
 checksum, historical rehearsal, or user acceptance of risk is not verified
 rollback. If current restore validation or complete coverage cannot run, stop
 execution; a plan may report the gap.
+
+An informed waiver under `references/informed-waiver.md` lifts this rollback requirement only for the effects named to the user; every other effect and rule still binds.
 
 ## Change Contract
 
@@ -104,19 +79,7 @@ unverified, not complete.
 
 ## Resume And Compaction Handoff
 
-After resume or compaction, reobserve the target and drift-sensitive state,
-then fail closed unless host-native task context and current direct evidence
-from the owning system reconstruct the active phase, exact current user
-authority, frozen action envelope and complete write set, prior mutations and
-attempt identifiers, idempotency status, and phase-appropriate recovery
-evidence. Preparation resumes through its isolation and disposal gate; candidate
-or active-state mutation still requires current full rollback validation. If any
-required field is missing, stale, or inconsistent, perform zero new mutations.
-Never adopt post-change state as the prior rollback baseline. An unknown
-external outcome enters Verify only and must not be
-resent. Reestablish changed or missing evidence and obtain renewed authority;
-authority cannot waive the rollback gate. Do not add a daemon, cache,
-telemetry, or persistent handoff tool to reconstruct the handoff.
+After resume or compaction, reobserve the target and drift-sensitive state, then fail closed unless host-native task context and current direct evidence from the owning system reconstruct the active phase, exact current user authority, frozen action envelope and complete write set, prior mutations and attempt identifiers, idempotency status, and phase-appropriate recovery evidence. Preparation resumes through its isolation and disposal gate; candidate or active-state mutation still requires current full rollback validation. If any required field is missing, stale, or inconsistent, perform zero new mutations. Never adopt post-change state as the prior rollback baseline. An unknown external outcome enters Verify only and must not be resent. Reestablish changed or missing evidence and obtain renewed authority; authority alone cannot waive the rollback gate, and only an informed waiver that current host-native context still shows lifts its rollback requirement. Do not add a daemon, cache, telemetry, or persistent handoff tool to reconstruct the handoff.
 
 ## Safety And Handoff
 

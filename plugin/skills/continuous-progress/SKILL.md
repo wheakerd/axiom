@@ -15,6 +15,8 @@ not a scheduler or a survival guarantee. Confirm the actual host capabilities be
 starting a supervised run. Never present an unavailable supervision mechanism
 as active, and never silently reduce the request to a foreground-only loop.
 
+Defaults you may adapt, saying so: step order where no gate depends on it, and report layout. Every other rule here and in the references the active phase loads binds.
+
 ## Select The Phase
 
 - Before activation, read [Host and run contract](references/host-and-run-contract.md).

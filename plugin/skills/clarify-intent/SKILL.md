@@ -8,6 +8,8 @@ description: Clarify a user request when its wording supports materially differe
 Turn a material ambiguity into a user decision while preserving the requested
 outcome, constraints, and existing authorization.
 
+Defaults you may adapt, saying so: question and option counts, how independent questions are batched, and wording. Every other rule here binds.
+
 ## Entry And Scope
 
 - `using-axiom` may select this skill before choosing an action route when a
@@ -22,22 +24,13 @@ outcome, constraints, and existing authorization.
   already established for the same action. A permission-bypass mode does not
   resolve an ambiguous intended result.
 
-## Ask One Focused Question
+## Ask Focused Questions
 
-1. Name the unresolved decision in one concise, self-contained question.
-2. Offer two or three distinct, plausible interpretations grounded in the
-   user's words and current context. State the outcome or tradeoff of each;
-   do not invent unrelated requirements to fill the choices.
-3. Let the user enter a custom answer. Use the host's native question tool
-   when available in the current mode and follow its option and free-text
-   conventions. If that tool is unavailable, ask in ordinary conversation.
-4. Recommend an option only when known user priorities support it and the
-   host's question format calls for a recommendation. A default, recommendation,
-   silence, elapsed time, or "choose one" is not a submitted decision where
-   alternatives change route ownership or action authority.
-5. Wait before work that depends on a material choice. Continue authorized
-   independent work when useful. Do not poll, repeat the same question, or
-   manufacture additional interview rounds.
+1. Ask one concise, self-contained question per unresolved material decision. Ask independent decisions together, in one call when the host's question tool supports several questions; never split one decision into several questions or add rounds.
+2. Offer the distinct, plausible interpretations, usually two to four and within the host tool's limits, grounded in the user's words and current context. State the outcome or tradeoff of each; do not invent unrelated requirements to fill the choices.
+3. Let the user enter a custom answer. Use the host's native question tool when available in the current mode and follow its option and free-text conventions. If that tool is unavailable, ask in ordinary conversation.
+4. Recommend an option only when known user priorities support it and the host's question format calls for a recommendation. A default, recommendation, silence, or elapsed time is not a submitted decision; a delegated answer such as "choose one" counts only when every alternative is reversible and already authorized. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.
+5. Wait before work that depends on a material choice. Continue authorized independent work when useful. Do not poll, repeat the same question, or manufacture additional interview rounds.
 
 If there is only one plausible interpretation but a required value is missing,
 ask for that value directly instead of manufacturing multiple choices. If the
@@ -61,6 +54,7 @@ follow-up. Otherwise resume the task without restating a questionnaire.
 | --- | --- |
 | "Clean up the old records" without a target or retention meaning | Ask whether the user means archive, remove duplicates, or another intended cleanup; accept custom details before changes |
 | "Maybe fix this typo" with one identified typo | Continue with the clear correction; tentative wording alone is not a trigger |
+| "Export the report" with the destination and the file format both unresolved | Ask both independent decisions together, one question each, in one round |
 | "Use either deployment destination" with different authority boundaries | Ask one destination question; do not pick an action route first |
 | User supplies a custom answer or corrects an option | Preserve that answer and reroute the resolved request |
 | A permission-bypass mode with an unresolved target | Ask; execution permissions do not identify the intended target |

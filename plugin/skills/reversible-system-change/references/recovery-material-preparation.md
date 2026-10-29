@@ -33,6 +33,8 @@ or overwriting any existing candidate or recovery material.
 
 ## Isolation And Failure Gate
 
+The preparation phase uses this isolation and failure disposal gate, not the full rollback gate. It does not require an already validated backup.
+
 Before the first preparation write, directly establish that:
 
 1. The destination is unused and outside active selection, source data, and
@@ -70,8 +72,4 @@ state, and isolation and disposal evidence. Missing restore validation is
 expected in this phase; missing preparation evidence is not permission to
 continue. Never relabel post-change source state as the original prior state.
 
-After preparation, return to `preflight-and-rollback.md`. Require current full
-coverage and target-native restore validation or an authorized isolated restore
-rehearsal against this exact material before any candidate or active-state
-mutation. Preparation-only authority ends with the observed material and its
-evidence report; later actions use their own phase and applicable authority.
+After preparation, return to `preflight-and-rollback.md`. Require current full coverage and target-native restore validation or an authorized isolated restore rehearsal against this exact material before any candidate or active-state mutation, except for effects that an informed waiver under `informed-waiver.md` names. Preparation-only authority ends with the observed material and its evidence report; later actions use their own phase and applicable authority.

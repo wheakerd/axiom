@@ -9,21 +9,14 @@ Produce a self-contained plan that describes the work currently requested.
 Treat the plan as the current agreement about the work. Size its detail to the
 task and preserve the user's preferred format when it remains useful.
 
+Defaults you may adapt, saying so: plan structure and detail, question count, and the order of the final checks. Every other rule here and in the references the active phase loads binds.
+
 ## Select The Planning Phase
 
-- Use the request and the existing artifact to identify planning; a visible
-  host plan-mode indicator is not required.
-- A request to formulate or revise a plan authorizes that planning work.
-  Execution, scheduling, creating another host task, and saving a file require
-  their own applicable user intent. Carry forward authority already granted;
-  do not add a confirmation gate merely because a plan was produced.
-- Specialized Axiom workflows retain their domain and authorization rules.
-  Select their owner for specialized planning. When explicitly invoked to
-  refine such a plan, apply this skill to its presentation and consistency
-  without replacing those rules or resolving a material workflow choice for
-  the user.
-- Read `references/scope-revisions.md` when a revision removes, replaces, or
-  restores scope, or when dependency and constraint treatment is uncertain.
+- Use the request and the existing artifact to identify planning; a visible host plan-mode indicator is not required.
+- A request to formulate or revise a plan authorizes that planning work. Execution, scheduling, creating another host task, and saving a file require their own applicable user intent. Carry forward authority already granted; do not add a confirmation gate merely because a plan was produced.
+- Specialized Axiom workflows retain their domain and authorization rules. Select their owner for specialized planning. When explicitly invoked to refine such a plan, apply this skill to its presentation and consistency without replacing those rules or resolving a material workflow choice for the user, unless the user explicitly delegated that choice and every alternative is reversible and already authorized; then state the choice and why before acting. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.
+- Read `references/scope-revisions.md` when a revision removes, replaces, or restores scope, or when dependency and constraint treatment is uncertain.
 
 ## Establish The Current Requirements
 

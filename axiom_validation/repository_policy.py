@@ -154,7 +154,7 @@ SKILL_REFERENCE_ORDER = (
 )
 INSTRUCTION_MAX_BYTES = 8192
 AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
-"Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's architecture across shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for evaluating or reviewing an individual Skill or Skill proposal, repository-local AGENTS.md, .agents/skills, or .claude/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission. When architecture and installation or deployment are mutually exclusive alternatives, ask one concise clarification before routing and keep the workflow unselected until the user chooses; delegation or execution limits do not resolve that choice. Preserve each option's original end goal; state permission limits separately instead of replacing a goal with preparation, review, planning or preflight."
+"Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's architecture across shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for evaluating or reviewing an individual Skill or Skill proposal, repository-local AGENTS.md, .agents/skills, or .claude/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission."
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",

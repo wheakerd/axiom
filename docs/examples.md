@@ -8,7 +8,7 @@ A request that names a skill uses Codex's `$skill-name` form here. In Claude Cod
 
 > Clean up the old records.
 
-If context leaves archiving, deduplication, and deletion as materially different outcomes, the gate selects [Clarify Intent](../plugin/skills/clarify-intent/SKILL.md). Ask one focused question with plausible options and a custom answer before dependent work. "Maybe fix this identified typo" needs no clarification when the correction is clear. A permission-bypass mode does not resolve intent.
+If context leaves archiving, deduplication, and deletion as materially different outcomes, the gate selects [Clarify Intent](../plugin/skills/clarify-intent/SKILL.md). Ask one focused question per open decision, with plausible options and a custom answer, before dependent work; ask independent decisions together in one round. "Maybe fix this identified typo" needs no clarification when the correction is clear. A permission-bypass mode does not resolve intent.
 
 ## `delegate-simple-task`
 
@@ -116,6 +116,8 @@ An ordinary "commit the staged change and git push origin main" stays host-nativ
 
 An isolated restore rehearsal is a separately authorized persistent write. It may establish recovery evidence but does not authorize the complete change or cleanup. A deployment with a consequential external effect also selects the external-action owner; neither route satisfies the other's gates.
 
+If you later ask to execute and current restore validation cannot run, the skill stops before candidate or active-state mutation and names the effects that would stay unrecoverable. The decision is yours: an explicit choice to proceed without verified rollback is an informed waiver that lifts the rollback requirement only for those named effects; every other effect keeps its rollback. The change then continues under every other rule of the skill, including its authority, write-set, failure, and verification gates; the waiver is recorded, and the change is never reported as reversible.
+
 ## Requests That Should Not Route
 
 | Request | Reason |
@@ -134,4 +136,8 @@ No route is a normal outcome. It neither denies the task nor relaxes host, repos
 
 > Either redesign this plugin's architecture or install it in production; choose one.
 
-The alternatives change owners, write surfaces, and authority, so the gate selects only clarification before choosing an action route. Delegating the choice does not remove material ambiguity. Preserve each original goal and explain permission limits separately; do not substitute planning or review for installation. Once the user chooses, route the selected work without reopening settled conditions.
+The alternatives change owners, write surfaces, and authority, and offering the production installation does not authorize it, so the gate selects only clarification before choosing an action route. A delegated choice settles only when every alternative is reversible and already authorized. Preserve each original goal and explain permission limits separately; do not substitute planning or review for installation. Once the user chooses, route the selected work without reopening settled conditions.
+
+> Audit either this repository's AGENTS.md instructions or this packaged plugin's hook architecture; your call.
+
+Both alternatives are read-only audits within the request's authority, so no question is needed. The model picks one, says which and why before starting so you can redirect, and routes it to its owner.

@@ -11,6 +11,8 @@ host's model decides what to check, how deep, and what to recommend. It exists
 because long tasks and repeated compaction let summaries stand in for
 evidence, and a summary that says "done" is a claim, not a fact.
 
+Defaults you may adapt, saying so: Direction step order where no gate depends on it, and ledger and report layout. Every other rule here and in the references this skill loads binds.
+
 ## Apply When
 
 - The user asks to verify, audit, or double-check whether work is complete.

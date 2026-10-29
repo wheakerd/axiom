@@ -20,9 +20,118 @@ class RoutingContractTests(unittest.TestCase):
     def test_all_routing_fixtures(self):
         failures = []
         check_routing_scenarios(ROUTING_SCENARIOS, failures)
-        self.assertEqual(77 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
+        self.assertEqual(86 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
         self.assertEqual(10, len(ROUTE_BOUNDARY_SCENARIOS))
         self.assertEqual([], failures)
+
+    def test_delegated_choice_settles_only_reversible_already_authorized_alternatives(self):
+        audits = (
+            "Audit either this repository's AGENTS.md instruction discovery or this "
+            "packaged Codex and Claude Code plugin's hook architecture"
+        )
+        for delegation in ("choose one", "your call", "decide yourself"):
+            with self.subTest(delegation=delegation):
+                choice = route_contract(f"{audits}; {delegation}.")
+                self.assertEqual(
+                    frozenset({"agents-architect", "agent-plugin-architect"}), choice["route"]
+                )
+                self.assertEqual("delegated-choice", choice["phase"])
+                self.assertEqual((), choice["references"])
+                self.assertEqual(frozenset({"read"}), choice["authorization"])
+        # Without an explicit delegation, routing never silently picks one owner.
+        self.assertEqual("clarify-intent", route_contract(f"{audits}.")["route"])
+        for negated in ("do not pick one yourself", "don't choose one for me", "it is not your call", "it isn't your call", "it isn't up to you"):
+            with self.subTest(negated=negated):
+                self.assertEqual("clarify-intent", route_contract(f"{audits}; {negated}.")["route"])
+
+        # The deployment alternative, not the delegation wording, forces the question.
+        usage = "Reduce Codex usage by either rewriting AGENTS.md or {}; choose one."
+        self.assertEqual(
+            "clarify-intent",
+            route_contract(usage.format("changing deployment defaults"))["route"],
+        )
+        trimmed = route_contract(usage.format("trimming the Skill descriptions"))
+        self.assertEqual("optimize-agent-usage", trimmed["route"])
+        self.assertEqual(frozenset({"read", "edit", "test"}), trimmed["authorization"])
+
+        # Offering an alternative grants no installation, send, credential, or irreversible authority.
+        for request in (
+            "Either redesign this plugin's architecture or install it in production; choose one.",
+            "Either audit this repository's AGENTS.md or send the summary email to the team; your call.",
+            "Either rotate the signing key at the provider or audit this repository's AGENTS.md; your call.",
+            "Either delete the stale release backups or archive them; decide yourself.",
+            "Delete either the stale release backups or the stale build caches; decide yourself.",
+            "Either the stale release backups or the stale build caches, delete one; decide yourself.",
+            "Either show me the branch protection settings on main or turn off required reviews on main; your call.",
+            "Either merge the release branch or push the hotfix tag; your call.",
+        ):
+            with self.subTest(request=request):
+                contract = route_contract(request)
+                self.assertEqual("clarify-intent", contract["route"])
+                self.assertEqual("route-choice", contract["phase"])
+                self.assertEqual(frozenset({"read"}), contract["authorization"])
+
+        # Alternatives without an Axiom route leave the choice with the host.
+        for request in (
+            "Either fix the README typo or the CONTRIBUTING typo; your call.",
+            "Fix either the README typo or the CONTRIBUTING typo.",
+        ):
+            with self.subTest(request=request):
+                self.assertIsNone(route_contract(request)["route"])
+
+    def test_delegated_choice_scenarios_require_installed_alternatives(self):
+        choice = {
+            "route": frozenset({"agents-architect", "missing-route", None}),
+            "phase": "delegated-choice",
+            "references": (),
+            "authorization": frozenset({"read"}),
+        }
+        scenario = {"name": "synthetic-delegated-choice", "request": "synthetic"}
+        with patch.object(routing_contracts, "route_contract", return_value=choice):
+            failures = []
+            check_routing_scenarios((scenario,), failures)
+        self.assertEqual(1, len(failures), failures)
+        self.assertIn("missing-route", failures[0])
+
+    def test_gate_pins_choice_invariants_but_not_the_clarification_count(self):
+        gate = routing_contracts.REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
+        original_read = Path.read_text
+
+        def replaced(old, new):
+            def read(path, *args, **kwargs):
+                text = original_read(path, *args, **kwargs)
+                if path == gate:
+                    self.assertIn(old, text)
+                    return text.replace(old, new, 1)
+                return text
+            return read
+
+        for invariant in (
+            "Routing never silently picks among mutually exclusive implementations",
+            "every alternative is reversible and already authorized",
+            "select only `clarify-intent`",
+            "explicitly delegates the choice",
+            "state which and why before acting",
+            "An offered option authorizes no persistent system change",
+            "never silently replaces the stated goal",
+            "including those in references the active phase loads, bind",
+        ):
+            with self.subTest(invariant=invariant), patch.object(
+                Path, "read_text", replaced(invariant, "REMOVED CONTRACT")
+            ):
+                failures = []
+                check_cross_route_resume_contracts(failures)
+                self.assertTrue(any("using-axiom" in failure for failure in failures), failures)
+
+        # Procedure stays adaptable: the clarification count and delegation examples are not pinned.
+        for old, new in (
+            ("ask one concise clarification question", "ask concise clarification questions"),
+            ('("choose one", "your call")', '("decide yourself")'),
+        ):
+            with self.subTest(procedure=old), patch.object(Path, "read_text", replaced(old, new)):
+                failures = []
+                check_cross_route_resume_contracts(failures)
+                self.assertEqual([], failures)
 
     def test_ordinary_request_does_not_route(self):
         self.assertIsNone(route_contract("Summarize this README without changing files.")["route"])

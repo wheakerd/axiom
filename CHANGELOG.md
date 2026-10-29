@@ -6,6 +6,26 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## 0.22.0 - unreleased
+
+### Changed
+
+- When you explicitly delegate a choice ("choose one", "your call") and every alternative is reversible and already within your authority, the startup routing gate lets the model pick: it says which alternative and why before acting, so you can redirect. Otherwise it still asks one clarification question first. Offering an alternative authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost, and a lighter or read-only alternative never silently replaces your goal.
+- Bundled skills give direction: twelve skills name the few defaults the model may adapt, such as step order where no gate depends on it and report layout, saying so when it departs; every authority, safety, and evidence rule, including those in the references a phase loads, still binds. The startup gate states the same rule for every selected skill and lets a skill's own defaults list govern.
+- `clarify-intent` asks one question per open decision, asks independent decisions together when the host's question tool allows it, and offers the plausible interpretations, usually two to four, instead of exactly one question with two or three options.
+- The descriptions of `traceable-git-submit`, `agent-plugin-architect`, `reversible-system-change`, `confirm-external-action`, and `review-axiom-task` keep what the skill does, when to use it, and when not to; their clarification procedure lives in the skill bodies.
+- `reversible-system-change`: when verified rollback cannot be established and you, told which effects would stay unrecoverable, explicitly choose to proceed without it, your informed waiver lifts the rollback requirement only for those effects, and every other effect keeps its rollback. The change still follows every other rule of the workflow, including its authorization, write-set, safety, verification, and completion rules, and a failure stops further writes and reports the unrecovered state. The workflow never calls the change reversible or the rollback verified, and the waiver authorizes nothing else.
+
+### Behavioral impact
+
+You get fewer questions when you have already delegated a choice within your authority, and `clarify-intent` can settle several open decisions in one round. Authority does not widen: an offered option still authorizes no persistent or external effect, the rollback workflow still stops without an informed, explicit waiver, and a waiver covers only its exact target. The startup gate grows from 4648 to 5309 bytes, still 590 bytes below the v0.7.9 baseline. The runtime digest changes because the gate, twelve other skills, and a new `reversible-system-change` reference are installed inputs.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.22.0.md) for the reasoning, the changed passages, the measurement, and the evidence boundary.
+
 ## Repository policy revision 108
 
 ### Changed

@@ -44,6 +44,26 @@ GATE_SELECTION_ANCHORS = (
     "is not displaced by a bundled route.",
     "No match continues host-native.",
 )
+# The startup gate's choice rule: routing never silently picks one of mutually
+# exclusive alternatives. An explicit delegation lets the host's model choose only
+# when every alternative is reversible and already authorized; otherwise the gate
+# selects clarify-intent. Offering an alternative authorizes no persistent system
+# change, external or remote-state change, deletion, credential use, or material cost.
+CHOICE_ALTERNATIVES = re.compile(
+    r"\beither\s+(?P<first>.+?)\s+or\s+(?P<second>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
+)
+EXPLICIT_CHOICE_DELEGATION = re.compile(
+    r"\b(?:choose one|pick one|your call|your choice|you decide|decide yourself|up to you)\b"
+)
+NEGATED_CHOICE_DELEGATION = re.compile(
+    r"\b(?:do not|don't|never|not)\s+(?:\w+\s+){0,2}?(?:choose|pick|decide)\b|(?:\bnot|n't|\bnever)\s+(?:your call|your choice|up to you)\b"
+)
+UNGRANTED_OR_IRREVERSIBLE_CHOICE = re.compile(
+    r"\b(?:deploy\w*|install\w*|send\w*|post|invit\w*|publish\w*|purchas\w*|buy|pay|billing|"
+    r"credentials?|secrets?|passwords?|api[ -]keys?|delet\w*|destroy\w*|drop|wipe|purg\w*|"
+    r"revok\w*|revocation|force\w*|push\w*|merg\w*|remov\w*|disabl\w*|turn(?:ing)? off|accounts?|tags?)\b"
+)
+ALREADY_AUTHORIZED_CHOICE = frozenset({"read", "edit", "test"})
 LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
 LIFECYCLE_COMMANDS = (
     "codex plugin marketplace upgrade axiom",
@@ -618,8 +638,59 @@ def historical_route_contract(request: str) -> dict[str, Any]:
     }
 
 
+def _choice_contract(request: str) -> dict[str, Any] | None:
+    """Apply the gate's choice rule to one either/or request, or return None.
+
+    Each alternative is routed with the shared request prefix. A delegated choice whose
+    alternatives are all reversible and already authorized yields the acceptable route set
+    (a frozenset; the host's model selects one after stating it), or the shared owner's
+    contract. Without delegation, same-owner alternatives defer to the existing model, as
+    do alternatives that no Axiom route owns; every other material choice clarifies.
+    """
+    normalized = request.casefold()
+    match = CHOICE_ALTERNATIVES.search(normalized)
+    if match is None:
+        return None
+    prefix = normalized[: match.start()]
+    suffix = normalized[match.end():]
+    texts = (match["first"], match["second"])
+    contracts = tuple(route_contract(prefix + text) for text in texts)
+    gated = any(
+        UNGRANTED_OR_IRREVERSIBLE_CHOICE.search(prefix + text + suffix)
+        or contract["route"] == "clarify-intent"
+        or contract["phase"].startswith("credential")
+        or not contract["authorization"] <= ALREADY_AUTHORIZED_CHOICE
+        for text, contract in zip(texts, contracts)
+    )
+    clarify = {
+        "route": "clarify-intent",
+        "phase": "route-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    }
+    if gated:
+        return clarify
+    routes = frozenset(contract["route"] for contract in contracts)
+    delegated = bool(EXPLICIT_CHOICE_DELEGATION.search(normalized)) and not NEGATED_CHOICE_DELEGATION.search(normalized)
+    if routes == {None} or (len(routes) == 1 and not delegated):
+        return None
+    if not delegated:
+        return clarify
+    if contracts[0] == contracts[1]:
+        return contracts[0]
+    return {
+        "route": routes,
+        "phase": "delegated-choice",
+        "references": (),
+        "authorization": frozenset({"read"}),
+    }
+
+
 def route_contract(request: str) -> dict[str, Any]:
     """Evaluate current explicit routes without rewriting the historical model."""
+    choice = _choice_contract(request)
+    if choice is not None:
+        return choice
     contract = historical_route_contract(request)
     if contract["route"] == "clarify":
         return {**contract, "route": "clarify-intent"}
@@ -954,13 +1025,20 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "authorization under either route never satisfies the other.",
                 "Explicit machine-credential lifecycle work composes the existing owners",
                 "references/credential-lifecycle.md",
-                "When a request delegates a choice among mutually exclusive implementations",
+                # Pin the delegated-choice authority and safety invariants, not the
+                # clarification count or phrasing; offline route scenarios cover procedure.
+                "Routing never silently picks among mutually exclusive implementations",
                 "materially different route sets, write surfaces, or authorization or safety boundaries",
-                "routing MUST NOT choose an alternative for the user.",
-                "Select only `clarify-intent` and ask exactly one concise clarification question before selecting an action route.",
-                'Wording such as "choose one" does not remove the ambiguity.',
+                "explicitly delegates the choice",
+                "every alternative is reversible and already authorized",
+                "state which and why before acting",
+                "select only `clarify-intent`",
+                "before selecting an action route.",
+                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost",
+                "never silently replaces the stated goal.",
                 "Once the user chooses an unambiguous implementation, resume normal route selection.",
                 "An explicit usage-reduction goal selects",
+                "including those in references the active phase loads, bind",
                 "On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation.",
                 "If route or phase cannot be reconstructed, perform zero new mutations",
             ),
@@ -973,7 +1051,6 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "Repo-local `AGENTS.md`, `.agents/skills`, or `.claude/skills` work belongs to",
                 "references/release-readiness.md",
                 "Load only references needed for the active phase.",
-                "at most one other Axiom route",
                 "An explicit usage-cost goal may add `optimize-agent-usage`",
                 "Git submission, installation, publication, deployment, and consequential external effects remain separate active phases",
             ),
@@ -1104,7 +1181,16 @@ def check_routing_scenarios(
         route_value = actual["route"]
         if route_value in (None, "clarify"):
             continue
-        routes = route_value if isinstance(route_value, tuple) else (route_value,)
+        if isinstance(route_value, frozenset):
+            # A delegated choice: every acceptable alternative must be an installed route.
+            routes = tuple(sorted({
+                route
+                for alternative in route_value
+                if alternative is not None
+                for route in (alternative if isinstance(alternative, tuple) else (alternative,))
+            }))
+        else:
+            routes = route_value if isinstance(route_value, tuple) else (route_value,)
         for route in routes:
             main_path = REPOSITORY_ROOT / "plugin" / "skills" / route / "SKILL.md"
             try:
