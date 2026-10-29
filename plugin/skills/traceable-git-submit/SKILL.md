@@ -9,7 +9,7 @@ Defaults you may adapt, saying so: the order of read-only inspections where no g
 
 ## Intent Gate
 
-Distinguish unresolved workflow choice from a selected phase before Git inspection. If mutually exclusive options materially change route ownership, persistent metadata, write surfaces or authority, ask one concise clarification before selecting; never choose silently. A delegated choice resolves it only when every option is reversible and already authorized, and a read-only or lighter option never silently replaces the stated goal. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost. Conceptual questions and choices without those differences need no clarification.
+Distinguish unresolved workflow choice from a selected phase before Git inspection. If mutually exclusive options materially change route ownership, persistent metadata, write surfaces or authority, ask one concise clarification before selecting; never choose silently. A delegated choice resolves it only when every option is reversible and already authorized; then state which and why before acting. A read-only or lighter option never silently replaces the stated goal. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost. Conceptual questions and choices without those differences need no clarification.
 
 After selection, never reconfirm an unchanged envelope. Ask only for missing
 necessary input or a material conflict, including checkpoint history that
