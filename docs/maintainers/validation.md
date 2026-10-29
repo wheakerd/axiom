@@ -170,8 +170,4 @@ records and [Routing Evaluations](../../evals/README.md) for bounded routing
 runs. Preserve original subjects, outcomes, and unavailable cases; never
 relabel earlier evidence as a new host, lifecycle, version, or date.
 
-The checked-in release status remains `STATIC-ONLY`. A later observation is a
-separate artifact bound to its immutable subject. Passing contributor checks
-does not authorize tag creation or publication; those actions and their
-evidence follow [Repository Governance](../repository-governance.md) and
-[Release Documentation And Evidence](release-documentation.md).
+The checked-in release status remains `STATIC-ONLY`. A later observation is a separate artifact bound to its immutable subject. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).

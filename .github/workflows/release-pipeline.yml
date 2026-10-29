@@ -1,0 +1,145 @@
+name: Release pipeline
+
+on:
+  # Only a change to the Codex manifest can change the plugin version, so every
+  # other pull request or main commit leaves this workflow idle.
+  pull_request:
+    branches:
+      - main
+    paths:
+      - plugin/.codex-plugin/plugin.json
+  push:
+    branches:
+      - main
+    paths:
+      - plugin/.codex-plugin/plugin.json
+  # Resume an interrupted release of the version that main declares.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-candidate:
+    name: Release candidate
+    if: "github.event_name == 'pull_request'"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: release-candidate-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the pull request head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Check the version step and preview the Release body
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          python3 -B scripts/release-pipeline.py candidate
+          --repository "$GITHUB_REPOSITORY"
+          --base-sha "$BASE_SHA"
+          --head-sha "$HEAD_SHA"
+
+  publish-release:
+    name: Publish release
+    if: "github.event_name != 'pull_request' && github.ref == 'refs/heads/main'"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    concurrency:
+      group: release-pipeline
+      cancel-in-progress: false
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+    outputs:
+      tag: ${{ steps.publish.outputs.tag }}
+      catalog: ${{ steps.publish.outputs.catalog }}
+    steps:
+      - name: Check out the main commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Tag, publish, and observe the release
+        id: publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 -B scripts/release-pipeline.py publish
+          --repository "$GITHUB_REPOSITORY"
+          --commit "$GITHUB_SHA"
+
+  advance-catalogs:
+    name: Advance marketplace catalogs
+    needs: publish-release
+    if: "needs.publish-release.outputs.catalog == 'pending'"
+    environment: release-tag-creation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    concurrency:
+      group: release-catalog
+      cancel-in-progress: false
+    permissions:
+      checks: read
+      contents: read
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+          package-manager-cache: false
+
+      - name: Mint the catalog handoff App token
+        id: catalog-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.AXIOM_RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AXIOM_RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Open, verify, and merge the catalog handoff
+        env:
+          AXIOM_RELEASE_APP_TOKEN: ${{ steps.catalog-app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.publish-release.outputs.tag }}
+        run: >-
+          python3 -B scripts/release-pipeline.py catalog
+          --repository "$GITHUB_REPOSITORY"
+          --tag "$RELEASE_TAG"

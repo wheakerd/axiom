@@ -12,13 +12,14 @@ from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 
 
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 148 required files, 6 JSON files, "
+    "Publication validation passed: 150 required files, 6 JSON files, "
     "164 Markdown files, 21 documentation negative fixtures, "
     "87 offline route contract fixtures, "
     "142 black-box routing cases, 66 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 8 routing-context lifecycle scenarios, "
-    "42 canonical release-fact surfaces, 10 structured Git route-boundary scenarios, "
+    "42 canonical release-fact surfaces, 14 generated README skill rows, "
+    "10 structured Git route-boundary scenarios, "
     "92 canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 241 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "
@@ -26,7 +27,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"version {RELEASE_VERSION}, 2 compatibility evidence records, "
     "12 compatibility evidence negative fixtures, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
-    "55 release-provenance fixtures, 20 immutable external action and image pins "
+    "55 release-provenance fixtures, 28 immutable external action and image pins "
     "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "
     "packaged skills."
 )

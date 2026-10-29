@@ -40,8 +40,10 @@ from .manifests import (
     load_json,
 )
 from .release_policy import check_release_signature_workflow_contract
+from .release_pipeline import check_release_pipeline_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
+from .readme_facts import check_readme_facts
 from .release_facts import check_release_facts
 from .reporting import run_policy
 from .repository_policy import (
@@ -75,6 +77,7 @@ def main() -> int:
     release_fact_surface_count = run_policy(
         "release-facts", check_release_facts, failures
     )
+    readme_skill_count = run_policy("readme-facts", check_readme_facts, failures)
     route_catalog_scenario_count = run_policy(
         "route-catalog", check_route_catalog, failures
     )
@@ -164,6 +167,7 @@ def main() -> int:
         "release", check_release_signature_workflow_contract, failures
     )
     run_policy("release", check_controller_workflow_contract, failures)
+    run_policy("release-pipeline", check_release_pipeline_workflow_contract, failures)
     run_policy("release-evidence", check_publish_workflow_contract, failures)
     pull_request_fixture_count = run_policy(
         "action-graph",
@@ -252,6 +256,7 @@ def main() -> int:
         f"{review_checkpoint_count} review checkpoints, "
         f"{context_scenario_count} routing-context lifecycle scenarios, "
         f"{release_fact_surface_count} canonical release-fact surfaces, "
+        f"{readme_skill_count} generated README skill rows, "
         f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
         f"{runtime_contract_input_count} canonical installed-runtime inputs, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "

@@ -13,6 +13,12 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
+from axiom_validation.readme_facts import (  # noqa: E402
+    README_RELATIVE,
+    check_readme_facts,
+    load_skill_summaries,
+    replace_readme_blocks,
+)
 from axiom_validation.release_facts import (  # noqa: E402
     FACTS_SURFACES,
     FACTS_SURFACE_VERSIONS,
@@ -70,16 +76,25 @@ def _render() -> tuple[int, list[str]]:
         REPOSITORY_ROOT / IDENTITY_RELATIVE,
         failures,
     )
+    skill_summaries = load_skill_summaries(failures)
     if (
         len(release_documents) != len(set(FACTS_SURFACE_VERSIONS.values()))
         or route_document is None
         or identity_document is None
+        or skill_summaries is None
     ):
         return 0, failures
 
     rendered: dict[Path, str] = {}
     for relative_path in sorted(
-        set((*FACTS_SURFACES, *ROUTE_SURFACES, *RUNTIME_IDENTITY_SURFACES))
+        set(
+            (
+                *FACTS_SURFACES,
+                *ROUTE_SURFACES,
+                *RUNTIME_IDENTITY_SURFACES,
+                README_RELATIVE,
+            )
+        )
     ):
         path = REPOSITORY_ROOT / relative_path
         try:
@@ -93,6 +108,8 @@ def _render() -> tuple[int, list[str]]:
                 text = replace_route_block(text, route_document)
             if relative_path in RUNTIME_IDENTITY_SURFACES:
                 text = replace_runtime_identity_block(text, identity_document)
+            if relative_path == README_RELATIVE:
+                text = replace_readme_blocks(text, skill_summaries)
         except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
             failures.append(f"cannot render {relative_path}: {error}")
             continue
@@ -111,12 +128,13 @@ def _render() -> tuple[int, list[str]]:
     return changed, failures
 
 
-def _check() -> tuple[int, int, int, list[str]]:
+def _check() -> tuple[int, int, int, int, list[str]]:
     failures: list[str] = []
     fact_surfaces = check_release_facts(failures)
     route_scenarios = check_route_catalog(failures)
     runtime_inputs = check_runtime_identity(failures)
-    return fact_surfaces, route_scenarios, runtime_inputs, failures
+    readme_skills = check_readme_facts(failures)
+    return fact_surfaces, route_scenarios, runtime_inputs, readme_skills, failures
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -130,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"- {failure}", file=sys.stderr)
             return 1
 
-    fact_surfaces, route_scenarios, runtime_inputs, failures = _check()
+    fact_surfaces, route_scenarios, runtime_inputs, readme_skills, failures = _check()
     if failures:
         print("Canonical fact validation failed:", file=sys.stderr)
         for failure in failures:
@@ -141,7 +159,8 @@ def main(argv: list[str] | None = None) -> int:
         "Canonical fact validation passed: "
         f"{action}{fact_surfaces} release-fact surfaces and "
         f"{route_scenarios} structured route scenarios with "
-        f"{runtime_inputs} canonical runtime inputs; static counts remain "
+        f"{runtime_inputs} canonical runtime inputs, plus a README index of "
+        f"{readme_skills} bundled skills; static counts remain "
         "proxies, token figures remain estimates, and host observation is not inferred."
     )
     return 0

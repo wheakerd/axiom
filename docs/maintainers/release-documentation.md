@@ -126,6 +126,18 @@ Earlier version contracts and recorded experiments retain their historical
 meaning. Asset names and validators are selected by the release version;
 existing Releases and their evidence are not migrated.
 
+## Release Pipeline
+
+A pull request that changes the plugin version in the Codex manifest is a release pull request; every other pull request publishes nothing. Prepare it with the new version, its `## X.Y.Z - unreleased` Changelog entry, any warranted version note, and the identity records that [Runtime And Repository Identity](../runtime-identity.md) requires. Use the immediate next patch, minor, or major version after the latest published Release, and keep other changes out of `main` until the release completes.
+
+The [Release pipeline](../../.github/workflows/release-pipeline.yml) then publishes the version from CI without a manual dispatch:
+
+1. On the pull request, `Release candidate` checks the version step and the absent tag and Release, and previews the exact Release body in its job summary.
+2. After the squash merge, `Publish release` waits for the required checks and `Verify signed main history` on the merged commit, dispatches the protected tag controller, waits for `Verify created release tag`, stages the Draft with the rendered body and release-policy asset, dispatches the immutable publisher on the tag, and dispatches the published-release observation.
+3. `Advance marketplace catalogs` then completes the [Marketplace Publication](#marketplace-publication) handoff.
+
+The pipeline runs no AI model or agent. Every step reads current GitHub state before it acts, so rerunning a failed job, or dispatching the workflow on `main`, resumes the earliest unfinished step without repeating a completed one. A stopped job names the object to inspect; resolve it before any retry. [Repository Governance](../repository-governance.md#release-pipeline) records the workflow's permissions and fail-closed conditions.
+
 ## Marketplace Publication
 
 The default [marketplace](../../.agents/plugins/marketplace.json) and the
@@ -147,33 +159,14 @@ each catalog's source object in its job summary. The same handoff runs during
 final-only recovery. It reports **Marketplace publication pending** because
 the workflow does not write to protected `main` or bypass its PR rules.
 
-Complete the authorized catalog publication through the existing signed PR
-process:
+The Release pipeline's `Advance marketplace catalogs` job then completes the catalog publication through this signed PR process; a maintainer follows the same steps when the job cannot run:
 
-1. Verify the current Latest Release is final, stable, immutable, and identifies
-   the intended tag and signed commit. For a deliberate Latest selection made
-   outside the publisher, perform the same verification before preparing the
-   catalog change; a Release event alone does not prove a Latest transition.
-2. On a task branch from current `main`, replace only the Axiom entry's source
-   in each catalog with the verified Git URL, version tag, and the source type
-   and subtree path that tag requires. Preserve other
-   catalog metadata, and date the released version's Changelog heading as the
-   [Changelog Contract](#changelog-contract) describes.
-   Record the next repository-policy revision and its baseline, retain the
-   installed runtime identity, and run the contributor checks. This catalog
-   operation requires publication scope; a policy revision does not grant it.
-3. Recheck Latest before merging the signed PR with its required checks. If it
-   changed, refresh the candidate for the selected release instead of merging
-   a stale reference. Do not move a version tag or the legacy `latest` Git tag.
-4. Read back both merged catalogs and resolve their plugin tag. Confirm that the
-   selected manifest version matches that tag. Record the catalog commit for
-   users who need a fixed catalog snapshot. A tag on the marketplace repository
-   may contain a different plugin reference; it is not a per-plugin pin.
+1. Verify the current Latest Release is final, stable, immutable, and identifies the intended tag and signed commit. For a deliberate Latest selection made outside the publisher, perform the same verification before preparing the catalog change; a Release event alone does not prove a Latest transition.
+2. On a task branch from current `main`, replace only the Axiom entry's source in each catalog with the verified Git URL, version tag, and the source type and subtree path that tag requires. Preserve other catalog metadata, and date the released version's Changelog heading as the [Changelog Contract](#changelog-contract) describes. Record the next repository-policy revision and its baseline, retain the installed runtime identity, and run the contributor checks. The merged release pull request authorizes this catalog operation for its version; a policy revision alone does not grant it.
+3. Recheck Latest before merging the signed PR with its required checks. If it changed, refresh the candidate for the selected release instead of merging a stale reference. Do not move a version tag or the legacy `latest` Git tag.
+4. Read back both merged catalogs and resolve their plugin tag. Confirm that the selected manifest version matches that tag. Record the catalog commit for users who need a fixed catalog snapshot. A tag on the marketplace repository may contain a different plugin reference; it is not a per-plugin pin.
 
-The directory update is complete only after that merge and readback. Release
-publication or a generated job summary alone does not update the directory or
-an installed client. A failed or delayed handoff leaves the previous catalog
-selection available; resume it without republishing the immutable Release.
+The directory update is complete only after that merge and readback. Release publication or a generated job summary alone does not update the directory or an installed client. A failed or delayed handoff leaves the previous catalog selection available; rerun the catalog job or resume the steps above without republishing the immutable Release.
 
 The Codex catalog format was last verified on 2026-10-24 against the official
 [marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata),

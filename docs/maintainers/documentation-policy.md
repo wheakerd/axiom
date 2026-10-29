@@ -96,30 +96,17 @@ Place optional metadata near the document H1 using this exact form:
 
 The current repository assigns these responsibilities:
 
-- `README.md` owns the bounded public introduction, installation and update
-  quick start, and first-use example; `docs/reference/skills.md` owns the
-  bundled-skill summaries, copyable examples, and rename notices;
-- `CONTRIBUTING.md` owns contribution intake and the repository map;
-  `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and
-  `docs/maintainers/validation.md` owns contributor check procedures;
-- `SECURITY.md` owns vulnerability reporting and security boundaries, while
-  `CHANGELOG.md` owns user-visible changes and required action;
-- `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement
-  contact;
-- `docs/guides/` owns installation, first use, update, removal, and
-  troubleshooting;
-- `docs/reference/hooks.md` renders the canonical Hook declarations and
-  wrapper, while `docs/getting-started.md` is a compatibility entry for
-  historical links;
-- `docs/compatibility.md` owns the concise current support contract and links
-  to historical records without reproducing their run narratives;
+- `README.md` owns the bounded public introduction, the generated skill index, installation and update quick start, and first-use example; `docs/reference/skills.md` owns the bundled-skill descriptions, copyable examples, and rename notices;
+- `CONTRIBUTING.md` owns contribution intake and the repository map; `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and `docs/maintainers/validation.md` owns contributor check procedures;
+- `SECURITY.md` owns vulnerability reporting and security boundaries, while `CHANGELOG.md` owns user-visible changes and required action;
+- `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement contact;
+- `docs/guides/` owns installation, first use, update, removal, and troubleshooting;
+- `docs/reference/hooks.md` renders the canonical Hook declarations and wrapper, while `docs/getting-started.md` is a compatibility entry for historical links;
+- `docs/compatibility.md` owns the concise current support contract and links to historical records without reproducing their run narratives;
 - `docs/releases/` contains version notes;
-- `docs/maintainers/release-documentation.md` defines release-document and
-  evidence responsibilities for future releases;
-- `evidence/` and `evals/results/` retain machine records and observations;
-  `docs/field-validation.md` indexes retired records at immutable archive sources;
-- `evals/README.md` and `evals/context-budget/README.md` own current evaluation
-  guidance; `evals/history/` retains earlier methods and run narratives.
+- `docs/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases;
+- `evidence/` and `evals/results/` retain machine records and observations; `docs/field-validation.md` indexes retired records at immutable archive sources;
+- `evals/README.md` and `evals/context-budget/README.md` own current evaluation guidance; `evals/history/` retains earlier methods and run narratives.
 
 [The documentation index](../README.md) describes these current locations by
 audience and task. A proposed path does not become canonical until the content,
@@ -149,9 +136,7 @@ evals/
 Topical current references may remain directly under `docs/` when another
 directory would create artificial fragmentation.
 
-README stays a landing page: identity, installation, updating, first use, and
-links. It links to the Skill Reference instead of listing skills or rename
-notices.
+README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. The Skill Reference keeps each skill's full description, copyable usage, and rename notices. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
 
 Under the Skill Reference `## Shared skills`, give each skill a
 `### skill-name` heading in canonical startup-route order. Each entry contains **Link**, **Description**,
@@ -171,7 +156,7 @@ optional detail within an entry without creating another skill-level heading.
 | Discoverability facts and external listing status | `docs/maintainers/distribution-channels.md` | Dated observations; a submission is recorded only when it was made |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
-| Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering |
+| Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering and `README.md` a generated index of each skill's short description |
 | Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Codex plugin manifest | Current |
@@ -239,31 +224,18 @@ redefine their values.
 
 Every documentation change must, at minimum:
 
-- review current instructions against their same-snapshot source owners and
-  separate release history, schema selectors, and observed evidence from
-  current capability claims;
-- keep `README.md` at or below the enforced 16 KiB ceiling, and report the
-  preferred 4--8 KiB range;
+- review current instructions against their same-snapshot source owners and separate release history, schema selectors, and observed evidence from current capability claims;
+- keep `README.md` at or below the enforced 16 KiB ceiling;
 - preserve repository-relative links and valid local anchors;
-- contain exactly one level-one heading in each current Markdown document and
-  avoid skipped heading levels;
-- keep `docs/README.md` complete for current public documents and reject
-  current-document orphans, including the current evaluation and context-budget
-  entry points outside `docs/`;
+- contain exactly one level-one heading in each current Markdown document and avoid skipped heading levels;
+- keep `docs/README.md` complete for current public documents and reject current-document orphans, including the current evaluation and context-budget entry points outside `docs/`;
 - accept only the documented lifecycle values;
-- preserve generated marker boundaries and compare rendered machine facts with
-  their canonical sources;
-- require current entry points to link their canonical status and identity
-  owners, while the Changelog and selected version note retain exact release
-  bindings; a repeated version number is not a substitute for those links;
+- preserve generated marker boundaries and compare rendered machine facts with their canonical sources;
+- require current entry points to link their canonical status and identity owners, while the Changelog and selected version note retain exact release bindings; a repeated version number is not a substitute for those links;
 - keep current public guidance from linking to non-public sources;
-- keep the Skill Reference `## Shared skills` section and its per-skill
-  level-three headings parseable, with the inventory matching the canonical
-  startup front door;
-- validate the public Hook reference against checked-in declarations and
-  wrappers; and
-- keep historical and project-plan documents, including `evals/history/`, out
-  of current task navigation.
+- keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
+- validate the public Hook reference against checked-in declarations and wrappers; and
+- keep historical and project-plan documents, including `evals/history/`, out of current task navigation.
 
 Run the deterministic, Python-standard-library-only documentation validator
 from the repository root:
