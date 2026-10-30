@@ -16,6 +16,7 @@ from pathlib import Path
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.runtime_identity import (
     INPUT_MANIFEST_RELATIVE,
+    POLICY_LEDGER_SURFACES,
     RUNTIME_IDENTITY_SURFACES,
     V2_INPUT_MANIFEST_RELATIVE,
     check_runtime_identity,
@@ -70,6 +71,7 @@ class RuntimeIdentityTests(unittest.TestCase):
             V2_INPUT_MANIFEST_RELATIVE,
             "evidence/repository-policy-revisions-v1.json",
             *RUNTIME_IDENTITY_SURFACES,
+            *POLICY_LEDGER_SURFACES,
         ):
             destination = target / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -294,13 +296,18 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual([], failures)
 
     def test_identity_reference_rejects_stale_values_and_missing_markers(self):
-        for mutation in ("stale-value", "missing-marker"):
+        for mutation in ("stale-value", "missing-marker", "stale-ledger"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 self.copy_identity_fixture(root)
                 reference = root / "docs/runtime-identity.md"
+                if mutation == "stale-ledger":
+                    reference = root / "docs/repository-policy-revisions.md"
                 original = reference.read_text(encoding="utf-8")
-                if mutation == "stale-value":
+                if mutation == "stale-ledger":
+                    changed = original.replace("<!-- policy-ledger:current:end -->", "| 0 | 2000-01-01 | none | `0` | stale |\n<!-- policy-ledger:current:end -->")
+                    expected = "docs/repository-policy-revisions.md policy ledger block is stale"
+                elif mutation == "stale-value":
                     identity = json.loads((root / "evidence/runtime-identity.json").read_text())
                     changed = original.replace(
                         f"`repositoryPolicyRevision`: `{identity['repositoryPolicyRevision']}`",

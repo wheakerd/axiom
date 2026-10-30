@@ -6,85 +6,7 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
-## Repository policy revision 116
-
-### Added
-
-- The routing-context budget measures the bundled skill descriptions, the selection surface that each host lists on every turn, next to the always-loaded gate. Schema v4 records carry each skill's UTF-8 byte and character counts, the totals, and a comparison with the nearest earlier record under the same review threshold; the 0.22.1 record is the description baseline. `scripts/measure-routing-context.py` reports the description set when it measures the gate.
-
-### Changed
-
-- The budget guide and the runtime-changes policy state each host's hook-output limit as a dated, verified constraint: Codex limits a model-visible hook-output message to roughly 2,500 tokens by default, and Claude Code caps plain `SessionStart` stdout at 10,000 characters.
-
-### Behavioral impact
-
-Repository maintenance only. The larger half of the always-loaded context cost is now measured and reviewed; nothing installed changes, and the installed runtime digest is unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 115
-
-### Added
-
-- Thirty-four routing cases in the current evaluation corpus, outside both benchmark profiles, so that every bundled route has a positive, a near-miss no-route control, and a cross-route control. `clarify-intent`, `delegate-simple-task`, `task-planning`, `continuous-progress`, and `local-web-search` previously had no near-miss or cross-route case anywhere, and six routes had a single current case.
-
-### Changed
-
-- The evaluation guide states that the per-route workload stays frozen for the routing-context budget and documents its retired route name mapping, and the current-corpus tests no longer pin the number of `verify-completion` cases.
-
-### Behavioral impact
-
-Repository maintenance only. Offline validation covers the five routes most likely to fire on everyday requests; host observations of the new cases need the next benchmark profile. The installed runtime digest is unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 114
-
-### Changed
-
-- The Windows hook canary test, which proves that the packaged `cmd` wrapper does not execute same-named programs placed in the workspace, moved from the unit test module into the native hook runtime integration module that the cross-platform workflow executes on Windows. The unit copy read a pre-v0.17.0 path and had never run in CI.
-
-### Behavioral impact
-
-Repository maintenance only. The Windows CI job now executes the canary check on every pull request and push to `main`. The installed runtime digest is unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 113
-
-### Changed
-
-- The Release pipeline proves its post-publication steps before its first irreversible one. `Publish release` waits for every check on the release commit, not only the required ones, and rehearses the catalog handoff in a disposable worktree of that commit, running the publication aggregate and the unit tests on the advanced catalogs, before it dispatches the protected tag controller. The same rehearsal runs on the release pull request, and the catalog job merges only after every check on the handoff commit has finished.
-- Repository tests derive the totals that grow with every release, such as the required public files, the Markdown files, the release-fact surfaces, and the installed-runtime inputs, from the production validators instead of pinning them; the current routing-context record is checked for consistency with the measured bytes; and the `agent-plugin-architect` description is pinned by its route-boundary sentences instead of verbatim.
-
-### Behavioral impact
-
-Repository maintenance only. A release whose catalog handoff would fail now stops before any tag or Release exists, and a release pull request shows that failure before the merge. A release that changes no validator behavior no longer requires editing the repository tests. The installed runtime digest is unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 112
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.22.1`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.22.1`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select release `v0.22.1`. This catalog handoff preserves plugin version `0.22.1` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
+Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
 ## 0.22.1 - 2026-10-29
 
@@ -106,21 +28,6 @@ None.
 
 See the [version notes](docs/releases/v0.22.1.md) for the reasoning, the changed passages, and the evidence boundary.
 
-## Repository policy revision 110
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.22.0`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.22.0`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select release `v0.22.0`. This catalog handoff preserves plugin version `0.22.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
 ## 0.22.0 - 2026-10-29
 
 ### Changed
@@ -140,35 +47,6 @@ You get fewer questions when you have already delegated a choice within your aut
 None.
 
 See the [version notes](docs/releases/v0.22.0.md) for the reasoning, the changed passages, the measurement, and the evidence boundary.
-
-## Repository policy revision 108
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.21.0`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.21.0`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select release `v0.21.0`. This catalog handoff preserves plugin version `0.21.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
-## Repository policy revision 107
-
-### Fixed
-
-- The catalog handoff test no longer depends on the checked-in marketplace catalogs. Its fixture now selects an earlier release in the copied catalogs, so the test still has catalogs to advance after they select the newest release. The 0.21.0 catalog handoff stopped on this test because its pull request already selected `v0.21.0`.
-
-### Behavioral impact
-
-None for installed plugin workflows. The Release pipeline can complete the 0.21.0 catalog handoff.
-
-### Required action
-
-None.
 
 ## 0.21.0 - 2026-10-29
 
@@ -192,122 +70,6 @@ None. If you want delegation only at your host's top reasoning level, say so in 
 
 See the [version notes](docs/releases/v0.21.0.md) for the reasoning, the changed passages, and the evidence boundary.
 
-## Repository policy revision 105
-
-### Changed
-
-- The README hero image, which is also the social preview, and the Codex plugin mark now draw the letter A as the first construction of Euclid's Elements: two circles that pass through each other's centers. Its four construction points mark scope, authority, evidence, and rollback in the existing brand colors.
-
-### Behavioral impact
-
-None for installed plugin workflows. Codex shows the new mark once a later release includes it.
-
-### Required action
-
-None.
-
-## Repository policy revision 104
-
-### Changed
-
-- The release signature guard now runs on the fixed `ubuntu-24.04` runner, like the other workflows, instead of GitHub's moving `ubuntu-latest` label, which is migrating to Ubuntu 26. Validation now rejects a moving runner for this workflow.
-
-### Behavioral impact
-
-None for installed plugin workflows. The signature checks keep their names and verification logic.
-
-### Required action
-
-None.
-
-## Repository policy revision 103
-
-### Changed
-
-- Public documentation outside the packaged skills keeps each paragraph and list item on one source line instead of hard-wrapping it at a column width. Every word, code block, and rendered page stays the same.
-- The aggregate validator drops an unused import.
-
-### Behavioral impact
-
-None. Installed plugin workflows, rendered documentation, and validation results are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 102
-
-### Changed
-
-- The Claude Code marketplace catalog description now follows the README positioning instead of an outdated partial list of workflows.
-
-### Behavioral impact
-
-None for installed plugin workflows. Only the catalog's description text changes; the catalog still selects the same release.
-
-### Required action
-
-None.
-
-## Repository policy revision 101
-
-### Changed
-
-- A new `Release pipeline` workflow publishes each version from CI. Only a pull request that changes the plugin version in the Codex manifest starts it. On the pull request it checks the version step and previews the Release body. After the merge it waits for the required checks, dispatches the protected tag controller, stages the Draft, dispatches the immutable publisher and the published-release observation, and opens and merges the marketplace catalog handoff. Maintainers no longer dispatch those workflows or prepare the catalog pull request by hand; the workflows remain available for recovery. The pipeline runs no AI model or agent.
-- The README opens with a centered header: identity and CI badges, a hero image, and one plain request to star the repository. A generated skill index and the badge that counts the bundled skills are rendered from each skill's `agents/openai.yaml` short description, so the introduction always matches the bundled skills.
-- The documentation validator drops the README's preferred 4 to 8 KiB band and keeps the 16 KiB ceiling.
-
-### Behavioral impact
-
-None for installed plugin workflows. A merged release pull request now publishes its version, and both marketplace catalogs advance once that release is verified. The catalog job needs the release App's Pull requests read and write permission; without it, the job stops before any write and publication still completes.
-
-### Required action
-
-None for users. Before the next release, maintainers grant the `axiom-release-tag-controller` App the Pull requests read and write permission.
-
-## Repository policy revision 100
-
-### Changed
-
-- The `Record star history` script also commits when the rendered chart differs from the `stats` branch, not only when the data changed, so a renderer change reaches the README on the next run instead of waiting for the next data row.
-
-### Behavioral impact
-
-None for installed plugin workflows. The next scheduled or dispatched run commits the restyled `stars.svg` of revision 99.
-
-### Required action
-
-None.
-
-## Repository policy revision 99
-
-### Changed
-
-- Render the README star-history chart in a sketched, hand-lettered style: wobbly axes, line, and legend box through one SVG displacement filter, a legend naming the repository, `GitHub Stars` and `Date` axis titles, month or day ticks chosen from the recorded span, and a dark-mode variant. The text uses a printable-ASCII subset of the Patrick Hand typeface (SIL Open Font License 1.1) added under `scripts/fonts/` and embedded in the SVG, so the chart renders the same in every viewer; the output stays deterministic for the same data.
-
-### Behavioral impact
-
-None for installed plugin workflows. The `Record star history` workflow, the `stats` branch layout, and the README embed are unchanged; the next scheduled run commits the restyled `stars.svg`.
-
-### Required action
-
-None.
-
-## Repository policy revision 98
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.20.0`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.20.0`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release whose startup routing gate selects bundled skills from the host's skill list by description. This catalog handoff preserves plugin version `0.20.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
 ## 0.20.0 - 2026-10-28
 
 ### Changed
@@ -325,21 +87,6 @@ Routing rests on the skill descriptions each host already shows its model, and a
 None.
 
 See the [version notes](docs/releases/v0.20.0.md) for the measurement, the precedence rule, and the evidence boundary.
-
-## Repository policy revision 96
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.19.3`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.19.3`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release that states the host permission boundary in the startup routing gate. This catalog handoff preserves plugin version `0.19.3` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
 
 ## 0.19.3 - 2026-10-28
 
@@ -361,36 +108,6 @@ None.
 
 See the [version notes](docs/releases/v0.19.3.md) for the changed passages, the host mechanics, and the evidence boundary.
 
-## Repository policy revision 94
-
-### Changed
-
-- Add routing response schema V8: the V7 fields and constraints plus one reviewed description per field, so each host's model reads `clarificationCount` as the number of clarification questions the selected routing asks before any action route (`1` whenever `clarify-intent` is selected, otherwise `0`) even though an evaluation session asks no question. V7 stays frozen for the records that bind it, schema v6 records accept either response schema path, and the ambiguity control's corpus expectation is unchanged.
-- Record the #192 decision: four fresh Codex sessions and two Claude Code sessions on the published v0.19.2 reported `clarificationCount` `1` for the ambiguity control, so the single earlier `0` was one-run variance under an undefined field, not a gate or `clarify-intent` wording defect.
-
-### Behavioral impact
-
-None for installed plugin workflows. Contributors collecting routing observations use response schema V8 with the unchanged `codex-core-v6` and `claude-code-core-v6` profiles.
-
-### Required action
-
-None.
-
-## Repository policy revision 93
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.19.2`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.19.2`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release in which an explicit `delegate-simple-task` invocation routes deterministically. This catalog handoff preserves plugin version `0.19.2` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
 ## 0.19.2 - 2026-10-28
 
 ### Fixed
@@ -407,39 +124,6 @@ None.
 
 See the [version notes](docs/releases/v0.19.2.md) for the selection-then-activation order, the changed passages, and the evidence boundary.
 
-## Repository policy revision 91
-
-### Added
-
-- `evidence/v0.19.0/`: schema v4 host observation records for Codex and Claude Code against the immutable `v0.19.0` runtime (startup and compaction lifecycle cases with the delivered gate digest compared with the installed gate), indexed by `priorReleaseEvidence` in the release status as `partial-host-observed` prior-release evidence.
-
-### Changed
-
-- Field Validation and Compatibility name the checked-in records; the host support tests and the publication summary count them. The OpenAI plugin directory row records the Codex no-hook observation of the v0.19.0 listing variant.
-
-### Behavioral impact
-
-None for installed plugins. The current target release keeps its `STATIC-ONLY` status and `not-run` host fields; prior-release evidence never promotes it.
-
-### Required action
-
-None.
-
-## Repository policy revision 90
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.19.1`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.19.1`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release with the trimmed startup routing gate. This catalog handoff preserves plugin version `0.19.1` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
 ## 0.19.1 - 2026-10-27
 
 ### Changed
@@ -455,53 +139,6 @@ None intended. Both hosts load the same routes under the same conditions from a 
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
 
 See the [version notes](docs/releases/v0.19.1.md) for the trimmed passages and the reduction evidence.
-
-## Repository policy revision 88
-
-### Changed
-
-- The offline route contract model selects `verify-completion` for evidence-bound completion verification requests, including post-compaction re-grounding, when no earlier route applies. Seven routing scenario fixtures cover the canonical, post-compaction, Chinese, status near-miss, continuation near-miss, and `review-axiom-task` overlap cases, and the current-corpus bridge now compares the offline model with every `verify-completion` case.
-
-### Behavioral impact
-
-None for installed plugins: validators and fixtures only. Plugin version `0.19.0` and the runtime digest are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 87
-
-### Added
-
-- `scripts/build-listing-variant.py`: build the hook-less Codex directory listing variant from the `plugin/` tree of one tree-ish as a deterministic ZIP with a JSON build manifest; `tests/test_listing_variant.py` proves the exclusions and the byte-identical rebuild.
-
-### Changed
-
-- `docs/maintainers/distribution-channels.md` documents the variant's identity, behavioral boundary, required no-hook observation, and submission steps, and moves the OpenAI plugin directory row from `blocked` to `not submitted` with the variant path.
-
-### Behavioral impact
-
-None for installed plugins. The marketplace package, its startup Hook, plugin version `0.19.0`, and the runtime digest are unchanged; the variant is built on demand and this change publishes nothing.
-
-### Required action
-
-None.
-
-## Repository policy revision 86
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.19.0`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.19.0`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release that adds the `verify-completion` route. This catalog handoff preserves plugin version `0.19.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
 
 ## 0.19.0 - 2026-10-26
 
@@ -524,21 +161,6 @@ Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Clau
 
 See the [version notes](docs/releases/v0.19.0.md) for the routing boundary and the startup-gate change.
 
-## Repository policy revision 84
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.18.0`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.18.0`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release whose `agents-architect` keeps task state in Git metadata and treats its topology as defaults. This catalog handoff preserves plugin version `0.18.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
 ## 0.18.0 - 2026-10-25
 
 ### Added
@@ -560,92 +182,6 @@ Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Clau
 
 See the [version notes](docs/releases/v0.18.0.md) for the decision latitude, the memory model, and the task-state migration.
 
-## Repository policy revision 82
-
-### Added
-
-- Add the maintainers' Distribution Channels page: observed discoverability facts (topics, homepage, Agent Skills specification compliance of every bundled `SKILL.md`, catalog sources, README links) and a registry of external channels with their observed requirements and submission status, including the lifecycle-hook blocker for the OpenAI plugin directory. The documentation index and the documentation policy name the page.
-
-### Behavioral impact
-
-Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged. No external submission was made.
-
-### Required action
-
-None.
-
-## Repository policy revision 81
-
-### Fixed
-
-- Correct the stats branch policy in Repository Governance: the parentless root commit that the workflow creates through the Git Data API is also GitHub-signed, as the first run on 2026-10-25 showed; the earlier text called it unsigned.
-
-### Behavioral impact
-
-Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 80
-
-### Changed
-
-- Add the `Record star history` workflow and its standard-library script: a daily run records the repository's star and fork counts in `stars.csv` on the `stats` data branch, renders `stars.svg`, and commits both through GitHub-signed `createCommitOnBranch` commits. The README embeds the chart and Repository Governance documents the branch policy.
-
-### Behavioral impact
-
-Repository infrastructure and documentation only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged; the `stats` branch is outside every release and distribution surface.
-
-### Required action
-
-None.
-
-## Repository policy revision 79
-
-### Changed
-
-- Define the release standard under Runtime and Repository Identity: the exact final installed-runtime change selects the next minor version (new Skill, route, mode, trigger, Hook event, widened matching, new protocol or storage location, packaging change requiring user action, route deprecation or removal) or the next patch version (fixes without new capability), repository-only changes append a policy revision, and bundling rules decide when tasks share one release.
-- Link the standard from the contributor workflow, the runtime-changes guide, and the documentation index.
-
-### Behavioral impact
-
-Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 78
-
-### Changed
-
-- Describe the `git-subdir` catalog sources in the installation management guide: both catalogs select the installed plugin root through `path` (`./plugin` for Codex, `plugin` for Claude Code) and an immutable release-tag `ref`, and catalogs that select a tag before `v0.17.0` keep the Git `url` source.
-
-### Behavioral impact
-
-Documentation and repository policy only. Installed Skills, Hooks, manifests, catalogs, and the runtime digest are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 77
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.17.1`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.17.1`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release whose `agent-plugin-architect` route no longer matches a request to evaluate an individual Skill. This catalog handoff preserves plugin version `0.17.1` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
-
 ## 0.17.1 - 2026-10-25
 
 ### Fixed
@@ -661,21 +197,6 @@ A request to evaluate or review one Skill or Skill proposal continues in the hos
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
 
 See the [version notes](docs/releases/v0.17.1.md) for the routing boundary and the publisher's catalog sources.
-
-## Repository policy revision 75
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.17.0`, using a `git-subdir` source with path `./plugin`.
-- Advance the Claude Code marketplace plugin source to the same immutable release, using a `git-subdir` source with path `plugin`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release that installs only the `plugin/` subtree. This catalog handoff preserves plugin version `0.17.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
 
 ## 0.17.0 - 2026-10-24
 
@@ -693,54 +214,6 @@ Skills, routes, Hooks, and manifest fields are unchanged inside the installed pl
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`. Review the updated Hook before it runs.
 
 See the [version notes](docs/releases/v0.17.0.md) for the catalog migration and the runtime identity schema.
-
-## Repository policy revision 73
-
-### Changed
-
-- Keep README to the project introduction, installation, updating, and first use, and move the bundled-skill list, copyable examples, and rename notices to the new [Skill Reference](docs/reference/skills.md).
-- Add README badges for the supported hosts, unit and integration tests, and cross-platform Hook runtime results.
-- Validate the bundled-skill inventory in the Skill Reference, and set the preferred README size to 4-8 KiB.
-
-### Behavioral impact
-
-Documentation and repository policy only. Installed Skills, Hooks, manifests, and the runtime digest are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 72
-
-### Changed
-
-- Date each published version's Changelog heading with its GitHub Release publication date, and keep `unreleased` only until that Release is published.
-- Write README usage examples in plain words that read the same in Codex and Claude Code, and label the update commands by host.
-- Add a Code of Conduct and state where questions, ideas, and actionable reports belong.
-- Complete the contributor repository map and record the latest verification of private vulnerability reporting.
-
-### Behavioral impact
-
-Documentation and repository policy only. Installed Skills, Hooks, manifests, and the runtime digest are unchanged.
-
-### Required action
-
-None.
-
-## Repository policy revision 71
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.16.0`.
-- Advance the Claude Code marketplace plugin source to the same immutable release `v0.16.0`.
-
-### Behavioral impact
-
-Codex and Claude Code marketplace refresh now select the release that runs every bundled Axiom route in both hosts. This catalog handoff preserves plugin version `0.16.0` and its installed runtime digest.
-
-### Required action
-
-None. Existing Codex and Claude Code clients follow each host's native marketplace refresh and update controls.
 
 ## 0.16.0 - 2026-10-24
 
@@ -774,21 +247,6 @@ In Claude Code, `delegate-simple-task` stays inactive below the host's top reaso
 Invoke `optimize-agent-usage` where you invoked `optimize-codex-usage`, and rename any host setting or permission rule that names `axiom:optimize-codex-usage`. Claude Code users receive these routes after the Claude Code catalog selects this release. Review the updated Hook before it runs: in Codex, review and trust it in `/hooks`; in Claude Code, compare the installed copy with the [Hook Reference](docs/reference/hooks.md) before the plugin loads in a new or reloaded session.
 
 See the [version notes](docs/releases/v0.16.0.md) for the delegation gate, the supervision boundary, the usage route migration, and static context evidence.
-
-## Repository policy revision 69
-
-### Changed
-
-- Advance the Codex marketplace plugin source to the verified immutable Latest release `v0.15.0`.
-- Publish the Claude Code marketplace catalog, selecting the same immutable release `v0.15.0`.
-
-### Behavioral impact
-
-Codex marketplace refresh now selects the release with Claude Code support and the Git submission hardening. Claude Code can add the `wheakerd/axiom` marketplace and install `axiom@axiom`. This catalog handoff preserves plugin version `0.15.0` and its installed runtime digest.
-
-### Required action
-
-None for existing Codex clients, which follow Codex's native marketplace refresh and update controls. Claude Code users install through the commands in the README.
 
 ## 0.15.0 - 2026-10-18
 
@@ -841,20 +299,6 @@ None for ordinary Git use. If an explicitly selected simple submission stops, re
 
 See the [version notes](docs/releases/v0.14.6.md) for the boundaries and static context evidence.
 
-## Repository policy revision 64
-
-### Changed
-
-- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.5`.
-
-### Behavioral impact
-
-Marketplace refresh now selects the release with shorter Bundled Routes summaries. This catalog handoff preserves plugin version `0.14.5` and its installed runtime digest.
-
-### Required action
-
-None. Existing clients follow Codex's native marketplace refresh and update controls.
-
 ## 0.14.5 - 2026-10-15
 
 ### Changed
@@ -870,20 +314,6 @@ The startup gate carries less repeated text. Route matching continues to use bun
 None.
 
 See the [version notes](docs/releases/v0.14.5.md) for the scope and static context measurement.
-
-## Repository policy revision 62
-
-### Changed
-
-- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.4`.
-
-### Behavioral impact
-
-Marketplace refresh now selects the release with optional invocation explanations owned by `using-axiom` and native verbosity controls. This catalog handoff preserves plugin version `0.14.4` and its installed runtime digest.
-
-### Required action
-
-None. Existing clients follow Codex's native marketplace refresh and update controls.
 
 ## 0.14.4 - 2026-10-14
 
@@ -910,20 +340,6 @@ None. Use the host's native verbosity and gate controls; no new Axiom setting is
 
 See the [version notes](docs/releases/v0.14.4.md) for activation, ownership, and evidence boundaries.
 
-## Repository policy revision 60
-
-### Changed
-
-- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.3`.
-
-### Behavioral impact
-
-Marketplace refresh now selects the release with inline-code skill markers, brief invocation goals or reasons, and subsequent output in a new paragraph. This catalog handoff preserves plugin version `0.14.3` and its installed runtime digest.
-
-### Required action
-
-Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
-
 ## 0.14.3 - 2026-10-14
 
 ### Fixed
@@ -944,20 +360,6 @@ Each skill invocation shows both its name and why it is being used. The once-per
 None.
 
 See the [version notes](docs/releases/v0.14.3.md) for the notice format and evidence boundary.
-
-## Repository policy revision 58
-
-### Changed
-
-- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.2`.
-
-### Behavioral impact
-
-Marketplace refresh now selects the release that displays `Axiom:<skill-name>` for every skill invocation. This catalog handoff preserves plugin version `0.14.2` and its installed runtime digest.
-
-### Required action
-
-Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
 
 ## 0.14.2 - 2026-10-14
 
@@ -980,20 +382,6 @@ None.
 
 See the [version notes](docs/releases/v0.14.2.md) for invocation and evidence boundaries.
 
-## Repository policy revision 56
-
-### Changed
-
-- Advance the default marketplace plugin source to the verified immutable Latest release `v0.14.1`.
-
-### Behavioral impact
-
-Marketplace refresh now selects the release containing the Ultra, active-gate, and invocation-consent requirements for `delegate-simple-task`. This catalog handoff preserves plugin version `0.14.1` and its installed runtime digest.
-
-### Required action
-
-Users may refresh the marketplace through Codex's native controls. Preserve deliberate source pins; this catalog change does not update an installed client automatically.
-
 ## 0.14.1 - 2026-10-14
 
 ### Fixed
@@ -1015,38 +403,6 @@ To use this skill, enable `using-axiom`, select `Ultra`, and confirm or explicit
 
 See the [version notes](docs/releases/v0.14.1.md) for activation and evidence boundaries.
 
-
-## Repository policy revision 54
-
-### Changed
-
-- Use Codex's documented sparse marketplace checkout in the installation quick start and canonical guide.
-- Document native re-registration, source-pin preservation, and verification when marketplace upgrade reports a catalog clone timeout.
-
-### Behavioral impact
-
-The installation guidance reduces the marketplace checkout to its catalog while preserving the entry's immutable plugin source and native update controls. This documentation change retains the plugin version and runtime digest.
-
-### Required action
-
-None for working installations. Users encountering a marketplace clone timeout can follow the [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts), preserving deliberate source pins and workspace controls.
-
-## Repository policy revision 53
-
-### Changed
-
-- Bound the default marketplace plugin source to an immutable published version using Codex's documented Git source format.
-- Added a verified Latest catalog handoff to the existing release publisher and documented its signed PR completion, source pins, and native client update controls.
-- Retired default-branch plugin content as the default installation source; ordinary `main` development retains the published catalog selection.
-
-### Behavioral impact
-
-Marketplace refresh resolves the published plugin reference instead of the development tree. Automatic update decisions remain with users and the native client. This distribution and repository-policy correction retains plugin version `0.14.0` and its installed runtime digest.
-
-### Required action
-
-Existing default-source users can refresh through Codex's native marketplace upgrade and inspect the installed version. Preserve deliberate source pins. Maintainers complete the catalog PR after verified Latest publication; see [Managing an Installation](docs/guides/managing-installation.md#version-selection) and [Marketplace Publication](docs/maintainers/release-documentation.md#marketplace-publication).
-
 ## 0.14.0 - 2026-10-13
 
 ### Added
@@ -1064,73 +420,6 @@ Invoke `$continuous-progress` explicitly and authorize its session and native sc
 
 See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.0/docs/releases/v0.14.0.md) for activation, recovery, and validation boundaries.
 
-## Repository policy revision 51
-
-### Changed
-
-- Gave each README skill its own heading, source link, description, and copyable usage prompt, keeping the same structure for future additions.
-- Updated documentation policy and inventory validation for the skill headings, excluding example code and following sections from the inventory.
-
-### Behavioral impact
-
-Skills are easier to browse, link to, and try from the README. This repository-only documentation and validation change preserves plugin version `0.13.4`, the runtime digest, and installed behavior.
-
-### Required action
-
-None for plugin users. Contributors should use the same entry structure when updating README skill summaries.
-
-## Repository policy revision 50
-
-### Changed
-
-- Rewrote the README around the Codex plugin, separate installation and update commands, and current skill descriptions with example prompts.
-- Marked retired Claude Code support with strikethrough and distinguished it from the active plugin-architecture skill's other-project capabilities.
-- Moved generated runtime identity and Git routing details to their canonical reference pages, preserving their validation and generation.
-
-### Added
-
-- Added a CodeQL workflow and status badge for Python and GitHub Actions security analysis, alongside the dynamic release and existing checks.
-
-### Behavioral impact
-
-The landing page focuses on using Axiom. Repository security analysis adds CodeQL findings without changing installed skills, hooks, plugin version, or runtime digest. A workflow badge reports execution status, not the absence of vulnerabilities; no installed-host observation is implied.
-
-### Required action
-
-None for plugin users. Contributors should review CodeQL results alongside the existing repository checks after the workflow runs on GitHub.
-
-## Repository policy revision 49
-
-### Fixed
-
-- Added bounded read-only verification when a successfully created release tag initially returns HTTP 404: at most four exact-ref GETs, with waits of 1, 2, and 4 seconds.
-- Kept tag creation single-attempt and preserved both pre-creation safety checks, exact response validation, and fail-closed handling of other errors and uncertain creation outcomes.
-
-### Behavioral impact
-
-The release controller can tolerate temporary post-creation invisibility without repeating a tag-creation request or weakening verification. Exhausted reads still fail. This repository-only tooling fix preserves plugin version `0.13.4`, the runtime digest, installed behavior, and existing immutable tags and Releases.
-
-### Required action
-
-None. The controller uses bounded reads only after a valid creation response; a failed or uncertain workflow does not authorize another creation attempt.
-
-## Repository policy revision 48
-
-### Changed
-
-- Defined current guidance as documentation of the same source snapshot, with distinct rules for published releases, installed packages, historical evidence, and versioned protocols.
-- Replaced manually repeated candidate-version prose and routing-context measurement tables with links to canonical records and current measurement commands.
-- Aligned workflow summaries with prepared-release Git submission and distinguished completed governance promotion evidence from current enforcement.
-- Updated documentation checks to require canonical source links in current guides while retaining exact version bindings for release history, with regression coverage for both boundaries.
-
-### Behavioral impact
-
-This repository-only documentation and validation change preserves plugin version `0.13.4`, the runtime digest, routing behavior, and the startup document's headroom. Current guides explain implemented workflows; historical notes and observations retain their original version bindings and outcomes.
-
-### Required action
-
-Use documentation from the same release or source snapshot as the package being inspected. Contributors should follow the [source and version rules](docs/maintainers/documentation-policy.md#source-and-version-scope); no configuration or installation change is required.
-
 ## 0.13.4 - 2026-10-10
 
 ### Changed
@@ -1145,29 +434,6 @@ The startup document occupies less space within the instruction limit. Routing a
 ### Required action
 
 None. Existing configuration, workflow names, and installation paths remain valid.
-
-## Repository policy revision 46
-
-### Changed
-
-- Split detailed runtime-authoring and validation procedures out of the contribution entry point, and indexed current guidance by document responsibility.
-- Separated historical routing methods and run narratives from the current evaluation guide while preserving their original outcomes and validation contracts.
-- Extended documentation checks to current evaluation entry points and the historical-method boundary.
-
-### Fixed
-
-- Added the missing local web research capability to the README overview and corrected obsolete issue-template guidance.
-- Updated routing-context explanations to the v0.13.3 record, including its actual growth, latest recorded reduction, and remaining headroom shortfall.
-- Corrected contributor tooling ownership and a stale release-tag creator statement; linked duplicated compatibility and security procedures to their canonical owners.
-- Preserved bytecode suppression when the publication aggregate launches the compatibility checker, so the documented `-B` invocation does not create Python caches through that subprocess.
-
-### Behavioral impact
-
-This repository-only change improves navigation and contributor checks. Plugin version `0.13.3`, installed Skills, hooks, runtime digest, and historical release evidence retain their existing identities. The checked-in candidate wording describes its original source state; published Release objects own publication facts.
-
-### Required action
-
-Contributors should use the linked runtime-authoring and validation guides from `CONTRIBUTING.md`, the current `evals/README.md` for evaluation contracts, and `evals/history/codex-core-v1-v2.md` for earlier methods and run narratives. The publication-check command and plugin installation paths are unchanged.
 
 ## 0.13.3 - 2026-10-08
 
@@ -1232,21 +498,6 @@ These fixes change repository validation tools. Installed Skills, hooks, action 
 ### Required action
 
 None for installed plugin workflows. Contributors collecting new optional routing observations should use the current contract in [Routing Evaluations](evals/README.md): `codex-core-v3`, observation schema v3, and response schema V4. Existing historical records retain their original contracts.
-
-## Repository policy revision 34
-
-### Fixed
-
-- Updated current routing observation validation for clarification, delegation, and task planning while preserving historical contracts and results.
-- Allowed historical validation to use a writable temporary directory reached through a symbolic link while retaining checks against links inside the copied tree.
-
-### Behavioral impact
-
-These corrections affect repository validation tools. Plugin version `0.13.0`, installed runtime inputs, and existing immutable releases remain unchanged.
-
-### Required action
-
-Contributors collecting a new optional routing observation must use the current versioned contract described in [Routing Evaluations](evals/README.md). Installed plugin users do not need an update for this repository revision.
 
 ## 0.13.0 - 2026-09-16
 

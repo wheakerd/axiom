@@ -43,8 +43,8 @@ class DocumentationValidationTests(unittest.TestCase):
         # only with a deliberate documentation change.
         markdown = discover_markdown(REPOSITORY_ROOT)
         self.assertEqual(len(markdown), report.markdown_count)
-        self.assertEqual(25, report.current_document_count)
-        self.assertEqual(19, report.indexed_document_count)
+        self.assertEqual(26, report.current_document_count)
+        self.assertEqual(20, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
 

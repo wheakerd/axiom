@@ -130,6 +130,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | Dated governance evidence and maintainer reference | Current |
+| Repository policy revisions | `evidence/repository-policy-revisions-v1.json` | Current; `docs/repository-policy-revisions.md` renders the ledger and preserves the archived changelog entries |
 | Routing evaluation contracts and optional observation method | `evals/README.md` with versioned cases, schemas, and benchmark manifests | Current; earlier methods remain under `evals/history/` |
 | Routing-context measurements | Versioned `evals/context-budget/results/` records with `evals/context-budget/README.md` | Counts are static proxies; historical records keep their original bindings |
 

@@ -44,6 +44,7 @@ from axiom_validation.release_tag_controller import GITHUB_ACTIONS_APP_ID
 REPOSITORY = "wheakerd/axiom"
 HANDOFF_FILES = (
     "CHANGELOG.md",
+    "docs/repository-policy-revisions.md",
     "docs/runtime-identity.md",
     "evidence/release-status.json",
     "evidence/repository-policy-revisions-v1.json",
@@ -930,10 +931,9 @@ class CatalogHandoffTests(unittest.TestCase):
         changelog = (self.root / "CHANGELOG.md").read_text()
         self.assertIn("## 0.21.0 - 2026-11-02\n", changelog)
         self.assertNotIn("## 0.21.0 - unreleased", changelog)
-        self.assertLess(
-            changelog.index(f"## Repository policy revision {previous + 1}\n"),
-            changelog.index("## 0.21.0 - 2026-11-02\n"),
-        )
+        self.assertNotIn("## Repository policy revision", changelog)
+        ledger_page = (self.root / "docs" / "repository-policy-revisions.md").read_text()
+        self.assertIn(f"| {previous + 1} | 2026-11-03 | none | `{main}` |", ledger_page)
         self.assertIn("Merged commit | `" + "d" * 40, summary.read_text())
 
 

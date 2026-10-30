@@ -44,7 +44,7 @@ from .release_tag_controller import (
     SIGNED_MAIN_CHECK,
 )
 from .release_versions import parse_production_release_version
-from .runtime_identity import replace_runtime_identity_block
+from .runtime_identity import replace_policy_ledger_block, replace_runtime_identity_block
 from .yaml_subset import (
     CanonicalYamlError,
     CanonicalYamlScalar,
@@ -78,6 +78,7 @@ LEDGER_RELATIVE = "evidence/repository-policy-revisions-v1.json"
 IDENTITY_RELATIVE = "evidence/runtime-identity.json"
 STATUS_RELATIVE = "evidence/release-status.json"
 IDENTITY_DOCUMENT_RELATIVE = "docs/runtime-identity.md"
+LEDGER_DOCUMENT_RELATIVE = "docs/repository-policy-revisions.md"
 POLL_SECONDS = 20
 CHECK_TIMEOUT_SECONDS = 75 * 60
 RUN_DISCOVERY_SECONDS = 5 * 60
@@ -943,21 +944,6 @@ def _read_round_trip_json(path: Path) -> Any:
     return document
 
 
-def catalog_changelog_section(revision: int, tag: str, version: str) -> str:
-    return (
-        f"## Repository policy revision {revision}\n\n"
-        "### Changed\n\n"
-        f"- Advance the Codex marketplace plugin source to the verified immutable Latest release `{tag}`.\n"
-        f"- Advance the Claude Code marketplace plugin source to the same immutable release `{tag}`.\n\n"
-        "### Behavioral impact\n\n"
-        f"Codex and Claude Code marketplace refresh now select release `{tag}`. This catalog "
-        f"handoff preserves plugin version `{version}` and its installed runtime digest.\n\n"
-        "### Required action\n\n"
-        "None. Existing Codex and Claude Code clients follow each host's native marketplace "
-        "refresh and update controls.\n\n"
-    )
-
-
 def apply_catalog_handoff(
     root: Path,
     *,
@@ -1020,6 +1006,11 @@ def apply_catalog_handoff(
         replace_runtime_identity_block(identity_document.read_text(encoding="utf-8"), identity),
         encoding="utf-8",
     )
+    ledger_document = root / LEDGER_DOCUMENT_RELATIVE
+    ledger_document.write_text(
+        replace_policy_ledger_block(ledger_document.read_text(encoding="utf-8"), ledger),
+        encoding="utf-8",
+    )
 
     for host, relative in MARKETPLACE_CATALOGS:
         path = root / relative
@@ -1037,17 +1028,11 @@ def apply_catalog_handoff(
         f"{CHANGELOG_RELATIVE} must contain exactly one `## {version} - unreleased` heading",
     )
     changelog = changelog.replace(unreleased, f"\n## {version} - {release_date}\n")
-    first_entry = changelog.find("\n## ")
-    _require(first_entry >= 0, f"{CHANGELOG_RELATIVE} has no entries")
-    changelog = (
-        changelog[: first_entry + 1]
-        + catalog_changelog_section(revision, tag, version)
-        + changelog[first_entry + 1 :]
-    )
     changelog_path.write_text(changelog, encoding="utf-8")
     return (
         CHANGELOG_RELATIVE,
         IDENTITY_DOCUMENT_RELATIVE,
+        LEDGER_DOCUMENT_RELATIVE,
         STATUS_RELATIVE,
         LEDGER_RELATIVE,
         IDENTITY_RELATIVE,
@@ -1073,6 +1058,7 @@ def _run_publication_checks(root: Path) -> None:
 HANDOFF_REQUIRED_PATHS = (
     CHANGELOG_RELATIVE,
     IDENTITY_DOCUMENT_RELATIVE,
+    LEDGER_DOCUMENT_RELATIVE,
     STATUS_RELATIVE,
     LEDGER_RELATIVE,
     IDENTITY_RELATIVE,
@@ -1144,7 +1130,7 @@ def run_catalog(
     headline = f"chore: advance the marketplace catalogs to the immutable release {tag}"
     body = (
         f"Advance both marketplace catalogs to the verified immutable Latest release {tag}, "
-        "date its Changelog heading, and record the next repository policy revision.\n\n"
+        "date its Changelog heading, and record the next repository policy revision in the ledger.\n\n"
         f"Prepared by the Release pipeline run {run_url} from main {main}."
     )
     write_api.post(
