@@ -10,7 +10,7 @@
         "source": "git-subdir",
         "url": "https://github.com/wheakerd/axiom.git",
         "path": "./plugin",
-        "ref": "v0.22.1"
+        "ref": "v0.23.0"
       },
       "policy": {
         "installation": "AVAILABLE",

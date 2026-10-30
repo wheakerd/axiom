@@ -960,6 +960,14 @@
       "sourceIssue": null,
       "summary": "Release 0.23.0: traceable Git trimmed to plain-Git invariants with hooks on by default, four routes narrowed, descriptions shortened, the gate owns the delegated-choice rule, listing reworded.",
       "runtimeContractDigest": "sha256:84ef1ccbb95d640032b6a15eabcb236b658cac0dffdd488b66f3378591ea9c3d"
+    },
+    {
+      "revision": 121,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "c67b1fb454900dfe95d724bda45b52d74035f9d9",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.23.0.",
+      "runtimeContractDigest": "sha256:84ef1ccbb95d640032b6a15eabcb236b658cac0dffdd488b66f3378591ea9c3d"
     }
   ]
 }

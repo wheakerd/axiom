@@ -8,7 +8,7 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
-## 0.23.0 - unreleased
+## 0.23.0 - 2026-10-30
 
 ### Changed
 
