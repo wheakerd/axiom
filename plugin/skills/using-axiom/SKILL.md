@@ -20,11 +20,10 @@ These invariants bind in every session this gate reaches. Everything else here i
 
 ## Terms
 
-- **Route**: a bundled skill selected for a request. **Host-native**: handled by the host with no route.
-- **Selection surface**: the host's skill list with each description; this gate adds only composition and boundary rules.
+- **Route**: a bundled skill selected for a request. **Host-native**: handled by the host with no route. **Selection surface**: the host's skill list with each description.
 - **Explicit invocation**: the host's own way to name a skill: `$skill-name` in Codex, `/axiom:skill-name` in Claude Code, or the skill named in plain words. Dated host facts live in `references/codex-host.md` and `references/claude-code-host.md`.
 - **Invariant**: a rule a skill lists under its Invariants heading. **Default**: any other statement in a skill.
-- **Handoff contract**: the part of a route that says how to treat prior attempts after resume or compaction.
+- **Handoff contract**: the part of a route that governs prior attempts after resume or compaction.
 - **Envelope**: the frozen actor, action, target, payload, cost and count of one external action. **Write set**: the frozen persistent changes with their rollback.
 
 ## Route Once
@@ -52,6 +51,10 @@ Assess ambiguity before delegation; only this gate then selects `clarify-intent`
 An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary performance work does not. Ordinary AGENTS audits select only `agents-architect`.
 
 Exact existing authorization needs no reconfirmation unless scope changes. Prior refusal/assistant prose creates no policy. Ordinary named-remote Git remains host-native. Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
+
+## Before Acting
+
+Before an action that changes state, say in one sentence what outcome you intend, name any material ambiguity the user left open, and mark the first irreversible or externally visible step. This adds no question, stop, or authority; stay silent for read-only requests and conversation.
 
 ## Invocation Notes
 

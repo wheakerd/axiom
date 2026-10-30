@@ -26,12 +26,12 @@
     "sha256": "1380155863715c28b91223823f3eaadb96bcefbe2482b444ef9dc8e8b62fe011"
   },
   "candidate": {
-    "sha256": "8e6fff7a843c3550a8a3fadc484eab75e99e0f2d36bda1160e46beba6a6255ca",
+    "sha256": "aedb297e11d4b423dabb1fd9fdc1145e9946324027e638d2a23911e33badf964",
     "metrics": {
       "classification": "exact-static-counts-used-as-context-proxies",
-      "utf8Bytes": 6976,
-      "whitespaceDelimitedWords": 972,
-      "logicalLines": 62,
+      "utf8Bytes": 7217,
+      "whitespaceDelimitedWords": 1008,
+      "logicalLines": 65,
       "directReferenceCount": 5,
       "directReferences": [
         "references/claude-code-host.md",
@@ -44,27 +44,27 @@
         "classification": "estimate",
         "method": "ceil(utf8-bytes/4)",
         "comparisonScope": "same-English-Markdown-surface-only",
-        "value": 1744
+        "value": 1805
       }
     }
   },
   "comparison": {
     "method": "same-English-Markdown-surface",
-    "utf8ByteDelta": 1077,
-    "wordDelta": 215,
-    "lineDelta": -45,
+    "utf8ByteDelta": 1318,
+    "wordDelta": 251,
+    "lineDelta": -42,
     "referenceDelta": 4,
-    "estimatedTokenDelta": 269,
+    "estimatedTokenDelta": 330,
     "absoluteThresholdReached": true,
     "relativeThresholdReached": true,
     "meaningfulIncrease": true,
     "reviewStatus": "reviewed",
-    "justification": "The gate grows by the Terms section, which defines once the shared words the skills use (route, host-native, selection surface, explicit invocation, invariant and default, handoff contract, envelope, write set), by its six named invariants, and by the per-host invocation syntax. Issue #226 traded this always-loaded growth for fourteen skill bodies that name their invariants and define their terms, and the gate keeps more than 390 bytes of headroom below its publication maximum."
+    "justification": "The gate grows by the Terms section, which defines once the shared words the skills use (route, host-native, selection surface, explicit invocation, invariant and default, handoff contract, envelope, write set), by its six named invariants, by the per-host invocation syntax, and by the Before Acting behavior of Issue #233. Issue #226 traded this always-loaded growth for fourteen skill bodies that name their invariants and define their terms, and the gate keeps more than 150 bytes of headroom below its publication maximum."
   },
   "descriptionComparison": {
     "predecessor": "0.23.0",
     "method": "same-English-description-set",
-    "totalUtf8ByteDelta": 6,
+    "totalUtf8ByteDelta": 133,
     "absoluteThresholdReached": false,
     "relativeThresholdReached": false,
     "meaningfulIncrease": false,
@@ -87,8 +87,8 @@
       },
       {
         "name": "clarify-intent",
-        "utf8Bytes": 331,
-        "characters": 331
+        "utf8Bytes": 407,
+        "characters": 407
       },
       {
         "name": "confirm-external-action",
@@ -142,17 +142,17 @@
       },
       {
         "name": "verify-completion",
-        "utf8Bytes": 399,
-        "characters": 399
+        "utf8Bytes": 450,
+        "characters": 450
       }
     ],
-    "totalUtf8Bytes": 5077,
-    "totalCharacters": 5077,
+    "totalUtf8Bytes": 5204,
+    "totalCharacters": 5204,
     "estimatedTokens": {
       "classification": "estimate",
       "method": "ceil(utf8-bytes/4)",
       "comparisonScope": "same-English-description-set-only",
-      "value": 1270
+      "value": 1301
     }
   },
   "hostMetrics": [

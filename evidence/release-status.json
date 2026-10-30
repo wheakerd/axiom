@@ -10,7 +10,7 @@
     "pluginVersion": "0.24.0",
     "repositoryPolicyRevision": 122,
     "runtimeContractSchemaVersion": "4",
-    "runtimeContractDigest": "sha256:afe2cfe2021c0de0841bfe41c758f1b2bcffbe8926bf8bd361f6d0e56b26921f",
+    "runtimeContractDigest": "sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v4.json",
     "history": "evidence/runtime-contract-history-v4.json"
   },
@@ -23,7 +23,7 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.24.0",
-      "runtimeContractDigest": "sha256:afe2cfe2021c0de0841bfe41c758f1b2bcffbe8926bf8bd361f6d0e56b26921f",
+      "runtimeContractDigest": "sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14",
       "status": "not-run",
       "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
     },
@@ -34,7 +34,7 @@
       "observationSubject": "installed-runtime-contract",
       "observedAt": null,
       "pluginVersion": "0.24.0",
-      "runtimeContractDigest": "sha256:afe2cfe2021c0de0841bfe41c758f1b2bcffbe8926bf8bd361f6d0e56b26921f",
+      "runtimeContractDigest": "sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14",
       "status": "not-run",
       "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
     }

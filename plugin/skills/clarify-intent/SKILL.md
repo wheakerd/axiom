@@ -1,6 +1,6 @@
 ---
 name: clarify-intent
-description: Clarify a request whose wording supports materially different outcomes that context cannot resolve; offer the plausible options and accept a custom answer before dependent work. Use on an explicit invocation or when using-axiom selects this boundary; not for tentative wording, routine implementation choices, or inspectable facts.
+description: Clarify a request whose wording supports materially different outcomes that context cannot resolve, including alternatives offered across sentences or without the word either; offer the plausible options and accept a custom answer before dependent work. Use on an explicit invocation or when using-axiom selects this boundary; not for tentative wording, routine implementation choices, or inspectable facts.
 ---
 
 # Clarify Intent

@@ -39,6 +39,8 @@ Selection precedes reading candidate Skill bodies. Load the smallest matching se
 
 Reassess when a later tool choice starts research through the user's own browser, CLI, script, or HTTP client, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Select `local-web-search` before that access; routing itself sends no network request.
 
+The gate also carries one light behavior that selects no route: before an action that changes state, the model says in one sentence what outcome it intends, names any material ambiguity the user left open, and marks the first irreversible or externally visible step. It adds no question, stop, or authority and stays silent for read-only requests and conversation.
+
 ## Workflow Ownership
 
 The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using-axiom/SKILL.md) are canonical. This table summarizes responsibilities; concrete requests and controls are in [Examples](examples.md).

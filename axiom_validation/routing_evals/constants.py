@@ -529,23 +529,40 @@ V6_BENCHMARK_PROFILES = {
 SCHEMA_V7_ID = "urn:axiom:routing-evals:schema:v7"
 BENCHMARK_V7_ID = "codex-core-v7"
 CLAUDE_CODE_BENCHMARK_V7_ID = "claude-code-core-v7"
-CURRENT_BENCHMARK_IDS = (BENCHMARK_V7_ID, CLAUDE_CODE_BENCHMARK_V7_ID)
-CURRENT_BENCHMARK_CASE_COUNT = 40
-CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v7/current.jsonl"
+V7_BENCHMARK_IDS = (BENCHMARK_V7_ID, CLAUDE_CODE_BENCHMARK_V7_ID)
+V7_BENCHMARK_CASE_COUNT = 40
+V7_CORPUS_RELATIVE_PATH = "evals/routing-v7/current.jsonl"
 # The v7 Codex profile runs the model the maintainer's ChatGPT account serves at its
 # maximum effort; Codex CLI 0.166.0 refuses `gpt-5.4` on a ChatGPT account, and the
 # stall rate observed on 2026-10-28 needs the longer timeout.
-CURRENT_BENCHMARK_PROFILES = {
-    "codex": {
-        "id": BENCHMARK_V7_ID,
-        "method": "documented-codex-cli-equivalent",
-        "model": "gpt-6-astra",
-        "reasoningEffort": "max",
-        "caseTimeoutSeconds": 300,
-    },
+V7_CODEX_PROFILE = {
+    "method": "documented-codex-cli-equivalent",
+    "model": "gpt-6-astra",
+    "reasoningEffort": "max",
+    "caseTimeoutSeconds": 300,
+}
+V7_BENCHMARK_PROFILES = {
+    "codex": {**V7_CODEX_PROFILE, "id": BENCHMARK_V7_ID},
     "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V7_ID},
+}
+
+# Schema v8 (0.24.0) keeps the thirteen routes and every v7 case, and adds nine cases:
+# two no-route cases for the gate's before-acting behavior, four cases for the
+# completion-claim and choice forms a private session audit found missing with their
+# near-miss controls, and one post-compaction route reselection case. The v7 corpus,
+# benchmarks, and bindings stay immutable.
+SCHEMA_V8_ID = "urn:axiom:routing-evals:schema:v8"
+BENCHMARK_V8_ID = "codex-core-v8"
+CLAUDE_CODE_BENCHMARK_V8_ID = "claude-code-core-v8"
+CURRENT_BENCHMARK_IDS = (BENCHMARK_V8_ID, CLAUDE_CODE_BENCHMARK_V8_ID)
+CURRENT_BENCHMARK_CASE_COUNT = 49
+CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v8/current.jsonl"
+CURRENT_BENCHMARK_PROFILES = {
+    "codex": {**V7_CODEX_PROFILE, "id": BENCHMARK_V8_ID},
+    "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V8_ID},
 }
 # Schema versions that bind a benchmark profile per host, with their profiles.
 HOST_BENCHMARK_PROFILES_BY_VERSION = {
-    "5": V5_BENCHMARK_PROFILES, "6": V6_BENCHMARK_PROFILES, "7": CURRENT_BENCHMARK_PROFILES,
+    "5": V5_BENCHMARK_PROFILES, "6": V6_BENCHMARK_PROFILES, "7": V7_BENCHMARK_PROFILES,
+    "8": CURRENT_BENCHMARK_PROFILES,
 }

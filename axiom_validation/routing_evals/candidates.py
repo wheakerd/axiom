@@ -21,8 +21,8 @@ CANDIDATE_RESULTS_RELATIVE = "evals/results"
 OBSERVATION_HOSTS = ("codex", "claude-code")
 OPERATING_SYSTEM_FILE = re.compile(r"[a-z][a-z0-9-]*\.json\Z")
 # Candidate records exist from routing contract v7; each binds the contract its
-# schemaVersion names and response schema V8.
-CANDIDATE_CONTRACT_VERSIONS = ("7",)
+# schemaVersion names (v7 or v8) and response schema V8.
+CANDIDATE_CONTRACT_VERSIONS = ("7", "8")
 CURRENT_RESPONSE_BINDINGS = (
     {"path": HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256},
 )

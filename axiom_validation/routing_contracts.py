@@ -49,6 +49,10 @@ GATE_SELECTION_ANCHORS = (
 # pinned or not.
 CHOICE_ALTERNATIVES = re.compile(
     r"\beither\s+(?P<first>.+?)\s+or\s+(?P<second>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
+    # 0.24.0: alternatives stated across two sentences ("X. Alternatively Y.") or
+    # offered without "either" ("X, or if you prefer Y").
+    r"|(?P<first2>[^.!?]+?)\.\s+alternatively,?\s+(?P<second2>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
+    r"|(?P<first3>[^.!?]+?),?\s+or\s+if\s+you\s+prefer,?\s+(?P<second3>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
 )
 EXPLICIT_CHOICE_DELEGATION = re.compile(
     r"\b(?:choose one|pick one|your call|your choice|you decide|decide yourself|up to you)\b"
@@ -644,7 +648,11 @@ def _choice_contract(request: str) -> dict[str, Any] | None:
         return None
     prefix = normalized[: match.start()]
     suffix = normalized[match.end():]
-    texts = (match["first"], match["second"])
+    texts = next(
+        (first, second)
+        for first, second in ((match["first"], match["second"]), (match["first2"], match["second2"]), (match["first3"], match["second3"]))
+        if first is not None
+    )
     contracts = tuple(route_contract(prefix + text) for text in texts)
     gated = any(
         UNGRANTED_OR_IRREVERSIBLE_CHOICE.search(prefix + text + suffix)
@@ -781,7 +789,16 @@ def _verify_completion_contract(request: str, normalized: str) -> dict[str, Any]
         r"\b(?:evidence|observed|observe|summar\w*|compact\w*|recall\w*|current (?:state|evidence|repository))\b",
         normalized,
     )
-    if not (verification and claim and evidence):
+    # 0.24.0: a completion claim that rests on a compaction summary and is used to
+    # move on also selects the route, even without a verification verb; a question
+    # about where things stand does not.
+    summary_claim = (
+        claim
+        and re.search(r"\b(?:summar\w*|compact\w*)\b", normalized)
+        and re.search(r"\b(?:move on|next (?:item|step|task)|proceed|close (?:it|the task)|mark(?:ed)? (?:it |as )?(?:done|complete))\b", normalized)
+        and "?" not in normalized
+    )
+    if not ((verification and claim and evidence) or summary_claim):
         return None
     regrounding = bool(re.search(r"\b(?:compact\w*|resum\w*|fork\w*|hand-?off)\b", normalized))
     return {

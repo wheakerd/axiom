@@ -7,7 +7,7 @@ Axiom separates installed plugin behavior from repository maintenance. The [mach
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.24.0`
 - `repositoryPolicyRevision`: `122`
-- `runtimeContractDigest` (schema v4): `sha256:afe2cfe2021c0de0841bfe41c758f1b2bcffbe8926bf8bd361f6d0e56b26921f`
+- `runtimeContractDigest` (schema v4): `sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v4.json`](../axiom_validation/runtime-contract-inputs-v4.json)
 <!-- runtime-identity:current:end -->
 

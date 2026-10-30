@@ -1,6 +1,6 @@
 ---
 name: verify-completion
-description: Verify a completion or progress claim against current direct evidence before it is made or accepted. Use when the user asks to verify or audit whether work is really complete, or when a claim rests on recalled or summarized facts, including after compaction. Advises before complying when evidence conflicts. Not for status questions, routine continuation, Axiom task review, or supervised progress.
+description: Verify a completion or progress claim against current direct evidence before it is made or accepted. Use when the user asks to verify or audit whether work is really complete, or when a claim that work is done rests on recalled or summarized facts, including a compaction summary even without the word verify. Advises before complying when evidence conflicts. Not for status questions, routine continuation, Axiom task review, or supervised progress.
 ---
 
 # Verify Completion

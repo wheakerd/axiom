@@ -8,7 +8,7 @@ from typing import Any
 
 from .benchmark import validate_benchmark
 from .constants import (
-    BENCHMARK_V3_ID, BENCHMARK_V4_ID, BENCHMARK_V5_ID, BENCHMARK_V6_ID, BENCHMARK_V7_ID,
+    BENCHMARK_V3_ID, BENCHMARK_V4_ID, BENCHMARK_V5_ID, BENCHMARK_V6_ID, BENCHMARK_V7_ID, BENCHMARK_V8_ID,
     CURRENT_BENCHMARK_PROFILES,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_CORPUS_RELATIVE_PATH,
@@ -18,8 +18,9 @@ from .constants import (
     HOST_BENCHMARK_PROFILES_BY_VERSION,
     HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
     HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
-    SCHEMA_V3_ID, SCHEMA_V4_ID, SCHEMA_V5_ID, SCHEMA_V6_ID, SCHEMA_V7_ID,
+    SCHEMA_V3_ID, SCHEMA_V4_ID, SCHEMA_V5_ID, SCHEMA_V6_ID, SCHEMA_V7_ID, SCHEMA_V8_ID,
     V6_BENCHMARK_CASE_COUNT, V6_CORPUS_RELATIVE_PATH,
+    V7_BENCHMARK_CASE_COUNT, V7_CORPUS_RELATIVE_PATH,
     V3_BENCHMARK_CASE_COUNT, V3_CORPUS_RELATIVE_PATH, V3_PUBLIC_ROUTES,
     V4_BENCHMARK_CASE_COUNT, V4_CORPUS_RELATIVE_PATH, V4_PUBLIC_ROUTES,
     V5_BENCHMARK_CASE_COUNT, V5_CORPUS_RELATIVE_PATH, V5_PUBLIC_ROUTES,
@@ -30,17 +31,30 @@ from .schemas import (
     check_host_response_schema_v8,
     check_schema_contract_v6,
     check_schema_contract_v7,
+    check_schema_contract_v8,
     validate_case,
 )
 
 _CANONICAL_V3 = ("agent-plugin-architect", "clarify-intent", "delegate-simple-task", "task-planning")
-# Schema v7 cases whose narrowed expectation the offline route model regression-tests.
+# Schema v7 cases whose narrowed expectation the offline route model regression-tests;
+# schema v8 adds nine cases (OFFLINE_ENFORCED_V8_CASES) that it also resolves.
 OFFLINE_ENFORCED_V7_CASES = frozenset({
     "current-no-route-builtin-web-search-001",
     "current-no-route-fresh-plan-001",
     "current-no-route-post-compaction-continuation-001",
     "current-delegate-simple-task-explicit-no-gate-001",
     "current-overlap-delegate-plan-only-002",
+})
+OFFLINE_ENFORCED_V8_CASES = OFFLINE_ENFORCED_V7_CASES | frozenset({
+    "current-no-route-light-restatement-state-change-001",
+    "current-no-route-light-restatement-read-only-001",
+    "current-verify-completion-summary-claim-no-verb-001",
+    "current-near-miss-post-compaction-status-001",
+    "current-clarify-intent-consecutive-sentences-001",
+    "current-near-miss-consecutive-sentences-routine-001",
+    "current-clarify-intent-authority-choice-no-either-001",
+    "current-near-miss-staged-sequence-001",
+    "current-post-compaction-route-reselection-001",
 })
 _CANONICAL_V4 = (*_CANONICAL_V3, "continuous-progress")
 # version: (corpus, benchmark ID, schema ID, routes, case count, canonical routes)
@@ -53,12 +67,14 @@ VERSIONED_CONTRACTS = {
           V5_BENCHMARK_CASE_COUNT, _CANONICAL_V4),
     "6": (V6_CORPUS_RELATIVE_PATH, BENCHMARK_V6_ID, SCHEMA_V6_ID, CURRENT_PUBLIC_ROUTES,
           V6_BENCHMARK_CASE_COUNT, (*_CANONICAL_V4, "verify-completion")),
-    "7": (CURRENT_CORPUS_RELATIVE_PATH, BENCHMARK_V7_ID, SCHEMA_V7_ID, CURRENT_PUBLIC_ROUTES,
+    "7": (V7_CORPUS_RELATIVE_PATH, BENCHMARK_V7_ID, SCHEMA_V7_ID, CURRENT_PUBLIC_ROUTES,
+          V7_BENCHMARK_CASE_COUNT, (*_CANONICAL_V4, "verify-completion")),
+    "8": (CURRENT_CORPUS_RELATIVE_PATH, BENCHMARK_V8_ID, SCHEMA_V8_ID, CURRENT_PUBLIC_ROUTES,
           CURRENT_BENCHMARK_CASE_COUNT, (*_CANONICAL_V4, "verify-completion")),
 }
 
 
-def collect_current_corpus(root: Path, failures: list[str], *, version: str = "7") -> dict[str, dict[str, Any]]:
+def collect_current_corpus(root: Path, failures: list[str], *, version: str = "8") -> dict[str, dict[str, Any]]:
     """Read one versioned corpus; do not reinterpret the historical corpus."""
     if version not in VERSIONED_CONTRACTS:
         raise ValueError("unsupported versioned corpus")
@@ -82,7 +98,7 @@ def collect_current_corpus(root: Path, failures: list[str], *, version: str = "7
 
 
 def current_benchmark_case_ids(
-    root: Path, cases: dict[str, dict[str, Any]], failures: list[str], *, version: str = "7",
+    root: Path, cases: dict[str, dict[str, Any]], failures: list[str], *, version: str = "8",
     host: str = "codex",
 ) -> list[str]:
     if version not in VERSIONED_CONTRACTS:
@@ -109,6 +125,7 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
     for relative, check in (
         ("evals/schema-v6.json", check_schema_contract_v6),
         ("evals/schema-v7.json", check_schema_contract_v7),
+        ("evals/schema-v8.json", check_schema_contract_v8),
     ):
         schema = load_json_object(root / relative, failures, root)
         if schema is not None:
@@ -134,7 +151,7 @@ def check_current_routing_evaluations(root: Path, failures: list[str]) -> tuple[
     cases = collect_current_corpus(root, failures)
     case_ids = current_benchmark_case_ids(root, cases, failures)
     if current_benchmark_case_ids(root, cases, failures, host="claude-code") != case_ids:
-        failures.append("claude-code-core-v7 must select the codex-core-v7 cases in the same order")
+        failures.append("claude-code-core-v8 must select the codex-core-v8 cases in the same order")
     covered = {route for case in cases.values() for route in case.get("expectedRoutes", ())}
     if covered != set(CURRENT_PUBLIC_ROUTES):
         failures.append("current routing corpus must cover every current public task route")

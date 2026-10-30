@@ -15,7 +15,9 @@ from axiom_validation.routing_evals import (
     BENCHMARK_V5_ID,
     BENCHMARK_V6_ID,
     BENCHMARK_V7_ID,
+    BENCHMARK_V8_ID,
     CLAUDE_CODE_BENCHMARK_V7_ID,
+    CLAUDE_CODE_BENCHMARK_V8_ID,
     CURRENT_BENCHMARK_PROFILES,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
@@ -33,6 +35,7 @@ from axiom_validation.routing_evals import (
     check_host_response_schema_v7,
     check_host_response_schema_v8,
     check_schema_contract_v7,
+    check_schema_contract_v8,
     classify_host_response_v7_acceptance,
     collect_corpus,
     collect_current_corpus,
@@ -76,7 +79,7 @@ def current_record() -> dict:
         results.append(result)
     profile = CURRENT_BENCHMARK_PROFILES["codex"]
     record.update(
-        schemaVersion="7", benchmarkId=BENCHMARK_V7_ID,
+        schemaVersion="8", benchmarkId=BENCHMARK_V8_ID,
         runId="synthetic-current-routing-regression", cases=results,
         responseSchema={"path": HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
                         "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256},
@@ -150,7 +153,7 @@ def frozen_v5_record(host: str = "codex") -> dict:
     return record
 
 
-def write_current_record(directory: Path, record: dict, benchmark_id: str = BENCHMARK_V7_ID) -> Path:
+def write_current_record(directory: Path, record: dict, benchmark_id: str = BENCHMARK_V8_ID) -> Path:
     payload = (json.dumps(record, indent=2) + "\n").encode("utf-8")
     digest = hashlib.sha256(payload).hexdigest()
     path = directory / f"axiom-v{RELEASE_VERSION}-{benchmark_id}-{digest}.json"
@@ -161,11 +164,11 @@ def write_current_record(directory: Path, record: dict, benchmark_id: str = BENC
 class CurrentRoutingTests(unittest.TestCase):
     def test_current_contract_covers_installed_routes_and_updated_ambiguity(self):
         failures = []
-        self.assertEqual((77, 40), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
+        self.assertEqual((86, 49), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
         self.assertEqual([], failures)
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
-        self.assertEqual(77, len(cases))
-        self.assertEqual(40, CURRENT_BENCHMARK_CASE_COUNT)
+        self.assertEqual(86, len(cases))
+        self.assertEqual(49, CURRENT_BENCHMARK_CASE_COUNT)
         self.assertEqual(13, len(CURRENT_PUBLIC_ROUTES))
         self.assertEqual("verify-completion", CURRENT_PUBLIC_ROUTES[CURRENT_PUBLIC_ROUTES.index("review-axiom-task") + 1])
         for case in cases.values():
@@ -252,7 +255,9 @@ class CurrentRoutingTests(unittest.TestCase):
             ["current-verify-completion-canonical-audit-001",
              "current-verify-completion-near-miss-status-001",
              "current-compaction-verify-completion-manual-001",
-             "current-no-route-post-compaction-continuation-001"],
+             "current-no-route-post-compaction-continuation-001",
+             "current-verify-completion-summary-claim-no-verb-001",
+             "current-near-miss-post-compaction-status-001"],
             [case_id for case_id in ids if case_id in verify],
         )
         self.assertEqual(
@@ -338,10 +343,10 @@ class CurrentRoutingTests(unittest.TestCase):
         self.assertEqual("selected-routes-duplicate", classify_host_response_v7_acceptance(duplicate))
 
     def test_current_schema_rejects_old_routes_and_loosened_model_shape(self):
-        schema = json.loads((REPOSITORY_ROOT / "evals/schema-v7.json").read_text())
+        schema = json.loads((REPOSITORY_ROOT / "evals/schema-v8.json").read_text())
         schema["$defs"]["route"]["enum"].remove("task-planning")
         failures = []
-        check_schema_contract_v7(schema, failures)
+        check_schema_contract_v8(schema, failures)
         self.assertTrue(any("route enum" in item for item in failures))
         response = json.loads((REPOSITORY_ROOT / HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH).read_text())
         response["additionalProperties"] = True
@@ -432,7 +437,7 @@ class CurrentRoutingTests(unittest.TestCase):
         claude = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, host="claude-code")
         self.assertEqual([], failures)
         self.assertEqual(codex, claude)
-        benchmark = json.loads((REPOSITORY_ROOT / "evals/benchmarks/claude-code-core-v7.json").read_text())
+        benchmark = json.loads((REPOSITORY_ROOT / "evals/benchmarks/claude-code-core-v8.json").read_text())
         for field in ("method", "model", "reasoningEffort", "caseTimeoutSeconds"):
             self.assertEqual(CURRENT_BENCHMARK_PROFILES["claude-code"][field], benchmark[field])
         self.assertEqual("dontAsk", benchmark["safety"]["permissionMode"])
@@ -441,7 +446,7 @@ class CurrentRoutingTests(unittest.TestCase):
     def test_current_external_observation_accepts_the_claude_code_profile(self):
         record = claude_code_record()
         with tempfile.TemporaryDirectory() as directory:
-            path = write_current_record(Path(directory), record, CLAUDE_CODE_BENCHMARK_V7_ID)
+            path = write_current_record(Path(directory), record, CLAUDE_CODE_BENCHMARK_V8_ID)
             failures = []
             validate_external_routing_observation(
                 path, expected_version=RELEASE_VERSION, expected_tag=f"v{RELEASE_VERSION}",
@@ -452,10 +457,10 @@ class CurrentRoutingTests(unittest.TestCase):
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
         ids = current_benchmark_case_ids(REPOSITORY_ROOT, cases, failures, host="claude-code")
         crossed = copy.deepcopy(record)
-        crossed["benchmarkId"] = BENCHMARK_V7_ID
+        crossed["benchmarkId"] = BENCHMARK_V8_ID
         crossed["run"]["method"] = CURRENT_BENCHMARK_PROFILES["codex"]["method"]
         validate_observation(crossed, "claude-code", ids, cases, "crossed", failures)
-        self.assertTrue(any("benchmarkId must bind claude-code-core-v7" in item for item in failures))
+        self.assertTrue(any("benchmarkId must bind claude-code-core-v8" in item for item in failures))
         self.assertTrue(any("run.method is unsupported" in item for item in failures))
         failures = []
         validate_observation(record, "codex", ids, cases, "codex-host", failures)
@@ -544,7 +549,7 @@ class ResponseSchemaV8Tests(unittest.TestCase):
                 validate_host_response_v7(response, route, failures)
                 self.assertEqual([], failures)
 
-    def test_schema_v7_records_bind_the_v8_response_schema(self):
+    def test_schema_v8_records_bind_the_v8_response_schema(self):
         for host in ("codex", "claude-code"):
             with self.subTest(host=host):
                 record = current_record() if host == "codex" else claude_code_record()

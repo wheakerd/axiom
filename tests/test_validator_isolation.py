@@ -30,7 +30,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
     "21 documentation negative fixtures, "
     f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
-    "179 black-box routing cases, 70 fixed host benchmark cases, "
+    "188 black-box routing cases, 79 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 8 routing-context lifecycle scenarios, "
     f"{len(FACTS_SURFACES)} canonical release-fact surfaces, "

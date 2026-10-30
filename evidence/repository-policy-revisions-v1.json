@@ -974,8 +974,8 @@
       "recordedOn": "2026-10-30",
       "baselineCommit": "144127b93508d67a4386ede85e8436de08e3a955",
       "sourceIssue": 226,
-      "summary": "Release 0.24.0: fourteen skills rewritten as direction plus named invariants, gate terms and per-host invocation syntax, dated host references, single-session reconcile, readability validator.",
-      "runtimeContractDigest": "sha256:afe2cfe2021c0de0841bfe41c758f1b2bcffbe8926bf8bd361f6d0e56b26921f"
+      "summary": "Release 0.24.0: skills as direction plus named invariants, gate terms, per-host invocation, before-acting behavior, dated host references, recall cases (contract v8), readability validator.",
+      "runtimeContractDigest": "sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14"
     }
   ]
 }
