@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 120 | 2026-10-30 | none | `64f39b7a9798d33bd7881953f78333f8cd1339dd` | Release 0.23.0: traceable Git trimmed to plain-Git invariants with hooks on by default, four routes narrowed, descriptions shortened, the gate owns the delegated-choice rule, listing reworded. |
 | 119 | 2026-10-30 | [#221](https://github.com/wheakerd/axiom/issues/221) | `3097889f28c3dc0aef44b766cfee533cfb551c60` | Docs: trust model discloses Git-metadata task state and backup refs with removal commands; installed-Hook comparison is optional; install docs add the Codex /hooks trust step and Windows status. |
 | 118 | 2026-10-30 | [#220](https://github.com/wheakerd/axiom/issues/220) | `e88e3065da805b27040c97b77f981aede3afe638` | Gate release candidates on checked-in fresh-session routing observation records for changed routes, bound to the runtime digest, and narrow description anchors to authority invariants. |
 | 117 | 2026-10-30 | [#219](https://github.com/wheakerd/axiom/issues/219) | `4fb5271be792ebb6812b6195ded9b633bab82abf` | Record policy revisions in the ledger only: a rendered Repository Policy Revisions page replaces their changelog entries, which move there unchanged, and the catalog handoff stops writing them. |

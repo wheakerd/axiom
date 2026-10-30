@@ -1,6 +1,6 @@
 ---
 name: continuous-progress
-description: Supervised progress across host sessions by explicit invocation only. Use when the human invokes this skill to pursue a defined outcome through fresh execution sessions, coordinator handoffs, compaction, and independent recovery. Do not select it for ordinary requests to continue, one-off work, skill evaluation or authoring, or a request to use native Goals or /goal alone. Activation requires verified native scheduling, a supported independent supervisor, and existing authority for the requested coordination.
+description: Supervised progress across host sessions by explicit invocation only, pursuing a defined outcome through fresh sessions, coordinator handoffs, compaction, and recovery. Activation needs a native scheduler for the supervisor, a Desktop or cloud scheduled task or GitHub Actions rather than a CLI session alone, and existing authority. Not for ordinary continuation, one-off work, or native Goals alone.
 ---
 
 # Continuous Progress

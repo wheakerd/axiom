@@ -33,7 +33,7 @@ before making changes.
 
 **Link:** [Bounded task delegation](../../plugin/skills/delegate-simple-task/SKILL.md)
 
-**Description:** Delegates clear, simple, bounded work to a model from your ordered candidate list while the main session keeps responsibility for the outcome. An explicit invocation selects the skill. It requires the active `using-axiom` gate and states the unmet condition instead of silently declining. Before delegating it shows the exact model and brief and asks once, unless an explicit invocation or standing delegation policy already gave consent within a permission-bypass mode; that one answer covers both consent and the assignment. The host's reasoning level is not a condition: the main session judges whether it can state the work completely and check the result.
+**Description:** Delegates clear, simple, bounded work to a model from your ordered candidate list while the main session keeps responsibility for the outcome. An explicit invocation or a clear delegation request selects the skill, even in a session where the startup gate was not delivered; it then says so and assesses ambiguity itself. Before delegating it shows the exact model and brief and asks once, unless an explicit invocation or standing delegation policy already gave consent within a permission-bypass mode; that one answer covers both consent and the assignment. The host's reasoning level is not a condition: the main session judges whether it can state the work completely and check the result.
 
 **Usage:**
 
@@ -46,7 +46,7 @@ model candidates, and show me the exact model and brief before delegating.
 
 **Link:** [Task planning and revision](../../plugin/skills/task-planning/SKILL.md)
 
-**Description:** Turns requirements into steps, dependencies, and acceptance criteria, or updates an existing plan.
+**Description:** Revises an existing plan when you ask to remove, replace, merge, reorder, or narrow its items, or creates one when you invoke the skill; a fresh request for a plan stays with the host.
 
 **Usage:**
 
@@ -59,7 +59,7 @@ Do not implement it yet.
 
 **Link:** [Supervised progress across sessions](../../plugin/skills/continuous-progress/SKILL.md)
 
-**Description:** Explicitly invoked progress through fresh workers and coordinator handoffs, with a verified native supervisor. Stops after verified completion or cancellation; local scheduling requires the owning host application and the machine to remain available.
+**Description:** Explicitly invoked progress through fresh workers and coordinator handoffs, with a verified native supervisor. Activation needs a native scheduler for that supervisor, a Desktop or cloud scheduled task or GitHub Actions; a CLI session alone cannot wake it. Stops after verified completion or cancellation; local scheduling requires the owning host application and the machine to remain available.
 
 **Usage:**
 
@@ -74,7 +74,7 @@ cancel.
 
 **Link:** [Research through a local browser or client](../../plugin/skills/local-web-search/SKILL.md)
 
-**Description:** Limits information disclosed in requests and handles site challenges through a user handoff.
+**Description:** Limits information disclosed in requests and handles site challenges through a user handoff. Applies only to research through your own browser, CLI, script, or HTTP client; a host's built-in web tool stays with the host.
 
 **Usage:**
 
@@ -139,7 +139,7 @@ Do not retry it.
 
 **Link:** [Completion verification](../../plugin/skills/verify-completion/SKILL.md)
 
-**Description:** Verifies completion, progress, or success claims against current direct evidence, especially after compaction or resume, and advises before complying when evidence conflicts.
+**Description:** Verifies completion or progress claims against current direct evidence on an explicit request or before a completion claim, including one carried by a compaction summary, and advises before complying when evidence conflicts. Routine continuation after compaction stays with the host.
 
 **Usage:**
 
@@ -165,7 +165,7 @@ publication. Show the exact destination and text; do not publish yet.
 
 **Link:** [Traceable Git work](../../plugin/skills/traceable-git-submit/SKILL.md)
 
-**Description:** Handles explicit checkpoints, consolidation, recovery, and submissions that need traceability. Ordinary named-remote non-force Git stays with the host.
+**Description:** Handles explicit checkpoints, consolidation, recovery, and submissions that need traceability with plain Git: compare-and-swap ref updates, a backup ref before any rewrite, an exact frozen path set, one push per target with read-back, and no automatic retry. Repository hooks run by default. Ordinary named-remote non-force Git stays with the host.
 
 **Usage:**
 

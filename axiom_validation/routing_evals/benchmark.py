@@ -8,6 +8,7 @@ from typing import Any
 
 from .constants import (
     BENCHMARK_CASE_TIMEOUT_SECONDS,
+    HOST_BENCHMARK_PROFILES_BY_VERSION,
     BENCHMARK_DEVELOPER_INSTRUCTION,
     BENCHMARK_ID,
     BENCHMARK_KEYS,
@@ -222,15 +223,23 @@ def validate_benchmark(
             failures.append(f"{label}.officialReference.commit must be an immutable Git SHA")
         if official.get("path") != "plugins/plugin-eval":
             failures.append(f"{label}.officialReference.path must name plugins/plugin-eval")
-    if host == "codex" and benchmark.get("model") != BENCHMARK_MODEL:
-        failures.append(f"{label}.model must be {BENCHMARK_MODEL!r}")
-    if host == "codex" and benchmark.get("reasoningEffort") != BENCHMARK_REASONING_EFFORT:
+    # Versions with a profile per host bind the Codex manifest to that version's Codex
+    # profile; earlier Codex-only versions keep the original fixed settings.
+    codex_profile = (
+        profiles["codex"]
+        if host == "codex" and schema_version in HOST_BENCHMARK_PROFILES_BY_VERSION and "codex" in profiles
+        else {"model": BENCHMARK_MODEL, "reasoningEffort": BENCHMARK_REASONING_EFFORT,
+              "caseTimeoutSeconds": BENCHMARK_CASE_TIMEOUT_SECONDS}
+    )
+    if host == "codex" and benchmark.get("model") != codex_profile["model"]:
+        failures.append(f"{label}.model must be {codex_profile['model']!r}")
+    if host == "codex" and benchmark.get("reasoningEffort") != codex_profile["reasoningEffort"]:
         failures.append(
-            f"{label}.reasoningEffort must be {BENCHMARK_REASONING_EFFORT!r}"
+            f"{label}.reasoningEffort must be {codex_profile['reasoningEffort']!r}"
         )
-    if host == "codex" and benchmark.get("caseTimeoutSeconds") != BENCHMARK_CASE_TIMEOUT_SECONDS:
+    if host == "codex" and benchmark.get("caseTimeoutSeconds") != codex_profile["caseTimeoutSeconds"]:
         failures.append(
-            f"{label}.caseTimeoutSeconds must be {BENCHMARK_CASE_TIMEOUT_SECONDS}"
+            f"{label}.caseTimeoutSeconds must be {codex_profile['caseTimeoutSeconds']}"
         )
     if benchmark.get("stopOnFirstFailure") is not True:
         failures.append(f"{label}.stopOnFirstFailure must be true")

@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Create or revise an actionable task plan from the user's current requirements. Use when the user explicitly requests a task or implementation plan, or asks to remove, replace, merge, reorder, or narrow items in an existing plan. Keep retained decisions, dependencies, and acceptance criteria consistent with the current scope. Do not use for scheduled automations, progress reports, ordinary chat corrections, plan execution, or specialized planning already owned by another Axiom route. An explicit task-planning invocation may refine that plan's presentation while preserving its owner's constraints and authority.
+description: Revise an existing plan when the user asks to remove, replace, merge, reorder, or narrow its items, or create one on an explicit invocation; keep retained decisions, dependencies, and acceptance criteria consistent. A fresh plan request, scheduling, progress reports, execution, and planning another Axiom route owns stay host-native.
 ---
 
 # Task Planning
@@ -13,9 +13,9 @@ Defaults you may adapt, saying so: plan structure and detail, question count, an
 
 ## Select The Planning Phase
 
-- Use the request and the existing artifact to identify planning; a visible host plan-mode indicator is not required.
+- Enter on a revision of an existing plan or an explicit invocation; a fresh request for a plan stays host-native, and a visible host plan-mode indicator is not required.
 - A request to formulate or revise a plan authorizes that planning work. Execution, scheduling, creating another host task, and saving a file require their own applicable user intent. Carry forward authority already granted; do not add a confirmation gate merely because a plan was produced.
-- Specialized Axiom workflows retain their domain and authorization rules. Select their owner for specialized planning. When explicitly invoked to refine such a plan, apply this skill to its presentation and consistency without replacing those rules or resolving a material workflow choice for the user, unless the user explicitly delegated that choice and every alternative is reversible and already authorized; then state the choice and why before acting. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.
+- Specialized Axiom workflows retain their domain and authorization rules. Select their owner for specialized planning. When explicitly invoked to refine such a plan, apply this skill to its presentation and consistency without replacing those rules; a material workflow choice follows the startup gate's delegated-choice rule.
 - Read `references/scope-revisions.md` when a revision removes, replaces, or restores scope, or when dependency and constraint treatment is uncertain.
 
 ## Establish The Current Requirements

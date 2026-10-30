@@ -1,6 +1,6 @@
 ---
 name: agents-architect
-description: Design, initialize, audit, split, migrate, maintain, or validate a repository's AGENTS.md instruction system, routed .agents guidance, and repo-local .agents/skills or .claude/skills that support that system. Use for active-instruction discovery, durable AGENTS updates, route ownership, oversized guidance, instruction-memory growth, task-state placement, or an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Do not use for packaged or installed plugin Skills, ordinary documentation, or general agent usage optimization unless the requested change is specifically to AGENTS architecture.
+description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, and repo-local .agents/skills or .claude/skills, or an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Not for packaged plugin Skills or plain documentation.
 ---
 
 # AGENTS Architect

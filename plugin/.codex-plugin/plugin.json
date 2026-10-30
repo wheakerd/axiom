@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.22.1",
+  "version": "0.23.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -11,11 +11,11 @@
   "license": "MIT",
   "keywords": [
     "codex",
+    "claude-code",
     "agents-md",
     "codex-instructions",
     "ai-workflows",
-    "agent-safety",
-    "workflow-guardrails",
+    "workflow-routing",
     "skills",
     "context-efficiency",
     "automation",
@@ -25,8 +25,8 @@
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "displayName": "Axiom",
-    "shortDescription": "Guardrails for agent actions",
-    "longDescription": "Axiom routes focused workflows for intent clarification, simple-task delegation, task planning, explicitly supervised progress across sessions, local web research, repository instructions, plugin architecture, usage optimization, task review, evidence-bound completion verification, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority.",
+    "shortDescription": "Route before the agent acts",
+    "longDescription": "Axiom routes focused workflows for intent clarification, simple-task delegation, task planning, explicitly supervised progress across sessions, local web research, repository instructions, plugin architecture, usage optimization, task review, evidence-bound completion verification, confirmed external actions, traceable Git submission, and reversible persistent system changes. Route selection never grants mutation authority. Axiom adds instructions, not enforcement: it does not sandbox the agent, grant credentials, or block actions.",
     "developerName": "wheakerd",
     "category": "Productivity",
     "capabilities": [

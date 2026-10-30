@@ -62,7 +62,8 @@ context, not authority to guess a materially different deletion.
 
 | Request | Owner |
 | --- | --- |
-| Create an implementation plan for search with acceptance criteria | `task-planning` |
+| Use the task-planning skill to create an implementation plan for search with acceptance criteria | `task-planning` |
+| Make a plan for adding search before we start coding | Host-native planning |
 | Remove export from the current task plan and update the remaining steps | `task-planning` |
 | Replace step 3 in the existing plan with the agreed local-storage approach | `task-planning` |
 | Correct this sentence in our conversation | Host-native editing |

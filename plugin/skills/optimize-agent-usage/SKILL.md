@@ -1,6 +1,6 @@
 ---
 name: optimize-agent-usage
-description: Reduce or diagnose agent usage of tokens, credits, and context without weakening task quality or safety. Use only when the user explicitly asks to save credits, tokens, or usage limits in the current agent host; optimize Skills, instruction files such as AGENTS.md or CLAUDE.md, MCP, or context loading; explain unusually high usage; or design a lower-consumption workflow. Do not use for ordinary coding, software performance work, or generic cost questions.
+description: Reduce or diagnose agent usage of tokens, credits, and context without weakening quality or safety. Use only on an explicit goal to save credits or tokens, trim Skills, instruction files, MCP, or context loading, explain unusually high usage, or design a leaner workflow. Not for ordinary coding, software performance, or generic cost questions.
 ---
 
 # Optimize Agent Usage

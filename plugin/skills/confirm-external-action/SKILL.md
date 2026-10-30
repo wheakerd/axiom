@@ -1,6 +1,6 @@
 ---
 name: confirm-external-action
-description: Bind and verify a consequential external action. Use when the user explicitly asks to send, publish, invite, purchase, trade, delete, create or revoke a machine credential, or change external app or account state and the exact actor, target, payload, disclosure, cost, or retry boundary matters. Do not use for read-only lookup, draft-only work, or local Git. Pair with reversible-system-change when the same request also has persistent rollback, data, service, or activation risk.
+description: Bind and verify a consequential external action. Use when the user explicitly asks to send, publish, invite, purchase, trade, delete, create or revoke a credential, or change external app or account state and the exact actor, target, payload, disclosure, cost, or retry matters. Not for read-only lookup, drafts, or local Git. Pair with reversible-system-change for persistent rollback, data, or service risk.
 ---
 
 # Confirm External Action

@@ -133,65 +133,22 @@ class RoutingContractTests(unittest.TestCase):
                 check_cross_route_resume_contracts(failures)
                 self.assertEqual([], failures)
 
-    def test_skill_bodies_pin_delegated_choice_invariants_but_not_direction(self):
+    def test_skill_bodies_do_not_duplicate_the_gate_delegated_choice_rule(self):
         skills = routing_contracts.REPOSITORY_ROOT / "plugin" / "skills"
-        original_read = Path.read_text
-
-        def replaced(target, old, new):
-            def read(path, *args, **kwargs):
-                text = original_read(path, *args, **kwargs)
-                if path == target:
-                    self.assertIn(old, text)
-                    return text.replace(old, new, 1)
-                return text
-            return read
-
-        offered = "An offered option authorizes no persistent system change"
-        route_contract = "agent-plugin-architect/references/route-and-trigger-contracts.md"
-        for relative, invariant in (
-            ("traceable-git-submit/SKILL.md", "write surfaces or authority, ask"),
-            ("traceable-git-submit/SKILL.md", "never choose silently"),
-            ("traceable-git-submit/SKILL.md", "every option is reversible and already authorized"),
-            ("traceable-git-submit/SKILL.md", "state which and why before acting"),
-            ("traceable-git-submit/SKILL.md", offered),
-            ("task-planning/SKILL.md", "resolving a material workflow choice for the user"),
-            ("task-planning/SKILL.md", "every alternative is reversible and already authorized"),
-            ("task-planning/SKILL.md", "state the choice and why before acting"),
-            ("clarify-intent/SKILL.md", "never an undelegated choice"),
-            ("clarify-intent/SKILL.md", "counts only when every alternative is reversible and already authorized"),
-            ("clarify-intent/SKILL.md", "say which and why before acting"),
-            ("clarify-intent/SKILL.md", offered),
-            ("clarify-intent/SKILL.md", "Wait before work that depends on a material choice."),
-            ("agent-plugin-architect/SKILL.md", "keep the workflow unselected until the user chooses"),
-            ("agent-plugin-architect/SKILL.md", "every option is reversible and already authorized"),
-            ("agent-plugin-architect/SKILL.md", "cannot replace it without the user's choice"),
-            (route_contract, "rather than choosing for the user"),
-            (route_contract, "every alternative is reversible and already authorized"),
-            (route_contract, "state which and why before acting"),
-            (route_contract, offered),
-            ("reversible-system-change/SKILL.md", "question only when"),
-            ("reversible-system-change/SKILL.md", "only if every alternative is reversible and already authorized"),
-            ("reversible-system-change/SKILL.md", "state which and why before acting"),
+        rule = "reversible and already authorized"
+        self.assertIn(rule, (skills / "using-axiom/SKILL.md").read_text(encoding="utf-8"))
+        for relative in (
+            "traceable-git-submit/SKILL.md",
+            "task-planning/SKILL.md",
+            "clarify-intent/SKILL.md",
+            "agent-plugin-architect/SKILL.md",
+            "agent-plugin-architect/references/route-and-trigger-contracts.md",
+            "reversible-system-change/SKILL.md",
         ):
-            target = skills / relative
-            with self.subTest(skill=relative, invariant=invariant), patch.object(
-                Path, "read_text", replaced(target, invariant, "REMOVED CONTRACT")
-            ):
-                failures = []
-                check_cross_route_resume_contracts(failures)
-                self.assertTrue(any(relative in failure and "delegated" in failure for failure in failures), failures)
-
-        # Direction stays adaptable: how the model picks and how it phrases a question are not pinned.
-        for relative, old, new in (
-            ("clarify-intent/SKILL.md", "choose the one that fits the user's environment and goal", "choose one"),
-            ("reversible-system-change/SKILL.md", "choose by the user's environment and goal, and state", "state"),
-            ("traceable-git-submit/SKILL.md", "ask one concise clarification before selecting", "ask concise clarifications before selecting"),
-        ):
-            target = skills / relative
-            with self.subTest(direction=old), patch.object(Path, "read_text", replaced(target, old, new)):
-                failures = []
-                check_cross_route_resume_contracts(failures)
-                self.assertEqual([], failures)
+            with self.subTest(skill=relative):
+                body = (skills / relative).read_text(encoding="utf-8")
+                self.assertNotIn(rule, body)
+                self.assertIn("startup gate", body)
 
     def test_ordinary_request_does_not_route(self):
         self.assertIsNone(route_contract("Summarize this README without changing files.")["route"])
@@ -210,8 +167,8 @@ class RoutingContractTests(unittest.TestCase):
         self.assertEqual("prepared-release-submit", tagged_release["phase"])
         self.assertEqual(
             (
-                "references/safe-git-values-and-metadata.md",
-                "references/repository-and-remote-targets.md",
+                "references/git-values.md",
+                "references/remote-targets.md",
                 "references/prepared-release-submit.md",
             ),
             tagged_release["references"],
@@ -290,8 +247,8 @@ class RoutingContractTests(unittest.TestCase):
             "Perform the authorized hardened multi-target Git push without force."
         )
         self.assertEqual("hardened-submit", hardened["phase"])
-        self.assertEqual(("references/safe-git-values-and-metadata.md",
-                          "references/repository-and-remote-targets.md"),
+        self.assertEqual(("references/git-values.md",
+                          "references/remote-targets.md"),
                          hardened["references"])
         self.assertEqual("confirm-external-action", route_contract(
             "Publish this announcement somewhere.")["route"])
@@ -383,7 +340,7 @@ class RoutingContractTests(unittest.TestCase):
     def test_source_routes_and_phase_contracts_are_reachable(self):
         failures = []
         check_routing_source_contracts(failures)
-        self.assertEqual(13, check_cross_route_resume_contracts(failures))
+        self.assertEqual(7, check_cross_route_resume_contracts(failures))
         self.assertEqual([], failures)
 
 
