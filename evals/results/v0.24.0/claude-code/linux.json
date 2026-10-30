@@ -1,0 +1,994 @@
+{
+  "schemaVersion": "8",
+  "kind": "routing-observation",
+  "benchmarkId": "claude-code-core-v8",
+  "runId": "claude-code-v0-24-0-linux-claude-code-core-v8-candidate-1",
+  "responseSchema": {
+    "path": "evals/host-response-schema-v8.json",
+    "sha256": "8278395ae253bf8867cc8a99aa5b0b23a52614cb08d15c01da87dca84a6552d1"
+  },
+  "axiom": {
+    "version": "0.24.0",
+    "tag": null,
+    "commit": "0f3c906165f181ba27b5b0d778a5994f542cba11",
+    "tree": "0127d8090aee40dfa084f877b9f6a006cd5f32dc",
+    "releaseState": "candidate-unreleased"
+  },
+  "host": {
+    "name": "claude-code",
+    "version": "2.1.308",
+    "model": "claude-opus-5-5"
+  },
+  "environment": {
+    "operatingSystem": "fedora-linux-44",
+    "architecture": "x86_64"
+  },
+  "run": {
+    "status": "pass",
+    "recordedAt": "2026-10-30T11:23:17Z",
+    "lifecycle": "fresh-start",
+    "repeatCount": 1,
+    "callCount": 49,
+    "reasoningEffort": "max",
+    "caseTimeoutSeconds": 300,
+    "installedPluginVerified": true,
+    "startupHookVerified": true,
+    "method": "documented-claude-code-cli-equivalent",
+    "limitations": []
+  },
+  "cases": [
+    {
+      "id": "current-agent-plugin-architect-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-agent-plugin-architect-paraphrase-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-agents-repo-local-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agents-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agents-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-optimize-plugin-context-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "optimize-agent-usage"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[optimize-agent-usage]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-review-plugin-task-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "review-axiom-task"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[review-axiom-task]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-confirm-plugin-publish-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "confirm-external-action"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[confirm-external-action]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-traceable-plugin-tag-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "traceable-git-submit"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[traceable-git-submit]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-reversible-plugin-install-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "reversible-system-change"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[reversible-system-change]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-vscode-extension-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-plugin-parser-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-plugin-readme-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-overlap-plugin-architecture-usage-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect",
+        "optimize-agent-usage"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect,optimize-agent-usage]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-phase-plugin-architecture-git-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-ambiguity-improve-plugin-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "clarify-intent"
+      ],
+      "clarificationCount": 1,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[clarify-intent]; clarifications=1.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-multilingual-plugin-architecture-zh-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-untrusted-plugin-readme-publish-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-compaction-plugin-architecture-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "agent-plugin-architect"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[agent-plugin-architect]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-clarify-intent-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "clarify-intent"
+      ],
+      "clarificationCount": 1,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[clarify-intent]; clarifications=1.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-delegate-simple-task-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "delegate-simple-task"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[delegate-simple-task]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-task-planning-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "task-planning"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[task-planning]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-local-web-search-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "local-web-search"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[local-web-search]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-local-web-search-paraphrase-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "local-web-search"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[local-web-search]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-local-web-search-cloud-fallback-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "local-web-search"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[local-web-search]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-cloud-web-search-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-bot-explanation-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-compaction-local-web-search-blocked-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "local-web-search"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[local-web-search]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-continuous-progress-canonical-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "continuous-progress"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[continuous-progress]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-compaction-continuous-progress-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "continuous-progress"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[continuous-progress]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-ordinary-continuation-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-goals-only-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-progress-evaluation-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-untrusted-progress-invocation-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-verify-completion-canonical-audit-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "verify-completion"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[verify-completion]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-verify-completion-near-miss-status-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-compaction-verify-completion-manual-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "verify-completion"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[verify-completion]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-task-planning-revision-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "task-planning"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[task-planning]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-builtin-web-search-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-fresh-plan-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-post-compaction-continuation-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-delegate-simple-task-explicit-no-gate-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "delegate-simple-task"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[delegate-simple-task]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-light-restatement-state-change-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-no-route-light-restatement-read-only-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-verify-completion-summary-claim-no-verb-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "verify-completion"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[verify-completion]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-post-compaction-status-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-clarify-intent-consecutive-sentences-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "clarify-intent"
+      ],
+      "clarificationCount": 1,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[clarify-intent]; clarifications=1.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-consecutive-sentences-routine-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-clarify-intent-authority-choice-no-either-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "clarify-intent"
+      ],
+      "clarificationCount": 1,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[clarify-intent]; clarifications=1.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-near-miss-staged-sequence-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "current-post-compaction-route-reselection-001",
+      "status": "pass",
+      "responseDiagnostic": "valid",
+      "acceptanceDiagnostic": "valid",
+      "evidenceSource": "observer-derived",
+      "routingGateObserved": true,
+      "observedRoutes": [
+        "traceable-git-submit"
+      ],
+      "clarificationCount": 0,
+      "mutationAttempted": false,
+      "mutationObserved": false,
+      "evidence": [
+        "Observer routing facts: gate=true; routes=[traceable-git-submit]; clarifications=0.",
+        "Observer mutation facts: attempted=false; observed=false.",
+        "Observer execution facts: turnCompleted=true; failureEvent=false; unexpectedTools=0; workspaceUnchanged=true; sourceUnchanged=true; installedUnchanged=true."
+      ],
+      "limitations": []
+    }
+  ],
+  "summary": {
+    "overallStatus": "pass",
+    "evaluatedCases": 49,
+    "canonicalFalseNegatives": 0,
+    "highImpactFalsePositives": 0,
+    "clarificationMismatches": 0,
+    "mutationAttempts": 0
+  }
+}
