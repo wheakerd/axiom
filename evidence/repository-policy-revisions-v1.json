@@ -904,6 +904,14 @@
       "sourceIssue": null,
       "summary": "Harden the Release pipeline with a settled-check wait and a catalog handoff rehearsal before its first irreversible step, and derive release-varying test totals from their owners.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 114,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "8a622880fd7d5fbc9f274aa7420d33d80ddd3406",
+      "sourceIssue": 216,
+      "summary": "Move the Windows hook canary test into the native hook runtime integration module so the Windows CI job executes it; the unit copy read a pre-v0.17.0 path and had never run.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }

@@ -1,10 +1,6 @@
 """Focused tests for platform-specific hook policy."""
 
-import os
-import subprocess
-import tempfile
 import unittest
-from pathlib import Path
 
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.hooks import (
@@ -57,68 +53,6 @@ class HookPolicyTests(unittest.TestCase):
             CODEX_WINDOWS_WRAPPER_TEXT,
             (REPOSITORY_ROOT / CODEX_WINDOWS_WRAPPER_PATH).read_text(encoding="utf-8"),
         )
-
-    @unittest.skipUnless(os.name == "nt", "requires a real Windows command shell")
-    def test_checked_in_windows_hook_ignores_workspace_executable_canaries(self):
-        handler = self.documents()["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0][
-            "hooks"
-        ][0]
-        heading = (
-            b"You have Axiom. Load this startup front door before deciding whether any "
-            b"Axiom skill applies:\r\n\r\n"
-        )
-        skill_bytes = (REPOSITORY_ROOT / "skills/using-axiom/SKILL.md").read_bytes()
-
-        with tempfile.TemporaryDirectory(prefix="axiom-hook-") as temporary:
-            root = Path(temporary)
-            plugin_root = root / "plugin root !% & (trusted)"
-            workspace = root / "workspace !% & (untrusted)"
-            skill_path = plugin_root / "skills" / "using-axiom" / "SKILL.md"
-            skill_path.parent.mkdir(parents=True)
-            skill_path.write_bytes(skill_bytes)
-            wrapper_path = plugin_root / CODEX_WINDOWS_WRAPPER_PATH
-            wrapper_path.parent.mkdir(parents=True)
-            wrapper_path.write_bytes(
-                (REPOSITORY_ROOT / CODEX_WINDOWS_WRAPPER_PATH).read_bytes()
-            )
-            workspace.mkdir()
-
-            marker = workspace / "workspace-program-ran"
-            canary = b'@echo hijacked>"%~dp0workspace-program-ran"\r\n'
-            for name in (
-                "codex-session-start.cmd",
-                "echo.cmd",
-                "setlocal.cmd",
-                "type.cmd",
-                "powershell.cmd",
-                "pwsh.cmd",
-            ):
-                (workspace / name).write_bytes(canary)
-            (workspace / "cmd.exe").write_bytes(b"not a Windows executable")
-            (workspace / "powershell.exe").write_bytes(b"not a Windows executable")
-
-            environment = os.environ.copy()
-            environment["PLUGIN_ROOT"] = str(plugin_root)
-            comspec = environment.get("COMSPEC", "cmd.exe")
-            codex_raw_command_line = (
-                f'{subprocess.list2cmdline([comspec])} /C '
-                f'"{handler["commandWindows"]}"'
-            )
-            result = subprocess.run(
-                codex_raw_command_line,
-                executable=comspec,
-                cwd=workspace,
-                env=environment,
-                input=b"{}",
-                capture_output=True,
-                check=False,
-                timeout=handler["timeout"],
-            )
-
-            self.assertEqual(0, result.returncode, result.stderr.decode(errors="replace"))
-            self.assertEqual(heading + skill_bytes, result.stdout)
-            self.assertEqual(b"", result.stderr)
-            self.assertFalse(marker.exists())
 
 
 if __name__ == "__main__":
