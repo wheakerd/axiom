@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.22.1",
+  "version": "0.23.0",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -11,10 +11,10 @@
   "license": "MIT",
   "keywords": [
     "claude-code",
+    "codex",
     "agents-md",
     "ai-workflows",
-    "agent-safety",
-    "workflow-guardrails",
+    "workflow-routing",
     "skills",
     "context-efficiency",
     "developer-tools"

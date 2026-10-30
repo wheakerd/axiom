@@ -1,6 +1,6 @@
 ---
 name: verify-completion
-description: Verify a completion, progress, or success claim against current direct evidence before it is made or accepted, especially after context compaction, resume, or a long task, and keep advice separate from compliance. Use when the user asks to verify or audit whether work is really complete, when a task resumes or continues after compaction with unfinished mutations, or when a completion claim rests on recalled or summarized facts. Classifies each fact as observed, recalled, or summarized, rebuilds a short evidence ledger for every completion criterion, re-derives the task state from files, commands, and records instead of summaries, and states advice and risks before complying when evidence conflicts with the request. Do not use for ordinary status questions, routine continuation of an unfinished task, reviewing an identified Axiom task's routing and authorization, or supervised multi-session progress.
+description: Verify a completion or progress claim against current direct evidence before it is made or accepted. Use when the user asks to verify or audit whether work is really complete, or when a claim rests on recalled or summarized facts, including after compaction. Advises before complying when evidence conflicts. Not for status questions, routine continuation, Axiom task review, or supervised progress.
 ---
 
 # Verify Completion
@@ -16,13 +16,11 @@ Defaults you may adapt, saying so: Direction step order where no gate depends on
 ## Apply When
 
 - The user asks to verify, audit, or double-check whether work is complete.
-- A task resumes or continues after compaction, a fork, or a handoff while
-  mutations are unfinished, before the next report or mutation.
-- A completion claim about to be made rests on recalled or summarized facts.
+- A completion claim about to be made rests on recalled or summarized facts, including a claim carried by a compaction summary.
 
 ## Do Not Apply When
 
-- The user asks for an ordinary status update or routine continuation.
+- The user asks for an ordinary status update or routine continuation, including continuation after compaction, a fork, or a resume: the startup gate owns reselecting routes at that moment, and this skill waits for a verification request or a completion claim.
 - The request is to review an identified Axiom task's routing, authorization,
   or evidence; that is `review-axiom-task`.
 - The request is to supervise progress across sessions; that is
@@ -65,7 +63,7 @@ their subject; re-observe after mutating.
    Use `met`, `not met`, or `unverifiable` per criterion; never write "done"
    for an unverifiable criterion, and never present an unrun check as passed.
 
-After compaction, a fork, or a handoff, follow
+When the request or claim arrives after compaction, a fork, or a handoff, follow
 `references/regrounding-after-compaction.md` before step 2: treat the summary
 as an index of what to check, re-read the recorded artifacts, and reselect
 routes from current evidence before any new mutation.

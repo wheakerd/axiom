@@ -14,7 +14,7 @@ from .constants import (
     BENCHMARK_V3_ID,
     BENCHMARK_V4_ID, V3_BENCHMARK_CASE_COUNT,
     HOST_RESPONSE_SCHEMA_V5_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V5_SHA256,
-    CURRENT_BENCHMARK_CASE_COUNT,
+    CURRENT_BENCHMARK_CASE_COUNT, BENCHMARK_V7_ID, V6_BENCHMARK_CASE_COUNT,
     BENCHMARK_V5_ID, V4_BENCHMARK_CASE_COUNT,
     CURRENT_BENCHMARK_PROFILES,
     HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256,
@@ -95,7 +95,7 @@ def validate_external_routing_observation(
     if record is None:
         return None
     schema_version = record.get("schemaVersion")
-    versioned = schema_version in {"3", "4", "5", "6"}
+    versioned = schema_version in {"3", "4", "5", "6", "7"}
     bound = record.get("responseSchema")
     # A schema v6 record binds response V7 or, from repository policy revision 94, V8.
     current_response = (
@@ -104,7 +104,9 @@ def validate_external_routing_observation(
         else (HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256)
     )
     benchmark_id, case_count, response_path, response_digest = {
-        "6": (BENCHMARK_V6_ID, CURRENT_BENCHMARK_CASE_COUNT, *current_response),
+        "7": (BENCHMARK_V7_ID, CURRENT_BENCHMARK_CASE_COUNT,
+              HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256),
+        "6": (BENCHMARK_V6_ID, V6_BENCHMARK_CASE_COUNT, *current_response),
         "5": (BENCHMARK_V5_ID, V5_BENCHMARK_CASE_COUNT,
               HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256),
         "4": (BENCHMARK_V4_ID, V4_BENCHMARK_CASE_COUNT,
@@ -113,7 +115,7 @@ def validate_external_routing_observation(
               HOST_RESPONSE_SCHEMA_V4_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V4_SHA256),
     }.get(schema_version, (BENCHMARK_V2_ID, 17,
                            HOST_RESPONSE_SCHEMA_V3_RELATIVE_PATH, CURRENT_HOST_RESPONSE_SCHEMA_V3_SHA256))
-    # Only schema v5 and v6 have a profile per host; earlier versions stay Codex-only.
+    # Only schema v5, v6, and v7 have a profile per host; earlier versions stay Codex-only.
     host_profiles = HOST_BENCHMARK_PROFILES_BY_VERSION.get(schema_version)
     host_value = record.get("host")
     host_name = host_value.get("name") if type(host_value) is dict else None
@@ -161,8 +163,8 @@ def validate_external_routing_observation(
         label,
         failures,
     )
-    if schema_version not in {"2", "3", "4", "5", "6"}:
-        failures.append("external routing observation must use schemaVersion '2', '3', '4', '5', or '6'")
+    if schema_version not in {"2", "3", "4", "5", "6", "7"}:
+        failures.append("external routing observation must use schemaVersion '2', '3', '4', '5', '6', or '7'")
     if record.get("benchmarkId") != benchmark_id:
         failures.append(f"external routing observation must use {benchmark_id}")
     if record.get("responseSchema") != {

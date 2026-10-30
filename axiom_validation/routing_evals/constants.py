@@ -484,9 +484,9 @@ CURRENT_PUBLIC_ROUTES = (
 SCHEMA_V6_ID = "urn:axiom:routing-evals:schema:v6"
 BENCHMARK_V6_ID = "codex-core-v6"
 CLAUDE_CODE_BENCHMARK_V6_ID = "claude-code-core-v6"
-CURRENT_BENCHMARK_IDS = (BENCHMARK_V6_ID, CLAUDE_CODE_BENCHMARK_V6_ID)
-CURRENT_BENCHMARK_CASE_COUNT = 36
-CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v6/current.jsonl"
+V6_BENCHMARK_IDS = (BENCHMARK_V6_ID, CLAUDE_CODE_BENCHMARK_V6_ID)
+V6_BENCHMARK_CASE_COUNT = 36
+V6_CORPUS_RELATIVE_PATH = "evals/routing-v6/current.jsonl"
 HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH = "evals/host-response-schema-v7.json"
 CURRENT_HOST_RESPONSE_SCHEMA_V7_SHA256 = "c6705369bfb965ce3bd6b9239acdd6a3325b5b36a9d31fc537f3a876d8270ff8"
 # Response V8 keeps the V7 shape and adds one reviewed description per field so
@@ -516,9 +516,27 @@ HOST_RESPONSE_V8_DESCRIPTIONS = {
         "True if any such attempt took effect."
     ),
 }
-CURRENT_BENCHMARK_PROFILES = {
+V6_BENCHMARK_PROFILES = {
     "codex": {**V5_BENCHMARK_PROFILES["codex"], "id": BENCHMARK_V6_ID},
     "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V6_ID},
 }
+
+# Schema v7 (0.23.0) keeps the thirteen routes and narrows four triggers: a host's
+# built-in web tool, a fresh plan request, and routine post-compaction continuation
+# select no route, and an explicit delegation invocation selects delegate-simple-task
+# even without the startup gate. Cases whose expectation changed received new IDs; the
+# v6 corpus, benchmarks, and bindings stay immutable.
+SCHEMA_V7_ID = "urn:axiom:routing-evals:schema:v7"
+BENCHMARK_V7_ID = "codex-core-v7"
+CLAUDE_CODE_BENCHMARK_V7_ID = "claude-code-core-v7"
+CURRENT_BENCHMARK_IDS = (BENCHMARK_V7_ID, CLAUDE_CODE_BENCHMARK_V7_ID)
+CURRENT_BENCHMARK_CASE_COUNT = 40
+CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v7/current.jsonl"
+CURRENT_BENCHMARK_PROFILES = {
+    "codex": {**V5_BENCHMARK_PROFILES["codex"], "id": BENCHMARK_V7_ID},
+    "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V7_ID},
+}
 # Schema versions that bind a benchmark profile per host, with their profiles.
-HOST_BENCHMARK_PROFILES_BY_VERSION = {"5": V5_BENCHMARK_PROFILES, "6": CURRENT_BENCHMARK_PROFILES}
+HOST_BENCHMARK_PROFILES_BY_VERSION = {
+    "5": V5_BENCHMARK_PROFILES, "6": V6_BENCHMARK_PROFILES, "7": CURRENT_BENCHMARK_PROFILES,
+}

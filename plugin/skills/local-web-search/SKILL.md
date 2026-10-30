@@ -1,6 +1,6 @@
 ---
 name: local-web-search
-description: Use before web search or follow-up page access from the user's machine or local workspace through a browser, CLI, script, or local client, including a fallback from cloud search. Also classify an uncertain execution location before that access. Confirmed cloud-hosted search and unrelated web app actions stay outside.
+description: Use before web search or page access through the user's own browser, CLI, script, or HTTP client, or that the user says runs on their machine, including a fallback from cloud search to such a client. A host's built-in web tool, confirmed cloud search, and web app actions stay outside.
 ---
 
 # Local Web Search
@@ -14,17 +14,10 @@ Defaults you may adapt, saying so: query wording and report layout. Every other 
 
 ## Select The Execution Boundary
 
-Before the first request, use available tool documentation and host context to
-identify where the request will originate. A tool invoked from a local chat is
-not necessarily a local network client. Do not probe a website, enumerate
-machine identifiers, or inspect secrets to make this decision.
+Before the first request, identify where it will run from the tool's documentation, the host's context, and the user's words. Do not probe a website, enumerate machine identifiers, or inspect secrets to make this decision.
 
-- Confirmed local browser, CLI, script, or HTTP client: read
-  `references/local-browsing.md` before sending the request.
-- Confirmed cloud-hosted search or retrieval: return to the host's normal
-  workflow. Reassess if a later step uses a local client.
-- Execution location still unknown: read `references/local-browsing.md` and
-  apply its constraints to the proposed access without claiming it is local.
+- The user's own browser, CLI, script, or HTTP client, or a tool the user says runs on their machine: read `references/local-browsing.md` before sending the request.
+- A host's built-in web tool, or a confirmed cloud-hosted search or retrieval service: return to the host's normal workflow. Reassess if a later step uses a local client.
 
 ## Scope
 

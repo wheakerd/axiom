@@ -34,7 +34,7 @@
     "already-prepared plugin release",
     "ordinary named-remote non-force",
     "without a tag",
-    "stay host-native"
+    "stays host-native"
   ],
   "scenarios": [
     {
@@ -61,8 +61,8 @@
       "name": "catalog-prepared-plugin-release",
       "phase": "prepared-release-submit",
       "references": [
-        "references/safe-git-values-and-metadata.md",
-        "references/repository-and-remote-targets.md",
+        "references/git-values.md",
+        "references/remote-targets.md",
         "references/prepared-release-submit.md"
       ],
       "request": "Commit, tag, and push the already-prepared plugin release without rewriting history.",
@@ -94,10 +94,9 @@
       "name": "catalog-checkpoint",
       "phase": "checkpoint",
       "references": [
-        "references/safe-git-values-and-metadata.md",
+        "references/git-values.md",
         "references/baseline-and-preflight.md",
-        "references/checkpoint-provenance.md",
-        "references/checkpoint-execution.md"
+        "references/checkpoint.md"
       ],
       "request": "Create a local checkpoint commit for these paths and do not push.",
       "route": "traceable-git-submit",
@@ -111,7 +110,7 @@
       "name": "catalog-baseline",
       "phase": "baseline",
       "references": [
-        "references/safe-git-values-and-metadata.md",
+        "references/git-values.md",
         "references/baseline-and-preflight.md"
       ],
       "request": "Audit the traceable Git baseline metadata without changing it.",
@@ -128,11 +127,10 @@
       "name": "catalog-consolidation",
       "phase": "consolidation",
       "references": [
-        "references/safe-git-values-and-metadata.md",
+        "references/git-values.md",
         "references/baseline-and-preflight.md",
-        "references/checkpoint-provenance.md",
-        "references/commit-construction.md",
-        "references/consolidation-and-push.md"
+        "references/checkpoint.md",
+        "references/consolidation.md"
       ],
       "request": "Consolidate the authorized unpublished checkpoints into one final commit without pushing.",
       "route": "traceable-git-submit",
@@ -146,10 +144,10 @@
       "name": "catalog-recovery",
       "phase": "recovery",
       "references": [
-        "references/safe-git-values-and-metadata.md",
+        "references/git-values.md",
         "references/baseline-and-preflight.md",
-        "references/checkpoint-provenance.md",
-        "references/post-consolidation-recovery.md"
+        "references/checkpoint.md",
+        "references/remote-targets.md"
       ],
       "request": "Recover the interrupted traceable checkpoint workflow without pushing.",
       "route": "traceable-git-submit",
@@ -164,8 +162,8 @@
       "name": "catalog-multi-target",
       "phase": "hardened-submit",
       "references": [
-        "references/safe-git-values-and-metadata.md",
-        "references/repository-and-remote-targets.md"
+        "references/git-values.md",
+        "references/remote-targets.md"
       ],
       "request": "Perform the authorized hardened multi-target Git push without force.",
       "route": "traceable-git-submit",
@@ -180,8 +178,8 @@
       "name": "catalog-force",
       "phase": "hardened-submit",
       "references": [
-        "references/safe-git-values-and-metadata.md",
-        "references/repository-and-remote-targets.md"
+        "references/git-values.md",
+        "references/remote-targets.md"
       ],
       "request": "Perform the explicitly authorized force-push to this one Git target.",
       "route": "traceable-git-submit",
@@ -196,8 +194,8 @@
       "name": "catalog-history-replacement",
       "phase": "hardened-submit",
       "references": [
-        "references/safe-git-values-and-metadata.md",
-        "references/repository-and-remote-targets.md"
+        "references/git-values.md",
+        "references/remote-targets.md"
       ],
       "request": "Rewrite history and push the authorized replacement to the named remote.",
       "route": "traceable-git-submit",
@@ -242,7 +240,7 @@
   "usingAxiomAnchors": [
     "hardened/multi-target/history-replacing Git",
     "combined commit, tag, and push of an already-prepared plugin release",
-    "Ordinary named-remote non-force staging, commits, and pushes without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stay host-native",
+    "Ordinary named-remote non-force Git without a tag, checkpoint, baseline, consolidation, recovery, hardening, multiple targets, or history replacement stays host-native",
     "merely mentioning submit, publish, or push does not select this route"
   ]
 }

@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, prepare recovery material, rehearse, or execute persistent system changes with verified rollback and postconditions. Use for an install, upgrade, deployment, migration, destructive retention action, active-version promotion, or explicit machine-credential lifecycle inventory, plan, activation, or retirement with rollback, data, service, or activation risk. Plans and non-mutating workflow rehearsals stay read-only; recovery preparation and isolated restore rehearsals require bounded write authority. Pair with confirm-external-action when the same request also causes a consequential external app or account effect. Do not use for ordinary source/configuration edits, Git operations, generic status queries, or conceptual explanations.
+description: Plan, rehearse, or execute a persistent system change with verified rollback and postconditions for an install, upgrade, deployment, migration, destructive retention action, version promotion, or credential lifecycle step with rollback, data, service, or activation risk. Plans and rehearsals stay read-only; recovery preparation needs bounded write authority. Not for ordinary edits, Git, or status queries.
 ---
 
 # Reversible System Change
@@ -21,7 +21,7 @@ Defaults you may adapt, saying so: step order where no gate depends on it, and r
 
 ## Authority Boundary
 
-Resolve the requested outcome, exact target, authorized actions, and expected postcondition before mutation. Ask one question only when target, environment, destructive scope, credentials, sensitive asset use, promotion, or rollback authority would change execution. Settle an explicitly delegated target or environment choice only if every alternative is reversible and already authorized; choose by the user's environment and goal, and state which and why before acting.
+Resolve the requested outcome, exact target, authorized actions, and expected postcondition before mutation. Ask one question only when target, environment, destructive scope, credentials, sensitive asset use, promotion, or rollback authority would change execution. Settle an explicitly delegated target or environment choice under the startup gate's rule.
 
 Keep recovery-material preparation, isolated restore rehearsal, candidate
 preparation, active promotion, service restart/reload, data migration,

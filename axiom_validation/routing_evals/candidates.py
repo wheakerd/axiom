@@ -51,7 +51,7 @@ def validate_candidate_routing_observation(
     failures: list[str],
     root: Path = REPOSITORY_ROOT,
 ) -> dict[str, Any] | None:
-    """Validate one schema v6 record of the current benchmark for a candidate version.
+    """Validate one schema v7 record of the current benchmark for a candidate version.
 
     The record binds the observed candidate commit and tree; it is accepted for a
     release commit when the observed commit's installed runtime digest equals the
@@ -66,7 +66,7 @@ def validate_candidate_routing_observation(
     if profile is None:
         failures.append(f"{label} names a host without a current benchmark profile: {host!r}")
         return None
-    if record.get("schemaVersion") != "6":
+    if record.get("schemaVersion") != "7":
         failures.append(f"{label} must use schemaVersion '6'")
     cases = collect_current_corpus(root, failures)
     benchmark_case_ids = current_benchmark_case_ids(root, cases, failures, host=host)

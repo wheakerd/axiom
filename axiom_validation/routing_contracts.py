@@ -471,15 +471,11 @@ def historical_route_contract(request: str) -> dict[str, Any]:
     if git:
         if recovery_git:
             recovery_references = (
-                "references/safe-git-values-and-metadata.md",
+                "references/git-values.md",
                 "references/baseline-and-preflight.md",
-                "references/checkpoint-provenance.md",
-                "references/post-consolidation-recovery.md",
+                "references/checkpoint.md",
+                "references/remote-targets.md",
             )
-            if recovery_remote:
-                recovery_references += (
-                    "references/repository-and-remote-targets.md",
-                )
             return {
                 "route": "traceable-git-submit",
                 "phase": "recovery",
@@ -492,16 +488,14 @@ def historical_route_contract(request: str) -> dict[str, Any]:
             }
         if consolidation_git:
             consolidation_references = (
-                "references/safe-git-values-and-metadata.md",
+                "references/git-values.md",
                 "references/baseline-and-preflight.md",
-                "references/checkpoint-provenance.md",
-                "references/commit-construction.md",
-                "references/consolidation-and-push.md",
+                "references/checkpoint.md",
+                "references/consolidation.md",
             )
             if consolidation_push:
                 consolidation_references += (
-                    "references/repository-and-remote-targets.md",
-                    "references/post-consolidation-recovery.md",
+                    "references/remote-targets.md",
                 )
             return {
                 "route": "traceable-git-submit",
@@ -518,10 +512,9 @@ def historical_route_contract(request: str) -> dict[str, Any]:
                 "route": "traceable-git-submit",
                 "phase": "checkpoint",
                 "references": (
-                    "references/safe-git-values-and-metadata.md",
+                    "references/git-values.md",
                     "references/baseline-and-preflight.md",
-                    "references/checkpoint-provenance.md",
-                    "references/checkpoint-execution.md",
+                    "references/checkpoint.md",
                 ),
                 "authorization": frozenset({"read", "metadata-write", "commit"}),
             }
@@ -533,7 +526,7 @@ def historical_route_contract(request: str) -> dict[str, Any]:
                 "route": "traceable-git-submit",
                 "phase": "baseline",
                 "references": (
-                    "references/safe-git-values-and-metadata.md",
+                    "references/git-values.md",
                     "references/baseline-and-preflight.md",
                 ),
                 "authorization": (
@@ -547,8 +540,8 @@ def historical_route_contract(request: str) -> dict[str, Any]:
                 "route": "traceable-git-submit",
                 "phase": "hardened-submit",
                 "references": (
-                    "references/safe-git-values-and-metadata.md",
-                    "references/repository-and-remote-targets.md",
+                    "references/git-values.md",
+                    "references/remote-targets.md",
                 ),
                 "authorization": frozenset({"read", "network-push"}),
             }
@@ -711,8 +704,8 @@ def route_contract(request: str) -> dict[str, Any]:
             **contract,
             "phase": "prepared-release-submit",
             "references": (
-                "references/safe-git-values-and-metadata.md",
-                "references/repository-and-remote-targets.md",
+                "references/git-values.md",
+                "references/remote-targets.md",
                 "references/prepared-release-submit.md",
             ),
             "authorization": frozenset({"read", "commit", "tag", "network-push"}),
@@ -882,8 +875,8 @@ def check_routing_source_contracts(failures: list[str]) -> None:
             "selects its prepared-release phase",
             "selection grants no commit, tag, or push authority",
             "combined prepared-plugin commit/tag/push",
-            "references/safe-git-values-and-metadata.md",
-            "references/repository-and-remote-targets.md",
+            "references/git-values.md",
+            "references/remote-targets.md",
             "references/prepared-release-submit.md",
         ):
             if anchor.casefold() not in traceable_body.casefold():
@@ -1079,73 +1072,8 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "Do not add a daemon, cache, telemetry, or persistent handoff tool",
             ),
         ),
-        # Every body that accepts a delegated choice pins its rule to ask or keep the choice
-        # open otherwise and the gate's authority and safety conditions; how the model
-        # chooses among the alternatives stays its decision.
-        (
-            skills / "traceable-git-submit/SKILL.md",
-            "delegated choice",
-            (
-                "write surfaces or authority, ask",
-                "before selecting; never choose silently.",
-                "A delegated choice resolves it only when every option is reversible and already authorized",
-                "state which and why before acting.",
-                "A read-only or lighter option never silently replaces the stated goal.",
-                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
-            ),
-        ),
-        (
-            skills / "task-planning/SKILL.md",
-            "delegated choice",
-            (
-                "resolving a material workflow choice for the user",
-                "unless the user explicitly delegated that choice and every alternative is reversible and already authorized",
-                "state the choice and why before acting.",
-                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
-            ),
-        ),
-        (
-            skills / "clarify-intent/SKILL.md",
-            "delegated answer",
-            (
-                "never an undelegated choice between alternatives with different route sets, write surfaces, or authority or safety boundaries",
-                "A default, recommendation, silence, or elapsed time is not a submitted decision",
-                "counts only when every alternative is reversible and already authorized",
-                "say which and why before acting.",
-                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
-                "Wait before work that depends on a material choice.",
-            ),
-        ),
-        (
-            skills / "agent-plugin-architect/SKILL.md",
-            "delegated choice",
-            (
-                "keep the workflow unselected until the user chooses",
-                "unless the user explicitly delegated the choice and every option is reversible and already authorized",
-                "state the chosen option and why before acting.",
-                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
-                "cannot replace it without the user's choice.",
-            ),
-        ),
-        (
-            skills / "agent-plugin-architect/references/route-and-trigger-contracts.md",
-            "delegated choice",
-            (
-                "rather than choosing for the user",
-                "unless the user explicitly delegated the choice and every alternative is reversible and already authorized",
-                "state which and why before acting.",
-                "An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost.",
-            ),
-        ),
-        (
-            skills / "reversible-system-change/SKILL.md",
-            "delegated target choice",
-            (
-                "question only when target, environment, destructive scope, credentials, sensitive asset use, promotion, or rollback authority would change execution.",
-                "Settle an explicitly delegated target or environment choice only if every alternative is reversible and already authorized",
-                "state which and why before acting.",
-            ),
-        ),
+        # The startup gate is the single owner of the delegated-choice rule (0.23.0);
+        # bodies that accept a delegated choice point at it with one sentence.
         (
             skills / "agent-plugin-architect/references/release-readiness.md",
             "release readiness",

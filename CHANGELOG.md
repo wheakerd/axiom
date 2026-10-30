@@ -8,6 +8,30 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.23.0 - unreleased
+
+### Changed
+
+- `traceable-git-submit` runs your repository's own Git hooks in every phase by default and adds `--no-verify` only when you explicitly authorize bypassing the pre-push hook for an exact push. Its heavy phases keep the invariants that protect your history (compare-and-swap ref updates, a backup ref before any rewrite, an exact frozen path set, one push per target with read-back, and no automatic retry) and drop the byte-level parsing, file-locking, and configuration-override demands that plain Git cannot express. Eight references replace twelve at about half the size.
+- `local-web-search` applies only to research that runs through your own browser, CLI, script, or HTTP client, or that you say runs on your machine; a host's built-in web tool stays with the host instead of loading the skill for an uncertain execution location.
+- `verify-completion` fires on an explicit verification request or a completion claim, including one carried by a compaction summary. The startup gate alone owns the compaction moment, and routine continuation after compaction selects no route.
+- `task-planning` revises an existing plan when you ask to remove, replace, merge, reorder, or narrow its items, or creates one when you invoke it; a fresh "make a plan" request stays with the host.
+- `delegate-simple-task` activates on an explicit invocation or a clear delegation request. When the startup gate was not delivered in the session, it says so and assesses ambiguity itself instead of refusing; the models on your list are named the way your host names them.
+- Every bundled description carries only its selection conditions and nearest exclusions, at most 450 characters each; the set shrinks from 7,250 to 5,071 bytes. The delegated-choice rule has one owner, the startup gate, and the skill bodies that accept a delegated choice point at it with one sentence.
+- `continuous-progress` states its scheduler requirement: the supervisor needs a Desktop or cloud scheduled task or GitHub Actions, and a CLI session alone cannot wake it.
+- The Codex marketplace listing describes routing rather than guardrails: the short description reads "Route before the agent acts", the keywords drop enforcement terms, and the long description says that Axiom adds instructions, not enforcement.
+- Routing contract v7 replaces v6 for new observations: two cases with changed expectations retire, five new cases encode the narrowed triggers, and each host's benchmark profile selects 40 cases.
+
+### Behavioral impact
+
+Fewer sessions load a skill that does not apply: built-in web searches, fresh plan requests, and routine continuation after compaction stay with the host, while explicit invocations keep working and an explicit delegation now works without the startup gate. Pushes through the traceable Git phases run your pre-push hooks unless you say otherwise. Authority does not widen: every authorization, safety, and evidence rule still binds, and a delegated choice still settles only under the gate's rule. The startup gate grows from 5,569 to 5,847 bytes, still below the v0.7.9 baseline; the description set shrinks by 30 percent. The runtime digest changes because skills, references, and the continuous-progress prompt are installed inputs.
+
+### Required action
+
+None. If a workflow relied on the traceable Git phases adding `--no-verify` by default, state that bypass explicitly in the request.
+
+See the [version notes](docs/releases/v0.23.0.md) for the reasoning, the changed passages, the routing contract, and the evidence boundary.
+
 ## 0.22.1 - 2026-10-29
 
 ### Changed

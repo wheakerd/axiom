@@ -1,7 +1,6 @@
 # Local Browsing Conduct
 
-Apply this reference before a local research request, or provisionally when
-the execution location cannot be established from available tool information.
+Apply this reference before a research request that runs through the user's own browser, CLI, script, or HTTP client.
 
 ## Minimize Agent-Added Disclosure
 

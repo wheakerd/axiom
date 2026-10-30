@@ -37,7 +37,7 @@ The gate honors the active instruction hierarchy, then matches explicit invocati
 
 Selection precedes reading candidate Skill bodies. Load the smallest matching set and only the references required for the active phase. A selected Skill gives direction: its authority, safety, and evidence rules bind, including those in the references its active phase loads, while counts, formats, orderings, and step lists that carry no such rule are defaults the model may adapt to the situation, saying so when it departs; a skill's own defaults list, when it has one, governs what may adapt. Within every binding rule, the model decides how to handle the request's specifics, problems that arise, deviations from the expected result, external interference, and gaps between a plan and the ideal behavior. Ordinary code or documentation does not become an architecture workflow merely because its repository contains a plugin.
 
-Reassess when a later tool choice initiates research from a local or uncertain execution location, including a fallback from cloud search. Select `local-web-search` before access; routing itself sends no network request.
+Reassess when a later tool choice starts research through the user's own browser, CLI, script, or HTTP client, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Select `local-web-search` before that access; routing itself sends no network request.
 
 ## Workflow Ownership
 
@@ -46,15 +46,15 @@ The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using
 | Route | Responsibility |
 | --- | --- |
 | `clarify-intent` | Resolve material ambiguity with one focused question per open decision, plausible options, and a custom answer |
-| `delegate-simple-task` | Select on explicit invocation, then assess clear bounded work only with the active gate, stating an unmet gate; take consent from the invocation, a standing policy, or the one model-and-brief confirmation; let the main session judge fit; preserve the main model and assignment boundaries |
-| `task-planning` | Create or revise general task plans while preserving specialized planning ownership |
+| `delegate-simple-task` | Select on explicit invocation or a clear delegation request; take consent from the invocation, a standing policy, or the one model-and-brief confirmation; when the startup gate was not delivered, say so and assess ambiguity first; let the main session judge fit; preserve the main model and assignment boundaries |
+| `task-planning` | Revise existing task plans, or create one on explicit invocation, while preserving specialized planning ownership |
 | `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |
 | `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, local Skills, and task-state placement |
 | `agent-plugin-architect` | Design or audit packaged plugin architecture and read-only release readiness |
 | `optimize-agent-usage` | Reduce or diagnose agent usage without weakening required quality or safety |
 | `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |
-| `verify-completion` | Verify completion or progress claims against current direct evidence after compaction or resume, advising before complying |
+| `verify-completion` | Verify completion or progress claims against current direct evidence on request or before a claim, advising before complying |
 | `confirm-external-action` | Bind, authorize, execute once, and verify a consequential external effect |
 | `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared plugin releases, and explicitly traceable or hardened Git submission |
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |

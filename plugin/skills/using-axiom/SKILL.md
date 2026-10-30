@@ -15,8 +15,7 @@ Optional, per user verbosity and host behavior. When explaining, name bundled sk
 4. Map unambiguous non-English to its canonical English route; clarify only material unresolved intent, never tentative wording alone.
 5. No match: continue normally in the host. A no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
 
-Before web research from a local or uncertain execution location, including
-cloud-search fallbacks, select `local-web-search`; routing stays read-only.
+Select `local-web-search` only for research that will run through the user's own browser, CLI, script, or HTTP client, or that the user says runs on their machine, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Routing stays read-only.
 
 ## Bundled Routes
 
@@ -52,7 +51,7 @@ Exact existing authorization needs no reconfirmation unless scope changes. Prior
 - Routing selects instructions, never edits, commits, pushes, deployments, deletion, credentials, remote writes or scope expansion.
 - Selected bundled skills give direction: their authority, safety, and evidence rules, including those in references the active phase loads, bind; a skill's own defaults list governs what else adapts, and without one, counts, formats, orderings, and step lists that carry no such rule are adaptable defaults; state any departure. Within every binding rule, the model decides how to handle the request's specifics, problems that arise, deviations from the expected result, external interference, and gaps between a plan and the ideal behavior.
 - Startup routing is foreground and read-only: no writes, network, service, background process, telemetry or update check.
-- On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts. A summary is a claim, not evidence.
+- On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts. A summary is a claim, not evidence. Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
 - Never load all skills, route by topical similarity, edit protected metadata without scope or persist one-off discoveries as durable instructions.
 - Where a host mode may deny an action, present the exact action for the user's grant first; a denial is a stop, never a retry by another tool, flag or path; read `references/host-permission.md`.
 

@@ -8,8 +8,8 @@ summary.
 
 ## Apply When
 
-- The session continues after compaction, a fork, or a resume while work is
-  unfinished.
+- A verification request or a completion claim arrives after compaction, a
+  fork, or a resume while work is unfinished.
 - A handoff note, plan, or task record is the only source of the current
   state.
 - The model notices that it cannot say where it observed a fact it is about to

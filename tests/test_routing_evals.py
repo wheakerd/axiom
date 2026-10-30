@@ -313,7 +313,7 @@ class RoutingEvaluationTests(unittest.TestCase):
 
     def test_checked_in_evaluation_contracts_pass(self):
         failures: list[str] = []
-        self.assertEqual((176, 66, 11), check_routing_evaluations(failures))
+        self.assertEqual((179, 70, 11), check_routing_evaluations(failures))
         self.assertEqual([], failures)
 
     def test_documented_method_requires_native_hook_trust_without_bypass(self):

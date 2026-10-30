@@ -952,6 +952,14 @@
       "sourceIssue": 221,
       "summary": "Docs: trust model discloses Git-metadata task state and backup refs with removal commands; installed-Hook comparison is optional; install docs add the Codex /hooks trust step and Windows status.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 120,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "64f39b7a9798d33bd7881953f78333f8cd1339dd",
+      "sourceIssue": null,
+      "summary": "Release 0.23.0: traceable Git trimmed to plain-Git invariants with hooks on by default, four routes narrowed, descriptions shortened, the gate owns the delegated-choice rule, listing reworded.",
+      "runtimeContractDigest": "sha256:84ef1ccbb95d640032b6a15eabcb236b658cac0dffdd488b66f3378591ea9c3d"
     }
   ]
 }

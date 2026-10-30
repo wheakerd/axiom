@@ -14,7 +14,7 @@ If context leaves archiving, deduplication, and deletion as materially different
 
 > Use $delegate-simple-task to assess this small edit for my ordered model candidates, and show me the exact model and brief before delegating.
 
-[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) is selected by an explicit invocation or the startup gate and first checks that the `using-axiom` gate is active. The explicit invocation supplies your consent, so the skill assesses the edit, picks the first suitable model from your list, and shows that model and the brief before delegating; without an explicit invocation, that one question also asks for your consent. An inactive or unverified gate prevents activation, even for a direct skill request; the skill then says so and continues in the main session instead of answering with no route. The host's reasoning level does not gate the skill: the main session judges whether it can state the work completely and check the result.
+[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) is selected by an explicit invocation or a clear delegation request. The explicit invocation supplies your consent, so the skill assesses the edit, picks the first suitable model from your list, and shows that model and the brief before delegating; without an explicit invocation, that one question also asks for your consent. When the startup gate was not delivered in the session, the skill says so and assesses ambiguity itself before proposing an assignment. The host's reasoning level does not gate the skill: the main session judges whether it can state the work completely and check the result.
 
 After authorized activation, the skill assesses the first available candidate whose relevant capability is supported, announces its exact model and faithful task brief, and checks the result. The main model stays unchanged. Model names alone establish neither price nor suitability.
 
@@ -22,9 +22,9 @@ A verified permission-bypass mode cannot replace invocation consent. After activ
 
 ## `task-planning`
 
-> Create an implementation plan for search with acceptance criteria.
+> Use the task-planning skill to create an implementation plan for search with acceptance criteria.
 
-[Task Planning](../plugin/skills/task-planning/SKILL.md) creates a plan from current requirements. A later request to remove export updates the plan, dependencies, and acceptance criteria around the retained work. Explicit constraints survive scope edits; a dependency that makes the retained goal infeasible needs resolution.
+[Task Planning](../plugin/skills/task-planning/SKILL.md) creates a plan on an explicit invocation and revises an existing plan when you ask to remove, replace, merge, reorder, or narrow its items; a fresh "make a plan" request without the invocation stays with the host. A later request to remove export updates the plan, dependencies, and acceptance criteria around the retained work. Explicit constraints survive scope edits; a dependency that makes the retained goal infeasible needs resolution.
 
 A migration plan keeps its specialized reversible-change owner. Scheduling, status updates, and implementation stay with their own owners. A plan does not authorize execution or scheduling.
 
@@ -38,7 +38,7 @@ A migration plan keeps its specialized reversible-change owner. Scheduling, stat
 
 > Use my local browser to search the documentation and read relevant results.
 
-[Local Web Search](../plugin/skills/local-web-search/SKILL.md) applies before local access, including a fallback from cloud search to a local browser, CLI, or HTTP client. Determine an uncertain execution location from tool information without sending a probe.
+[Local Web Search](../plugin/skills/local-web-search/SKILL.md) applies before research through your own browser, CLI, script, or HTTP client, including a fallback from cloud search to such a client. A host's built-in web tool stays with the host; determine where a tool runs from its documentation and your words, without sending a probe.
 
 Keep machine-information disclosure bounded, browse serially, preserve browser identity, and stop automatic access to a challenged or rate-limited site. A manual handoff waits for explicit readiness and preserves the user's page. There is no guarantee against Cloudflare or another site's bot classification. Confirmed cloud search and conceptual bot-detection questions do not select this route.
 
@@ -76,7 +76,7 @@ Repo-local instruction systems belong to `agents-architect`; ordinary plugin sou
 
 > Verify that this task is actually complete against current evidence before I accept the summary. List each criterion with what you observed now.
 
-[Verify Completion](../plugin/skills/verify-completion/SKILL.md) freezes the original criteria, re-checks each one directly, and reports `met`, `not met`, or `unverifiable` per criterion with the fact class of every input. After compaction it treats the carried summary as an index of what to check and re-reads the recorded artifacts before any new mutation. When evidence conflicts with the request it states the conflict and a recommendation first, then acts within the user's authority. A status question or routine continuation does not select this route; reviewing an identified Axiom task's routing stays with `review-axiom-task`.
+[Verify Completion](../plugin/skills/verify-completion/SKILL.md) freezes the original criteria, re-checks each one directly, and reports `met`, `not met`, or `unverifiable` per criterion with the fact class of every input. After compaction it treats the carried summary as an index of what to check and re-reads the recorded artifacts before any new mutation. When evidence conflicts with the request it states the conflict and a recommendation first, then acts within the user's authority. A status question or routine continuation, including continuation after compaction, does not select this route; the startup gate owns that moment, and reviewing an identified Axiom task's routing stays with `review-axiom-task`.
 
 ## `confirm-external-action`
 

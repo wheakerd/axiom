@@ -23,80 +23,70 @@ from axiom_validation.routing_contracts import require_ordered_contract_anchors
 from .evidence import check_strict_evidence_gate
 
 
+# The hook policy of every traceable phase: repository hooks run by default, and the
+# one sentence below is the only authorized bypass.
+HOOK_BYPASS_SENTENCE = (
+    "Add `--no-verify` only when the user explicitly authorized bypassing this "
+    "repository's pre-push hook for this push"
+)
+HEAVY_PUSH_COMMAND = "git -C <repo> push --no-follow-tags <push-remote> <branch-ref>:<merge-ref>"
+REFRESH_COMMAND = (
+    "git -C <repo> fetch --no-tags --no-recurse-submodules --refmap= <upstream-remote> <merge-ref>"
+)
+
+
 def check_traceable_security_contracts(failures: list[str]) -> int:
     skill_root = REPOSITORY_ROOT / "plugin" / "skills" / "traceable-git-submit"
     required_anchors = {
         "SKILL.md": (
             "references/direct-submit.md",
-            "references/safe-git-values-and-metadata.md",
-            "references/commit-construction.md",
-            "references/repository-and-remote-targets.md",
-            "references/post-consolidation-recovery.md",
-            "references/phase-outcomes.md",
-            "references/network-transport.md",
+            "references/git-values.md",
+            "references/baseline-and-preflight.md",
+            "references/checkpoint.md",
+            "references/consolidation.md",
+            "references/remote-targets.md",
             "references/prepared-release-submit.md",
+            "references/phase-outcomes.md",
             "the verified live remote tip is an ancestor of the final commit",
             "normal repository hooks",
+            "general push authority never includes it",
         ),
         "references/phase-outcomes.md": (
             "cleanupReady",
             "Cleanup requires separate exact authority",
         ),
-        "references/safe-git-values-and-metadata.md": (
-            "literal argument-vector element",
+        "references/git-values.md": (
+            "one argument-vector element",
+            "`--` before paths",
+            "never build a command string",
             "git check-ref-format",
-            "target-controlled",
-            "core.fsmonitor",
-            "core.sshCommand",
-            "credential helpers",
-            "`GIT_*`",
-            "installed Git version",
-            "no-follow",
+            "repository code the model has not reviewed",
+            "do not add flags that bypass one",
             "linked worktree",
-            "parent identity",
-            "require strict UTF-8",
-            "invalid/overlong/surrogate encodings",
-            "NUL, CR, LF, ASCII C0, DEL, C1",
-            "`U+2028`, `U+2029`",
-            "`Cc`, `Cf`, `Zl`, and `Zp`",
+            "One writer at a time is assumed",
+            "never by URL",
         ),
-        "references/baseline-and-preflight.md": (">/dev/null 2>&1",),
-        "references/repository-and-remote-targets.md": (
-            "non-visible literal-argument capture",
+        "references/baseline-and-preflight.md": (
+            "push authority never grants a refresh or any fetch",
+        ),
+        "references/remote-targets.md": (
             "a configured remote explicitly named in the current request",
             "`branch.<branch>.pushRemote`",
             "`remote.pushDefault`",
             "current `upstreamRemote`",
             "`pushRemote != upstreamRemote`",
             "git merge-base --is-ancestor <target-baseline-sha> <final-sha>",
-            "Tracking OIDs remain informational",
+            "A stale local tracking ref is informational",
             "liveBaselineSha",
             "Different targets may have different ancestor baselines",
-            "Consolidated submission uses its recorded `baselineSha` for every bound target instead",
-            "network-transport.md",
+            "A consolidated submission uses its recorded `baselineSha` for every target instead",
+            "never force-push on this route",
+            "Push authority never grants fetch",
         ),
-        "references/network-transport.md": (
-            "`fetch.bundleURI`",
-            "Bypass pre-push hooks unless their exact frozen identity and action are separately authorized",
-            "<helper>::<address>",
-            "`protocol.allow=never`",
-        ),
-        "references/post-consolidation-recovery.md": (
-            "cleanupReady",
-            "separate authority for both deletions",
-            "exact repository",
-            "Push/recovery authority never implies fetch",
-            "Local-only consolidation persists the initial",
-            "then transition once to",
-            "Never overwrite or rebind a bound record",
-            "Validate `backupRef` as the exact full `refs/axiom/backups/` ref name",
-            "not as an OID",
-            "Absence without a matching persisted intent or an already-true deletion flag never proves authorized cleanup",
-        ),
-        "references/consolidation-and-push.md": (
-            "Network-push authority never authorizes it",
+        "references/consolidation.md": (
+            "Network-push authority never authorizes a refresh",
             "Generic prune needs separate exact authority",
-            "Delete no backup or active record without the separately authorized exact cleanup envelope",
+            "Never retry a push automatically",
         ),
     }
     for relative_path, anchors in required_anchors.items():
@@ -109,78 +99,48 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
                     f"{display_path(path)} is missing traceable security contract {anchor!r}"
                 )
 
-    refresh_command = (
-        "git -C <repo> -c fetch.all=false -c fetch.prune=false -c fetch.pruneTags=false "
-        "-c fetch.recurseSubmodules=false -c fetch.writeCommitGraph=false "
-        "-c maintenance.auto=false fetch --no-all --no-tags --no-prune --no-prune-tags "
-        "--no-recurse-submodules --no-write-fetch-head --no-auto-maintenance "
-        "--no-write-commit-graph --refmap= <fetch-target> <source-ref>"
-    )
-    push_command = (
-        "git -C <repo> -c push.followTags=false -c push.recurseSubmodules=no "
-        "-c push.gpgSign=false -c push.pushOption= -c push.negotiate=false "
-        "-c push.autoSetupRemote=false push --no-verify --no-follow-tags "
-        "--recurse-submodules=no --no-signed --no-push-option --no-set-upstream "
-        "--no-prune --no-force --no-force-with-lease --no-force-if-includes "
-        "<push-target> <branch-ref>:<merge-ref>"
-    )
     require_ordered_contract_anchors(
-        skill_root / "references/consolidation-and-push.md",
+        skill_root / "references/consolidation.md",
         (
             "## Exact Remote Refresh",
-            "Freeze and validate `objectFormat`",
-            "source-only refspec is exactly validated `mergeRef`",
-            refresh_command,
-            "Re-query `sourceRef`, require the same `sourceOid`",
+            REFRESH_COMMAND,
             "git -C <repo> update-ref --no-deref <upstream-tracking-ref> <source-oid> <old-tracking-oid>",
-            "The old value is compare-and-swap.",
-            "recompute `@{u}`, divergence, cache, and provenance",
-            push_command,
+            "`--refmap=` keeps the fetch from updating configured refs",
+            "recompute `@{u}`",
+            "## Backup And Final Commit",
+            "the null old value makes it fail when the ref already exists",
+            "Never fall back to an unconditional `update-ref`.",
+            "git -C <repo> update-ref --no-deref <backup-ref> <old-head> <null-oid>",
+            "git -C <repo> commit-tree <final-tree> -p <upstream-sha>",
+            "## Install And Persist",
+            "git -C <repo> update-ref --no-deref <branch-ref> <new-commit> <old-head>",
+            "restore the branch with compare-and-swap",
+            "git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>",
+            "## Push",
+            "repository hooks running",
+            HEAVY_PUSH_COMMAND,
+            HOOK_BYPASS_SENTENCE,
+            "Stop issuing pushes at the first failure",
+            "Never retry a push automatically",
         ),
         failures,
         "exact refresh and consolidated push",
     )
     require_ordered_contract_anchors(
-        skill_root / "references/commit-construction.md",
+        skill_root / "references/git-values.md",
         (
-            "do not probe for absence before create",
-            "git -C <repo> update-ref --no-deref <backup-ref> <old-head> <null-oid>",
-            "The null old value makes it create-only",
-            "Never fall back to an unconditional `update-ref`.",
-            "## Atomically Update And Verify Branch",
-            "git -C <repo> update-ref --no-deref <branch-ref> <new-commit> <old-head>",
-            "If verification fails before push, restore with compare-and-swap",
-            "git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>",
-        ),
-        failures,
-        "create-only backup ref",
-    )
-    require_ordered_contract_anchors(
-        skill_root / "references/safe-git-values-and-metadata.md",
-        (
-            "## Object Format And OIDs",
+            "## Literal Arguments",
             "git rev-parse --show-object-format",
-            "Accept only `sha1`/40 hex or `sha256`/64 hex",
-            "same-width all-zero null OID",
-            "Recheck before commit creation, network access, each ref mutation, and final proof",
+            "40 hex characters for `sha1`, 64 for `sha256`",
+            "all-zero OID is only the old-value sentinel of `update-ref`",
+            "Reject NUL, CR, LF, and other control characters",
+            "## Git Metadata State",
+            "git -C <repo> rev-parse --path-format=absolute --git-path axiom/<file>",
+            "stop when a reread shows a record you did not write",
+            "## Endpoints",
         ),
         failures,
-        "object-format OID",
-    )
-    require_ordered_contract_anchors(
-        skill_root / "references/safe-git-values-and-metadata.md",
-        (
-            "Require direct-OID `branchRef`",
-            "git symbolic-ref --quiet <branch-ref>",
-            "must classify it non-symbolic",
-            "git rev-parse --verify <branch-ref>",
-            "must equal frozen `HEAD`",
-            "Recheck before source use or mutation",
-            "symbolic/uncertain state stops",
-            "Branch CAS must use `update-ref --no-deref`",
-        ),
-        failures,
-        "direct branch ref",
+        "literal values and metadata",
     )
     require_ordered_contract_anchors(
         skill_root / "references/baseline-and-preflight.md",
@@ -194,71 +154,100 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         "object format before ref and OID reads",
     )
     require_ordered_contract_anchors(
-        skill_root / "references/repository-and-remote-targets.md",
+        skill_root / "references/remote-targets.md",
         (
-            "## Hardened Direct Submit Preflight",
-            "Record the tracking OID and\nlocal divergence as informational state",
-            "`liveBaselineSha` separately for each verified live target",
+            "## Push Identity",
+            "## Targets",
+            "git -C <repo> ls-remote <push-url> <merge-ref>",
             "git merge-base --is-ancestor <target-baseline-sha> <final-sha>",
-            "Bind that OID as `liveBaselineSha` on that target's ordinal/fingerprint/ref record",
-            "Different targets may have different ancestor baselines",
-            "Consolidated submission uses its recorded `baselineSha`",
-            "Query every target's `mergeRef`; compare each result with that same target's bound `liveBaselineSha`",
-            "Require all comparisons to pass before issuing any push",
-            push_command,
-            "the exact frozen pre-push hook identity and action",
-            "query every authorized target",
+            "## Push And Read-Back",
+            "any missing, changed, non-commit, or non-ancestor result means zero pushes",
+            "repository hooks running",
+            HEAVY_PUSH_COMMAND,
+            HOOK_BYPASS_SENTENCE,
+            "Stop issuing pushes at the first failure",
+            "Read every target back",
+            "never retry automatically",
             "Push authority never grants fetch",
-        ),
-        failures,
-        "direct push closure and verification",
-    )
-    require_ordered_contract_anchors(
-        skill_root / "references/post-consolidation-recovery.md",
-        (
-            "Before deletion, atomically persist and reread `cleanupReady.backupDeletion`",
-            "state `pending`, the exact `backupRef`, and expected OID `oldHead`",
-            "If intent persistence is uncertain, do not delete the ref",
+            "## Recovery Of A Consolidated Record",
+            "accept only `baselineSha` or `newCommit`",
+            "## Cleanup",
             "git -C <repo> update-ref --no-deref -d <backup-ref> <old-head>",
-            "`backupDeletion.state: complete`",
-            "if absent, record the observed desired state through step 7 without issuing another deletion",
             "A changed or symbolic ref stops",
+            "An already absent ref is observed state, not proof that cleanup ran",
         ),
         failures,
-        "interruption-safe backup cleanup",
+        "direct push closure, recovery, and cleanup",
     )
     require_ordered_contract_anchors(
         skill_root / "references/prepared-release-submit.md",
         (
             "## Freeze Preparation",
-            "An existing index must be empty or match that authorized set exactly",
-            "Require the local tag absent before commit creation",
-            "For each, bind its own branch `liveBaselineSha`",
+            "Require an empty index or one that already matches the authorized path set exactly",
+            "Require the local tag absent before the commit exists",
+            "bind its branch `liveBaselineSha`",
             "## Construct Local Objects",
             "branch compare-and-swap from `oldHead` to `finalSha`",
             "reuse that verified commit as `finalSha`",
             "never add an empty commit",
             "`update-ref --no-deref <tag-ref> <tag-oid> <null-oid>`",
             "## Atomic Branch And Tag Push",
+            "repository hooks running",
             "git -C <repo> push --atomic",
-            "<push-target> <branch-ref>:<merge-ref> <tag-ref>:<tag-ref>",
+            "<push-remote> <branch-ref>:<merge-ref> <tag-ref>:<tag-ref>",
+            HOOK_BYPASS_SENTENCE,
             "If the receiver lacks atomic support, stop; never silently split the update",
-            "Unknown attempts enter verification only",
+            "unknown attempts enter verification only",
         ),
         failures,
         "prepared release commit and tag submission",
     )
+    require_ordered_contract_anchors(
+        skill_root / "references/checkpoint.md",
+        (
+            "## Active Record",
+            "git -C <repo> rev-parse --path-format=absolute --git-path axiom/traceable-git-submit-active-checkpoints.json",
+            "## Begin And Resume",
+            "Never overwrite an existing record",
+            "## Freeze The Write Set",
+            "Require an empty index",
+            "## Stage And Prove",
+            "never `git add .` or a glob",
+            "require exact equality with the frozen set",
+            "## Construct And Install",
+            "git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>",
+            "git -C <repo> update-ref --no-deref <branch-ref> <candidate-commit-sha> <parent-sha>",
+            "A failed compare-and-swap is branch drift",
+            "never retry or fall back to `git commit`",
+            "## Failure And Recovery",
+            "a marker, subject, author, time, or apparent path match never replaces that confirmation",
+        ),
+        failures,
+        "checkpoint write set, candidate, and record",
+    )
     direct_push_text = (
-        skill_root / "references/repository-and-remote-targets.md"
+        skill_root / "references/remote-targets.md"
     ).read_text(encoding="utf-8")
     lightweight_push_text = (
         skill_root / "references/direct-submit.md"
     ).read_text(encoding="utf-8")
     consolidated_push_text = (
-        skill_root / "references/consolidation-and-push.md"
+        skill_root / "references/consolidation.md"
     ).read_text(encoding="utf-8")
-    if direct_push_text.count(push_command) != 1 or consolidated_push_text.count(push_command) != 1:
-        failures.append("direct and consolidated push owners must each contain the exact closed push argv once")
+    prepared_push_text = (
+        skill_root / "references/prepared-release-submit.md"
+    ).read_text(encoding="utf-8")
+    if direct_push_text.count(HEAVY_PUSH_COMMAND) != 1 or consolidated_push_text.count(HEAVY_PUSH_COMMAND) != 1:
+        failures.append("direct and consolidated push owners must each contain the exact push argv once")
+    for name, text in (
+        ("remote-targets", direct_push_text),
+        ("consolidation", consolidated_push_text),
+        ("prepared-release-submit", prepared_push_text),
+    ):
+        if re.search(r"^git[^\n]*--no-verify", text, re.MULTILINE):
+            failures.append(f"{name} must not put --no-verify in a default command")
+        if text.count(HOOK_BYPASS_SENTENCE) != 1:
+            failures.append(f"{name} must state the one authorized hook bypass sentence exactly once")
     require_ordered_contract_anchors(
         skill_root / "references/direct-submit.md",
         (
@@ -352,8 +341,8 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     require_ordered_contract_anchors(
         skill_root / "SKILL.md",
         (
-            "Ordinary named-remote non-force staging, commits, and pushes",
-            "stay host-native",
+            "Ordinary named-remote non-force Git",
+            "stays host-native",
             "merely mentioning submit, publish, or push does not select this route",
         ),
         failures,
@@ -393,15 +382,24 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     )
     if re.search(r"\bfetch\s+--prune\s+<remote>", traceable_text):
         failures.append("traceable-git-submit must not restore broad fetch --prune <remote>")
+    for forbidden, reason in (
+        (r"\breset --hard\b", "reset --hard"),
+        (r"-c push\.", "command-scoped push.* overrides"),
+        (r"\bno-follow\b(?!-tags)", "no-follow file semantics"),
+        (r"\bsibling lock\b", "exclusive sibling locks"),
+    ):
+        # A line may name the practice only to forbid it.
+        if any(
+            re.search(forbidden, line) and "never" not in line.casefold()
+            for line in traceable_text.splitlines()
+        ):
+            failures.append(f"traceable-git-submit must not prescribe {reason}")
     branch_restore = "git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>"
-    checkpoint_text = (
-        skill_root / "references/checkpoint-provenance.md"
-    ).read_text(encoding="utf-8")
-    if checkpoint_text.count(branch_restore) != 1:
-        failures.append("checkpoint persistence recovery must contain the exact no-deref branch restore once")
+    if consolidated_push_text.count(branch_restore) != 1:
+        failures.append("consolidation must contain the exact no-deref branch restore once")
 
     checkpoint_execution = (
-        skill_root / "references/checkpoint-execution.md"
+        skill_root / "references/checkpoint.md"
     ).read_text(encoding="utf-8")
     checkpoint_commit_tree = (
         "git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>"
@@ -424,7 +422,7 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
         failures.append("checkpoint execution must never prescribe ordinary git commit")
 
     push_binding_path = (
-        skill_root / "references/repository-and-remote-targets.md"
+        skill_root / "references/remote-targets.md"
     )
     require_ordered_contract_anchors(
         push_binding_path,
@@ -441,8 +439,8 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     normalized_push_binding = " ".join(push_binding_text.split())
     for anchor in (
         "`upstreamRemote` comes only from `branch.<branch>.remote` and owns `@{u}` and refresh",
-        "Resolve effective `pushRemote` independently",
-        "Freeze `pushRemote`, resolution source, `mergeRef`, branch, and upstream identity separately",
+        "Resolve the effective `pushRemote` independently",
+        "Freeze `pushRemote`, its resolution source, `mergeRef`, the branch, and the upstream identity",
         "Refresh still uses `upstreamRemote`",
         "`pushRemote != upstreamRemote`",
     ):
@@ -450,47 +448,18 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             failures.append(
                 f"{display_path(push_binding_path)} is missing distinct push/upstream identity contract {anchor!r}"
             )
-
-    provenance_binding_path = (
-        skill_root / "references/post-consolidation-recovery.md"
-    )
-    require_ordered_contract_anchors(
-        provenance_binding_path,
-        (
-            "Local-only consolidation persists the initial\n`pushTargetState.state == unbound`",
-            "may\nthen transition once to:",
-            '"pushTargetState": {\n    "state": "bound"',
-            "Never overwrite or rebind a bound record",
-        ),
-        failures,
-        "one-time push-target binding",
-    )
-    provenance_binding_text = provenance_binding_path.read_text(encoding="utf-8")
-    if provenance_binding_text.count('"state": "bound"') != 1:
-        failures.append("push-target binding must define exactly one canonical bound state")
-    if (
-        "`post-consolidation-recovery.md` owns the one-time\n`unbound` to `bound` transition"
-        not in checkpoint_text
+    for relative_path, anchor in (
+        ("references/checkpoint.md", "`pushRemote` is set at most once"),
+        ("references/consolidation.md", "bind `pushRemote` in the record once"),
+        ("references/remote-targets.md", "Bind `pushRemote` now under current push authority when it is unset, and require it to match when it is set"),
     ):
-        failures.append(
-            "checkpoint provenance must delegate the one-time unbound-to-bound transition"
-        )
-    if "retain `pushTargetState.state == unbound`" not in consolidated_push_text:
-        failures.append("local-only consolidation must retain unbound push-target state")
-
-    hostile_path = skill_root / "references/safe-git-values-and-metadata.md"
-    require_ordered_contract_anchors(
-        hostile_path,
-        (
-            "require strict UTF-8",
-            "invalid/overlong/surrogate encodings",
-            "NUL, CR, LF, ASCII C0",
-            "DEL, C1, `U+2028`, `U+2029`",
-            "`Cc`, `Cf`, `Zl`, and `Zp`",
-        ),
-        failures,
-        "hostile Git metadata scalar rejection",
-    )
+        text = " ".join((skill_root / relative_path).read_text(encoding="utf-8").split())
+        if anchor not in text:
+            failures.append(
+                f"{display_path(skill_root / relative_path)} is missing one-time push-remote binding {anchor!r}"
+            )
+    if "retain the backup and the record with `pushRemote` unset" not in consolidated_push_text:
+        failures.append("local-only consolidation must retain the record with the push remote unset")
     if re.search(
         r"git[^\n]*(?:log|show|for-each-ref)[^\n]*%s",
         consolidated_push_text,
@@ -501,19 +470,26 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     route_contracts = {
         "SKILL.md": (
             "references/direct-submit.md",
-            "references/safe-git-values-and-metadata.md",
-            "references/commit-construction.md",
-            "references/repository-and-remote-targets.md",
-            "references/post-consolidation-recovery.md",
+            "references/git-values.md",
+            "references/checkpoint.md",
+            "references/consolidation.md",
+            "references/remote-targets.md",
         ),
-        "references/commit-construction.md": (
-            "safe-git-values-and-metadata.md",
+        "references/consolidation.md": (
+            "baseline-and-preflight.md",
+            "remote-targets.md",
         ),
-        "references/repository-and-remote-targets.md": (
-            "post-consolidation-recovery.md",
+        "references/remote-targets.md": (
+            "git-values.md",
+            "direct-submit.md",
         ),
-        "references/checkpoint-provenance.md": (
-            "post-consolidation-recovery.md",
+        "references/checkpoint.md": (
+            "git-values.md",
+            "remote-targets.md",
+        ),
+        "references/prepared-release-submit.md": (
+            "git-values.md",
+            "remote-targets.md",
         ),
     }
     for relative_path, references in route_contracts.items():
