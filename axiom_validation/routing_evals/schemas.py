@@ -22,6 +22,7 @@ from .constants import (
     V5_PUBLIC_ROUTES, V5_BENCHMARK_CASE_COUNT, V5_BENCHMARK_IDS,
     BENCHMARK_V6_ID, SCHEMA_V6_ID, HOST_RESPONSE_SCHEMA_V7_RELATIVE_PATH,
     V6_BENCHMARK_IDS, V6_BENCHMARK_CASE_COUNT, BENCHMARK_V7_ID, SCHEMA_V7_ID,
+    V7_BENCHMARK_IDS, V7_BENCHMARK_CASE_COUNT, BENCHMARK_V8_ID, SCHEMA_V8_ID,
     HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH, HOST_RESPONSE_V8_DESCRIPTIONS,
     CURRENT_BENCHMARK_CASE_COUNT,
     CURRENT_BENCHMARK_IDS,
@@ -68,18 +69,19 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
     if document is None:
         return None
     schema_version = document.get("schemaVersion")
-    if schema_version not in {"1", "2", "3", "4", "5", "6", "7"}:
-        failures.append(f"{label}.schemaVersion must be '1', '2', '3', '4', '5', '6', or '7'")
+    if schema_version not in {"1", "2", "3", "4", "5", "6", "7", "8"}:
+        failures.append(f"{label}.schemaVersion must be '1', '2', '3', '4', '5', '6', '7', or '8'")
     allowed_routes = (
         HISTORICAL_PUBLIC_ROUTES if schema_version == "1"
-        else CURRENT_PUBLIC_ROUTES if schema_version in {"6", "7"}
+        else CURRENT_PUBLIC_ROUTES if schema_version in {"6", "7", "8"}
         else V5_PUBLIC_ROUTES if schema_version == "5"
         else V4_PUBLIC_ROUTES if schema_version == "4"
         else V3_PUBLIC_ROUTES if schema_version == "3" else PUBLIC_ROUTES
     )
     allowed_benchmarks = (
         (BENCHMARK_ID,) if schema_version == "1"
-        else CURRENT_BENCHMARK_IDS if schema_version == "7"
+        else CURRENT_BENCHMARK_IDS if schema_version == "8"
+        else V7_BENCHMARK_IDS if schema_version == "7"
         else V6_BENCHMARK_IDS if schema_version == "6"
         else V5_BENCHMARK_IDS if schema_version == "5"
         else (BENCHMARK_V4_ID,) if schema_version == "4"
@@ -103,6 +105,8 @@ def validate_case(case: Any, label: str, failures: list[str]) -> dict[str, Any] 
         failures.append(f"{label}.contractVersion must be 6 for schema v6")
     if schema_version == "7" and contract_version != 7:
         failures.append(f"{label}.contractVersion must be 7 for schema v7")
+    if schema_version == "8" and contract_version != 8:
+        failures.append(f"{label}.contractVersion must be 8 for schema v8")
     language = require_string(document.get("language"), f"{label}.language", failures, 16)
     if language is not None and LANGUAGE_PATTERN.fullmatch(language) is None:
         failures.append(f"{label}.language must be a bounded BCP-47 language tag")
@@ -702,6 +706,18 @@ def check_schema_contract_v7(schema: dict[str, Any], failures: list[str]) -> Non
     _check_versioned_schema_contract(
         schema, failures, version="7", schema_id=SCHEMA_V7_ID,
         routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V7_ID,
+        case_count=V7_BENCHMARK_CASE_COUNT,
+        response_paths=(HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,),
+        benchmark_ids=V7_BENCHMARK_IDS,
+        extra_definitions=_HOST_PROFILE_DEFINITIONS,
+    )
+
+
+def check_schema_contract_v8(schema: dict[str, Any], failures: list[str]) -> None:
+    """Schema v8 keeps the v7 shape and routes and adds nine cases; its records bind response V8 only."""
+    _check_versioned_schema_contract(
+        schema, failures, version="8", schema_id=SCHEMA_V8_ID,
+        routes=CURRENT_PUBLIC_ROUTES, benchmark_id=BENCHMARK_V8_ID,
         case_count=CURRENT_BENCHMARK_CASE_COUNT,
         response_paths=(HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,),
         benchmark_ids=CURRENT_BENCHMARK_IDS,

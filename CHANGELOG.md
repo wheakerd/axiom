@@ -8,6 +8,28 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.24.0 - unreleased
+
+### Changed
+
+- Every bundled skill now opens with a short direction paragraph and an Invariants section of three to six named rules that bind in every phase, including the references that phase loads; everything else in a skill is a default the model may adapt, saying so. The blanket "every other rule binds" clauses are gone, and no sentence in bundled skill text exceeds 300 characters.
+- The startup gate defines the shared terms it uses once (route, host-native, selection surface, explicit invocation, invariant and default, handoff contract, envelope, write set) and describes explicit invocation in each host's own syntax: `$skill-name` in Codex and `/axiom:skill-name` in Claude Code. The offline route fixtures cover both forms.
+- Host facts live in two dated references owned by the gate, `codex-host.md` and `claude-code-host.md`, each verified against the installed host version on 2026-10-30. `continuous-progress` reads them instead of its two former operations references, and the other skills point at them rather than restating host mechanics.
+- `agents-architect` reconcile modes run in one session: three independent read-only reviews and one writer, as separate subagents when the host offers them or as sequential passes otherwise.
+- The publication aggregate checks the readability contract: an Invariants list per skill, the 300-character sentence maximum, and the absence of a blanket binding clause.
+- Before an action that changes state, the startup gate asks the model to say in one sentence what outcome it intends, name any material ambiguity you left open, and mark the first irreversible or externally visible step. This adds no question, stop, or authority and stays silent for read-only requests and conversation.
+- `verify-completion` fires on a completion claim carried by a compaction summary even when nobody says verify, and `clarify-intent` fires on alternatives offered across sentences or without the word either. Routing contract v8 adds nine cases for these forms, their near-miss controls, the before-acting behavior, and post-compaction route reselection; each host's benchmark profile selects 49 cases.
+
+### Behavioral impact
+
+A model reading a skill sees which rules bind and which it may adapt, and meets each term defined once where it first appears. Authority does not widen: every invariant restates a rule that already bound, and every default was already adaptable. The startup gate grows from 5,847 to 7,217 bytes for the term definitions, the invariants, and the before-acting behavior, still below its publication maximum; the description set grows by 133 bytes for the two widened triggers and one split sentence. The runtime digest changes because every skill body is an installed input.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.24.0.md) for the reasoning, the changed passages, the routing contract, and the evidence boundary.
+
 ## 0.23.0 - 2026-10-30
 
 ### Changed

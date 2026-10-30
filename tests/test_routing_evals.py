@@ -266,6 +266,7 @@ class RoutingEvaluationTests(unittest.TestCase):
     def test_checked_in_candidate_observations_are_validated(self):
         from axiom_validation.routing_evals.candidates import (
             candidate_record_paths,
+            candidate_version_directories,
             check_candidate_routing_observations,
             validate_candidate_routing_observation,
         )
@@ -308,17 +309,21 @@ class RoutingEvaluationTests(unittest.TestCase):
             )
             self.assertTrue(failures)
 
+            # Every checked-in record of the current version validates; the Release
+            # pipeline, not this test, requires their presence for a changed route.
             failures = []
+            versions = set(candidate_version_directories(REPOSITORY_ROOT)) | {RELEASE_VERSION}
             checked_in = sum(
-                len(paths) for paths in candidate_record_paths(REPOSITORY_ROOT, RELEASE_VERSION).values()
+                len(paths)
+                for version in versions
+                for paths in candidate_record_paths(REPOSITORY_ROOT, version).values()
             )
-            self.assertEqual(2, checked_in)
             self.assertEqual(checked_in, check_candidate_routing_observations(REPOSITORY_ROOT, failures))
             self.assertEqual([], failures)
 
     def test_checked_in_evaluation_contracts_pass(self):
         failures: list[str] = []
-        self.assertEqual((179, 70, 11), check_routing_evaluations(failures))
+        self.assertEqual((188, 79, 11), check_routing_evaluations(failures))
         self.assertEqual([], failures)
 
     def test_documented_method_requires_native_hook_trust_without_bypass(self):

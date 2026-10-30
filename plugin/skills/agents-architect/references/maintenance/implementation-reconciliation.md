@@ -93,33 +93,15 @@ durable gate in `maintenance-application.md` passes. A repository scan alone
 cannot expand scope; otherwise use `reject-new`. Never copy an implementation
 inventory into AGENTS.
 
-## Strict Multi-Agent Contract
+## Independent Review Contract
 
-Both modes require one coordinator and three independently assigned read-only
-workers:
+Both modes need three independent read-only reviews before any write. The instruction audit atomizes rules and inspects owners and inheritance; the implementation audit inspects implementation and test or runtime evidence; the provenance check establishes baseline state and provenance. Run them as separate read-only subagents when the host offers them. Otherwise one session performs them as sequential passes, records each pass's findings before starting the next, and never rewrites an earlier pass's ledger from a later one.
 
-- `instruction-auditor`: atomize rules and inspect owners and inheritance;
-- `implementation-auditor`: inspect implementation and test/runtime evidence;
-- `provenance-verifier`: establish baseline state and provenance.
+Whoever coordinates records authority, fixes scope and baseline, integrates the ledger, directly rechecks decisive evidence, resolves routing, and validates. All participants obey the loaded chain and remain read-only during audit. Never decide by majority vote: resolve a conflict by checking the owning source directly; otherwise the claim remains `conflicting` and `unresolved` / `defer`.
 
-All participants receive and obey the loaded chain and remain read-only during
-audit. The coordinator alone records authority, fixes scope and baseline,
-dispatches, integrates the ledger, directly rechecks decisive evidence,
-resolves routing, and validates. Worker audits remain independent.
+After the material-state recheck, freeze the ledger, the exact target paths, and the authorized operations. Exactly one writer performs the frozen AGENTS-system edits; every other participant or pass writes nothing. After writing, the coordinator directly reviews every frozen path, including untracked or ignored paths, and verifies unrelated baseline preservation; a tracked diff is insufficient.
 
-Never decide by majority vote. The coordinator resolves worker conflict by
-checking the owning source directly; otherwise the claim remains
-`conflicting` and `unresolved` / `defer`. After the material-state recheck,
-freeze the ledger, exact target paths, and authorized operations. Designate
-exactly one non-coordinator writer; every other participant remains
-non-writing. The writer performs only frozen AGENTS-system edits.
-
-After writing, the coordinator directly reviews every frozen path, including
-untracked or ignored paths, and verifies unrelated baseline preservation; a
-tracked diff is insufficient. If a role was not independently run, decisive
-evidence cannot be checked, or writer isolation is uncertain, safe-stop before
-writing. Report the mode incomplete and completion and writes as `NOT-RUN`;
-partial findings are not a completed preview.
+If a review was not independently run, decisive evidence cannot be checked, or writer isolation is uncertain, safe-stop before writing. Report the mode incomplete and completion and writes as `NOT-RUN`; partial findings are not a completed preview.
 
 ## Handoff And Stops
 
@@ -131,15 +113,8 @@ cross-owner duplicate removal, or file moves; also load
 `../routing-architecture.md` when route topology changes. No handoff expands
 authorization.
 
-Stop or remain read-only when target, baseline, authority, owner, or removal
-scope is ambiguous; relevant live evidence is unavailable; an active
-non-`AGENTS.md` source shadows the result; a requested write conflicts with the
-active chain; or only separately authorized implementation work can resolve
-the mismatch.
+Stop or remain read-only when target, baseline, authority, owner, or removal scope is ambiguous, or when relevant live evidence is unavailable. Stop as well when an active non-`AGENTS.md` source shadows the result, a requested write conflicts with the active chain, or only separately authorized implementation work can resolve the mismatch.
 
 ## Report Required
 
-Report mode; target, scope, and baseline; material Git/ignored state; authority
-versus evidence; workers, conflicts, and rechecks; each status and disposition;
-writer scope or stop; terminal owner; changed files and bytes; direct
-post-write review; validation; unresolved items; and activation timing.
+Report the mode; the target, scope, and baseline; material Git and ignored state; authority versus evidence; and the reviewers, conflicts, and rechecks. Report each status and disposition; the writer scope or stop; the terminal owner; changed files and bytes; the direct post-write review; validation; unresolved items; and activation timing.

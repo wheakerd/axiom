@@ -12,6 +12,9 @@
    configuration. Supply the scope, working root, relevant evidence, constraints,
    and exact return destination. Feed prompts through structured arguments or
    literal files; never interpolate retrieved text into shell source.
+   Bound the worker's turns and budget where the host allows it, and never
+   widen its permissions or tools to make it finish; a cap that stops the run
+   also stops its background subagents.
 5. Record the actual session ID. Observe completion through host events or a
    bounded wait. A successful launch, zero exit code, or fluent response is
    insufficient evidence that the requested work succeeded.
@@ -93,8 +96,8 @@ Wait for the host's compaction turn to finish before submitting recovery input.
 A compaction event can complete before its turn ends. If the host rejects input
 while a turn is still active, preserve the pending recovery, observe the same
 turn until it ends, then submit once. Do not create a second coordinator or
-treat the rejected input as an accepted handoff. The current host's operations
-reference names its compaction and turn signals.
+treat the rejected input as an accepted handoff. The current host's facts in
+the startup gate's references name its compaction and turn signals.
 
 If a compaction signal is missing, record that observation limit. Neither
 static schema support nor a manually triggered CLI compaction proves automatic

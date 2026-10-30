@@ -63,6 +63,7 @@ from .routing_contracts import (
 from .route_catalog import check_route_catalog
 from .routing_evals import check_review_sequence_contracts, check_routing_evaluations
 from .runtime_identity import check_runtime_identity
+from .skill_text import check_skill_text
 
 
 def main() -> int:
@@ -190,6 +191,7 @@ def main() -> int:
     run_policy("routing", check_lifecycle_guide_commands, failures)
     run_policy("repository", check_packaged_skills, failures)
     run_policy("repository", check_skill_contracts, failures)
+    skill_text_entry_count = run_policy("repository", check_skill_text, failures)
     run_policy("routing", check_routing_source_contracts, failures)
     cross_route_contract_count = run_policy(
         "routing", check_cross_route_resume_contracts, failures
@@ -256,6 +258,7 @@ def main() -> int:
         f"{context_scenario_count} routing-context lifecycle scenarios, "
         f"{release_fact_surface_count} canonical release-fact surfaces, "
         f"{readme_skill_count} generated README skill rows, "
+        f"{skill_text_entry_count} skill readability contracts, "
         f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
         f"{runtime_contract_input_count} canonical installed-runtime inputs, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "

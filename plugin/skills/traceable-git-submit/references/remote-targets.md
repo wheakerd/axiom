@@ -18,7 +18,7 @@ For a hardened push of existing commits, freeze `finalSha` as current `HEAD` and
 
 ## Push And Read-Back
 
-Immediately before the first push, re-resolve the identity, re-list the targets, require the branch ref to equal `finalSha` (or the recorded `newCommit`), check that no operation is in progress, and query every target's merge ref; any missing, changed, non-commit, or non-ancestor result means zero pushes. Then push once per frozen target in order with one exact ref update and repository hooks running:
+Immediately before the first push, re-resolve the identity, re-list the targets, require the branch ref to equal `finalSha` (or the recorded `newCommit`), check that no operation is in progress, and query every target's merge ref. Any missing, changed, non-commit, or non-ancestor result means zero pushes. Then push once per frozen target in order with one exact ref update and repository hooks running:
 
 ```bash
 git -C <repo> push --no-follow-tags <push-remote> <branch-ref>:<merge-ref>

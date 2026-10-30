@@ -118,6 +118,12 @@ An isolated restore rehearsal is a separately authorized persistent write. It ma
 
 If you later ask to execute and current restore validation cannot run, the skill stops before candidate or active-state mutation and names the effects that would stay unrecoverable. The decision is yours: an explicit choice to proceed without verified rollback is an informed waiver that lifts the rollback requirement only for those named effects; every other effect keeps its rollback. The change then continues under every other rule of the skill, including its authority, write-set, failure, and verification gates; the waiver is recorded, and the change is never reported as reversible.
 
+## Before Acting
+
+> Rename `utils.py` to `helpers.py` across the project and update every import.
+
+No route is selected. Before the first edit, the model says in one sentence what it intends, for example that every import will point at the new module name, names anything you left open, such as whether tests that import the old name should also move, and marks the first irreversible step, the rename itself. It then proceeds; the behavior adds no question or stop. A read-only request, such as explaining what the retry helper does, gets no restatement.
+
 ## Requests That Should Not Route
 
 | Request | Reason |

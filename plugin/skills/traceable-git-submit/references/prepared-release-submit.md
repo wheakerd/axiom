@@ -14,7 +14,7 @@ Freeze the exact repository, branch, prepared path set and tree, commit message,
 
 ## Construct Local Objects
 
-Create one ordinary commit from the frozen tree and `oldHead` with `git commit-tree`, the message on standard input, and only explicitly authorized signing; verify its parent, tree, message, and signature, then install it with branch compare-and-swap from `oldHead` to `finalSha` using `git update-ref --no-deref <branch-ref> <final-sha> <old-head>`. If the payload is already committed and the frozen tree equals `oldHead^{tree}`, reuse that verified commit as `finalSha` and report that no new commit was needed; never add an empty commit.
+Create one ordinary commit from the frozen tree and `oldHead` with `git commit-tree`, the message on standard input, and only explicitly authorized signing. Verify its parent, tree, message, and signature, then install it with branch compare-and-swap from `oldHead` to `finalSha` using `git update-ref --no-deref <branch-ref> <final-sha> <old-head>`. If the payload is already committed and the frozen tree equals `oldHead^{tree}`, reuse that verified commit as `finalSha` and report that no new commit was needed; never add an empty commit.
 
 Create the tag object with `git tag` as frozen (annotated or signed), or let a lightweight tag name `finalSha` itself; create the ref with `update-ref --no-deref <tag-ref> <tag-oid> <null-oid>` so that an existing tag makes it fail, and verify the direct object and the peeled commit. Never overwrite an existing tag. On a conflicting or uncertain local write, inspect only: reuse an exact previously recorded object or stop and keep the candidate.
 

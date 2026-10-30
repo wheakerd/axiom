@@ -34,7 +34,7 @@ GATE_SELECTION_ANCHORS = (
     "Route only explicit Axiom invocations or clear bundled-description matches.",
     "Select a bundled skill from the host's listed skills by its description",
     "the descriptions are the selection surface",
-    "An explicit `Axiom:<skill-name>` invocation selects that skill.",
+    "An explicit invocation selects that skill.",
     "is not displaced by a bundled route.",
     "No match continues host-native.",
 )
@@ -49,6 +49,10 @@ GATE_SELECTION_ANCHORS = (
 # pinned or not.
 CHOICE_ALTERNATIVES = re.compile(
     r"\beither\s+(?P<first>.+?)\s+or\s+(?P<second>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
+    # 0.24.0: alternatives stated across two sentences ("X. Alternatively Y.") or
+    # offered without "either" ("X, or if you prefer Y").
+    r"|(?P<first2>[^.!?]+?)\.\s+alternatively,?\s+(?P<second2>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
+    r"|(?P<first3>[^.!?]+?),?\s+or\s+if\s+you\s+prefer,?\s+(?P<second3>.+?)\s*(?=[;,:?!]|\.(?:\s|$)|$)"
 )
 EXPLICIT_CHOICE_DELEGATION = re.compile(
     r"\b(?:choose one|pick one|your call|your choice|you decide|decide yourself|up to you)\b"
@@ -201,7 +205,7 @@ def historical_route_contract(request: str) -> dict[str, Any]:
             normalized,
         )
     )
-    explicit_traceable = "$traceable-git-submit" in normalized
+    explicit_traceable = "$traceable-git-submit" in normalized or "/axiom:traceable-git-submit" in normalized
     checkpoint_git = bool(re.search(r"\bcheckpoint\b", normalized))
     baseline_git = bool(
         re.search(r"\bbaseline metadata\b", normalized)
@@ -644,7 +648,11 @@ def _choice_contract(request: str) -> dict[str, Any] | None:
         return None
     prefix = normalized[: match.start()]
     suffix = normalized[match.end():]
-    texts = (match["first"], match["second"])
+    texts = next(
+        (first, second)
+        for first, second in ((match["first"], match["second"]), (match["first2"], match["second2"]), (match["first3"], match["second3"]))
+        if first is not None
+    )
     contracts = tuple(route_contract(prefix + text) for text in texts)
     gated = any(
         UNGRANTED_OR_IRREVERSIBLE_CHOICE.search(prefix + text + suffix)
@@ -686,9 +694,9 @@ def route_contract(request: str) -> dict[str, Any]:
     if contract["route"] == "clarify":
         return {**contract, "route": "clarify-intent"}
     normalized = request.casefold()
-    # Schema v5 states explicit invocations in plain language for both hosts; the
-    # Codex `$skill-name` form stays accepted for existing examples.
-    if re.match(r"^\s*(?:(?:use|resume)\s+)?\$continuous-progress(?![\w-])", normalized) or re.match(
+    # Explicit invocations use each host's own syntax: `$skill-name` in Codex and
+    # `/axiom:skill-name` in Claude Code; plain-language naming stays accepted.
+    if re.match(r"^\s*(?:(?:use|resume)\s+)?(?:\$|/axiom:)continuous-progress(?![\w-])", normalized) or re.match(
         r"^\s*(?:use|resume)\s+the\s+continuous-progress\s+skill\b", normalized
     ):
         return {"route": "continuous-progress", "phase": "capability-check",
@@ -712,7 +720,7 @@ def route_contract(request: str) -> dict[str, Any]:
         }
     preparation_requested = bool(
         re.search(r"\b(?:prepare|create)\b.*\b(?:recovery material|backup|snapshot)\b", normalized)
-        and re.search(r"\b(?:persistent|system|database|service)\b|\$reversible-system-change", normalized)
+        and re.search(r"\b(?:persistent|system|database|service)\b|(?:\$|/axiom:)reversible-system-change", normalized)
     )
     preparation_owner = contract["route"] in (None, "reversible-system-change") or (
         contract["route"] == "traceable-git-submit"
@@ -741,7 +749,7 @@ def route_contract(request: str) -> dict[str, Any]:
         ("task-planning", "plan", ()),
         ("local-web-search", "research", ("references/local-browsing.md",)),
     ):
-        if re.search(r"(?<![\w-])\$" + re.escape(route) + r"(?![\w-])", request) or re.match(
+        if re.search(r"(?<![\w-])(?:\$|/axiom:)" + re.escape(route) + r"(?![\w-])", request) or re.match(
             r"\s*use\s+the\s+" + re.escape(route) + r"\s+skill\b", normalized
         ):
             return {"route": route, "phase": phase, "references": references,
@@ -781,7 +789,16 @@ def _verify_completion_contract(request: str, normalized: str) -> dict[str, Any]
         r"\b(?:evidence|observed|observe|summar\w*|compact\w*|recall\w*|current (?:state|evidence|repository))\b",
         normalized,
     )
-    if not (verification and claim and evidence):
+    # 0.24.0: a completion claim that rests on a compaction summary and is used to
+    # move on also selects the route, even without a verification verb; a question
+    # about where things stand does not.
+    summary_claim = (
+        claim
+        and re.search(r"\b(?:summar\w*|compact\w*)\b", normalized)
+        and re.search(r"\b(?:move on|next (?:item|step|task)|proceed|close (?:it|the task)|mark(?:ed)? (?:it |as )?(?:done|complete))\b", normalized)
+        and "?" not in normalized
+    )
+    if not ((verification and claim and evidence) or summary_claim):
         return None
     regrounding = bool(re.search(r"\b(?:compact\w*|resum\w*|fork\w*|hand-?off)\b", normalized))
     return {
@@ -1010,6 +1027,14 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
             skills / "using-axiom/SKILL.md",
             "cross-route and resume",
             (
+                # The gate's invariants come first (0.24.0): instructions only, named
+                # invariants bind, fail-closed resume, and the no-silent-pick rule.
+                "Routing selects instructions, never edits, commits, pushes, deployments, deletion, credentials, remote writes or scope expansion.",
+                "its named invariants bind in every phase, including the references that phase loads",
+                "On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation.",
+                "If route or phase cannot be reconstructed, perform zero new mutations",
+                "Routing never silently picks among mutually exclusive implementations",
+                "materially different route sets, write surfaces, or authorization or safety boundaries",
                 "Resolve cross-route ownership from these rules before inspecting either candidate body.",
                 "confirm-external-action",
                 "reversible-system-change",
@@ -1018,8 +1043,6 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "references/credential-lifecycle.md",
                 # Pin the delegated-choice authority and safety invariants, not the
                 # clarification count or phrasing; offline route scenarios cover procedure.
-                "Routing never silently picks among mutually exclusive implementations",
-                "materially different route sets, write surfaces, or authorization or safety boundaries",
                 "explicitly delegates the choice",
                 "every alternative is reversible and already authorized",
                 "state which and why before acting",
@@ -1029,9 +1052,6 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "never silently replaces the stated goal.",
                 "Once the user chooses an unambiguous implementation, resume normal route selection.",
                 "An explicit usage-reduction goal selects",
-                "including those in references the active phase loads, bind",
-                "On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation.",
-                "If route or phase cannot be reconstructed, perform zero new mutations",
             ),
         ),
         (

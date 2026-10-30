@@ -23,11 +23,7 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 
 ## Required actions
 
-- Confirm the fresh-init gate before writing files. Inspect current directory,
-  no-Git or Git-root state, nested-root ambiguity, unborn/normal branch state,
-  tracked/untracked/ignored guidance, existing `AGENTS.md` entries, `.agents/`,
-  visible host-discovered non-`AGENTS.md` candidates, source roots, manifests,
-  build config, test config, CI, and candidate project docs.
+- Confirm the fresh-init gate before writing files. Inspect the current directory, no-Git or Git-root state, nested-root ambiguity, unborn or normal branch state, and tracked, untracked, and ignored guidance. Inspect existing `AGENTS.md` entries, `.agents/`, visible host-discovered non-`AGENTS.md` candidates, source roots, manifests, build config, test config, CI, and candidate project docs.
 - If an existing `AGENTS.md` system appears after scoping starts, stop
   initialization and route to `migration-policy.md`; do not overwrite or merge
   by default. If only a host-discovered non-`AGENTS.md` source appears,

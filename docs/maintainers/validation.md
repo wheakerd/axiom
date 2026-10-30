@@ -18,7 +18,7 @@ python3 -B -m unittest discover -s tests -p 'test_*.py'
 git diff --check
 ```
 
-Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, compatibility evidence, routing context, documentation, and publication checks. Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs the first two commands on the rehearsed catalog handoff before it creates a tag.
+Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, compatibility evidence, routing context, documentation, publication checks, and the bundled skill readability contract (an Invariants list of three to six items per skill, no sentence over 300 characters, and no blanket binding clause). Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs the first two commands on the rehearsed catalog handoff before it creates a tag.
 
 Run additional checks required by the changed surface, read the final diff, confirm that the manifest version matches the release identity, and inspect `git status --short` for unrelated paths. Classify every changed path under [Runtime and Repository Identity](../runtime-identity.md#classify-a-change) before calling the result repository-only.
 
