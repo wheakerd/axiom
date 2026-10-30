@@ -27,7 +27,7 @@ The release tree provides one integration per host over the same Skills:
 
 Both manifests point to `./skills/` inside the installed plugin root `plugin/`. A catalog that selects `v0.17.0` or later installs only that subtree through a `git-subdir` source; earlier tags hold the plugin at the repository root. Codex and Claude Code are supported installation and runtime hosts from `0.15.0`; Claude Code records from `0.10.x` and earlier remain historical. From `0.16.0`, both hosts receive every bundled route. `continuous-progress` keeps each host's operations detail in its own `references/`, and `delegate-simple-task` leaves the judgment of host settings to the host model. This is repository support, not proof of execution on every host release, operating system, shell, installation method, or policy configuration.
 
-Compare the installed Hook with the exact commands in the [Hook Reference](reference/hooks.md) before it runs: in Codex, before you trust it in `/hooks`; in Claude Code, before the plugin loads.
+Codex holds a new or changed Hook until you trust it in `/hooks`; Claude Code runs it at the next `SessionStart` once the plugin loads. The [Hook Reference](reference/hooks.md) renders the exact checked-in commands for an optional comparison with an installed copy.
 
 ## Claude Code Package Format And Validation
 
@@ -53,6 +53,8 @@ The table summarizes that record. Read its `targetRelease` and `runtimeIdentity`
 | --- | --- | --- | --- |
 | Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` | `STATIC-ONLY` |
 | Claude Code | `CHECKED-IN`; deterministic package and contract checks and strict `claude plugin validate` are available | `NOT-RUN` | `STATIC-ONLY` |
+
+Windows has no recorded observation on either host. The cross-platform CI job runs the checked-in Hook commands on a Windows runner, the Codex wrapper under `cmd.exe` and the Claude Code command under Git Bash; Claude Code without Git Bash falls back to PowerShell, which does not run the command.
 
 A source candidate cannot establish a future signed merge, immutable tag, final workflow result, or post-publication host observation. See [Routing Context Budget](../evals/context-budget/README.md) for the current startup-document measurement and its separate static evidence boundary.
 

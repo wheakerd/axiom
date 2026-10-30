@@ -9,17 +9,20 @@ Axiom provides workflow instructions within the host's existing trust model. It 
 | Instruction authority | Active system, developer, user, and repository instructions retain their actual precedence; a Skill cannot override a higher-priority rule |
 | Intent and scope | Resolve material ambiguity before dependent work; an explicitly delegated choice settles it only when every alternative is reversible and already authorized, and a permission-bypass mode does not choose the user's intended target or outcome |
 | Action authorization | The request must cover the material action and target; route selection, tool access, and login state do not supply permission |
-| Hook execution | Compare the installed command with its canonical declaration before it runs; Codex holds a new or changed Hook for review, while Claude Code runs an enabled plugin's Hook |
+| Hook execution | Codex holds a new or changed Hook until you trust it in `/hooks`, while Claude Code runs an enabled plugin's Hook at the next `SessionStart`; comparing the installed command with its canonical declaration is an optional reviewer check |
 | Credentials and disclosure | Access and use remain with their existing owners; sensitive content needs the applicable exact-use and disclosure authority |
 | Evidence | Observe the layer that owns the outcome; a plan, artifact, accepted request, or successful command alone may be insufficient |
 | Usage measurement | Host metrics apply only to their stated scope; bytes, words, route sizes, and tool calls are proxies |
 | Updates | Codex or Claude Code controls refresh and installation; Axiom does not run an updater |
+| Repository state | Two routes keep task state in a target repository's Git metadata directory and backup refs; it stays until you remove it |
 
 ## Hook Trust Boundary
 
 The checked-in handlers read `skills/using-axiom/SKILL.md` from the installed plugin root. The Codex handler uses `printf` and `cat` on POSIX, and on Windows it invokes the fixed packaged wrapper with command-shell built-ins, without resolving another executable from the working directory or `PATH`. The Claude Code handler runs one POSIX shell command with `printf` and `cat`: Claude Code passes it to `sh -c` on macOS and Linux and to Git Bash on Windows. Without Git Bash, Claude Code falls back to PowerShell, which this command does not support. Each handler has a five-second timeout. See the [Hook Reference](reference/hooks.md) for the exact commands.
 
-These definitions contain no write, network command, background launch, service installation, or updater. This describes the checked-in files; the installed definition is a separate trust decision. Codex records that decision: it skips a new or changed Hook until you review and trust it in `/hooks`. Claude Code has no per-Hook trust step; once Axiom loads at a session start, an in-session install, or a plugin reload, its Hook runs at the next `SessionStart` event, so compare the installed copy before it loads. If the installed matcher, command, path, wrapper, or timeout differs, leave the Hook untrusted in Codex or disable Axiom in Claude Code until the package and source agree. Do not run a changed command to discover what it does.
+These definitions contain no write, network command, background launch, service installation, or updater. This describes the checked-in files; the installed copy is a separate object. Codex skips a new or changed Hook until you review and trust it in `/hooks`. Claude Code has no per-Hook trust step; once Axiom loads at a session start, an in-session install, or a plugin reload, its Hook runs at the next `SessionStart` event.
+
+Verifying the installed Hook is optional. It is a supply-chain check for reviewers who want to rule out tampering between this repository and the installed copy, such as a modified marketplace mirror, plugin cache, or install path. Compare the installed matcher, command, path, wrapper, and timeout with the [Hook Reference](reference/hooks.md): in Codex before you trust the entry in `/hooks`, in Claude Code by reading the installed `hooks/claude-hooks.json` under `~/.claude/plugins/cache/axiom/axiom/<version>/` after a terminal install and before a session starts. If they differ, leave the Hook untrusted in Codex or disable Axiom in Claude Code until the package and source agree, and do not run the changed command to discover what it does.
 
 ## Authority Across Workflows
 
@@ -52,4 +55,20 @@ Use current direct evidence from the owning Git state, affected system layers, o
 
 Missing tools, permissions, host observations, and unavailable history remain unavailable or unverified. Keep `PASS`, `FAIL`, `NOT-RUN`, and `UNAVAILABLE` separate. See [Compatibility](compatibility.md) and [Field Validation](field-validation.md).
 
-Startup routing is read-only and foreground. Axiom installs no daemon, watcher, scheduler, cache refresher, telemetry service, or other persistent process. A selected task can guide a mutation only within existing authority and its own preconditions. After an installed update, review the Hook again before it runs, following each host's steps in [Managing an Installation](guides/managing-installation.md).
+Startup routing is read-only and foreground. Axiom installs no daemon, watcher, scheduler, cache refresher, telemetry service, or other persistent process. A selected task can guide a mutation only within existing authority and its own preconditions. After an installed update, Codex holds the changed Hook until you trust it again, and Claude Code runs it at the next `SessionStart`; [Managing an Installation](guides/managing-installation.md) owns each host's steps.
+
+## Repository State Written By Routes
+
+Two routes keep task state inside the target repository's Git metadata directory. They resolve the location through `git rev-parse --git-path` instead of a hand-built path, so `git status`, `.gitignore`, and code search never show it:
+
+- `traceable-git-submit` writes `axiom/traceable-git-submit-baseline.json`, an advisory cache of the last pushed upstream state, and `axiom/traceable-git-submit-active-checkpoints.json`, the active checkpoint record, under the Git directory during a checkpoint, baseline, consolidation, or recovery workflow. Before a history-replacing operation it creates one backup ref under `refs/axiom/backups/traceable-git-submit/<unique-id>`.
+- `agents-architect` writes session capsules named `session-<unique-id>.md` and generated material under `axiom/agents-architect/` in the Git directory during instruction-system maintenance, and deletes them or marks them obsolete at completion.
+
+Nothing removes these files when a task stops early, and the baseline cache is meant to persist between tasks. A backup ref keeps its objects reachable and travels with `git push --mirror` and `git clone --mirror`. List them with:
+
+```bash
+git rev-parse --path-format=absolute --git-path axiom
+git for-each-ref refs/axiom/
+```
+
+Remove a state file with your shell when no Axiom task is active, and delete a verified backup ref with `git update-ref -d <ref>`. Earlier versions wrote `.agents/.cache/traceable-git-submit-baseline.json`, `.agents/.runtime/`, and `.agents/.generated/` inside the working tree; current routes migrate or report such leftovers. Task state never goes under the installed plugin root or the repository's `.agents/`, `.claude/`, or `.codex/` directories. `agents-architect` edits instruction files there only as the requested change, and may list user-local rule directories such as `.agents/local/` in `.git/info/exclude`.
