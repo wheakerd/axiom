@@ -3,31 +3,47 @@
 from __future__ import annotations
 
 import ast
+import json
 import subprocess
 import sys
 import unittest
 from pathlib import Path
 
+from axiom_validation.cases.routing import ROUTING_SCENARIOS
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
+from axiom_validation.documentation import discover_markdown
+from axiom_validation.manifests import JSON_FILES
+from axiom_validation.release_facts import FACTS_SURFACES
+from axiom_validation.repository_policy import EXPECTED_DIRECT_SKILLS, REQUIRED_PUBLIC_FILES
 
 
+# Totals that grow with every release (release notes, installed inputs, skills,
+# route fixtures) come from the production owners the aggregate reports, so a
+# release that changes no validator behavior needs no edit here. Fixture totals
+# stay literal: losing a fixture must fail this test.
+RUNTIME_INPUT_COUNT = json.loads(
+    (REPOSITORY_ROOT / "evidence" / "runtime-identity.json").read_text(encoding="utf-8")
+)["runtimeContract"]["recordCount"]
 EXPECTED_SUCCESS_SUMMARY = (
-    "Publication validation passed: 153 required files, 6 JSON files, "
-    "168 Markdown files, 21 documentation negative fixtures, "
-    "96 offline route contract fixtures, "
+    f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
+    f"{len(JSON_FILES)} JSON files, "
+    f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
+    "21 documentation negative fixtures, "
+    f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
     "142 black-box routing cases, 66 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "
     "11 review checkpoints, 8 routing-context lifecycle scenarios, "
-    "45 canonical release-fact surfaces, 14 generated README skill rows, "
+    f"{len(FACTS_SURFACES)} canonical release-fact surfaces, "
+    f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     "10 structured Git route-boundary scenarios, "
-    "93 canonical installed-runtime inputs, "
+    f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 241 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "
     "13 source-linked cross-route, resume, and delegated-choice contracts, 102 validator parser fixtures, "
     f"version {RELEASE_VERSION}, 2 compatibility evidence records, "
     "12 compatibility evidence negative fixtures, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
-    "55 release-provenance fixtures, 28 immutable external action and image pins "
+    "55 release-provenance fixtures, 30 immutable external action and image pins "
     "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "
     "packaged skills."
 )

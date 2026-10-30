@@ -6,6 +6,7 @@ import base64
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 import urllib.parse
@@ -17,7 +18,10 @@ from axiom_validation.manifests import catalog_source
 from axiom_validation.release_pipeline import (
     CATALOG_REQUIRED_CHECKS,
     CREATED_TAG_CHECK,
+    EXPECTED_WORKFLOW,
+    PIPELINE_JOB_NAMES,
     PUBLISHED_RELEASE_CHECK,
+    REHEARSAL_COMMANDS,
     REQUIRED_MAIN_CHECKS,
     WORKFLOW_PATH,
     Clock,
@@ -27,9 +31,11 @@ from axiom_validation.release_pipeline import (
     check_release_pipeline_workflow_contract,
     check_release_pipeline_workflow_text,
     immediate_successors,
+    rehearse_catalog_handoff,
     run_candidate,
     run_catalog,
     run_publish,
+    wait_for_settled_checks,
 )
 from axiom_validation.release_evidence import MARKETPLACE_CATALOGS
 from axiom_validation.release_tag_controller import GITHUB_ACTIONS_APP_ID
@@ -131,6 +137,10 @@ class FakeGitHub:
         self.extra_dispatch_runs = 0
         self.failing_checks: set[str] = set()
         self.catalog_tag = "v0.20.0"
+        # Another workflow on the same commit, such as code scanning, that finishes a
+        # few check reads after the required checks do.
+        self.sibling_checks: dict[str, str] = {"Analyze (python)": "success"}
+        self.sibling_pending_reads = 3
 
     def _path(self, path: str) -> tuple[str, dict[str, str]]:
         parsed = urllib.parse.urlsplit(path)
@@ -145,7 +155,7 @@ class FakeGitHub:
             status, conclusion = "in_progress", None
         else:
             status, conclusion = "completed", "success"
-        return [
+        runs = [
             check_run(
                 10 + index,
                 name,
@@ -155,6 +165,22 @@ class FakeGitHub:
             )
             for index, name in enumerate(REQUIRED_MAIN_CHECKS)
         ]
+        # The pipeline's own job never completes while it waits.
+        runs.append(check_run(40, "Publish release", commit, "in_progress", None))
+        settled = self.sibling_pending_reads == 0
+        if not settled:
+            self.sibling_pending_reads -= 1
+        runs.extend(
+            check_run(
+                80 + index,
+                name,
+                commit,
+                "completed" if settled else "in_progress",
+                sibling_conclusion if settled else None,
+            )
+            for index, (name, sibling_conclusion) in enumerate(self.sibling_checks.items())
+        )
+        return runs
 
     def get(self, path: str, *, allow_not_found: bool = False) -> Any:
         route, query = self._path(path)
@@ -279,6 +305,24 @@ def render_inputs(root: Path, commit: str, version: str, tag: str) -> tuple[str,
     return "rendered body\n", b'{"policy":true}', f"axiom-v{version}-release-policy-{'a' * 64}.json"
 
 
+def no_rehearsal(root: Path, commit: str, version: str, tag: str, *, today: str) -> None:
+    raise AssertionError(f"no catalog handoff rehearsal was expected for {tag}")
+
+
+class SettledChecksApi:
+    """Serve successive check-run pages; the last page repeats."""
+
+    def __init__(self, *pages: list[dict[str, Any]]) -> None:
+        self.pages = list(pages)
+        self.reads = 0
+
+    def get(self, path: str, *, allow_not_found: bool = False) -> Any:
+        assert path.endswith("/check-runs?filter=latest&per_page=100&page=1"), path
+        runs = self.pages.pop(0) if len(self.pages) > 1 else self.pages[0]
+        self.reads += 1
+        return {"total_count": len(runs), "check_runs": runs}
+
+
 class ReleasePipelineTests(unittest.TestCase):
     def setUp(self) -> None:
         self.directory = tempfile.TemporaryDirectory()
@@ -298,6 +342,44 @@ class ReleasePipelineTests(unittest.TestCase):
         failures: list[str] = []
         self.assertIsNotNone(check_release_pipeline_workflow_contract(failures))
         self.assertEqual([], failures)
+
+    def test_pipeline_job_names_match_the_workflow_contract(self):
+        self.assertEqual(
+            tuple(job["name"] for job in EXPECTED_WORKFLOW["jobs"].values()),
+            PIPELINE_JOB_NAMES,
+        )
+
+    def test_rehearsal_commands_are_the_contributor_checks(self):
+        self.assertEqual(
+            (
+                ("scripts/check-publication.py",),
+                ("-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"),
+            ),
+            REHEARSAL_COMMANDS,
+        )
+
+    def test_settled_wait_covers_sibling_checks_but_not_the_pipeline_jobs(self):
+        commit = "f" * 40
+        own_job = check_run(1, "Publish release", commit, "in_progress", None)
+        sibling_running = check_run(2, "Analyze (python)", commit, "in_progress", None)
+        sibling_done = check_run(2, "Analyze (python)", commit, "completed", "success")
+        skipped = check_run(3, "Release candidate", commit, "completed", "skipped")
+        foreign = {**check_run(4, "Other app", commit, "in_progress", None), "app": {"id": 999}}
+        api = SettledChecksApi([own_job, sibling_running, skipped, foreign], [own_job, sibling_done, skipped, foreign])
+        clock = FakeClock()
+        evidence = wait_for_settled_checks(api, REPOSITORY, commit, clock, "main checks")
+        self.assertEqual({"Analyze (python)": 2}, evidence)
+        self.assertEqual(2, api.reads)
+        self.assertGreater(clock.current, 0)
+
+        failed = check_run(2, "Analyze (python)", commit, "completed", "failure")
+        with self.assertRaisesRegex(PipelineError, r"'Analyze \(python\)' concluded 'failure'"):
+            wait_for_settled_checks(SettledChecksApi([own_job, failed]), REPOSITORY, commit, FakeClock(), "main checks")
+
+        with self.assertRaisesRegex(PipelineError, r"timed out waiting for Analyze \(python\)"):
+            wait_for_settled_checks(
+                SettledChecksApi([own_job, sibling_running]), REPOSITORY, commit, FakeClock(), "main checks", timeout=30
+            )
 
     def test_workflow_mutations_are_rejected(self):
         original = WORKFLOW_PATH.read_text(encoding="utf-8")
@@ -322,6 +404,15 @@ class ReleasePipelineTests(unittest.TestCase):
                 "      checks: read\n      contents: write\n",
                 "      checks: write\n      contents: write\n",
             ),
+            "candidate without Node.js for the rehearsal": original.replace(
+                "      - name: Set up Node.js\n"
+                "        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6\n"
+                "        with:\n"
+                '          node-version: "24.19.0"\n'
+                "          package-manager-cache: false\n\n",
+                "",
+                1,
+            ),
         }
         for label, text in mutations.items():
             with self.subTest(label=label):
@@ -345,12 +436,18 @@ class ReleasePipelineTests(unittest.TestCase):
             head_commit=head,
             reporter=self.reporter,
             render_body=lambda *_: self.fail("no body for a non-release"),
+            rehearse=no_rehearsal,
         )
         self.assertEqual("not-a-release", outcome)
         self.assertIn("Not a release candidate", (self.reports / "summary.md").read_text())
 
-    def test_candidate_previews_the_next_version(self):
+    def test_candidate_previews_the_next_version_and_rehearses_its_handoff(self):
         base, head = commit_versions(self.root, ("0.20.0", "0.21.0"))
+        rehearsals: list[tuple[Path, str, str, str, str]] = []
+
+        def rehearse(root: Path, commit: str, version: str, tag: str, *, today: str) -> None:
+            rehearsals.append((root, commit, version, tag, today))
+
         outcome = run_candidate(
             root=self.root,
             api=FakeGitHub(head),
@@ -359,11 +456,34 @@ class ReleasePipelineTests(unittest.TestCase):
             head_commit=head,
             reporter=self.reporter,
             render_body=lambda root, commit, version: f"notes for {version} at {commit}\n",
+            rehearse=rehearse,
+            today="2026-11-02",
         )
         self.assertEqual("release-candidate", outcome)
+        self.assertEqual([(self.root, head, "0.21.0", "v0.21.0", "2026-11-02")], rehearsals)
         summary = (self.reports / "summary.md").read_text()
         self.assertIn("## Release candidate v0.21.0", summary)
+        self.assertIn("| Catalog handoff rehearsal | passed on this head |", summary)
         self.assertIn(f"notes for 0.21.0 at {head}", summary)
+
+    def test_candidate_stops_when_its_handoff_rehearsal_fails(self):
+        base, head = commit_versions(self.root, ("0.20.0", "0.21.0"))
+
+        def rehearse(root: Path, commit: str, version: str, tag: str, *, today: str) -> None:
+            raise PipelineError(f"the rehearsed catalog handoff for {tag} fails `python -B x`")
+
+        with self.assertRaisesRegex(PipelineError, "rehearsed catalog handoff for v0.21.0"):
+            run_candidate(
+                root=self.root,
+                api=FakeGitHub(head),
+                repository=REPOSITORY,
+                base_commit=base,
+                head_commit=head,
+                reporter=self.reporter,
+                render_body=lambda root, commit, version: "notes\n",
+                rehearse=rehearse,
+            )
+        self.assertFalse((self.reports / "summary.md").exists())
 
     def test_candidate_rejects_skipped_or_stacked_versions(self):
         base, head = commit_versions(self.root, ("0.20.0", "0.22.0"))
@@ -375,6 +495,7 @@ class ReleasePipelineTests(unittest.TestCase):
                 base_commit=base,
                 head_commit=head,
                 reporter=self.reporter,
+                rehearse=no_rehearsal,
             )
         stacked_root = Path(self.directory.name) / "stacked"
         stacked_root.mkdir()
@@ -387,11 +508,19 @@ class ReleasePipelineTests(unittest.TestCase):
                 base_commit=base,
                 head_commit=head,
                 reporter=self.reporter,
+                rehearse=no_rehearsal,
             )
 
     def test_publish_runs_every_stage_once_in_order(self):
         (commit,) = commit_versions(self.root, ("0.21.0",))
         api = FakeGitHub(commit)
+
+        def rehearse(root: Path, rehearsed_commit: str, version: str, tag: str, *, today: str) -> None:
+            # The rehearsal runs after every sibling check settled and before any mutation.
+            self.assertEqual(0, api.sibling_pending_reads)
+            self.assertEqual((self.root, commit, "0.21.0"), (root, rehearsed_commit, version))
+            api.mutations.append(("REHEARSE", tag))
+
         outputs = run_publish(
             root=self.root,
             api=api,
@@ -400,6 +529,7 @@ class ReleasePipelineTests(unittest.TestCase):
             reporter=self.reporter,
             clock=FakeClock(),
             render_inputs=render_inputs,
+            rehearse=rehearse,
         )
         dispatched = [run["workflow"] for run in sorted(api.runs.values(), key=lambda run: run["id"])]
         self.assertEqual(
@@ -412,6 +542,7 @@ class ReleasePipelineTests(unittest.TestCase):
         )
         self.assertEqual(
             [
+                ("REHEARSE", "v0.21.0"),
                 ("POST", "/actions/workflows/create-protected-release-tag.yml/dispatches"),
                 ("POST", "/releases"),
                 ("UPLOAD", f"axiom-v0.21.0-release-policy-{'a' * 64}.json"),
@@ -426,6 +557,75 @@ class ReleasePipelineTests(unittest.TestCase):
             {"version": "0.21.0", "tag": "v0.21.0", "commit": commit, "catalog": "pending"},
             {key: value for key, value in self.outputs().items() if key != "release-id"},
         )
+        self.assertIn(
+            "| Catalog handoff rehearsal | passed before the first mutation |",
+            (self.reports / "summary.md").read_text(),
+        )
+
+    def test_publish_rehearses_before_the_publisher_when_the_tag_already_exists(self):
+        (commit,) = commit_versions(self.root, ("0.21.0",))
+        api = FakeGitHub(commit)
+        api.tags["v0.21.0"] = commit
+        api.checks[commit] = [check_run(50, CREATED_TAG_CHECK, commit, "completed", "success")]
+        api.sibling_pending_reads = 0
+        run_publish(
+            root=self.root,
+            api=api,
+            repository=REPOSITORY,
+            commit=commit,
+            reporter=self.reporter,
+            clock=FakeClock(),
+            render_inputs=render_inputs,
+            rehearse=lambda root, rehearsed, version, tag, *, today: api.mutations.append(("REHEARSE", tag)),
+        )
+        self.assertEqual(
+            [
+                ("REHEARSE", "v0.21.0"),
+                ("POST", "/releases"),
+                ("UPLOAD", f"axiom-v0.21.0-release-policy-{'a' * 64}.json"),
+                ("POST", "/actions/workflows/publish-immutable-release.yml/dispatches"),
+                ("POST", "/actions/workflows/release-signature-guard.yml/dispatches"),
+            ],
+            api.mutations,
+        )
+
+    def test_publish_stops_when_the_rehearsed_handoff_fails(self):
+        (commit,) = commit_versions(self.root, ("0.21.0",))
+        api = FakeGitHub(commit)
+
+        def rehearse(root: Path, rehearsed: str, version: str, tag: str, *, today: str) -> None:
+            raise PipelineError(f"the rehearsed catalog handoff for {tag} fails `python -B x`")
+
+        with self.assertRaisesRegex(PipelineError, "rehearsed catalog handoff for v0.21.0"):
+            run_publish(
+                root=self.root,
+                api=api,
+                repository=REPOSITORY,
+                commit=commit,
+                reporter=self.reporter,
+                clock=FakeClock(),
+                render_inputs=render_inputs,
+                rehearse=rehearse,
+            )
+        self.assertEqual([], api.mutations)
+        self.assertNotIn("v0.21.0", api.tags)
+
+    def test_publish_stops_on_a_failed_sibling_check(self):
+        (commit,) = commit_versions(self.root, ("0.21.0",))
+        api = FakeGitHub(commit)
+        api.sibling_checks = {"Analyze (python)": "failure"}
+        with self.assertRaisesRegex(PipelineError, r"'Analyze \(python\)' concluded 'failure'"):
+            run_publish(
+                root=self.root,
+                api=api,
+                repository=REPOSITORY,
+                commit=commit,
+                reporter=self.reporter,
+                clock=FakeClock(),
+                render_inputs=render_inputs,
+                rehearse=no_rehearsal,
+            )
+        self.assertEqual([], api.mutations)
 
     def test_publish_resumes_without_mutation_when_complete(self):
         (commit,) = commit_versions(self.root, ("0.21.0",))
@@ -443,9 +643,14 @@ class ReleasePipelineTests(unittest.TestCase):
             reporter=self.reporter,
             clock=FakeClock(),
             render_inputs=render_inputs,
+            rehearse=no_rehearsal,
         )
         self.assertEqual([], api.mutations)
         self.assertEqual("current", outputs["catalog"])
+        self.assertIn(
+            "| Catalog handoff rehearsal | not needed: the Release was already final |",
+            (self.reports / "summary.md").read_text(),
+        )
 
     def test_publish_stops_before_mutation_when_main_moved(self):
         (commit,) = commit_versions(self.root, ("0.21.0",))
@@ -460,6 +665,7 @@ class ReleasePipelineTests(unittest.TestCase):
                 reporter=self.reporter,
                 clock=FakeClock(),
                 render_inputs=render_inputs,
+                rehearse=no_rehearsal,
             )
         self.assertEqual([], api.mutations)
 
@@ -476,6 +682,7 @@ class ReleasePipelineTests(unittest.TestCase):
                 reporter=self.reporter,
                 clock=FakeClock(),
                 render_inputs=render_inputs,
+                rehearse=no_rehearsal,
             )
         self.assertEqual([], api.mutations)
 
@@ -492,6 +699,7 @@ class ReleasePipelineTests(unittest.TestCase):
                 reporter=self.reporter,
                 clock=FakeClock(),
                 render_inputs=render_inputs,
+                rehearse=lambda *arguments, **options: None,
             )
         self.assertNotIn("v0.21.0", api.tags)
 
@@ -624,6 +832,49 @@ class CatalogHandoffTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.directory.cleanup()
+
+    def worktree_count(self) -> int:
+        return len(git(self.root, "worktree", "list", "--porcelain").strip().split("\n\n"))
+
+    def test_rehearsal_applies_the_handoff_in_a_disposable_worktree(self):
+        main = prepare_handoff_repository(self.root, "0.21.0")
+        probe_output = Path(self.directory.name) / "probe.txt"
+        probe = (
+            "-c",
+            "import json, pathlib, sys; "
+            "changelog = pathlib.Path('CHANGELOG.md').read_text(); "
+            "assert '## 0.21.0 - 2026-11-03\\n' in changelog, changelog[:200]; "
+            "catalog = json.loads(pathlib.Path('.claude-plugin/marketplace.json').read_text()); "
+            "assert catalog['plugins'][0]['source']['ref'] == 'v0.21.0', catalog; "
+            "pathlib.Path(sys.argv[1]).write_text(str(pathlib.Path.cwd()))",
+            str(probe_output),
+        )
+        rehearse_catalog_handoff(
+            self.root, main, "0.21.0", "v0.21.0", today="2026-11-03", commands=(probe,)
+        )
+        rehearsal_tree = Path(probe_output.read_text())
+        self.assertNotEqual(self.root.resolve(), rehearsal_tree.resolve())
+        self.assertFalse(rehearsal_tree.exists())
+        self.assertEqual("", git(self.root, "status", "--porcelain"))
+        self.assertIn("## 0.21.0 - unreleased\n", (self.root / "CHANGELOG.md").read_text())
+        self.assertEqual(1, self.worktree_count())
+
+    def test_rehearsal_failure_names_the_command_and_removes_the_worktree(self):
+        main = prepare_handoff_repository(self.root, "0.21.0")
+        failing = ("-c", "import sys; print('handoff checks failed', file=sys.stderr); sys.exit(3)")
+        with self.assertRaisesRegex(
+            PipelineError, r"rehearsed catalog handoff for v0\.21\.0 fails `python -B -c"
+        ) as raised:
+            rehearse_catalog_handoff(
+                self.root, main, "0.21.0", "v0.21.0", today="2026-11-03", commands=(failing,)
+            )
+        self.assertIn("handoff checks failed", str(raised.exception))
+        self.assertEqual("", git(self.root, "status", "--porcelain"))
+        self.assertEqual(1, self.worktree_count())
+
+    def test_rehearsal_rejects_a_tag_that_does_not_name_the_version(self):
+        with self.assertRaisesRegex(PipelineError, "does not name version"):
+            rehearse_catalog_handoff(self.root, "1" * 40, "0.21.0", "v0.22.0", today="2026-11-03")
 
     def test_handoff_rejects_a_superseded_version(self):
         prepare_handoff_repository(self.root, "0.22.0")

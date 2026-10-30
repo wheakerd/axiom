@@ -13,12 +13,24 @@ from axiom_validation.cases.documentation import (
 )
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.documentation import (
+    GENERATED_MARKER,
     check_documentation,
     check_lifecycle_text,
     check_skill_reference_inventory_text,
     check_task_navigation_text,
+    discover_markdown,
     is_current_document,
 )
+from axiom_validation.markdown import fenced_blocks_and_masked_text
+
+
+def generated_region_count(paths: tuple[Path, ...]) -> int:
+    """Count closed generated regions outside code fences, independently of the validator."""
+    count = 0
+    for path in paths:
+        _, searchable = fenced_blocks_and_masked_text(path.read_text(encoding="utf-8"))
+        count += sum(1 for match in GENERATED_MARKER.finditer(searchable) if match.group(2) == "end")
+    return count
 
 
 class DocumentationValidationTests(unittest.TestCase):
@@ -26,10 +38,14 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         report = check_documentation(failures)
         self.assertEqual([], failures)
-        self.assertEqual(168, report.markdown_count)
+        # The Markdown and generated-region totals grow with every release note, so
+        # they are recomputed here; the current and indexed document totals change
+        # only with a deliberate documentation change.
+        markdown = discover_markdown(REPOSITORY_ROOT)
+        self.assertEqual(len(markdown), report.markdown_count)
         self.assertEqual(25, report.current_document_count)
         self.assertEqual(19, report.indexed_document_count)
-        self.assertEqual(50, report.generated_region_count)
+        self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
 
     def test_named_negative_fixtures_are_all_rejected(self):
