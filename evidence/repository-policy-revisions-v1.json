@@ -896,6 +896,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.22.1.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 113,
+      "recordedOn": "2026-10-29",
+      "baselineCommit": "23145ece187607897bd4c07469ada9c6c0888225",
+      "sourceIssue": null,
+      "summary": "Harden the Release pipeline with a settled-check wait and a catalog handoff rehearsal before its first irreversible step, and derive release-varying test totals from their owners.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }

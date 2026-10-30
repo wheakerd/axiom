@@ -2,8 +2,11 @@
 
 A pull request that changes the Codex manifest version is a release candidate;
 every other pull request leaves the pipeline idle. On the candidate pull
-request the pipeline checks the version step and previews the Release body.
-After the merge it waits for the required checks on the exact main commit,
+request the pipeline checks the version step, previews the Release body, and
+rehearses the catalog handoff on the pull-request head. After the merge it
+waits for the required checks and every other check on the exact main commit,
+rehearses the catalog handoff again in a disposable worktree of that commit so
+the post-publication step is proven before the first irreversible one,
 dispatches the protected tag controller, stages the exact Draft, dispatches the
 immutable publisher and the published-release observation, and then proposes
 and merges the marketplace catalog handoff for the verified Latest release.
@@ -59,6 +62,17 @@ CATALOG_REQUIRED_CHECKS = MAIN_REQUIRED_CHECKS
 CREATED_TAG_CHECK = "Verify created release tag"
 PUBLISHED_RELEASE_CHECK = "Observe published immutable release"
 CATALOG_BRANCH_PREFIX = "catalog/"
+# The pipeline's own jobs stay in progress while it waits, so the settled-check
+# gate below never waits for them.
+PIPELINE_JOB_NAMES = ("Release candidate", "Publish release", "Advance marketplace catalogs")
+SETTLED_CONCLUSIONS = frozenset({"success", "skipped", "neutral"})
+# The contributor checks that the rehearsed catalog handoff must pass, each run
+# as ``python -B <command>`` from the rehearsal tree.
+REHEARSAL_COMMANDS: tuple[tuple[str, ...], ...] = (
+    ("scripts/check-publication.py",),
+    ("-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"),
+)
+REHEARSAL_OUTPUT_LIMIT = 4000
 CHANGELOG_RELATIVE = "CHANGELOG.md"
 LEDGER_RELATIVE = "evidence/repository-policy-revisions-v1.json"
 IDENTITY_RELATIVE = "evidence/runtime-identity.json"
@@ -424,6 +438,49 @@ def wait_for_checks(
         clock.sleep(POLL_SECONDS)
 
 
+def wait_for_settled_checks(
+    api: Api,
+    repository: str,
+    commit: str,
+    clock: Clock,
+    label: str,
+    *,
+    timeout: float = CHECK_TIMEOUT_SECONDS,
+) -> dict[str, int]:
+    """Wait until every other GitHub Actions check on the commit finished without failing.
+
+    The required checks gate the release by name; this gate adds every other check
+    that GitHub started for the same commit, such as code scanning, so the pipeline
+    creates no tag and publishes no Release while a check on that commit is still
+    running or has failed. The pipeline's own jobs are excluded because they stay in
+    progress while it waits.
+    """
+    deadline = clock.now() + timeout
+    while True:
+        evidence: dict[str, int] = {}
+        pending: list[str] = []
+        for run in list_check_runs(api, repository, commit):
+            name = run.get("name")
+            if (run.get("app") or {}).get("id") != GITHUB_ACTIONS_APP_ID or name in PIPELINE_JOB_NAMES:
+                continue
+            if run.get("status") != "completed":
+                pending.append(str(name))
+                continue
+            _require(
+                run.get("conclusion") in SETTLED_CONCLUSIONS,
+                f"{label}: check {name!r} concluded {run.get('conclusion')!r} on {commit}; "
+                "the pipeline publishes nothing while a check on the release commit has failed",
+            )
+            evidence[str(name)] = run.get("id")
+        if not pending:
+            return evidence
+        _require(
+            clock.now() < deadline,
+            f"{label}: timed out waiting for {', '.join(sorted(set(pending)))} on {commit}",
+        )
+        clock.sleep(POLL_SECONDS)
+
+
 def check_succeeded(api: Api, repository: str, commit: str, name: str) -> bool:
     run = _actions_check(list_check_runs(api, repository, commit), name)
     return bool(run and run.get("status") == "completed" and run.get("conclusion") == "success")
@@ -634,6 +691,50 @@ def catalog_status(api: Api, repository: str, tag: str, ref: str = "main") -> st
     return "current"
 
 
+def rehearse_catalog_handoff(
+    root: Path,
+    commit: str,
+    version: str,
+    tag: str,
+    *,
+    today: str,
+    commands: tuple[tuple[str, ...], ...] = REHEARSAL_COMMANDS,
+) -> None:
+    """Prove the post-publication catalog handoff before any tag or Release exists.
+
+    The handoff is applied to a disposable worktree of the exact commit, with the
+    rehearsal date standing in for the publication date, and the contributor checks
+    run on that tree. A failure here stops the pipeline before its first irreversible
+    step instead of after the immutable Release, and leaves the checkout untouched.
+    """
+    validate_commit(commit, "rehearsal commit")
+    _require(validate_tag(tag) == version, f"tag {tag} does not name version {version}")
+    with tempfile.TemporaryDirectory(prefix="axiom-release-rehearsal-") as directory:
+        tree = Path(directory) / "tree"
+        git(root, "worktree", "add", "--detach", str(tree), commit)
+        try:
+            apply_catalog_handoff(
+                tree, tag=tag, release_date=today, baseline_commit=commit, recorded_on=today
+            )
+            for command in commands:
+                result = subprocess.run(
+                    [sys.executable, "-B", *command],
+                    cwd=tree,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    output = (result.stderr or result.stdout).strip()[-REHEARSAL_OUTPUT_LIMIT:]
+                    raise PipelineError(
+                        f"the rehearsed catalog handoff for {tag} fails "
+                        f"`python -B {' '.join(command)}`; fix the candidate before any "
+                        f"tag or Release exists:\n{output}"
+                    )
+        finally:
+            git(root, "worktree", "remove", "--force", str(tree))
+
+
 def run_candidate(
     *,
     root: Path,
@@ -643,8 +744,10 @@ def run_candidate(
     head_commit: str,
     reporter: Reporter,
     render_body: Callable[[Path, str, str], str] = render_release_body_at,
+    rehearse: Callable[..., None] = rehearse_catalog_handoff,
+    today: str | None = None,
 ) -> str:
-    """Classify a pull request and preview its Release when it changes the version."""
+    """Classify a pull request, preview its Release, and rehearse its catalog handoff."""
     validate_repository(repository)
     validate_commit(base_commit, "base commit")
     validate_commit(head_commit, "head commit")
@@ -670,14 +773,17 @@ def run_candidate(
     _require(read_tag_commit(api, repository, head_tag) is None, f"tag {head_tag} already exists")
     _require(find_release(api, repository, head_tag) is None, f"a Release already uses {head_tag}")
     body = render_body(root, head_commit, head_version)
+    rehearse(root, head_commit, head_version, head_tag, today=today or utc_today())
     reporter.summary(
         f"## Release candidate {head_tag}\n\n"
         "| Field | Value |\n| --- | --- |\n"
         f"| Version | `{base_version}` to `{head_version}` |\n"
         f"| Tag | `{head_tag}` |\n"
-        f"| Head commit | `{head_commit}` |\n\n"
+        f"| Head commit | `{head_commit}` |\n"
+        "| Catalog handoff rehearsal | passed on this head |\n\n"
         f"Merging this pull request publishes `{head_tag}` through the Release "
-        "pipeline after the required checks pass on the merged main commit.\n\n"
+        "pipeline after every check passes on the merged main commit and the catalog "
+        "handoff is rehearsed again on that commit.\n\n"
         "### Release body preview\n\n"
         f"{body}\n"
     )
@@ -695,14 +801,22 @@ def run_publish(
     render_inputs: Callable[
         [Path, str, str, str], tuple[str, bytes, str]
     ] = render_release_inputs,
+    rehearse: Callable[..., None] = rehearse_catalog_handoff,
 ) -> dict[str, str]:
-    """Create the tag, publish the immutable Latest release, and observe it."""
+    """Create the tag, publish the immutable Latest release, and observe it.
+
+    Nothing irreversible happens while a check on the release commit is still
+    running or has failed, or while the rehearsed catalog handoff fails a repository
+    check: the rehearsal runs before the tag, or before the publisher when the tag
+    already exists from an earlier attempt.
+    """
     validate_repository(repository)
     validate_commit(commit, "pipeline commit")
     version = manifest_version_at(root, commit)
     tag = f"v{version}"
     release = find_release(api, repository, tag)
     tag_commit = read_tag_commit(api, repository, tag)
+    rehearsed = False
 
     if not _is_final_release(release, tag):
         _require(
@@ -727,6 +841,9 @@ def run_publish(
                     f"{tag} must be newer than the current Latest {latest.get('tag_name')}",
                 )
             wait_for_checks(api, repository, commit, REQUIRED_MAIN_CHECKS, clock, "main checks")
+            wait_for_settled_checks(api, repository, commit, clock, "main checks")
+            rehearse(root, commit, version, tag, today=utc_today())
+            rehearsed = True
             dispatch_and_wait(
                 api,
                 repository,
@@ -741,6 +858,10 @@ def run_publish(
             _require(tag_commit == commit, f"{tag} must target {commit} after the controller run")
         require_on_main_history(api, repository, tag_commit)
         wait_for_checks(api, repository, tag_commit, (CREATED_TAG_CHECK,), clock, "created tag")
+        wait_for_settled_checks(api, repository, tag_commit, clock, "created tag")
+        if not rehearsed:
+            rehearse(root, tag_commit, version, tag, today=utc_today())
+            rehearsed = True
         body, policy, asset_name = render_inputs(root, tag_commit, version, tag)
         release = stage_draft(
             api,
@@ -801,6 +922,8 @@ def run_publish(
         "| Immutable | `true` |\n"
         "| GitHub Latest | `true` |\n"
         f"| `{PUBLISHED_RELEASE_CHECK}` | passed |\n"
+        "| Catalog handoff rehearsal | "
+        f"{'passed before the first mutation' if rehearsed else 'not needed: the Release was already final'} |\n"
         f"| Marketplace catalogs | {status} |\n"
     )
     return outputs
@@ -1064,6 +1187,7 @@ def run_catalog(
     _require(type(number) is int and number > 0, "the catalog pull request was not created")
     _require((pull.get("head") or {}).get("sha") == commit, "the catalog pull request head drifted")
     wait_for_checks(read_api, repository, commit, CATALOG_REQUIRED_CHECKS, clock, "catalog checks")
+    wait_for_settled_checks(read_api, repository, commit, clock, "catalog checks")
     latest = read_api.get(f"/repos/{repository}/releases/latest")
     _require(_is_final_release(latest, tag), f"GitHub Latest changed away from {tag}; not merging")
     _require(read_main_commit(read_api, repository) == main, "main moved; rerun after inspection")
@@ -1120,6 +1244,13 @@ SETUP_PYTHON_STEP = {
     "uses": SETUP_PYTHON_ACTION,
     "with": {"python-version": "3.14.7"},
 }
+# The publication aggregate validates the JavaScript release guard with Node.js, so
+# every job that rehearses or validates the catalog handoff sets it up.
+SETUP_NODE_STEP = {
+    "name": "Set up Node.js",
+    "uses": SETUP_NODE_ACTION,
+    "with": {"node-version": "24.19.0", "package-manager-cache": "false"},
+}
 EXPECTED_WORKFLOW = {
     "name": "Release pipeline",
     "on": {
@@ -1150,6 +1281,7 @@ EXPECTED_WORKFLOW = {
                     },
                 },
                 SETUP_PYTHON_STEP,
+                SETUP_NODE_STEP,
                 {
                     "name": "Check the version step and preview the Release body",
                     "env": {
@@ -1183,6 +1315,7 @@ EXPECTED_WORKFLOW = {
                     },
                 },
                 SETUP_PYTHON_STEP,
+                SETUP_NODE_STEP,
                 {
                     "name": "Tag, publish, and observe the release",
                     "id": "publish",
@@ -1211,11 +1344,7 @@ EXPECTED_WORKFLOW = {
                     },
                 },
                 SETUP_PYTHON_STEP,
-                {
-                    "name": "Set up Node.js",
-                    "uses": SETUP_NODE_ACTION,
-                    "with": {"node-version": "24.19.0", "package-manager-cache": "false"},
-                },
+                SETUP_NODE_STEP,
                 {
                     "name": "Mint the catalog handoff App token",
                     "id": "catalog-app-token",
@@ -1315,9 +1444,12 @@ __all__ = (
     "CATALOG_REQUIRED_CHECKS",
     "CREATED_TAG_CHECK",
     "Clock",
+    "EXPECTED_WORKFLOW",
     "GitHubClient",
+    "PIPELINE_JOB_NAMES",
     "PUBLISHED_RELEASE_CHECK",
     "PipelineError",
+    "REHEARSAL_COMMANDS",
     "REQUIRED_MAIN_CHECKS",
     "Reporter",
     "WORKFLOW_PATH",
@@ -1328,10 +1460,12 @@ __all__ = (
     "dispatch_and_wait",
     "immediate_successors",
     "manifest_version_at",
+    "rehearse_catalog_handoff",
     "run_candidate",
     "run_catalog",
     "run_publish",
     "stage_draft",
     "utc_today",
     "wait_for_checks",
+    "wait_for_settled_checks",
 )

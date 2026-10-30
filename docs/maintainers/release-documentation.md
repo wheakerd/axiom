@@ -72,9 +72,9 @@ A pull request that changes the plugin version in the Codex manifest is a releas
 
 The [Release pipeline](../../.github/workflows/release-pipeline.yml) then publishes the version from CI without a manual dispatch:
 
-1. On the pull request, `Release candidate` checks the version step and the absent tag and Release, and previews the exact Release body in its job summary.
-2. After the squash merge, `Publish release` waits for the required checks and `Verify signed main history` on the merged commit, dispatches the protected tag controller, waits for `Verify created release tag`, stages the Draft with the rendered body and release-policy asset, dispatches the immutable publisher on the tag, and dispatches the published-release observation.
-3. `Advance marketplace catalogs` then completes the [Marketplace Publication](#marketplace-publication) handoff.
+1. On the pull request, `Release candidate` checks the version step and the absent tag and Release, previews the exact Release body in its job summary, and rehearses the catalog handoff on the pull-request head: it applies the catalog advance to a disposable worktree of that head and runs the publication aggregate and the unit tests there.
+2. After the squash merge, `Publish release` waits for the required checks, `Verify signed main history`, and every other check on the merged commit, rehearses the catalog handoff again on that exact commit, dispatches the protected tag controller, waits for `Verify created release tag` and the other tag-triggered checks, stages the Draft with the rendered body and release-policy asset, dispatches the immutable publisher on the tag, and dispatches the published-release observation. The rehearsal runs before the first irreversible step, so a release whose handoff would fail stops before any tag or Release exists.
+3. `Advance marketplace catalogs` then completes the [Marketplace Publication](#marketplace-publication) handoff; it merges only after every check on the handoff commit has finished without failing.
 
 The pipeline runs no AI model or agent. Every step reads current GitHub state before it acts, so rerunning a failed job, or dispatching the workflow on `main`, resumes the earliest unfinished step without repeating a completed one. A stopped job names the object to inspect; resolve it before any retry. [Repository Governance](../repository-governance.md#release-pipeline) records the workflow's permissions and fail-closed conditions.
 

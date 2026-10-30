@@ -6,6 +6,21 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## Repository policy revision 113
+
+### Changed
+
+- The Release pipeline proves its post-publication steps before its first irreversible one. `Publish release` waits for every check on the release commit, not only the required ones, and rehearses the catalog handoff in a disposable worktree of that commit, running the publication aggregate and the unit tests on the advanced catalogs, before it dispatches the protected tag controller. The same rehearsal runs on the release pull request, and the catalog job merges only after every check on the handoff commit has finished.
+- Repository tests derive the totals that grow with every release, such as the required public files, the Markdown files, the release-fact surfaces, and the installed-runtime inputs, from the production validators instead of pinning them; the current routing-context record is checked for consistency with the measured bytes; and the `agent-plugin-architect` description is pinned by its route-boundary sentences instead of verbatim.
+
+### Behavioral impact
+
+Repository maintenance only. A release whose catalog handoff would fail now stops before any tag or Release exists, and a release pull request shows that failure before the merge. A release that changes no validator behavior no longer requires editing the repository tests. The installed runtime digest is unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 112
 
 ### Changed

@@ -153,8 +153,15 @@ SKILL_REFERENCE_ORDER = (
     "reversible-system-change",
 )
 INSTRUCTION_MAX_BYTES = 8192
-AGENT_PLUGIN_ARCHITECT_DESCRIPTION = (
-"Design, initialize, audit, migrate, maintain, or evaluate a packaged Codex or Claude Code plugin's architecture across shared Skills, route ownership, manifests, marketplace wrappers, hooks, and version-bound compatibility evidence. Use only for explicit packaged agent-plugin architecture work. Do not use for evaluating or reviewing an individual Skill or Skill proposal, repository-local AGENTS.md, .agents/skills, or .claude/skills systems, ordinary source-code or documentation work merely because it is in a plugin repository, host installation, publication, deployment, or Git submission."
+# The accepted narrow route contract of agent-plugin-architect: its description must
+# keep these boundary sentences. Pinning the sentences rather than the full text lets
+# a wording change that keeps the boundary pass without a validator edit.
+AGENT_PLUGIN_ARCHITECT_DESCRIPTION_ANCHORS = (
+    "packaged Codex or Claude Code plugin's architecture",
+    "Use only for explicit packaged agent-plugin architecture work.",
+    "Do not use for evaluating or reviewing an individual Skill or Skill proposal, "
+    "repository-local AGENTS.md, .agents/skills, or .claude/skills systems",
+    "host installation, publication, deployment, or Git submission",
 )
 AGENT_PLUGIN_ARCHITECT_REFERENCES = (
     "references/package-inventory.md",
@@ -449,13 +456,14 @@ def check_skill_contracts(failures: list[str]) -> None:
     architect_root = REPOSITORY_ROOT / "plugin" / "skills" / "agent-plugin-architect"
     architect_main = architect_root / "SKILL.md"
     architect_fields = parse_skill_frontmatter(architect_main, failures)
-    if architect_fields is not None and architect_fields.get(
-        "description"
-    ) != AGENT_PLUGIN_ARCHITECT_DESCRIPTION:
-        failures.append(
-            "plugin/skills/agent-plugin-architect/SKILL.md description drifted from the "
-            "accepted narrow route contract"
-        )
+    if architect_fields is not None:
+        description = " ".join(architect_fields.get("description", "").split())
+        for anchor in AGENT_PLUGIN_ARCHITECT_DESCRIPTION_ANCHORS:
+            if " ".join(anchor.split()) not in description:
+                failures.append(
+                    "plugin/skills/agent-plugin-architect/SKILL.md description drifted from "
+                    f"the accepted narrow route contract: missing {anchor!r}"
+                )
     actual_references = tuple(
         path.relative_to(architect_root).as_posix()
         for path in sorted((architect_root / "references").glob("*.md"))

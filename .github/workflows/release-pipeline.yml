@@ -2,7 +2,11 @@ name: Release pipeline
 
 on:
   # Only a change to the Codex manifest can change the plugin version, so every
-  # other pull request or main commit leaves this workflow idle.
+  # other pull request or main commit leaves this workflow idle. The candidate job
+  # rehearses the catalog handoff on the pull-request head; the publish job waits
+  # for every check on the merged commit and rehearses the handoff again before
+  # it creates the tag, so a release that would fail after publication stops
+  # before anything irreversible exists.
   pull_request:
     branches:
       - main
@@ -43,6 +47,12 @@ jobs:
         with:
           python-version: "3.14.7"
 
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+          package-manager-cache: false
+
       - name: Check the version step and preview the Release body
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -81,6 +91,12 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.14.7"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+          package-manager-cache: false
 
       - name: Tag, publish, and observe the release
         id: publish

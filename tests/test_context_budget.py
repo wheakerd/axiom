@@ -91,14 +91,28 @@ class ContextBudgetTests(unittest.TestCase):
         self.assertIsNone(codex_metric["cachedInputTokens"])
         self.assertIsNone(codex_metric["wallClockMilliseconds"])
         self.assertIsNone(codex_metric["credits"])
+        # The recorded comparison restates the threshold assessment of the measured
+        # bytes, and a reduction experiment exists exactly when the gate shrank from
+        # its predecessor. Which side of a threshold a release lands on is that
+        # release's fact, not an expectation pinned here.
         comparison = current_record["comparison"]
-        self.assertLess(comparison["utf8ByteDelta"], 0)
-        self.assertFalse(comparison["absoluteThresholdReached"])
-        self.assertFalse(comparison["relativeThresholdReached"])
-        self.assertFalse(comparison["meaningfulIncrease"])
-        self.assertEqual("not-required", comparison["reviewStatus"])
-        self.assertIsNone(comparison["justification"])
-        self.assertIsNone(current_record["routingQuality"]["reductionExperiment"])
+        assessment = threshold_assessment(BASELINE_METRICS["utf8Bytes"], current_metrics["utf8Bytes"])
+        self.assertEqual(assessment, {key: comparison[key] for key in assessment})
+        if assessment["meaningfulIncrease"]:
+            self.assertIsInstance(comparison["justification"], str)
+            self.assertGreaterEqual(len(comparison["justification"].strip()), 40)
+        else:
+            self.assertIsNone(comparison["justification"])
+        predecessor = previous_context_budget_candidate(
+            current_record["targetRelease"]["version"], failures
+        )
+        self.assertEqual([], failures)
+        experiment = current_record["routingQuality"]["reductionExperiment"]
+        if predecessor is not None and current_metrics["utf8Bytes"] < predecessor[1]["utf8Bytes"]:
+            self.assertEqual(current_record["candidate"]["sha256"], experiment["after"]["surfaceSha256"])
+            self.assertEqual(predecessor[0], experiment["before"]["surfaceSha256"])
+        else:
+            self.assertIsNone(experiment)
         self.assertTrue(
             all(
                 scenario["hostObservations"][0]["status"] == "not-run"
