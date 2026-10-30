@@ -936,6 +936,14 @@
       "sourceIssue": 219,
       "summary": "Record policy revisions in the ledger only: a rendered Repository Policy Revisions page replaces their changelog entries, which move there unchanged, and the catalog handoff stops writing them.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 118,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "e88e3065da805b27040c97b77f981aede3afe638",
+      "sourceIssue": 220,
+      "summary": "Gate release candidates on checked-in fresh-session routing observation records for changed routes, bound to the runtime digest, and narrow description anchors to authority invariants.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }

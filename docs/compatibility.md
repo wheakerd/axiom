@@ -56,7 +56,7 @@ The table summarizes that record. Read its `targetRelease` and `runtimeIdentity`
 
 A source candidate cannot establish a future signed merge, immutable tag, final workflow result, or post-publication host observation. See [Routing Context Budget](../evals/context-budget/README.md) for the current startup-document measurement and its separate static evidence boundary.
 
-An identical runtime digest may make older evidence relevant to the same bytes, but it does not create a new observation or change the older record's host, version, date, lifecycle, or status.
+An identical runtime digest may make older evidence relevant to the same bytes, but it does not create a new observation or change the older record's host, version, date, lifecycle, or status. From repository policy revision 118, a release candidate that changes a bundled route also carries checked-in fresh-session routing observation records for both hosts under `evals/results/`, as [Candidate Observations](../evals/README.md#candidate-observations) describes; the 0.22.0 and 0.22.1 releases predate that gate.
 
 ## Known Limitations
 

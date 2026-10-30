@@ -232,6 +232,13 @@ from .suite import (
     check_routing_evaluations,
 )
 from .current import collect_current_corpus, current_benchmark_case_ids, check_current_routing_evaluations
+from .candidates import (
+    CANDIDATE_RESULTS_RELATIVE,
+    OBSERVATION_HOSTS,
+    candidate_record_paths,
+    check_candidate_routing_observations,
+    validate_candidate_routing_observation,
+)
 from .external import (
     validate_external_routing_observation,
 )

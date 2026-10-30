@@ -19,20 +19,14 @@ EFFECTIVE_INSTRUCTION_TOKENS = (
     "effective-instructions:reconcile",
     "effective-instructions:reconcile-preview",
 )
+# Description anchors pin only authority invariants: the consent and mode rule of
+# delegation, the explicit-only activation of supervised progress, and the rollback
+# requirement of persistent change. Trigger wording is covered by the routing corpus
+# and fresh-session observations, not by phrase pins (repository policy revision 118).
 ROUTE_SOURCE_ANCHORS = {
-    "clarify-intent": ("ambiguity", "options", "custom"),
-    "delegate-simple-task": ("model", "permission-bypass", "confirmation"),
-    "task-planning": ("plan", "current", "scope"),
-    "continuous-progress": ("explicit invocation only", "compaction", "native scheduling"),
-    "local-web-search": ("local", "cloud-hosted", "execution location"),
-    "agents-architect": ("AGENTS.md", "audit"),
-    "agent-plugin-architect": ("packaged", "shared Skills", "hooks"),
-    "confirm-external-action": ("external", "target", "verify"),
-    "optimize-agent-usage": ("usage", "credits", "context"),
-    "review-axiom-task": ("routing", "authorization", "evidence"),
-    "verify-completion": ("completion", "evidence"),
-    "traceable-git-submit": ("checkpoint", "push"),
-    "reversible-system-change": ("plan", "persistent", "rollback"),
+    "delegate-simple-task": ("consent", "permission-bypass"),
+    "continuous-progress": ("explicit invocation only",),
+    "reversible-system-change": ("rollback",),
 }
 # The startup gate selects from the host's skill list by description; it carries
 # these selection rules instead of a catalog that restates the descriptions.

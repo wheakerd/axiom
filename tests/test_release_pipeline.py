@@ -74,6 +74,50 @@ def git(root: Path, *arguments: str) -> str:
     ).stdout
 
 
+def candidate_fixture(root: Path) -> tuple[str, str]:
+    """Base and head commits where the head changes one bundled route and bumps the version."""
+    git(root, "init", "-q", "-b", "main")
+    shutil.copytree(
+        REPOSITORY_ROOT / "evals", root / "evals", ignore=shutil.ignore_patterns("results")
+    )
+    manifest = root / "plugin" / ".codex-plugin" / "plugin.json"
+    manifest.parent.mkdir(parents=True)
+    skill = root / "plugin" / "skills" / "clarify-intent" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    identity = root / "evidence" / "runtime-identity.json"
+    identity.parent.mkdir(parents=True)
+    manifest.write_text(json.dumps({"name": "axiom", "version": "0.20.0"}) + "\n")
+    skill.write_text("---\nname: clarify-intent\ndescription: Clarify.\n---\n\n# Clarify\n")
+    identity.write_text(json.dumps({"runtimeContract": {"digest": "sha256:" + "a" * 64}}) + "\n")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "-m", "version 0.20.0")
+    base = git(root, "rev-parse", "HEAD").strip()
+    manifest.write_text(json.dumps({"name": "axiom", "version": "0.21.0"}) + "\n")
+    skill.write_text("---\nname: clarify-intent\ndescription: Clarify better.\n---\n\n# Clarify\n")
+    identity.write_text(json.dumps({"runtimeContract": {"digest": "sha256:" + "b" * 64}}) + "\n")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "-m", "version 0.21.0")
+    return base, git(root, "rev-parse", "HEAD").strip()
+
+
+def commit_candidate_records(root: Path, observed_commit: str, version: str = "0.21.0") -> str:
+    """Add passing records for both hosts that bind the observed candidate commit."""
+    from tests.test_current_routing import claude_code_record, current_record
+
+    tree = git(root, "rev-parse", f"{observed_commit}^{{tree}}").strip()
+    for host, record in (("codex", current_record()), ("claude-code", claude_code_record())):
+        record["axiom"] = {
+            "version": version, "tag": None, "commit": observed_commit, "tree": tree,
+            "releaseState": "candidate-unreleased",
+        }
+        path = root / "evals" / "results" / f"v{version}" / host / "linux.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(record, indent=2) + "\n")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "-m", "add candidate observation records")
+    return git(root, "rev-parse", "HEAD").strip()
+
+
 def commit_versions(root: Path, versions: tuple[str, ...]) -> list[str]:
     git(root, "init", "-q", "-b", "main")
     manifest = root / "plugin" / ".codex-plugin" / "plugin.json"
@@ -466,6 +510,51 @@ class ReleasePipelineTests(unittest.TestCase):
         self.assertIn("## Release candidate v0.21.0", summary)
         self.assertIn("| Catalog handoff rehearsal | passed on this head |", summary)
         self.assertIn(f"notes for 0.21.0 at {head}", summary)
+
+    def test_candidate_requires_route_observations_for_changed_routes(self):
+        base, head = candidate_fixture(self.root)
+        arguments = dict(
+            root=self.root, api=FakeGitHub(head), repository=REPOSITORY, base_commit=base,
+            reporter=self.reporter, render_body=lambda root, commit, version: "notes\n",
+            rehearse=lambda *args, **kwargs: None, today="2026-11-02",
+        )
+        with self.assertRaises(PipelineError) as context:
+            run_candidate(head_commit=head, **arguments)
+        message = str(context.exception)
+        self.assertIn("clarify-intent", message)
+        self.assertIn("codex: no record under evals/results/v0.21.0/codex/", message)
+        self.assertIn("claude-code: no record under evals/results/v0.21.0/claude-code/", message)
+
+        with_records = commit_candidate_records(self.root, head)
+        arguments["api"] = FakeGitHub(with_records)
+        self.assertEqual("release-candidate", run_candidate(head_commit=with_records, **arguments))
+        summary = (self.reports / "summary.md").read_text()
+        self.assertIn(
+            "| Route observations | records accepted for codex, claude-code covering clarify-intent |",
+            summary,
+        )
+
+        # A record whose observed commit carries a different runtime digest is rejected.
+        identity = self.root / "evidence" / "runtime-identity.json"
+        identity.write_text(json.dumps({"runtimeContract": {"digest": "sha256:" + "c" * 64}}) + "\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", "-m", "change the installed runtime again")
+        drifted = git(self.root, "rev-parse", "HEAD").strip()
+        arguments["api"] = FakeGitHub(drifted)
+        with self.assertRaises(PipelineError) as context:
+            run_candidate(head_commit=drifted, **arguments)
+        self.assertIn("observed runtime digest", str(context.exception))
+
+    def test_candidate_without_route_changes_needs_no_observation(self):
+        base, head = commit_versions(self.root, ("0.20.0", "0.21.0"))
+        run_candidate(
+            root=self.root, api=FakeGitHub(head), repository=REPOSITORY, base_commit=base,
+            head_commit=head, reporter=self.reporter,
+            render_body=lambda root, commit, version: "notes\n",
+            rehearse=lambda *args, **kwargs: None, today="2026-11-02",
+        )
+        summary = (self.reports / "summary.md").read_text()
+        self.assertIn("| Route observations | not required: no bundled route changed |", summary)
 
     def test_candidate_stops_when_its_handoff_rehearsal_fails(self):
         base, head = commit_versions(self.root, ("0.20.0", "0.21.0"))
