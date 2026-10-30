@@ -69,7 +69,7 @@ claude plugin install axiom@axiom
 
 Each marketplace selects an immutable published version. A new version reaches both marketplaces only after its release is published and verified; development commits on `main` do not advance that selection.
 
-Compare the installed startup Hook with the [Hook Reference](docs/reference/hooks.md) before it runs, and stop if the definitions differ. In Codex, start a new session and review the Hook in `/hooks`; Codex skips a new or changed Hook until you trust it. Claude Code has no separate Hook trust step and runs the Hook at the next `SessionStart` after the plugin loads, so compare the installed `hooks/claude-hooks.json` before starting a session or running `/reload-plugins`. The [Getting Started guide](docs/guides/getting-started.md) owns the full installation and first-use procedure.
+In Codex, start a new session and trust the Hook in `/hooks`: Codex skips a new or changed Hook until you do, and Axiom's routing begins after that step. Claude Code has no separate Hook trust step and runs the Hook at the next `SessionStart` after the plugin loads. On Windows, Claude Code needs Git Bash for the Hook, and neither host has a recorded Windows observation yet; see [Compatibility](docs/compatibility.md#current-bounded-status). Verifying an installed Hook against its checked-in definition is an optional reviewer step described in the [Trust Model](docs/trust-model.md#hook-trust-boundary). The [Getting Started guide](docs/guides/getting-started.md) owns the full installation and first-use procedure.
 
 ## Updating
 
@@ -88,7 +88,7 @@ claude plugin marketplace update axiom
 claude plugin update axiom@axiom
 ```
 
-After updating, repeat the Hook comparison above before the updated Hook runs. Automatic update behavior is controlled by each host and your settings. See [Managing an Installation](docs/guides/managing-installation.md) for in-app updates, disabling, removal, and troubleshooting. For a marketplace clone timeout in either host, follow the guide's [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts).
+After updating, start a new session; Codex holds the changed Hook until you trust it again in `/hooks`. Automatic update behavior is controlled by each host and your settings. See [Managing an Installation](docs/guides/managing-installation.md) for in-app updates, disabling, removal, and troubleshooting. For a marketplace clone timeout in either host, follow the guide's [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts).
 
 ## Usage
 

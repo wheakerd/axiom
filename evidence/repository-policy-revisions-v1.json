@@ -944,6 +944,14 @@
       "sourceIssue": 220,
       "summary": "Gate release candidates on checked-in fresh-session routing observation records for changed routes, bound to the runtime digest, and narrow description anchors to authority invariants.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 119,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "3097889f28c3dc0aef44b766cfee533cfb551c60",
+      "sourceIssue": 221,
+      "summary": "Docs: trust model discloses Git-metadata task state and backup refs with removal commands; installed-Hook comparison is optional; install docs add the Codex /hooks trust step and Windows status.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }

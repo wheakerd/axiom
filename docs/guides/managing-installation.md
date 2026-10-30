@@ -10,7 +10,7 @@ For Codex, request a marketplace upgrade:
 codex plugin marketplace upgrade axiom
 ```
 
-In a supported Codex workspace plugin UI, use **Refresh**. Start a new session after the update, then inspect `/hooks` again before trusting the changed snapshot.
+In a supported Codex workspace plugin UI, use **Refresh**. Start a new session after the update and trust the changed Hook in `/hooks`; Codex holds it until you do.
 
 For Claude Code, refresh the marketplace and update Axiom:
 
@@ -19,7 +19,7 @@ claude plugin marketplace update axiom
 claude plugin update axiom@axiom
 ```
 
-Claude Code runs an updated Hook without a separate trust step, at the next `SessionStart` event after the plugin loads. After these commands, compare the installed Hook with the [Hook Reference](../reference/hooks.md) before you start a session or run `/reload-plugins`. Inside a running session, run `/plugin marketplace update axiom`, then select Axiom on the **Installed** tab of `/plugin` and choose **Update now**. Once closing the panel reloads plugins, the updated Hook runs at that session's next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an automatic or manual compaction, so update from a terminal to compare it first. A new session's `SessionStart` Hook delivers the updated routing gate; `/reload-plugins` does not rerun it. Claude Code may update plugin files in the background when marketplace auto-update is enabled, which is off by default for third-party marketplaces such as `axiom`; with it on, the installed Hook can change before you compare it. A running session keeps the version it loaded until `/reload-plugins`.
+Claude Code runs an updated Hook without a separate trust step, at the next `SessionStart` event after the plugin loads. After these commands, start a new session; verifying the installed Hook is optional, as the [Trust Model](../trust-model.md#hook-trust-boundary) describes. Inside a running session, run `/plugin marketplace update axiom`, then select Axiom on the **Installed** tab of `/plugin` and choose **Update now**. Once closing the panel reloads plugins, the updated Hook runs at that session's next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an automatic or manual compaction. A new session's `SessionStart` Hook delivers the updated routing gate; `/reload-plugins` does not rerun it. Claude Code may update plugin files in the background when marketplace auto-update is enabled, which is off by default for third-party marketplaces such as `axiom`; with it on, the installed Hook can change between your sessions without a command from you. A running session keeps the version it loaded until `/reload-plugins`.
 
 Whether updates are checked or installed automatically, and their timing, are controlled by your settings and the native client or workspace policy. Axiom provides versioned source metadata and has no update scheduler.
 
@@ -120,9 +120,9 @@ claude plugin enable axiom@axiom
 claude plugin uninstall axiom@axiom
 ```
 
-Without `--scope`, `disable` and `enable` act on the first of the local, project, and user scopes whose settings mention Axiom. That is usually `user`, so disabling turns Axiom off in every project. To turn it off only in the current project, add `--scope local` for yourself or `--scope project` to share the override through the project's settings. Once Axiom is enabled and loads again, at a session start or a plugin reload, its Hook runs at the next `SessionStart` event without a separate trust step, so compare the installed Hook with the [Hook Reference](../reference/hooks.md) first. These Claude Code commands were last verified on 2026-10-24 against the official [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
+Without `--scope`, `disable` and `enable` act on the first of the local, project, and user scopes whose settings mention Axiom. That is usually `user`, so disabling turns Axiom off in every project. To turn it off only in the current project, add `--scope local` for yourself or `--scope project` to share the override through the project's settings. Once Axiom is enabled and loads again, at a session start or a plugin reload, its Hook runs at the next `SessionStart` event without a separate trust step. These Claude Code commands were last verified on 2026-10-24 against the official [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
 
-After a change on either host, start a new session. In Claude Code, `/reload-plugins` unloads the plugin from a running session, but the routing gate already delivered stays in that session's context. Confirm that Axiom is absent or disabled in the host's plugin list and that its Hook is absent from `/hooks` before treating it as inactive. Do not edit installed files or delete host caches as a substitute for the host-managed lifecycle.
+After a change on either host, start a new session. In Claude Code, `/reload-plugins` unloads the plugin from a running session, but the routing gate already delivered stays in that session's context. Confirm that Axiom is absent or disabled in the host's plugin list and that its Hook is absent from `/hooks` before treating it as inactive. Do not edit installed files or delete host caches as a substitute for the host-managed lifecycle. Disabling or removing Axiom leaves any task state that routes wrote into your repositories' Git metadata in place; the [Trust Model](../trust-model.md#repository-state-written-by-routes) lists those locations and how to remove them.
 
 ## Non-Destructive Troubleshooting
 
