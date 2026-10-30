@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from axiom_validation.context import RELEASE_VERSION
+from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.routing_evals import (
     ACCEPTANCE_DIAGNOSTICS,
     CANDIDATE2_CODEX_RUN_ID,
@@ -262,6 +263,54 @@ def documented_method_failures(text: str) -> list[str]:
 
 
 class RoutingEvaluationTests(unittest.TestCase):
+    def test_checked_in_candidate_observations_are_validated(self):
+        from axiom_validation.routing_evals.candidates import (
+            check_candidate_routing_observations,
+            validate_candidate_routing_observation,
+        )
+        from tests.test_current_routing import claude_code_record, current_record
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            shutil.copytree(
+                REPOSITORY_ROOT / "evals", root / "evals", ignore=shutil.ignore_patterns("results")
+            )
+            subject = {
+                "version": RELEASE_VERSION, "tag": None, "commit": "a" * 40, "tree": "b" * 40,
+                "releaseState": "candidate-unreleased",
+            }
+            for host, record in (("codex", current_record()), ("claude-code", claude_code_record())):
+                record["axiom"] = dict(subject)
+                path = root / "evals" / "results" / f"v{RELEASE_VERSION}" / host / "linux.json"
+                path.parent.mkdir(parents=True)
+                path.write_text(json.dumps(record, indent=2) + "\n")
+            failures: list[str] = []
+            self.assertEqual(2, check_candidate_routing_observations(root, failures))
+            self.assertEqual([], failures)
+
+            record = current_record()
+            record["axiom"] = dict(subject, version="9.9.9")
+            failures = []
+            validate_candidate_routing_observation(
+                record, "codex/linux.json", host="codex", expected_version=RELEASE_VERSION,
+                failures=failures, root=root,
+            )
+            self.assertTrue(any("subject must name version" in failure for failure in failures))
+
+            record = current_record()
+            record["axiom"] = dict(subject)
+            record["cases"][-1]["status"] = "fail"
+            failures = []
+            validate_candidate_routing_observation(
+                record, "codex/linux.json", host="codex", expected_version=RELEASE_VERSION,
+                failures=failures, root=root,
+            )
+            self.assertTrue(failures)
+
+            failures = []
+            self.assertEqual(0, check_candidate_routing_observations(REPOSITORY_ROOT, failures))
+            self.assertEqual([], failures)
+
     def test_checked_in_evaluation_contracts_pass(self):
         failures: list[str] = []
         self.assertEqual((176, 66, 11), check_routing_evaluations(failures))

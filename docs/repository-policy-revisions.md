@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 118 | 2026-10-30 | [#220](https://github.com/wheakerd/axiom/issues/220) | `e88e3065da805b27040c97b77f981aede3afe638` | Gate release candidates on checked-in fresh-session routing observation records for changed routes, bound to the runtime digest, and narrow description anchors to authority invariants. |
 | 117 | 2026-10-30 | [#219](https://github.com/wheakerd/axiom/issues/219) | `4fb5271be792ebb6812b6195ded9b633bab82abf` | Record policy revisions in the ledger only: a rendered Repository Policy Revisions page replaces their changelog entries, which move there unchanged, and the catalog handoff stops writing them. |
 | 116 | 2026-10-30 | [#218](https://github.com/wheakerd/axiom/issues/218) | `0e01f169113b70eaed56ead793d28da4eb02f9fa` | Measure the bundled skill descriptions in the routing-context budget (schema v4, 0.22.1 baseline) and record each host's verified hook-output limit as a dated size constraint. |
 | 115 | 2026-10-30 | [#217](https://github.com/wheakerd/axiom/issues/217) | `ad19af173f5c242b354229fb2a51b01de77cc51b` | Add thirty-four current-corpus routing cases so every bundled route has positive, near-miss, and cross-route coverage; freeze the per-route workload and document its retired name mapping. |
