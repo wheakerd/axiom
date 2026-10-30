@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 123 | 2026-10-30 | none | `4e5e76848cc809f62556c49adbbc361e787951f1` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.24.0. |
 | 122 | 2026-10-30 | [#226](https://github.com/wheakerd/axiom/issues/226) | `144127b93508d67a4386ede85e8436de08e3a955` | Release 0.24.0: skills as direction plus named invariants, gate terms, per-host invocation, before-acting behavior, dated host references, recall cases (contract v8), readability validator. |
 | 121 | 2026-10-30 | none | `c67b1fb454900dfe95d724bda45b52d74035f9d9` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.23.0. |
 | 120 | 2026-10-30 | none | `64f39b7a9798d33bd7881953f78333f8cd1339dd` | Release 0.23.0: traceable Git trimmed to plain-Git invariants with hooks on by default, four routes narrowed, descriptions shortened, the gate owns the delegated-choice rule, listing reworded. |

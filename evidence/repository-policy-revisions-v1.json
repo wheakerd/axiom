@@ -976,6 +976,14 @@
       "sourceIssue": 226,
       "summary": "Release 0.24.0: skills as direction plus named invariants, gate terms, per-host invocation, before-acting behavior, dated host references, recall cases (contract v8), readability validator.",
       "runtimeContractDigest": "sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14"
+    },
+    {
+      "revision": 123,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "4e5e76848cc809f62556c49adbbc361e787951f1",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.24.0.",
+      "runtimeContractDigest": "sha256:85fbd5f1554b2f99a7e7764c4efcea409401364a529d1d45ff0ee5f89f2fcd14"
     }
   ]
 }
