@@ -8,7 +8,7 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.23.0",
-    "repositoryPolicyRevision": 120,
+    "repositoryPolicyRevision": 121,
     "runtimeContractSchemaVersion": "4",
     "runtimeContractDigest": "sha256:84ef1ccbb95d640032b6a15eabcb236b658cac0dffdd488b66f3378591ea9c3d",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v4.json",
