@@ -21,8 +21,10 @@ from axiom_validation.context_budget import (
     check_context_budget,
     check_schema_lifecycle_matrix,
     context_budget_schema_version,
+    measure_descriptions,
     measure_markdown,
     previous_context_budget_candidate,
+    previous_description_set,
     routing_corpus_metrics,
     threshold_assessment,
     validate_host_observation,
@@ -52,6 +54,9 @@ class ContextBudgetTests(unittest.TestCase):
     def test_fork_scenario_requires_schema_v2_from_0_16_0(self):
         self.assertEqual("1", context_budget_schema_version("0.15.0"))
         self.assertEqual("2", context_budget_schema_version("0.16.0"))
+        self.assertEqual("3", context_budget_schema_version("0.17.0"))
+        self.assertEqual("3", context_budget_schema_version("0.22.0"))
+        self.assertEqual("4", context_budget_schema_version("0.22.1"))
         record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
         fork = record["scenarios"][-1]
         self.assertEqual(
@@ -304,6 +309,37 @@ class ContextBudgetTests(unittest.TestCase):
         self.assertEqual("a" * 64, predecessor_sha256)
         self.assertEqual(7739, predecessor_metrics["utf8Bytes"])
 
+    def test_description_set_measures_every_bundled_description(self):
+        record = json.loads(CONTEXT_BUDGET_RECORD.read_text(encoding="utf-8"))
+        measured = measure_descriptions()
+        self.assertEqual(measured, record["descriptionSet"])
+        names = [skill["name"] for skill in measured["skills"]]
+        self.assertEqual(sorted(names), names)
+        self.assertEqual(
+            set(names),
+            {path.parent.name for path in (REPOSITORY_ROOT / "plugin" / "skills").glob("*/SKILL.md")},
+        )
+        self.assertEqual(
+            measured["totalUtf8Bytes"], sum(skill["utf8Bytes"] for skill in measured["skills"])
+        )
+        self.assertEqual((measured["totalUtf8Bytes"] + 3) // 4, measured["estimatedTokens"]["value"])
+        # The description set is compared with the nearest earlier record that carries one;
+        # until such a record exists the comparison stays null.
+        failures = []
+        predecessor = previous_description_set(record["targetRelease"]["version"], failures)
+        self.assertEqual([], failures)
+        if predecessor is None:
+            self.assertIsNone(record["descriptionComparison"])
+        else:
+            self.assertEqual(predecessor[0], record["descriptionComparison"]["predecessor"])
+        drifted = dict(measured, totalUtf8Bytes=measured["totalUtf8Bytes"] + 1)
+        failures = []
+        with patch("axiom_validation.context_budget.measure_descriptions", return_value=drifted):
+            check_context_budget(failures)
+        self.assertTrue(
+            any("descriptionSet is not reproducible" in failure for failure in failures), failures
+        )
+
     def test_measurement_cli_is_repository_relative_and_read_only(self):
         script = REPOSITORY_ROOT / "scripts" / "measure-routing-context.py"
         completed = subprocess.run(
@@ -317,6 +353,18 @@ class ContextBudgetTests(unittest.TestCase):
         self.assertEqual("README.md", document["path"])
         self.assertEqual("not-measured", document["measurementBoundary"]["exactHostUsage"])
         self.assertGreater(document["metrics"]["utf8Bytes"], 0)
+        self.assertNotIn("descriptionSet", document)
+
+        gate = subprocess.run(
+            [sys.executable, str(script)],
+            cwd="/tmp",
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        gate_document = json.loads(gate.stdout)
+        self.assertEqual("plugin/skills/using-axiom/SKILL.md", gate_document["path"])
+        self.assertEqual(measure_descriptions(), gate_document["descriptionSet"])
 
         checked = subprocess.run(
             [sys.executable, str(script), "--check"],

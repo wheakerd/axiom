@@ -1,5 +1,5 @@
 {
-  "$schema": "../schema-v3.json",
+  "$schema": "../schema-v4.json",
   "baseline": {
     "metrics": {
       "classification": "exact-static-counts-used-as-context-proxies",
@@ -47,17 +47,102 @@
     "sha256": "18e2b64620e86e4df937b816b49d1a0878e45f0ac8196d136498c411cc80ad25"
   },
   "comparison": {
-    "method": "same-English-Markdown-surface",
-    "utf8ByteDelta": -330,
     "absoluteThresholdReached": false,
-    "relativeThresholdReached": false,
-    "meaningfulIncrease": false,
-    "reviewStatus": "not-required",
-    "wordDelta": -3,
-    "lineDelta": -46,
-    "referenceDelta": 2,
     "estimatedTokenDelta": -82,
-    "justification": null
+    "justification": null,
+    "lineDelta": -46,
+    "meaningfulIncrease": false,
+    "method": "same-English-Markdown-surface",
+    "referenceDelta": 2,
+    "relativeThresholdReached": false,
+    "reviewStatus": "not-required",
+    "utf8ByteDelta": -330,
+    "wordDelta": -3
+  },
+  "descriptionComparison": null,
+  "descriptionSet": {
+    "classification": "exact-static-counts-used-as-context-proxies",
+    "estimatedTokens": {
+      "classification": "estimate",
+      "comparisonScope": "same-English-description-set-only",
+      "method": "ceil(utf8-bytes/4)",
+      "value": 1813
+    },
+    "skills": [
+      {
+        "characters": 595,
+        "name": "agent-plugin-architect",
+        "utf8Bytes": 595
+      },
+      {
+        "characters": 754,
+        "name": "agents-architect",
+        "utf8Bytes": 754
+      },
+      {
+        "characters": 404,
+        "name": "clarify-intent",
+        "utf8Bytes": 404
+      },
+      {
+        "characters": 481,
+        "name": "confirm-external-action",
+        "utf8Bytes": 481
+      },
+      {
+        "characters": 514,
+        "name": "continuous-progress",
+        "utf8Bytes": 514
+      },
+      {
+        "characters": 420,
+        "name": "delegate-simple-task",
+        "utf8Bytes": 420
+      },
+      {
+        "characters": 318,
+        "name": "local-web-search",
+        "utf8Bytes": 318
+      },
+      {
+        "characters": 459,
+        "name": "optimize-agent-usage",
+        "utf8Bytes": 459
+      },
+      {
+        "characters": 745,
+        "name": "reversible-system-change",
+        "utf8Bytes": 745
+      },
+      {
+        "characters": 378,
+        "name": "review-axiom-task",
+        "utf8Bytes": 378
+      },
+      {
+        "characters": 616,
+        "name": "task-planning",
+        "utf8Bytes": 616
+      },
+      {
+        "characters": 493,
+        "name": "traceable-git-submit",
+        "utf8Bytes": 493
+      },
+      {
+        "characters": 161,
+        "name": "using-axiom",
+        "utf8Bytes": 161
+      },
+      {
+        "characters": 912,
+        "name": "verify-completion",
+        "utf8Bytes": 912
+      }
+    ],
+    "surface": "plugin/skills/*/SKILL.md frontmatter description",
+    "totalCharacters": 7250,
+    "totalUtf8Bytes": 7250
   },
   "hostMetrics": [
     {
@@ -110,12 +195,12 @@
       "staticAndHostEvidenceRemainDistinct": true
     },
     "workload": {
-      "classification": "static-contract-workload-identity",
-      "path": "evals/routing",
-      "fileCount": 13,
       "caseCount": 102,
-      "routedCaseCount": 74,
+      "classification": "static-contract-workload-identity",
+      "fileCount": 13,
       "noRouteCaseCount": 28,
+      "path": "evals/routing",
+      "routedCaseCount": 74,
       "sha256": "6b11fe9f7568d08845d8492089d8ee1f3f00f230e73ae8328060beb574967c45"
     }
   },
@@ -355,7 +440,7 @@
       "sessionState": "forked"
     }
   ],
-  "schemaVersion": "3",
+  "schemaVersion": "4",
   "surface": {
     "alwaysLoaded": true,
     "language": "en",

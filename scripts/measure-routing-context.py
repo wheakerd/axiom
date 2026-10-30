@@ -17,6 +17,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
 from axiom_validation.context_budget import (  # noqa: E402
     ROUTING_GATE_PATH,
     check_context_budget,
+    measure_descriptions,
     measure_markdown,
 )
 
@@ -91,6 +92,9 @@ def main(argv: list[str] | None = None) -> int:
         },
         "metrics": metrics,
     }
+    if path == ROUTING_GATE_PATH:
+        # The gate and the bundled descriptions form the always-loaded surface.
+        document["descriptionSet"] = measure_descriptions()
     print(json.dumps(document, indent=2, sort_keys=True))
     return 0
 
