@@ -6,6 +6,24 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## Repository policy revision 116
+
+### Added
+
+- The routing-context budget measures the bundled skill descriptions, the selection surface that each host lists on every turn, next to the always-loaded gate. Schema v4 records carry each skill's UTF-8 byte and character counts, the totals, and a comparison with the nearest earlier record under the same review threshold; the 0.22.1 record is the description baseline. `scripts/measure-routing-context.py` reports the description set when it measures the gate.
+
+### Changed
+
+- The budget guide and the runtime-changes policy state each host's hook-output limit as a dated, verified constraint: Codex limits a model-visible hook-output message to roughly 2,500 tokens by default, and Claude Code caps plain `SessionStart` stdout at 10,000 characters.
+
+### Behavioral impact
+
+Repository maintenance only. The larger half of the always-loaded context cost is now measured and reviewed; nothing installed changes, and the installed runtime digest is unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 115
 
 ### Added

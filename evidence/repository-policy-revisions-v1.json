@@ -920,6 +920,14 @@
       "sourceIssue": 217,
       "summary": "Add thirty-four current-corpus routing cases so every bundled route has positive, near-miss, and cross-route coverage; freeze the per-route workload and document its retired name mapping.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 116,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "0e01f169113b70eaed56ead793d28da4eb02f9fa",
+      "sourceIssue": 218,
+      "summary": "Measure the bundled skill descriptions in the routing-context budget (schema v4, 0.22.1 baseline) and record each host's verified hook-output limit as a dated size constraint.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }

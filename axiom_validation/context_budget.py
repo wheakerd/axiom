@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path, supported_hosts
+from .yaml_subset import CanonicalYamlError, parse_skill_frontmatter_document
 from .release_versions import parse_production_release_version
 
 
@@ -22,9 +23,12 @@ def context_budget_schema_version(version: str) -> str:
     Both startup Hooks match the fork source from 0.16.0, so those records use
     schema v2 with a forked-session scenario; earlier records keep schema v1.
     From 0.17.0 the routing gate is installed from the plugin/ subtree, so schema
-    v3 binds that path with the same lifecycle matrix.
+    v3 binds that path with the same lifecycle matrix. From 0.22.1 schema v4 adds
+    the always-loaded description set, which the host lists on every turn.
     """
     parsed = parse_production_release_version(version)
+    if parsed is not None and parsed >= parse_production_release_version("0.22.1"):
+        return "4"
     if parsed is not None and parsed >= parse_production_release_version("0.17.0"):
         return "3"
     fork_since = parse_production_release_version("0.16.0")
@@ -33,7 +37,7 @@ def context_budget_schema_version(version: str) -> str:
 
 def routing_gate_surface_path(version: str) -> str:
     """Return the routing-gate path that the release's record schema binds."""
-    if context_budget_schema_version(version) == "3":
+    if context_budget_schema_version(version) in ("3", "4"):
         return "plugin/skills/using-axiom/SKILL.md"
     return "skills/using-axiom/SKILL.md"
 
@@ -44,6 +48,8 @@ CONTEXT_BUDGET_RESULTS = CONTEXT_BUDGET_ROOT / "results"
 CONTEXT_BUDGET_RECORD = CONTEXT_BUDGET_RESULTS / f"v{RELEASE_VERSION}.json"
 ROUTING_GATE_PATH = REPOSITORY_ROOT / "plugin" / "skills" / "using-axiom" / "SKILL.md"
 ROUTING_CORPUS_ROOT = REPOSITORY_ROOT / "evals" / "routing"
+BUNDLED_SKILLS_ROOT = REPOSITORY_ROOT / "plugin" / "skills"
+DESCRIPTION_SURFACE = "plugin/skills/*/SKILL.md frontmatter description"
 MAX_JSON_BYTES = 256 * 1024
 DIRECT_REFERENCE_PATTERN = re.compile(r"(?<![A-Za-z0-9_.-])references/[A-Za-z0-9._/-]+\.md")
 CONTEXT_BUDGET_RECORD_PATTERN = re.compile(
@@ -187,7 +193,7 @@ EXPECTED_SCENARIOS = (
     else SCHEMA_V1_SCENARIOS + (FORK_SCENARIO,)
 )
 
-TOP_LEVEL_KEYS = frozenset(
+BASE_TOP_LEVEL_KEYS = frozenset(
     {
         "$schema",
         "schemaVersion",
@@ -204,6 +210,12 @@ TOP_LEVEL_KEYS = frozenset(
         "scenarios",
     }
 )
+# Schema v4 records add the always-loaded description set and its comparison.
+TOP_LEVEL_KEYS = BASE_TOP_LEVEL_KEYS | (
+    frozenset({"descriptionSet", "descriptionComparison"})
+    if CONTEXT_BUDGET_SCHEMA_VERSION == "4"
+    else frozenset()
+)
 METRIC_KEYS = frozenset(
     {
         "classification",
@@ -213,6 +225,29 @@ METRIC_KEYS = frozenset(
         "directReferenceCount",
         "directReferences",
         "estimatedTokens",
+    }
+)
+DESCRIPTION_SET_KEYS = frozenset(
+    {
+        "classification",
+        "surface",
+        "skills",
+        "totalUtf8Bytes",
+        "totalCharacters",
+        "estimatedTokens",
+    }
+)
+DESCRIPTION_SKILL_KEYS = frozenset({"name", "utf8Bytes", "characters"})
+DESCRIPTION_COMPARISON_KEYS = frozenset(
+    {
+        "predecessor",
+        "method",
+        "totalUtf8ByteDelta",
+        "absoluteThresholdReached",
+        "relativeThresholdReached",
+        "meaningfulIncrease",
+        "reviewStatus",
+        "justification",
     }
 )
 HOST_OBSERVATION_KEYS = frozenset(
@@ -308,6 +343,132 @@ def measure_markdown(path: Path) -> dict[str, Any]:
             "value": (len(data) + 3) // 4,
         },
     }
+
+
+def measure_descriptions(root: Path = BUNDLED_SKILLS_ROOT) -> dict[str, Any]:
+    """Measure every bundled description: the selection surface a host lists on every turn."""
+    skills: list[dict[str, Any]] = []
+    for path in sorted(root.glob("*/SKILL.md")):
+        metadata = path.lstat()
+        if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"{display_path(path)} must be a regular non-symbolic-link file")
+        fields = parse_skill_frontmatter_document(path.read_text(encoding="utf-8"), display_path(path))
+        description = fields["description"]
+        skills.append(
+            {
+                "name": path.parent.name,
+                "utf8Bytes": len(description.encode("utf-8")),
+                "characters": len(description),
+            }
+        )
+    if not skills:
+        raise ValueError("no bundled skill description was found")
+    total_bytes = sum(skill["utf8Bytes"] for skill in skills)
+    return {
+        "classification": "exact-static-counts-used-as-context-proxies",
+        "surface": DESCRIPTION_SURFACE,
+        "skills": skills,
+        "totalUtf8Bytes": total_bytes,
+        "totalCharacters": sum(skill["characters"] for skill in skills),
+        "estimatedTokens": {
+            "classification": "estimate",
+            "method": "ceil(utf8-bytes/4)",
+            "comparisonScope": "same-English-description-set-only",
+            "value": (total_bytes + 3) // 4,
+        },
+    }
+
+
+def _check_description_set_shape(
+    value: Any, label: str, failures: list[str]
+) -> dict[str, Any] | None:
+    initial_failure_count = len(failures)
+    document = exact_object(value, label, DESCRIPTION_SET_KEYS, failures)
+    if document is None:
+        return None
+    if document.get("classification") != "exact-static-counts-used-as-context-proxies":
+        failures.append(f"{label}.classification is invalid")
+    if document.get("surface") != DESCRIPTION_SURFACE:
+        failures.append(f"{label}.surface must name the bundled description surface")
+    skills = document.get("skills")
+    names: list[Any] = []
+    byte_total = 0
+    character_total = 0
+    if type(skills) is not list or not skills:
+        failures.append(f"{label}.skills must be a non-empty array")
+    else:
+        for index, entry in enumerate(skills):
+            skill = exact_object(entry, f"{label}.skills[{index}]", DESCRIPTION_SKILL_KEYS, failures)
+            if skill is None:
+                continue
+            name = skill.get("name")
+            names.append(name)
+            if type(name) is not str or not name:
+                failures.append(f"{label}.skills[{index}].name must be a non-empty string")
+            for field in ("utf8Bytes", "characters"):
+                field_value = skill.get(field)
+                if type(field_value) is not int or isinstance(field_value, bool) or field_value < 0:
+                    failures.append(f"{label}.skills[{index}].{field} must be a non-negative integer")
+                elif field == "utf8Bytes":
+                    byte_total += field_value
+                else:
+                    character_total += field_value
+        if names != sorted(set(name for name in names if type(name) is str)):
+            failures.append(f"{label}.skills must be sorted by unique name")
+        if document.get("totalUtf8Bytes") != byte_total:
+            failures.append(f"{label}.totalUtf8Bytes must equal the sum of the skill bytes")
+        if document.get("totalCharacters") != character_total:
+            failures.append(f"{label}.totalCharacters must equal the sum of the skill characters")
+    estimate = exact_object(
+        document.get("estimatedTokens"),
+        f"{label}.estimatedTokens",
+        frozenset({"classification", "method", "comparisonScope", "value"}),
+        failures,
+    )
+    if estimate is not None and estimate != {
+        "classification": "estimate",
+        "method": "ceil(utf8-bytes/4)",
+        "comparisonScope": "same-English-description-set-only",
+        "value": (byte_total + 3) // 4,
+    }:
+        failures.append(f"{label}.estimatedTokens is not the documented estimate")
+    return document if len(failures) == initial_failure_count else None
+
+
+def previous_description_set(
+    release_version: str,
+    failures: list[str],
+    *,
+    results_root: Path = CONTEXT_BUDGET_RESULTS,
+) -> tuple[str, dict[str, Any]] | None:
+    """Return the nearest earlier record that carries a description set, if any."""
+    current_match = CONTEXT_BUDGET_RECORD_PATTERN.fullmatch(f"v{release_version}.json")
+    if current_match is None:
+        failures.append("current context-budget release must be a stable SemVer")
+        return None
+    current_version = tuple(int(part) for part in current_match.groups())
+    predecessors: list[tuple[tuple[int, int, int], Path]] = []
+    for path in results_root.glob("v*.json"):
+        match = CONTEXT_BUDGET_RECORD_PATTERN.fullmatch(path.name)
+        if match is None:
+            continue
+        version = tuple(int(part) for part in match.groups())
+        if version < current_version:
+            predecessors.append((version, path))
+    for version, path in sorted(predecessors, reverse=True):
+        document = load_json(path, failures)
+        if document is None:
+            return None
+        if "descriptionSet" not in document:
+            continue
+        label = ".".join(str(part) for part in version)
+        description_set = _check_description_set_shape(
+            document.get("descriptionSet"), f"v{label} predecessor descriptionSet", failures
+        )
+        if description_set is None:
+            return None
+        return label, description_set
+    return None
 
 
 def routing_corpus_metrics(
@@ -941,6 +1102,68 @@ def check_context_budget(failures: list[str]) -> int:
                 corpus,
                 failures,
             )
+
+    if CONTEXT_BUDGET_SCHEMA_VERSION == "4":
+        description_set = _check_description_set_shape(
+            document.get("descriptionSet"), "descriptionSet", failures
+        )
+        try:
+            current_descriptions: dict[str, Any] | None = measure_descriptions()
+        except (OSError, UnicodeError, ValueError, CanonicalYamlError) as error:
+            failures.append(f"cannot measure the bundled skill descriptions: {error}")
+            current_descriptions = None
+        if (
+            description_set is not None
+            and current_descriptions is not None
+            and description_set != current_descriptions
+        ):
+            failures.append(
+                "descriptionSet is not reproducible from the bundled skill descriptions"
+            )
+        predecessor_descriptions = previous_description_set(RELEASE_VERSION, failures)
+        description_comparison = document.get("descriptionComparison")
+        if predecessor_descriptions is None:
+            if description_comparison is not None:
+                failures.append(
+                    "descriptionComparison must be null until an earlier record carries a "
+                    "description set"
+                )
+        else:
+            description_comparison = exact_object(
+                description_comparison,
+                "descriptionComparison",
+                DESCRIPTION_COMPARISON_KEYS,
+                failures,
+            )
+            if description_comparison is not None and description_set is not None:
+                predecessor_label, previous_descriptions = predecessor_descriptions
+                assessment = threshold_assessment(
+                    previous_descriptions["totalUtf8Bytes"], description_set["totalUtf8Bytes"]
+                )
+                expected_description_comparison = {
+                    "predecessor": predecessor_label,
+                    "method": "same-English-description-set",
+                    "totalUtf8ByteDelta": assessment["utf8ByteDelta"],
+                    "absoluteThresholdReached": assessment["absoluteThresholdReached"],
+                    "relativeThresholdReached": assessment["relativeThresholdReached"],
+                    "meaningfulIncrease": assessment["meaningfulIncrease"],
+                    "reviewStatus": assessment["reviewStatus"],
+                }
+                for field, expected in expected_description_comparison.items():
+                    if description_comparison.get(field) != expected:
+                        failures.append(f"descriptionComparison.{field} must be {expected!r}")
+                justification = description_comparison.get("justification")
+                if assessment["meaningfulIncrease"]:
+                    if type(justification) is not str or len(justification.strip()) < 40:
+                        failures.append(
+                            "a meaningful description-set increase requires a substantive "
+                            "review justification"
+                        )
+                elif justification is not None:
+                    failures.append(
+                        "descriptionComparison.justification must be null when review is not "
+                        "required"
+                    )
 
     host_metrics = document.get("hostMetrics")
     if type(host_metrics) is not list or len(host_metrics) != len(HOSTS):
