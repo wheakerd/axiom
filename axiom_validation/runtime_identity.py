@@ -38,6 +38,10 @@ POLICY_REVISIONS_RELATIVE = "evidence/repository-policy-revisions-v1.json"
 RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
 RUNTIME_IDENTITY_END = "<!-- runtime-identity:current:end -->"
+POLICY_LEDGER_SURFACES = ("docs/repository-policy-revisions.md",)
+POLICY_LEDGER_START = "<!-- policy-ledger:current:start -->"
+POLICY_LEDGER_END = "<!-- policy-ledger:current:end -->"
+ISSUE_URL_PREFIX = "https://github.com/wheakerd/axiom/issues/"
 
 MAX_JSON_BYTES = 512 * 1024
 DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -885,6 +889,32 @@ def replace_runtime_identity_block(text: str, document: dict[str, Any]) -> str:
     return text[:start] + "\n" + render_runtime_identity(document) + "\n" + text[end:]
 
 
+def render_policy_ledger(document: dict[str, Any]) -> str:
+    """Render the policy ledger as one table, newest revision first."""
+    rows = [
+        "| Revision | Recorded on | Source Issue | Baseline commit | Summary |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for item in sorted(document["revisions"], key=lambda item: item["revision"], reverse=True):
+        issue = item.get("sourceIssue")
+        issue_cell = f"[#{issue}]({ISSUE_URL_PREFIX}{issue})" if issue is not None else "none"
+        summary = str(item["summary"]).replace("|", "\\|")
+        rows.append(
+            f"| {item['revision']} | {item['recordedOn']} | {issue_cell} | "
+            f"`{item['baselineCommit']}` | {summary} |"
+        )
+    return "\n".join(rows)
+
+
+def replace_policy_ledger_block(text: str, document: dict[str, Any]) -> str:
+    """Replace the managed ledger table in the policy-revisions reference."""
+    if text.count(POLICY_LEDGER_START) != 1 or text.count(POLICY_LEDGER_END) != 1:
+        raise ValueError("policy-ledger markers must each appear exactly once")
+    start = text.index(POLICY_LEDGER_START) + len(POLICY_LEDGER_START)
+    end = text.index(POLICY_LEDGER_END, start)
+    return text[:start] + "\n" + render_policy_ledger(document) + "\n" + text[end:]
+
+
 def check_runtime_identity(
     failures: list[str],
     *,
@@ -960,6 +990,15 @@ def check_runtime_identity(
             else:
                 if text != expected:
                     failures.append(f"{relative_path} runtime identity block is stale")
+        for relative_path in POLICY_LEDGER_SURFACES:
+            try:
+                text = (root / relative_path).read_text(encoding="utf-8")
+                expected = replace_policy_ledger_block(text, revisions)
+            except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
+                failures.append(f"cannot validate {relative_path} policy ledger: {error}")
+            else:
+                if text != expected:
+                    failures.append(f"{relative_path} policy ledger block is stale")
     return contract.record_count
 
 
@@ -967,12 +1006,15 @@ __all__ = [
     "HISTORY_RELATIVE",
     "IDENTITY_RELATIVE",
     "INPUT_MANIFEST_RELATIVE",
+    "POLICY_LEDGER_SURFACES",
     "POLICY_REVISIONS_RELATIVE",
     "RUNTIME_IDENTITY_SURFACES",
     "RuntimeContract",
     "check_runtime_identity",
     "compute_runtime_contract",
     "load_json_document",
+    "render_policy_ledger",
     "render_runtime_identity",
+    "replace_policy_ledger_block",
     "replace_runtime_identity_block",
 ]

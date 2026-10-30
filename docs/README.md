@@ -25,6 +25,7 @@ Current guidance describes the same source snapshot as the document. See [Source
 | Understand package identity | [Runtime and Repository Identity](runtime-identity.md) | Maintainers and auditors |
 | Decide the version increment or bundling for a change | [Version Increment](runtime-identity.md#version-increment) | Maintainers |
 | Review repository controls | [Repository Governance](repository-governance.md) | Maintainers |
+| Trace a repository policy revision | [Repository Policy Revisions](repository-policy-revisions.md) | Maintainers and auditors |
 | Contribute documentation | [Documentation Policy](maintainers/documentation-policy.md) | Contributors |
 | Prepare release documentation and evidence | [Release Documentation And Evidence](maintainers/release-documentation.md) | Maintainers and auditors |
 | Decide where Axiom is listed and record a submission | [Distribution Channels](maintainers/distribution-channels.md) | Maintainers |

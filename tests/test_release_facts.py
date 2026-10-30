@@ -30,7 +30,7 @@ from axiom_validation.route_catalog import (
     rendered_route_block,
     route_boundary_scenarios,
 )
-from axiom_validation.runtime_identity import RUNTIME_IDENTITY_SURFACES
+from axiom_validation.runtime_identity import POLICY_LEDGER_SURFACES, RUNTIME_IDENTITY_SURFACES
 
 
 class ReleaseFactTests(unittest.TestCase):
@@ -187,7 +187,7 @@ class ReleaseFactTests(unittest.TestCase):
         )
 
     def test_check_cli_is_cwd_independent_and_read_only(self):
-        surfaces = {"README.md", *FACTS_SURFACES, *ROUTE_SURFACES, *RUNTIME_IDENTITY_SURFACES}
+        surfaces = {"README.md", *FACTS_SURFACES, *ROUTE_SURFACES, *RUNTIME_IDENTITY_SURFACES, *POLICY_LEDGER_SURFACES}
         before = {path: (REPOSITORY_ROOT / path).read_bytes() for path in surfaces}
         script = REPOSITORY_ROOT / "scripts" / "render-release-facts.py"
         completed = subprocess.run(

@@ -34,9 +34,12 @@ from axiom_validation.route_catalog import (  # noqa: E402
 )
 from axiom_validation.runtime_identity import (  # noqa: E402
     IDENTITY_RELATIVE,
+    POLICY_LEDGER_SURFACES,
+    POLICY_REVISIONS_RELATIVE,
     RUNTIME_IDENTITY_SURFACES,
     check_runtime_identity,
     load_json_document,
+    replace_policy_ledger_block,
     replace_runtime_identity_block,
 )
 
@@ -76,11 +79,16 @@ def _render() -> tuple[int, list[str]]:
         REPOSITORY_ROOT / IDENTITY_RELATIVE,
         failures,
     )
+    ledger_document = load_json_document(
+        REPOSITORY_ROOT / POLICY_REVISIONS_RELATIVE,
+        failures,
+    )
     skill_summaries = load_skill_summaries(failures)
     if (
         len(release_documents) != len(set(FACTS_SURFACE_VERSIONS.values()))
         or route_document is None
         or identity_document is None
+        or ledger_document is None
         or skill_summaries is None
     ):
         return 0, failures
@@ -92,6 +100,7 @@ def _render() -> tuple[int, list[str]]:
                 *FACTS_SURFACES,
                 *ROUTE_SURFACES,
                 *RUNTIME_IDENTITY_SURFACES,
+                *POLICY_LEDGER_SURFACES,
                 README_RELATIVE,
             )
         )
@@ -108,6 +117,8 @@ def _render() -> tuple[int, list[str]]:
                 text = replace_route_block(text, route_document)
             if relative_path in RUNTIME_IDENTITY_SURFACES:
                 text = replace_runtime_identity_block(text, identity_document)
+            if relative_path in POLICY_LEDGER_SURFACES:
+                text = replace_policy_ledger_block(text, ledger_document)
             if relative_path == README_RELATIVE:
                 text = replace_readme_blocks(text, skill_summaries)
         except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:

@@ -26,6 +26,8 @@ Keep the heading state `unreleased` until the GitHub Release is published; the t
 
 Keep the entry concise and user-facing. Case-level results, commit and tree IDs, timing, token counts, candidate investigations, workflow internals, and historical run ledgers belong in version notes or evidence rather than the Changelog.
 
+Repository policy revisions are not Changelog entries. The [policy ledger](../../evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](../repository-policy-revisions.md) renders it; the catalog handoff dates the released version's heading and appends a ledger revision without adding a Changelog entry.
+
 ## Deprecation And Removal
 
 Before publishing a version, review the behavior and guidance superseded by that release. Record each obsolete feature, command, configuration, validator, or procedure in its Changelog entry under `Deprecated` or `Removed`. Name the affected version, reason, supported replacement, and required user action; put material migration detail in the version note.
