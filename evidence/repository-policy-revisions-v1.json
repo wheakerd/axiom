@@ -968,6 +968,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.23.0.",
       "runtimeContractDigest": "sha256:84ef1ccbb95d640032b6a15eabcb236b658cac0dffdd488b66f3378591ea9c3d"
+    },
+    {
+      "revision": 122,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "144127b93508d67a4386ede85e8436de08e3a955",
+      "sourceIssue": 226,
+      "summary": "Release 0.24.0: fourteen skills rewritten as direction plus named invariants, gate terms and per-host invocation syntax, dated host references, single-session reconcile, readability validator.",
+      "runtimeContractDigest": "sha256:afe2cfe2021c0de0841bfe41c758f1b2bcffbe8926bf8bd361f6d0e56b26921f"
     }
   ]
 }

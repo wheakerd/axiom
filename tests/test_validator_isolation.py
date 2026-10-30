@@ -35,6 +35,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     "11 review checkpoints, 8 routing-context lifecycle scenarios, "
     f"{len(FACTS_SURFACES)} canonical release-fact surfaces, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
+    f"{len(EXPECTED_DIRECT_SKILLS)} skill readability contracts, "
     "10 structured Git route-boundary scenarios, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 241 traceable-Git contract fixtures, "

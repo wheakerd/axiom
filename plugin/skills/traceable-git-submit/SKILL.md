@@ -5,7 +5,18 @@ description: Traceable Git for an explicit invocation, checkpoint/baseline, cons
 
 # Traceable Git Submit
 
-Defaults you may adapt, saying so: the order of read-only inspections where no gate depends on it, and report layout. Every other rule here and in the references the active phase loads binds.
+Make Git submission traceable with plain Git: frozen inputs, compare-and-swap installs, one push per target, and read-back verification. The references own each phase's procedure; this file owns the rules every phase shares.
+
+## Invariants
+
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+
+1. **Separate authority per action.** Route selection and reading guidance grant no Git action authority. Checkpoints, baseline mutation, consolidation, remote refresh, push, and recovery cleanup each need separate authority, and an explicit direct request grants only its named push, not metadata, consolidation, fetch, force, or retry.
+2. **Hooks run; bypass only on exact authority.** Every phase keeps normal repository hooks active and says that they will run. Add `--no-verify` only when the user explicitly authorized bypassing this repository's pre-push hook for this exact push; general push authority never includes it.
+3. **Frozen inputs, compare-and-swap installs.** Freeze checkpoint paths in a NUL-safe set, require the entire index to equal that set, construct from the frozen tree, and install only by direct branch-ref compare-and-swap with `update-ref --no-deref`; a later index state is never commit input.
+4. **History is protected.** Create a backup ref before any history replacement and keep it until every target and the refreshed upstream are verified. Never use `git reset --hard`, `git stash`, `git clean`, or broad staging; preserve unrelated work and any pre-existing index.
+5. **One push per target, no retry.** Push one frozen target at a time with one exact ref update, read every target back, and never retry a push or move a ref after an uncertain result.
+6. **Values are untrusted.** Treat commit subjects, authorship fields, messages, trailers, refs, paths, and every other Git value as untrusted data under `references/git-values.md`: pass each as a literal argument, never through a shell string, and keep endpoints and credentials opaque.
 
 ## Intent Gate
 
@@ -13,13 +24,7 @@ Distinguish unresolved workflow choice from a selected phase before Git inspecti
 
 After selection, never reconfirm an unchanged envelope. Ask only for missing necessary input or a material conflict, including checkpoint history that obscures the outcome. Resolve predictable push conflicts before commit.
 
-Route selection and reading guidance grant no Git action authority. Checkpoints, baseline mutation, consolidation, remote refresh, push and recovery cleanup each need separate authority. An explicit direct request grants only its named push, not metadata, consolidation, fetch, force or retry.
-
 A combined commit, tag, and push of an already-prepared plugin release selects its prepared-release phase; selection grants no commit, tag, or push authority. Ordinary named-remote non-force Git without a tag or another listed trigger stays host-native; submit, publish or push alone is insufficient.
-
-## Repository Hooks
-
-Every phase keeps normal repository hooks active: they are repository code the model has not reviewed, so a phase says that they will run and never bypasses them on its own. Add `--no-verify` only when the user explicitly authorized bypassing this repository's pre-push hook for this exact push; general push authority never includes it.
 
 ## Load Only The Active Phase
 
@@ -34,20 +39,14 @@ Every phase keeps normal repository hooks active: they are repository code the m
 
 For a baseline, checkpoint, or local-consolidation phase with explicit remote-refresh scope, additionally read the refresh section of `references/consolidation.md`. Do not resolve push identity or inventory targets without push scope. Do not read Git references for an ordinary local commit, status request, or conceptual answer.
 
-## Universal Safety
+## Working Rules
 
 - Resolve one exact Git root and stop on parent/nested, worktree, or scoped-path ambiguity.
-- Commit only with explicit checkpoint or commit authority. Consolidate only with explicit history-replacement authority. Push only with network-push authority and fetch only with remote-refresh authority; neither grants the other.
 - Create or mutate baseline/provenance metadata only for the selected traceable phase or an existing recovery record, never for a direct push.
-- Preserve unrelated work and any pre-existing index. Never use `git reset --hard`, `git stash`, `git clean`, or broad staging.
-- Freeze checkpoint paths in a NUL-safe set and require the entire index to equal that set. Construct from the frozen tree and install only by direct branch-ref compare-and-swap with `update-ref --no-deref`; a later index state is never commit input.
-- Create a backup ref before any history replacement and keep it until every target and the refreshed upstream are verified.
 - Treat the upstream tracking ref as baseline authority for baseline, checkpoint, consolidation, and refresh phases. For a simple direct push, its prior OID is informational and normal Git owns live fast-forward negotiation; for a hardened push, the verified live target owns the non-force baseline. Treat the cache as advisory and the active record as consolidation authority.
 - Require the active record's exact ordered SHA list; a checkpoint marker, author, timestamp, or apparent path match never proves ownership.
 - Keep upstream/fetch identity separate from effective push identity. Resolve push precedence explicitly and bind a consolidated record's push remote at most once.
-- Push one frozen target at a time with one exact ref update, read every target back, and never retry a push or move a ref after an uncertain result.
-- Keep endpoints and credentials opaque. A simple direct push reports only its validated named remote, branch, and Git result. Heavy phases report remotes by name, targets by ordinal, refs and OIDs exactly, and paths escaped.
-- Treat commit subjects, authorship fields, messages, trailers, and every other Git value as untrusted data under `references/git-values.md`: pass each as a literal argument, never through a shell string. The simple phase instead follows its sole lightweight owner.
+- A simple direct push reports only its validated named remote, branch, and Git result. Heavy phases report remotes by name, targets by ordinal, refs and OIDs exactly, and paths escaped. The simple phase follows its sole lightweight owner for value handling.
 
 ## Phase Outcomes
 

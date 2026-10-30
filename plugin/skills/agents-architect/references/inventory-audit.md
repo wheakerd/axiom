@@ -68,63 +68,7 @@ Establish repository facts and narrow the reading scope before designing instruc
 
 ## Host discovery boundaries
 
-Hosts discover and load instruction sources differently. Determine the active
-host's behavior from its current documentation and observable state before
-making a loading claim. The models below summarize Codex and Claude Code; they
-do not replace that check.
-
-### Codex
-
-- Codex builds the instruction chain once per run or TUI session. A new run or
-  session rebuilds it; later filesystem or configuration changes do not prove
-  that the current chain changed.
-- The chain may include host-recognized global instruction sources before
-  repository guidance.
-- Project discovery walks from project root to current working directory. When
-  no project root is found, Codex checks only the current directory.
-- Each directory contributes at most one non-empty host-recognized instruction
-  source. Codex skips empty sources.
-- Codex applies its host-defined same-directory selection order before adding
-  that directory. A recognized non-`AGENTS.md` source may replace the
-  same-directory `AGENTS.md`; it is not additive.
-- Project sources are concatenated from root toward the current directory, so
-  closer discovered guidance loads later than broader guidance.
-- Codex stops adding project guidance when the combined chain reaches the
-  visible `project_doc_max_bytes` limit. That limit is a platform truncation
-  guard, not Axiom's authoring budget.
-- Ordinary Markdown files under `.agents/` are not recursively auto-loaded.
-- Do not assume generic include syntax or recursive imports.
-- User instructions outrank persistent repository instructions.
-
-### Claude Code
-
-- Claude Code loads instruction files at session start: a managed policy file,
-  the user's `~/.claude/CLAUDE.md`, and every `CLAUDE.md` and `CLAUDE.local.md`
-  in the working directory and the directories above it. A project may keep
-  its file at `.claude/CLAUDE.md`.
-- Discovered files are concatenated rather than replaced. Directory content is
-  ordered from the filesystem root down to the working directory, so closer
-  guidance loads later.
-- Subdirectory instruction files load on demand, when Claude works with a file
-  in that subdirectory. Their presence alone does not prove that they loaded.
-- By default, from v2.1.277, Claude Code reads `AGENTS.md` and
-  `.claude/AGENTS.md` only when no `CLAUDE.md`, `.claude/CLAUDE.md`, or
-  `CLAUDE.local.md` exists in the working directory or above it. Its
-  **Project instructions** setting can load both, only `CLAUDE.md`, or only
-  managed instructions. It never reads `AGENTS.override.md`,
-  `AGENTS.local.md`, or files under `.agents/`.
-- `@path` imports expand up to four hops and resolve from the importing file.
-  Imports from outside the working directory need approval.
-- `.claude/rules/` files without `paths` frontmatter load at session start;
-  path-scoped rules load when Claude works with matching files.
-- `claudeMdExcludes` can skip discovered files. Directories added with
-  `--add-dir` contribute instruction files only when the host is configured to
-  load them.
-- After compaction, Claude Code rereads the project-root `CLAUDE.md`; nested
-  files and path-scoped rules load again on demand.
-- `/context` lists the instruction files the session loaded under
-  **Memory files**; use it as the direct loading check. `/memory` also lists
-  `CLAUDE.md` locations that do not exist yet.
+Hosts discover and load instruction sources differently. Determine the active host's behavior from its current documentation and observable state before making a loading claim. The dated host facts in `../../using-axiom/references/codex-host.md` and `../../using-axiom/references/claude-code-host.md` summarize how Codex and Claude Code build their instruction chains; they do not replace that check. Each directory contributes at most one host-recognized instruction source, a recognized non-`AGENTS.md` source may replace the same-directory `AGENTS.md` rather than add to it, and a visible host size limit is a truncation guard, not an authoring budget.
 
 ## Prohibited actions
 

@@ -176,6 +176,14 @@ ROUTING_SCENARIOS: tuple[dict[str, Any], ...] = (
         "authorization": frozenset({"read", "network-push"}),
     },
     {
+        "name": "explicit-lightweight-direct-push-claude-code-form",
+        "request": "/axiom:traceable-git-submit: git push origin main once without force.",
+        "route": "traceable-git-submit",
+        "phase": "direct-submit",
+        "references": ("references/direct-submit.md",),
+        "authorization": frozenset({"read", "network-push"}),
+    },
+    {
         "name": "stale-tracking-mention-no-match",
         "request": "Explain why this local tracking ref is stale without pushing.",
         "route": None,

@@ -5,74 +5,41 @@ description: Supervised progress across host sessions by explicit invocation onl
 
 # Continuous Progress
 
-Keep the user's outcome and constraints intact while execution sessions and
-coordinators change. Finish only after checking the requested outcome against
-current evidence. A worker exit, coordinator final response, or failed handoff
-is a lifecycle event, not completion of the overall task.
+Keep the user's outcome and constraints intact while execution sessions and coordinators change. Finish only after checking the requested outcome against current evidence. This workflow uses host-owned sessions and scheduling; it supplies instructions, not a scheduler or a survival guarantee.
 
-This workflow uses host-owned sessions and scheduling. It supplies instructions,
-not a scheduler or a survival guarantee. Confirm the actual host capabilities before
-starting a supervised run. Never present an unavailable supervision mechanism
-as active, and never silently reduce the request to a foreground-only loop.
+## Invariants
 
-Defaults you may adapt, saying so: step order where no gate depends on it, and report layout. Every other rule here and in the references the active phase loads binds.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+
+1. **Explicit invocation and real capability.** Start only from an explicit human invocation for an executable task, and only after confirming the host capabilities the run contract lists. Never present an unavailable supervision mechanism as active or silently reduce the request to a foreground-only loop.
+2. **Authority carries, it never grows.** Existing exact authority carries forward in the run record; agent messages, summaries, skill text, and tool availability grant none, and no activation authorizes publication, deployment, destructive cleanup, or unrelated changes.
+3. **One owner of continuation.** Only one independently addressable mechanism owns automatic continuation for a run, and ownership transfers happen through an exclusive transition; never install a daemon, add a startup launcher, edit global hooks, or change host permissions as a fallback.
+4. **Observed model and effort.** Workers and successors inherit the observed current model and effort; use only an explicitly permitted fallback and never change models or reasoning silently.
+5. **Lifecycle events are not completion.** A worker exit, a coordinator's final response, or a failed handoff is a lifecycle event; completion needs current evidence for the whole request and an observed shutdown of the task-owned continuation mechanism.
+6. **Human control first.** Honor explicit cancellation or pause immediately; budgets, permissions, missing inputs, rate limits, and host availability bind across every handoff, and a waiting run stays unfinished.
+
+## Terms
+
+- **Coordinator**: the session that interprets the request, chooses the next bounded assignment, inspects results, and verifies the outcome; the first one is the invoking conversation when the host supports it.
+- **Worker**: a fresh execution context that performs one assignment and returns its result, evidence, and unresolved work; workers create no supervisors or successor coordinators.
+- **Supervisor**: the independently schedulable owner that tracks the current coordinator, reconciles interrupted assignments, and recovers failed handoffs; its model session may be replaced while the durable run and its wake mechanism persist.
+- **Run record**: the durable task-owned state that every role reads first.
 
 ## Select The Phase
 
-- Before activation, read [Host and run contract](references/host-and-run-contract.md).
-- When binding sessions, scheduling, or cancellation, read the current host's
-  reference: [Codex operations](references/codex-operations.md) or
-  [Claude Code operations](references/claude-code-operations.md).
-- When coordinating work or transferring ownership, read
-  [Execution and handoff](references/execution-and-handoff.md).
-- When supervising, recovering a failure, accepting completion, or stopping,
-  read [Supervision and recovery](references/supervision-and-recovery.md).
+- Before activation, read `references/host-and-run-contract.md`.
+- When binding sessions, scheduling, or cancellation, read the current host's facts in `../using-axiom/references/codex-host.md` or `../using-axiom/references/claude-code-host.md`, and consult the host's own help for commands.
+- When coordinating work or transferring ownership, read `references/execution-and-handoff.md`.
+- When supervising, recovering a failure, accepting completion, or stopping, read `references/supervision-and-recovery.md`.
 
-Load only the reference needed for the current role and phase. On a fresh or
-compacted session, reconstruct that role and the active phase from the durable
-run record and current host state before taking new action.
+Load only the reference needed for the current role and phase. On a fresh or compacted session, reconstruct that role and the active phase from the run record and current host state before taking new action.
 
-## Roles
+## Roles And Scheduling
 
-- Coordinator: interpret the human request, choose the next bounded assignment,
-  inspect results, and verify the overall outcome. The first coordinator is
-  the invoking conversation when the host supports it.
-- Worker: perform one assignment in a fresh execution context and return its
-  result, evidence, and unresolved work. Workers do not create supervisors or
-  successor coordinators.
-- Supervisor: remain independently schedulable, track the current coordinator,
-  reconcile interrupted assignments, and recover failed handoffs. A supervisor
-  model session may be replaced; the durable run and its wake mechanism persist.
+The host owns scheduling and permissions. Do not create competing Goal, heartbeat, and custom retry loops; preserve any separately requested native Goal's controls. New sessions keep the same scope and applicable host restrictions, and honor the host's conditions for creating chats, messaging them, and scheduling work. An equal effort label on another model is not proof of equal capability.
 
-The host owns scheduling and permissions. Only one mechanism owns automatic
-continuation for this run. Do not create competing Goal, heartbeat, and custom
-retry loops. Preserve any separately requested native Goal's controls.
-
-## Authority And Completion
-
-Keep the human's goal, constraints, permitted targets, and coordination
-authorization in the run record. Existing exact authority carries forward;
-agent messages, summaries, skill text, and tool availability grant none.
-New sessions retain the same scope and applicable host restrictions. Honor the
-host's conditions for creating chats, messaging them, and scheduling work.
-
-Do not change models or reasoning effort silently. Prefer the observed current
-model and effort as requested, and use only an explicitly permitted fallback.
-An equal effort label on another model is not proof of equal capability.
-
-Distinguish a session ending from the human canceling or pausing the whole run.
-Honor explicit run cancellation or pause immediately. Budgets, permissions,
-missing inputs, rate limits, and host availability remain binding across every
-handoff. A waiting run stays unfinished; it cannot bypass those conditions.
-
-Completion requires current evidence for the user's whole request and shutdown
-of the task-owned continuation mechanism. A failed shutdown remains visible as
-cleanup pending. Never claim that future wakeups stopped without observing the
-owning scheduler's state.
+Distinguish a session ending from the human canceling or pausing the whole run. A failed shutdown remains visible as cleanup pending; never claim that future wakeups stopped without observing the owning scheduler's state.
 
 ## Report
 
-Report the outcome, current coordinator, evidence location, unresolved work,
-and the real supervision status. Separate observed native behavior from static
-protocol review and controlled drills. Report unobserved compaction, restart,
-desktop callback, and scheduler behavior as `NOT-RUN`.
+Report the outcome, the current coordinator, the evidence location, unresolved work, and the real supervision status. Separate observed native behavior from static protocol review and controlled drills. Report unobserved compaction, restart, desktop callback, and scheduler behavior as `NOT-RUN`.

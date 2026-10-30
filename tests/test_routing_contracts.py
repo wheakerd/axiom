@@ -20,7 +20,7 @@ class RoutingContractTests(unittest.TestCase):
     def test_all_routing_fixtures(self):
         failures = []
         check_routing_scenarios(ROUTING_SCENARIOS, failures)
-        self.assertEqual(86 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
+        self.assertEqual(87 + len(ROUTE_BOUNDARY_SCENARIOS), len(ROUTING_SCENARIOS))
         self.assertEqual(10, len(ROUTE_BOUNDARY_SCENARIOS))
         self.assertEqual([], failures)
 
@@ -114,7 +114,7 @@ class RoutingContractTests(unittest.TestCase):
             "state which and why before acting",
             "An offered option authorizes no persistent system change",
             "never silently replaces the stated goal",
-            "including those in references the active phase loads, bind",
+            "including the references that phase loads",
         ):
             with self.subTest(invariant=invariant), patch.object(
                 Path, "read_text", replaced(invariant, "REMOVED CONTRACT")

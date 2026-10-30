@@ -17,6 +17,8 @@ Check host liveness, queued work, approval requests, and known operation state.
 If the supervisor's own session ends while the run remains active, the external
 wake mechanism must be able to invoke a replacement from the same record.
 
+Register the wake mechanism against the run record, not the rotating coordinator, and verify its identifier, schedule, enabled state, and one actual wake before depending on recovery; a manual message cannot stand in for a scheduled wake. Its saved prompt states the run-record location, original scope, model and effort, control check, reconciliation rules, exclusive ownership mechanism, and exact shutdown operation. Every wake rereads that record and current host state, changes its own schedule or prompt only when the record calls for it, and never creates another supervisor or wake mechanism. Check for an existing task for this run before creating one and address that same task in every later operation, keeping its other settings when editing it.
+
 ## Recovery Decisions
 
 | Observation | Required action |
@@ -64,6 +66,8 @@ existing authority. Mark completed only when the goal and shutdown checks hold.
 On shutdown failure, retain cleanup-pending status and explain the remaining
 active mechanism. Do not delete unrelated schedules, chats, branches, or files.
 
+Verify shutdown through the surface that owns the mechanism, as the current host's facts describe; the model's own statement, a rendered card, or a green indicator is not a terminal-state observation.
+
 Explicit cancellation ends task dispatch and its wake mechanism even when the
 goal is unfinished. A human pause preserves resumable state without continuing
 work. A worker or coordinator session ending by itself is a recovery event.
@@ -86,6 +90,8 @@ Keep these claims separate:
 - Actual desktop callback and independent scheduler wakeups.
 - Automatic pre-compaction transfer and post-compaction recovery.
 - Duplicate-delivery handling, cancellation, and verified scheduler shutdown.
+
+Record the host version with every claim. Distinguish a scheduled wake after the coordinator exited, recovery of a failed handoff, worker and successor completion with session IDs, actual compaction with a durable reread, cancellation of active work, and observed scheduler shutdown after both completion and cancellation.
 
 A controlled drill proves only its observed path. Fresh instruction loading,
 unattended scheduling, app restart, and another operating system remain

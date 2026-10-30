@@ -136,8 +136,8 @@ class ReleaseFactTests(unittest.TestCase):
         current_path = f"docs/releases/v{RELEASE_VERSION}.md"
         inserted = replace_release_block(current_path, "Version facts.\n", current_document)
         self.assertIn("## Routing Context Facts", inserted)
-        self.assertIn("3 direct references", inserted)
-        self.assertIn("+2 references", inserted)
+        self.assertIn("5 direct references", inserted)
+        self.assertIn("+4 references", inserted)
         self.assertIn(
             f"<!-- release-facts:v{RELEASE_VERSION}-context-budget:start -->",
             inserted,
