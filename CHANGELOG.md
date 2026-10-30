@@ -6,6 +6,24 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## Repository policy revision 115
+
+### Added
+
+- Thirty-four routing cases in the current evaluation corpus, outside both benchmark profiles, so that every bundled route has a positive, a near-miss no-route control, and a cross-route control. `clarify-intent`, `delegate-simple-task`, `task-planning`, `continuous-progress`, and `local-web-search` previously had no near-miss or cross-route case anywhere, and six routes had a single current case.
+
+### Changed
+
+- The evaluation guide states that the per-route workload stays frozen for the routing-context budget and documents its retired route name mapping, and the current-corpus tests no longer pin the number of `verify-completion` cases.
+
+### Behavioral impact
+
+Repository maintenance only. Offline validation covers the five routes most likely to fire on everyday requests; host observations of the new cases need the next benchmark profile. The installed runtime digest is unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 114
 
 ### Changed
