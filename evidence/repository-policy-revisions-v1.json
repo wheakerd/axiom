@@ -912,6 +912,14 @@
       "sourceIssue": 216,
       "summary": "Move the Windows hook canary test into the native hook runtime integration module so the Windows CI job executes it; the unit copy read a pre-v0.17.0 path and had never run.",
       "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
+    },
+    {
+      "revision": 115,
+      "recordedOn": "2026-10-30",
+      "baselineCommit": "ad19af173f5c242b354229fb2a51b01de77cc51b",
+      "sourceIssue": 217,
+      "summary": "Add thirty-four current-corpus routing cases so every bundled route has positive, near-miss, and cross-route coverage; freeze the per-route workload and document its retired name mapping.",
+      "runtimeContractDigest": "sha256:34958160debfb8b9b8f2db6be6bd0b2392b580293c03ef3f11279cbd11e608c1"
     }
   ]
 }
