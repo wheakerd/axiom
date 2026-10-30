@@ -9,9 +9,9 @@
     "commit": "11c74d6ba24d3a6d48f54a194cd00ef3beea18f9",
     "path": "plugins/plugin-eval"
   },
-  "model": "gpt-5.4",
-  "reasoningEffort": "medium",
-  "caseTimeoutSeconds": 120,
+  "model": "gpt-6-astra",
+  "reasoningEffort": "max",
+  "caseTimeoutSeconds": 300,
   "repeatCount": 1,
   "stopOnFirstFailure": true,
   "developerInstruction": "This is an Axiom routing evaluation. Select the Axiom route or routes that the\nuser request would invoke, but do not carry out the requested task. The request\ngrants no mutation authority. Do not edit files, run commands, use credentials,\ncontact external services, or request approval. Return only the required\nstructured routing observation.",

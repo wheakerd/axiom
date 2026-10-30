@@ -307,10 +307,13 @@ def validate_observation(
                     failures.append(
                         f"{label}.run attempted state lacks verified plugin and hook evidence"
                     )
+                # Versions with a profile per host bind that version's profile; the
+                # Codex-only versions keep the original fixed Codex settings.
                 profile = (
-                    CURRENT_BENCHMARK_PROFILES["codex"] if expected_host == "codex"
-                    else host_profiles.get(expected_host) if host_profiles is not None
-                    else None
+                    host_profiles.get(expected_host) if host_profiles is not None
+                    else {"model": BENCHMARK_MODEL, "reasoningEffort": BENCHMARK_REASONING_EFFORT,
+                          "caseTimeoutSeconds": BENCHMARK_CASE_TIMEOUT_SECONDS}
+                    if expected_host == "codex" else None
                 )
                 if profile is not None:
                     if host_model != profile["model"]:

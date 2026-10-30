@@ -17,7 +17,7 @@ from .constants import (
     SCHEMA_V2_ID,
 )
 from .corpus import check_corpus_coverage, collect_corpus
-from .candidates import check_candidate_routing_observations
+from .candidates import candidate_family_paths, check_candidate_routing_observations
 from .current import check_current_routing_evaluations
 from .history import (
     CURRENT_HOST_RESPONSE_SCHEMA_SHA256,
@@ -106,9 +106,11 @@ def check_routing_evaluations(
             canonical_routes=("agent-plugin-architect",),
             expected_case_count=17,
         )
+    candidate_family = candidate_family_paths(root)
     actual_results = tuple(
         path.relative_to(eval_root).as_posix()
         for path in sorted((eval_root / "results").glob("v*/*/*.json"))
+        if path.relative_to(eval_root).as_posix() not in candidate_family
     )
     actual_result_set = set(actual_results)
     missing_required = sorted(set(REQUIRED_RESULT_PATHS) - actual_result_set)

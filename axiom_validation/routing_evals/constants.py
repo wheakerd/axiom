@@ -532,8 +532,17 @@ CLAUDE_CODE_BENCHMARK_V7_ID = "claude-code-core-v7"
 CURRENT_BENCHMARK_IDS = (BENCHMARK_V7_ID, CLAUDE_CODE_BENCHMARK_V7_ID)
 CURRENT_BENCHMARK_CASE_COUNT = 40
 CURRENT_CORPUS_RELATIVE_PATH = "evals/routing-v7/current.jsonl"
+# The v7 Codex profile runs the model the maintainer's ChatGPT account serves at its
+# maximum effort; Codex CLI 0.166.0 refuses `gpt-5.4` on a ChatGPT account, and the
+# stall rate observed on 2026-10-28 needs the longer timeout.
 CURRENT_BENCHMARK_PROFILES = {
-    "codex": {**V5_BENCHMARK_PROFILES["codex"], "id": BENCHMARK_V7_ID},
+    "codex": {
+        "id": BENCHMARK_V7_ID,
+        "method": "documented-codex-cli-equivalent",
+        "model": "gpt-6-astra",
+        "reasoningEffort": "max",
+        "caseTimeoutSeconds": 300,
+    },
     "claude-code": {**V5_BENCHMARK_PROFILES["claude-code"], "id": CLAUDE_CODE_BENCHMARK_V7_ID},
 }
 # Schema versions that bind a benchmark profile per host, with their profiles.

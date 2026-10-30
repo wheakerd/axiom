@@ -74,12 +74,16 @@ def current_record() -> dict:
             workspace_unchanged=True, source_unchanged=True, installed_unchanged=True,
         )
         results.append(result)
+    profile = CURRENT_BENCHMARK_PROFILES["codex"]
     record.update(
         schemaVersion="7", benchmarkId=BENCHMARK_V7_ID,
         runId="synthetic-current-routing-regression", cases=results,
         responseSchema={"path": HOST_RESPONSE_SCHEMA_V8_RELATIVE_PATH,
                         "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V8_SHA256},
     )
+    record["host"].update(model=profile["model"])
+    record["run"].update(method=profile["method"], reasoningEffort=profile["reasoningEffort"],
+                         caseTimeoutSeconds=profile["caseTimeoutSeconds"])
     record["run"]["callCount"] = len(results)
     record["summary"]["evaluatedCases"] = len(results)
     return record
@@ -137,6 +141,10 @@ def frozen_v5_record(host: str = "codex") -> dict:
         responseSchema={"path": HOST_RESPONSE_SCHEMA_V6_RELATIVE_PATH,
                         "sha256": CURRENT_HOST_RESPONSE_SCHEMA_V6_SHA256},
     )
+    v5_profile = V5_BENCHMARK_PROFILES[host]
+    record["host"].update(model=v5_profile["model"])
+    record["run"].update(method=v5_profile["method"], reasoningEffort=v5_profile["reasoningEffort"],
+                         caseTimeoutSeconds=v5_profile["caseTimeoutSeconds"])
     record["run"]["callCount"] = len(results)
     record["summary"]["evaluatedCases"] = len(results)
     return record

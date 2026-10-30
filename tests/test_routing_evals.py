@@ -265,6 +265,7 @@ def documented_method_failures(text: str) -> list[str]:
 class RoutingEvaluationTests(unittest.TestCase):
     def test_checked_in_candidate_observations_are_validated(self):
         from axiom_validation.routing_evals.candidates import (
+            candidate_record_paths,
             check_candidate_routing_observations,
             validate_candidate_routing_observation,
         )
@@ -308,7 +309,11 @@ class RoutingEvaluationTests(unittest.TestCase):
             self.assertTrue(failures)
 
             failures = []
-            self.assertEqual(0, check_candidate_routing_observations(REPOSITORY_ROOT, failures))
+            checked_in = sum(
+                len(paths) for paths in candidate_record_paths(REPOSITORY_ROOT, RELEASE_VERSION).values()
+            )
+            self.assertEqual(2, checked_in)
+            self.assertEqual(checked_in, check_candidate_routing_observations(REPOSITORY_ROOT, failures))
             self.assertEqual([], failures)
 
     def test_checked_in_evaluation_contracts_pass(self):
