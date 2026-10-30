@@ -6,6 +6,20 @@ For versions after `0.10.0`, each new entry states what changed, the behavioral 
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
+## Repository policy revision 114
+
+### Changed
+
+- The Windows hook canary test, which proves that the packaged `cmd` wrapper does not execute same-named programs placed in the workspace, moved from the unit test module into the native hook runtime integration module that the cross-platform workflow executes on Windows. The unit copy read a pre-v0.17.0 path and had never run in CI.
+
+### Behavioral impact
+
+Repository maintenance only. The Windows CI job now executes the canary check on every pull request and push to `main`. The installed runtime digest is unchanged.
+
+### Required action
+
+None.
+
 ## Repository policy revision 113
 
 ### Changed

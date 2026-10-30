@@ -412,6 +412,31 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
                     self._run(invocation, timeout=TIMEOUT_FIXTURE_SECONDS)
                 self.assertLess(time.monotonic() - started, 5)
 
+    @unittest.skipUnless(os.name == "nt", "requires the native Windows command shell")
+    def test_windows_wrapper_ignores_workspace_executable_canaries(self) -> None:
+        """The checked-in cmd wrapper must not run same-named programs from the workspace."""
+        marker = self.workspace / "workspace-program-ran"
+        canary = b'@echo hijacked>"%~dp0workspace-program-ran"\r\n'
+        for name in (
+            "codex-session-start.cmd",
+            "echo.cmd",
+            "setlocal.cmd",
+            "type.cmd",
+            "powershell.cmd",
+            "pwsh.cmd",
+        ):
+            (self.workspace / name).write_bytes(canary)
+        for name in ("cmd.exe", "powershell.exe"):
+            (self.workspace / name).write_bytes(b"not a Windows executable")
+
+        invocation = self._invocations()[0]
+        self.assertEqual("codex-windows", invocation.name)
+        result = self._run(invocation)
+        self.assertEqual(0, result.returncode, result.stderr.decode("utf-8", errors="replace"))
+        self.assertEqual(invocation.heading_bytes + self.skill_bytes, result.stdout)
+        self.assertEqual(b"", result.stderr)
+        self.assertFalse(marker.exists())
+
 
 def main() -> int:
     if sys.argv[1:] == ["--report-environment"]:
