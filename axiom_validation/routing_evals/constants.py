@@ -432,12 +432,14 @@ CLAUDE_CODE_STREAM_JSON_CATEGORIES = (
     "failure-error",
     "forbidden-unknown",
 )
-# Documented message types, observed with Claude Code 2.1.308 on 2026-10-23.
+# Documented message types, observed with Claude Code 2.1.308 on 2026-10-23; the
+# commands_changed notice was observed with Claude Code 2.1.309 on 2026-11-02.
 CLAUDE_CODE_STREAM_JSON_EVENT_TYPES = {
     "system/hook_started": ("lifecycle", "startup-hook-start"),
     "system/hook_progress": ("lifecycle", "startup-hook-progress"),
     "system/hook_response": ("lifecycle", "startup-hook-result"),
     "system/init": ("lifecycle", "session-start"),
+    "system/commands_changed": ("lifecycle", "commands-changed"),
     "system/thinking_tokens": ("content-progress", "reasoning-progress"),
     "system/api_retry": ("content-progress", "api-retry"),
     "system/permission_denied": ("tool-action-capable", "permission-denied"),

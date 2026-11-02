@@ -386,7 +386,7 @@ def _expected_claude_code_stream_json_taxonomy() -> dict[str, Any]:
     return {
         "schemaVersion": "1",
         "taxonomyVersion": CLAUDE_CODE_STREAM_JSON_TAXONOMY_VERSION,
-        "host": {"name": "claude-code", "version": "2.1.308"},
+        "host": {"name": "claude-code", "version": "2.1.309"},
         "source": {
             "documentation": [
                 {
@@ -402,7 +402,7 @@ def _expected_claude_code_stream_json_taxonomy() -> dict[str, Any]:
                     "authority": "SessionStart sources and command hook execution",
                 },
             ],
-            "verifiedOn": "2026-10-23",
+            "verifiedOn": "2026-11-02",
         },
         "invocation": {
             "required": [
