@@ -29,7 +29,7 @@ validation report cannot pass the final gate for a different current state.
 
 ## Apply And Promote
 
-Apply the smallest authorized candidate mutation first. Preserve the active
+Apply the smallest authorized candidate mutation first, one mutation per tool request: a read-only query or a second action in the same call hides which one a host denied. Preserve the active
 version and rollback material until completion evidence is established.
 
 When promotion is distinct from preparation:

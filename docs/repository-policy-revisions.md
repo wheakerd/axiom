@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 124 | 2026-11-02 | [#239](https://github.com/wheakerd/axiom/issues/239) | `cce3fb379f112556ea7464d003e3c5833c852c73` | Release 0.25.0: per-call host-mode grant before the first attempt in the action owners, a mandatory visible route notice and output-language rule in the gate, envelope and rollback-point references. |
 | 123 | 2026-10-30 | none | `4e5e76848cc809f62556c49adbbc361e787951f1` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.24.0. |
 | 122 | 2026-10-30 | [#226](https://github.com/wheakerd/axiom/issues/226) | `144127b93508d67a4386ede85e8436de08e3a955` | Release 0.24.0: skills as direction plus named invariants, gate terms, per-host invocation, before-acting behavior, dated host references, recall cases (contract v8), readability validator. |
 | 121 | 2026-10-30 | none | `c67b1fb454900dfe95d724bda45b52d74035f9d9` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.23.0. |

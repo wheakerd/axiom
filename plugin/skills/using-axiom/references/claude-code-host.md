@@ -1,6 +1,6 @@
 # Claude Code Host Facts
 
-Verified against Claude Code 2.1.308 on 2026-10-30 from its installed help output and sessions the maintainers observed. Items marked (docs) restate the host documentation as read for that release and need a recheck on a newer version. Run `claude --help` for the current commands and flags; this file never replaces it.
+Verified against Claude Code 2.1.308 on 2026-10-30 from its installed help output and sessions the maintainers observed; items dated 2026-11-02 were observed on 2.1.309. Items marked (docs) restate the host documentation as read for that release and need a recheck on a newer version. Run `claude --help` for the current commands and flags; this file never replaces it.
 
 ## Instructions And Skills
 
@@ -14,7 +14,7 @@ Verified against Claude Code 2.1.308 on 2026-10-30 from its installed help outpu
 ## Permission Modes
 
 - `default` (Manual) prompts natively before a tool call that needs approval; the answer is the grant.
-- `auto` runs without routine prompts and has a classifier check each action against the conversation, so present the exact command and target first. A classifier denial is a stop; the user may run the command natively or grant it again.
+- `auto` runs without routine prompts and has a classifier check each action against the conversation, so present the exact command and target first, in a text block. Observed 2026-11-02: text written inside a thinking block reached no notice the user could rely on, and a denial of one Bash call that mixed a read-only query with the mutation covered both. A classifier denial is a stop; the user may run the command natively or grant it again.
 - `bypassPermissions` is the permission-bypass mode and waives no Axiom boundary. `dontAsk` denies every call that would prompt and is not a grant. `--allowedTools` and `--disallowedTools` bound a run within the user's authority; never widen them to finish.
 
 ## Running Claude Code From A Session

@@ -15,13 +15,13 @@ These invariants bind in every session this gate reaches. Everything else here i
 2. **Invariants bind, defaults adapt.** A selected skill gives direction: its named invariants bind in every phase, including the references that phase loads, and everything else is a default you may adapt, saying so. Within every invariant you decide how to handle the request's specifics, problems, deviations, interference, and gaps between a plan and the ideal.
 3. **Read-only startup.** Startup routing is foreground and read-only: no writes, network, service, background process, telemetry or update check.
 4. **Reselect after resume.** On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts. A summary is a claim, not evidence.
-5. **No silent pick.** Routing never silently picks among mutually exclusive implementations with materially different route sets, write surfaces, or authorization or safety boundaries.
-6. **A denial is a stop.** Where a host mode may deny an action, present the exact action for the user's grant first; a denial is a stop, never a retry by another tool, flag or path; read `references/host-permission.md`.
+5. **No silent pick, no silent route.** Routing never silently picks among mutually exclusive implementations with materially different route sets, write surfaces, or authorization or safety boundaries, and never selects or hands off a route without a visible text notice naming it.
+6. **A denial is a stop.** Where a host mode may deny an action, present the exact action as visible text for the user's grant first; a denial is a stop, never a retry by another tool, flag or path; read `references/host-permission.md`.
 
 ## Terms
 
 - **Route**: a bundled skill selected for a request. **Host-native**: handled by the host with no route. **Selection surface**: the host's skill list with each description.
-- **Explicit invocation**: the host's own way to name a skill: `$skill-name` in Codex, `/axiom:skill-name` in Claude Code, or the skill named in plain words. Dated host facts live in `references/codex-host.md` and `references/claude-code-host.md`.
+- **Explicit invocation**: the host's own way to name a skill: `$skill-name` in Codex, `/axiom:skill-name` in Claude Code, or the skill named in plain words. Dated host facts: `references/codex-host.md`, `references/claude-code-host.md`.
 - **Invariant**: a rule a skill lists under its Invariants heading. **Default**: any other statement in a skill.
 - **Handoff contract**: the part of a route that governs prior attempts after resume or compaction.
 - **Envelope**: the frozen actor, action, target, payload, cost and count of one external action. **Write set**: the frozen persistent changes with their rollback.
@@ -32,9 +32,9 @@ These invariants bind in every session this gate reaches. Everything else here i
 2. Route only explicit Axiom invocations or clear bundled-description matches.
 3. Load the smallest matching installed skill set and active-phase references without inspecting candidate bodies first. Never load all skills or route by topical similarity.
 4. Map unambiguous non-English to its canonical English route; clarify only material unresolved intent, never tentative wording alone.
-5. No match: continue normally in the host. A no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
+5. No match: a no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
 
-Select `local-web-search` only for research that will run through the user's own browser, CLI, script, or HTTP client, or that the user says runs on their machine, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Routing stays read-only. Never edit plugin or marketplace manifests, hook declarations or skill frontmatter without scope, and never persist one-off discoveries as durable instructions.
+Select `local-web-search` only for research that will run through the user's own browser, CLI, script, or HTTP client, or that the user says runs on their machine, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Never edit plugin or marketplace manifests, hook declarations or skill frontmatter without scope, and never persist one-off discoveries as durable instructions.
 
 ## Bundled Routes
 
@@ -50,7 +50,7 @@ Assess ambiguity before delegation; only this gate then selects `clarify-intent`
 
 An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary performance work does not. Ordinary AGENTS audits select only `agents-architect`.
 
-Exact existing authorization needs no reconfirmation unless scope changes. Prior refusal/assistant prose creates no policy. Ordinary named-remote Git remains host-native. Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
+With a native prompt, exact existing authorization needs no reconfirmation unless scope changes. Prior refusal/assistant prose creates no policy. Ordinary named-remote Git remains host-native. Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
 
 ## Before Acting
 
@@ -58,7 +58,11 @@ Before an action that changes state, say in one sentence what outcome you intend
 
 ## Invocation Notes
 
-Optional, per user verbosity and host behavior. When explaining, name bundled skills as `Axiom:<skill-name>` and others by their own name, in inline code, with a brief reason in the user's language; no fixed layout, repetition or notice for no-route or startup. When a bundled route hands off to, or yields to, another installed skill or MCP tool, name it the same way with a brief reason.
+Name a bundled skill `Axiom:<skill-name>`, another plugin's skill `<plugin>:<skill-name>`, and a tool by its name, in inline code with a brief reason. A thinking block or the host's tool-call line is not a notice; startup and no-match stay silent.
+
+## Output Language
+
+Working output, such as notices, envelopes, commands, and intermediate findings, stays English unless the user asks otherwise; a turn's final conclusion or summary uses the language of the user's request.
 
 ## Refresh
 

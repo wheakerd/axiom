@@ -1,6 +1,6 @@
 # Architecture
 
-Axiom is a foreground routing layer built from host plugin metadata, startup hooks, Markdown Skills, and on-demand references. Codex and Claude Code each load the same Skills through their own manifest and hook. After routing, the host uses its normal tools and permissions. Axiom adds no execution service, daemon, watcher, automatic updater, or hidden persistent component.
+Axiom is a foreground routing layer built from host plugin metadata, startup hooks, Markdown Skills, and on-demand references. Codex and Claude Code each load the same Skills through their own manifest and hook. After routing, the host uses its normal tools and permissions. When the gate selects a route, or a route hands off to another installed skill or tool, one visible text line names it, `Axiom:<skill-name>` for a bundled skill; working output stays English unless the user asks otherwise, and the final conclusion of a turn uses the language of the user's request. Axiom adds no execution service, daemon, watcher, automatic updater, or hidden persistent component.
 
 ```mermaid
 flowchart TD

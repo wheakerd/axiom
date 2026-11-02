@@ -105,7 +105,7 @@ Then try an ordinary request:
 Summarize the purpose of this README. Do not modify files.
 ```
 
-The first request should select `agents-architect`; the second should continue normally without another skill. Any explanation of the routing decision is optional and follows the [invocation notes](plugin/skills/using-axiom/SKILL.md#invocation-notes); a quiet response is valid. These are expected behaviors, not a claim that your installation has already reproduced them.
+The first request should select `agents-architect` and say so in one line, `Axiom:agents-architect` with a brief reason, as the gate's [invocation notes](plugin/skills/using-axiom/SKILL.md#invocation-notes) describe; the second should continue normally without another skill and without a notice. These are expected behaviors, not a claim that your installation has already reproduced them.
 
 > [!IMPORTANT]
 > A request that matches no Axiom skill still follows your host's permissions and repository instructions. No match is not a safety certification. Selecting a skill does not grant permission to edit, publish, deploy, or delete anything.

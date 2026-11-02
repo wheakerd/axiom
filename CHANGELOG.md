@@ -8,6 +8,26 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.25.0 - unreleased
+
+### Changed
+
+- Under a host permission mode that decides each call without a native prompt, such as Claude Code auto mode, `confirm-external-action` and `reversible-system-change` present the exact command and target as visible text and obtain your grant before the first attempt; a request that named the outcome earlier no longer stands in for that grant. The host permission reference says the same and adds that a thinking block or a tool-call line is not a notice, that each mutation goes in its own tool request, and that a multi-step irreversible sequence is ordered so a denial between steps leaves a recoverable state (rename, create, then delete) or is granted as a whole before its first irreversible step (Issue #239).
+- The startup gate's invariant "No silent pick" becomes "No silent pick, no silent route": selecting a bundled route, or handing off to another installed skill or tool, is announced in one visible text line, `Axiom:<skill-name>` for a bundled skill and `<plugin>:<skill-name>` for another plugin's skill. The notice was an optional convention before; startup and no-match stay silent (Issue #241).
+- The gate adds an Output Language rule: working output such as notices, envelopes, commands, and intermediate findings stays English unless you ask otherwise, and the final conclusion or summary of a turn uses the language of your request (Issue #242).
+- Detail moved to routed references without dropping a rule: the external-action envelope fields live in `confirm-external-action/references/action-envelope.md`, the rollback-point contract moves from `preflight-and-rollback.md` to `reversible-system-change/references/rollback-point.md`, and the rehearsal-phase boundary text lives in that reference.
+- `claude-code-host.md` records the 2026-11-02 observation on Claude Code 2.1.309: text written inside a thinking block reached no notice the user could rely on, and a denial of one call that mixed a read-only query with the mutation covered both.
+
+### Behavioral impact
+
+Under a per-call permission mode the first irreversible step waits for a visible grant even when your request named the outcome; every Axiom-guided turn names the selected skill; working output is English by default and the conclusion follows your request's language. Authority does not widen: the notice grants nothing, and the grant is what the host then evaluates. The startup gate grows from 7,217 to 7,370 bytes, below its publication maximum; the description set is unchanged, so routing conditions are unchanged. The runtime digest changes because skill bodies and references are installed inputs.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.25.0.md) for the reasoning, the changed passages, the private audit counts behind Issue #240, and the evidence boundary.
+
 ## 0.24.0 - 2026-10-30
 
 ### Changed
