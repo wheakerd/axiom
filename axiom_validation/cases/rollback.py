@@ -25,6 +25,15 @@ ROLLBACK_WAIVER_ANCHORS = (
     "Without it, stay stopped before candidate or active-state mutation",
 )
 
+# Under a host mode that decides each call without a native prompt, the exact command is
+# presented as visible text and granted before the first attempt, one mutation per tool
+# request, and a multi-step sequence leaves a recoverable state between steps.
+HOST_GRANT_ANCHORS = (
+    "obtain the grant before the first attempt",
+    "one mutation per tool request",
+    "leaves a recoverable state",
+)
+
 
 def check_reversible_safety_scenarios(failures: list[str]) -> int:
     gate_scenario_count = check_strict_evidence_gate(
@@ -40,6 +49,7 @@ def check_reversible_safety_scenarios(failures: list[str]) -> int:
         for path in (
             skill_root / "SKILL.md",
             skill_root / "references" / "preflight-and-rollback.md",
+            skill_root / "references" / "rollback-point.md",
             skill_root / "references" / "execution-and-verification.md",
             skill_root / "references" / "recovery-material-preparation.md",
             skill_root / "references" / "informed-waiver.md",
@@ -72,6 +82,11 @@ def check_reversible_safety_scenarios(failures: list[str]) -> int:
         if phase_anchor.casefold() not in normalized_contract:
             failures.append(
                 f"reversible-system-change is missing rehearsal phase contract {phase_anchor!r}"
+            )
+    for grant_anchor in HOST_GRANT_ANCHORS:
+        if " ".join(grant_anchor.split()).casefold() not in normalized_contract:
+            failures.append(
+                f"reversible-system-change is missing host grant contract {grant_anchor!r}"
             )
     for waiver_anchor in ROLLBACK_WAIVER_ANCHORS:
         if " ".join(waiver_anchor.split()).casefold() not in normalized_contract:

@@ -1035,6 +1035,7 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "If route or phase cannot be reconstructed, perform zero new mutations",
                 "Routing never silently picks among mutually exclusive implementations",
                 "materially different route sets, write surfaces, or authorization or safety boundaries",
+                "never selects or hands off a route without a visible text notice naming it",
                 "Resolve cross-route ownership from these rules before inspecting either candidate body.",
                 "confirm-external-action",
                 "reversible-system-change",
@@ -1052,6 +1053,9 @@ def check_cross_route_resume_contracts(failures: list[str]) -> int:
                 "never silently replaces the stated goal.",
                 "Once the user chooses an unambiguous implementation, resume normal route selection.",
                 "An explicit usage-reduction goal selects",
+                # The notice and output-language rules (0.25.0) close the gate's cross-cutting section.
+                "A thinking block or the host's tool-call line is not a notice",
+                "uses the language of the user's request",
             ),
         ),
         (

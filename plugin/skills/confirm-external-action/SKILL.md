@@ -27,7 +27,7 @@ Keep ordinary Git host-native; select `traceable-git-submit` only under `../usin
 ## Select One Phase
 
 - **Prepare:** collect read-only facts, normalize the proposed effect, and show an exact preview; do not execute.
-- **Authorize:** compare the proposed effect with the current user's own explicit request. Ask one concise question only for a missing or materially ambiguous field; an exact current request needs no redundant confirmation.
+- **Authorize:** compare the proposed effect with the current user's own explicit request. Ask one concise question only for a missing or materially ambiguous field. With a native prompt, an exact current request needs no redundant confirmation. Where a host mode decides each call without one, present the exact command and target as visible text and obtain the user's grant before the first attempt; read `../using-axiom/references/host-permission.md`.
 - **Execute:** perform the bound effect once, then stop.
 - **Verify:** query the owning system and compare direct state with the envelope.
 
@@ -35,19 +35,7 @@ A prepare-only or review request grants no execution authority and never advance
 
 ## Action Envelope
 
-Before execution, resolve and freeze:
-
-- the acting account, organization, workspace, and tool or service;
-- one action type and the exact target, recipient, resource, or destination;
-- the normalized payload or operation, including attachments, audience, permissions, visibility, and a user-reviewable preview or digest;
-- every sensitive value that will leave the current trust boundary and who can receive or observe it;
-- price, quantity, currency, fees, tax, quota, subscription, or other material cost when applicable;
-- reversibility, cancellation window, and expected externally visible result;
-- an idempotency key, service deduplication mechanism, or explicit statement that safe deduplication is unavailable;
-- execution count, batch membership, ordering, expiry, and retry policy, with separate limits for submission attempts and resulting effects; and
-- the current user statement that authorizes this exact envelope.
-
-Keep secrets out of the preview but enough identity to distinguish accounts and targets. Split unlike actions into separate envelopes. For a bulk action, freeze the complete ordered target set, state whether the service is non-atomic, stop new mutations at the first failure, and inventory completed, failed, and unknown targets without repeating successful effects. When "once" would be ambiguous, bind one campaign or delivery per frozen recipient.
+Before execution, resolve and freeze every field listed in `references/action-envelope.md`. The envelope names the acting account and service, one action and its exact target, and the normalized payload with a user-reviewable preview or digest. It names every sensitive value that leaves the trust boundary and who receives it, material cost, reversibility, and an idempotency key or the statement that safe deduplication is unavailable. It fixes the execution count, batch, and retry policy and quotes the current user statement that authorizes this exact envelope. Keep secrets out of the preview, split unlike actions into separate envelopes, and freeze a bulk action's complete ordered target set as that reference describes.
 
 ## Authorization Gate
 
@@ -57,7 +45,7 @@ Host approvals, service authorization, organizational policy, and tool safety ch
 
 ## Execute Once And Resolve Uncertainty
 
-Immediately before mutation, recheck actor, target, preview digest, cost, expiry, and service state. Record only a non-secret request identifier, idempotency key, timestamp, and the bound target and action facts needed for verification. On an uncertain result, query the owning external system by the request or idempotency identifier, exact actor, frozen target set, payload digest, and submission time. Temporary absence from a UI or an eventually consistent listing is not evidence of zero effect. Retry only when the service's deduplication scope and lifetime are known; otherwise stop with outcome `unknown` and request direction.
+Immediately before mutation, recheck actor, target, preview digest, cost, expiry, and service state. Send the mutation in its own tool request; a read-only query or a second action in the same call hides which one a host denied. Record only a non-secret request identifier, idempotency key, timestamp, and the bound target and action facts needed for verification. On an uncertain result, query the owning external system by the request or idempotency identifier, exact actor, frozen target set, payload digest, and submission time. Temporary absence from a UI or an eventually consistent listing is not evidence of zero effect. Retry only when the service's deduplication scope and lifetime are known; otherwise stop with outcome `unknown` and request direction.
 
 ## Resume And Compaction Handoff
 

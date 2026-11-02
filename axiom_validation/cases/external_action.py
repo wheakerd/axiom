@@ -8,8 +8,13 @@ from .evidence import check_strict_evidence_gate
 
 
 def check_external_action_scenarios(failures: list[str]) -> int:
-    skill_path = REPOSITORY_ROOT / "plugin" / "skills" / "confirm-external-action" / "SKILL.md"
-    contract = skill_path.read_text(encoding="utf-8")
+    skill_root = REPOSITORY_ROOT / "plugin" / "skills" / "confirm-external-action"
+    skill_path = skill_root / "SKILL.md"
+    # The envelope fields live in the routed reference; the entry keeps the summary and gates.
+    contract = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (skill_path, skill_root / "references" / "action-envelope.md")
+    )
     for anchor in (
         "acting account",
         "exact target",
@@ -21,6 +26,9 @@ def check_external_action_scenarios(failures: list[str]) -> int:
         "Do not automatically retry",
         "external system of record",
         "untrusted",
+        "before the first attempt",
+        "visible text",
+        "in its own tool request",
     ):
         if anchor.casefold() not in contract.casefold():
             failures.append(
