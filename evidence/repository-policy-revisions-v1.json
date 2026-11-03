@@ -1016,6 +1016,14 @@
       "sourceIssue": 240,
       "summary": "Release 0.26.0: the gate names the not-displaced boundary (a host-offered tool or unnamed repo-local skill displaces nothing); notifications select no route; descriptions unchanged; 18 cases.",
       "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
+    },
+    {
+      "revision": 128,
+      "recordedOn": "2026-11-03",
+      "baselineCommit": "c8126c54b3d77bba79bee90a49fcc0e675315a56",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.26.0.",
+      "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
     }
   ]
 }
