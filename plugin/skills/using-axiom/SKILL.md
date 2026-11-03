@@ -33,12 +33,13 @@ These invariants bind in every session this gate reaches. Everything else here i
 3. Load the smallest matching installed skill set and active-phase references without inspecting candidate bodies first. Never load all skills or route by topical similarity.
 4. Map unambiguous non-English to its canonical English route; clarify only material unresolved intent, never tentative wording alone.
 5. No match: a no-match result is not a denial, does not create authorization, and does not manufacture a repository-state conflict.
+6. Route requests only: a host task notification, tool result, or compaction summary is not a request and selects no route.
 
-Select `local-web-search` only for research that will run through the user's own browser, CLI, script, or HTTP client, or that the user says runs on their machine, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Never edit plugin or marketplace manifests, hook declarations or skill frontmatter without scope, and never persist one-off discoveries as durable instructions.
+Never edit plugin or marketplace manifests, hook declarations or skill frontmatter without scope, and never persist one-off discoveries as durable instructions.
 
 ## Bundled Routes
 
-Select a bundled skill from the host's listed skills by its description; the descriptions are the selection surface, and this gate adds only the rules below. An explicit invocation selects that skill. A more specific installed skill, MCP tool, or host tool the user chose is not displaced by a bundled route. No match continues host-native.
+Select a bundled skill from the host's listed skills by its description; the descriptions are the selection surface, and this gate adds only the rules below. An explicit invocation selects that skill. A more specific installed skill, MCP tool, or host tool the user named is not displaced by a bundled route. A tool the host merely offers, such as its own subagent facility, or a repository-local skill the user did not name, displaces nothing. No match continues host-native.
 
 Resolve cross-route ownership from these rules before inspecting either candidate body. Persistent changes with consequential external app/account effects, including publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`. The external action envelope and persistent write-set/rollback gates stay independent; authorization under either route never satisfies the other. Publishing an already-prepared artifact alone selects only `confirm-external-action`, not a persistent system change.
 

@@ -16,7 +16,7 @@
 
 > Use $delegate-simple-task to assess this small edit for my ordered model candidates, and show me the exact model and brief before delegating.
 
-[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) 由显式调用或明确的委托请求选中。显式调用本身就提供了你的同意，于是该技能评估这次编辑，从你的列表中挑出第一个合适的模型，并在委托之前展示该模型与任务简报；没有显式调用时，那个唯一的提问同时也会征求你的同意。当会话中没有投递启动门控时，该技能会说明这一点，并在提出分派方案之前自行评估歧义。宿主的推理级别不是该技能的门槛：由主会话判断自己能否完整陈述工作并检查结果。
+[Delegate Simple Task](../plugin/skills/delegate-simple-task/SKILL.md) 由显式调用或明确的委托请求选中；除非你点名宿主自带的子智能体工具，它不会取代该技能。显式调用本身就提供了你的同意，于是该技能评估这次编辑，从你的列表中挑出第一个合适的模型，并在委托之前展示该模型与任务简报；没有显式调用时，那个唯一的提问同时也会征求你的同意。当会话中没有投递启动门控时，该技能会说明这一点，并在提出分派方案之前自行评估歧义。宿主的推理级别不是该技能的门槛：由主会话判断自己能否完整陈述工作并检查结果。
 
 获授权激活之后，该技能评估第一个相关能力受支持的可用候选，宣布其确切模型与忠实的任务简报，并检查结果。主模型保持不变。仅凭模型名称既不能确定价格，也不能确定适用性。
 
