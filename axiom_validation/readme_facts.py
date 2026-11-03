@@ -9,6 +9,7 @@ from .repository_policy import SKILL_REFERENCE_ORDER
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document
 
 README_RELATIVE = "README.md"
+README_TRANSLATIONS = ("README.zh-CN.md",)
 SKILL_REFERENCE_RELATIVE = "docs/reference/skills.md"
 README_BADGES_START = "<!-- readme:badges:start -->"
 README_BADGES_END = "<!-- readme:badges:end -->"
@@ -101,22 +102,31 @@ def replace_readme_blocks(text: str, summaries: tuple[tuple[str, str], ...]) -> 
     )
 
 
+def readme_surfaces(root: Path = REPOSITORY_ROOT) -> tuple[str, ...]:
+    """Return the README and each existing translation that carries its generated regions."""
+    return (
+        README_RELATIVE,
+        *(relative for relative in README_TRANSLATIONS if (root / relative).is_file()),
+    )
+
+
 def check_readme_facts(failures: list[str], *, root: Path = REPOSITORY_ROOT) -> int:
     """Require the README badge row and skill index to match the skill metadata."""
     summaries = load_skill_summaries(failures, root=root)
     if summaries is None:
         return 0
-    try:
-        text = (root / README_RELATIVE).read_text(encoding="utf-8")
-        expected = replace_readme_blocks(text, summaries)
-    except (OSError, UnicodeError, ValueError) as error:
-        failures.append(f"cannot validate {README_RELATIVE} generated skill facts: {error}")
-        return 0
-    if text != expected:
-        failures.append(
-            f"{README_RELATIVE} generated skill facts are stale; run "
-            "python3 scripts/render-release-facts.py --render"
-        )
+    for relative in readme_surfaces(root):
+        try:
+            text = (root / relative).read_text(encoding="utf-8")
+            expected = replace_readme_blocks(text, summaries)
+        except (OSError, UnicodeError, ValueError) as error:
+            failures.append(f"cannot validate {relative} generated skill facts: {error}")
+            return 0
+        if text != expected:
+            failures.append(
+                f"{relative} generated skill facts are stale; run "
+                "python3 scripts/render-release-facts.py --render"
+            )
     return len(summaries)
 
 
@@ -126,8 +136,10 @@ __all__ = (
     "README_RELATIVE",
     "README_SKILL_INDEX_END",
     "README_SKILL_INDEX_START",
+    "README_TRANSLATIONS",
     "check_readme_facts",
     "load_skill_summaries",
+    "readme_surfaces",
     "render_badges",
     "render_skill_index",
     "replace_readme_blocks",

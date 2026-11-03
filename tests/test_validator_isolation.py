@@ -28,7 +28,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
     f"{len(JSON_FILES)} JSON files, "
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
-    "21 documentation negative fixtures, "
+    "29 documentation negative fixtures, "
     f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
     "188 black-box routing cases, 79 fixed host benchmark cases, "
     "11 labeled host result records, 8 bounded-review sequences with "

@@ -1,5 +1,7 @@
 # Managing an Axiom Installation
 
+English | [Simplified Chinese (zh-CN)](managing-installation.zh-CN.md)
+
 This guide owns Axiom's current update, disable, removal, and non-destructive troubleshooting procedures. The host owns the plugin lifecycle; Axiom does not check for, download, install, or announce updates by itself.
 
 ## Updating

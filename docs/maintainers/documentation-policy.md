@@ -103,6 +103,12 @@ Topical current references may remain directly under `docs/` when another direct
 
 README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. The Skill Reference keeps each skill's full description, copyable usage, and rename notices. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
 
+## Translations
+
+English documentation is canonical and the default; every English Markdown file stays ASCII. A document may have one Simplified Chinese twin beside it, named `<name>.zh-CN.md`, for readers who prefer Chinese. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, lifecycle metadata, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
+
+A twin is not indexed separately and does not count as a current document of its own; it is reached through its source. It changes in the same change as its source, and the documentation validator rejects a twin whose structure, code, generated facts, or links drift from the source. Maintainer, evidence, release, and reference documents stay English unless a twin is deliberately added under the same rules.
+
 Under the Skill Reference `## Shared skills`, give each skill a `### skill-name` heading in canonical startup-route order. Each entry contains **Link**, **Description**, and **Usage** fields: a repository-relative link to its `SKILL.md`, a concise summary, and a copyable prompt in a fenced `text` block. Keep detailed requirements in the linked source. New entries use the same structure; add optional detail within an entry without creating another skill-level heading.
 
 ## Canonical Ownership
@@ -130,6 +136,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | Dated governance evidence and maintainer reference | Current |
+| Simplified Chinese translations | The English source and its `<name>.zh-CN.md` twin | Current; the twin translates prose and table headers and changes with its source |
 | Repository policy revisions | `evidence/repository-policy-revisions-v1.json` | Current; `docs/repository-policy-revisions.md` renders the ledger and preserves the archived changelog entries |
 | Routing evaluation contracts and optional observation method | `evals/README.md` with versioned cases, schemas, and benchmark manifests | Current; earlier methods remain under `evals/history/` |
 | Routing-context measurements | Versioned `evals/context-budget/results/` records with `evals/context-budget/README.md` | Counts are static proxies; historical records keep their original bindings |
@@ -178,7 +185,9 @@ Every documentation change must, at minimum:
 - keep current public guidance from linking to non-public sources;
 - keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
 - validate the public Hook reference against checked-in declarations and wrappers; and
-- keep historical and project-plan documents, including `evals/history/`, out of current task navigation.
+- keep historical and project-plan documents, including `evals/history/`, out of current task navigation;
+- keep every English Markdown file ASCII; and
+- keep each `<name>.zh-CN.md` twin bound to its English source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, lifecycle metadata, and link targets match.
 
 Run the deterministic, Python-standard-library-only documentation validator from the repository root:
 

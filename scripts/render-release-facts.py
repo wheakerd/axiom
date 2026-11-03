@@ -14,9 +14,9 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from axiom_validation.readme_facts import (  # noqa: E402
-    README_RELATIVE,
     check_readme_facts,
     load_skill_summaries,
+    readme_surfaces,
     replace_readme_blocks,
 )
 from axiom_validation.release_facts import (  # noqa: E402
@@ -93,6 +93,7 @@ def _render() -> tuple[int, list[str]]:
     ):
         return 0, failures
 
+    readme_paths = readme_surfaces(REPOSITORY_ROOT)
     rendered: dict[Path, str] = {}
     for relative_path in sorted(
         set(
@@ -101,7 +102,7 @@ def _render() -> tuple[int, list[str]]:
                 *ROUTE_SURFACES,
                 *RUNTIME_IDENTITY_SURFACES,
                 *POLICY_LEDGER_SURFACES,
-                README_RELATIVE,
+                *readme_paths,
             )
         )
     ):
@@ -119,7 +120,7 @@ def _render() -> tuple[int, list[str]]:
                 text = replace_runtime_identity_block(text, identity_document)
             if relative_path in POLICY_LEDGER_SURFACES:
                 text = replace_policy_ledger_block(text, ledger_document)
-            if relative_path == README_RELATIVE:
+            if relative_path in readme_paths:
                 text = replace_readme_blocks(text, skill_summaries)
         except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
             failures.append(f"cannot render {relative_path}: {error}")

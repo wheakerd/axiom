@@ -16,10 +16,16 @@ from axiom_validation.documentation import (
     GENERATED_MARKER,
     check_documentation,
     check_lifecycle_text,
+    check_markdown_language,
     check_skill_reference_inventory_text,
     check_task_navigation_text,
+    check_translation_text,
+    check_translations,
     discover_markdown,
     is_current_document,
+    is_translation,
+    translation_documents,
+    translation_source,
 )
 from axiom_validation.markdown import fenced_blocks_and_masked_text
 
@@ -47,12 +53,13 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(20, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
+        self.assertEqual(6, report.translation_count)
 
     def test_named_negative_fixtures_are_all_rejected(self):
         failures: list[str] = []
         rejected = check_documentation_negative_fixtures(failures)
         self.assertEqual(len(NEGATIVE_FIXTURES), rejected)
-        self.assertEqual(21, rejected)
+        self.assertEqual(29, rejected)
         self.assertEqual([], failures)
 
     def test_standard_library_command_line_entrypoint(self):
@@ -69,7 +76,8 @@ class DocumentationValidationTests(unittest.TestCase):
             f"README {(REPOSITORY_ROOT / 'README.md').stat().st_size} bytes "
             "(ceiling 16 KiB)", result.stdout
         )
-        self.assertIn("21 negative fixtures", result.stdout)
+        self.assertIn("6 translations", result.stdout)
+        self.assertIn("29 negative fixtures", result.stdout)
 
     def test_skill_inventory_ignores_headings_in_usage_examples(self):
         for fence in ("```", "~~~~"):
@@ -157,6 +165,55 @@ class DocumentationValidationTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(is_current_document(path))
         self.assertFalse(is_current_document("evals/history/codex-core-v1-v2.md"))
+
+    def test_translations_are_not_current_documents_and_name_their_source(self):
+        self.assertTrue(is_translation("docs/examples.zh-CN.md"))
+        self.assertFalse(is_current_document("docs/examples.zh-CN.md"))
+        self.assertFalse(is_current_document("README.zh-CN.md"))
+        self.assertEqual("docs/examples.md", translation_source("docs/examples.zh-CN.md"))
+        self.assertEqual("README.md", translation_source("README.zh-CN.md"))
+
+    def test_checked_in_translations_mirror_their_sources(self):
+        failures: list[str] = []
+        count = check_translations(REPOSITORY_ROOT, failures)
+        self.assertEqual([], failures)
+        self.assertEqual(6, count)
+        self.assertEqual(
+            {
+                "README.zh-CN.md",
+                "docs/README.zh-CN.md",
+                "docs/examples.zh-CN.md",
+                "docs/guides/getting-started.zh-CN.md",
+                "docs/guides/managing-installation.zh-CN.md",
+                "docs/trust-model.zh-CN.md",
+            },
+            {path.relative_to(REPOSITORY_ROOT).as_posix() for path in translation_documents(REPOSITORY_ROOT)},
+        )
+
+    def test_english_markdown_stays_ascii(self):
+        failures: list[str] = []
+        check_markdown_language(REPOSITORY_ROOT, failures)
+        self.assertEqual([], failures)
+
+    def test_translation_may_substitute_its_own_translation_in_links(self):
+        root = Path("/fixture").resolve()
+        failures: list[str] = []
+        check_translation_text(
+            "docs/a.zh-CN.md",
+            "# A\n\n[English](a.md) | \u7b80\u4f53\u4e2d\u6587\n\n[B](b.zh-CN.md) [C](c.md#anchor)\n",
+            "docs/a.md",
+            "# A\n\nEnglish | [Simplified Chinese (zh-CN)](a.zh-CN.md)\n\n[B](b.md) [C](c.md#other)\n",
+            failures,
+            root=root,
+        )
+        self.assertEqual([], failures)
+
+    def test_translation_lifecycle_follows_its_source_class(self):
+        failures: list[str] = []
+        check_lifecycle_text(
+            "docs/guide.zh-CN.md", "# Guide\n\n<!-- lifecycle: historical -->\n", failures
+        )
+        self.assertTrue(any("conflicts with its document class" in failure for failure in failures))
 
     def test_historical_evaluation_accepts_preserved_lifecycle(self):
         failures: list[str] = []

@@ -27,6 +27,7 @@ from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
 
 README_MAX_BYTES = 16 * 1024
+TRANSLATION_SUFFIX = ".zh-CN.md"
 
 ROOT_CURRENT_DOCUMENTS = (
     "README.md",
@@ -71,6 +72,7 @@ class DocumentationReport:
     indexed_document_count: int
     generated_region_count: int
     readme_bytes: int
+    translation_count: int = 0
 
 
 def _label(path: Path, root: Path) -> str:
@@ -98,8 +100,20 @@ def discover_markdown(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
     )
 
 
+def is_translation(relative_path: str) -> bool:
+    """Return whether a Markdown path is a Simplified Chinese twin of an English source."""
+    return relative_path.endswith(TRANSLATION_SUFFIX)
+
+
+def translation_source(relative_path: str) -> str:
+    """Return the English source path that owns a translation."""
+    return relative_path[: -len(TRANSLATION_SUFFIX)] + ".md"
+
+
 def is_current_document(relative_path: str) -> bool:
     """Return whether a Markdown path belongs to the maintained current set."""
+    if is_translation(relative_path):
+        return False
     if relative_path in (*ROOT_CURRENT_DOCUMENTS, *EVALUATION_CURRENT_DOCUMENTS):
         return True
     if not relative_path.startswith("docs/"):
@@ -116,6 +130,16 @@ def current_documents(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
         path
         for path in discover_markdown(root)
         if is_current_document(path.relative_to(root).as_posix())
+    )
+
+
+def translation_documents(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
+    """Return every translation in stable path order."""
+    root = root.resolve()
+    return tuple(
+        path
+        for path in discover_markdown(root)
+        if is_translation(path.relative_to(root).as_posix())
     )
 
 
@@ -256,6 +280,8 @@ def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
 
 
 def _allowed_lifecycle(relative_path: str) -> frozenset[str] | None:
+    if is_translation(relative_path):
+        return _allowed_lifecycle(translation_source(relative_path))
     if relative_path == COMPATIBILITY_ENTRY or relative_path.startswith(
         "docs/releases/"
     ):
@@ -407,7 +433,7 @@ def check_task_navigation_text(
 
 def check_guidance_boundaries(root: Path, failures: list[str]) -> None:
     root = root.resolve()
-    for path in current_documents(root):
+    for path in (*current_documents(root), *translation_documents(root)):
         text = _read_text(path, root, failures)
         if text is not None:
             check_private_guidance_text(_label(path, root), text, failures)
@@ -415,6 +441,132 @@ def check_guidance_boundaries(root: Path, failures: list[str]) -> None:
     index_text = _read_text(index, root, failures)
     if index_text is not None:
         check_task_navigation_text(index, index_text, root, failures)
+
+
+def _generated_regions(text: str) -> dict[str, str]:
+    """Map each closed generated marker to the text between its start and end."""
+    pattern = re.compile(
+        r"<!--\s*([a-z0-9][a-z0-9._:-]*?):start\s*-->(.*?)<!--\s*\1:end\s*-->",
+        re.DOTALL,
+    )
+    return {match.group(1): match.group(2) for match in pattern.finditer(text)}
+
+
+def _link_targets(
+    source: Path, text: str, root: Path
+) -> tuple[set[str], set[str], set[str]]:
+    """Return exact local targets, local targets with translations folded, and external links."""
+    exact: set[str] = set()
+    normalized: set[str] = set()
+    external: set[str] = set()
+    for raw in _raw_destinations(text):
+        target = _local_target(source, raw, root)
+        if target is None:
+            destination = link_destination(raw)
+            parsed = urlsplit(destination)
+            if parsed.scheme or parsed.netloc:
+                external.add(destination)
+            continue
+        exact.add(target)
+        normalized.add(translation_source(target) if is_translation(target) else target)
+    return exact, normalized, external
+
+
+def check_translation_text(
+    relative_path: str,
+    text: str,
+    source_relative_path: str,
+    source_text: str,
+    failures: list[str],
+    *,
+    root: Path = REPOSITORY_ROOT,
+) -> None:
+    """Require a translation to keep its source's structure, code, facts, and links."""
+    root = root.resolve()
+    check_heading_text(relative_path, text, failures)
+    source_blocks, source_searchable = fenced_blocks_and_masked_text(source_text)
+    mirror_blocks, mirror_searchable = fenced_blocks_and_masked_text(text)
+    if _heading_levels(source_searchable) != _heading_levels(mirror_searchable):
+        failures.append(
+            f"{relative_path} heading structure differs from {source_relative_path}"
+        )
+    if source_blocks != mirror_blocks:
+        failures.append(
+            f"{relative_path} fenced code blocks differ from {source_relative_path}; "
+            "code, commands, and examples stay identical"
+        )
+    if _generated_regions(source_text) != _generated_regions(text):
+        failures.append(
+            f"{relative_path} generated regions differ from {source_relative_path}"
+        )
+    source_lifecycle = [value.strip() for value in LIFECYCLE_COMMENT.findall(source_searchable)]
+    mirror_lifecycle = [value.strip() for value in LIFECYCLE_COMMENT.findall(mirror_searchable)]
+    if source_lifecycle != mirror_lifecycle:
+        failures.append(
+            f"{relative_path} lifecycle metadata differs from {source_relative_path}"
+        )
+    source_path = root / source_relative_path
+    mirror_path = root / relative_path
+    source_exact, source_local, source_external = _link_targets(
+        source_path, source_text, root
+    )
+    mirror_exact, mirror_local, mirror_external = _link_targets(mirror_path, text, root)
+    if source_local != mirror_local or source_external != mirror_external:
+        failures.append(
+            f"{relative_path} link targets differ from {source_relative_path}; "
+            "a translation may substitute a document's own translation, nothing else"
+        )
+    if relative_path not in source_exact:
+        failures.append(
+            f"{source_relative_path} must link to its translation {relative_path}"
+        )
+    if source_relative_path not in mirror_exact:
+        failures.append(
+            f"{relative_path} must link to its English source {source_relative_path}"
+        )
+
+
+def check_translations(root: Path, failures: list[str]) -> int:
+    """Validate every translation against its English source."""
+    root = root.resolve()
+    paths = translation_documents(root)
+    for path in paths:
+        relative_path = _label(path, root)
+        source_relative_path = translation_source(relative_path)
+        source_path = root / source_relative_path
+        if not source_path.is_file():
+            failures.append(
+                f"{relative_path} has no English source {source_relative_path}"
+            )
+            continue
+        text = _read_text(path, root, failures)
+        source_text = _read_text(source_path, root, failures)
+        if text is not None and source_text is not None:
+            check_translation_text(
+                relative_path, text, source_relative_path, source_text, failures, root=root
+            )
+    return len(paths)
+
+
+def check_markdown_language(root: Path, failures: list[str]) -> None:
+    """Require every Markdown file other than a translation to stay ASCII."""
+    root = root.resolve()
+    for path in discover_markdown(root):
+        relative_path = _label(path, root)
+        if is_translation(relative_path):
+            continue
+        text = _read_text(path, root, failures)
+        if text is None or text.isascii():
+            continue
+        line_number = next(
+            number
+            for number, line in enumerate(text.splitlines(), start=1)
+            if not line.isascii()
+        )
+        failures.append(
+            f"{relative_path}:{line_number} contains non-ASCII text; English "
+            f"documentation stays ASCII and a translation uses the {TRANSLATION_SUFFIX} suffix"
+        )
 
 
 def _skill_reference_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
@@ -514,6 +666,8 @@ def check_documentation(
     indexed_count = check_docs_index_and_orphans(root, failures)
     check_lifecycle_metadata(root, failures)
     generated_count = check_generated_markers(root, failures)
+    translation_count = check_translations(root, failures)
+    check_markdown_language(root, failures)
     check_guidance_boundaries(root, failures)
     check_skill_reference_inventory(root, failures)
     check_hook_reference(root, failures)
@@ -530,6 +684,7 @@ def check_documentation(
         indexed_document_count=indexed_count,
         generated_region_count=generated_count,
         readme_bytes=readme_bytes,
+        translation_count=translation_count,
     )
 
 
@@ -538,6 +693,7 @@ __all__ = (
     "LIFECYCLE_VALUES",
     "README_MAX_BYTES",
     "SKILL_REFERENCE_PATH",
+    "TRANSLATION_SUFFIX",
     "check_current_headings",
     "check_docs_index_and_orphans",
     "check_documentation",
@@ -546,10 +702,16 @@ __all__ = (
     "check_heading_text",
     "check_hook_reference",
     "check_lifecycle_text",
+    "check_markdown_language",
     "check_private_guidance_text",
     "check_readme_budget",
     "check_skill_reference_inventory_text",
     "check_task_navigation_text",
+    "check_translation_text",
+    "check_translations",
     "current_documents",
     "discover_markdown",
+    "is_translation",
+    "translation_documents",
+    "translation_source",
 )
