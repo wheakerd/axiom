@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 126 | 2026-11-02 | [#243](https://github.com/wheakerd/axiom/issues/243) | `70505ead779f8ec6be7a31374e9a84efb0713163` | Simplified Chinese twins (*.zh-CN.md) of the README, docs index, both guides, trust model, and examples; the documentation validator binds each twin to its source and keeps other Markdown ASCII. |
 | 125 | 2026-11-02 | none | `2219401a7121607096d305f3beeaee3af2805837` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.25.0. |
 | 124 | 2026-11-02 | [#239](https://github.com/wheakerd/axiom/issues/239) | `cce3fb379f112556ea7464d003e3c5833c852c73` | Release 0.25.0: per-call host-mode grant before the first attempt in the action owners, a mandatory visible route notice and output-language rule in the gate, envelope and rollback-point references. |
 | 123 | 2026-10-30 | none | `4e5e76848cc809f62556c49adbbc361e787951f1` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.24.0. |

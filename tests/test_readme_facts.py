@@ -11,8 +11,10 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.readme_facts import (
     README_SKILL_INDEX_END,
     README_SKILL_INDEX_START,
+    README_TRANSLATIONS,
     check_readme_facts,
     load_skill_summaries,
+    readme_surfaces,
     render_skill_index,
 )
 from axiom_validation.repository_policy import SKILL_REFERENCE_ORDER
@@ -42,6 +44,18 @@ class ReadmeFactsTests(unittest.TestCase):
         self.assertEqual([], failures)
         positions = [index.index(f"](docs/reference/skills.md#{name})") for name in SKILL_REFERENCE_ORDER]
         self.assertEqual(sorted(positions), positions)
+
+    def test_checked_in_readme_translation_carries_the_same_generated_regions(self):
+        self.assertEqual(("README.md", *README_TRANSLATIONS), readme_surfaces(REPOSITORY_ROOT))
+        for relative in README_TRANSLATIONS:
+            shutil.copyfile(REPOSITORY_ROOT / relative, self.root / relative)
+        failures: list[str] = []
+        check_readme_facts(failures, root=self.root)
+        self.assertEqual([], failures)
+        mirror = self.root / README_TRANSLATIONS[0]
+        mirror.write_text(mirror.read_text().replace("| --- | --- |", "| --- | ---- |", 1))
+        check_readme_facts(failures, root=self.root)
+        self.assertEqual([f"{README_TRANSLATIONS[0]} generated skill facts are stale; run python3 scripts/render-release-facts.py --render"], failures)
 
     def test_a_changed_short_description_makes_the_readme_stale(self):
         path = self.metadata("task-planning")

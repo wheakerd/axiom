@@ -14,10 +14,12 @@ from axiom_validation.documentation import (
     check_heading_text,
     check_hook_reference,
     check_lifecycle_text,
+    check_markdown_language,
     check_private_guidance_text,
     check_readme_budget,
     check_skill_reference_inventory_text,
     check_task_navigation_text,
+    check_translations,
 )
 from axiom_validation.markdown import check_markdown_links
 
@@ -274,6 +276,79 @@ def _hook_reference_drift() -> list[str]:
         temporary.cleanup()
 
 
+def _translation_pair(source: str, mirror: str) -> list[str]:
+    temporary, root = _temporary_root()
+    try:
+        docs = root / "docs"
+        docs.mkdir()
+        if source is not None:
+            (docs / "guide.md").write_text(source, encoding="utf-8")
+        (docs / "guide.zh-CN.md").write_text(mirror, encoding="utf-8")
+        failures: list[str] = []
+        check_translations(root, failures)
+        return failures
+    finally:
+        temporary.cleanup()
+
+
+def _translation_missing_source() -> list[str]:
+    return _translation_pair(None, "# Guide\n\n[English](guide.md)\n")
+
+
+def _translation_heading_drift() -> list[str]:
+    return _translation_pair(
+        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n\n## Install\n",
+        "# Guide\n\n[English](guide.md)\n",
+    )
+
+
+def _translation_code_drift() -> list[str]:
+    return _translation_pair(
+        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n\n```bash\ncodex plugin add axiom@axiom\n```\n",
+        "# Guide\n\n[English](guide.md)\n\n```bash\ncodex plugin add axiom\n```\n",
+    )
+
+
+def _translation_generated_drift() -> list[str]:
+    return _translation_pair(
+        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n\n<!-- facts:v1:start -->\nvalue\n<!-- facts:v1:end -->\n",
+        "# Guide\n\n[English](guide.md)\n\n<!-- facts:v1:start -->\nother\n<!-- facts:v1:end -->\n",
+    )
+
+
+def _translation_link_drift() -> list[str]:
+    return _translation_pair(
+        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n",
+        "# Guide\n\n[English](guide.md) [Extra](README.md)\n",
+    )
+
+
+def _translation_missing_switcher() -> list[str]:
+    return _translation_pair(
+        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n",
+        "# Guide\n\nNo way back.\n",
+    )
+
+
+def _translation_lifecycle_drift() -> list[str]:
+    return _translation_pair(
+        "# Guide\n\n<!-- lifecycle: current -->\n\n[zh-CN](guide.zh-CN.md)\n",
+        "# Guide\n\n[English](guide.md)\n",
+    )
+
+
+def _english_source_with_non_ascii() -> list[str]:
+    temporary, root = _temporary_root()
+    try:
+        (root / "docs").mkdir()
+        (root / "docs" / "guide.md").write_text("# Guide\n\nAxiom \u4e2d\u6587\n", encoding="utf-8")
+        failures: list[str] = []
+        check_markdown_language(root, failures)
+        return failures
+    finally:
+        temporary.cleanup()
+
+
 NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("readme-oversize", _readme_oversize, "migration ceiling"),
     ("broken-relative-link", _broken_relative_link, "broken repository-relative link"),
@@ -296,6 +371,14 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("historical-directory-task-navigation", _historical_directory_task_navigation, "historical or project-plan"),
     ("skill-inventory-drift", _skill_inventory_drift, "differs from the canonical skill order"),
     ("hook-reference-drift", _hook_reference_drift, "not present in the checked-in declarations"),
+    ("translation-missing-source", _translation_missing_source, "has no English source"),
+    ("translation-heading-drift", _translation_heading_drift, "heading structure differs"),
+    ("translation-code-drift", _translation_code_drift, "fenced code blocks differ"),
+    ("translation-generated-drift", _translation_generated_drift, "generated regions differ"),
+    ("translation-link-drift", _translation_link_drift, "link targets differ"),
+    ("translation-missing-switcher", _translation_missing_switcher, "must link to its English source"),
+    ("translation-lifecycle-drift", _translation_lifecycle_drift, "lifecycle metadata differs"),
+    ("english-source-non-ascii", _english_source_with_non_ascii, "contains non-ASCII text"),
 )
 
 

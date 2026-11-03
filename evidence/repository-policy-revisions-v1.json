@@ -1000,6 +1000,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.25.0.",
       "runtimeContractDigest": "sha256:42647e4dea042989cbac6428823bb011b2b14d52b6b9b2908d5c38ac291a26bc"
+    },
+    {
+      "revision": 126,
+      "recordedOn": "2026-11-02",
+      "baselineCommit": "70505ead779f8ec6be7a31374e9a84efb0713163",
+      "sourceIssue": 243,
+      "summary": "Simplified Chinese twins (*.zh-CN.md) of the README, docs index, both guides, trust model, and examples; the documentation validator binds each twin to its source and keeps other Markdown ASCII.",
+      "runtimeContractDigest": "sha256:42647e4dea042989cbac6428823bb011b2b14d52b6b9b2908d5c38ac291a26bc"
     }
   ]
 }

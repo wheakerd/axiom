@@ -1,5 +1,7 @@
 # Axiom Documentation
 
+English | [Simplified Chinese (zh-CN)](README.zh-CN.md)
+
 Use this index to find the document that owns the task or fact you need. The locations below are the current canonical public structure; historical evidence remains distinct from current user guidance.
 
 Current guidance describes the same source snapshot as the document. See [Source And Version Scope](maintainers/documentation-policy.md#source-and-version-scope) when comparing the source tree, a published release, and an installed package.
@@ -68,6 +70,7 @@ Use the task references above for current guidance. Historical records neither e
 | `evals/README.md` and `evals/context-budget/README.md` | Current evaluation contracts and interpretation of static measurements |
 | `evals/history/` and `evals/results/` | Historical methods and version-bound observation records |
 | `evidence/` | Machine-readable identity, status, policy revisions, schemas, and runtime histories |
+| `<name>.zh-CN.md` beside an English document | Simplified Chinese translation of that document; English is canonical, and the translation changes in the same change as its source |
 
 `docs/getting-started.md` remains a compatibility entry for historical links. Use [Getting Started](guides/getting-started.md) for the maintained guide and [Contributing](../CONTRIBUTING.md#repository-layout) for the full repository map.
 

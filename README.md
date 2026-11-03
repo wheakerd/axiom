@@ -4,6 +4,8 @@
 
 **Think before AI thinks.**
 
+English | [Simplified Chinese (zh-CN)](README.zh-CN.md)
+
 <!-- readme:badges:start -->
 [![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](docs/reference/skills.md) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
 <!-- readme:badges:end -->

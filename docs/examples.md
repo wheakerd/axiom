@@ -1,5 +1,7 @@
 # Examples
 
+English | [Simplified Chinese (zh-CN)](examples.zh-CN.md)
+
 These examples describe routing contracts, not execution transcripts. Active instructions and the user's actual authorization remain decisive. Follow the linked Skill for full procedures; [Architecture](architecture.md) explains how the gate selects and composes owners.
 
 A request that names a skill uses Codex's `$skill-name` form here. In Claude Code, type `/axiom:skill-name` or name the skill in plain language.

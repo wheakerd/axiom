@@ -37,6 +37,7 @@ def main() -> int:
         f"{report.current_document_count} current documents, "
         f"{report.indexed_document_count} indexed documents, "
         f"{report.generated_region_count} generated regions, "
+        f"{report.translation_count} translations, "
         f"{fixture_count} negative fixtures."
     )
     return 0
