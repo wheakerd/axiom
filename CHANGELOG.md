@@ -8,6 +8,24 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.26.0 - unreleased
+
+### Changed
+
+- The startup gate states the boundary of its "not displaced" rule: a more specific installed skill, MCP tool, or host tool that you named is not displaced by a bundled route, while a tool the host merely offers, such as its own subagent facility, or a repository-local skill you did not name, displaces nothing. A private session audit found seven requests that the gate had missed because the model read the host's native subagent tool or a repository-local skill as displacing `delegate-simple-task` or `review-axiom-task` (Issue #240).
+- The gate's Route Once list gains one item: a host task notification, tool result, or compaction summary is not a request and selects no route. The sentence that restated the `local-web-search` selection condition leaves the gate; the skill's description is the selection surface and already carries that condition.
+- No description changes. Four proposed description changes were measured as two arms on both hosts and dropped: a `delegate-simple-task` widening made Codex select the route for a request that named the host's own subagent tool, and a variant with `local-web-search`, `review-axiom-task`, and `agents-architect` wording changes made Codex select `reversible-system-change` for a project-initialization control more often than the current wording; the fresh-session positives routed under the current wording without any of them. The routing corpus gains eighteen cases for the request forms a private audit found missed or wrongly routed, outside both benchmark profiles.
+
+### Behavioral impact
+
+With the gate delivered, a bundled route is no longer skipped because the host offers a tool, such as its own subagent facility, or because a repository-local skill exists that you did not name, and host task notifications, tool results, and compaction summaries select no route. Authority does not widen: selecting a route still grants nothing, and `delegate-simple-task` still needs your consent. The startup gate shrinks from 7,370 to 7,363 bytes and every description is unchanged, so the selection surface is unchanged. The runtime digest changes because the gate is an installed input.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.26.0.md) for the two-arm measurement behind the wording, the request forms that now route, and the evidence boundary.
+
 ## 0.25.0 - 2026-11-02
 
 ### Changed

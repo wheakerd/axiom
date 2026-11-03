@@ -164,10 +164,10 @@ def write_current_record(directory: Path, record: dict, benchmark_id: str = BENC
 class CurrentRoutingTests(unittest.TestCase):
     def test_current_contract_covers_installed_routes_and_updated_ambiguity(self):
         failures = []
-        self.assertEqual((86, 49), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
+        self.assertEqual((104, 49), check_current_routing_evaluations(REPOSITORY_ROOT, failures))
         self.assertEqual([], failures)
         cases = collect_current_corpus(REPOSITORY_ROOT, failures)
-        self.assertEqual(86, len(cases))
+        self.assertEqual(104, len(cases))
         self.assertEqual(49, CURRENT_BENCHMARK_CASE_COUNT)
         self.assertEqual(13, len(CURRENT_PUBLIC_ROUTES))
         self.assertEqual("verify-completion", CURRENT_PUBLIC_ROUTES[CURRENT_PUBLIC_ROUTES.index("review-axiom-task") + 1])
