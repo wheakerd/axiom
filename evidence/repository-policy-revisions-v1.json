@@ -1040,6 +1040,14 @@
       "sourceIssue": 251,
       "summary": "Add the fresh-session workspace rule and its verification step, record the 0.26.0 workspace deviation, and add clean-location observation records of the immutable v0.26.0 for both hosts.",
       "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
+    },
+    {
+      "revision": 131,
+      "recordedOn": "2026-11-04",
+      "baselineCommit": "66b36e491cfb5a0c56c2ae8a58fec88ca5f3e7d5",
+      "sourceIssue": 253,
+      "summary": "Release 0.27.0 names an explicit goal to measure or reduce context cost in the optimize-agent-usage description after a two-arm measurement in clean locations; the startup gate is unchanged.",
+      "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
     }
   ]
 }
