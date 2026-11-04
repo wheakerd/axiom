@@ -61,7 +61,11 @@ from .routing_contracts import (
     check_routing_source_contracts,
 )
 from .route_catalog import check_route_catalog
-from .routing_evals import check_review_sequence_contracts, check_routing_evaluations
+from .routing_evals import (
+    check_in_session_sequence_contracts,
+    check_review_sequence_contracts,
+    check_routing_evaluations,
+)
 from .runtime_identity import check_runtime_identity
 from .skill_text import check_skill_text
 
@@ -209,6 +213,9 @@ def main() -> int:
     review_sequence_count, review_checkpoint_count = run_policy(
         "review-evals", check_review_sequence_contracts, failures
     )
+    in_session_family_count, in_session_case_count = run_policy(
+        "in-session-evals", check_in_session_sequence_contracts, failures
+    )
     traceable_security_scenarios = run_policy(
         "git-contracts", check_traceable_security_contracts, failures
     )
@@ -255,6 +262,8 @@ def main() -> int:
         f"{routing_result_count} labeled host result records, "
         f"{review_sequence_count} bounded-review sequences with "
         f"{review_checkpoint_count} review checkpoints, "
+        f"{in_session_family_count} in-session routing families over "
+        f"{in_session_case_count} measured cases, "
         f"{context_scenario_count} routing-context lifecycle scenarios, "
         f"{release_fact_surface_count} canonical release-fact surfaces, "
         f"{readme_skill_count} generated README skill rows, "
