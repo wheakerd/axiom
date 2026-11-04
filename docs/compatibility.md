@@ -60,6 +60,8 @@ A source candidate cannot establish a future signed merge, immutable tag, final 
 
 An identical runtime digest may make older evidence relevant to the same bytes, but it does not create a new observation or change the older record's host, version, date, lifecycle, or status. From repository policy revision 118, a release candidate that changes a bundled route also carries checked-in fresh-session routing observation records for both hosts under `evals/results/`, as [Candidate Observations](../evals/README.md#candidate-observations) describes; the 0.22.0 and 0.22.1 releases predate that gate.
 
+On 2026-11-03 the maintainer found that the 0.26.0 fresh-session records were collected in case workspaces inside the maintainer's own repository, so each host also loaded that repository's root instruction file; earlier versions' harnesses were not retained and their workspace location is unknown. The records keep their lifecycle and outcome, the deviation is recorded in the [v0.26.0 note](releases/v0.26.0.md#host-evidence) and Issue #251, and from repository policy revision 130 every case workspace lies outside any instruction chain, as [Host Observation Boundaries](../evals/README.md#host-observation-boundaries) requires.
+
 ## Known Limitations
 
 Unless a current immutable result states otherwise, do not assume:
