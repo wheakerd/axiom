@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 129 | 2026-11-03 | [#249](https://github.com/wheakerd/axiom/issues/249) | `fab69b78462d7f8d93938fa075099771b9923e27` | Add the in-session routing measurement contract: two host suites, six prior-turn families over the 18 cases of 0.26.0, validator and tests, and the first measurement as counts in the evals README. |
 | 128 | 2026-11-03 | none | `c8126c54b3d77bba79bee90a49fcc0e675315a56` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.26.0. |
 | 127 | 2026-11-02 | [#240](https://github.com/wheakerd/axiom/issues/240) | `b48debed6442f93415fec4e598240b31c866d4e1` | Release 0.26.0: the gate names the not-displaced boundary (a host-offered tool or unnamed repo-local skill displaces nothing); notifications select no route; descriptions unchanged; 18 cases. |
 | 126 | 2026-11-02 | [#243](https://github.com/wheakerd/axiom/issues/243) | `70505ead779f8ec6be7a31374e9a84efb0713163` | Simplified Chinese twins (*.zh-CN.md) of the README, docs index, both guides, trust model, and examples; the documentation validator binds each twin to its source and keeps other Markdown ASCII. |

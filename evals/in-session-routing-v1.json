@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "1",
+  "kind": "in-session-routing-sequence-suite",
+  "id": "in-session-routing-v1",
+  "method": "documented-codex-app-server-thread-sequence",
+  "corpusSchema": "urn:axiom:routing-evals:schema:v8",
+  "corpus": {
+    "path": "evals/routing-v8/current.jsonl"
+  },
+  "responseSchema": {
+    "path": "evals/host-response-schema-v8.json",
+    "sha256": "8278395ae253bf8867cc8a99aa5b0b23a52614cb08d15c01da87dca84a6552d1"
+  },
+  "model": "gpt-6-astra",
+  "reasoningEffort": "max",
+  "turnTimeoutSeconds": 300,
+  "repeatCount": 1,
+  "developerInstruction": "This is an Axiom in-session routing evaluation. Every turn ends with the structured routing observation for that turn's request. A turn whose request begins with [routing-observation] is a measured turn: select the Axiom route or routes that the request after the marker would invoke, and do not carry it out. Every other turn is a setup turn: carry it out with read-only means inside this workspace before reporting its own observation. No turn grants mutation authority: do not edit files, use credentials, contact external services, or request approval. Return no prose inside the structured output.",
+  "measuredTurnMarker": "[routing-observation]",
+  "measuredCaseIds": [
+    "current-multilingual-delegate-subagents-zh-001",
+    "current-delegate-dispatch-subagents-001",
+    "current-multilingual-agents-architect-update-zh-001",
+    "current-agents-architect-short-update-001",
+    "current-agents-architect-inside-multistep-001",
+    "current-reversible-deploy-authorized-interruption-001",
+    "current-reversible-local-cluster-rollout-001",
+    "current-multilingual-reversible-cleanup-zh-001",
+    "current-review-axiom-task-why-no-question-001",
+    "current-multilingual-review-axiom-task-zh-001",
+    "current-local-web-search-open-page-001",
+    "current-no-route-project-initialization-001",
+    "current-no-route-setup-script-edit-001",
+    "current-no-route-menu-entry-001",
+    "current-no-route-task-notification-001",
+    "current-no-route-build-and-test-001",
+    "current-near-miss-delegate-host-tool-named-001",
+    "current-near-miss-review-repo-local-skill-named-001"
+  ],
+  "workspaceFixture": {
+    "location": "A directory with no host instruction file in itself or in any ancestor and no enclosing Git repository, so that the host reports no project instruction source and the fixture files are the whole project the session sees",
+    "files": {
+      "README.md": "# Ledger Sync\n\nLedger Sync is a small command-line tool that reconciles two CSV exports of the same account and prints the rows that differ. It has no network access and writes nothing outside the output directory you name.\n\n## Layout\n\n- `sync.py`: the reconciliation script\n- `config.toml`: column mapping and the output directory\n- `CHANGELOG.md`: release history\n",
+      "config.toml": "[columns]\ndate = \"Posted\"\namount = \"Amount\"\nmemo = \"Description\"\n\n[output]\ndirectory = \"out\"\nformat = \"csv\"\n",
+      "CHANGELOG.md": "# Changelog\n\n## 0.3.0\n\n- Added the memo column to the diff output.\n\n## 0.2.0\n\n- First public release.\n",
+      "sync.py": "\"\"\"Reconcile two CSV exports and print the differing rows.\"\"\"\n\nimport csv\nimport sys\n\n\ndef rows(path):\n    with open(path, newline=\"\", encoding=\"utf-8\") as handle:\n        return list(csv.DictReader(handle))\n\n\ndef main(left, right):\n    seen = {tuple(sorted(row.items())) for row in rows(left)}\n    for row in rows(right):\n        if tuple(sorted(row.items())) not in seen:\n            print(row)\n\n\nif __name__ == \"__main__\":\n    main(sys.argv[1], sys.argv[2])\n"
+    }
+  },
+  "families": [
+    {
+      "id": "fresh",
+      "condition": "no prior turn; the measured request is the first turn after the gate, as in the fresh-session benchmark",
+      "setupTurns": []
+    },
+    {
+      "id": "prior-turns",
+      "condition": "three prior conversation turns without tool use",
+      "setupTurns": [
+        {
+          "kind": "setup",
+          "request": "In one sentence, what is the difference between a Git tag and a Git branch?"
+        },
+        {
+          "kind": "setup",
+          "request": "Name three things a release checklist should verify before publishing, one line each."
+        },
+        {
+          "kind": "setup",
+          "request": "In one line, which of these two sentences is a request and which is a status report: 'the build finished without errors' and 'please run the build'?"
+        }
+      ]
+    },
+    {
+      "id": "tool-results",
+      "condition": "two prior turns whose answers required reading files in the workspace, so tool results precede the measured request",
+      "setupTurns": [
+        {
+          "kind": "setup",
+          "request": "Read README.md in this workspace and say in one sentence what the tool does."
+        },
+        {
+          "kind": "setup",
+          "request": "Read config.toml and CHANGELOG.md and tell me the three mapped columns and the newest version, in one line."
+        }
+      ]
+    },
+    {
+      "id": "non-request-turn",
+      "condition": "a tool-reading turn and then a task-notification turn that asks for nothing, immediately before the measured request",
+      "setupTurns": [
+        {
+          "kind": "setup",
+          "request": "Read README.md in this workspace and say in one sentence what the tool does."
+        },
+        {
+          "kind": "non-request",
+          "request": "[Task notification] The background check you started has finished: all four files in this workspace parsed without errors."
+        }
+      ]
+    },
+    {
+      "id": "continuation",
+      "condition": "two prior turns that frame an ongoing multi-step task, so the measured request arrives as its next step",
+      "setupTurns": [
+        {
+          "kind": "setup",
+          "request": "We are preparing the 0.4.0 release of this tool. Step one: read CHANGELOG.md and tell me the newest recorded version."
+        },
+        {
+          "kind": "setup",
+          "request": "Step two: read config.toml and confirm the output directory and format in one line."
+        }
+      ]
+    },
+    {
+      "id": "compaction",
+      "condition": "two tool-reading turns, then a host-native compaction of the session, immediately before the measured request",
+      "setupTurns": [
+        {
+          "kind": "setup",
+          "request": "Read README.md in this workspace and say in one sentence what the tool does."
+        },
+        {
+          "kind": "setup",
+          "request": "Read config.toml and CHANGELOG.md and tell me the three mapped columns and the newest version, in one line."
+        },
+        {
+          "kind": "compact"
+        }
+      ]
+    }
+  ],
+  "turnFacts": {
+    "setup": "turn completed; tool-capable read-only items are allowed; no file change, approval request, or external action; the structured output validates against the bound schema and its selectedRoutes are counted as a setup-turn selection, not judged against a case",
+    "non-request": "turn completed; tool-capable items are allowed and not required; no file change, approval request, or external action; the structured output validates and its selectedRoutes are counted as a non-request-turn selection, where any route is a false positive by the gate's requests-only rule",
+    "compact": "the host's compaction item or compacted notification is observed before the next turn starts; a startup-hook re-delivery for the compaction source is recorded when the host emits one",
+    "measured": "turn completed; no tool-capable item; structured output validates against the bound schema with routingGateObserved true and false mutation fields; selectedRoutes and clarificationCount are judged against the corpus case"
+  },
+  "measurement": {
+    "stopOnFirstFailure": false,
+    "hostFailureRerun": 1,
+    "missConfirmation": 1,
+    "comparison": "per family and per route, counts of measured turns whose routes match the corpus case, against the fresh family of the same run; a condition is named when a family routes fewer positives or leaves fewer controls host-native than the fresh family, and the named count is the confirmed one",
+    "publication": "counts only; raw streams, transcripts, and workspace contents stay private and no public result record is produced"
+  },
+  "hostMechanics": {
+    "session": "codex app-server: thread/start with the fixture workspace as cwd, the model, a read-only sandbox, approval policy never, this developer instruction, and startup as the session source; the plugin is installed from a local marketplace into an isolated home whose configuration records trust for the packaged SessionStart hook, and the thread/start result names no instruction source",
+    "turn": "turn/start with one text input item, the profile's reasoning effort, and the bound response schema as outputSchema on every turn; the turn ends at turn/completed",
+    "compaction": "thread/compact/start on the same thread; the host records a contextCompaction item and re-runs the plugin SessionStart hook on the next turn",
+    "tools": "default tools kept; web search disabled in configuration"
+  },
+  "safety": {
+    "sandbox": "read-only",
+    "approvalPolicy": "never",
+    "webSearch": "disabled",
+    "freshSessionPerCase": true,
+    "sameSessionWithinCase": true,
+    "mutationAuthority": false,
+    "externalActions": false,
+    "privateTranscriptRetention": false,
+    "credentialDisclosure": false
+  }
+}

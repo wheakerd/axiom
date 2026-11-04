@@ -1024,6 +1024,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.26.0.",
       "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
+    },
+    {
+      "revision": 129,
+      "recordedOn": "2026-11-03",
+      "baselineCommit": "fab69b78462d7f8d93938fa075099771b9923e27",
+      "sourceIssue": 249,
+      "summary": "Add the in-session routing measurement contract: two host suites, six prior-turn families over the 18 cases of 0.26.0, validator and tests, and the first measurement as counts in the evals README.",
+      "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
     }
   ]
 }

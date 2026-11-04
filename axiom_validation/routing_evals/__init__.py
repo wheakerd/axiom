@@ -264,5 +264,17 @@ from .review_sequences import (
     validate_review_response,
     check_review_sequence_contracts,
 )
+from .in_session_sequences import (
+    IN_SESSION_SUITE_RELATIVE_PATH,
+    IN_SESSION_SUITE_SHA256,
+    CLAUDE_CODE_IN_SESSION_SUITE_RELATIVE_PATH,
+    CLAUDE_CODE_IN_SESSION_SUITE_SHA256,
+    IN_SESSION_DEVELOPER_INSTRUCTION,
+    IN_SESSION_FAMILY_IDS,
+    IN_SESSION_MEASURED_TURN_MARKER,
+    IN_SESSION_SHARED_KEYS,
+    IN_SESSION_TURN_KINDS,
+    check_in_session_sequence_contracts,
+)
 
 __all__ = [name for name in globals() if not name.startswith("_")]

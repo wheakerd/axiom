@@ -70,6 +70,8 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evals/benchmarks/claude-code-core-v5.json",
     "evals/benchmarks/claude-code-core-v6.json",
     "evals/review-sequences-claude-code-v1.json",
+    "evals/in-session-routing-v1.json",
+    "evals/in-session-routing-claude-code-v1.json",
     "evals/benchmarks/codex-core-v1.json",
     "evals/benchmarks/codex-core-v2.json",
     "evals/context-budget/README.md",
