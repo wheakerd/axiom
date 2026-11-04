@@ -27,7 +27,7 @@ Compatibility-format versions and runtime-digest schema versions are separate id
 
 ## Recording A Result
 
-1. Use a disposable, non-sensitive workspace and a read-only request.
+1. Use a disposable, non-sensitive workspace and a read-only request. Place the workspace in a directory with no `AGENTS.md` or `CLAUDE.md` in itself or in any ancestor and no enclosing Git repository, so the host loads no project instruction file beside Axiom.
 2. Record the exact host version, operating system, immutable Axiom tag and commit, installation method, and lifecycle source.
 3. Compare the installed Hook with the [Hook Reference](reference/hooks.md).
 4. Follow the routed example and no-route control in [Getting Started](guides/getting-started.md). A fresh session does not prove manual or automatic compaction behavior; leave unobserved cases `NOT-RUN`.

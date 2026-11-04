@@ -1032,6 +1032,14 @@
       "sourceIssue": 249,
       "summary": "Add the in-session routing measurement contract: two host suites, six prior-turn families over the 18 cases of 0.26.0, validator and tests, and the first measurement as counts in the evals README.",
       "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
+    },
+    {
+      "revision": 130,
+      "recordedOn": "2026-11-03",
+      "baselineCommit": "d5a914e1bb6a6a98b0997df3c815cfe37cbe2de6",
+      "sourceIssue": 251,
+      "summary": "Add the fresh-session workspace rule and its verification step, record the 0.26.0 workspace deviation, and add clean-location observation records of the immutable v0.26.0 for both hosts.",
+      "runtimeContractDigest": "sha256:4a30c04a9a5a8a59f175ea2399211fa422728f6d04b42dc8cd6cc2786bd47960"
     }
   ]
 }
