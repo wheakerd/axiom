@@ -1056,6 +1056,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.0.",
       "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
+    },
+    {
+      "revision": 133,
+      "recordedOn": "2026-11-04",
+      "baselineCommit": "064f67cc9763ad858b7f80ed2806419d31ffab89",
+      "sourceIssue": 250,
+      "summary": "Record the Issue #250 decision: the eighteen 0.26.0 corpus forms stay outside both benchmark profiles after three clean-location fresh-session rounds per host; promotion is not proportional.",
+      "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
     }
   ]
 }
