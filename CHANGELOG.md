@@ -8,6 +8,24 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.27.0 - unreleased
+
+### Changed
+
+- The `optimize-agent-usage` description names an explicit goal to measure or reduce context cost among the goals that select the route. The schema v8 overlap case that asks to redesign a packaged plugin's shared routing architecture and explicitly measure the resulting context cost expects `agent-plugin-architect` with `optimize-agent-usage`; in fresh sessions whose workspace lies outside any instruction chain, the 0.26.0 wording selected the usage route for it in 2 of 6 Claude Code trials and 3 of 6 Codex trials, and the new wording in 8 of 8 (Issue #253).
+- The startup gate is unchanged; its usage sentence still states that an explicit usage-reduction goal selects `optimize-agent-usage` and ordinary performance work does not, and the description is the selection surface for the measurement goal.
+- No other skill, hook, or manifest content changes.
+
+### Behavioral impact
+
+With the gate delivered, a request that explicitly asks to measure context cost beside other work now selects `optimize-agent-usage` together with the route that owns that work, as the `agent-plugin-architect` skill already stated for an explicit usage-cost goal. Requests that merely mention performance or cost in passing still select no usage route.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.27.0.md) for the two-arm measurement behind the wording and the evidence boundary.
+
 ## 0.26.0 - 2026-11-03
 
 ### Changed

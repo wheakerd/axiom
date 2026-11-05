@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 131 | 2026-11-04 | [#253](https://github.com/wheakerd/axiom/issues/253) | `66b36e491cfb5a0c56c2ae8a58fec88ca5f3e7d5` | Release 0.27.0 names an explicit goal to measure or reduce context cost in the optimize-agent-usage description after a two-arm measurement in clean locations; the startup gate is unchanged. |
 | 130 | 2026-11-03 | [#251](https://github.com/wheakerd/axiom/issues/251) | `d5a914e1bb6a6a98b0997df3c815cfe37cbe2de6` | Add the fresh-session workspace rule and its verification step, record the 0.26.0 workspace deviation, and add clean-location observation records of the immutable v0.26.0 for both hosts. |
 | 129 | 2026-11-03 | [#249](https://github.com/wheakerd/axiom/issues/249) | `fab69b78462d7f8d93938fa075099771b9923e27` | Add the in-session routing measurement contract: two host suites, six prior-turn families over the 18 cases of 0.26.0, validator and tests, and the first measurement as counts in the evals README. |
 | 128 | 2026-11-03 | none | `c8126c54b3d77bba79bee90a49fcc0e675315a56` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.26.0. |
