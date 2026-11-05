@@ -1048,6 +1048,14 @@
       "sourceIssue": 253,
       "summary": "Release 0.27.0 names an explicit goal to measure or reduce context cost in the optimize-agent-usage description after a two-arm measurement in clean locations; the startup gate is unchanged.",
       "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
+    },
+    {
+      "revision": 132,
+      "recordedOn": "2026-11-05",
+      "baselineCommit": "fde84ffb815db92f33342633901bfcacd85cd193",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.0.",
+      "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
     }
   ]
 }
