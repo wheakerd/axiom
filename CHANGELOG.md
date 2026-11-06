@@ -8,6 +8,27 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.27.1 - unreleased
+
+### Fixed
+
+- `traceable-git-submit` creates checkpoint, consolidated, and prepared-release commits with ordinary `git commit` from the frozen, verified index, so the repository's `pre-commit` and `commit-msg` hooks run as the skill and the Trust Model state; the previous `commit-tree` construction ran neither. Each commit is verified against the recorded tree and parent, a failed proof restores the branch by compare-and-swap, and a user-requested empty checkpoint adds `--allow-empty`.
+- On a host whose tool runs only a shell string, the skill now passes each Git value as one single-quoted literal and rejects values that cannot be quoted safely, instead of stopping the phase; Claude Code's shell tool is such a host.
+- When a remote has several push URLs, heavy pushes run once per URL so that one command reaches one target and the first failure stops the sequence; the skill states that Git resolves a configured URL to its remote and updates that remote's tracking refs, and that `pre-push` receives the URL instead of the remote name. The URL still appears in no report or record.
+- The prepared-release tag is created with `git tag` alone, whose refusal to overwrite an existing name is the create-only guarantee; the earlier `update-ref` step could not succeed after `git tag` had created the ref.
+- Invariant 2 states that the direct-submit phase never adds `--no-verify`.
+- No description, hook, manifest content other than the version, or other skill changes.
+
+### Behavioral impact
+
+Traceable commits now trigger the repository's commit hooks; a hook that fails or rewrites the index stops the phase with the branch restored, where the previous construction bypassed the hook silently. Because ordinary `git commit` is used, `commit.gpgSign` and Git's message whitespace cleanup now apply, and a `commit-msg` hook that rewrites the message makes the frozen-message proof fail closed. The heavy phases no longer stop on a host whose tool runs only POSIX shell strings; the quoting rule tells the model how to pass values there. Multi-URL remotes are pushed one URL at a time.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.27.1.md) for the review finding behind each fix and the evidence boundary.
+
 ## 0.27.0 - 2026-11-05
 
 ### Changed

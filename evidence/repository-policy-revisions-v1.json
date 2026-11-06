@@ -1080,6 +1080,14 @@
       "sourceIssue": 260,
       "summary": "Reconcile the public docs: one record of the 0.27.0 overlap counts, 49-case asset acceptance, delegation without the gate, required notices, optional hook comparison, static release status.",
       "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
+    },
+    {
+      "revision": 136,
+      "recordedOn": "2026-11-05",
+      "baselineCommit": "54589beacc9ad1d04de8112030ebe2f6723dd8d0",
+      "sourceIssue": 259,
+      "summary": "Release 0.27.1: traceable-git-submit commits with ordinary git commit so hooks run, passes shell-string values as quoted literals, pushes per URL, and creates the tag with git tag alone.",
+      "runtimeContractDigest": "sha256:6f1286a4fb4c172356f3142f5da42f2aef4901f355f8f636edecef561c2e2c5e"
     }
   ]
 }

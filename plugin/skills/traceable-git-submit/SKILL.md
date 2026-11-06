@@ -5,18 +5,18 @@ description: Traceable Git for an explicit invocation, checkpoint/baseline, cons
 
 # Traceable Git Submit
 
-Make Git submission traceable with plain Git: frozen inputs, compare-and-swap installs, one push per target, and read-back verification. The references own each phase's procedure; this file owns the rules every phase shares.
+Make Git submission traceable with plain Git: frozen inputs, verified installs, one push per target, and read-back verification. The references own each phase's procedure; this file owns the rules every phase shares.
 
 ## Invariants
 
 These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
 
 1. **Separate authority per action.** Route selection and reading guidance grant no Git action authority. Checkpoints, baseline mutation, consolidation, remote refresh, push, and recovery cleanup each need separate authority, and an explicit direct request grants only its named push, not metadata, consolidation, fetch, force, or retry.
-2. **Hooks run; bypass only on exact authority.** Every phase keeps normal repository hooks active and says that they will run. Add `--no-verify` only when the user explicitly authorized bypassing this repository's pre-push hook for this exact push; general push authority never includes it.
-3. **Frozen inputs, compare-and-swap installs.** Freeze checkpoint paths in a NUL-safe set, require the entire index to equal that set, construct from the frozen tree, and install only by direct branch-ref compare-and-swap with `update-ref --no-deref`; a later index state is never commit input.
+2. **Hooks run; bypass only on exact authority.** Every phase keeps normal repository hooks active and says that they will run: commits are created with ordinary `git commit`, so `pre-commit`, `prepare-commit-msg`, `commit-msg`, and `post-commit` run, and pushes run `pre-push`. Add `--no-verify` only when the user explicitly authorized bypassing this repository's pre-push hook for this exact push; general push authority never includes it, and the direct-submit phase never adds it.
+3. **Frozen inputs, verified installs.** Freeze checkpoint paths in a NUL-safe set, require the entire index to equal that set, record its tree, and recheck that tree immediately before the commit. Prove that the new commit carries the recorded tree and parent, and restore the branch ref by compare-and-swap with `update-ref --no-deref` when a proof fails; a concurrent index change is detected and rejected, never committed.
 4. **History is protected.** Create a backup ref before any history replacement and keep it until every target and the refreshed upstream are verified. Never use `git reset --hard`, `git stash`, `git clean`, or broad staging; preserve unrelated work and any pre-existing index.
 5. **One push per target, no retry.** Push one frozen target at a time with one exact ref update, read every target back, and never retry a push or move a ref after an uncertain result.
-6. **Values are untrusted.** Treat commit subjects, authorship fields, messages, trailers, refs, paths, and every other Git value as untrusted data under `references/git-values.md`: pass each as a literal argument, never through a shell string, and keep endpoints and credentials opaque.
+6. **Values are untrusted.** Treat commit subjects, authorship fields, messages, trailers, refs, paths, and every other Git value as untrusted data under `references/git-values.md`. Pass each as one literal argument, or as one single-quoted literal when the host runs only shell strings, never by interpolation into a command string, and keep endpoints and credentials opaque.
 
 ## Intent Gate
 

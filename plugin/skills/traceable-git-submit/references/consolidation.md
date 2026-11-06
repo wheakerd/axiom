@@ -29,11 +29,19 @@ git -C <repo> update-ref --no-deref <backup-ref> <old-head> <null-oid>
 git -C <repo> rev-parse --verify <backup-ref>
 ```
 
-Construct the final commit from `oldHead`'s tree with `upstreamSha` as its only parent, passing the message on standard input:
+Construct the final commit with an ordinary `git commit`, so that the repository's `pre-commit` and `commit-msg` hooks run. Require `git write-tree` equal to `finalTree`; if `finalTree` equals the upstream tree, stop before moving the branch, because there is nothing to consolidate. Move the branch to `upstreamSha` by compare-and-swap, which touches neither the index nor the worktree:
 
 ```bash
-git -C <repo> commit-tree <final-tree> -p <upstream-sha>
+git -C <repo> update-ref --no-deref <branch-ref> <upstream-sha> <old-head>
 ```
+
+Only after that compare-and-swap succeeded, commit the index with the message on standard input:
+
+```bash
+git -C <repo> commit --quiet --no-status -F -
+```
+
+If the commit does not complete for any reason, including a hook failure, a signing failure, a timeout, or a host denial, the branch is at `upstreamSha` with the index intact: restore it with `git -C <repo> update-ref --no-deref <branch-ref> <old-head> <upstream-sha>`, keep the backup, and stop.
 
 ```text
 <type>: <concise final summary>
@@ -50,15 +58,11 @@ Validation:
 <commands run and outcomes>
 ```
 
-Carry `Axiom-checkpoint: true` into the final commit only when the user asks. Verify `newCommit^ == upstreamSha`, `newCommit^{tree} == finalTree`, `git diff --quiet <old-head>^{tree} <new-commit>^{tree}`, the message, and that `branchRef` still equals `oldHead`; stop and keep the backup on any failure.
+Carry `Axiom-checkpoint: true` into the final commit only when the user asks. Verify `newCommit^ == upstreamSha`, `newCommit^{tree} == finalTree`, `git diff --quiet <old-head>^{tree} <new-commit>^{tree}`, the message, and that `branchRef` resolves to `newCommit`; on any failure restore `branchRef` to `oldHead` by compare-and-swap, keep the backup, and stop.
 
 ## Install And Persist
 
-```bash
-git -C <repo> update-ref --no-deref <branch-ref> <new-commit> <old-head>
-```
-
-After the compare-and-swap, require `HEAD == newCommit`, `HEAD^ == upstreamSha`, the exact tree, no new index or worktree changes, and `backupRef == oldHead`. If verification fails before any push, restore the branch with compare-and-swap and report the result:
+The commit installed `newCommit` on `branchRef`. Require `HEAD == newCommit`, `HEAD^ == upstreamSha`, the exact tree, no new index or worktree changes, and `backupRef == oldHead`. If verification fails before any push, restore the branch with compare-and-swap and report the result:
 
 ```bash
 git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>
@@ -70,7 +74,7 @@ Without push authority, stop here: retain the backup and the record with `pushRe
 
 ## Push
 
-With push authority, resolve and freeze the push identity and targets as `remote-targets.md` describes, bind `pushRemote` in the record once, and recheck every target's merge ref against `baselineSha` immediately before the first push; any mismatch means zero pushes. Push one frozen target at a time in the authorized order with one exact ref update and repository hooks running:
+With push authority, resolve and freeze the push identity and targets as `remote-targets.md` describes, bind `pushRemote` in the record once, and recheck every target's merge ref against `baselineSha` immediately before the first push; any mismatch means zero pushes. Push one frozen target at a time in the authorized order with one exact ref update and repository hooks running; when the push remote has several push URLs, run the command once per URL with the URL in place of the remote name, so that one command reaches one target:
 
 ```bash
 git -C <repo> push --no-follow-tags <push-remote> <branch-ref>:<merge-ref>

@@ -33,8 +33,8 @@ git -C <repo> rev-parse --verify HEAD
 git -C <repo> rev-parse --abbrev-ref --symbolic-full-name '@{u}'
 git -C <repo> rev-parse --symbolic-full-name '@{u}'
 git -C <repo> rev-parse --verify '@{u}'
-git -C <repo> config --get "branch.<branch>.remote"
-git -C <repo> config --get "branch.<branch>.merge"
+git -C <repo> config --get 'branch.<branch>.remote'
+git -C <repo> config --get 'branch.<branch>.merge'
 git -C <repo> rev-list --left-right --count HEAD...'@{u}'
 ```
 

@@ -675,6 +675,112 @@ class GitContractTests(unittest.TestCase):
             self.assertEqual(final, self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
             self.assertEqual(final, self.fixture_git(remote, "rev-parse", tag_ref).stdout.strip())
 
+    def run_git(self, repository: Path, *arguments: str, stdin: str | None = None, check: bool = True):
+        return subprocess.run(
+            ("git", "-C", str(repository), *arguments),
+            env=self.fixture_environment(), input=stdin,
+            check=check, capture_output=True, text=True, timeout=10,
+        )
+
+    def write_hook(self, repository: Path, name: str, body: str) -> None:
+        hooks = repository / ".git" / "hooks"
+        hooks.mkdir(exist_ok=True)
+        hook = hooks / name
+        hook.write_text("#!/bin/sh\n" + body, encoding="utf-8")
+        hook.chmod(0o755)
+
+    def test_commit_procedures_match_the_skill_text(self):
+        """Execute the traceable-git-submit commit, consolidation, tag, and URL-push procedures against a fixture."""
+        commit = ("commit", "--quiet", "--no-status", "-F", "-")
+        with tempfile.TemporaryDirectory(prefix="axiom-commit-procedures-") as temporary:
+            root = Path(temporary)
+            repository = root / "repo"
+            self.initialize_fixture(repository)
+            base = self.fixture_commit(repository, "base")
+            log = root / "hooks.log"
+            self.write_hook(repository, "pre-commit", f"echo pre-commit >> '{log}'\n")
+            self.write_hook(repository, "commit-msg", f"echo commit-msg >> '{log}'\n")
+
+            # 1 and 2: ordinary git commit from the verified index runs both hooks and
+            # carries the recorded tree and parent.
+            (repository / "a.txt").write_text("one\n", encoding="utf-8")
+            self.run_git(repository, "add", "--", "a.txt")
+            staged = self.run_git(repository, "write-tree").stdout.strip()
+            self.run_git(repository, *commit, stdin="feat: one\n\nScope:\none\n")
+            first = self.run_git(repository, "rev-parse", "HEAD").stdout.strip()
+            self.assertEqual(["pre-commit", "commit-msg"], log.read_text(encoding="utf-8").split())
+            self.assertEqual(base, self.run_git(repository, "rev-parse", "HEAD^").stdout.strip())
+            self.assertEqual(staged, self.run_git(repository, "rev-parse", "HEAD^{tree}").stdout.strip())
+
+            # 9: Git's default message cleanup is not byte-preserving.
+            self.assertNotEqual("feat: one  \n\n\nScope:\none\n",
+                                self.run_git(repository, "log", "-1", "--format=%B").stdout)
+
+            # A failing pre-commit hook leaves HEAD unchanged.
+            self.write_hook(repository, "pre-commit", "exit 1\n")
+            (repository / "a.txt").write_text("two\n", encoding="utf-8")
+            self.run_git(repository, "add", "--", "a.txt")
+            refused = self.run_git(repository, *commit, stdin="feat: two\n", check=False)
+            self.assertNotEqual(0, refused.returncode)
+            self.assertEqual(first, self.run_git(repository, "rev-parse", "HEAD").stdout.strip())
+
+            # 3: a hook that rewrites the index makes the tree proof fail; compare-and-swap restores the branch.
+            self.write_hook(repository, "pre-commit", "printf 'rewritten\\n' > a.txt && git add -- a.txt\n")
+            staged = self.run_git(repository, "write-tree").stdout.strip()
+            self.run_git(repository, *commit, stdin="feat: two\n")
+            rejected = self.run_git(repository, "rev-parse", "HEAD").stdout.strip()
+            self.assertNotEqual(staged, self.run_git(repository, "rev-parse", "HEAD^{tree}").stdout.strip())
+            self.run_git(repository, "update-ref", "--no-deref", "refs/heads/main", first, rejected)
+            self.assertEqual(first, self.run_git(repository, "rev-parse", "HEAD").stdout.strip())
+            self.write_hook(repository, "pre-commit", "exit 0\n")
+            self.run_git(repository, "read-tree", first)
+
+            # 4: an empty checkpoint needs --allow-empty.
+            self.assertNotEqual(0, self.run_git(repository, *commit, stdin="chore: empty\n", check=False).returncode)
+            self.assertEqual(first, self.run_git(repository, "rev-parse", "HEAD").stdout.strip())
+            self.run_git(repository, *commit, "--allow-empty", stdin="chore: empty\n")
+            self.assertEqual(first, self.run_git(repository, "rev-parse", "HEAD^").stdout.strip())
+
+            # 5: consolidation moves the branch to the upstream by compare-and-swap and commits the index.
+            old_head = self.run_git(repository, "rev-parse", "HEAD").stdout.strip()
+            final_tree = self.run_git(repository, "rev-parse", "HEAD^{tree}").stdout.strip()
+            self.run_git(repository, "update-ref", "--no-deref", "refs/heads/main", base, old_head)
+            self.assertEqual(final_tree, self.run_git(repository, "write-tree").stdout.strip())
+            self.run_git(repository, *commit, stdin="feat: consolidated\n")
+            new_commit = self.run_git(repository, "rev-parse", "HEAD").stdout.strip()
+            self.assertEqual(base, self.run_git(repository, "rev-parse", "HEAD^").stdout.strip())
+            self.assertEqual(final_tree, self.run_git(repository, "rev-parse", "HEAD^{tree}").stdout.strip())
+
+            # 6: when the consolidation commit does not complete, the branch sits at the upstream and is restorable.
+            self.run_git(repository, "update-ref", "--no-deref", "refs/heads/main", old_head, new_commit)
+            self.write_hook(repository, "pre-commit", "exit 1\n")
+            self.run_git(repository, "update-ref", "--no-deref", "refs/heads/main", base, old_head)
+            self.assertNotEqual(0, self.run_git(repository, *commit, stdin="feat: consolidated\n", check=False).returncode)
+            self.assertEqual(base, self.run_git(repository, "rev-parse", "HEAD").stdout.strip())
+            self.run_git(repository, "update-ref", "--no-deref", "refs/heads/main", old_head, base)
+            self.assertEqual(old_head, self.run_git(repository, "rev-parse", "HEAD").stdout.strip())
+            self.write_hook(repository, "pre-commit", "exit 0\n")
+
+            # 7: git tag refuses an existing name in lightweight and annotated mode.
+            self.run_git(repository, "tag", "v1.0.0")
+            self.assertNotEqual(0, self.run_git(repository, "tag", "v1.0.0", check=False).returncode)
+            self.assertNotEqual(0, self.run_git(repository, "tag", "-a", "-m", "again", "v1.0.0", check=False).returncode)
+            self.run_git(repository, "tag", "-a", "-m", "annotated", "v1.1.0")
+            self.assertNotEqual(0, self.run_git(repository, "tag", "v1.1.0", check=False).returncode)
+            self.assertEqual(old_head, self.run_git(repository, "rev-parse", "v1.1.0^{}").stdout.strip())
+
+            # 8: a push named by a configured URL resolves to that remote, updates its tracking ref, and hands pre-push the URL.
+            remote = root / "remote.git"
+            remote.mkdir()
+            self.run_git(remote, "init", "--bare", "--quiet")
+            self.run_git(repository, "remote", "add", "origin", str(remote))
+            seen = root / "pre-push.log"
+            self.write_hook(repository, "pre-push", f"printf '%s\\n' \"$1\" >> '{seen}'\n")
+            self.run_git(repository, "push", "--quiet", "--no-follow-tags", str(remote), "refs/heads/main:refs/heads/main")
+            self.assertEqual(old_head, self.run_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
+            self.assertEqual(old_head, self.run_git(repository, "rev-parse", "--verify", "refs/remotes/origin/main").stdout.strip())
+            self.assertEqual(str(remote), seen.read_text(encoding="utf-8").strip())
+
     def test_all_traceable_git_fixtures(self):
         failures = []
         count = check_traceable_security_contracts(failures)

@@ -23,8 +23,8 @@ from axiom_validation.routing_contracts import require_ordered_contract_anchors
 from .evidence import check_strict_evidence_gate
 
 
-# The hook policy of every traceable phase: repository hooks run by default, and the
-# one sentence below is the only authorized bypass.
+# The hook policy of every traceable phase: repository hooks run by default (commits use
+# ordinary `git commit`), and the one sentence below is the only authorized bypass.
 HOOK_BYPASS_SENTENCE = (
     "Add `--no-verify` only when the user explicitly authorized bypassing this "
     "repository's pre-push hook for this push"
@@ -111,9 +111,10 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "the null old value makes it fail when the ref already exists",
             "Never fall back to an unconditional `update-ref`.",
             "git -C <repo> update-ref --no-deref <backup-ref> <old-head> <null-oid>",
-            "git -C <repo> commit-tree <final-tree> -p <upstream-sha>",
+            "git -C <repo> update-ref --no-deref <branch-ref> <upstream-sha> <old-head>",
+            "git -C <repo> commit --quiet --no-status -F -",
             "## Install And Persist",
-            "git -C <repo> update-ref --no-deref <branch-ref> <new-commit> <old-head>",
+            "The commit installed `newCommit` on `branchRef`",
             "restore the branch with compare-and-swap",
             "git -C <repo> update-ref --no-deref <branch-ref> <old-head> <new-commit>",
             "## Push",
@@ -187,10 +188,11 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "Require the local tag absent before the commit exists",
             "bind its branch `liveBaselineSha`",
             "## Construct Local Objects",
-            "branch compare-and-swap from `oldHead` to `finalSha`",
+            "so that the repository's `pre-commit` and `commit-msg` hooks run",
+            "record it as `finalSha`",
             "reuse that verified commit as `finalSha`",
             "never add an empty commit",
-            "`update-ref --no-deref <tag-ref> <tag-oid> <null-oid>`",
+            "`git tag` refuses an existing name",
             "## Atomic Branch And Tag Push",
             "repository hooks running",
             "git -C <repo> push --atomic",
@@ -215,10 +217,10 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
             "never `git add .` or a glob",
             "require exact equality with the frozen set",
             "## Construct And Install",
-            "git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>",
-            "git -C <repo> update-ref --no-deref <branch-ref> <candidate-commit-sha> <parent-sha>",
-            "A failed compare-and-swap is branch drift",
-            "never retry or fall back to `git commit`",
+            "never construct the checkpoint with `commit-tree`",
+            "git -C <repo> commit --quiet --no-status -F -",
+            "git -C <repo> update-ref --no-deref <branch-ref> <parent-sha> <candidate-commit-sha>",
+            "A failed restore is branch drift",
             "## Failure And Recovery",
             "a marker, subject, author, time, or apparent path match never replaces that confirmation",
         ),
@@ -401,25 +403,21 @@ def check_traceable_security_contracts(failures: list[str]) -> int:
     checkpoint_execution = (
         skill_root / "references/checkpoint.md"
     ).read_text(encoding="utf-8")
-    checkpoint_commit_tree = (
-        "git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>"
-    )
-    checkpoint_branch_cas = (
+    checkpoint_commit = "git -C <repo> commit --quiet --no-status -F -"
+    checkpoint_branch_restore = (
         "git -C <repo> update-ref --no-deref <branch-ref> "
-        "<candidate-commit-sha> <parent-sha>"
+        "<parent-sha> <candidate-commit-sha>"
     )
-    if checkpoint_execution.count(checkpoint_commit_tree) != 1:
+    if checkpoint_execution.count(checkpoint_commit) != 1:
         failures.append(
-            "checkpoint execution must construct exactly one candidate from stagedTreeSha"
+            "checkpoint execution must commit the verified index exactly once with ordinary git commit"
         )
-    if checkpoint_execution.count(checkpoint_branch_cas) != 1:
+    if checkpoint_execution.count(checkpoint_branch_restore) != 1:
         failures.append(
-            "checkpoint execution must install exactly one candidate with branch compare-and-swap"
+            "checkpoint execution must restore the branch exactly once with compare-and-swap"
         )
-    if re.search(
-        r"^git -C <repo> commit(?:\s|$)", checkpoint_execution, re.MULTILINE
-    ):
-        failures.append("checkpoint execution must never prescribe ordinary git commit")
+    if re.search(r"^git -C <repo> commit-tree\b", checkpoint_execution, re.MULTILINE):
+        failures.append("checkpoint execution must never construct the candidate with commit-tree")
 
     push_binding_path = (
         skill_root / "references/remote-targets.md"

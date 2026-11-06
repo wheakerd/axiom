@@ -43,7 +43,7 @@ Stage only the frozen paths with `git add --pathspec-from-file=<file> --pathspec
 
 ## Construct And Install
 
-Build the message from validated lines in this shape, pass it on standard input, and construct the candidate from the recorded tree, never from the current index and never with ordinary `git commit`:
+Build the message from validated lines in this shape and pass it on standard input to an ordinary `git commit`, so that the repository's `pre-commit` and `commit-msg` hooks run; never construct the checkpoint with `commit-tree`, which runs neither:
 
 ```text
 <type>: <concise checkpoint summary>
@@ -58,21 +58,23 @@ Validation:
 <commands run and outcomes>
 ```
 
-```bash
-git -C <repo> commit-tree <staged-tree-sha> -p <parent-sha>
-```
-
-Before any ref mutation, verify with `git cat-file -p` and `git diff-tree` that the candidate has exactly one parent `parentSha`, tree `stagedTreeSha`, the frozen message, and the frozen changed path set; record `candidateCommitSha`. Recheck that `HEAD` is the symbolic ref `branchRef` resolving to `parentSha`, then install with compare-and-swap:
+Immediately before the commit, recheck that `HEAD` is the symbolic ref `branchRef` resolving to `parentSha` and that `git write-tree` still equals `stagedTreeSha`; then commit the index:
 
 ```bash
-git -C <repo> update-ref --no-deref <branch-ref> <candidate-commit-sha> <parent-sha>
+git -C <repo> commit --quiet --no-status -F -
 ```
 
-A failed compare-and-swap is branch drift: keep every record and never retry or fall back to `git commit`. After success, require `HEAD` and `branchRef` to resolve to the candidate and repeat the parent, tree, message, and path proofs. Capture the index and status before and after the transaction; concurrent index state is reported, not normalized, and cannot change the commit. Append the SHA to `checkpointShas` and remove `pendingCheckpoint` in one record replacement. Do not update the baseline cache after a local checkpoint.
+For an empty checkpoint the user asked for, add `--allow-empty`; Git otherwise refuses a commit whose tree equals its parent's. If the commit does not complete for any reason, including a hook failure, a signing failure, a timeout, or a host denial, `HEAD` stays at `parentSha`: stop with the index as it is and report the result. After the commit, verify with `git cat-file -p` and `git diff-tree` that `HEAD` has exactly one parent `parentSha`, tree `stagedTreeSha`, the frozen message, and the frozen changed path set, and record it as `candidateCommitSha`; a hook that rewrote the index or the message makes this proof fail. If any proof fails, restore the branch with compare-and-swap, record the rejected commit's OID, and stop:
+
+```bash
+git -C <repo> update-ref --no-deref <branch-ref> <parent-sha> <candidate-commit-sha>
+```
+
+A failed restore is branch drift: keep every record and never retry. After a commit whose proofs passed, require `HEAD` and `branchRef` to resolve to the candidate and repeat the parent, tree, message, and path proofs. Capture the index and status before and after the transaction; the write-tree recheck and the tree proof reject a concurrent index change instead of committing it. Append the SHA to `checkpointShas` and remove `pendingCheckpoint` in one record replacement. Do not update the baseline cache after a local checkpoint.
 
 ## Failure And Recovery
 
 - A pending-record, staging, staged-set, or tree-record failure stops with the index and pending state as found; never auto-unstage or clear evidence.
-- A candidate construction, proof, or record failure performs no ref mutation.
+- A pre-commit recheck or hook failure performs no ref mutation; a proof failure after the commit restores the branch as described above and records the rejected commit's OID.
 - A no-commit pending record may be removed only when identity and baseline match, there is no `newCommit`, `HEAD == parentSha`, `checkpointShas` equals `@{u}..HEAD`, and the index is empty.
 - If the commit succeeded but the record append failed or is uncertain, stop; never create another checkpoint, consolidate, or push. On an explicitly resumed recovery, append the unrecorded `HEAD` only when the record has no `newCommit` and `pendingCheckpoint` matches the current parent, write-set digest, path count, and `stagedTreeSha`. Require `checkpointShas` to be an ordered prefix of `@{u}..HEAD` followed by exactly that one commit, and the commit's parent, tree, message digest, marker, and changed paths to match. Any larger gap or uncertain binding needs the user to adopt the exact full SHA; a marker, subject, author, time, or apparent path match never replaces that confirmation.

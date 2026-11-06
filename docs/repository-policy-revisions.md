@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 136 | 2026-11-05 | [#259](https://github.com/wheakerd/axiom/issues/259) | `54589beacc9ad1d04de8112030ebe2f6723dd8d0` | Release 0.27.1: traceable-git-submit commits with ordinary git commit so hooks run, passes shell-string values as quoted literals, pushes per URL, and creates the tag with git tag alone. |
 | 135 | 2026-11-05 | [#260](https://github.com/wheakerd/axiom/issues/260) | `72b65027a21a33c762e0c7462ed3e106af6a0ce3` | Reconcile the public docs: one record of the 0.27.0 overlap counts, 49-case asset acceptance, delegation without the gate, required notices, optional hook comparison, static release status. |
 | 134 | 2026-11-05 | [#258](https://github.com/wheakerd/axiom/issues/258) | `1de1330b2c0c357486a8a4fbef38a46d43c2bb5a` | Require a candidate's fresh-session observation records only when a route's selection surface, the startup gate or a skill's frontmatter, changes; body-only changes in skills need none. |
 | 133 | 2026-11-04 | [#250](https://github.com/wheakerd/axiom/issues/250) | `064f67cc9763ad858b7f80ed2806419d31ffab89` | Record the Issue #250 decision: the eighteen 0.26.0 corpus forms stay outside both benchmark profiles after three clean-location fresh-session rounds per host; promotion is not proportional. |
