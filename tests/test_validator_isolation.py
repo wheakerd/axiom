@@ -9,7 +9,6 @@ import sys
 import unittest
 from pathlib import Path
 
-from axiom_validation.cases.routing import ROUTING_SCENARIOS
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.documentation import discover_markdown
 from axiom_validation.manifests import JSON_FILES
@@ -28,14 +27,10 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"{len(JSON_FILES)} JSON files, "
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
     "25 documentation negative fixtures, "
-    f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
-    f"{len(EXPECTED_DIRECT_SKILLS)} skill readability contracts, "
     "10 structured Git route-boundary scenarios, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
-    "13 critical-path CODEOWNERS entries, 241 traceable-Git contract fixtures, "
-    "155 external-action gate fixtures, 127 rollback gate fixtures, "
-    "7 source-linked cross-route, resume, and delegated-choice contracts, 102 validator parser fixtures, "
+    "13 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
     f"version {RELEASE_VERSION}, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
     "55 release-provenance fixtures, 30 immutable external action and image pins "

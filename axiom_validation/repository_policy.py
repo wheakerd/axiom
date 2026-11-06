@@ -759,6 +759,30 @@ def check_packaged_skills(failures: list[str]) -> None:
         )
 
 
+LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
+LIFECYCLE_COMMANDS = (
+    "codex plugin marketplace upgrade axiom",
+    "codex plugin remove axiom@axiom",
+    "claude plugin marketplace update axiom",
+    "claude plugin update axiom@axiom",
+    "claude plugin uninstall axiom@axiom",
+)
+
+
+def check_lifecycle_guide_commands(failures: list[str]) -> None:
+    """Keep the exact host lifecycle commands in the installation guide."""
+    try:
+        guide = (REPOSITORY_ROOT / LIFECYCLE_GUIDE_RELATIVE).read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {LIFECYCLE_GUIDE_RELATIVE}: {error}")
+        return
+    for command in LIFECYCLE_COMMANDS:
+        if command not in guide:
+            failures.append(
+                f"{LIFECYCLE_GUIDE_RELATIVE} is missing exact lifecycle command {command!r}"
+            )
+
+
 ROUTING_GATE_RELATIVE = "plugin/skills/using-axiom/SKILL.md"
 # Both hosts deliver the gate through a startup hook; the ceiling keeps 10% headroom
 # below the 8192-byte instruction-file limit.

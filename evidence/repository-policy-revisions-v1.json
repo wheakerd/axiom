@@ -1128,6 +1128,14 @@
       "sourceIssue": 271,
       "summary": "Remove model-behavior measurement from main: routing evaluations, context-budget records, and compatibility-evidence records and validators; history links point at release tags; gate ceiling stays.",
       "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
+    },
+    {
+      "revision": 142,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "433f5a6f2e40efa4f9ad0ee36776ccb1592d1468",
+      "sourceIssue": 271,
+      "summary": "Remove wording constraints: the offline route, Git, external-action, and rollback decision models, the phrase anchors, and the skill readability contract; tests that run real Git procedures stay.",
+      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
     }
   ]
 }

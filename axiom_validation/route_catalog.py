@@ -284,25 +284,6 @@ def load_route_catalog(failures: list[str]) -> dict[str, Any] | None:
     return document if validate_route_catalog(document, failures) else None
 
 
-def route_boundary_scenarios() -> tuple[dict[str, Any], ...]:
-    """Build offline fixtures directly from the reviewed structured catalog."""
-    failures: list[str] = []
-    document = load_route_catalog(failures)
-    if document is None:
-        return ()
-    return tuple(
-        {
-            "name": scenario["name"],
-            "request": scenario["request"],
-            "route": scenario["route"],
-            "phase": scenario["phase"],
-            "references": tuple(scenario["references"]),
-            "authorization": frozenset(scenario["authorization"]),
-        }
-        for scenario in document["scenarios"]
-    )
-
-
 def _english_join(values: list[str]) -> str:
     if len(values) == 1:
         return values[0]
@@ -422,6 +403,5 @@ __all__ = (
     "render_route_boundary",
     "rendered_route_block",
     "replace_route_block",
-    "route_boundary_scenarios",
     "validate_route_catalog",
 )
