@@ -60,7 +60,7 @@ Use the task references above for current guidance. Historical records neither e
 | Root `CODE_OF_CONDUCT.md` | Community conduct expectations and enforcement contact |
 | Root `CHANGELOG.md` | User-visible changes, impact, and required action |
 | `docs/guides/` | First use and host-managed installation lifecycle |
-| Topical documents in `docs/` | Architecture, examples, trust, compatibility, identity, and dated governance evidence |
+| Topical documents in `docs/` | Architecture, examples, trust, compatibility, identity, and repository governance |
 | `docs/reference/` | Exact public technical references: the Skill Reference and the checked Hook rendering |
 | `docs/maintainers/` | Runtime authoring, validation, documentation, and release procedures |
 | `docs/releases/` | Preserved version-specific notes and candidate evidence |

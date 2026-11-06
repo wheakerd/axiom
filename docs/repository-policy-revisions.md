@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 145 | 2026-11-06 | [#277](https://github.com/wheakerd/axiom/issues/277) | `efa27a618253477fd7c8e9fec033e46057a7e3c1` | Rewrite the governance page to the controls in force and remove the remaining phrase pins on documents and on the agent-plugin-architect description; CODEOWNERS and changelog checks stay. |
 | 144 | 2026-11-06 | [#275](https://github.com/wheakerd/axiom/issues/275) | `e208dcf042c9a3cd45d47c2e5aacdf74ce2e3cbc` | Remove the route catalog, its phrase anchors on the traceable-git-submit description, and its offline scenarios; four documents state that prohibitions bind and drop the removed pre-action rule. |
 | 143 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `7490d11f746d70fbfd9753b5321b5e3fb7aee061` | Remove the repository's host-status vocabulary: Compatibility states once what a release checks and what it does not measure; the release status keeps only its version and runtime-identity binding. |
 | 142 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `433f5a6f2e40efa4f9ad0ee36776ccb1592d1468` | Remove wording constraints: the offline route, Git, external-action, and rollback decision models, the phrase anchors, and the skill readability contract; tests that run real Git procedures stay. |

@@ -7,7 +7,7 @@ from html import unescape
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-from .context import REPOSITORY_ROOT, display_path
+from .context import REPOSITORY_ROOT
 from .hooks import CODEX_WINDOWS_WRAPPER_TEXT, HOOK_FILES, hook_commands
 
 FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})(.*)$")
@@ -97,19 +97,6 @@ def check_documented_hook_command_text(
             "the checked-in declarations or wrapper: "
             f"{command!r}"
         )
-
-
-def check_documented_hook_commands(
-    documents: dict[str, dict[str, Any]], failures: list[str]
-) -> None:
-    try:
-        text = HOOK_REFERENCE_PATH.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(
-            f"cannot read {HOOK_REFERENCE_RELATIVE} for Hook command comparison: {error}"
-        )
-        return
-    check_documented_hook_command_text(text, documents, failures)
 
 
 def mask_inline_code(line: str) -> str:

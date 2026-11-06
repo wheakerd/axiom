@@ -48,7 +48,7 @@ python3 -B -m unittest tests.hook_runtime_integration -v
 
 Run the module from a disposable repository copy. One local operating system is sufficient: the host tool owns hook triggering, and the required CI matrix runs the same module on Linux, Windows, and macOS, which covers each system's command variant. Static inspection, emulation, and a successful package read cannot replace a native result.
 
-The native matrix and its stable `hook-runtime-gate` aggregate are described in [Repository Governance](../repository-governance.md#hook-runtime-promotion-gate). That owner records required-check status and the dated remote observation. The weekly scheduled run remains read-only compatibility evidence.
+The native matrix and its stable `hook-runtime-gate` aggregate are described in [Repository Governance](../repository-governance.md#hook-runtime-gate). That owner records required-check status and the dated remote observation. The weekly scheduled run remains read-only compatibility evidence.
 
 ## Validation Tooling
 
@@ -58,7 +58,7 @@ Focused `unittest` modules under [tests/](../../tests/) own domain-local asserti
 
 Tests pin fixture totals and invariants, not release facts. A total that grows with every release, such as the required public files, the Markdown files, or the installed-runtime inputs, comes from the same production owner the aggregate reports. A release that changes no validator behavior therefore needs no test edit; a lost fixture still fails.
 
-The validators check structure, not wording: a skill's frontmatter, its references, its size, the manifests, the hooks, and the documentation links. They pin no sentence of skill text and model no routing or gate decision, because each host's model decides how to act within the binding rules a skill states. The fixture tests in [tests/test_git_contracts.py](../../tests/test_git_contracts.py) run the Git procedures and configuration rules that `traceable-git-submit` documents against disposable repositories, so a documented command that stops working fails a test.
+The validators check structure, not wording: a skill's frontmatter, its references, its size, the manifests, the hooks, and the documentation links. They pin no sentence of a skill or a document and model no routing or gate decision, because each host's model decides how to act within the binding rules a skill states. The fixture tests in [tests/test_git_contracts.py](../../tests/test_git_contracts.py) run the Git procedures and configuration rules that `traceable-git-submit` documents against disposable repositories, so a documented command that stops working fails a test.
 
 Keep fixture names in failure messages, and let the aggregate reporter add the policy domain. Keep fixture payloads separate from production policy modules, and do not add a third-party test or runtime dependency. Prefer focused validation using Python's standard library, without third-party Python packages; the host executable prerequisites above still apply.
 
