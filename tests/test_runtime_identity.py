@@ -1,14 +1,10 @@
-"""Focused tests for installed-runtime and repository-policy identity."""
+"""Focused tests for the installed-runtime identity."""
 
 from __future__ import annotations
 
 import copy
-import io
 import json
 import shutil
-import subprocess
-import sys
-import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,16 +12,12 @@ from pathlib import Path
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.runtime_identity import (
     INPUT_MANIFEST_RELATIVE,
-    POLICY_LEDGER_SURFACES,
     RUNTIME_IDENTITY_SURFACES,
-    V2_INPUT_MANIFEST_RELATIVE,
     check_runtime_identity,
     compute_runtime_contract,
     load_json_document,
 )
 
-
-FROZEN_V0131_CANDIDATE = "98624d806beed701beeb50235edc96675c214924"
 
 
 class RuntimeIdentityTests(unittest.TestCase):
@@ -39,10 +31,6 @@ class RuntimeIdentityTests(unittest.TestCase):
         if manifest is None or failures:
             raise AssertionError(failures)
         cls.manifest = manifest
-        v2_manifest = load_json_document(REPOSITORY_ROOT / V2_INPUT_MANIFEST_RELATIVE, failures)
-        if v2_manifest is None or failures:
-            raise AssertionError(failures)
-        cls.v2_manifest = v2_manifest
         cls.expected_record_count = json.loads(
             (REPOSITORY_ROOT / "evidence/runtime-identity.json").read_text(encoding="utf-8")
         )["runtimeContract"]["recordCount"]
@@ -62,38 +50,18 @@ class RuntimeIdentityTests(unittest.TestCase):
         for relative in (
             INPUT_MANIFEST_RELATIVE,
             "evidence/runtime-identity.json",
-            "evidence/runtime-contract-history-v1.json",
-            "evidence/runtime-contract-history-v2.json",
-            "evidence/runtime-contract-history-v3.json",
-            "evidence/runtime-contract-history-v4.json",
-            "axiom_validation/runtime-contract-inputs-v1.json",
-            "axiom_validation/runtime-contract-inputs-v3.json",
-            V2_INPUT_MANIFEST_RELATIVE,
-            "evidence/repository-policy-revisions-v1.json",
             *RUNTIME_IDENTITY_SURFACES,
-            *POLICY_LEDGER_SURFACES,
         ):
             destination = target / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPOSITORY_ROOT / relative, destination)
 
-    def compute(
-        self,
-        root: Path,
-        manifest: dict | None = None,
-        *,
-        historical: bool = False,
-    ):
+    def compute(self, root: Path, manifest: dict | None = None):
         failures: list[str] = []
-        result = compute_runtime_contract(
-            root,
-            manifest or self.manifest,
-            failures,
-            historical=historical,
-        )
+        result = compute_runtime_contract(root, manifest or self.manifest, failures)
         return result, failures
 
-    def test_checked_in_identity_history_and_rendered_surface(self):
+    def test_checked_in_identity_and_rendered_surface(self):
         failures: list[str] = []
         record_count = check_runtime_identity(failures)
         self.assertEqual(self.expected_record_count, record_count)
@@ -141,134 +109,6 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual([], current_failures)
             self.assertEqual(baseline.digest, current.digest)
 
-    def copy_v0131_candidate(self, target: Path) -> None:
-        """Replay one frozen candidate commit, independently of the current package.
-
-        This commit records the reviewed 0.13.1 candidate, not a tag or proof of
-        publication. The disposable test repository must contain its objects.
-        """
-        archive = getattr(type(self), "_v0131_archive", None)
-        if archive is None:
-            root = subprocess.check_output(
-                ["git", "-C", str(REPOSITORY_ROOT), "rev-parse", "--show-toplevel"],
-                text=True,
-            ).strip()
-            self.assertEqual(REPOSITORY_ROOT.resolve(), Path(root).resolve())
-            archive = subprocess.check_output(
-                [
-                    "git", "-C", root, "archive", "--format=tar",
-                    FROZEN_V0131_CANDIDATE, "--",
-                    *self.v2_manifest["installedSurfaceRoots"],
-                    V2_INPUT_MANIFEST_RELATIVE,
-                    "axiom_validation/runtime-contract-inputs-v1.json",
-                    "evidence/runtime-identity.json",
-                    "evidence/runtime-contract-history-v1.json",
-                    "evidence/runtime-contract-history-v2.json",
-                    "evidence/repository-policy-revisions-v1.json",
-                ],
-            )
-            type(self)._v0131_archive = archive
-        with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as snapshot:
-            snapshot.extractall(target, filter="data")
-
-    def check_candidate_identity(self, root: Path) -> list[str]:
-        failures: list[str] = []
-        self.assertEqual(65, check_runtime_identity(failures, root=root, check_surfaces=False))
-        return failures
-
-    def test_repository_release_exception_accepts_the_authorized_unchanged_candidate(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            self.copy_v0131_candidate(root)
-            self.assertEqual([], self.check_candidate_identity(root))
-
-    def test_repository_release_exception_rejects_changed_identity_bindings(self):
-        variants = (
-            "future-version",
-            "missing-predecessor",
-            "wrong-predecessor-commit",
-            "wrong-predecessor-digest",
-            "wrong-policy-baseline",
-            "wrong-identity-revision",
-            "later-policy-revision",
-            "wrong-policy-digest",
-        )
-        for variant in variants:
-            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary)
-                self.copy_v0131_candidate(root)
-                manifest_path = root / ".codex-plugin/plugin.json"
-                identity_path = root / "evidence/runtime-identity.json"
-                history_path = root / "evidence/runtime-contract-history-v2.json"
-                revisions_path = root / "evidence/repository-policy-revisions-v1.json"
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                identity = json.loads(identity_path.read_text(encoding="utf-8"))
-                history = json.loads(history_path.read_text(encoding="utf-8"))
-                revisions = json.loads(revisions_path.read_text(encoding="utf-8"))
-                if variant == "future-version":
-                    manifest["version"] = identity["pluginVersion"] = "0.13.2"
-                elif variant == "missing-predecessor":
-                    history["entries"] = [
-                        entry for entry in history["entries"] if entry["pluginVersion"] != "0.13.0"
-                    ]
-                elif variant == "wrong-predecessor-commit":
-                    history["entries"][-1]["commit"] = "0" * 40
-                elif variant == "wrong-predecessor-digest":
-                    history["entries"][-1]["runtimeContractDigest"] = "sha256:" + "0" * 64
-                elif variant == "wrong-policy-baseline":
-                    revisions["revisions"][-1]["baselineCommit"] = "0" * 40
-                elif variant == "wrong-identity-revision":
-                    identity["repositoryPolicyRevision"] = 34
-                elif variant == "later-policy-revision":
-                    identity["repositoryPolicyRevision"] = 36
-                    later = copy.deepcopy(revisions["revisions"][-1])
-                    later["revision"] = 36
-                    revisions["revisions"].append(later)
-                elif variant == "wrong-policy-digest":
-                    revisions["revisions"][-1]["runtimeContractDigest"] = "sha256:" + "0" * 64
-                for path, document in (
-                    (manifest_path, manifest), (identity_path, identity),
-                    (history_path, history), (revisions_path, revisions),
-                ):
-                    path.write_text(json.dumps(document), encoding="utf-8")
-                failures = self.check_candidate_identity(root)
-                expected = (
-                    "pluginVersion advanced while runtimeContractDigest stayed unchanged"
-                    if variant == "future-version" else "v0.13.1 repository-release exception requires"
-                )
-                self.assertTrue(any(expected in failure for failure in failures), failures)
-
-    def test_runtime_change_cannot_use_exception_but_future_runtime_release_still_can_advance(self):
-        for version in ("0.13.1", "0.13.2"):
-            with self.subTest(version=version), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary)
-                self.copy_v0131_candidate(root)
-                self.append_text(root / "skills/using-axiom/SKILL.md", "\nChanged runtime contract.\n")
-                contract, failures = self.compute(root, self.v2_manifest)
-                self.assertEqual([], failures)
-                self.assertIsNotNone(contract)
-                manifest_path = root / ".codex-plugin/plugin.json"
-                identity_path = root / "evidence/runtime-identity.json"
-                revisions_path = root / "evidence/repository-policy-revisions-v1.json"
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                identity = json.loads(identity_path.read_text(encoding="utf-8"))
-                revisions = json.loads(revisions_path.read_text(encoding="utf-8"))
-                manifest["version"] = identity["pluginVersion"] = version
-                identity["runtimeContract"]["digest"] = contract.digest
-                revisions["revisions"][-1]["runtimeContractDigest"] = contract.digest
-                for path, document in (
-                    (manifest_path, manifest), (identity_path, identity), (revisions_path, revisions),
-                ):
-                    path.write_text(json.dumps(document), encoding="utf-8")
-                failures = self.check_candidate_identity(root)
-                if version == "0.13.1":
-                    self.assertTrue(
-                        any("v0.13.1 repository-release exception requires" in item for item in failures),
-                        failures,
-                    )
-                else:
-                    self.assertEqual([], failures)
-
     def test_line_endings_are_canonical_across_operating_systems(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -295,23 +135,45 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual(self.expected_record_count, record_count)
             self.assertEqual([], failures)
 
+    def test_identity_rejects_values_that_disagree_with_the_tree(self):
+        mutations = {
+            "unknown-field": (
+                lambda identity: identity.update(repositoryPolicyRevision=1),
+                "contains unknown fields: repositoryPolicyRevision",
+            ),
+            "other-version": (
+                lambda identity: identity.update(pluginVersion="9.9.9"),
+                "pluginVersion must match the Codex plugin manifest",
+            ),
+            "other-digest": (
+                lambda identity: identity["runtimeContract"].update(digest="sha256:" + "0" * 64),
+                "runtimeContract.digest does not match computed inputs",
+            ),
+        }
+        for label, (mutate, expected) in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.copy_identity_fixture(root)
+                path = root / "evidence/runtime-identity.json"
+                identity = json.loads(path.read_text(encoding="utf-8"))
+                mutate(identity)
+                path.write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
+                failures: list[str] = []
+                check_runtime_identity(failures, root=root, check_surfaces=False)
+                self.assertTrue(any(expected in failure for failure in failures), failures)
+
     def test_identity_reference_rejects_stale_values_and_missing_markers(self):
-        for mutation in ("stale-value", "missing-marker", "stale-ledger"):
+        for mutation in ("stale-value", "missing-marker"):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 self.copy_identity_fixture(root)
                 reference = root / "docs/runtime-identity.md"
-                if mutation == "stale-ledger":
-                    reference = root / "docs/repository-policy-revisions.md"
                 original = reference.read_text(encoding="utf-8")
-                if mutation == "stale-ledger":
-                    changed = original.replace("<!-- policy-ledger:current:end -->", "| 0 | 2000-01-01 | none | `0` | stale |\n<!-- policy-ledger:current:end -->")
-                    expected = "docs/repository-policy-revisions.md policy ledger block is stale"
-                elif mutation == "stale-value":
+                if mutation == "stale-value":
                     identity = json.loads((root / "evidence/runtime-identity.json").read_text())
                     changed = original.replace(
-                        f"`repositoryPolicyRevision`: `{identity['repositoryPolicyRevision']}`",
-                        "`repositoryPolicyRevision`: `0`",
+                        f"`pluginVersion`: `{identity['pluginVersion']}`",
+                        "`pluginVersion`: `0.0.0`",
                     )
                     expected = "docs/runtime-identity.md runtime identity block is stale"
                 else:

@@ -20,7 +20,7 @@ git diff --check
 
 Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, the routing gate's byte ceiling, documentation, and publication checks. Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs the first two commands on the rehearsed catalog handoff before it creates a tag.
 
-Run additional checks required by the changed surface, read the final diff, confirm that the manifest version matches the release identity, and inspect `git status --short` for unrelated paths. Classify every changed path under [Runtime and Repository Identity](../runtime-identity.md#classify-a-change) before calling the result repository-only.
+Run additional checks required by the changed surface, read the final diff, confirm that the manifest version matches the release identity, and inspect `git status --short` for unrelated paths. Classify every changed path under [Runtime Identity](../runtime-identity.md#classify-a-change) before calling the result repository-only.
 
 | Changed surface | Additional acceptance owner |
 | --- | --- |
@@ -86,4 +86,4 @@ The repository aggregate owns Axiom's strict package checks. A missing tool is `
 
 Static validation and native parsing check structure; they do not establish how a host's model behaves, and the repository measures no host model behavior for a release. Use [Report A Compatibility Result](../compatibility.md#report-a-compatibility-result) to report an observation of an installed host. Never relabel earlier evidence as a new host, lifecycle, version, or date.
 
-The checked-in release status binds the tree to its version and runtime identity and never records publication or an observation. A later observation is a separate artifact bound to its immutable subject. The Release pipeline requires no observation record for any release candidate. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).
+The checked-in runtime identity binds the tree to its version and installed-file digest and never records publication or an observation. The Release pipeline requires no observation record for any release candidate. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).

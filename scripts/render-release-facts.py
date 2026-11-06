@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check or explicitly render the managed runtime-identity, policy-ledger, and README blocks."""
+"""Check or explicitly render the managed runtime-identity and README blocks."""
 
 from __future__ import annotations
 
@@ -21,12 +21,9 @@ from axiom_validation.readme_facts import (  # noqa: E402
 )
 from axiom_validation.runtime_identity import (  # noqa: E402
     IDENTITY_RELATIVE,
-    POLICY_LEDGER_SURFACES,
-    POLICY_REVISIONS_RELATIVE,
     RUNTIME_IDENTITY_SURFACES,
     check_runtime_identity,
     load_json_document,
-    replace_policy_ledger_block,
     replace_runtime_identity_block,
 )
 
@@ -60,36 +57,18 @@ def _render() -> tuple[int, list[str]]:
         REPOSITORY_ROOT / IDENTITY_RELATIVE,
         failures,
     )
-    ledger_document = load_json_document(
-        REPOSITORY_ROOT / POLICY_REVISIONS_RELATIVE,
-        failures,
-    )
     skill_summaries = load_skill_summaries(failures)
-    if (
-        identity_document is None
-        or ledger_document is None
-        or skill_summaries is None
-    ):
+    if identity_document is None or skill_summaries is None:
         return 0, failures
 
     readme_paths = readme_surfaces(REPOSITORY_ROOT)
     rendered: dict[Path, str] = {}
-    for relative_path in sorted(
-        set(
-            (
-                *RUNTIME_IDENTITY_SURFACES,
-                *POLICY_LEDGER_SURFACES,
-                *readme_paths,
-            )
-        )
-    ):
+    for relative_path in sorted({*RUNTIME_IDENTITY_SURFACES, *readme_paths}):
         path = REPOSITORY_ROOT / relative_path
         try:
             text = _load_regular_text(path)
             if relative_path in RUNTIME_IDENTITY_SURFACES:
                 text = replace_runtime_identity_block(text, identity_document)
-            if relative_path in POLICY_LEDGER_SURFACES:
-                text = replace_policy_ledger_block(text, ledger_document)
             if relative_path in readme_paths:
                 text = replace_readme_blocks(text, skill_summaries)
         except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:

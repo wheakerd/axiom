@@ -21,7 +21,7 @@ Ask questions and discuss early ideas in [GitHub Discussions](https://github.com
 | [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Private vulnerability reporting and community conduct |
 | [LICENSE](LICENSE) | MIT license; `plugin/LICENSE` is a byte-identical copy that installs with the plugin |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
-| [evidence/](evidence/) | Current identity and status, policy ledger, and runtime digest histories |
+| [evidence/](evidence/) | Current runtime identity |
 | [axiom_validation/](axiom_validation/) | Standard-library publication policy and installed-runtime input classification |
 | [tests/](tests/) | Focused unit tests and isolated policy fixtures |
 | [scripts/](scripts/) | Stable validation entrypoints |
@@ -33,7 +33,7 @@ Hosts install only `plugin/`; the rest of the repository supports development, v
 
 1. Inspect the worktree and preserve edits you did not create. Do not reset, stash, clean, stage, or rewrite unrelated work to make your change appear clean.
 2. Identify the intended outcome and the owning surface: installed Skills and Hooks, a host package, documentation, or repository tooling.
-3. Classify the change against [Runtime and Repository Identity](docs/runtime-identity.md#classify-a-change). An included runtime change must alter the digest and advance `pluginVersion`; a repository-only change appends `repositoryPolicyRevision` and must retain the digest. The same section owns the version increment and bundling standard.
+3. Classify the change against [Runtime Identity](docs/runtime-identity.md#classify-a-change). An included runtime change must alter the digest and advance `pluginVersion`; a repository-only change must retain both. The same section owns the version increment and bundling standard.
 4. Separate route selection from action authorization. Loading a Skill never grants permission to commit, push, deploy, delete, promote, read a secret, or mutate a remote system.
 5. Keep the change within its stated scope and identify any routing or authorization impact before implementation.
 

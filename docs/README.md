@@ -24,10 +24,9 @@ Current guidance describes the same source snapshot as the document. See [Source
 | Explicitly continue a task across sessions | [Continuous Progress](../plugin/skills/continuous-progress/SKILL.md) | Users |
 | Research through a local browser or client | [Local Web Search example](examples.md#local-web-search) | Users |
 | Report a host result | [Report A Compatibility Result](compatibility.md#report-a-compatibility-result) | Testers and auditors |
-| Understand package identity | [Runtime and Repository Identity](runtime-identity.md) | Maintainers and auditors |
+| Understand package identity | [Runtime Identity](runtime-identity.md) | Maintainers and auditors |
 | Decide the version increment or bundling for a change | [Version Increment](runtime-identity.md#version-increment) | Maintainers |
 | Review repository controls | [Repository Governance](repository-governance.md) | Maintainers |
-| Trace a repository policy revision | [Repository Policy Revisions](repository-policy-revisions.md) | Maintainers and auditors |
 | Contribute documentation | [Documentation Policy](maintainers/documentation-policy.md) | Contributors |
 | Prepare release documentation and evidence | [Release Documentation And Evidence](maintainers/release-documentation.md) | Maintainers and auditors |
 | Decide where Axiom is listed and record a submission | [Distribution Channels](maintainers/distribution-channels.md) | Maintainers |
@@ -40,10 +39,10 @@ Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussi
 
 ## Release History
 
-The [checked-in release status](../evidence/release-status.json) owns the source candidate's version and binding; consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
+Consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
 
 - [Changelog](../CHANGELOG.md) records user-visible changes and required action for every version.
-- [Evidence](../evidence/) contains machine facts with their own version, subject, and date.
+- [Runtime identity](../evidence/runtime-identity.json) records the current version and installed-file digest.
 - [Earlier Records](compatibility.md#earlier-records) names the release tag that keeps version notes, routing evaluations, and host observation records.
 
 ## Current Structure
@@ -60,7 +59,7 @@ The [checked-in release status](../evidence/release-status.json) owns the source
 | Topical documents in `docs/` | Architecture, examples, trust, compatibility, identity, and repository governance |
 | `docs/reference/` | Exact public technical references: the Skill Reference and the checked Hook rendering |
 | `docs/maintainers/` | Runtime authoring, validation, documentation, and release procedures |
-| `evidence/` | Machine-readable identity, status, policy revisions, and runtime histories |
+| `evidence/` | Machine-readable runtime identity |
 | `<name>.zh-CN.md` beside an English document | Simplified Chinese translation of that document; English is canonical, and the translation changes in the same change as its source |
 
 See [Contributing](../CONTRIBUTING.md#repository-layout) for the full repository map.

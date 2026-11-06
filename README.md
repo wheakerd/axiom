@@ -125,7 +125,7 @@ The [Record star history workflow](.github/workflows/record-star-history.yml) re
 - [Documentation index](docs/README.md): guides and references by task.
 - [Skill Reference](docs/reference/skills.md): bundled skills and examples.
 - [Latest release](https://github.com/wheakerd/axiom/releases/latest) and [Changelog](CHANGELOG.md): what changed in each version and any required action.
-- [Compatibility](docs/compatibility.md): supported hosts and known limitations, backed by the [release-status record](evidence/release-status.json).
+- [Compatibility](docs/compatibility.md): supported hosts and known limitations.
 - [Trust Model](docs/trust-model.md): security boundaries. Axiom is a public beta; its instructions do not replace host permissions or provide a sandbox.
 - [GitHub Discussions](https://github.com/wheakerd/axiom/discussions): questions and early ideas.
 - [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose): bug reports, feature requests, routing cases, and compatibility reports.

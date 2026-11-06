@@ -9,8 +9,6 @@ from .context import (
     RELEASE_VERSION,
     REPOSITORY_ROOT,
     display_path,
-    release_version,
-    supported_hosts,
 )
 from .release_evidence import render_release_body
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
@@ -37,13 +35,7 @@ REQUIRED_PUBLIC_FILES = (
     "docs/runtime-identity.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
-    "evidence/release-status.json",
     "evidence/runtime-identity.json",
-    "evidence/runtime-contract-history-v1.json",
-    "evidence/runtime-contract-history-v2.json",
-    "evidence/runtime-contract-history-v3.json",
-    "evidence/runtime-contract-history-v4.json",
-    "evidence/repository-policy-revisions-v1.json",
     "scripts/check-documentation.py",
     "scripts/check-runtime-identity.py",
     "scripts/check-release-evidence.py",
@@ -51,9 +43,6 @@ REQUIRED_PUBLIC_FILES = (
     "scripts/render-release-facts.py",
     "scripts/release-pipeline.py",
     "scripts/build-listing-variant.py",
-    "axiom_validation/runtime-contract-inputs-v1.json",
-    "axiom_validation/runtime-contract-inputs-v2.json",
-    "axiom_validation/runtime-contract-inputs-v3.json",
     "axiom_validation/runtime-contract-inputs-v4.json",
     ".github/workflows/publish-immutable-release.yml",
     ".github/workflows/create-protected-release-tag.yml",
@@ -193,24 +182,7 @@ def check_skill_contracts(failures: list[str]) -> None:
         )
 
 
-def check_retired_installation_paths(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
-    """Reject the Claude distribution wrapper outside versions that support Claude Code."""
-    version = release_version(root)
-    if version is not None and "claude-code" in supported_hosts(version):
-        return
-    for relative in (
-        ".claude-plugin",
-        "hooks/claude-hooks.json",
-        "plugin/.claude-plugin",
-        "plugin/hooks/claude-hooks.json",
-    ):
-        path = root / relative
-        if path.exists() or path.is_symlink():
-            failures.append(f"retired Axiom installation surface must be absent: {relative}")
-
-
 def check_required_files(failures: list[str]) -> None:
-    check_retired_installation_paths(failures)
     for relative_path in REQUIRED_PUBLIC_FILES:
         if not (REPOSITORY_ROOT / relative_path).is_file():
             failures.append(

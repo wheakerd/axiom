@@ -21,7 +21,6 @@ from axiom_validation.release_pipeline import (  # noqa: E402
     run_candidate,
     run_catalog,
     run_publish,
-    utc_today,
 )
 
 
@@ -92,7 +91,6 @@ def main(argv: list[str] | None = None) -> int:
                 tag=args.tag,
                 reporter=reporter,
                 clock=Clock(),
-                today=utc_today(),
                 run_url=f"{server}/{args.repository}/actions/runs/{run_id}",
             )
     except PipelineError as error:

@@ -6,7 +6,7 @@ This reference is for maintainers and auditors reviewing repository controls. It
 
 | Review task | Section |
 | --- | --- |
-| Classify a repository change | [Repository Policy Identity](#repository-policy-identity) |
+| Classify a repository change | [Runtime Identity](runtime-identity.md#classify-a-change) |
 | Inspect merge and tag restrictions | [Main Branch Policy](#main-branch-policy) and [Release Tag Policy](#release-tag-policy) |
 | Understand release-controller permissions | [Release Tag Controller](#release-tag-controller) |
 | Check version syntax | [Production Release Version Policy](#production-release-version-policy) |
@@ -18,12 +18,6 @@ This reference is for maintainers and auditors reviewing repository controls. It
 | Understand the star-history data branch | [Stats Branch Policy](#stats-branch-policy) |
 
 Release preparation and evidence responsibilities belong to [Release Documentation And Evidence](maintainers/release-documentation.md). The [ruleset REST API](https://docs.github.com/en/rest/repos/rules), [ruleset semantics](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), and [CODEOWNERS behavior](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) are the external interpretation references.
-
-## Repository Policy Identity
-
-Repository governance has an identity separate from the installed plugin. [`repository-policy-revisions-v1.json`](../evidence/repository-policy-revisions-v1.json) is an append-only, contiguous record, and [Repository Policy Revisions](repository-policy-revisions.md) renders it together with the changelog entries that earlier revisions carried. CI, validator, release-automation, governance-documentation, and evidence-policy changes append a revision when the installed [`runtimeContractDigest`](../evidence/runtime-identity.json) remains unchanged. The signed merge commit containing the entry and its required checks are the durable record; a repository-policy revision does not create an installed package Release by default.
-
-An installed Skill, hook, wrapper, route, action-authority contract, or other classified runtime input instead changes the digest and requires a new `pluginVersion`. See [Runtime And Repository Identity](runtime-identity.md) for the complete classification and release decision.
 
 ## Main Branch Policy
 

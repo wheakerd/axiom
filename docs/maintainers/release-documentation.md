@@ -25,7 +25,7 @@ Keep the heading state `unreleased` until the GitHub Release is published; the t
 
 Keep the entry concise and user-facing. Case-level results, commit and tree IDs, timing, token counts, candidate investigations, and workflow internals belong in the release pull request or its issue rather than the Changelog.
 
-Repository policy revisions are not Changelog entries. The [policy ledger](../../evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](../repository-policy-revisions.md) renders it; the catalog handoff dates the released version's heading and appends a ledger revision without adding a Changelog entry.
+Repository-only changes are not Changelog entries; Git history records them. The catalog handoff dates the released version's heading without adding a Changelog entry.
 
 ## Deprecation And Removal
 
@@ -63,7 +63,7 @@ Earlier version contracts and recorded experiments retain their historical meani
 
 ## Release Pipeline
 
-A pull request that changes the plugin version in the Codex manifest is a release pull request; every other pull request publishes nothing. Prepare it with the new version, its `## X.Y.Z - unreleased` Changelog entry, and the identity records that [Runtime And Repository Identity](../runtime-identity.md) requires. Use the immediate next patch, minor, or major version after the latest published Release, and keep other changes out of `main` until the release completes.
+A pull request that changes the plugin version in the Codex manifest is a release pull request; every other pull request publishes nothing. Prepare it with the new version, its `## X.Y.Z - unreleased` Changelog entry, and the identity record that [Runtime Identity](../runtime-identity.md) requires. Use the immediate next patch, minor, or major version after the latest published Release, and keep other changes out of `main` until the release completes.
 
 The [Release pipeline](../../.github/workflows/release-pipeline.yml) then publishes the version from CI without a manual dispatch:
 
@@ -82,7 +82,7 @@ After verifying final immutable publication and GitHub Latest, the [publisher](.
 The Release pipeline's `Advance marketplace catalogs` job then completes the catalog publication through this signed PR process; a maintainer follows the same steps when the job cannot run:
 
 1. Verify the current Latest Release is final, stable, immutable, and identifies the intended tag and signed commit. For a deliberate Latest selection made outside the publisher, perform the same verification before preparing the catalog change; a Release event alone does not prove a Latest transition.
-2. On a task branch from current `main`, replace only the Axiom entry's source in each catalog with the verified Git URL, version tag, and the source type and subtree path that tag requires. Preserve other catalog metadata, and date the released version's Changelog heading as the [Changelog Contract](#changelog-contract) describes. Record the next repository-policy revision and its baseline, retain the installed runtime identity, and run the contributor checks. The merged release pull request authorizes this catalog operation for its version; a policy revision alone does not grant it.
+2. On a task branch from current `main`, replace only the Axiom entry's source in each catalog with the verified Git URL, version tag, and the source type and subtree path that tag requires. Preserve other catalog metadata, and date the released version's Changelog heading as the [Changelog Contract](#changelog-contract) describes. Retain the installed runtime identity and run the contributor checks. The merged release pull request authorizes this catalog operation for its version.
 3. Recheck Latest before merging the signed PR with its required checks. If it changed, refresh the candidate for the selected release instead of merging a stale reference. Do not move a version tag or the legacy `latest` Git tag.
 4. Read back both merged catalogs and resolve their plugin tag. Confirm that the selected manifest version matches that tag. Record the catalog commit for users who need a fixed catalog snapshot. A tag on the marketplace repository may contain a different plugin reference; it is not a per-plugin pin.
 

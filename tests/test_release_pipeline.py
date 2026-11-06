@@ -42,16 +42,12 @@ from axiom_validation.release_tag_controller import GITHUB_ACTIONS_APP_ID
 
 
 REPOSITORY = "wheakerd/axiom"
-HANDOFF_FILES = (
+HANDOFF_CHANGED_FILES = (
     "CHANGELOG.md",
-    "docs/repository-policy-revisions.md",
-    "docs/runtime-identity.md",
-    "evidence/release-status.json",
-    "evidence/repository-policy-revisions-v1.json",
-    "evidence/runtime-identity.json",
     ".agents/plugins/marketplace.json",
     ".claude-plugin/marketplace.json",
 )
+HANDOFF_FILES = (*HANDOFF_CHANGED_FILES, "evidence/runtime-identity.json")
 
 
 def git(root: Path, *arguments: str) -> str:
@@ -74,13 +70,22 @@ def git(root: Path, *arguments: str) -> str:
     ).stdout
 
 
-def commit_versions(root: Path, versions: tuple[str, ...]) -> list[str]:
+def commit_versions(
+    root: Path, versions: tuple[str, ...], digests: tuple[str, ...] | None = None
+) -> list[str]:
+    """Commit one manifest version per entry; each commit records its own runtime digest."""
     git(root, "init", "-q", "-b", "main")
     manifest = root / "plugin" / ".codex-plugin" / "plugin.json"
     manifest.parent.mkdir(parents=True)
+    identity = root / "evidence" / "runtime-identity.json"
+    identity.parent.mkdir(parents=True)
     commits = []
-    for version in versions:
+    for index, version in enumerate(versions):
         manifest.write_text(json.dumps({"name": "axiom", "version": version}) + "\n")
+        digest = digests[index] if digests else f"sha256:{index:064x}"
+        identity.write_text(
+            json.dumps({"pluginVersion": version, "runtimeContract": {"digest": digest}}) + "\n"
+        )
         git(root, "add", "-A")
         git(root, "commit", "-q", "--allow-empty", "-m", f"version {version}")
         commits.append(git(root, "rev-parse", "HEAD").strip())
@@ -486,6 +491,22 @@ class ReleasePipelineTests(unittest.TestCase):
             )
         self.assertFalse((self.reports / "summary.md").exists())
 
+    def test_candidate_rejects_a_version_step_without_an_installed_change(self):
+        digest = "sha256:" + "a" * 64
+        base, head = commit_versions(self.root, ("0.20.0", "0.20.1"), (digest, digest))
+        with self.assertRaisesRegex(PipelineError, "version 0.20.1 changes no installed file"):
+            run_candidate(
+                root=self.root,
+                api=FakeGitHub(head),
+                repository=REPOSITORY,
+                base_commit=base,
+                head_commit=head,
+                reporter=self.reporter,
+                render_body=lambda *_: self.fail("no body for an empty release"),
+                rehearse=no_rehearsal,
+            )
+        self.assertFalse((self.reports / "summary.md").exists())
+
     def test_candidate_rejects_skipped_or_stacked_versions(self):
         base, head = commit_versions(self.root, ("0.20.0", "0.22.0"))
         with self.assertRaisesRegex(PipelineError, "not the next patch, minor, or major"):
@@ -880,19 +901,11 @@ class CatalogHandoffTests(unittest.TestCase):
     def test_handoff_rejects_a_superseded_version(self):
         prepare_handoff_repository(self.root, "0.22.0")
         with self.assertRaisesRegex(PipelineError, "no longer applies"):
-            apply_catalog_handoff(
-                self.root,
-                tag="v0.21.0",
-                release_date="2026-11-02",
-                baseline_commit="1" * 40,
-                recorded_on="2026-11-02",
-            )
+            apply_catalog_handoff(self.root, tag="v0.21.0", release_date="2026-11-02")
 
     def test_catalog_handoff_opens_verifies_and_merges_one_signed_pull_request(self):
         main = prepare_handoff_repository(self.root, "0.21.0")
-        previous = json.loads((self.root / "evidence" / "runtime-identity.json").read_text())[
-            "repositoryPolicyRevision"
-        ]
+        identity = (self.root / "evidence" / "runtime-identity.json").read_bytes()
         api = FakeCatalogGitHub(self.root, main, "v0.21.0")
         summary = Path(self.directory.name) / "summary.md"
         outcome = run_catalog(
@@ -903,12 +916,11 @@ class CatalogHandoffTests(unittest.TestCase):
             tag="v0.21.0",
             reporter=Reporter(summary, Path(self.directory.name) / "output.txt"),
             clock=FakeClock(),
-            today="2026-11-03",
             run_url="https://github.com/wheakerd/axiom/actions/runs/1",
             publication_checks=lambda root: None,
         )
         self.assertEqual("advanced", outcome)
-        self.assertEqual(sorted(HANDOFF_FILES), sorted(api.additions))
+        self.assertEqual(sorted(HANDOFF_CHANGED_FILES), sorted(api.additions))
         self.assertEqual(["/repos/wheakerd/axiom/git/refs/heads/catalog/v0.21.0"], api.deleted)
         for host, relative in (
             ("codex", ".agents/plugins/marketplace.json"),
@@ -916,24 +928,10 @@ class CatalogHandoffTests(unittest.TestCase):
         ):
             catalog = json.loads((self.root / relative).read_text())
             self.assertEqual(catalog_source("v0.21.0", host), catalog["plugins"][0]["source"])
-        ledger = json.loads(
-            (self.root / "evidence" / "repository-policy-revisions-v1.json").read_text()
-        )
-        self.assertEqual(
-            {
-                "revision": previous + 1,
-                "recordedOn": "2026-11-03",
-                "baselineCommit": main,
-                "sourceIssue": None,
-            },
-            {key: ledger["revisions"][-1][key] for key in ("revision", "recordedOn", "baselineCommit", "sourceIssue")},
-        )
+        self.assertEqual(identity, (self.root / "evidence" / "runtime-identity.json").read_bytes())
         changelog = (self.root / "CHANGELOG.md").read_text()
         self.assertIn("## 0.21.0 - 2026-11-02\n", changelog)
         self.assertNotIn("## 0.21.0 - unreleased", changelog)
-        self.assertNotIn("## Repository policy revision", changelog)
-        ledger_page = (self.root / "docs" / "repository-policy-revisions.md").read_text()
-        self.assertIn(f"| {previous + 1} | 2026-11-03 | none | `{main}` |", ledger_page)
         self.assertIn("Merged commit | `" + "d" * 40, summary.read_text())
 
 

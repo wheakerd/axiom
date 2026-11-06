@@ -88,6 +88,6 @@ Ordinary source edits, tests, explanations, status queries, local staging or com
 
 ## Identity, Lifecycle, And Evidence
 
-[Runtime and Repository Identity](runtime-identity.md) separates installed behavior from repository policy. Documentation or CI changes do not require an installed release when the final classified runtime inputs remain unchanged.
+[Runtime Identity](runtime-identity.md) separates installed behavior from repository maintenance. Documentation or CI changes do not require an installed release when the final classified runtime inputs remain unchanged.
 
 Each host owns installation and refresh. After changing the installed snapshot, review its Hook again before it runs, following each host's steps in [Managing an Installation](guides/managing-installation.md). Static package validation and native command tests do not establish fresh installed-plugin or model-session behavior. [Compatibility](compatibility.md) owns the current support and observation boundary.
