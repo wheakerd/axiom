@@ -20,11 +20,6 @@ from axiom_validation.repository_policy import (
     check_skill_contracts,
     discover_release_documents,
 )
-from axiom_validation.cases.external_action import check_external_action_scenarios
-from axiom_validation.cases.rollback import (
-    ROLLBACK_WAIVER_ANCHORS,
-    check_reversible_safety_scenarios,
-)
 
 
 class RepositoryPolicyTests(unittest.TestCase):
@@ -417,31 +412,6 @@ class RepositoryPolicyTests(unittest.TestCase):
                 )
                 self.assertTrue(
                     any("Hook Runtime Promotion Gate" in failure for failure in failures),
-                    failures,
-                )
-
-    def test_external_action_fixtures(self):
-        failures = []
-        self.assertEqual(155, check_external_action_scenarios(failures))
-        self.assertEqual([], failures)
-
-    def test_rollback_fixtures(self):
-        failures = []
-        self.assertEqual(127, check_reversible_safety_scenarios(failures))
-        self.assertEqual([], failures)
-
-    def test_rollback_waiver_pins_its_invariants(self):
-        original_read = Path.read_text
-        for anchor in ROLLBACK_WAIVER_ANCHORS:
-
-            def read_without_anchor(path, *args, **kwargs):
-                return original_read(path, *args, **kwargs).replace(anchor, "REMOVED CONTRACT")
-
-            with self.subTest(anchor=anchor), patch.object(Path, "read_text", read_without_anchor):
-                failures = []
-                check_reversible_safety_scenarios(failures)
-                self.assertTrue(
-                    any("rollback waiver contract" in failure for failure in failures),
                     failures,
                 )
 

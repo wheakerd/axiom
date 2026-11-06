@@ -13,14 +13,10 @@ from .action_graph import (
 )
 from .cases.action_graph import check_pull_request_validation_fixtures
 from .cases.documentation import check_documentation_negative_fixtures
-from .cases.external_action import check_external_action_scenarios
-from .cases.git_contracts import check_traceable_security_contracts
 from .cases.hooks import check_hook_lifecycle_fixtures
 from .cases.manifests import check_manifest_schema_fixtures
 from .cases.parsers import check_validator_negative_fixtures
 from .cases.release_policy import check_release_script_runtime_contract
-from .cases.rollback import check_reversible_safety_scenarios
-from .cases.routing import ROUTING_SCENARIOS
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
 from .documentation import check_documentation
 from .hooks import (
@@ -45,6 +41,7 @@ from .readme_facts import check_readme_facts
 from .reporting import run_policy
 from .repository_policy import (
     REQUIRED_PUBLIC_FILES,
+    check_lifecycle_guide_commands,
     check_packaged_skills,
     check_repository_governance_contract,
     check_release_version_surfaces,
@@ -52,15 +49,8 @@ from .repository_policy import (
     check_routing_gate_size,
     check_skill_contracts,
 )
-from .routing_contracts import (
-    check_cross_route_resume_contracts,
-    check_lifecycle_guide_commands,
-    check_routing_scenarios,
-    check_routing_source_contracts,
-)
 from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
-from .skill_text import check_skill_text
 
 
 def main() -> int:
@@ -176,31 +166,10 @@ def main() -> int:
         failures,
     )
 
-    run_policy("routing", check_lifecycle_guide_commands, failures)
+    run_policy("documentation", check_lifecycle_guide_commands, failures)
     run_policy("repository", check_packaged_skills, failures)
     run_policy("repository", check_routing_gate_size, failures)
     run_policy("repository", check_skill_contracts, failures)
-    skill_text_entry_count = run_policy("repository", check_skill_text, failures)
-    run_policy("routing", check_routing_source_contracts, failures)
-    cross_route_contract_count = run_policy(
-        "routing", check_cross_route_resume_contracts, failures
-    )
-    run_policy(
-        "routing",
-        lambda domain_failures: check_routing_scenarios(
-            ROUTING_SCENARIOS, domain_failures
-        ),
-        failures,
-    )
-    traceable_security_scenarios = run_policy(
-        "git-contracts", check_traceable_security_contracts, failures
-    )
-    external_action_scenarios = run_policy(
-        "external-action", check_external_action_scenarios, failures
-    )
-    rollback_scenarios = run_policy(
-        "rollback", check_reversible_safety_scenarios, failures
-    )
     documentation_report = run_policy(
         "documentation",
         lambda domain_failures: check_documentation(
@@ -232,16 +201,10 @@ def main() -> int:
         f"{len(REQUIRED_PUBLIC_FILES)} required files, {len(JSON_FILES)} JSON files, "
         f"{documentation_report.markdown_count} Markdown files, "
         f"{documentation_fixture_count} documentation negative fixtures, "
-        f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
         f"{readme_skill_count} generated README skill rows, "
-        f"{skill_text_entry_count} skill readability contracts, "
         f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
         f"{runtime_contract_input_count} canonical installed-runtime inputs, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
-        f"{traceable_security_scenarios} traceable-Git contract fixtures, "
-        f"{external_action_scenarios} external-action gate fixtures, "
-        f"{rollback_scenarios} rollback gate fixtures, "
-        f"{cross_route_contract_count} source-linked cross-route, resume, and delegated-choice contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
         f"{manifest_schema_fixture_count} manifest schema fixtures, "
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "

@@ -4,12 +4,31 @@ from __future__ import annotations
 
 import json
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from .context import REPOSITORY_ROOT, display_path
 from .release_versions import PRODUCTION_RELEASE_VERSION_PATTERN
-from .routing_contracts import require_ordered_contract_anchors
 from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonical_yaml_document
+
+
+def require_ordered_contract_anchors(
+    path: Path,
+    anchors: tuple[str, ...],
+    failures: list[str],
+    contract_name: str,
+) -> None:
+    """Require ordered phrases in a workflow or script that the release path depends on."""
+    text = " ".join(path.read_text(encoding="utf-8").split()).casefold()
+    cursor = 0
+    for anchor in anchors:
+        index = text.find(" ".join(anchor.split()).casefold(), cursor)
+        if index < 0:
+            failures.append(
+                f"{display_path(path)} is missing or reorders {contract_name} anchor {anchor!r}"
+            )
+            return
+        cursor = index + len(anchor)
 
 
 def check_release_signature_workflow_contract(failures: list[str]) -> str | None:
