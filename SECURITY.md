@@ -33,7 +33,7 @@ If a routing case caused or could plausibly cause unauthorized credential use, e
 Read the [Trust Model](docs/trust-model.md) before assessing impact. In particular:
 
 - selecting a route loads instructions; it never grants action authority;
-- installed hooks must be compared with the exact checked-in definitions;
+- installed hooks can be compared with the exact checked-in definitions, an optional reviewer step described in the Trust Model;
 - host, operating-system, repository, credential, and connected-service permissions remain outside Axiom's control;
 - request acceptance and command exit status are not proof of the intended outcome; and
 - missing or unavailable evidence must not be reported as a pass.

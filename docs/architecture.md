@@ -84,7 +84,7 @@ baseline, consolidation, recovery, multi-target, force, and history replacement.
 mentioning `submit`, `publish`, or `push` does not select the route.
 <!-- route-boundary:traceable-git-submit-v1:end -->
 
-Route selection does not authorize Git mutation; the current request and host permissions still govern the action.
+The rendered block names the explicit invocation in its Codex form; in Claude Code the same trigger is `/axiom:traceable-git-submit`, or the skill named in plain words on either host. Route selection does not authorize Git mutation; the current request and host permissions still govern the action.
 
 ## No-Match Continuation And Trust
 
