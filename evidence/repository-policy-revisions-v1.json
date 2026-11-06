@@ -1144,6 +1144,14 @@
       "sourceIssue": 271,
       "summary": "Remove the repository's host-status vocabulary: Compatibility states once what a release checks and what it does not measure; the release status keeps only its version and runtime-identity binding.",
       "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
+    },
+    {
+      "revision": 144,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "e208dcf042c9a3cd45d47c2e5aacdf74ce2e3cbc",
+      "sourceIssue": 275,
+      "summary": "Remove the route catalog, its phrase anchors on the traceable-git-submit description, and its offline scenarios; four documents state that prohibitions bind and drop the removed pre-action rule.",
+      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
     }
   ]
 }

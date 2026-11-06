@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 144 | 2026-11-06 | [#275](https://github.com/wheakerd/axiom/issues/275) | `e208dcf042c9a3cd45d47c2e5aacdf74ce2e3cbc` | Remove the route catalog, its phrase anchors on the traceable-git-submit description, and its offline scenarios; four documents state that prohibitions bind and drop the removed pre-action rule. |
 | 143 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `7490d11f746d70fbfd9753b5321b5e3fb7aee061` | Remove the repository's host-status vocabulary: Compatibility states once what a release checks and what it does not measure; the release status keeps only its version and runtime-identity binding. |
 | 142 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `433f5a6f2e40efa4f9ad0ee36776ccb1592d1468` | Remove wording constraints: the offline route, Git, external-action, and rollback decision models, the phrase anchors, and the skill readability contract; tests that run real Git procedures stay. |
 | 141 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `5107d16025dbf1fe06b1eb3784fb8863d49e53ff` | Remove model-behavior measurement from main: routing evaluations, context-budget records, and compatibility-evidence records and validators; history links point at release tags; gate ceiling stays. |

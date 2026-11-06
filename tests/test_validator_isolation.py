@@ -28,7 +28,6 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
     "25 documentation negative fixtures, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
-    "10 structured Git route-boundary scenarios, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
     f"version {RELEASE_VERSION}, 27 manifest schema fixtures, "
