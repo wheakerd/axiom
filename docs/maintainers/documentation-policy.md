@@ -125,7 +125,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
 | Current plugin version | Codex plugin manifest | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |
-| Git workflow routing boundary | `axiom_validation/route-boundaries-v1.json` and the routing skill | Current; `docs/architecture.md` renders the checked summary |
+| Git workflow routing boundary | The `traceable-git-submit` skill | Current; `docs/architecture.md` summarizes it |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
 | Historical host observations | Immutable sources indexed by `docs/field-validation.md` | Preserve original subjects and outcomes; archived records do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check or explicitly render the managed route-boundary, runtime-identity, and README blocks."""
+"""Check or explicitly render the managed runtime-identity, policy-ledger, and README blocks."""
 
 from __future__ import annotations
 
@@ -18,12 +18,6 @@ from axiom_validation.readme_facts import (  # noqa: E402
     load_skill_summaries,
     readme_surfaces,
     replace_readme_blocks,
-)
-from axiom_validation.route_catalog import (  # noqa: E402
-    ROUTE_SURFACES,
-    check_route_catalog,
-    load_route_catalog,
-    replace_route_block,
 )
 from axiom_validation.runtime_identity import (  # noqa: E402
     IDENTITY_RELATIVE,
@@ -62,7 +56,6 @@ def _load_regular_text(path: Path) -> str:
 
 def _render() -> tuple[int, list[str]]:
     failures: list[str] = []
-    route_document = load_route_catalog(failures)
     identity_document = load_json_document(
         REPOSITORY_ROOT / IDENTITY_RELATIVE,
         failures,
@@ -73,8 +66,7 @@ def _render() -> tuple[int, list[str]]:
     )
     skill_summaries = load_skill_summaries(failures)
     if (
-        route_document is None
-        or identity_document is None
+        identity_document is None
         or ledger_document is None
         or skill_summaries is None
     ):
@@ -85,7 +77,6 @@ def _render() -> tuple[int, list[str]]:
     for relative_path in sorted(
         set(
             (
-                *ROUTE_SURFACES,
                 *RUNTIME_IDENTITY_SURFACES,
                 *POLICY_LEDGER_SURFACES,
                 *readme_paths,
@@ -95,8 +86,6 @@ def _render() -> tuple[int, list[str]]:
         path = REPOSITORY_ROOT / relative_path
         try:
             text = _load_regular_text(path)
-            if relative_path in ROUTE_SURFACES:
-                text = replace_route_block(text, route_document)
             if relative_path in RUNTIME_IDENTITY_SURFACES:
                 text = replace_runtime_identity_block(text, identity_document)
             if relative_path in POLICY_LEDGER_SURFACES:
@@ -121,12 +110,11 @@ def _render() -> tuple[int, list[str]]:
     return changed, failures
 
 
-def _check() -> tuple[int, int, int, list[str]]:
+def _check() -> tuple[int, int, list[str]]:
     failures: list[str] = []
-    route_scenarios = check_route_catalog(failures)
     runtime_inputs = check_runtime_identity(failures)
     readme_skills = check_readme_facts(failures)
-    return route_scenarios, runtime_inputs, readme_skills, failures
+    return runtime_inputs, readme_skills, failures
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -140,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"- {failure}", file=sys.stderr)
             return 1
 
-    route_scenarios, runtime_inputs, readme_skills, failures = _check()
+    runtime_inputs, readme_skills, failures = _check()
     if failures:
         print("Canonical fact validation failed:", file=sys.stderr)
         for failure in failures:
@@ -149,8 +137,7 @@ def main(argv: list[str] | None = None) -> int:
     action = f"rendered {changed} changed files and " if arguments.render else ""
     print(
         "Canonical fact validation passed: "
-        f"{action}{route_scenarios} structured route scenarios with "
-        f"{runtime_inputs} canonical runtime inputs, plus a README index of "
+        f"{action}{runtime_inputs} canonical runtime inputs, plus a README index of "
         f"{readme_skills} bundled skills."
     )
     return 0

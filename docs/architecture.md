@@ -35,11 +35,9 @@ Each hook prints a loading message and reads the gate using the host-provided pl
 
 The gate honors the active instruction hierarchy, then matches explicit invocations or clear bundled descriptions. Each host's native skill list is the selection surface: the gate selects a bundled skill by the description that list shows, carries only the composition and boundary rules, and does not restate the catalog. An explicit invocation selects that skill (`$skill-name` in Codex, `/axiom:skill-name` in Claude Code, or the skill named in plain words), and a more specific installed skill, MCP tool, or host tool the user named is not displaced by a bundled route, while a tool the host merely offers or a repository-local skill the user did not name displaces nothing. It normalizes unambiguous non-English wording to canonical routes without introducing localized aliases. Material ambiguity is resolved before action routing; tentative wording alone does not require a question. Routing never silently picks one of several materially different alternatives: when the user explicitly delegates the choice and every alternative is reversible and already authorized, the model picks the one that fits the user's environment and goal and states which and why before acting; otherwise the gate selects clarification first. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost. Useful, host-supported delegation is assessed only after the intended result is clear.
 
-Selection precedes reading candidate Skill bodies. Load the smallest matching set and only the references required for the active phase. A selected Skill gives direction: its named invariants bind in every phase, including the references its active phase loads, while everything else in it is a default the model may adapt to the situation, saying so when it departs. Within every invariant, the model decides how to handle the request's specifics, problems that arise, deviations from the expected result, external interference, and gaps between a plan and the ideal behavior. Ordinary code or documentation does not become an architecture workflow merely because its repository contains a plugin.
+Selection precedes reading candidate Skill bodies. Load the smallest matching set and only the references required for the active phase. A selected Skill gives direction: its named invariants bind in every phase, including the references its active phase loads, and so does every prohibition the Skill or its references state, a never, only, or stop. Everything else in it is a default the model may adapt to the situation, saying so when it departs. Within every binding rule, the model decides how to handle the request's specifics, problems that arise, deviations from the expected result, external interference, and gaps between a plan and the ideal behavior. Ordinary code or documentation does not become an architecture workflow merely because its repository contains a plugin.
 
 Reassess when a later tool choice starts research through the user's own browser, CLI, script, or HTTP client, including a fallback from cloud search to such a client; a host's built-in web tool stays host-native. Select `local-web-search` before that access; routing itself sends no network request.
-
-The gate also carries one light behavior that selects no route: before an action that changes state, the model says in one sentence what outcome it intends, names any material ambiguity the user left open, and marks the first irreversible or externally visible step. It adds no question, stop, or authority and stays silent for read-only requests and conversation.
 
 ## Workflow Ownership
 
@@ -75,16 +73,14 @@ After resume (including a fork) or compaction, active routes are reselected from
 
 ## Git Workflow Routing
 
-<!-- route-boundary:traceable-git-submit-v1:start -->
 Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
 include neither a tag nor a traceable trigger. A combined commit, tag, and push of an
 already-prepared plugin release selects `traceable-git-submit`'s prepared-release phase.
 The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
 baseline, consolidation, recovery, multi-target, force, and history replacement. Merely
 mentioning `submit`, `publish`, or `push` does not select the route.
-<!-- route-boundary:traceable-git-submit-v1:end -->
 
-The rendered block names the explicit invocation in its Codex form; in Claude Code the same trigger is `/axiom:traceable-git-submit`, or the skill named in plain words on either host. Route selection does not authorize Git mutation; the current request and host permissions still govern the action.
+The paragraph above names the explicit invocation in its Codex form; in Claude Code the same trigger is `/axiom:traceable-git-submit`, or the skill named in plain words on either host. Route selection does not authorize Git mutation; the current request and host permissions still govern the action.
 
 ## No-Match Continuation And Trust
 

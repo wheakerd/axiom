@@ -22,7 +22,6 @@ from .markdown import (
 )
 from .readme_facts import check_readme_facts
 from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
-from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
 
 README_MAX_BYTES = 16 * 1024
@@ -637,7 +636,6 @@ def check_hook_reference(root: Path, failures: list[str]) -> None:
 def check_machine_derived_documentation(failures: list[str]) -> None:
     """Run existing canonical owners for generated public facts."""
     check_runtime_identity(failures)
-    check_route_catalog(failures)
     check_readme_facts(failures)
     check_release_version_surfaces(failures)
 

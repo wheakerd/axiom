@@ -49,7 +49,6 @@ from .repository_policy import (
     check_routing_gate_size,
     check_skill_contracts,
 )
-from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
 
 
@@ -62,9 +61,6 @@ def main() -> int:
     )
     run_policy("release", check_release_version_surfaces, failures)
     readme_skill_count = run_policy("readme-facts", check_readme_facts, failures)
-    route_catalog_scenario_count = run_policy(
-        "route-catalog", check_route_catalog, failures
-    )
     runtime_contract_input_count = run_policy(
         "runtime-identity", check_runtime_identity, failures
     )
@@ -202,7 +198,6 @@ def main() -> int:
         f"{documentation_report.markdown_count} Markdown files, "
         f"{documentation_fixture_count} documentation negative fixtures, "
         f"{readme_skill_count} generated README skill rows, "
-        f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
         f"{runtime_contract_input_count} canonical installed-runtime inputs, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
