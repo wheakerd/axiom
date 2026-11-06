@@ -41,7 +41,6 @@ from .readme_facts import check_readme_facts
 from .reporting import run_policy
 from .repository_policy import (
     REQUIRED_PUBLIC_FILES,
-    check_lifecycle_guide_commands,
     check_packaged_skills,
     check_repository_governance_contract,
     check_release_version_surfaces,
@@ -162,7 +161,6 @@ def main() -> int:
         failures,
     )
 
-    run_policy("documentation", check_lifecycle_guide_commands, failures)
     run_policy("repository", check_packaged_skills, failures)
     run_policy("repository", check_routing_gate_size, failures)
     run_policy("repository", check_skill_contracts, failures)

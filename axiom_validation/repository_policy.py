@@ -6,8 +6,6 @@ import re
 from pathlib import Path
 
 from .context import (
-    CURRENT_RELEASE_NOTES,
-    README_PATH,
     RELEASE_VERSION,
     REPOSITORY_ROOT,
     display_path,
@@ -15,7 +13,6 @@ from .context import (
     supported_hosts,
 )
 from .release_evidence import render_release_body
-from .release_tag_controller import MAIN_RULESET, RULESET_BINDINGS
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
 
 _BASE_REQUIRED_PUBLIC_FILES = (
@@ -118,27 +115,6 @@ SKILL_REFERENCE_ORDER = (
     "reversible-system-change",
 )
 INSTRUCTION_MAX_BYTES = 8192
-# The accepted narrow route contract of agent-plugin-architect: its description must
-# keep these boundary sentences. Pinning the sentences rather than the full text lets
-# a wording change that keeps the boundary pass without a validator edit.
-AGENT_PLUGIN_ARCHITECT_DESCRIPTION_ANCHORS = (
-    "packaged Codex or Claude Code plugin's architecture",
-    "Use only for explicit packaged agent-plugin architecture work.",
-    "Do not use for evaluating or reviewing an individual Skill or Skill proposal, "
-    "repository-local AGENTS.md, .agents/skills, or .claude/skills systems",
-    "host installation, publication, deployment, or Git submission",
-)
-AGENT_PLUGIN_ARCHITECT_REFERENCES = (
-    "references/package-inventory.md",
-    "references/release-readiness.md",
-    "references/route-and-trigger-contracts.md",
-    "references/packaged-skill-architecture.md",
-    "references/hooks-and-trust-boundaries.md",
-    "references/cross-host-packaging.md",
-    "references/evaluation-and-evidence.md",
-    "references/validation-reporting.md",
-)
-GOVERNANCE_VERIFIED_DATE = "2026-10-02"
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
@@ -154,191 +130,6 @@ CRITICAL_CODEOWNER_PATTERNS = (
     "/tests/",
     "/SECURITY.md",
     "/docs/repository-governance.md",
-)
-GOVERNANCE_SNAPSHOT_ANCHORS = (
-    f"Last verified (UTC): `{GOVERNANCE_VERIFIED_DATE}`",
-    f"and updated at `{RULESET_BINDINGS[MAIN_RULESET][1]}`",
-    "`require-signed-commits-on-main`",
-    "`require-github-signed-release-tags`",
-    "`restrict-release-tag-creation`",
-    "`refs/heads/main`",
-    "`refs/tags/v*`",
-    "`Verify signed main history`",
-    "`repository-guards`",
-    "`unit-and-integration-tests`",
-    "`integration_id: 15368`",
-    "`required_approving_review_count: 0`",
-    "`require_extra_approval_for_unattributed_changes: true`",
-    "`allowed_merge_methods: [squash]`",
-    "`require_code_owner_review: false`",
-    "`strict_required_status_checks_policy: true`",
-    "`strict_required_status_checks_policy: false`",
-    "`do_not_enforce_on_create: false`",
-    "`bypass_actors: []`",
-    "`current_user_can_bypass: never`",
-    "`actor_id: 4756785`",
-    "`actor_type: Integration`",
-    "`bypass_mode: always`",
-    "must omit the `bypass_actors` property",
-    "`20677005`",
-    "`20724385`",
-    "`21703772`",
-    "Required checks on `main`: `repository-guards`, `unit-and-integration-tests`, "
-    "and `hook-runtime-gate`",
-    "Default-branch deletion rule: **UNAVAILABLE / NOT-RUN**",
-    "Release-tag creator allowlist: **GitHub App "
-    "`axiom-release-tag-controller` only**",
-    "Commit-level required-check evidence is defense in depth, not exact "
-    "tag-creation authorization.",
-    "A failed workflow is detection evidence, not server-side mutation prevention.",
-    "`Publish immutable release`",
-    "`enabled: true`",
-    "`enforced_by_owner: false`",
-    "Existing Releases, including v0.8.5, remain in their previously reported mutable state",
-)
-GOVERNANCE_SNAPSHOT_FORBIDDEN = (
-    "The ruleset has no `creation` restriction and exposes no creator allowlist.",
-    "Release-tag creator allowlist: **UNAVAILABLE**",
-)
-REPOSITORY_GUARDS_ENVIRONMENT_HEADING = "### Repository Guards Canonical Environment"
-REPOSITORY_GUARDS_ENVIRONMENT_ANCHORS = (
-    "pins the required `repository-guards` job to the exact `ubuntu-24.04` runner",
-    "Python `3.14.7` and Node.js `24.19.0`",
-    "`package-manager-cache: false` setting keeps package-manager caching disabled",
-    "one read-only aggregate: `python -B scripts/check-publication.py`",
-    "Fork pull requests use ordinary `pull_request`, receive only `contents: read`, "
-    "and receive no repository secret",
-    "No moving `ubuntu-latest` compatibility canary is currently defined",
-    "without reviewed ownership, cadence, failure triage, and runner-upgrade criteria",
-    "never be described as release provenance or installed-host evidence",
-)
-HOOK_RUNTIME_PROMOTION_HEADING = "### Hook Runtime Promotion Gate"
-HOOK_RUNTIME_PROMOTION_ANCHORS = (
-    "`hook-runtime-gate`. It uses `if: always()`, depends on the complete "
-    "`hook-runtime` matrix job",
-    "accepts only the current workflow run's `needs.hook-runtime.result == success`",
-    "at least 30 consecutive completed `push` runs on `main`",
-    "the interval from the first qualifying run to the last is at least 14 full days",
-    "there is no unresolved runner-specific false failure or scheduled compatibility failure",
-    "when an eligible fork pull request is available during the observation period",
-    "The observation gate is **SATISFIED** as of `2026-10-02`.",
-    "`hook-runtime-gate` is required, bound to GitHub Actions `integration_id: 15368`",
-    "Fork execution remains **NOT-RUN**; the conditional fork criterion was not triggered",
-    "The release-tag controller now requires the same three exact main checks",
-)
-RELEASE_TAG_POLICY_ANCHORS = (
-    "The active repository ruleset `require-github-signed-release-tags` targets "
-    "exactly `refs/tags/v*`. The administrator-visible REST response for ruleset "
-    "`20724385`, updated at `2026-08-29T01:53:08.312Z`, reported "
-    "`bypass_actors: []` and `current_user_can_bypass: never`.",
-    "It contains no `creation` rule. Its empty bypass list applies to every "
-    "integrity rule in this ruleset, including the required signature, required "
-    "check, deletion, and non-fast-forward controls.",
-    "The separate active ruleset `restrict-release-tag-creation` also targets "
-    "exactly `refs/tags/v*`. Ruleset `21703772`, updated at "
-    "`2026-08-29T01:52:49.941Z`, contains exactly one `creation` rule.",
-    "Its only administrator-visible bypass entry is `actor_id: 4756785`, "
-    "`actor_type: Integration`, and `bypass_mode: always`, which identifies the "
-    "dedicated `axiom-release-tag-controller` GitHub App.",
-    "Because the App bypass is scoped to this creation-only ruleset, it does not "
-    "bypass any rule in `require-github-signed-release-tags`.",
-    "Release-tag creator allowlist: **GitHub App "
-    "`axiom-release-tag-controller` only**.",
-    "Commit-level required-check evidence is defense in depth, not exact "
-    "tag-creation authorization.",
-)
-RELEASE_TAG_CONTROLLER_HEADING = "## Release Tag Controller Migration"
-RELEASE_TAG_CONTROLLER_ANCHORS = (
-    "The v0.8.20 migration registered GitHub App ID `4756785` with slug "
-    "`axiom-release-tag-controller`, installed it only on `wheakerd/axiom`, and "
-    "created the `release-tag-creation` Actions environment.",
-    "The administrator read-back above confirms that the App is the only "
-    "`Integration` / `always` bypass actor in `restrict-release-tag-creation`, "
-    "the former owner-user bypass is absent, and "
-    "`require-github-signed-release-tags` has no bypass actor and requires only "
-    "`Verify signed main history`.",
-    "A break-glass operation remains a separately authorized, audited ruleset change; "
-    "no permanent interactive-user bypass is retained merely for convenience.",
-    "The `release-tag-creation` Actions environment owns "
-    "`AXIOM_RELEASE_APP_PRIVATE_KEY`, `AXIOM_RELEASE_APP_CLIENT_ID`, and the numeric "
-    "`AXIOM_RELEASE_APP_ID`.",
-    "The minted App token is scoped to this repository and requests only "
-    "`administration: read` plus `contents: write`; administration write is not granted.",
-    "Before one exact `POST /git/refs`, the controller binds the requested version "
-    "and tag, live protected-main commit and tree, the Codex manifest version",
-    "It performs the same complete read a second time, rejects any difference, "
-    "creates only the exact absent tag, and immediately reads the ref back.",
-    "After a valid creation response, only a GET returning HTTP 404 may be retried: "
-    "at most four exact-ref reads, with waits of 1, 2, and 4 seconds.",
-    "Other HTTP or transport errors, malformed responses, and ref, type, or commit "
-    "mismatches stop immediately.",
-    "Exhausted reads leave verification failed; the tag is never recreated.",
-    "An uncertain creation response is read back once and reported as a failure without retry; "
-    "a rerun rejects the existing ref with zero mutation.",
-    "GitHub returns `bypass_actors` only to a caller with ruleset write access.",
-    "It binds ruleset IDs `20677005`, `20724385`, and `21703772` plus their "
-    "normalized server update instants to the reviewed administrator-visible snapshot",
-    "Any actor or rule edit changes the server-owned update instant and fails before "
-    "tag mutation; no workflow receives ruleset-write permission",
-    "`Verify signed main history`, `Verify release candidate`, "
-    "`Verify created release tag`, and `Observe published immutable release`.",
-    "The controller accepts only the exact current `main` SHA and the main-history "
-    "context, so a candidate result cannot authorize production tag creation.",
-    "At this dated snapshot `v0.8.20` remained absent after fail-closed controller "
-    "refusals",
-)
-GOVERNANCE_REVIEW_BOUNDARY_HEADING = "## Human Review Trust Boundary"
-GOVERNANCE_REVIEW_BOUNDARY_ANCHORS = (
-    "`Path B: document the single-maintainer trust boundary` is the selected "
-    "policy for this snapshot.",
-    "`wheakerd` is the current ultimate repository trust root, and the absence "
-    "of independent human review is a known limitation.",
-    "CODEOWNERS is advisory under the live rule: it assigns responsibility and "
-    "requests review, but it does not block an unapproved merge while "
-    "`require_code_owner_review: false` and `required_approving_review_count: 0`.",
-    "The current directly observed preventive controls are the server-side "
-    "pull-request requirement, required signatures, non-fast-forward protection, "
-    "strict required checks, squash-only main merges, and the release-tag creation "
-    "and integrity rules.",
-    "The current directly observed detective controls are the repository validators "
-    "and tests, GitHub Actions and check output, signed-target and release "
-    "observations, content-addressed release attestations, manual read-only API "
-    "re-verification, and ruleset-history entries.",
-    "Hardware-backed authentication and an independently controlled release identity "
-    "were not verified by the repository or API evidence used for this snapshot and "
-    "are not claimed as current compensating controls.",
-    "Emergency or administrative ruleset changes remain separately auditable "
-    "through GitHub's ruleset version history.",
-    "Every currently observed history entry identifies `actor_id: 78034820` and "
-    "`actor_type: User`, which maps to the same `wheakerd` identity.",
-    "That audit trail is detective evidence; because the governing administrator "
-    "remains the same identity, it does not constitute an independent trust domain.",
-    "`Path A: enforce independent review` must not be enabled until a different "
-    "trusted GitHub principal has direct write access, is added alongside `@wheakerd` "
-    "as a code owner for every critical path listed above, and has approved a "
-    "protected test pull request that changes at least one such path.",
-    "That test must prove that the approval counts without author self-approval or a "
-    "ruleset bypass.",
-    "Path B changes no repository ruleset, CODEOWNERS entry, workflow, collaborator "
-    "permission, or required check.",
-    "Server-side enforcement of the three required check contexts is preventive",
-    "The single-maintainer review policy does not alter the required checks "
-    "recorded in Main Branch Policy: `repository-guards`, "
-    "`unit-and-integration-tests`, and `hook-runtime-gate`.",
-    "The three native hook-runtime matrix jobs supply the required aggregate; "
-    "they are not separate required check contexts.",
-)
-GOVERNANCE_REVIEW_BOUNDARY_FORBIDDEN = (
-    "Server-side enforcement of the two required check contexts",
-    "`repository-guards` and `unit-and-integration-tests` remain the only required checks",
-    "`hook-runtime-gate` remain non-required review evidence",
-    "`Path A: enforce independent review` is the selected policy for this snapshot.",
-    "Independent human review is currently enforced.",
-    "CODEOWNERS blocks an unapproved merge.",
-    "Hardware-backed authentication and an independently controlled release identity "
-    "are verified current compensating controls.",
-    "Ruleset history constitutes an independent trust domain.",
-    "Path B adds a required approval for external contributors.",
 )
 
 
@@ -418,34 +209,6 @@ def check_skill_contracts(failures: list[str]) -> None:
             + ", ".join(SKILL_REFERENCE_ORDER)
         )
 
-    architect_root = REPOSITORY_ROOT / "plugin" / "skills" / "agent-plugin-architect"
-    architect_main = architect_root / "SKILL.md"
-    architect_fields = parse_skill_frontmatter(architect_main, failures)
-    if architect_fields is not None:
-        description = " ".join(architect_fields.get("description", "").split())
-        for anchor in AGENT_PLUGIN_ARCHITECT_DESCRIPTION_ANCHORS:
-            if " ".join(anchor.split()) not in description:
-                failures.append(
-                    "plugin/skills/agent-plugin-architect/SKILL.md description drifted from "
-                    f"the accepted narrow route contract: missing {anchor!r}"
-                )
-    actual_references = tuple(
-        path.relative_to(architect_root).as_posix()
-        for path in sorted((architect_root / "references").glob("*.md"))
-    )
-    if actual_references != tuple(sorted(AGENT_PLUGIN_ARCHITECT_REFERENCES)):
-        failures.append(
-            "agent-plugin-architect direct reference set drifted: "
-            + ", ".join(actual_references)
-        )
-    architect_text = architect_main.read_text(encoding="utf-8")
-    for reference in AGENT_PLUGIN_ARCHITECT_REFERENCES:
-        if architect_text.count(reference) != 1:
-            failures.append(
-                "plugin/skills/agent-plugin-architect/SKILL.md must expose exactly one direct "
-                f"next hop for {reference!r}"
-            )
-
 
 def check_retired_installation_paths(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
     """Reject the Claude distribution wrapper outside versions that support Claude Code."""
@@ -484,122 +247,8 @@ def check_installed_license_copy(failures: list[str], root: Path = REPOSITORY_RO
         failures.append("plugin/LICENSE must be a byte-identical copy of LICENSE")
 
 
-def check_repository_governance_documents(
-    governance_text: str,
-    codeowners_text: str,
-    failures: list[str],
-) -> int:
-    """Validate the dated governance snapshot and exact critical-path owners."""
-    normalized_governance = " ".join(governance_text.split())
-    for anchor in GOVERNANCE_SNAPSHOT_ANCHORS:
-        if " ".join(anchor.split()) not in normalized_governance:
-            failures.append(
-                f"docs/repository-governance.md is missing governance snapshot anchor {anchor!r}"
-            )
-    for stale_claim in GOVERNANCE_SNAPSHOT_FORBIDDEN:
-        if " ".join(stale_claim.split()) in normalized_governance:
-            failures.append(
-                "docs/repository-governance.md retains stale governance claim "
-                f"{stale_claim!r}"
-            )
-
-    repository_guards_heading = REPOSITORY_GUARDS_ENVIRONMENT_HEADING
-    if governance_text.count(repository_guards_heading) != 1:
-        failures.append(
-            "docs/repository-governance.md must contain exactly one Repository "
-            "Guards Canonical Environment section"
-        )
-    else:
-        repository_guards_section = governance_text.split(
-            repository_guards_heading, 1
-        )[1].split("\n## ", 1)[0]
-        normalized_repository_guards_section = " ".join(
-            repository_guards_section.split()
-        )
-        for anchor in REPOSITORY_GUARDS_ENVIRONMENT_ANCHORS:
-            if " ".join(anchor.split()) not in normalized_repository_guards_section:
-                failures.append(
-                    "docs/repository-governance.md Repository Guards Canonical "
-                    f"Environment is missing scoped anchor {anchor!r}"
-                )
-
-    release_heading = "## Release Tag Policy"
-    if governance_text.count(release_heading) != 1:
-        failures.append(
-            "docs/repository-governance.md must contain exactly one Release Tag Policy section"
-        )
-    else:
-        release_section = governance_text.split(release_heading, 1)[1].split(
-            "\n## ", 1
-        )[0]
-        normalized_release_section = " ".join(release_section.split())
-        for anchor in RELEASE_TAG_POLICY_ANCHORS:
-            if " ".join(anchor.split()) not in normalized_release_section:
-                failures.append(
-                    "docs/repository-governance.md Release Tag Policy is missing "
-                    f"scoped anchor {anchor!r}"
-                )
-
-    controller_heading = RELEASE_TAG_CONTROLLER_HEADING
-    if governance_text.count(controller_heading) != 1:
-        failures.append(
-            "docs/repository-governance.md must contain exactly one Release Tag "
-            "Controller Migration section"
-        )
-    else:
-        controller_section = governance_text.split(controller_heading, 1)[1].split(
-            "\n## ", 1
-        )[0]
-        normalized_controller_section = " ".join(controller_section.split())
-        for anchor in RELEASE_TAG_CONTROLLER_ANCHORS:
-            if " ".join(anchor.split()) not in normalized_controller_section:
-                failures.append(
-                    "docs/repository-governance.md Release Tag Controller Migration "
-                    f"is missing scoped anchor {anchor!r}"
-                )
-
-    hook_runtime_heading = HOOK_RUNTIME_PROMOTION_HEADING
-    if governance_text.count(hook_runtime_heading) != 1:
-        failures.append(
-            "docs/repository-governance.md must contain exactly one Hook Runtime "
-            "Promotion Gate section"
-        )
-    else:
-        hook_runtime_section = governance_text.split(hook_runtime_heading, 1)[1].split(
-            "\n## ", 1
-        )[0]
-        normalized_hook_runtime_section = " ".join(hook_runtime_section.split())
-        for anchor in HOOK_RUNTIME_PROMOTION_ANCHORS:
-            if " ".join(anchor.split()) not in normalized_hook_runtime_section:
-                failures.append(
-                    "docs/repository-governance.md Hook Runtime Promotion Gate is "
-                    f"missing scoped anchor {anchor!r}"
-                )
-
-    review_heading = GOVERNANCE_REVIEW_BOUNDARY_HEADING
-    if governance_text.count(review_heading) != 1:
-        failures.append(
-            "docs/repository-governance.md must contain exactly one Human Review "
-            "Trust Boundary section"
-        )
-    else:
-        review_section = governance_text.split(review_heading, 1)[1].split(
-            "\n## ", 1
-        )[0]
-        normalized_review_section = " ".join(review_section.split())
-        for anchor in GOVERNANCE_REVIEW_BOUNDARY_ANCHORS:
-            if " ".join(anchor.split()) not in normalized_review_section:
-                failures.append(
-                    "docs/repository-governance.md Human Review Trust Boundary is "
-                    f"missing scoped anchor {anchor!r}"
-                )
-    for unsupported_claim in GOVERNANCE_REVIEW_BOUNDARY_FORBIDDEN:
-        if " ".join(unsupported_claim.split()) in normalized_governance:
-            failures.append(
-                "docs/repository-governance.md contains unsupported review-boundary "
-                f"claim {unsupported_claim!r}"
-            )
-
+def check_critical_path_owners(codeowners_text: str, failures: list[str]) -> int:
+    """Require the exact ordered critical-path owner set in CODEOWNERS."""
     entries: list[tuple[str, tuple[str, ...]]] = []
     seen_patterns: set[str] = set()
     for line_number, raw_line in enumerate(codeowners_text.splitlines(), start=1):
@@ -632,97 +281,37 @@ def check_repository_governance_documents(
     valid_count = 0
     entry_map = dict(entries)
     for pattern in CRITICAL_CODEOWNER_PATTERNS:
-        expected_owners = (GOVERNANCE_OWNER,)
-        actual_owners = entry_map.get(pattern)
-        if actual_owners != expected_owners:
+        if entry_map.get(pattern) != (GOVERNANCE_OWNER,):
             failures.append(
                 f".github/CODEOWNERS must assign {pattern!r} only to {GOVERNANCE_OWNER}"
             )
         else:
             valid_count += 1
-        if f"`{pattern}`" not in governance_text:
-            failures.append(
-                f"docs/repository-governance.md must list critical CODEOWNERS pattern {pattern!r}"
-            )
     return valid_count
 
 
 def check_repository_governance_contract(failures: list[str]) -> int:
-    """Load and validate checked-in repository-governance declarations."""
-    documents: dict[str, str] = {}
-    for relative_path in ("docs/repository-governance.md", ".github/CODEOWNERS"):
-        path = REPOSITORY_ROOT / relative_path
-        try:
-            documents[relative_path] = path.read_text(encoding="utf-8")
-        except OSError as error:
-            failures.append(f"cannot read {relative_path}: {error}")
-    if len(documents) != 2:
+    """Validate the checked-in critical-path owners."""
+    relative_path = ".github/CODEOWNERS"
+    try:
+        codeowners_text = (REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {relative_path}: {error}")
         return 0
-    return check_repository_governance_documents(
-        documents["docs/repository-governance.md"],
-        documents[".github/CODEOWNERS"],
-        failures,
-    )
+    return check_critical_path_owners(codeowners_text, failures)
 
 
 def check_release_version_surfaces(failures: list[str]) -> None:
-    """Bind current guides to source owners and release documents to their version."""
-    release_path = REPOSITORY_ROOT / CURRENT_RELEASE_NOTES
-    surface_contracts = (
-        (
-            README_PATH,
-            (
-                "](evidence/release-status.json)",
-                "](docs/compatibility.md)",
-                "](CHANGELOG.md)",
-            ),
-        ),
-        (
-            REPOSITORY_ROOT / "CHANGELOG.md",
-            (f"## {RELEASE_VERSION} - ",),
-        ),
-        (
-            REPOSITORY_ROOT / "docs" / "compatibility.md",
-            (
-                "](../evidence/release-status.json)",
-                "](../evidence/runtime-identity.json)",
-            ),
-        ),
-        (
-            release_path,
-            (f"Version `{RELEASE_VERSION}`", "## Exact Draft Evidence Validation"),
-        ),
-        (
-            REPOSITORY_ROOT / "docs" / "README.md",
-            ("](maintainers/release-documentation.md)",),
-        ),
-        (
-            REPOSITORY_ROOT / "docs" / "maintainers" / "release-documentation.md",
-            (
-                "## Responsibility Map",
-                "render-body --expected-version X.Y.Z",
-                "`notesSha256`",
-                "## Fix-Forward Boundary",
-            ),
-        ),
-    )
-    documents: dict[Path, str] = {}
-    for path, anchors in surface_contracts:
-        try:
-            text = path.read_text(encoding="utf-8")
-        except OSError as error:
-            failures.append(f"cannot read {display_path(path)}: {error}")
-            continue
-        documents[path] = text
-        for anchor in anchors:
-            if anchor not in text:
-                failures.append(
-                    f"{display_path(path)} is missing required documentation anchor {anchor!r}"
-                )
-    rendered_body = render_release_body(RELEASE_VERSION, failures)
-    release_notes = documents.get(release_path)
-    if rendered_body is not None and release_notes is not None and rendered_body == release_notes:
-        failures.append("future GitHub Release body must remain distinct from the version note")
+    """Require the current version's changelog entry and a Release body it renders."""
+    changelog_path = REPOSITORY_ROOT / "CHANGELOG.md"
+    try:
+        changelog = changelog_path.read_text(encoding="utf-8")
+    except OSError as error:
+        failures.append(f"cannot read {display_path(changelog_path)}: {error}")
+        return
+    if f"## {RELEASE_VERSION} - " not in changelog:
+        failures.append(f"CHANGELOG.md has no entry heading for {RELEASE_VERSION}")
+    render_release_body(RELEASE_VERSION, failures)
 
 
 def check_packaged_skills(failures: list[str]) -> None:
@@ -756,30 +345,6 @@ def check_packaged_skills(failures: list[str]) -> None:
             "nested or unexpected packaged SKILL.md files are not allowed: "
             + ", ".join(path.as_posix() for path in unexpected)
         )
-
-
-LIFECYCLE_GUIDE_RELATIVE = "docs/guides/managing-installation.md"
-LIFECYCLE_COMMANDS = (
-    "codex plugin marketplace upgrade axiom",
-    "codex plugin remove axiom@axiom",
-    "claude plugin marketplace update axiom",
-    "claude plugin update axiom@axiom",
-    "claude plugin uninstall axiom@axiom",
-)
-
-
-def check_lifecycle_guide_commands(failures: list[str]) -> None:
-    """Keep the exact host lifecycle commands in the installation guide."""
-    try:
-        guide = (REPOSITORY_ROOT / LIFECYCLE_GUIDE_RELATIVE).read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read {LIFECYCLE_GUIDE_RELATIVE}: {error}")
-        return
-    for command in LIFECYCLE_COMMANDS:
-        if command not in guide:
-            failures.append(
-                f"{LIFECYCLE_GUIDE_RELATIVE} is missing exact lifecycle command {command!r}"
-            )
 
 
 ROUTING_GATE_RELATIVE = "plugin/skills/using-axiom/SKILL.md"

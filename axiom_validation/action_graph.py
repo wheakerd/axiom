@@ -1193,11 +1193,6 @@ def check_github_action_pin_counts(failures: list[str]) -> ActionGraphPinCounts:
     return counts
 
 
-def check_github_action_pins(failures: list[str]) -> int:
-    """Compatibility wrapper for callers that need only the aggregate total."""
-    return check_github_action_pin_counts(failures).total
-
-
 def check_distribution_workflow_text(
     text: str,
     failures: list[str],

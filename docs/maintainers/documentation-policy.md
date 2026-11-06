@@ -133,7 +133,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
 | Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
-| Repository governance | Dated governance evidence and maintainer reference | Current |
+| Repository governance | `docs/repository-governance.md`; the live rulesets are the source for their own settings | Current |
 | Simplified Chinese translations | The English source and its `<name>.zh-CN.md` twin | Current; the twin translates prose and table headers and changes with its source |
 | Repository policy revisions | `evidence/repository-policy-revisions-v1.json` | Current; `docs/repository-policy-revisions.md` renders the ledger and preserves the archived changelog entries |
 

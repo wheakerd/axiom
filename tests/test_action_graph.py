@@ -7,7 +7,6 @@ from axiom_validation.action_graph import (
     check_distribution_workflow_contract,
     check_distribution_workflow_text,
     check_github_action_pin_counts,
-    check_github_action_pins,
     check_hook_runtime_workflow_contract,
     check_hook_runtime_workflow_text,
     check_unit_test_workflow_contract,
@@ -21,11 +20,9 @@ class ActionGraphTests(unittest.TestCase):
     def test_checked_in_action_graph(self):
         failures = []
         counts = check_github_action_pin_counts(failures)
-        count = check_github_action_pins([])
         document = check_distribution_workflow_contract(failures)
         unit_test_document = check_unit_test_workflow_contract(failures)
         hook_runtime_document = check_hook_runtime_workflow_contract(failures)
-        self.assertEqual(30, count)
         self.assertEqual(30, counts.total)
         self.assertEqual(0, counts.dockerfile_base_images)
         self.assertEqual(0, counts.dockerfile_other_inputs)
