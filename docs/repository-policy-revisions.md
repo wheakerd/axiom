@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 140 | 2026-11-06 | none | `bf16ade1e0f1a1cfa2d0e945141ea1ba71892bb4` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.2. |
 | 139 | 2026-11-06 | [#261](https://github.com/wheakerd/axiom/issues/261) | `0000eb4a3ae002a187af392d2a9b98d1507d18d4` | Release 0.27.2: the gate states its role, binds every stated prohibition, scopes presentation rules to routed turns, spells notices axiom:<skill-name>, and shrinks; agents-architect names its host. |
 | 138 | 2026-11-06 | [#267](https://github.com/wheakerd/axiom/issues/267) | `cd6a660d92795902c8fb7041c73426c4d06a46cb` | Remove the release pipeline's fresh-session observation record requirement: no release candidate requires a record; the records under evals/results and their static validation stay. |
 | 137 | 2026-11-06 | none | `7c3fedd18c17ebc937e2a110041dd26a09022c77` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.1. |
