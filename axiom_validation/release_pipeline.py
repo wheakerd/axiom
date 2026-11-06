@@ -50,6 +50,7 @@ from .yaml_subset import (
     CanonicalYamlError,
     CanonicalYamlScalar,
     parse_canonical_yaml_document,
+    parse_skill_frontmatter_document,
 )
 
 
@@ -305,8 +306,35 @@ def installed_routes_at(root: Path, commit: str) -> tuple[str, ...]:
     return tuple(sorted(routes))
 
 
-def changed_routes_between(root: Path, base_commit: str, head_commit: str) -> tuple[str, ...]:
-    """Return the routes whose skill files differ; a gate change selects every route."""
+def skill_frontmatter_at(root: Path, commit: str, skill: str) -> dict[str, str] | None:
+    """Return a bundled skill's frontmatter fields at a commit, or None when the skill is absent."""
+    relative = f"{SKILLS_RELATIVE}/{skill}/SKILL.md"
+    try:
+        text = git(root, "show", f"{commit}:{relative}")
+    except PipelineError:
+        return None
+    try:
+        return parse_skill_frontmatter_document(text, f"{relative} at {commit}")
+    except CanonicalYamlError as error:
+        raise PipelineError(str(error)) from error
+
+
+@dataclass(frozen=True)
+class RouteChanges:
+    """Bundled routes changed between two commits, split by the surface that changed.
+
+    `selection_surface` holds the routes whose selection surface changed: the startup gate
+    (any change selects every installed route) or a skill's frontmatter name or description.
+    `body_only` holds the routes whose skill files changed only below the frontmatter, in the
+    body or the references; the gate selects a skill by its description without reading them.
+    """
+
+    selection_surface: tuple[str, ...]
+    body_only: tuple[str, ...]
+
+
+def route_changes_between(root: Path, base_commit: str, head_commit: str) -> RouteChanges:
+    """Classify the routes whose skill files differ between two commits."""
     changed = git(root, "diff", "--name-only", base_commit, head_commit, "--", SKILLS_RELATIVE)
     names = {
         line.split("/")[2]
@@ -314,11 +342,27 @@ def changed_routes_between(root: Path, base_commit: str, head_commit: str) -> tu
         if line.startswith(f"{SKILLS_RELATIVE}/") and line.count("/") >= 3
     }
     if not names:
-        return ()
+        return RouteChanges((), ())
     installed = installed_routes_at(root, head_commit)
     if "using-axiom" in names:
-        return installed
-    return tuple(route for route in installed if route in names)
+        return RouteChanges(installed, ())
+    selection_surface = []
+    body_only = []
+    for route in installed:
+        if route not in names:
+            continue
+        before = skill_frontmatter_at(root, base_commit, route)
+        after = skill_frontmatter_at(root, head_commit, route)
+        if before is None or after is None or before != after:
+            selection_surface.append(route)
+        else:
+            body_only.append(route)
+    return RouteChanges(tuple(selection_surface), tuple(body_only))
+
+
+def changed_routes_between(root: Path, base_commit: str, head_commit: str) -> tuple[str, ...]:
+    """Return the routes whose selection surface differs; a gate change selects every route."""
+    return route_changes_between(root, base_commit, head_commit).selection_surface
 
 
 def runtime_digest_at(root: Path, commit: str) -> str:
@@ -404,12 +448,13 @@ def require_route_observations(
     root: Path, base_commit: str, head_commit: str, version: str
 ) -> tuple[tuple[str, ...], str]:
     """Enforce the observation gate for the routes changed between two commits."""
-    routes = changed_routes_between(root, base_commit, head_commit)
+    changes = route_changes_between(root, base_commit, head_commit)
+    routes = changes.selection_surface
     problems = missing_route_observations(root, head_commit, version, routes)
     _require(
         not problems,
-        f"the release changes the routes {', '.join(routes)} but lacks a passing "
-        "fresh-session observation record bound to its runtime digest for: "
+        f"the release changes the selection surface of the routes {', '.join(routes)} but lacks "
+        "a passing fresh-session observation record bound to its runtime digest for: "
         + "; ".join(problems),
     )
     if routes:
@@ -417,6 +462,10 @@ def require_route_observations(
             f"records accepted for {', '.join(OBSERVATION_HOSTS)} covering "
             + ", ".join(routes)
         )
+        if changes.body_only:
+            status += "; body-only changes in " + ", ".join(changes.body_only)
+    elif changes.body_only:
+        status = "not required: only skill bodies or references changed (" + ", ".join(changes.body_only) + ")"
     else:
         status = "not required: no bundled route changed"
     return routes, status

@@ -100,6 +100,20 @@ def candidate_fixture(root: Path) -> tuple[str, str]:
     return base, git(root, "rev-parse", "HEAD").strip()
 
 
+def body_only_fixture(root: Path) -> tuple[str, str]:
+    """Base and head commits where the head changes only a skill body and bumps the version."""
+    base, _ = candidate_fixture(root)
+    git(root, "checkout", "-q", base)
+    git(root, "checkout", "-q", "-B", "main")
+    manifest = root / "plugin" / ".codex-plugin" / "plugin.json"
+    skill = root / "plugin" / "skills" / "clarify-intent" / "SKILL.md"
+    manifest.write_text(json.dumps({"name": "axiom", "version": "0.21.0"}) + "\n")
+    skill.write_text("---\nname: clarify-intent\ndescription: Clarify.\n---\n\n# Clarify\n\nAsk one question.\n")
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "-m", "version 0.21.0 with a body-only change")
+    return base, git(root, "rev-parse", "HEAD").strip()
+
+
 def commit_candidate_records(root: Path, observed_commit: str, version: str = "0.21.0") -> str:
     """Add passing records for both hosts that bind the observed candidate commit."""
     from tests.test_current_routing import claude_code_record, current_record
@@ -555,6 +569,51 @@ class ReleasePipelineTests(unittest.TestCase):
         )
         summary = (self.reports / "summary.md").read_text()
         self.assertIn("| Route observations | not required: no bundled route changed |", summary)
+
+    def test_candidate_with_body_only_route_change_needs_no_observation(self):
+        base, head = body_only_fixture(self.root)
+        outcome = run_candidate(
+            root=self.root, api=FakeGitHub(head), repository=REPOSITORY, base_commit=base,
+            head_commit=head, reporter=self.reporter,
+            render_body=lambda root, commit, version: "notes\n",
+            rehearse=lambda *args, **kwargs: None, today="2026-11-02",
+        )
+        self.assertEqual("release-candidate", outcome)
+        summary = (self.reports / "summary.md").read_text()
+        self.assertIn(
+            "| Route observations | not required: only skill bodies or references changed (clarify-intent) |",
+            summary,
+        )
+
+    def test_route_changes_split_selection_surface_from_bodies(self):
+        from axiom_validation.release_pipeline import route_changes_between
+
+        base, head = body_only_fixture(self.root)
+        changes = route_changes_between(self.root, base, head)
+        self.assertEqual((), changes.selection_surface)
+        self.assertEqual(("clarify-intent",), changes.body_only)
+
+        # A new skill has no frontmatter at the base, so it is a selection-surface change.
+        added = self.root / "plugin" / "skills" / "verify-completion" / "SKILL.md"
+        added.parent.mkdir(parents=True)
+        added.write_text("---\nname: verify-completion\ndescription: Verify.\n---\n\n# Verify\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", "-m", "add a skill")
+        with_added = git(self.root, "rev-parse", "HEAD").strip()
+        changes = route_changes_between(self.root, head, with_added)
+        self.assertEqual(("verify-completion",), changes.selection_surface)
+        self.assertEqual((), changes.body_only)
+
+        # Any change to the gate selects every installed route, whatever else changed.
+        gate = self.root / "plugin" / "skills" / "using-axiom" / "SKILL.md"
+        gate.parent.mkdir(parents=True)
+        gate.write_text("---\nname: using-axiom\ndescription: Route.\n---\n\n# Gate\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", "-m", "change the gate")
+        with_gate = git(self.root, "rev-parse", "HEAD").strip()
+        changes = route_changes_between(self.root, with_added, with_gate)
+        self.assertEqual(("clarify-intent", "verify-completion"), changes.selection_surface)
+        self.assertEqual((), changes.body_only)
 
     def test_candidate_stops_when_its_handoff_rehearsal_fails(self):
         base, head = commit_versions(self.root, ("0.20.0", "0.21.0"))

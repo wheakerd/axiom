@@ -6,7 +6,7 @@ Axiom separates installed plugin behavior from repository maintenance. The [mach
 
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.27.0`
-- `repositoryPolicyRevision`: `133`
+- `repositoryPolicyRevision`: `134`
 - `runtimeContractDigest` (schema v4): `sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b`
 - Digest input manifest: [`axiom_validation/runtime-contract-inputs-v4.json`](../axiom_validation/runtime-contract-inputs-v4.json)
 <!-- runtime-identity:current:end -->
@@ -64,7 +64,7 @@ The major version stays `0` until a separate maintainer decision declares the 1.
 - A fix for a defect in a published release ships as a patch from `main` before an in-progress minor release continues; the minor candidate then rebuilds on that patch.
 - A new Skill ships in its own minor release unless it depends on a redesign in the same cycle. Independent new capabilities share one minor release only when each has passed its own acceptance and the routing-gate review covers both.
 - Use the immediate next version in SemVer order; never skip or reorder.
-- Every release requires the validated candidate tree, fresh-session routing observations on both supported hosts for the changed routes, and the always-loaded context review in [Runtime Changes](maintainers/runtime-changes.md#always-loaded-context) when the routing gate grows.
+- Every release requires the validated candidate tree, fresh-session routing observations on both supported hosts for the routes whose selection surface changed, and the always-loaded context review in [Runtime Changes](maintainers/runtime-changes.md#always-loaded-context) when the routing gate grows.
 
 Advancing a version without changing the digest is normally rejected. The explicit [v0.13.1 repository-tooling exception](releases/v0.13.1.md) is bound by the validator to its exact predecessor, baseline, policy revision, and digest. It creates no reusable exception for later versions and waives no verification.
 

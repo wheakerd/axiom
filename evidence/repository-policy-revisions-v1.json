@@ -1064,6 +1064,14 @@
       "sourceIssue": 250,
       "summary": "Record the Issue #250 decision: the eighteen 0.26.0 corpus forms stay outside both benchmark profiles after three clean-location fresh-session rounds per host; promotion is not proportional.",
       "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
+    },
+    {
+      "revision": 134,
+      "recordedOn": "2026-11-05",
+      "baselineCommit": "1de1330b2c0c357486a8a4fbef38a46d43c2bb5a",
+      "sourceIssue": 258,
+      "summary": "Require a candidate's fresh-session observation records only when a route's selection surface, the startup gate or a skill's frontmatter, changes; body-only changes in skills need none.",
+      "runtimeContractDigest": "sha256:1272b5936b69f60b2b8ef69cc75f2a2b68e5a8f3031080e60b1d82d3fbf3ac7b"
     }
   ]
 }
