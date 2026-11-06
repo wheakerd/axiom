@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 134 | 2026-11-05 | [#258](https://github.com/wheakerd/axiom/issues/258) | `1de1330b2c0c357486a8a4fbef38a46d43c2bb5a` | Require a candidate's fresh-session observation records only when a route's selection surface, the startup gate or a skill's frontmatter, changes; body-only changes in skills need none. |
 | 133 | 2026-11-04 | [#250](https://github.com/wheakerd/axiom/issues/250) | `064f67cc9763ad858b7f80ed2806419d31ffab89` | Record the Issue #250 decision: the eighteen 0.26.0 corpus forms stay outside both benchmark profiles after three clean-location fresh-session rounds per host; promotion is not proportional. |
 | 132 | 2026-11-05 | none | `fde84ffb815db92f33342633901bfcacd85cd193` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.0. |
 | 131 | 2026-11-04 | [#253](https://github.com/wheakerd/axiom/issues/253) | `66b36e491cfb5a0c56c2ae8a58fec88ca5f3e7d5` | Release 0.27.0 names an explicit goal to measure or reduce context cost in the optimize-agent-usage description after a two-arm measurement in clean locations; the startup gate is unchanged. |
