@@ -45,12 +45,10 @@ from .release_tag_controller import (
 )
 from .release_versions import parse_production_release_version
 from .runtime_identity import replace_policy_ledger_block, replace_runtime_identity_block
-from .routing_evals.candidates import OBSERVATION_HOSTS, validate_candidate_routing_observation
 from .yaml_subset import (
     CanonicalYamlError,
     CanonicalYamlScalar,
     parse_canonical_yaml_document,
-    parse_skill_frontmatter_document,
 )
 
 
@@ -81,8 +79,6 @@ IDENTITY_RELATIVE = "evidence/runtime-identity.json"
 STATUS_RELATIVE = "evidence/release-status.json"
 IDENTITY_DOCUMENT_RELATIVE = "docs/runtime-identity.md"
 LEDGER_DOCUMENT_RELATIVE = "docs/repository-policy-revisions.md"
-SKILLS_RELATIVE = "plugin/skills"
-ROUTING_RESULTS_RELATIVE = "evals/results"
 POLL_SECONDS = 20
 CHECK_TIMEOUT_SECONDS = 75 * 60
 RUN_DISCOVERY_SECONDS = 5 * 60
@@ -289,186 +285,6 @@ def manifest_version_at(root: Path, commit: str) -> str:
         f"{CODEX_MANIFEST} at {commit} must declare one stable production version",
     )
     return version
-
-
-def installed_routes_at(root: Path, commit: str) -> tuple[str, ...]:
-    """Return the bundled task routes (skills with a SKILL.md, except the gate) at a commit."""
-    routes = []
-    for entry in git(root, "ls-tree", "--name-only", commit, f"{SKILLS_RELATIVE}/").splitlines():
-        skill = entry.rsplit("/", 1)[-1]
-        if skill == "using-axiom":
-            continue
-        try:
-            git(root, "cat-file", "-e", f"{commit}:{SKILLS_RELATIVE}/{skill}/SKILL.md")
-        except PipelineError:
-            continue
-        routes.append(skill)
-    return tuple(sorted(routes))
-
-
-def skill_frontmatter_at(root: Path, commit: str, skill: str) -> dict[str, str] | None:
-    """Return a bundled skill's frontmatter fields at a commit, or None when the skill is absent."""
-    relative = f"{SKILLS_RELATIVE}/{skill}/SKILL.md"
-    try:
-        text = git(root, "show", f"{commit}:{relative}")
-    except PipelineError:
-        return None
-    try:
-        return parse_skill_frontmatter_document(text, f"{relative} at {commit}")
-    except CanonicalYamlError as error:
-        raise PipelineError(str(error)) from error
-
-
-@dataclass(frozen=True)
-class RouteChanges:
-    """Bundled routes changed between two commits, split by the surface that changed.
-
-    `selection_surface` holds the routes whose selection surface changed: the startup gate
-    (any change selects every installed route) or a skill's frontmatter name or description.
-    `body_only` holds the routes whose skill files changed only below the frontmatter, in the
-    body or the references; the gate selects a skill by its description without reading them.
-    """
-
-    selection_surface: tuple[str, ...]
-    body_only: tuple[str, ...]
-
-
-def route_changes_between(root: Path, base_commit: str, head_commit: str) -> RouteChanges:
-    """Classify the routes whose skill files differ between two commits."""
-    changed = git(root, "diff", "--name-only", base_commit, head_commit, "--", SKILLS_RELATIVE)
-    names = {
-        line.split("/")[2]
-        for line in changed.splitlines()
-        if line.startswith(f"{SKILLS_RELATIVE}/") and line.count("/") >= 3
-    }
-    if not names:
-        return RouteChanges((), ())
-    installed = installed_routes_at(root, head_commit)
-    if "using-axiom" in names:
-        return RouteChanges(installed, ())
-    selection_surface = []
-    body_only = []
-    for route in installed:
-        if route not in names:
-            continue
-        before = skill_frontmatter_at(root, base_commit, route)
-        after = skill_frontmatter_at(root, head_commit, route)
-        if before is None or after is None or before != after:
-            selection_surface.append(route)
-        else:
-            body_only.append(route)
-    return RouteChanges(tuple(selection_surface), tuple(body_only))
-
-
-def changed_routes_between(root: Path, base_commit: str, head_commit: str) -> tuple[str, ...]:
-    """Return the routes whose selection surface differs; a gate change selects every route."""
-    return route_changes_between(root, base_commit, head_commit).selection_surface
-
-
-def runtime_digest_at(root: Path, commit: str) -> str:
-    """Return the installed runtime contract digest recorded at a commit."""
-    try:
-        document = json.loads(git(root, "show", f"{commit}:{IDENTITY_RELATIVE}"))
-    except json.JSONDecodeError as error:
-        raise PipelineError(f"{IDENTITY_RELATIVE} at {commit} is not valid JSON") from error
-    contract = document.get("runtimeContract") if isinstance(document, dict) else None
-    digest = contract.get("digest") if isinstance(contract, dict) else None
-    _require(
-        type(digest) is str and digest.startswith("sha256:"),
-        f"{IDENTITY_RELATIVE} at {commit} records no runtime contract digest",
-    )
-    return digest
-
-
-def missing_route_observations(
-    root: Path, head_commit: str, version: str, routes: tuple[str, ...]
-) -> list[str]:
-    """Return one line per host that lacks an accepted fresh-session observation record.
-
-    A record under evals/results/v<version>/<host>/ at the head commit is accepted when
-    it passes the candidate contract and the installed runtime digest at its observed
-    commit equals the head commit's digest.
-    """
-    if not routes:
-        return []
-    digest = runtime_digest_at(root, head_commit)
-    problems = []
-    for host in OBSERVATION_HOSTS:
-        directory = f"{ROUTING_RESULTS_RELATIVE}/v{version}/{host}"
-        try:
-            entries = git(root, "ls-tree", "--name-only", head_commit, f"{directory}/").splitlines()
-        except PipelineError:
-            entries = []
-        records = [entry for entry in entries if entry.endswith(".json")]
-        if not records:
-            problems.append(f"{host}: no record under {directory}/")
-            continue
-        reasons = []
-        accepted = None
-        for relative in records:
-            failures: list[str] = []
-            try:
-                record = json.loads(git(root, "show", f"{head_commit}:{relative}"))
-            except (PipelineError, json.JSONDecodeError):
-                reasons.append(f"{relative}: unreadable")
-                continue
-            subject = validate_candidate_routing_observation(
-                record, relative, host=host, expected_version=version, failures=failures, root=root
-            )
-            if subject is None:
-                reasons.append(f"{relative}: " + "; ".join(failures[:3]))
-                continue
-            try:
-                observed_digest = runtime_digest_at(root, subject["commit"])
-            except PipelineError as error:
-                reasons.append(f"{relative}: observed commit {subject['commit']} is unavailable ({error})")
-                continue
-            if observed_digest != digest:
-                reasons.append(
-                    f"{relative}: observed runtime digest {observed_digest} differs from the "
-                    f"release commit's {digest}"
-                )
-                continue
-            accepted = relative
-            break
-        if accepted is None:
-            problems.append(f"{host}: " + " | ".join(reasons))
-    return problems
-
-
-def release_parent(root: Path, commit: str) -> str | None:
-    """Return the first parent of a release commit, or None for a root commit."""
-    try:
-        return git(root, "rev-parse", f"{commit}^").strip()
-    except PipelineError:
-        return None
-
-
-def require_route_observations(
-    root: Path, base_commit: str, head_commit: str, version: str
-) -> tuple[tuple[str, ...], str]:
-    """Enforce the observation gate for the routes changed between two commits."""
-    changes = route_changes_between(root, base_commit, head_commit)
-    routes = changes.selection_surface
-    problems = missing_route_observations(root, head_commit, version, routes)
-    _require(
-        not problems,
-        f"the release changes the selection surface of the routes {', '.join(routes)} but lacks "
-        "a passing fresh-session observation record bound to its runtime digest for: "
-        + "; ".join(problems),
-    )
-    if routes:
-        status = (
-            f"records accepted for {', '.join(OBSERVATION_HOSTS)} covering "
-            + ", ".join(routes)
-        )
-        if changes.body_only:
-            status += "; body-only changes in " + ", ".join(changes.body_only)
-    elif changes.body_only:
-        status = "not required: only skill bodies or references changed (" + ", ".join(changes.body_only) + ")"
-    else:
-        status = "not required: no bundled route changed"
-    return routes, status
 
 
 def immediate_successors(version: str) -> tuple[str, str, str]:
@@ -959,15 +775,13 @@ def run_candidate(
     _require(find_release(api, repository, head_tag) is None, f"a Release already uses {head_tag}")
     body = render_body(root, head_commit, head_version)
     rehearse(root, head_commit, head_version, head_tag, today=today or utc_today())
-    _, observation_status = require_route_observations(root, base_commit, head_commit, head_version)
     reporter.summary(
         f"## Release candidate {head_tag}\n\n"
         "| Field | Value |\n| --- | --- |\n"
         f"| Version | `{base_version}` to `{head_version}` |\n"
         f"| Tag | `{head_tag}` |\n"
         f"| Head commit | `{head_commit}` |\n"
-        "| Catalog handoff rehearsal | passed on this head |\n"
-        f"| Route observations | {observation_status} |\n\n"
+        "| Catalog handoff rehearsal | passed on this head |\n\n"
         f"Merging this pull request publishes `{head_tag}` through the Release "
         "pipeline after every check passes on the merged main commit and the catalog "
         "handoff is rehearsed again on that commit.\n\n"
@@ -1004,7 +818,6 @@ def run_publish(
     release = find_release(api, repository, tag)
     tag_commit = read_tag_commit(api, repository, tag)
     rehearsed = False
-    observation_status = "not needed: the Release was already final"
 
     if not _is_final_release(release, tag):
         _require(
@@ -1032,9 +845,6 @@ def run_publish(
             wait_for_settled_checks(api, repository, commit, clock, "main checks")
             rehearse(root, commit, version, tag, today=utc_today())
             rehearsed = True
-            parent = release_parent(root, commit)
-            if parent is not None:
-                _, observation_status = require_route_observations(root, parent, commit, version)
             dispatch_and_wait(
                 api,
                 repository,
@@ -1053,9 +863,6 @@ def run_publish(
         if not rehearsed:
             rehearse(root, tag_commit, version, tag, today=utc_today())
             rehearsed = True
-            parent = release_parent(root, tag_commit)
-            if parent is not None:
-                _, observation_status = require_route_observations(root, parent, tag_commit, version)
         body, policy, asset_name = render_inputs(root, tag_commit, version, tag)
         release = stage_draft(
             api,
@@ -1118,7 +925,6 @@ def run_publish(
         f"| `{PUBLISHED_RELEASE_CHECK}` | passed |\n"
         "| Catalog handoff rehearsal | "
         f"{'passed before the first mutation' if rehearsed else 'not needed: the Release was already final'} |\n"
-        f"| Route observations | {observation_status} |\n"
         f"| Marketplace catalogs | {status} |\n"
     )
     return outputs

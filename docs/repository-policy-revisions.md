@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 138 | 2026-11-06 | [#267](https://github.com/wheakerd/axiom/issues/267) | `cd6a660d92795902c8fb7041c73426c4d06a46cb` | Remove the release pipeline's fresh-session observation record requirement: no release candidate requires a record; the records under evals/results and their static validation stay. |
 | 137 | 2026-11-06 | none | `7c3fedd18c17ebc937e2a110041dd26a09022c77` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.1. |
 | 136 | 2026-11-05 | [#259](https://github.com/wheakerd/axiom/issues/259) | `54589beacc9ad1d04de8112030ebe2f6723dd8d0` | Release 0.27.1: traceable-git-submit commits with ordinary git commit so hooks run, passes shell-string values as quoted literals, pushes per URL, and creates the tag with git tag alone. |
 | 135 | 2026-11-05 | [#260](https://github.com/wheakerd/axiom/issues/260) | `72b65027a21a33c762e0c7462ed3e106af6a0ce3` | Reconcile the public docs: one record of the 0.27.0 overlap counts, 49-case asset acceptance, delegation without the gate, required notices, optional hook comparison, static release status. |
