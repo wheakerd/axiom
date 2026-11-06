@@ -1104,6 +1104,14 @@
       "sourceIssue": 267,
       "summary": "Remove the release pipeline's fresh-session observation record requirement: no release candidate requires a record; the records under evals/results and their static validation stay.",
       "runtimeContractDigest": "sha256:6f1286a4fb4c172356f3142f5da42f2aef4901f355f8f636edecef561c2e2c5e"
+    },
+    {
+      "revision": 139,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "0000eb4a3ae002a187af392d2a9b98d1507d18d4",
+      "sourceIssue": 261,
+      "summary": "Release 0.27.2: the gate states its role, binds every stated prohibition, scopes presentation rules to routed turns, spells notices axiom:<skill-name>, and shrinks; agents-architect names its host.",
+      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
     }
   ]
 }

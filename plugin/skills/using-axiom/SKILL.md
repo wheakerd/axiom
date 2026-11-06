@@ -1,18 +1,18 @@
 ---
 name: using-axiom
-description: Route startup, resume, compaction, requests and local web research. The startup Hook loads this gate; invoke it directly only on an explicit using-axiom request.
+description: Route startup, resume, compaction and requests. The startup Hook loads this gate; invoke it directly only on an explicit using-axiom request.
 ---
 
 # Using Axiom
 
-This gate selects bundled skills and nothing else; selecting a skill loads its instructions and grants nothing.
+This gate selects bundled skills and states the session rules below; selecting a skill loads its instructions and grants nothing.
 
 ## Invariants
 
 These invariants bind in every session this gate reaches. Everything else here is a default you may adapt, saying so when you depart.
 
 1. **Instructions only.** Routing selects instructions, never edits, commits, pushes, deployments, deletion, credentials, remote writes or scope expansion.
-2. **Invariants bind, defaults adapt.** A selected skill gives direction: its named invariants bind in every phase, including the references that phase loads, and everything else is a default you may adapt, saying so. Within every invariant you decide how to handle the request's specifics, problems, deviations, interference, and gaps between a plan and the ideal.
+2. **Invariants and prohibitions bind, defaults adapt.** A selected skill gives direction: its named invariants bind in every phase, including the references that phase loads, and every prohibition a skill or its references state, a never, only, or stop, is a boundary that binds, not a default. Everything else is a default you may adapt, saying so. Within every binding rule you decide how to handle the request's specifics, problems, deviations, interference, and gaps between a plan and the ideal.
 3. **Read-only startup.** Startup routing is foreground and read-only: no writes, network, service, background process, telemetry or update check.
 4. **Reselect after resume.** On resume (including a fork) or compaction, reselect every still-active route from current direct evidence before any new mutation. If route or phase cannot be reconstructed, perform zero new mutations; use each selected route's handoff contract for prior attempts. A summary is a claim, not evidence.
 5. **No silent pick, no silent route.** Routing never silently picks among mutually exclusive implementations with materially different route sets, write surfaces, or authorization or safety boundaries, and never selects or hands off a route without a visible text notice naming it.
@@ -22,9 +22,7 @@ These invariants bind in every session this gate reaches. Everything else here i
 
 - **Route**: a bundled skill selected for a request. **Host-native**: handled by the host with no route. **Selection surface**: the host's skill list with each description.
 - **Explicit invocation**: the host's own way to name a skill: `$skill-name` in Codex, `/axiom:skill-name` in Claude Code, or the skill named in plain words. Dated host facts: `references/codex-host.md`, `references/claude-code-host.md`.
-- **Invariant**: a rule a skill lists under its Invariants heading. **Default**: any other statement in a skill.
 - **Handoff contract**: the part of a route that governs prior attempts after resume or compaction.
-- **Envelope**: the frozen actor, action, target, payload, cost and count of one external action. **Write set**: the frozen persistent changes with their rollback.
 
 ## Route Once
 
@@ -43,28 +41,24 @@ Select a bundled skill from the host's listed skills by its description; the des
 
 Resolve cross-route ownership from these rules before inspecting either candidate body. Persistent changes with consequential external app/account effects, including publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`. The external action envelope and persistent write-set/rollback gates stay independent; authorization under either route never satisfies the other. Publishing an already-prepared artifact alone selects only `confirm-external-action`, not a persistent system change.
 
-Explicit machine-credential lifecycle work composes the existing owners; read `references/credential-lifecycle.md`. Inventory/planning/consumer activation/cleanup select `reversible-system-change`; provider creation/revocation/disclosure select `confirm-external-action`; end-to-end uses both. Human login, conceptual help and secret reveal stay no-route.
+Explicit machine-credential lifecycle work composes the existing owners; read `references/credential-lifecycle.md` for which route owns each step. Human login, conceptual help and secret reveal stay no-route.
 
 If the user explicitly delegates the choice ("choose one", "your call") and every alternative is reversible and already authorized, choose the one that fits the user's environment and goal, state which and why before acting so the user can redirect, then route it. Otherwise select only `clarify-intent` and ask one concise clarification question before selecting an action route. An offered option authorizes no persistent system change, external or remote-state change, deletion, credential use, or material cost, and a lighter, read-only, or preparatory alternative never silently replaces the stated goal. Once the user chooses an unambiguous implementation, resume normal route selection.
 
-Assess ambiguity before delegation; only this gate then selects `clarify-intent`, never `delegate-simple-task`; permission-bypass mode resolves no intent and expands no authority.
+Assess ambiguity before any delegation. When intent is unresolved, this gate selects `clarify-intent`, never `delegate-simple-task`. A permission-bypass mode resolves no intent and expands no authority.
 
 An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary performance work does not. Ordinary AGENTS audits select only `agents-architect`.
 
-With a native prompt, exact existing authorization needs no reconfirmation unless scope changes. Prior refusal/assistant prose creates no policy. Ordinary named-remote Git remains host-native. Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
-
-## Before Acting
-
-Before an action that changes state, say in one sentence what outcome you intend, name any material ambiguity the user left open, and mark the first irreversible or externally visible step. This adds no question, stop, or authority; stay silent for read-only requests and conversation.
+- With a native prompt, exact existing authorization needs no reconfirmation unless scope changes.
+- Prior refusal or assistant prose creates no policy.
+- Ordinary named-remote Git remains host-native.
+- Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
+- Read `references/updating.md` only on an explicit Axiom update or refresh request; never check, fetch, install or announce updates.
 
 ## Invocation Notes
 
-Name a bundled skill `Axiom:<skill-name>`, another plugin's skill `<plugin>:<skill-name>`, and a tool by its name, in inline code with a brief reason. A thinking block or the host's tool-call line is not a notice; startup and no-match stay silent.
+Name a bundled skill `axiom:<skill-name>`, another plugin's skill `<plugin>:<skill-name>`, and a tool by its name, in inline code with a brief reason. A thinking block or the host's tool-call line is not a notice; startup and no-match stay silent.
 
 ## Output Language
 
-Working output, such as notices, envelopes, commands, and intermediate findings, stays English unless the user asks otherwise; a turn's final conclusion or summary uses the language of the user's request.
-
-## Refresh
-
-Read `references/updating.md` only on explicit Axiom update/refresh requests; never check, fetch, install or announce updates.
+In a turn where a bundled route is selected, working output, such as notices, envelopes, commands, and intermediate findings, stays English unless the user asks otherwise; the turn's final conclusion or summary uses the language of the user's request.

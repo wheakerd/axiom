@@ -9,7 +9,7 @@ Make Git submission traceable with plain Git: frozen inputs, verified installs, 
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Separate authority per action.** Route selection and reading guidance grant no Git action authority. Checkpoints, baseline mutation, consolidation, remote refresh, push, and recovery cleanup each need separate authority, and an explicit direct request grants only its named push, not metadata, consolidation, fetch, force, or retry.
 2. **Hooks run; bypass only on exact authority.** Every phase keeps normal repository hooks active and says that they will run: commits are created with ordinary `git commit`, so `pre-commit`, `prepare-commit-msg`, `commit-msg`, and `post-commit` run, and pushes run `pre-push`. Add `--no-verify` only when the user explicitly authorized bypassing this repository's pre-push hook for this exact push; general push authority never includes it, and the direct-submit phase never adds it.

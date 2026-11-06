@@ -9,7 +9,7 @@ Review the available evidence of one task in a compact retrospective. Axiom supp
 
 ## Invariants
 
-These invariants bind in every phase. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Review is read-only.** The request authorizes reading the visible target-task context; it never authorizes an edit, commit, push, deploy, install, migrate, delete, retry, cleanup, configuration change, or credential access.
 2. **Scope frozen first.** Select the preceding task segment or the one task the user identified, and freeze the reviewed window before the triggering request; the review's own reads and reasoning stay outside the reviewed task.

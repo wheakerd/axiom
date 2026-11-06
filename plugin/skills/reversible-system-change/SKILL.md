@@ -9,7 +9,7 @@ Make one authorized persistent change without losing the ability to identify, re
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Separate authority per action.** Recovery-material preparation, isolated restore rehearsal, candidate preparation, active promotion, service restart or reload, data migration, destructive retention, sensitive asset access, rollback, and cleanup are separate actions. Permission for one never implies another, and a newly discovered target, dependency, service, data store, endpoint, or destructive effect requires renewed authority.
 2. **Verified rollback before mutation.** Before candidate or active-state mutation, require a rollback point that represents the observed prior state and covers every non-forward-compatible effect. It must be readable by the restore principal with its prerequisites present and must have passed a target-native restore validation or an authorized isolated rehearsal, rechecked immediately before mutation.

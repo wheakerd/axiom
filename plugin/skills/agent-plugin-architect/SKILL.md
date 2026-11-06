@@ -9,7 +9,7 @@ Design or audit the smallest coherent packaged-plugin control plane for Codex an
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Architecture only.** Confirm that the selected request explicitly concerns packaged agent-plugin architecture. Repo-local `AGENTS.md`, `.agents/skills`, or `.claude/skills` work belongs to `agents-architect`, and ordinary plugin code or documentation has no Axiom route solely because it lives in a plugin repository.
 2. **No silent workflow choice.** When mutually exclusive workflows differ materially in route ownership, write surfaces, persistent metadata or authority, ask one clear question and keep the workflow unselected until the user chooses, or settle it under the startup gate's delegated-choice rule.

@@ -107,7 +107,7 @@ instruction system. Report findings only; do not modify files.
 Summarize the purpose of this README. Do not modify files.
 ```
 
-第一个请求应选中 `agents-architect`，并按门控的[调用说明](plugin/skills/using-axiom/SKILL.md#invocation-notes)用一行 `Axiom:agents-architect` 加简短原因来说明；第二个请求应照常继续，不选中其他技能，也不给出通知。这些是预期行为，并不表示你的安装已经复现了它们。
+第一个请求应选中 `agents-architect`，并按门控的[调用说明](plugin/skills/using-axiom/SKILL.md#invocation-notes)用一行 `axiom:agents-architect` 加简短原因来说明；第二个请求应照常继续，不选中其他技能，也不给出通知。这些是预期行为，并不表示你的安装已经复现了它们。
 
 > [!IMPORTANT]
 > 不匹配任何 Axiom 技能的请求仍然遵循宿主的权限和仓库指令。不匹配不是安全认证。选中一个技能并不授予编辑、发布、部署或删除任何内容的权限。

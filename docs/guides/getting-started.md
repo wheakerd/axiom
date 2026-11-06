@@ -50,9 +50,9 @@ Use this read-only request:
 
 The expected contract is selection of `agents-architect`, a read-only evidence report, and no file mutation. A route selection is not permission to change the repository. With `using-axiom` active, the model and host may explain the invocation according to your output-verbosity preferences. For example:
 
-`Axiom:agents-architect` Review the repository's instruction structure.
+`axiom:agents-architect` Review the repository's instruction structure.
 
-The entire Axiom skill marker is inline code. An external or repository-local skill, plugin, or MCP capability keeps its own inline-code name and a brief reason, without an `Axiom:` prefix. The notice itself is required by the gate's fifth invariant whenever a route is selected or handed off; the model chooses only how to arrange the surrounding output.
+The entire Axiom skill marker is inline code. An external or repository-local skill, plugin, or MCP capability keeps its own inline-code name and a brief reason, without an `axiom:` prefix. The notice itself is required by the gate's fifth invariant whenever a route is selected or handed off; the model chooses only how to arrange the surrounding output.
 
 This notice rule belongs to `using-axiom`: it applies through the enabled startup gate or an explicit invocation of that skill. With the gate disabled, invoking a different Axiom skill alone does not activate the notice rule.
 
