@@ -10,7 +10,7 @@ Axiom's compatibility claims are bounded by what the repository checks. It check
 | Statically validated | Deterministic repository checks passed for an identified tree. This is not host execution. |
 | Observed | Someone observed the behavior in a named host version and lifecycle against an immutable release and reported it. |
 
-A passing static check is not an observation. See [Field Validation](field-validation.md) for how to report one.
+A passing static check is not an observation. See [Report A Compatibility Result](#report-a-compatibility-result) for how to report one.
 
 ## Supported Hosts
 
@@ -52,10 +52,6 @@ The repository records no observation of an installed host for the current relea
 
 A source candidate cannot establish a future signed merge, immutable tag, final workflow result, or post-publication host observation.
 
-An identical runtime digest may make older evidence relevant to the same bytes, but it does not create a new observation or change the older record's host, version, date, lifecycle, or status. From repository policy revision 118 until revision 138, a release candidate that changed a bundled route also carried checked-in fresh-session routing observation records for both hosts; the 0.22.0 and 0.22.1 releases predate that requirement. From revision 138 no release requires a record, and revision 141 archived the records with the routing evaluations, as [Field Validation](field-validation.md#archived-experiments) records.
-
-On 2026-11-03 the maintainer found that the 0.26.0 fresh-session records were collected in case workspaces inside the maintainer's own repository, so each host also loaded that repository's root instruction file; earlier versions' harnesses were not retained and their workspace location is unknown. The records keep their lifecycle and outcome, the deviation is recorded in the [v0.26.0 note](releases/v0.26.0.md#host-evidence) and Issue #251, and from repository policy revision 130 every case workspace lies outside any instruction chain, as the archived [Host Observation Boundaries](https://github.com/wheakerd/axiom/blob/v0.27.2/evals/README.md#host-observation-boundaries) required.
-
 ## Known Limitations
 
 Unless a current immutable result states otherwise, do not assume:
@@ -72,25 +68,24 @@ Static workflow execution on native runners is useful process-boundary evidence 
 
 ## Report A Compatibility Result
 
-Follow [Recording A Result](field-validation.md#recording-a-result) for the read-only test, required host and subject details, and sanitized reporting fields. It owns the reporting procedure for both compatibility and routing-case reports. Report what you observed and say which cases you did not run.
+Report what you observed in a host session. Report a pass, a failure, an unknown result, and a case you did not run as different outcomes.
+
+1. Use a disposable, non-sensitive workspace and a read-only request. Place the workspace in a directory with no `AGENTS.md` or `CLAUDE.md` in itself or in any ancestor and no enclosing Git repository, so the host loads no project instruction file beside Axiom.
+2. Record the exact host version, operating system, immutable Axiom tag and commit, installation method, and lifecycle source.
+3. Compare the installed Hook with the [Hook Reference](reference/hooks.md).
+4. Follow the routed example and no-route control in [Getting Started](guides/getting-started.md). A fresh session does not prove manual or automatic compaction behavior; say which cases you did not observe.
+5. Retain only minimal sanitized facts. Never include credentials, private paths, raw transcripts, session identifiers, or external-service content.
+6. Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) or the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml).
+
+A report lives in its issue; the repository checks in no observation records.
 
 ## Evidence Paths
 
-Current sources:
+The [current release status](../evidence/release-status.json) and the [runtime identity](../evidence/runtime-identity.json), with its [policy](runtime-identity.md), are the machine-readable records for the current tree.
 
-- [current release status](../evidence/release-status.json); and
-- [runtime identity](../evidence/runtime-identity.json) and its [policy](runtime-identity.md).
+## Earlier Records
 
-Historical sources:
-
-- [v0.19.0 Codex host observation record](https://github.com/wheakerd/axiom/blob/v0.27.2/evidence/v0.19.0/codex/linux.json) (prior-release evidence, schema v4);
-- [v0.19.0 Claude Code host observation record](https://github.com/wheakerd/axiom/blob/v0.27.2/evidence/v0.19.0/claude-code/linux.json) (prior-release evidence, schema v4);
-- [archived version-bound host records, no-Hook experiments, and routing evaluations](field-validation.md#archived-experiments);
-- [routing observation records](https://github.com/wheakerd/axiom/tree/v0.27.2/evals/results);
-- [routing-context history](https://github.com/wheakerd/axiom/tree/v0.27.2/evals/context-budget/results); and
-- [version notes](releases/).
-
-These collections retain their original identities and outcomes, including failed, unknown, and unexecuted cases. Read the records directly for case-level, observer, commit/tree, token, timing, and investigation detail; those historical streams are intentionally not reproduced in this current user reference.
+Version notes, routing evaluations, host observation records, and the index of earlier experiment archives are not part of the current tree. They remain in the tree at tag [`v0.27.2`](https://github.com/wheakerd/axiom/tree/v0.27.2), under `docs/releases/`, `evals/`, `evidence/`, and `docs/field-validation.md`. Each record keeps its original host, version, date, and outcome and says nothing about the current release.
 
 ## Version Interpretation
 

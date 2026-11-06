@@ -72,6 +72,6 @@ Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定
 
 - 有边界的宿主结果使用[兼容性报告](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml)。
 - 误报、漏报或意外的澄清使用[路由用例报告](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml)。
-- 证据标签与非破坏性观测协议遵循[现场验证](../field-validation.md)。
+- 非破坏性观测流程遵循[报告兼容性结果](../compatibility.md#report-a-compatibility-result)。
 
 更新、移除、禁用或排障流程，请继续阅读[管理安装](managing-installation.zh-CN.md)。

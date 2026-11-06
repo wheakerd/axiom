@@ -1,4 +1,4 @@
-"""Repository layout, release-document, skill, and evidence policy."""
+"""Repository layout, skill, and release-surface policy."""
 
 from __future__ import annotations
 
@@ -15,13 +15,12 @@ from .context import (
 from .release_evidence import render_release_body
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
 
-_BASE_REQUIRED_PUBLIC_FILES = (
+REQUIRED_PUBLIC_FILES = (
     "README.md",
     "LICENSE",
     "plugin/LICENSE",
     ".github/CODEOWNERS",
     "docs/README.md",
-    "docs/getting-started.md",
     "docs/guides/getting-started.md",
     "docs/guides/managing-installation.md",
     "docs/reference/hooks.md",
@@ -34,7 +33,6 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "docs/examples.md",
     "docs/trust-model.md",
     "docs/compatibility.md",
-    "docs/field-validation.md",
     "docs/repository-governance.md",
     "docs/runtime-identity.md",
     "CHANGELOG.md",
@@ -63,21 +61,6 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
-)
-
-
-def discover_release_documents(root: Path = REPOSITORY_ROOT) -> tuple[str, ...]:
-    """Discover strict release-note paths without duplicating release history."""
-    release_root = root / "docs" / "releases"
-    return tuple(
-        path.relative_to(root).as_posix()
-        for path in sorted(release_root.glob("v*.md"))
-        if path.is_file()
-    )
-
-
-REQUIRED_PUBLIC_FILES = tuple(
-    dict.fromkeys((*_BASE_REQUIRED_PUBLIC_FILES, *discover_release_documents()))
 )
 
 EXPECTED_DIRECT_SKILLS = (

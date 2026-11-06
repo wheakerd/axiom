@@ -60,4 +60,3 @@ def release_version(root: Path = REPOSITORY_ROOT) -> str | None:
 
 
 RELEASE_VERSION = release_version() or "0.0.0"
-CURRENT_RELEASE_NOTES = f"docs/releases/v{RELEASE_VERSION}.md"

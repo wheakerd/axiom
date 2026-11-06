@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-使用本索引找到负责你所需任务或事实的文档。下面的位置是当前的公开规范结构；历史证据与当前用户指南保持区分。
+使用本索引找到负责你所需任务或事实的文档。下面的位置是当前的公开规范结构。
 
 当前指南描述的是与文档同一份源码快照。比较源码树、已发布版本与已安装包时，参见[源码与版本范围](maintainers/documentation-policy.md#source-and-version-scope)。
 
@@ -23,7 +23,7 @@
 | 创建或修订任务计划 | [Task Planning 示例](examples.zh-CN.md#task-planning) | 用户 |
 | 显式地跨会话延续一项任务 | [Continuous Progress](../plugin/skills/continuous-progress/SKILL.md) | 用户 |
 | 通过本地浏览器或客户端做检索 | [Local Web Search 示例](examples.zh-CN.md#local-web-search) | 用户 |
-| 解读证据文件或报告宿主结果 | [现场验证](field-validation.md) | 测试者与审计者 |
+| 报告宿主结果 | [报告兼容性结果](compatibility.md#report-a-compatibility-result) | 测试者与审计者 |
 | 理解包身份 | [运行时与仓库身份](runtime-identity.md) | 维护者与审计者 |
 | 决定某项变更的版本增量或打包方式 | [版本增量](runtime-identity.md#version-increment) | 维护者 |
 | 审阅仓库控制 | [仓库治理](repository-governance.md) | 维护者 |
@@ -38,16 +38,13 @@
 
 在 [GitHub Discussions](https://github.com/wheakerd/axiom/discussions) 提问，并通过 [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) 表单提交可处理的报告。安全问题请按 [SECURITY.md](../SECURITY.md) 中的流程报告；社区期望见[行为准则](../CODE_OF_CONDUCT.md)。
 
-## 候选与历史记录
+## 发布历史
 
-[签入的发布状态](../evidence/release-status.json)负责源码候选的版本与绑定。候选措辞按其原始源码状态保留；发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
+[签入的发布状态](../evidence/release-status.json)负责源码候选的版本与绑定；发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
 
-- [更新日志](../CHANGELOG.md)记录用户可见的变更及需要的操作。
-- [版本说明](releases/)保留与特定版本相关的迁移、架构、兼容性、安全与证据。较早的候选措辞描述的是其原始源码状态，而不是当前的发布状态。
+- [更新日志](../CHANGELOG.md)记录每个版本的用户可见变更及需要的操作。
 - [证据](../evidence/)包含机器事实，各自带有版本、主体与日期。
-- [归档实验](field-validation.md#archived-experiments)链接到已验证的不可变来源处的已退役宿主快照、无 Hook 工作，以及路由评估及其观测记录。
-
-当前指南请使用上面的任务参考。历史记录既不确立当前的宿主支持，也不把已退役的流程强加于当前工作。
+- [早期记录](compatibility.md#earlier-records)指明保留版本说明、路由评估与宿主观测记录的发布标签。
 
 ## 当前结构
 
@@ -63,10 +60,9 @@
 | `docs/` 下的主题文档 | 架构、示例、信任、兼容性、身份以及仓库治理 |
 | `docs/reference/` | 确切的公开技术参考：技能参考与经校验的 Hook 渲染 |
 | `docs/maintainers/` | 运行时编写、验证、文档与发布流程 |
-| `docs/releases/` | 保留的特定版本说明与候选证据 |
 | `evidence/` | 机器可读的身份、状态、策略修订与运行时历史 |
 | 英文文档旁的 `<name>.zh-CN.md` | 该文档的简体中文翻译；英文为规范版本，翻译与其源文档在同一次变更中更新 |
 
-`docs/getting-started.md` 仍作为历史链接的兼容入口保留。维护中的指南请使用[快速开始](guides/getting-started.zh-CN.md)，完整的仓库地图见[贡献指南](../CONTRIBUTING.md#repository-layout)。
+完整的仓库地图见[贡献指南](../CONTRIBUTING.md#repository-layout)。
 
-文档类别、生命周期词汇、规范所有者、迁移规则与验证要求见[文档策略](maintainers/documentation-policy.md)。
+文档类别、规范所有者、迁移规则与验证要求见[文档策略](maintainers/documentation-policy.md)。

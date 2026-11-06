@@ -34,25 +34,12 @@ ROOT_CURRENT_DOCUMENTS = (
     "CONTRIBUTING.md",
     "SECURITY.md",
 )
-COMPATIBILITY_ENTRY = "docs/getting-started.md"
-# Keep retired project paths classified for legacy-document and navigation checks.
-LEGACY_PROJECT_PREFIXES = ("project/",)
-LIFECYCLE_VALUES = frozenset(
-    {"current", "historical", "generated", "project-plan", "archived"}
-)
-LIFECYCLE_COMMENT = re.compile(r"<!--\s*lifecycle:\s*([^<>]*?)\s*-->")
 GENERATED_MARKER = re.compile(
     r"<!--\s*([a-z0-9][a-z0-9._:-]*?):(start|end)\s*-->"
 )
 SETEXT_HEADING = re.compile(r"^[ \t]{0,3}(=+|-+)[ \t]*$")
 SKILL_REFERENCE_PATH = "docs/reference/skills.md"
 SKILL_REFERENCE_SHARED_HEADING = "## Shared skills"
-TASK_NAVIGATION_HEADING = "## Start By Task"
-FORBIDDEN_TASK_PREFIXES = (
-    "docs/releases/",
-    "project/",
-    "evidence/",
-)
 
 
 @dataclass(frozen=True)
@@ -106,14 +93,7 @@ def is_current_document(relative_path: str) -> bool:
     """Return whether a Markdown path belongs to the maintained current set."""
     if is_translation(relative_path):
         return False
-    if relative_path in ROOT_CURRENT_DOCUMENTS:
-        return True
-    if not relative_path.startswith("docs/"):
-        return False
-    return (
-        relative_path != COMPATIBILITY_ENTRY
-        and not relative_path.startswith("docs/releases/")
-    )
+    return relative_path in ROOT_CURRENT_DOCUMENTS or relative_path.startswith("docs/")
 
 
 def current_documents(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
@@ -271,54 +251,6 @@ def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
     return len(expected & direct_targets)
 
 
-def _allowed_lifecycle(relative_path: str) -> frozenset[str] | None:
-    if is_translation(relative_path):
-        return _allowed_lifecycle(translation_source(relative_path))
-    if relative_path == COMPATIBILITY_ENTRY or relative_path.startswith(
-        "docs/releases/"
-    ):
-        return frozenset({"historical", "archived"})
-    if relative_path.startswith(LEGACY_PROJECT_PREFIXES):
-        return frozenset({"project-plan", "historical", "archived"})
-    if relative_path.startswith("evidence/"):
-        return frozenset({"historical", "generated", "archived"})
-    if is_current_document(relative_path):
-        return frozenset({"current", "generated"})
-    return None
-
-
-def check_lifecycle_text(
-    relative_path: str, text: str, failures: list[str]
-) -> None:
-    _, searchable = fenced_blocks_and_masked_text(text)
-    comments = LIFECYCLE_COMMENT.findall(searchable)
-    if searchable.count("<!-- lifecycle:") != len(comments):
-        failures.append(
-            f"{relative_path} contains malformed lifecycle metadata; use "
-            "<!-- lifecycle: value -->"
-        )
-    if len(comments) > 1:
-        failures.append(f"{relative_path} contains more than one lifecycle value")
-    allowed = _allowed_lifecycle(relative_path)
-    for raw_value in comments:
-        value = raw_value.strip()
-        if value not in LIFECYCLE_VALUES:
-            failures.append(
-                f"{relative_path} has invalid lifecycle value {value!r}"
-            )
-        elif allowed is not None and value not in allowed:
-            failures.append(
-                f"{relative_path} lifecycle {value!r} conflicts with its document class"
-            )
-
-
-def check_lifecycle_metadata(root: Path, failures: list[str]) -> None:
-    for path in discover_markdown(root):
-        text = _read_text(path, root, failures)
-        if text is not None:
-            check_lifecycle_text(_label(path, root), text, failures)
-
-
 def check_generated_marker_text(
     relative_path: str, text: str, failures: list[str]
 ) -> int:
@@ -394,43 +326,12 @@ def check_private_guidance_text(
             )
 
 
-def _section(text: str, heading: str) -> str:
-    if text.count(heading) != 1:
-        return ""
-    return text.split(heading, 1)[1].split("\n## ", 1)[0]
-
-
-def check_task_navigation_text(
-    source: Path, text: str, root: Path, failures: list[str]
-) -> None:
-    section = _section(text, TASK_NAVIGATION_HEADING)
-    if not section:
-        failures.append(
-            "docs/README.md must contain exactly one Start By Task section"
-        )
-        return
-    for raw in _raw_destinations(section):
-        target = _local_target(source, raw, root)
-        if target is not None and any(
-            target == prefix.rstrip("/") or target.startswith(prefix)
-            for prefix in FORBIDDEN_TASK_PREFIXES
-        ):
-            failures.append(
-                "docs/README.md Start By Task must not list historical or "
-                f"project-plan document {target} as current guidance"
-            )
-
-
 def check_guidance_boundaries(root: Path, failures: list[str]) -> None:
     root = root.resolve()
     for path in (*current_documents(root), *translation_documents(root)):
         text = _read_text(path, root, failures)
         if text is not None:
             check_private_guidance_text(_label(path, root), text, failures)
-    index = root / "docs" / "README.md"
-    index_text = _read_text(index, root, failures)
-    if index_text is not None:
-        check_task_navigation_text(index, index_text, root, failures)
 
 
 def _generated_regions(text: str) -> dict[str, str]:
@@ -488,12 +389,6 @@ def check_translation_text(
     if _generated_regions(source_text) != _generated_regions(text):
         failures.append(
             f"{relative_path} generated regions differ from {source_relative_path}"
-        )
-    source_lifecycle = [value.strip() for value in LIFECYCLE_COMMENT.findall(source_searchable)]
-    mirror_lifecycle = [value.strip() for value in LIFECYCLE_COMMENT.findall(mirror_searchable)]
-    if source_lifecycle != mirror_lifecycle:
-        failures.append(
-            f"{relative_path} lifecycle metadata differs from {source_relative_path}"
         )
     source_path = root / source_relative_path
     mirror_path = root / relative_path
@@ -652,7 +547,6 @@ def check_documentation(
     markdown_count = check_markdown_links(failures, root=root)
     current_count = check_current_headings(root, failures)
     indexed_count = check_docs_index_and_orphans(root, failures)
-    check_lifecycle_metadata(root, failures)
     generated_count = check_generated_markers(root, failures)
     translation_count = check_translations(root, failures)
     check_markdown_language(root, failures)
@@ -678,7 +572,6 @@ def check_documentation(
 
 __all__ = (
     "DocumentationReport",
-    "LIFECYCLE_VALUES",
     "README_MAX_BYTES",
     "SKILL_REFERENCE_PATH",
     "TRANSLATION_SUFFIX",
@@ -689,12 +582,10 @@ __all__ = (
     "check_guidance_boundaries",
     "check_heading_text",
     "check_hook_reference",
-    "check_lifecycle_text",
     "check_markdown_language",
     "check_private_guidance_text",
     "check_readme_budget",
     "check_skill_reference_inventory_text",
-    "check_task_navigation_text",
     "check_translation_text",
     "check_translations",
     "current_documents",

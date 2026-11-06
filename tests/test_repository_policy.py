@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from axiom_validation.context import CURRENT_RELEASE_NOTES, RELEASE_VERSION, REPOSITORY_ROOT
+from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.repository_policy import (
     CRITICAL_CODEOWNER_PATTERNS,
     check_critical_path_owners,
@@ -18,7 +18,6 @@ from axiom_validation.repository_policy import (
     check_repository_governance_contract,
     check_required_files,
     check_skill_contracts,
-    discover_release_documents,
 )
 
 
@@ -55,11 +54,6 @@ class RepositoryPolicyTests(unittest.TestCase):
         check_skill_contracts(failures)
         check_release_version_surfaces(failures)
         self.assertEqual([], failures)
-
-    def test_release_documents_are_discovered(self):
-        documents = discover_release_documents()
-        self.assertIn(CURRENT_RELEASE_NOTES, documents)
-        self.assertEqual(tuple(sorted(documents)), documents)
 
     def _release_surface_failures(self, relative, old, new):
         target = REPOSITORY_ROOT / relative

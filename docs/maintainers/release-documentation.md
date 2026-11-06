@@ -1,14 +1,13 @@
 # Release Documentation And Evidence
 
-This policy separates release communication from release evidence. It applies fix-forward to tags that contain it. Existing version notes, tags, GitHub Releases, assets, attestations, and historical evidence remain unchanged.
+This policy separates release communication from release evidence. It applies fix-forward to tags that contain it. Existing tags, GitHub Releases, assets, and attestations remain unchanged.
 
 ## Responsibility Map
 
 | Surface | Audience | It answers | Lifecycle and owner |
 | --- | --- | --- | --- |
 | `CHANGELOG.md` | Users and integrators | What changed, behavioral impact, and required action | Checked in with the candidate; canonical user-facing history |
-| `docs/releases/v<version>.md` | Maintainers and auditors | Material migration, architecture, security, compatibility, or evidence detail | Checked in only when that detail is warranted; may truthfully describe candidate limitations |
-| GitHub Release body | Release consumers | A concise tagged summary and immutable links to deeper documentation | Rendered from the tagged Changelog entry; never copied from the version note |
+| GitHub Release body | Release consumers | A concise tagged summary and immutable links to deeper documentation | Rendered from the tagged Changelog entry |
 | Candidate evidence | Reviewers | What the source commit can prove before publication | Checked-in records and candidate reports; future remote states remain pending or unavailable |
 | Final immutable release evidence | Auditors | What tag, Release, assets, signatures, Latest state, and remote postconditions actually exist | Established only after publication and authoritative read-back |
 
@@ -24,23 +23,17 @@ Every new version after `0.10.0` has one entry whose heading is `## X.Y.Z - <sta
 
 Keep the heading state `unreleased` until the GitHub Release is published; the tagged entry therefore always reads `unreleased`, and the rendered body omits the heading. After publication, replace the state with the Release's UTC publication date in the marketplace-publication pull request, or in the next repository-policy change when that handoff does not apply. A version tagged without a GitHub Release states that instead of a date.
 
-Keep the entry concise and user-facing. Case-level results, commit and tree IDs, timing, token counts, candidate investigations, workflow internals, and historical run ledgers belong in version notes or evidence rather than the Changelog.
+Keep the entry concise and user-facing. Case-level results, commit and tree IDs, timing, token counts, candidate investigations, and workflow internals belong in the release pull request or its issue rather than the Changelog.
 
 Repository policy revisions are not Changelog entries. The [policy ledger](../../evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](../repository-policy-revisions.md) renders it; the catalog handoff dates the released version's heading and appends a ledger revision without adding a Changelog entry.
 
 ## Deprecation And Removal
 
-Before publishing a version, review the behavior and guidance superseded by that release. Record each obsolete feature, command, configuration, validator, or procedure in its Changelog entry under `Deprecated` or `Removed`. Name the affected version, reason, supported replacement, and required user action; put material migration detail in the version note.
+Before publishing a version, review the behavior and guidance superseded by that release. Record each obsolete feature, command, configuration, validator, or procedure in its Changelog entry under `Deprecated` or `Removed`. Name the affected version, reason, supported replacement, and required user action.
 
 Retire obsolete functionality in the same change: remove its active entry points, calls, configuration, fallback paths, CI dependencies, and instructions. A deprecation notice alone does not complete removal. Current documentation must describe the supported replacement, and release checks must confirm that the obsolete behavior cannot still be selected by the active workflow. Verify actual support before retiring a format merely because a newer one exists.
 
-Preserve immutable version notes and evidence with their original outcomes. Historical records do not keep retired functionality enabled or turn its old diagnostics into current release requirements. For host-owned external tools, retire Axiom's dependency and invocations; removal from the user's system is a separate action outside the package release.
-
-## Version Notes
-
-Create a version note only for material migration, architecture, security, compatibility, or evidence detail. It is a durable technical record, not the GitHub Release body. Before publication it may state that a tag, Release, asset, workflow result, or host observation does not yet exist; that truthful candidate text remains attached to the source commit and must not be presented as final publication state.
-
-Historical version notes are preserved. Correct an obsolete convention in the next version or publication path instead of rewriting an immutable release.
+A record at an earlier release tag does not keep retired functionality enabled or turn its old diagnostics into current release requirements. For host-owned external tools, retire Axiom's dependency and invocations; removal from the user's system is a separate action outside the package release.
 
 ## Deterministic Release Body
 
@@ -58,7 +51,7 @@ The renderer:
 - rejects traversal links, candidate-only publication text, duplicate version entries, missing fix-forward sections, and bodies above 8 KiB; and
 - uses only the Python standard library, the checked-in Changelog, and standard output.
 
-The separately authorized draft must use the exact rendered bytes. The tag-owned release-evidence validator compares the draft, pre-publication, and final body to the same rendering. The existing `notesSha256` attestation field is retained for compatibility; it binds the GitHub Release body digest, not the version-note file.
+The separately authorized draft must use the exact rendered bytes. The tag-owned release-evidence validator compares the draft, pre-publication, and final body to the same rendering. The `notesSha256` attestation field binds the GitHub Release body digest.
 
 ## Release Verification
 
@@ -70,7 +63,7 @@ Earlier version contracts and recorded experiments retain their historical meani
 
 ## Release Pipeline
 
-A pull request that changes the plugin version in the Codex manifest is a release pull request; every other pull request publishes nothing. Prepare it with the new version, its `## X.Y.Z - unreleased` Changelog entry, any warranted version note, and the identity records that [Runtime And Repository Identity](../runtime-identity.md) requires. Use the immediate next patch, minor, or major version after the latest published Release, and keep other changes out of `main` until the release completes.
+A pull request that changes the plugin version in the Codex manifest is a release pull request; every other pull request publishes nothing. Prepare it with the new version, its `## X.Y.Z - unreleased` Changelog entry, and the identity records that [Runtime And Repository Identity](../runtime-identity.md) requires. Use the immediate next patch, minor, or major version after the latest published Release, and keep other changes out of `main` until the release completes.
 
 The [Release pipeline](../../.github/workflows/release-pipeline.yml) then publishes the version from CI without a manual dispatch:
 

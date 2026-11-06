@@ -2,7 +2,7 @@
 
 This file records notable changes to Axiom. Historical entries are based on the repository's version tags and the commits they identify.
 
-For versions after `0.10.0`, each new entry states what changed, the behavioral impact, and any required user action (including `None`). The future GitHub Release body is rendered deterministically from that entry at the exact tag; version notes and candidate evidence remain separate detail surfaces. Existing entries, tags, Releases, and evidence are not rewritten to adopt this policy.
+For versions after `0.10.0`, each new entry states what changed, the behavioral impact, and any required user action (including `None`). The GitHub Release body is rendered deterministically from that entry at the exact tag. Versions up to `0.27.2` also carried a version note, which their entries link at the release tag. Existing entries, tags, Releases, and evidence are not rewritten to adopt this policy.
 
 A version heading names the UTC date on which its GitHub Release was published, or states that the version was tagged without a GitHub Release. An entry keeps `unreleased` until that Release is published, so the tagged entry still reads `unreleased`; the rendered Release body omits the heading, and dating it later changes neither the entry nor that body. Headings before 0.8.3 keep the dates recorded when they were written.
 
@@ -28,7 +28,7 @@ Prohibitions anywhere in a skill or its references now bind on both hosts. A ses
 
 None.
 
-See the [version notes](docs/releases/v0.27.2.md) for the review findings behind each change and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/releases/v0.27.2.md) for the review findings behind each change and the evidence boundary.
 
 ## 0.27.1 - 2026-11-06
 
@@ -49,7 +49,7 @@ Traceable commits now trigger the repository's commit hooks; a hook that fails o
 
 None.
 
-See the [version notes](docs/releases/v0.27.1.md) for the review finding behind each fix and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.27.1/docs/releases/v0.27.1.md) for the review finding behind each fix and the evidence boundary.
 
 ## 0.27.0 - 2026-11-05
 
@@ -67,7 +67,7 @@ With the gate delivered, a request that explicitly asks to measure context cost 
 
 None.
 
-See the [version notes](docs/releases/v0.27.0.md) for the two-arm measurement behind the wording and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.27.0/docs/releases/v0.27.0.md) for the two-arm measurement behind the wording and the evidence boundary.
 
 ## 0.26.0 - 2026-11-03
 
@@ -85,7 +85,7 @@ With the gate delivered, a bundled route is no longer skipped because the host o
 
 None.
 
-See the [version notes](docs/releases/v0.26.0.md) for the two-arm measurement behind the wording, the request forms that now route, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.26.0/docs/releases/v0.26.0.md) for the two-arm measurement behind the wording, the request forms that now route, and the evidence boundary.
 
 ## 0.25.0 - 2026-11-02
 
@@ -105,7 +105,7 @@ Under a per-call permission mode the first irreversible step waits for a visible
 
 None.
 
-See the [version notes](docs/releases/v0.25.0.md) for the reasoning, the changed passages, the private audit counts behind Issue #240, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.25.0/docs/releases/v0.25.0.md) for the reasoning, the changed passages, the private audit counts behind Issue #240, and the evidence boundary.
 
 ## 0.24.0 - 2026-10-30
 
@@ -127,7 +127,7 @@ A model reading a skill sees which rules bind and which it may adapt, and meets 
 
 None.
 
-See the [version notes](docs/releases/v0.24.0.md) for the reasoning, the changed passages, the routing contract, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.24.0/docs/releases/v0.24.0.md) for the reasoning, the changed passages, the routing contract, and the evidence boundary.
 
 ## 0.23.0 - 2026-10-30
 
@@ -151,7 +151,7 @@ Fewer sessions load a skill that does not apply: built-in web searches, fresh pl
 
 None. If a workflow relied on the traceable Git phases adding `--no-verify` by default, state that bypass explicitly in the request.
 
-See the [version notes](docs/releases/v0.23.0.md) for the reasoning, the changed passages, the routing contract, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.23.0/docs/releases/v0.23.0.md) for the reasoning, the changed passages, the routing contract, and the evidence boundary.
 
 ## 0.22.1 - 2026-10-29
 
@@ -171,7 +171,7 @@ Delegated choices follow your environment, and you get fewer defensive or repeat
 
 None.
 
-See the [version notes](docs/releases/v0.22.1.md) for the reasoning, the changed passages, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.22.1/docs/releases/v0.22.1.md) for the reasoning, the changed passages, and the evidence boundary.
 
 ## 0.22.0 - 2026-10-29
 
@@ -191,7 +191,7 @@ You get fewer questions when you have already delegated a choice within your aut
 
 None.
 
-See the [version notes](docs/releases/v0.22.0.md) for the reasoning, the changed passages, the measurement, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.22.0/docs/releases/v0.22.0.md) for the reasoning, the changed passages, the measurement, and the evidence boundary.
 
 ## 0.21.0 - 2026-10-29
 
@@ -213,7 +213,7 @@ On Codex, an explicit invocation now reaches assessment instead of stopping at t
 
 None. If you want delegation only at your host's top reasoning level, say so in your request or standing instructions; the skill no longer enforces it.
 
-See the [version notes](docs/releases/v0.21.0.md) for the reasoning, the changed passages, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.21.0/docs/releases/v0.21.0.md) for the reasoning, the changed passages, and the evidence boundary.
 
 ## 0.20.0 - 2026-10-28
 
@@ -231,7 +231,7 @@ Routing rests on the skill descriptions each host already shows its model, and a
 
 None.
 
-See the [version notes](docs/releases/v0.20.0.md) for the measurement, the precedence rule, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.20.0/docs/releases/v0.20.0.md) for the measurement, the precedence rule, and the evidence boundary.
 
 ## 0.19.3 - 2026-10-28
 
@@ -251,7 +251,7 @@ Under a host mode that may deny an action, an Axiom-guided consequential action 
 
 None.
 
-See the [version notes](docs/releases/v0.19.3.md) for the changed passages, the host mechanics, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.19.3/docs/releases/v0.19.3.md) for the changed passages, the host mechanics, and the evidence boundary.
 
 ## 0.19.2 - 2026-10-28
 
@@ -267,7 +267,7 @@ On Codex, where a session exposes no verifiable reasoning-level setting, an expl
 
 None.
 
-See the [version notes](docs/releases/v0.19.2.md) for the selection-then-activation order, the changed passages, and the evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.19.2/docs/releases/v0.19.2.md) for the selection-then-activation order, the changed passages, and the evidence boundary.
 
 ## 0.19.1 - 2026-10-27
 
@@ -283,7 +283,7 @@ None intended. Both hosts load the same routes under the same conditions from a 
 
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
 
-See the [version notes](docs/releases/v0.19.1.md) for the trimmed passages and the reduction evidence.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.19.1/docs/releases/v0.19.1.md) for the trimmed passages and the reduction evidence.
 
 ## 0.19.0 - 2026-10-26
 
@@ -304,7 +304,7 @@ Requests to verify or audit whether work is complete, resumption after compactio
 
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
 
-See the [version notes](docs/releases/v0.19.0.md) for the routing boundary and the startup-gate change.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.19.0/docs/releases/v0.19.0.md) for the routing boundary and the startup-gate change.
 
 ## 0.18.0 - 2026-10-25
 
@@ -325,7 +325,7 @@ Routing is unchanged: the same requests select `agents-architect`, and the start
 
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`. In target repositories, delete leftover `.agents/.runtime/` and `.agents/.generated/` directories after moving anything still needed.
 
-See the [version notes](docs/releases/v0.18.0.md) for the decision latitude, the memory model, and the task-state migration.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.18.0/docs/releases/v0.18.0.md) for the decision latitude, the memory model, and the task-state migration.
 
 ## 0.17.1 - 2026-10-25
 
@@ -341,7 +341,7 @@ A request to evaluate or review one Skill or Skill proposal continues in the hos
 
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`.
 
-See the [version notes](docs/releases/v0.17.1.md) for the routing boundary and the publisher's catalog sources.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.17.1/docs/releases/v0.17.1.md) for the routing boundary and the publisher's catalog sources.
 
 ## 0.17.0 - 2026-10-24
 
@@ -358,7 +358,7 @@ Skills, routes, Hooks, and manifest fields are unchanged inside the installed pl
 
 Update as usual. In Codex, run `codex plugin marketplace upgrade axiom`. In Claude Code, run `claude plugin marketplace update axiom` and then `claude plugin update axiom@axiom`. Review the updated Hook before it runs.
 
-See the [version notes](docs/releases/v0.17.0.md) for the catalog migration and the runtime identity schema.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.17.0/docs/releases/v0.17.0.md) for the catalog migration and the runtime identity schema.
 
 ## 0.16.0 - 2026-10-24
 
@@ -391,7 +391,7 @@ In Claude Code, `delegate-simple-task` stays inactive below the host's top reaso
 
 Invoke `optimize-agent-usage` where you invoked `optimize-codex-usage`, and rename any host setting or permission rule that names `axiom:optimize-codex-usage`. Claude Code users receive these routes after the Claude Code catalog selects this release. Review the updated Hook before it runs: in Codex, review and trust it in `/hooks`; in Claude Code, compare the installed copy with the [Hook Reference](docs/reference/hooks.md) before the plugin loads in a new or reloaded session.
 
-See the [version notes](docs/releases/v0.16.0.md) for the delegation gate, the supervision boundary, the usage route migration, and static context evidence.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.16.0/docs/releases/v0.16.0.md) for the delegation gate, the supervision boundary, the usage route migration, and static context evidence.
 
 ## 0.15.0 - 2026-10-18
 
@@ -422,7 +422,7 @@ In Claude Code, the shared routes load natively. `delegate-simple-task`, `optimi
 
 None for Codex. To use Axiom in Claude Code, add the `wheakerd/axiom` marketplace and install `axiom@axiom` as described in [Managing Installation](docs/guides/managing-installation.md).
 
-See the [version notes](docs/releases/v0.15.0.md) for the host boundary, runtime schema, and static context evidence.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.15.0/docs/releases/v0.15.0.md) for the host boundary, runtime schema, and static context evidence.
 
 ## 0.14.6 - tagged 2026-10-18; no GitHub Release
 
@@ -442,7 +442,7 @@ The simple submission phase preserves its exact command, normal hooks, signing p
 
 None for ordinary Git use. If an explicitly selected simple submission stops, resolve the reported configuration conflict through a separately authorized change before requesting another attempt.
 
-See the [version notes](docs/releases/v0.14.6.md) for the boundaries and static context evidence.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.6/docs/releases/v0.14.6.md) for the boundaries and static context evidence.
 
 ## 0.14.5 - 2026-10-15
 
@@ -458,7 +458,7 @@ The startup gate carries less repeated text. Route matching continues to use bun
 
 None.
 
-See the [version notes](docs/releases/v0.14.5.md) for the scope and static context measurement.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.5/docs/releases/v0.14.5.md) for the scope and static context measurement.
 
 ## 0.14.4 - 2026-10-14
 
@@ -483,7 +483,7 @@ The model and host decide whether to explain an invocation under the user's outp
 
 None. Use the host's native verbosity and gate controls; no new Axiom setting is required.
 
-See the [version notes](docs/releases/v0.14.4.md) for activation, ownership, and evidence boundaries.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.4/docs/releases/v0.14.4.md) for activation, ownership, and evidence boundaries.
 
 ## 0.14.3 - 2026-10-14
 
@@ -504,7 +504,7 @@ Each skill invocation shows both its name and why it is being used. The once-per
 
 None.
 
-See the [version notes](docs/releases/v0.14.3.md) for the notice format and evidence boundary.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.3/docs/releases/v0.14.3.md) for the notice format and evidence boundary.
 
 ## 0.14.2 - 2026-10-14
 
@@ -525,7 +525,7 @@ Users can see which skills are being invoked. A later request or resume that sel
 
 None.
 
-See the [version notes](docs/releases/v0.14.2.md) for invocation and evidence boundaries.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.2/docs/releases/v0.14.2.md) for invocation and evidence boundaries.
 
 ## 0.14.1 - 2026-10-14
 
@@ -546,7 +546,7 @@ The main session continues the task when activation conditions are not met. Full
 
 To use this skill, enable `using-axiom`, select `Ultra`, and confirm or explicitly authorize the skill invocation. Existing explicit authorization is honored within its scope. Users staying on other reasoning levels need take no action.
 
-See the [version notes](docs/releases/v0.14.1.md) for activation and evidence boundaries.
+See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.1/docs/releases/v0.14.1.md) for activation and evidence boundaries.
 
 ## 0.14.0 - 2026-10-13
 
@@ -574,7 +574,7 @@ See the [version notes](https://github.com/wheakerd/axiom/blob/v0.14.0/docs/rele
 
 ### Behavioral impact
 
-The startup document occupies less space within the instruction limit. Routing and action authority are unchanged, and all startup rules remain in the same always-loaded document. The changed installed bytes receive a new runtime digest and patch version; model and reasoning settings are unchanged. See the [v0.13.4 notes](docs/releases/v0.13.4.md) for the paired static acceptance and evidence boundary.
+The startup document occupies less space within the instruction limit. Routing and action authority are unchanged, and all startup rules remain in the same always-loaded document. The changed installed bytes receive a new runtime digest and patch version; model and reasoning settings are unchanged. See the [v0.13.4 notes](https://github.com/wheakerd/axiom/blob/v0.13.4/docs/releases/v0.13.4.md) for the paired static acceptance and evidence boundary.
 
 ### Required action
 
@@ -606,11 +606,11 @@ None. Existing configuration, workflow names, and installation paths remain vali
 
 ### Behavioral impact
 
-AGENTS authoring now explicitly rejects task language as an implicit document-language choice. Explicit document-language requests apply only to their requested scope; canonical identifiers, exact source literals, and unrelated content are preserved. This authoring rule stays in Axiom rather than being copied into target repositories. Local web research selects its own route before access; confirmed cloud-hosted search stays outside. The new workflow preserves browser identity and cannot guarantee that a site will not classify a request as automated. Action authority is unchanged. See the [v0.13.3 notes](docs/releases/v0.13.3.md).
+AGENTS authoring now explicitly rejects task language as an implicit document-language choice. Explicit document-language requests apply only to their requested scope; canonical identifiers, exact source literals, and unrelated content are preserved. This authoring rule stays in Axiom rather than being copied into target repositories. Local web research selects its own route before access; confirmed cloud-hosted search stays outside. The new workflow preserves browser identity and cannot guarantee that a site will not classify a request as automated. Action authority is unchanged. See the [v0.13.3 notes](https://github.com/wheakerd/axiom/blob/v0.13.3/docs/releases/v0.13.3.md).
 
 ### Required action
 
-Repository consumers must replace `scripts/check-distribution-drift.py` with `scripts/check-publication.py`, use `evals/routing-history-v1.json` for the history index, and retire links to the removed `project/` documents. Consult Git history when those historical documents are needed. Retire no-Hook builder and observation command invocations; use the [experiment archive](docs/field-validation.md#archived-experiments) for explicitly scoped historical reproduction. Plugin installation paths are unchanged. Request another language explicitly when it is intended for generated instruction documents. If a research site requires manual handling, resolve it yourself and explicitly indicate readiness before automated browsing can resume.
+Repository consumers must replace `scripts/check-distribution-drift.py` with `scripts/check-publication.py`, use `evals/routing-history-v1.json` for the history index, and retire links to the removed `project/` documents. Consult Git history when those historical documents are needed. Retire no-Hook builder and observation command invocations; use the [experiment archive](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/field-validation.md#archived-experiments) for explicitly scoped historical reproduction. Plugin installation paths are unchanged. Request another language explicitly when it is intended for generated instruction documents. If a research site requires manual handling, resolve it yourself and explicitly indicate readiness before automated browsing can resume.
 
 ## 0.13.2 - 2026-09-20
 
@@ -623,7 +623,7 @@ Repository consumers must replace `scripts/check-distribution-drift.py` with `sc
 
 ### Behavioral impact
 
-These compatible corrections make existing Git, reversible-change, and plugin architecture workflows executable within their authorized scope. They add no public capability or implicit action authority. Unavailable evidence remains distinct from a check that does not apply. See the [v0.13.2 notes](docs/releases/v0.13.2.md).
+These compatible corrections make existing Git, reversible-change, and plugin architecture workflows executable within their authorized scope. They add no public capability or implicit action authority. Unavailable evidence remains distinct from a check that does not apply. See the [v0.13.2 notes](https://github.com/wheakerd/axiom/blob/v0.13.2/docs/releases/v0.13.2.md).
 
 ### Required action
 
@@ -638,7 +638,7 @@ None. Existing release and recovery records retain their original evidence; resu
 
 ### Behavioral impact
 
-These fixes change repository validation tools. Installed Skills, hooks, action authority, and the runtime digest match `0.13.0`. This patch release distributes the corrections first recorded in repository policy revision 34; see the [v0.13.1 notes](docs/releases/v0.13.1.md) for version and evidence details.
+These fixes change repository validation tools. Installed Skills, hooks, action authority, and the runtime digest match `0.13.0`. This patch release distributes the corrections first recorded in repository policy revision 34; see the [v0.13.1 notes](https://github.com/wheakerd/axiom/blob/v0.13.1/docs/releases/v0.13.1.md) for version and evidence details.
 
 ### Required action
 
@@ -661,7 +661,7 @@ None for installed plugin workflows. Contributors collecting new optional routin
 
 ### Behavioral impact
 
-The routing gate resolves material intent ambiguity before selecting an action workflow or considering delegation. Eligible simple work in verified Full Access can be delegated within existing authority after announcing the exact model ID and faithful task brief. Other modes require existing assignment authority or confirmation. Model selection follows the user's model order; unavailable or unsuitable models never justify an unlisted fallback. The delegation skill does not directly invoke the clarification skill. See the [v0.13.0 notes](docs/releases/v0.13.0.md).
+The routing gate resolves material intent ambiguity before selecting an action workflow or considering delegation. Eligible simple work in verified Full Access can be delegated within existing authority after announcing the exact model ID and faithful task brief. Other modes require existing assignment authority or confirmation. Model selection follows the user's model order; unavailable or unsuitable models never justify an unlisted fallback. The delegation skill does not directly invoke the clarification skill. See the [v0.13.0 notes](https://github.com/wheakerd/axiom/blob/v0.13.0/docs/releases/v0.13.0.md).
 
 ### Required action
 
@@ -677,7 +677,7 @@ Contributors must replace calls to the retired validator with `python3 scripts/c
 
 ### Behavioral impact
 
-Plan revisions remove canceled work from goals, steps, dependencies, and acceptance criteria without carrying it forward as unnecessary exclusion text. Retained decisions and effective constraints stay consistent, and specialized workflows keep their existing ownership and authorization boundaries. See the [v0.12.0 notes](docs/releases/v0.12.0.md) for details.
+Plan revisions remove canceled work from goals, steps, dependencies, and acceptance criteria without carrying it forward as unnecessary exclusion text. Retained decisions and effective constraints stay consistent, and specialized workflows keep their existing ownership and authorization boundaries. See the [v0.12.0 notes](https://github.com/wheakerd/axiom/blob/v0.12.0/docs/releases/v0.12.0.md) for details.
 
 ### Required action
 
@@ -700,7 +700,7 @@ Axiom installs and runs in Codex. The plugin architecture skill retains guidance
 
 ### Required action
 
-Existing Claude Code users must disable or uninstall their old Axiom installation in that host; cached installations are not removed by a repository update. For continued Axiom use, follow the [Codex installation guide](docs/guides/getting-started.md) and start a new session. See [v0.11.0 notes](docs/releases/v0.11.0.md) for details.
+Existing Claude Code users must disable or uninstall their old Axiom installation in that host; cached installations are not removed by a repository update. For continued Axiom use, follow the [Codex installation guide](docs/guides/getting-started.md) and start a new session. See [v0.11.0 notes](https://github.com/wheakerd/axiom/blob/v0.11.0/docs/releases/v0.11.0.md) for details.
 
 ## 0.10.1 - 2026-09-15
 
@@ -717,7 +717,7 @@ Descriptions expose existing ordering and ambiguity boundaries during native Ski
 
 ### Required action
 
-None. See [the v0.10.1 release notes](docs/releases/v0.10.1.md) for migration and compatibility evidence boundaries.
+None. See [the v0.10.1 release notes](https://github.com/wheakerd/axiom/blob/v0.10.1/docs/releases/v0.10.1.md) for migration and compatibility evidence boundaries.
 
 ## 0.10.0 - 2026-08-31
 
@@ -738,7 +738,7 @@ None. See [the v0.10.1 release notes](docs/releases/v0.10.1.md) for migration an
 - Advanced the installed candidate to `0.10.0`, repository policy revision 3, and 61 runtime inputs with digest `sha256:17dacf7d5d73b714e0762586683f855ee48ad087769f0a20d5453dba38a38ea3`.
 - Appended immutable `v0.9.0` to runtime-contract history without rewriting prior tags, evidence, benchmarks, or observations.
 
-Current installed Codex host and lifecycle observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See [the v0.10.0 release notes](docs/releases/v0.10.0.md).
+Current installed Codex host and lifecycle observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See [the v0.10.0 release notes](https://github.com/wheakerd/axiom/blob/v0.10.0/docs/releases/v0.10.0.md).
 
 ## 0.9.0 - 2026-08-31
 
@@ -762,7 +762,7 @@ Current installed Codex host and lifecycle observation is `NOT-RUN`; authenticat
 
 This repository-policy revision does not claim that the dedicated GitHub App, Actions environment, or live ruleset migration has been configured. Those external objects remain separately authorized and verified boundaries.
 
-Current installed Codex host and lifecycle observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See [the v0.9.0 release notes](docs/releases/v0.9.0.md).
+Current installed Codex host and lifecycle observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`. See [the v0.9.0 release notes](https://github.com/wheakerd/axiom/blob/v0.9.0/docs/releases/v0.9.0.md).
 
 ## 0.8.20 - 2026-08-29
 
@@ -780,7 +780,7 @@ Current installed Codex host and lifecycle observation is `NOT-RUN`; authenticat
 
 Installed Skills, hooks, routes, action authority, benchmarks, and runtime dependencies are unchanged. Current Codex host and lifecycle observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.20 release notes](docs/releases/v0.8.20.md).
+See [the v0.8.20 release notes](https://github.com/wheakerd/axiom/blob/v0.8.20/docs/releases/v0.8.20.md).
 
 ## 0.8.19 - 2026-08-28
 
@@ -790,7 +790,7 @@ See [the v0.8.20 release notes](docs/releases/v0.8.20.md).
 - Advanced manifests and current release-bound evidence to the immediate next patch version without moving or deleting the immutable v0.8.18 tag.
 - Published a fresh signed candidate, exact-host acceptance batch, immutable tag and Release, Latest transition, and signature guard for v0.8.19; the successful v0.8.18 batch remains separate unpublished evidence.
 
-See [the v0.8.19 release notes](docs/releases/v0.8.19.md).
+See [the v0.8.19 release notes](https://github.com/wheakerd/axiom/blob/v0.8.19/docs/releases/v0.8.19.md).
 
 ## 0.8.18 - tagged 2026-08-28; no GitHub Release
 
@@ -806,7 +806,7 @@ See [the v0.8.19 release notes](docs/releases/v0.8.19.md).
 - Preserved historical tags and Releases without rewriting them. Future prerelease or build-metadata support requires a separate reviewed publication design covering Latest, evidence, recovery, and compatibility semantics.
 - Installed Skills, hooks, routes, action authority, benchmarks, and runtime dependencies are unchanged. Current Codex host observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.18 release notes](docs/releases/v0.8.18.md).
+See [the v0.8.18 release notes](https://github.com/wheakerd/axiom/blob/v0.8.18/docs/releases/v0.8.18.md).
 
 ## 0.8.17 - 2026-08-28
 
@@ -822,7 +822,7 @@ See [the v0.8.18 release notes](docs/releases/v0.8.18.md).
 - Changed no ruleset, CODEOWNERS entry, workflow, collaborator permission, or required check. External contributor fork, branch, pull-request, and merge gates remain unchanged.
 - Installed Skills, hooks, routes, action authority, benchmarks, and runtime dependencies are unchanged. Current Codex host and lifecycle observation is `NOT-RUN`; authenticated Claude Code observation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.17 release notes](docs/releases/v0.8.17.md).
+See [the v0.8.17 release notes](https://github.com/wheakerd/axiom/blob/v0.8.17/docs/releases/v0.8.17.md).
 
 ## 0.8.16 - 2026-08-28
 
@@ -837,7 +837,7 @@ See [the v0.8.17 release notes](docs/releases/v0.8.17.md).
 - The separate three-job hook matrix is read-only and non-required; the existing `repository-guards` and `unit-and-integration-tests` required identities remain unchanged, so contributor branch and fork paths are not newly blocked.
 - Installed Skills, hooks, routes, and action authority are unchanged. Native `windows-2025` and `macos-15` workflow runs and installed Codex and Claude Code host observation remain `NOT-RUN` until external CI or host evidence exists.
 
-See [the v0.8.16 release notes](docs/releases/v0.8.16.md).
+See [the v0.8.16 release notes](https://github.com/wheakerd/axiom/blob/v0.8.16/docs/releases/v0.8.16.md).
 
 ## 0.8.15 - 2026-08-28
 
@@ -853,7 +853,7 @@ See [the v0.8.16 release notes](docs/releases/v0.8.16.md).
 - The live tag rulesets were read back as two active, overlapping controls: one creation-only ruleset with the exact user bypass and one integrity ruleset with no bypass actors or creation rule.
 - The checked-in status remains `STATIC-ONLY`; full Codex routing and lifecycle observation is `NOT-RUN`, and authenticated Claude Code host validation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.15 release notes](docs/releases/v0.8.15.md).
+See [the v0.8.15 release notes](https://github.com/wheakerd/axiom/blob/v0.8.15/docs/releases/v0.8.15.md).
 
 ## 0.8.14 - 2026-08-27
 
@@ -869,7 +869,7 @@ See [the v0.8.15 release notes](docs/releases/v0.8.15.md).
 - Added no persistent runner, transcript, telemetry, background service, credential access, external action, or mutation authority. Static validation remains distinct from installed-host behavior.
 - The checked-in status remains `STATIC-ONLY`; Codex routing, lifecycle, and bounded-review completion are `NOT-RUN`, and authenticated Claude Code host validation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.14 release notes](docs/releases/v0.8.14.md).
+See [the v0.8.14 release notes](https://github.com/wheakerd/axiom/blob/v0.8.14/docs/releases/v0.8.14.md).
 
 ## 0.8.13 - 2026-08-27
 
@@ -885,7 +885,7 @@ See [the v0.8.14 release notes](docs/releases/v0.8.14.md).
 - The complete 118-test standard-library suite, publication guard, distribution drift guard, compatibility self-test, routing-context and canonical-facts checks, JSON parsing, compile checks, English-only scan, Claude Code strict offline plugin validation, and whitespace checks pass in disposable release copies.
 - Installed Skills, hooks, routes, authorization, models, benchmark membership, and runtime dependencies are unchanged. The checked-in status remains `STATIC-ONLY`; Codex host and lifecycle evidence is `NOT-RUN`, and authenticated Claude Code host and lifecycle validation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.13 release notes](docs/releases/v0.8.13.md).
+See [the v0.8.13 release notes](https://github.com/wheakerd/axiom/blob/v0.8.13/docs/releases/v0.8.13.md).
 
 ## 0.8.12 - 2026-08-27
 
@@ -902,7 +902,7 @@ See [the v0.8.13 release notes](docs/releases/v0.8.13.md).
 - The local Codex plugin validator retains its documented stale-schema rejection of the unchanged supported `hooks`, `brandColorDark`, and `supportURL` fields.
 - Installed Skills, hooks, routes, authorization, models, benchmark membership, and runtime dependencies are unchanged. The checked-in status remains `STATIC-ONLY`; Codex host and lifecycle evidence is `NOT-RUN`, and authenticated Claude Code host and lifecycle validation is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.12 release notes](docs/releases/v0.8.12.md).
+See [the v0.8.12 release notes](https://github.com/wheakerd/axiom/blob/v0.8.12/docs/releases/v0.8.12.md).
 
 ## 0.8.11 - 2026-08-27
 
@@ -919,7 +919,7 @@ See [the v0.8.12 release notes](docs/releases/v0.8.12.md).
 - The complete 110-test suite, focused 44-test routing run, publication guard, distribution drift guard, compatibility self-test, context-budget and canonical-facts checks, JSON parsing, English-only scan, instruction-size check, skill quick validation, and Claude Code strict offline validation pass in a disposable copy.
 - The checked-in release status remains `STATIC-ONLY`. Codex host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code host and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks, signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain future external gates.
 
-See [the v0.8.11 release notes](docs/releases/v0.8.11.md).
+See [the v0.8.11 release notes](https://github.com/wheakerd/axiom/blob/v0.8.11/docs/releases/v0.8.11.md).
 
 ## 0.8.10 - 2026-08-27
 
@@ -938,7 +938,7 @@ See [the v0.8.11 release notes](docs/releases/v0.8.11.md).
 - Existing canonical workflows, action metadata, installed Skills, hooks, route selection, benchmark membership, models, reasoning settings, workflows, and action authority are unchanged.
 - The checked-in release status remains `STATIC-ONLY`. Codex host and release-bound lifecycle evidence for this corrected tree is `NOT-RUN`; authenticated Claude Code host and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks, signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain future external gates.
 
-See [the v0.8.10 release notes](docs/releases/v0.8.10.md).
+See [the v0.8.10 release notes](https://github.com/wheakerd/axiom/blob/v0.8.10/docs/releases/v0.8.10.md).
 
 ## 0.8.9 - 2026-08-27
 
@@ -955,7 +955,7 @@ See [the v0.8.10 release notes](docs/releases/v0.8.10.md).
 - Installed Skills, hooks, route selection, benchmark membership, models, reasoning settings, workflows, and action authority are unchanged.
 - The checked-in release status remains `STATIC-ONLY`. Current Codex host and release-bound lifecycle evidence is `NOT-RUN`; authenticated Claude Code host and lifecycle validation is `UNAVAILABLE / NOT-RUN`. Pull-request checks, signed merge, tag, immutable Release, GitHub Latest, and Issue closure remain future external gates.
 
-See [the v0.8.9 release notes](docs/releases/v0.8.9.md).
+See [the v0.8.9 release notes](https://github.com/wheakerd/axiom/blob/v0.8.9/docs/releases/v0.8.9.md).
 
 ## 0.8.8 - 2026-08-27
 
@@ -972,7 +972,7 @@ See [the v0.8.9 release notes](docs/releases/v0.8.9.md).
 - The always-loaded `using-axiom` gate remains byte-identical at 7,739 UTF-8 bytes with SHA-256 `7da583bb99880157a7fbca539ebb0426f49cd79d2748be51e5ef5fe85eaa3996`. Installed Skills, hooks, route selection, benchmark membership, models, reasoning settings, and action authority are unchanged.
 - The checked-in release status remains `STATIC-ONLY`. Current Codex host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code host and lifecycle evidence remains `UNAVAILABLE / NOT-RUN`. A fresh release-bound Codex observation remains external to the Git tree.
 
-See [the v0.8.8 release notes](docs/releases/v0.8.8.md).
+See [the v0.8.8 release notes](https://github.com/wheakerd/axiom/blob/v0.8.8/docs/releases/v0.8.8.md).
 
 ## 0.8.7 - 2026-08-27
 
@@ -989,7 +989,7 @@ See [the v0.8.8 release notes](docs/releases/v0.8.8.md).
 - Versioned the unchanged routing-context record and `STATIC-ONLY` evidence for v0.8.7. Installed behavior, the 67-case routing workload, the 17-case release acceptance contract, models, and reasoning settings remain unchanged.
 - Kept the signed v0.8.6 tag as an unpublished audit record. The failed v0.8.6 draft Release was removed; v0.8.5 remains GitHub Latest until v0.8.7 passes every release gate.
 
-See [the v0.8.7 release notes](docs/releases/v0.8.7.md).
+See [the v0.8.7 release notes](https://github.com/wheakerd/axiom/blob/v0.8.7/docs/releases/v0.8.7.md).
 
 ## 0.8.6 - signed tag, not released
 
@@ -1011,7 +1011,7 @@ The signed `v0.8.6` tag records the original Issue #57 candidate. Its immutable 
 - The checked-in release status remains `STATIC-ONLY`. A fresh v0.8.6 Codex result must remain external until it is bound to the final tag, commit, tree, immutable Release, and attestation. Prior terminal results are unchanged.
 - Installed Skills, hooks, route selection, corpus membership, benchmarks, models, reasoning settings, and action authority are unchanged. Authenticated Claude Code host evidence remains `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.6 release notes](docs/releases/v0.8.6.md).
+See [the v0.8.6 release notes](https://github.com/wheakerd/axiom/blob/v0.8.6/docs/releases/v0.8.6.md).
 
 ## 0.8.5 - 2026-08-26
 
@@ -1028,7 +1028,7 @@ See [the v0.8.6 release notes](docs/releases/v0.8.6.md).
 - Updated and directly re-read the active main ruleset on 2026-08-26 UTC. It requires both `repository-guards` and `unit-and-integration-tests` from GitHub Actions with strict branch synchronization while preserving the signed-commit, squash-only, non-fast-forward, zero-bypass, and release-tag protections.
 - Installed Skills, hooks, routing contracts, corpus membership, benchmarks, models, reasoning settings, and action authority are unchanged. Current Codex host and lifecycle evidence is `NOT-RUN`; authenticated Claude Code is `UNAVAILABLE / NOT-RUN`.
 
-See [the v0.8.5 release notes](docs/releases/v0.8.5.md).
+See [the v0.8.5 release notes](https://github.com/wheakerd/axiom/blob/v0.8.5/docs/releases/v0.8.5.md).
 
 ## 0.8.4 - 2026-08-25
 
@@ -1045,7 +1045,7 @@ See [the v0.8.5 release notes](docs/releases/v0.8.5.md).
 - The checked-in release status remains `STATIC-ONLY`. No v0.8.4 host or lifecycle observation binds the revised candidate, and it performs no remote action. Phase 3A's route-only passes and terminal behavior observation, and Phase 3B's terminal behavior observation, bind the prior patch only and remain separate external evidence.
 - Authenticated Claude Code remains `UNAVAILABLE / NOT-RUN`; actual post-compaction lifecycle observation remains `NOT-RUN`.
 
-See [the v0.8.4 release notes](docs/releases/v0.8.4.md).
+See [the v0.8.4 release notes](https://github.com/wheakerd/axiom/blob/v0.8.4/docs/releases/v0.8.4.md).
 
 ## 0.8.3 - 2026-08-25
 
@@ -1062,7 +1062,7 @@ See [the v0.8.4 release notes](docs/releases/v0.8.4.md).
 - The stale-tracking route case is static contract evidence only. A separate single-case Codex diagnostic and a fresh complete release-bound observation remain required before release.
 - Authenticated Claude Code remained `UNAVAILABLE / NOT-RUN`, and actual post-compaction behavior remained `NOT-RUN`.
 
-See [the v0.8.3 release notes](docs/releases/v0.8.3.md) for the diagnostic boundary and release gate.
+See [the v0.8.3 release notes](https://github.com/wheakerd/axiom/blob/v0.8.3/docs/releases/v0.8.3.md) for the diagnostic boundary and release gate.
 
 ## 0.8.2 - 2026-08-24
 
@@ -1082,7 +1082,7 @@ See [the v0.8.3 release notes](docs/releases/v0.8.3.md) for the diagnostic bound
 - A later complete-batch attempt against signed v0.8.2 repair commit `9dbc2592dc2e544d3f62aafb2788af7efc503840` also stopped at Case 1 without retry. Its route, V3 response, mutation fields, zero-tool observation, and protected snapshots were valid, but the old hook-trust bypass necessarily emitted a startup `ConfigWarning`; the fail-closed JSON Lines observer correctly treated the resulting error item as terminal. Cases 2-17 remain `NOT-RUN`.
 - The final signed repair merge received a complete 17-call Codex pass. The immutable `v0.8.2` tag, GitHub Release, and content-addressed observation asset bind that result to the released commit and tree; Issue #34 closed only after those checks succeeded.
 
-See [the v0.8.2 release notes](docs/releases/v0.8.2.md) for the preserved candidate evidence, context review, and completed acceptance sequence.
+See [the v0.8.2 release notes](https://github.com/wheakerd/axiom/blob/v0.8.2/docs/releases/v0.8.2.md) for the preserved candidate evidence, context review, and completed acceptance sequence.
 
 ## 0.8.1 - 2026-08-23
 
@@ -1115,7 +1115,7 @@ See [the v0.8.2 release notes](docs/releases/v0.8.2.md) for the preserved candid
 - Extended `using-axiom` only for explicit packaged Codex or Claude Code plugin architecture. Repo-local instruction systems, generic plugin work, Git, installation, publication, deployment, and external effects retain their existing owners and phase boundaries.
 - Measured the always-loaded gate at 6,150 bytes, 788 words, 111 lines, one direct reference, and an estimated 1,538 tokens. The 251-byte cumulative increase from v0.7.9 is below both review triggers.
 
-See [the v0.8.0 release notes](docs/releases/v0.8.0.md) for package shape, validation evidence, context metrics, and unavailable host checks.
+See [the v0.8.0 release notes](https://github.com/wheakerd/axiom/blob/v0.8.0/docs/releases/v0.8.0.md) for package shape, validation evidence, context metrics, and unavailable host checks.
 
 ## 0.7.12 - 2026-08-23
 
@@ -1129,7 +1129,7 @@ See [the v0.8.0 release notes](docs/releases/v0.8.0.md) for package shape, valid
 - Advanced both plugin manifests to `0.7.12` for design and release bookkeeping only. The accepted route is not implemented in this release; Stage 2 is intended for v0.8.0.
 - Kept the current six-route gate, all seven direct public Skills, hooks, marketplace wrappers, historical schemas and benchmarks, workflows, model, reasoning, telemetry, authorization boundaries, and runtime dependencies unchanged.
 
-See [the v0.7.12 release notes](docs/releases/v0.7.12.md) for the accepted design boundary, static validation evidence, and unavailable host checks.
+See [the v0.7.12 release notes](https://github.com/wheakerd/axiom/blob/v0.7.12/docs/releases/v0.7.12.md) for the accepted design boundary, static validation evidence, and unavailable host checks.
 
 ## 0.7.11 - 2026-08-23
 
@@ -1143,7 +1143,7 @@ See [the v0.7.12 release notes](docs/releases/v0.7.12.md) for the accepted desig
 - Advanced both plugin manifests to `0.7.11` while leaving the shared Skills, hook definitions, route behavior, authorization boundaries, model settings, reasoning settings, and runtime dependency surface unchanged.
 - Kept `interface.screenshots` absent because Axiom is a skills-only plugin without MCP custom UI; no synthetic marketplace result or host success is claimed.
 
-See [the v0.7.11 release notes](docs/releases/v0.7.11.md) for the listing contract, static validation evidence, and unavailable host and portal checks.
+See [the v0.7.11 release notes](https://github.com/wheakerd/axiom/blob/v0.7.11/docs/releases/v0.7.11.md) for the listing contract, static validation evidence, and unavailable host and portal checks.
 
 ## 0.7.10 - 2026-08-23
 
@@ -1158,7 +1158,7 @@ See [the v0.7.11 release notes](docs/releases/v0.7.11.md) for the listing contra
 - Established immutable v0.7.9 as the cumulative always-loaded baseline and documented a 256-byte-or-5% growth threshold that triggers review and justification rather than automatic rejection.
 - Kept `skills/using-axiom/SKILL.md`, route selection, lifecycle hooks, safety rules, authorization boundaries, stop conditions, model settings, and reasoning settings unchanged; no size reduction was manufactured for this release.
 
-See [the v0.7.10 release notes](docs/releases/v0.7.10.md) for metric classification, scenario status, threshold semantics, validation evidence, and known host-observation gaps.
+See [the v0.7.10 release notes](https://github.com/wheakerd/axiom/blob/v0.7.10/docs/releases/v0.7.10.md) for metric classification, scenario status, threshold semantics, validation evidence, and known host-observation gaps.
 
 ## 0.7.9 - 2026-08-23
 
@@ -1172,7 +1172,7 @@ See [the v0.7.10 release notes](docs/releases/v0.7.10.md) for metric classificat
 - Added standard-library publication checks and a focused negative test that fail when the governance snapshot loses a required fact or a sibling critical path loses its exact owner.
 - Kept governance auditing manual and read-only. No scheduled or dispatch workflow was added, and no workflow received repository-administration permission merely to inspect rulesets.
 
-See [the v0.7.9 release notes](docs/releases/v0.7.9.md) for the observed policy, security boundary, validation evidence, and explicitly unavailable controls.
+See [the v0.7.9 release notes](https://github.com/wheakerd/axiom/blob/v0.7.9/docs/releases/v0.7.9.md) for the observed policy, security boundary, validation evidence, and explicitly unavailable controls.
 
 ## 0.7.8 - 2026-08-21
 
@@ -1199,7 +1199,7 @@ See [the v0.7.9 release notes](docs/releases/v0.7.9.md) for the observed policy,
 - Added a byte-distinct V2 host-response schema containing only the five routing and mutation fields needed for evaluation. Candidate 4 publishes fixed observer-derived evidence rather than model-authored prose; route uniqueness and all lifecycle, tool, mutation, privacy, and snapshot gates remain fail closed. Its immutable unreleased-candidate batch passed all 13 fixed cases once without retry, with zero routing, clarification, or mutation regressions. Candidate 3 and every earlier terminal outcome remain frozen.
 - Kept authenticated Claude Code host and lifecycle evaluation explicitly `UNAVAILABLE / NOT-RUN` because no subscription or authenticated session was available; no Claude Code host pass is inferred.
 
-See [the v0.7.8 release notes](docs/releases/v0.7.8.md) for the corpus contract, bounded host method, validation evidence, and known host-observation limits.
+See [the v0.7.8 release notes](https://github.com/wheakerd/axiom/blob/v0.7.8/docs/releases/v0.7.8.md) for the corpus contract, bounded host method, validation evidence, and known host-observation limits.
 
 ## 0.7.7 - 2026-08-21
 
@@ -1214,7 +1214,7 @@ See [the v0.7.8 release notes](docs/releases/v0.7.8.md) for the corpus contract,
 - Preserved the valid-tree aggregate output and exit behavior, including all existing mutation-policy reasons, without adding an installed or third-party runtime dependency.
 - Kept the aggregate runtime at the measured 0.26-second baseline before the version-document update; the final candidate runtime is recorded in the release notes.
 
-See [the v0.7.7 release notes](docs/releases/v0.7.7.md) for module ownership, focused test coverage, runtime evidence, and known host-validation limits.
+See [the v0.7.7 release notes](https://github.com/wheakerd/axiom/blob/v0.7.7/docs/releases/v0.7.7.md) for module ownership, focused test coverage, runtime evidence, and known host-validation limits.
 
 ## 0.7.6 - 2026-08-21
 
@@ -1229,7 +1229,7 @@ See [the v0.7.7 release notes](docs/releases/v0.7.7.md) for module ownership, fo
 - Restricted the pull-request workflow to `contents: read`, an immutable checkout with `persist-credentials: false`, and exact local validators with no secret or write-token path.
 - Preserved GitHub-signature, approved-history, strict-tag, and manifest-version checks for merged and published release targets.
 
-See [the v0.7.6 release notes](docs/releases/v0.7.6.md) for the workflow trust boundary, validation evidence, and live-fork acceptance gap.
+See [the v0.7.6 release notes](https://github.com/wheakerd/axiom/blob/v0.7.6/docs/releases/v0.7.6.md) for the workflow trust boundary, validation evidence, and live-fork acceptance gap.
 
 ## 0.7.5 - 2026-08-21
 
@@ -1244,7 +1244,7 @@ See [the v0.7.6 release notes](docs/releases/v0.7.6.md) for the workflow trust b
 - Made publication validation execute the evidence validator and require the schema, release status, immutable prior-release records, and v0.7.5 release documentation.
 - Marked the checked-in v0.7.5 host status `STATIC-ONLY`; prior-release evidence cannot be promoted to the current release, whose final commit cannot be self-embedded in the commit that creates it.
 
-See [the v0.7.5 release notes](docs/releases/v0.7.5.md) for the evidence boundary, validation results, and post-tag asset option.
+See [the v0.7.5 release notes](https://github.com/wheakerd/axiom/blob/v0.7.5/docs/releases/v0.7.5.md) for the evidence boundary, validation results, and post-tag asset option.
 
 ## 0.7.4 - 2026-08-21
 
@@ -1254,7 +1254,7 @@ See [the v0.7.5 release notes](docs/releases/v0.7.5.md) for the evidence boundar
 - Kept `SessionStart` with the `compact` matcher as the single Axiom routing injection after both manual and automatic compaction, and synchronized the public lifecycle and troubleshooting guidance.
 - Added publication fixtures that reject a restored `PreCompact` context loader or a Claude Code `SessionStart` matcher that omits `compact`.
 
-See [the v0.7.4 release notes](docs/releases/v0.7.4.md) for validation evidence and known limits.
+See [the v0.7.4 release notes](https://github.com/wheakerd/axiom/blob/v0.7.4/docs/releases/v0.7.4.md) for validation evidence and known limits.
 
 ## 0.7.3 - 2026-08-20
 
@@ -1293,7 +1293,7 @@ See [the v0.7.4 release notes](docs/releases/v0.7.4.md) for validation evidence 
 - Made post-consolidation cleanup independently authorized and recoverable via a persisted `cleanupReady` state.
 - Pinned every third-party GitHub Action to an immutable commit and added a publication guard against moving action references.
 
-See [the v0.7.0 release notes](docs/releases/v0.7.0.md) for validation evidence and known limits.
+See [the v0.7.0 release notes](https://github.com/wheakerd/axiom/blob/v0.7.0/docs/releases/v0.7.0.md) for validation evidence and known limits.
 
 ## 0.6.1 - 2026-08-18
 
@@ -1304,7 +1304,7 @@ See [the v0.7.0 release notes](docs/releases/v0.7.0.md) for validation evidence 
 - Repaired the agents-architect validation route to its sibling instruction document contract.
 - Qualified host-controlled auto-update behavior and documented safe disable and removal workflows.
 
-See [the v0.6.1 release notes](docs/releases/v0.6.1.md) for validation evidence and known limits.
+See [the v0.6.1 release notes](https://github.com/wheakerd/axiom/blob/v0.6.1/docs/releases/v0.6.1.md) for validation evidence and known limits.
 
 ## 0.6.0 - 2026-08-18
 
@@ -1320,7 +1320,7 @@ See [the v0.6.1 release notes](docs/releases/v0.6.1.md) for validation evidence 
 - Kept rollback, interrupted execution, compaction, and model or agent handoff as post-activation evidence rather than autonomous reconciliation triggers.
 - Added focused routing and evidence scenarios for preview/apply boundaries, partial rollback, normative constraints, worker conflict, and active-chain authority.
 
-See [the v0.6.0 release notes](docs/releases/v0.6.0.md) for validation evidence and known limits.
+See [the v0.6.0 release notes](https://github.com/wheakerd/axiom/blob/v0.6.0/docs/releases/v0.6.0.md) for validation evidence and known limits.
 
 ## 0.5.1 - 2026-08-17
 
@@ -1335,7 +1335,7 @@ See [the v0.6.0 release notes](docs/releases/v0.6.0.md) for validation evidence 
 - Consolidated review-window and candidate-disposition ownership in the context-evidence reference instead of repeating it across update paths.
 - Added a focused compaction regression scenario for task-context maintenance.
 
-See [the v0.5.1 release notes](docs/releases/v0.5.1.md) for validation evidence and known limits.
+See [the v0.5.1 release notes](https://github.com/wheakerd/axiom/blob/v0.5.1/docs/releases/v0.5.1.md) for validation evidence and known limits.
 
 ## 0.5.0 - 2026-08-15
 
@@ -1347,7 +1347,7 @@ See [the v0.5.1 release notes](docs/releases/v0.5.1.md) for validation evidence 
 
 - Extended the shared router, public documentation, Codex interface metadata, and offline routing scenarios for task reviews without adding telemetry, persistent logs, background work, or new mutation authority.
 
-See [the v0.5.0 release notes](docs/releases/v0.5.0.md) for validation evidence and known limits.
+See [the v0.5.0 release notes](https://github.com/wheakerd/axiom/blob/v0.5.0/docs/releases/v0.5.0.md) for validation evidence and known limits.
 
 ## 0.4.2 - 2026-08-12
 
@@ -1358,7 +1358,7 @@ See [the v0.5.0 release notes](docs/releases/v0.5.0.md) for validation evidence 
 - Required task-history inspection to reach the established review-window boundary while keeping raw tool replay proportional to candidate decisions.
 - Prevented newest-phase-only extraction from being reported as a complete task review and separated review coverage from the number of accepted updates.
 
-See [the v0.4.2 release notes](docs/releases/v0.4.2.md) for validation evidence and known limits.
+See [the v0.4.2 release notes](https://github.com/wheakerd/axiom/blob/v0.4.2/docs/releases/v0.4.2.md) for validation evidence and known limits.
 
 ## 0.4.1 - 2026-08-12
 
@@ -1368,7 +1368,7 @@ See [the v0.4.2 release notes](docs/releases/v0.4.2.md) for validation evidence 
 - Added explicit `instruction-gap`, `routing-gap`, `validation-gap`, `expected-live-verification`, and `one-off-code-defect` dispositions so durable guidance remains scoped and implementation defects stay in source or regression tests under separate authorization.
 - Applied the retrieval-friction review to both `effective-instructions` and `effective-instructions:preview`, including required reporting of source checks that remain necessary.
 
-See [the v0.4.1 release notes](docs/releases/v0.4.1.md) for validation evidence and known limits.
+See [the v0.4.1 release notes](https://github.com/wheakerd/axiom/blob/v0.4.1/docs/releases/v0.4.1.md) for validation evidence and known limits.
 
 ## 0.4.0 - 2026-08-10
 
@@ -1384,7 +1384,7 @@ See [the v0.4.1 release notes](docs/releases/v0.4.1.md) for validation evidence 
 - Shortened the reversible-change parent while retaining rollback, authorization, sensitive-data, and layered completion gates before mutation.
 - Updated shared documentation, UI metadata, both platform wrappers, and publication validation for the five-skill source without changing the hook behavior.
 
-See [the v0.4.0 release notes](docs/releases/v0.4.0.md) for validation evidence and known limits.
+See [the v0.4.0 release notes](https://github.com/wheakerd/axiom/blob/v0.4.0/docs/releases/v0.4.0.md) for validation evidence and known limits.
 
 ## 0.3.1 - 2026-07-31
 
@@ -1400,7 +1400,7 @@ See [the v0.4.0 release notes](docs/releases/v0.4.0.md) for validation evidence 
 - Extended the read-only repository guard workflow to run both distribution drift and publication checks without persisting checkout credentials.
 - Synchronized the Codex and Claude Code manifests at version `0.3.1`.
 
-See [the v0.3.1 release notes](docs/releases/v0.3.1.md) for validation evidence and known limits.
+See [the v0.3.1 release notes](https://github.com/wheakerd/axiom/blob/v0.3.1/docs/releases/v0.3.1.md) for validation evidence and known limits.
 
 ## 0.3.0 - 2026-07-29
 
@@ -1415,7 +1415,7 @@ See [the v0.3.1 release notes](docs/releases/v0.3.1.md) for validation evidence 
 - Moved the Codex hook definition to `hooks/codex-hooks.json` and declared the Claude Code hook separately at `hooks/claude-hooks.json`.
 - Synchronized both plugin manifests at version `0.3.0`.
 
-See [the v0.3.0 release notes](docs/releases/v0.3.0.md) for evidence and known limits.
+See [the v0.3.0 release notes](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/releases/v0.3.0.md) for evidence and known limits.
 
 ## 0.2.1 - 2026-07-29
 

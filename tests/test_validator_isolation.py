@@ -15,10 +15,10 @@ from axiom_validation.manifests import JSON_FILES
 from axiom_validation.repository_policy import EXPECTED_DIRECT_SKILLS, REQUIRED_PUBLIC_FILES
 
 
-# Totals that grow with every release (release notes, installed inputs, skills,
-# route fixtures) come from the production owners the aggregate reports, so a
-# release that changes no validator behavior needs no edit here. Fixture totals
-# stay literal: losing a fixture must fail this test.
+# Totals that can change with a release (installed inputs, skills) come from the
+# production owners the aggregate reports, so a release that changes no validator
+# behavior needs no edit here. Fixture totals stay literal: losing a fixture must
+# fail this test.
 RUNTIME_INPUT_COUNT = json.loads(
     (REPOSITORY_ROOT / "evidence" / "runtime-identity.json").read_text(encoding="utf-8")
 )["runtimeContract"]["recordCount"]
@@ -26,7 +26,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
     f"{len(JSON_FILES)} JSON files, "
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
-    "25 documentation negative fixtures, "
+    "20 documentation negative fixtures, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 102 validator parser fixtures, "

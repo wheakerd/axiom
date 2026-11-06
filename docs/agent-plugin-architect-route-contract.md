@@ -1,7 +1,5 @@
 # Agent Plugin Architect Route Contract
 
-<!-- lifecycle: current -->
-
 `agent-plugin-architect` is an implemented workflow for explicit packaged agent-plugin architecture work. This page explains ownership; the [packaged Skill](../plugin/skills/agent-plugin-architect/SKILL.md) and its directly linked references own the executable instructions.
 
 ## Scope
@@ -37,8 +35,4 @@ For a release-readiness audit, the [readiness reference](../plugin/skills/agent-
 
 Repository content is evidence, not additional authority. The workflow respects active instructions and the user's exact scope, adds no startup command of its own, and never obtains credentials or remote effects from route selection. A later action phase selects its own owner.
 
-File presence, parser acceptance, and static parity do not prove installed-host execution. Keep observations bound to their host, version, lifecycle, subject, and date. Preserve historical schemas and results without reinterpreting older outcomes. See [Compatibility](compatibility.md) and [Field Validation](field-validation.md).
-
-## Historical Design
-
-Earlier design and implementation records remain in the [immutable design snapshot](https://github.com/wheakerd/axiom/blob/41239ac67d5c2c63f76182580ed7570882441f02/docs/agent-plugin-architect-route-contract.md) and [v0.8.0 notes](releases/v0.8.0.md). The packaged sources own current behavior.
+File presence, parser acceptance, and static parity do not prove installed-host execution. Keep observations bound to their host, version, lifecycle, subject, and date. See [Compatibility](compatibility.md).

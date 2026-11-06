@@ -27,7 +27,7 @@ Run additional checks required by the changed surface, read the final diff, conf
 | Skills, routing, or always-loaded context | [Runtime Changes](runtime-changes.md) |
 | Hooks or Hook workflows | [Hook runtime integration](#hook-runtime-integration) |
 | Documentation or navigation | [Documentation Policy](documentation-policy.md#validation-expectations) |
-| Compatibility observations | [Field Validation](../field-validation.md) |
+| Compatibility observations | [Compatibility](../compatibility.md#report-a-compatibility-result) |
 | Release documents or provenance | [Release Documentation And Evidence](release-documentation.md) and [Repository Governance](../repository-governance.md) |
 
 ## Code Security Scanning
@@ -64,7 +64,7 @@ Keep fixture names in failure messages, and let the aggregate reporter add the p
 
 The aggregate summary's `immutable external action and image pins` total adds one for each validated full-SHA GitHub Action, digest-pinned `docker://` action, workflow job or service image, and digest-pinned remote Dockerfile source. Its parenthetical breakdown reports remote `FROM` sources as `Dockerfile base-image pins` and digest-pinned `COPY --from` or `RUN --mount=from` sources as `other Dockerfile input pins`. `FROM scratch`, references to an already validated local build stage, and validated action-local `COPY` or `ADD` sources are accepted but do not increase either Dockerfile count.
 
-A fixture is test data, never a host observation. The [evidence inventory](../field-validation.md#evidence-directory) owns the runtime-history bindings; the [experiment archive](../field-validation.md#archived-experiments) owns retired observations, formats, and methods.
+A fixture is test data, never a host observation.
 
 ## Optional Native Package Inspection
 
@@ -80,10 +80,10 @@ claude plugin validate --strict .
 
 It checks the Claude Code manifest and shared Skill metadata against the installed Claude Code version; record that version with the result. It does not install the plugin or run its Hook. See [Compatibility](../compatibility.md#claude-code-package-format-and-validation).
 
-The repository aggregate owns Axiom's strict package checks. The retired `plugin-creator` allowlist validator is not an optional diagnostic or fallback; the [v0.13.0 migration notice](../releases/v0.13.0.md#retired-validator) records its replacement. A missing tool is `unavailable`, not `passed`. Do not install, update, or patch system tooling merely to satisfy a contribution check.
+The repository aggregate owns Axiom's strict package checks. A missing tool is `unavailable`, not `passed`. Do not install, update, or patch system tooling merely to satisfy a contribution check.
 
 ## Host Observations And Publication
 
-Static validation and native parsing check structure; they do not establish how a host's model behaves, and the repository measures no host model behavior for a release. Use [Field Validation](../field-validation.md#recording-a-result) to report an observation of an installed host. Never relabel earlier evidence as a new host, lifecycle, version, or date.
+Static validation and native parsing check structure; they do not establish how a host's model behaves, and the repository measures no host model behavior for a release. Use [Report A Compatibility Result](../compatibility.md#report-a-compatibility-result) to report an observation of an installed host. Never relabel earlier evidence as a new host, lifecycle, version, or date.
 
-The checked-in release status binds the tree to its version and runtime identity and never records publication or an observation. A later observation is a separate artifact bound to its immutable subject. The Release pipeline requires no observation record for any release candidate: repository policy revision 138 removed the earlier requirement, and revision 141 archived the routing evaluations, as [Field Validation](../field-validation.md#archived-experiments) records. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).
+The checked-in release status binds the tree to its version and runtime identity and never records publication or an observation. A later observation is a separate artifact bound to its immutable subject. The Release pipeline requires no observation record for any release candidate. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).
