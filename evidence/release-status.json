@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2",
+  "schemaVersion": "3",
   "targetRelease": {
     "version": "0.27.2",
     "tag": "v0.27.2",
@@ -8,44 +8,10 @@
   },
   "runtimeIdentity": {
     "pluginVersion": "0.27.2",
-    "repositoryPolicyRevision": 142,
+    "repositoryPolicyRevision": 143,
     "runtimeContractSchemaVersion": "4",
     "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65",
     "inputManifest": "axiom_validation/runtime-contract-inputs-v4.json",
     "history": "evidence/runtime-contract-history-v4.json"
-  },
-  "status": "STATIC-ONLY",
-  "currentHostEvidence": [
-    {
-      "host": "claude-code",
-      "hostVersion": null,
-      "lifecycleSource": null,
-      "observationSubject": "installed-runtime-contract",
-      "observedAt": null,
-      "pluginVersion": "0.27.2",
-      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65",
-      "status": "not-run",
-      "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
-    },
-    {
-      "host": "codex",
-      "hostVersion": null,
-      "lifecycleSource": null,
-      "observationSubject": "installed-runtime-contract",
-      "observedAt": null,
-      "pluginVersion": "0.27.2",
-      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65",
-      "status": "not-run",
-      "reason": "No immutable-release-bound installed-host observation has been recorded for this candidate."
-    }
-  ],
-  "priorReleaseEvidence": [],
-  "rules": {
-    "priorEvidenceIsCurrent": false,
-    "hostPassRequiresImmutableBinding": true,
-    "postTagReleaseAssetMaySupplementStatus": true,
-    "checkedInStatusMayBePromotedByAsset": false,
-    "futureEvidenceRequiresRuntimeIdentity": true,
-    "identicalRuntimeDigestDoesNotClaimNewObservation": true
   }
 }

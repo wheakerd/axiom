@@ -40,7 +40,7 @@ Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussi
 
 ## Candidate And Historical Records
 
-The [checked-in release status](../evidence/release-status.json) owns the source candidate's version, binding, and host-observation status. Candidate wording is preserved at its original source state; consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
+The [checked-in release status](../evidence/release-status.json) owns the source candidate's version and binding. Candidate wording is preserved at its original source state; consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
 
 - [Changelog](../CHANGELOG.md) records user-visible changes and required action.
 - [Version notes](releases/) preserve version-specific migrations, architecture, compatibility, security, and evidence. Earlier candidate wording describes its original source state, not the current publication state.

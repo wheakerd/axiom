@@ -27,7 +27,7 @@ Current guides, concepts, references, and contributor procedures describe the im
 
 Version information is therefore not limited to change history. A format such as `schema-v3.json`, an immutable evidence link, or an exact compatibility boundary is part of a usable contract. Do not remove it merely to make prose appear version-neutral. Conversely, a heading such as "Current vX.Y.Z" or a manually copied measurement table does not belong in a maintained guide when its canonical source already supplies that value.
 
-When reviewing a current document, distinguish an implemented capability from a plan, an example, and an observed result. Update the capability description from source, keep examples tied to their actual contract, and preserve `NOT-RUN` or other evidence limits until new observations justify a change.
+When reviewing a current document, distinguish an implemented capability from a plan, an example, and an observed result. Update the capability description from source, keep examples tied to their actual contract, and preserve stated evidence limits until new observations justify a change.
 
 ## Document Classes
 

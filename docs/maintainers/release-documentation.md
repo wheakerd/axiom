@@ -9,7 +9,7 @@ This policy separates release communication from release evidence. It applies fi
 | `CHANGELOG.md` | Users and integrators | What changed, behavioral impact, and required action | Checked in with the candidate; canonical user-facing history |
 | `docs/releases/v<version>.md` | Maintainers and auditors | Material migration, architecture, security, compatibility, or evidence detail | Checked in only when that detail is warranted; may truthfully describe candidate limitations |
 | GitHub Release body | Release consumers | A concise tagged summary and immutable links to deeper documentation | Rendered from the tagged Changelog entry; never copied from the version note |
-| Candidate evidence | Reviewers | What the source commit can prove before publication | Checked-in records and candidate reports; future remote states remain pending, not-run, or unavailable |
+| Candidate evidence | Reviewers | What the source commit can prove before publication | Checked-in records and candidate reports; future remote states remain pending or unavailable |
 | Final immutable release evidence | Auditors | What tag, Release, assets, signatures, Latest state, and remote postconditions actually exist | Established only after publication and authoritative read-back |
 
 No surface grants commit, tag, Release, asset-upload, publication, or Latest authority. Preparation and validation remain separate from those external actions.
@@ -110,7 +110,7 @@ Final evidence exists only after all of the following are directly verified:
 5. GitHub Latest identifies the intended Release when that transition was authorized; and
 6. required post-publication signature and publication checks pass.
 
-An attestation generated while a draft is mutable is a candidate artifact. It becomes part of final evidence only when the immutable Release and all remote postconditions above are verified. A failed, unavailable, unknown, or not-run result remains separate and is never relabeled by publication.
+An attestation generated while a draft is mutable is a candidate artifact. It becomes part of final evidence only when the immutable Release and all remote postconditions above are verified. A failed, unavailable, unknown, or unexecuted result remains separate and is never relabeled by publication.
 
 ## Fix-Forward Boundary
 

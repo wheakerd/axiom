@@ -54,7 +54,7 @@ Write current guides and references for the implementation in the same source sn
 
 ## Required local checks
 
-Run the publication aggregate, full unit suite, and whitespace check listed in [Contributor Validation](docs/maintainers/validation.md#required-checks), plus any checks required for the changed surface. Record exact commands and outcomes, review the final diff, and inspect the worktree for unrelated paths. A missing tool or unobserved host result is unavailable or `NOT-RUN`, not a passing result. Static checks do not establish installed-session behavior.
+Run the publication aggregate, full unit suite, and whitespace check listed in [Contributor Validation](docs/maintainers/validation.md#required-checks), plus any checks required for the changed surface. Record exact commands and outcomes, review the final diff, and inspect the worktree for unrelated paths. A missing tool or an unobserved host result is not a passing result. Static checks do not establish installed-session behavior.
 
 ## Pull requests
 

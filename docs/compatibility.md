@@ -1,20 +1,16 @@
 # Compatibility
 
-Axiom's compatibility claims are evidence-bounded. Checked-in integration, static validation, an observed host session, and an independent reproduction are different levels. A prior observation remains attached to its original host, version, lifecycle, commit, and date; it is never silently promoted to the current release.
+Axiom's compatibility claims are bounded by what the repository checks. It checks structure: for each release, the manifests, marketplace catalogs, Hooks, wrappers, Skills, and documentation parse and agree with each other. It does not measure how a host's model behaves with the plugin installed, for this release or any other. An earlier observation stays attached to its original host, version, lifecycle, commit, and date; it is never promoted to the current release.
 
 ## Support Levels
 
 | Level | Meaning |
 | --- | --- |
-| `CHECKED-IN` | The repository contains the named manifest, Hook, wrapper, Skill, or contract. |
-| `STATICALLY-VALIDATED` | Deterministic repository checks passed for an identified tree. This is not host execution. |
-| `HOST-OBSERVED` | Behavior was observed in a named host/version and lifecycle against an immutable subject. |
-| `EXTERNALLY-REPRODUCED` | An independent user supplied a reviewable result for the named subject. |
-| `NOT-VERIFIED` | The claim has not been checked at the level it requires. |
-| `NOT-RUN` | The case was intentionally or procedurally not executed. |
-| `UNAVAILABLE` | A required host, interface, permission, authenticated session, or evidence source was unavailable. |
+| Checked in | The repository contains the named manifest, Hook, wrapper, Skill, or contract. |
+| Statically validated | Deterministic repository checks passed for an identified tree. This is not host execution. |
+| Observed | Someone observed the behavior in a named host version and lifecycle against an immutable release and reported it. |
 
-These labels are not interchangeable. A passing static validator cannot turn a `NOT-RUN` or `UNAVAILABLE` host case into a pass. See [Field Validation](field-validation.md) for the reporting protocol.
+A passing static check is not an observation. See [Field Validation](field-validation.md) for how to report one.
 
 ## Supported Hosts
 
@@ -45,16 +41,14 @@ Current package checks use the repository's publication aggregate. A native pack
 
 ## Current Bounded Status
 
-The machine-readable [release status](../evidence/release-status.json) is the canonical static summary of the checked-in tree: it binds the current plugin and runtime identity, keeps current host states separate from prior evidence, and requires an immutable subject before a host pass can be claimed. By design it stays `STATIC-ONLY` and never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
+The machine-readable [release status](../evidence/release-status.json) binds the checked-in tree to its plugin version and runtime identity. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state. Read its `targetRelease` and `runtimeIdentity` fields for the candidate version, immutable binding, and installed-runtime contract schema.
 
-The table summarizes that record. Read its `targetRelease` and `runtimeIdentity` fields for the candidate version, immutable binding, and installed-runtime contract schema.
+| Host | What the repository checks for each release |
+| --- | --- |
+| Codex | The package and Hook are checked in and pass the deterministic package and contract checks. |
+| Claude Code | The package and Hook are checked in and pass the deterministic package and contract checks; strict `claude plugin validate` is available as a native check. |
 
-| Host | Repository support | Current installed-host evidence | Current claim |
-| --- | --- | --- | --- |
-| Codex | `CHECKED-IN`; deterministic package and contract checks are available | `NOT-RUN` | `STATIC-ONLY` |
-| Claude Code | `CHECKED-IN`; deterministic package and contract checks and strict `claude plugin validate` are available | `NOT-RUN` | `STATIC-ONLY` |
-
-Windows has no recorded observation on either host. The cross-platform CI job runs the checked-in Hook commands on a Windows runner, the Codex wrapper under `cmd.exe` and the Claude Code command under Git Bash; Claude Code without Git Bash falls back to PowerShell, which does not run the command.
+The repository records no observation of an installed host for the current release. The cross-platform CI job runs the checked-in Hook commands on a Windows runner, the Codex wrapper under `cmd.exe` and the Claude Code command under Git Bash; Claude Code without Git Bash falls back to PowerShell, which does not run the command.
 
 A source candidate cannot establish a future signed merge, immutable tag, final workflow result, or post-publication host observation.
 
@@ -78,7 +72,7 @@ Static workflow execution on native runners is useful process-boundary evidence 
 
 ## Report A Compatibility Result
 
-Follow [Recording A Result](field-validation.md#recording-a-result) for the read-only test, required host and subject details, sanitized reporting fields, and offline evidence-validation command. It owns the reporting procedure for both compatibility and routing-case reports. Preserve each observed outcome and leave unexecuted lifecycle cases `NOT-RUN`.
+Follow [Recording A Result](field-validation.md#recording-a-result) for the read-only test, required host and subject details, and sanitized reporting fields. It owns the reporting procedure for both compatibility and routing-case reports. Report what you observed and say which cases you did not run.
 
 ## Evidence Paths
 
@@ -96,7 +90,7 @@ Historical sources:
 - [routing-context history](https://github.com/wheakerd/axiom/tree/v0.27.2/evals/context-budget/results); and
 - [version notes](releases/).
 
-These collections retain their original identities and terminal `FAIL`, `UNKNOWN`, `NOT-RUN`, and `UNAVAILABLE` states. Read the records directly for case-level, observer, commit/tree, token, timing, and investigation detail; those historical streams are intentionally not reproduced in this current user reference.
+These collections retain their original identities and outcomes, including failed, unknown, and unexecuted cases. Read the records directly for case-level, observer, commit/tree, token, timing, and investigation detail; those historical streams are intentionally not reproduced in this current user reference.
 
 ## Version Interpretation
 
