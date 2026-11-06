@@ -9,6 +9,7 @@ The table renders the ledger, newest revision first; `python3 -B scripts/render-
 <!-- policy-ledger:current:start -->
 | Revision | Recorded on | Source Issue | Baseline commit | Summary |
 | --- | --- | --- | --- | --- |
+| 143 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `7490d11f746d70fbfd9753b5321b5e3fb7aee061` | Remove the repository's host-status vocabulary: Compatibility states once what a release checks and what it does not measure; the release status keeps only its version and runtime-identity binding. |
 | 142 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `433f5a6f2e40efa4f9ad0ee36776ccb1592d1468` | Remove wording constraints: the offline route, Git, external-action, and rollback decision models, the phrase anchors, and the skill readability contract; tests that run real Git procedures stay. |
 | 141 | 2026-11-06 | [#271](https://github.com/wheakerd/axiom/issues/271) | `5107d16025dbf1fe06b1eb3784fb8863d49e53ff` | Remove model-behavior measurement from main: routing evaluations, context-budget records, and compatibility-evidence records and validators; history links point at release tags; gate ceiling stays. |
 | 140 | 2026-11-06 | none | `bf16ade1e0f1a1cfa2d0e945141ea1ba71892bb4` | Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.2. |

@@ -1,10 +1,10 @@
 # Field Validation
 
-Use this page to report a bounded observation of Axiom in Codex or Claude Code. Current support and installed-host status are owned by [Compatibility](compatibility.md) and [release-status.json](../evidence/release-status.json). A static repository check does not establish installation, Skill discovery, routing, or lifecycle behavior in a host session.
+Use this page to report a bounded observation of Axiom in Codex or Claude Code. Current support is owned by [Compatibility](compatibility.md) and [release-status.json](../evidence/release-status.json). A static repository check does not establish installation, Skill discovery, routing, or lifecycle behavior in a host session.
 
 ## Evidence Levels
 
-Keep static validation, native package parsing, installed-host observation, and independent reproduction separate. Preserve `PASS`, `FAIL`, `NOT-RUN`, `UNKNOWN`, and `UNAVAILABLE` as distinct outcomes. Every observation retains its original version, commit, host, lifecycle, date, and evidence limits.
+Keep static validation, native package parsing, installed-host observation, and independent reproduction separate. Report a pass, a failure, an unknown result, and a case you did not run as different outcomes. Every observation retains its original version, commit, host, lifecycle, date, and evidence limits.
 
 ## Evidence Directory
 
@@ -13,7 +13,7 @@ Keep static validation, native package parsing, installed-host observation, and 
 | File | Role and lifecycle |
 | --- | --- |
 | [runtime-identity.json](../evidence/runtime-identity.json) | Current plugin version, policy revision, runtime schema, digest, and input count |
-| [release-status.json](../evidence/release-status.json) | Current candidate binding and host-observation state; derived identity fields must agree with the canonical identity |
+| [release-status.json](../evidence/release-status.json) | Current candidate binding; derived identity fields must agree with the canonical identity |
 | [repository-policy-revisions-v1.json](../evidence/repository-policy-revisions-v1.json) | Append-only repository policy ledger; older entries retain their original baselines and meaning |
 | [runtime-contract-history-v3.json](../evidence/runtime-contract-history-v3.json) | Immutable release subjects and digests calculated under the current runtime schema v3 |
 | [runtime-contract-history-v2.json](../evidence/runtime-contract-history-v2.json) | Immutable release subjects and digests calculated under runtime schema v2 |
@@ -26,7 +26,7 @@ The history files are schema-specific bindings, not duplicate release catalogs o
 1. Use a disposable, non-sensitive workspace and a read-only request. Place the workspace in a directory with no `AGENTS.md` or `CLAUDE.md` in itself or in any ancestor and no enclosing Git repository, so the host loads no project instruction file beside Axiom.
 2. Record the exact host version, operating system, immutable Axiom tag and commit, installation method, and lifecycle source.
 3. Compare the installed Hook with the [Hook Reference](reference/hooks.md).
-4. Follow the routed example and no-route control in [Getting Started](guides/getting-started.md). A fresh session does not prove manual or automatic compaction behavior; leave unobserved cases `NOT-RUN`.
+4. Follow the routed example and no-route control in [Getting Started](guides/getting-started.md). A fresh session does not prove manual or automatic compaction behavior; say which cases you did not observe.
 5. Retain only minimal sanitized facts. Never include credentials, private paths, raw transcripts, session identifiers, or external-service content.
 6. Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) or the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml).
 

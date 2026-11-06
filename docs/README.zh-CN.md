@@ -40,7 +40,7 @@
 
 ## 候选与历史记录
 
-[签入的发布状态](../evidence/release-status.json)负责源码候选的版本、绑定与宿主观测状态。候选措辞按其原始源码状态保留；发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
+[签入的发布状态](../evidence/release-status.json)负责源码候选的版本与绑定。候选措辞按其原始源码状态保留；发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
 
 - [更新日志](../CHANGELOG.md)记录用户可见的变更及需要的操作。
 - [版本说明](releases/)保留与特定版本相关的迁移、架构、兼容性、安全与证据。较早的候选措辞描述的是其原始源码状态，而不是当前的发布状态。

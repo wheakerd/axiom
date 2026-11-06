@@ -26,7 +26,7 @@ Axiom installs Markdown Skills and foreground Hook definitions. Explicit continu
 - Simple-task child model selection belongs to `delegate-simple-task`. Its [activation](../../plugin/skills/delegate-simple-task/SKILL.md#activation) requires an explicit invocation or a clear delegation request and the user's consent, which the one model-and-brief confirmation can supply; the startup gate's delivery is advisory context for ambiguity, and the host's reasoning level is not a condition. Preserve consent in route metadata, direct requests, and resume behavior before applying assignment permissions.
 - `continuous-progress` inherits the observed model and effort for its workers and successors. Its explicit activation, host capability checks, independent native supervisor, compaction recovery, and shutdown remain separate from simple-task delegation. It must not install a scheduler or change the hook.
 
-When editing a route, review its direct references and examples for accidental permission expansion. State separately whether the change affects matching, planning, mutation authority, stop conditions, rollback, or completion evidence. Review the installed behavior on each supported host when the runtime changes, and report unobserved behavior as `NOT-RUN`.
+When editing a route, review its direct references and examples for accidental permission expansion. State separately whether the change affects matching, planning, mutation authority, stop conditions, rollback, or completion evidence. The repository does not measure installed behavior, so do not describe behavior you did not observe as observed.
 
 ## Always-Loaded Context
 
