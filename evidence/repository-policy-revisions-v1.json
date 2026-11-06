@@ -1112,6 +1112,14 @@
       "sourceIssue": 261,
       "summary": "Release 0.27.2: the gate states its role, binds every stated prohibition, scopes presentation rules to routed turns, spells notices axiom:<skill-name>, and shrinks; agents-architect names its host.",
       "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
+    },
+    {
+      "revision": 140,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "bf16ade1e0f1a1cfa2d0e945141ea1ba71892bb4",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.2.",
+      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
     }
   ]
 }
