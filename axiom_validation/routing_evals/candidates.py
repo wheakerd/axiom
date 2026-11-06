@@ -81,10 +81,8 @@ def validate_candidate_routing_observation(
 ) -> dict[str, Any] | None:
     """Validate one schema v7 record of the current benchmark for a candidate version.
 
-    The record binds the observed candidate commit and tree; it is accepted for a
-    release commit when the observed commit's installed runtime digest equals the
-    release commit's digest, which the Release pipeline checks separately.
-    Returns the subject on success.
+    The record binds the observed candidate commit and tree. Returns the subject
+    on success.
     """
     initial_failure_count = len(failures)
     if type(record) is not dict:
@@ -170,9 +168,8 @@ def check_candidate_routing_observations(
 ) -> int:
     """Validate every candidate-family record, current version included; return the count.
 
-    The current version's records are validated even when its directory is absent, so a
-    missing record set stays visible to the release gate; earlier candidate versions keep
-    the contract their records name.
+    The current version is included even when its directory is absent, in which case it
+    contributes no record; earlier candidate versions keep the contract their records name.
     """
     count = 0
     versions = candidate_version_directories(root)

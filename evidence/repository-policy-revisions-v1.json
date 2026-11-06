@@ -1096,6 +1096,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.1.",
       "runtimeContractDigest": "sha256:6f1286a4fb4c172356f3142f5da42f2aef4901f355f8f636edecef561c2e2c5e"
+    },
+    {
+      "revision": 138,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "cd6a660d92795902c8fb7041c73426c4d06a46cb",
+      "sourceIssue": 267,
+      "summary": "Remove the release pipeline's fresh-session observation record requirement: no release candidate requires a record; the records under evals/results and their static validation stay.",
+      "runtimeContractDigest": "sha256:6f1286a4fb4c172356f3142f5da42f2aef4901f355f8f636edecef561c2e2c5e"
     }
   ]
 }
