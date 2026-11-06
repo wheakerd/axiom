@@ -8,7 +8,7 @@ Keep static validation, native package parsing, installed-host observation, and 
 
 ## Evidence Directory
 
-`evidence/` contains current identity and status, the policy ledger, immutable compatibility formats, runtime digest history, and the checked-in host-observation records that `priorReleaseEvidence` in the release status indexes: currently the v0.19.0 Codex and Claude Code records under `evidence/v0.19.0/`. Synthetic fixtures live under `tests/`; retired observations remain in the [archive](#archived-experiments).
+`evidence/` contains current identity and status, the policy ledger, and runtime digest history. Retired observations, their record formats, and the routing evaluations remain in the [archive](#archived-experiments).
 
 | File | Role and lifecycle |
 | --- | --- |
@@ -18,12 +18,8 @@ Keep static validation, native package parsing, installed-host observation, and 
 | [runtime-contract-history-v3.json](../evidence/runtime-contract-history-v3.json) | Immutable release subjects and digests calculated under the current runtime schema v3 |
 | [runtime-contract-history-v2.json](../evidence/runtime-contract-history-v2.json) | Immutable release subjects and digests calculated under runtime schema v2 |
 | [runtime-contract-history-v1.json](../evidence/runtime-contract-history-v1.json) | Preserved release subjects and digests under runtime schema v1 |
-| [schema-v4.json](../evidence/schema-v4.json) | Compatibility-record format supporting runtime schema v1, v2, or v3 that records each host's declared `SessionStart` sources; use it for current observations |
-| [schema-v3.json](../evidence/schema-v3.json) | Preserved compatibility-record format supporting runtime schema v1, v2, or v3 with the four-source Hook matcher |
-| [schema-v2.json](../evidence/schema-v2.json) | Preserved compatibility-record format for runtime schema v1 |
-| [schema-v1.json](../evidence/schema-v1.json) | Original compatibility format without a runtime identity; also supplies definitions referenced by v2, v3, and v4 |
 
-Compatibility-format versions and runtime-digest schema versions are separate identities. Do not select history from the compatibility-format number alone. The history files are schema-specific bindings, not duplicate release catalogs or host observations; none promises to list every published tag. Keep existing schema definitions and history entries unchanged. A new format needs its own version rather than repurposing an old filename.
+The history files are schema-specific bindings, not duplicate release catalogs or host observations; none promises to list every published tag. Keep existing history entries unchanged. A new format needs its own version rather than repurposing an old filename.
 
 ## Recording A Result
 
@@ -34,18 +30,7 @@ Compatibility-format versions and runtime-digest schema versions are separate id
 5. Retain only minimal sanitized facts. Never include credentials, private paths, raw transcripts, session identifiers, or external-service content.
 6. Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) or the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml).
 
-New machine-readable compatibility records use [schema v4](../evidence/schema-v4.json) and bind the exact installed-runtime digest. Schema v4 records each host's declared `SessionStart` sources; records from `0.16.0` need it because both Hooks add `fork`. Format v3 remains accepted for four-source Hooks, format v2 for historical runtime-v1 subjects, and original v1 records remain readable without being rewritten. Validate an external record against its existing immutable subject:
-
-```bash
-python3 scripts/check-compatibility-evidence.py \
-  --record /absolute/path/compatibility.json \
-  --expected-tag vX.Y.Z \
-  --expected-commit <40-character-commit>
-```
-
-The validator selects history by the record's runtime schema and checks its commit and digest against that history when present. For the current release, the caller supplies the already verified tag and commit; the record must match those arguments and the current runtime identity. This offline command does not query Git or a remote service to prove tag existence, signatures, or a host observation. Verify the immutable subject separately before using `--record`.
-
-Validation does not edit the checked-in current status or authorize an observation, installation, or publication. A checked-in `STATIC-ONLY` record cannot claim its future commit or host result; a later same-release observation is a separate artifact. An empty `priorReleaseEvidence` list means no retained records are indexed in this tree, not that historical observations never existed. See [Routing Evaluations](../evals/README.md#static-validation) for the separate optional routing-observation contract.
+The repository does not validate machine-readable compatibility records: repository policy revision 141 archived their formats and validator with the routing evaluations.
 
 ## Archived Experiments
 
@@ -59,7 +44,16 @@ Repository policy revision 42 retires the v0.7.4 compatibility snapshots and the
 
 Before removal, every retired file was compared byte-for-byte with that commit. Original source and result bindings remain inside the archived records. Retention in Git does not promote any old result to current evidence.
 
-The current aggregate and CI no longer run the no-Hook experiment, build its bundle, import its test harness, or fetch its source commit. Schema regression uses an explicitly synthetic fixture under `tests/fixtures/`; it is never counted as a host observation. Current schemas and runtime histories remain available for validating external evidence against its original subject.
+Repository policy revision 141 retires the routing evaluations, the routing-context budget records, and the compatibility-evidence records, formats, and validator from the current release tree, because the repository no longer measures host model behavior. Their exact files are preserved at the immutable release tag `v0.27.2`:
+
+- [routing corpora, benchmark profiles, schemas, observer definitions, and observation records](https://github.com/wheakerd/axiom/tree/v0.27.2/evals), with their [narrative](https://github.com/wheakerd/axiom/blob/v0.27.2/evals/README.md);
+- [routing-context budget method and per-version records](https://github.com/wheakerd/axiom/tree/v0.27.2/evals/context-budget);
+- [v0.19.0 host observation records](https://github.com/wheakerd/axiom/tree/v0.27.2/evidence/v0.19.0) and the [compatibility-record formats](https://github.com/wheakerd/axiom/tree/v0.27.2/evidence); and
+- [their validators](https://github.com/wheakerd/axiom/tree/v0.27.2/axiom_validation), [commands](https://github.com/wheakerd/axiom/tree/v0.27.2/scripts), and [tests](https://github.com/wheakerd/axiom/tree/v0.27.2/tests).
+
+Version notes link each record at the tag of the release that carried it.
+
+The current aggregate and CI no longer run the no-Hook experiment, build its bundle, import its test harness, or fetch its source commit. The runtime histories remain available for checking a release subject against its recorded digest.
 
 Historical reproduction belongs to an explicitly scoped task using a separate checkout of the archive commit and its original prerequisites. Restoring source alone grants no authority to install, authenticate, run models, or publish.
 

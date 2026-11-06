@@ -18,7 +18,6 @@ from .release_versions import (
     parse_production_release_tag,
     parse_production_release_version,
 )
-from .routing_evals import validate_external_routing_observation
 from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonical_yaml_document
 
 
@@ -169,15 +168,7 @@ def validate_release_asset(
     path: Path, subject: dict[str, str], failures: list[str], *, root: Path
 ) -> None:
     if not uses_repository_checks(subject["version"]):
-        validate_external_routing_observation(
-            path,
-            expected_version=subject["version"],
-            expected_tag=subject["tag"],
-            expected_commit=subject["commit"],
-            expected_tree=subject["tree"],
-            failures=failures,
-            root=root,
-        )
+        failures.append("release policy records apply from v0.11.0 onward")
         return
     try:
         canonical = path.resolve(strict=True)

@@ -56,11 +56,11 @@ The table summarizes that record. Read its `targetRelease` and `runtimeIdentity`
 
 Windows has no recorded observation on either host. The cross-platform CI job runs the checked-in Hook commands on a Windows runner, the Codex wrapper under `cmd.exe` and the Claude Code command under Git Bash; Claude Code without Git Bash falls back to PowerShell, which does not run the command.
 
-A source candidate cannot establish a future signed merge, immutable tag, final workflow result, or post-publication host observation. See [Routing Context Budget](../evals/context-budget/README.md) for the current startup-document measurement and its separate static evidence boundary.
+A source candidate cannot establish a future signed merge, immutable tag, final workflow result, or post-publication host observation.
 
-An identical runtime digest may make older evidence relevant to the same bytes, but it does not create a new observation or change the older record's host, version, date, lifecycle, or status. From repository policy revision 118 until revision 138, a release candidate that changed a bundled route also carried checked-in fresh-session routing observation records for both hosts under `evals/results/`, as [Candidate Observations](../evals/README.md#candidate-observations) describes; the 0.22.0 and 0.22.1 releases predate that requirement, and from revision 138 no release requires a record.
+An identical runtime digest may make older evidence relevant to the same bytes, but it does not create a new observation or change the older record's host, version, date, lifecycle, or status. From repository policy revision 118 until revision 138, a release candidate that changed a bundled route also carried checked-in fresh-session routing observation records for both hosts; the 0.22.0 and 0.22.1 releases predate that requirement. From revision 138 no release requires a record, and revision 141 archived the records with the routing evaluations, as [Field Validation](field-validation.md#archived-experiments) records.
 
-On 2026-11-03 the maintainer found that the 0.26.0 fresh-session records were collected in case workspaces inside the maintainer's own repository, so each host also loaded that repository's root instruction file; earlier versions' harnesses were not retained and their workspace location is unknown. The records keep their lifecycle and outcome, the deviation is recorded in the [v0.26.0 note](releases/v0.26.0.md#host-evidence) and Issue #251, and from repository policy revision 130 every case workspace lies outside any instruction chain, as [Host Observation Boundaries](../evals/README.md#host-observation-boundaries) requires.
+On 2026-11-03 the maintainer found that the 0.26.0 fresh-session records were collected in case workspaces inside the maintainer's own repository, so each host also loaded that repository's root instruction file; earlier versions' harnesses were not retained and their workspace location is unknown. The records keep their lifecycle and outcome, the deviation is recorded in the [v0.26.0 note](releases/v0.26.0.md#host-evidence) and Issue #251, and from repository policy revision 130 every case workspace lies outside any instruction chain, as the archived [Host Observation Boundaries](https://github.com/wheakerd/axiom/blob/v0.27.2/evals/README.md#host-observation-boundaries) required.
 
 ## Known Limitations
 
@@ -84,18 +84,16 @@ Follow [Recording A Result](field-validation.md#recording-a-result) for the read
 
 Current sources:
 
-- [current release status](../evidence/release-status.json);
-- [runtime identity](../evidence/runtime-identity.json) and its [policy](runtime-identity.md);
-- [routing-context measurement and record selection](../evals/context-budget/README.md); and
-- [current route corpus](../evals/README.md).
+- [current release status](../evidence/release-status.json); and
+- [runtime identity](../evidence/runtime-identity.json) and its [policy](runtime-identity.md).
 
 Historical sources:
 
-- [v0.19.0 Codex host observation record](../evidence/v0.19.0/codex/linux.json) (prior-release evidence, schema v4);
-- [v0.19.0 Claude Code host observation record](../evidence/v0.19.0/claude-code/linux.json) (prior-release evidence, schema v4);
-- [archived version-bound host records and no-Hook experiments](field-validation.md#archived-experiments);
-- [routing observation records](../evals/results/);
-- [routing-context history](../evals/context-budget/results/); and
+- [v0.19.0 Codex host observation record](https://github.com/wheakerd/axiom/blob/v0.27.2/evidence/v0.19.0/codex/linux.json) (prior-release evidence, schema v4);
+- [v0.19.0 Claude Code host observation record](https://github.com/wheakerd/axiom/blob/v0.27.2/evidence/v0.19.0/claude-code/linux.json) (prior-release evidence, schema v4);
+- [archived version-bound host records, no-Hook experiments, and routing evaluations](field-validation.md#archived-experiments);
+- [routing observation records](https://github.com/wheakerd/axiom/tree/v0.27.2/evals/results);
+- [routing-context history](https://github.com/wheakerd/axiom/tree/v0.27.2/evals/context-budget/results); and
 - [version notes](releases/).
 
 These collections retain their original identities and terminal `FAIL`, `UNKNOWN`, `NOT-RUN`, and `UNAVAILABLE` states. Read the records directly for case-level, observer, commit/tree, token, timing, and investigation detail; those historical streams are intentionally not reproduced in this current user reference.

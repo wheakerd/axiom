@@ -1120,6 +1120,14 @@
       "sourceIssue": null,
       "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.2.",
       "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
+    },
+    {
+      "revision": 141,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "5107d16025dbf1fe06b1eb3784fb8863d49e53ff",
+      "sourceIssue": 271,
+      "summary": "Remove model-behavior measurement from main: routing evaluations, context-budget records, and compatibility-evidence records and validators; history links point at release tags; gate ceiling stays.",
+      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
     }
   ]
 }

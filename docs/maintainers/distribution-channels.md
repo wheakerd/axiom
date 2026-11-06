@@ -47,8 +47,8 @@ The build keeps `.codex-plugin/plugin.json` with every field except `hooks`, cop
 Boundaries:
 
 - The variant is a derived distribution artifact identified by its source tag and archive digest. It is not an Axiom installed-runtime identity: the [runtime identity](../runtime-identity.md) binds versions to the marketplace `plugin/` tree, and the variant's manifest version only names its source.
-- Without the startup Hook nothing loads the routing gate at session start. Route selection relies on each skill's description, and `using-axiom` with its cross-route rules loads only on explicit invocation. Marketplace evidence, including fresh-session smoke and lifecycle observations, does not transfer to the variant.
-- Before a submission decision, observe the variant in a fresh Codex session installed from a local marketplace without the hook: routed requests from the current corpus select their skills from descriptions, near-miss requests stay unselected, and no-route requests continue normally. Record the observation date and host version in the channel row; keep raw results private as the release standard requires for smoke evidence.
+- Without the startup Hook nothing loads the routing gate at session start. Route selection relies on each skill's description, and `using-axiom` with its cross-route rules loads only on explicit invocation. Observations of the marketplace package do not transfer to the variant.
+- Before a submission decision, observe the variant in a fresh Codex session installed from a local marketplace without the hook: routed requests select their skills from descriptions, near-miss requests stay unselected, and no-route requests continue normally. Record the observation date and host version in the channel row.
 - Building the variant installs and publishes nothing. Submission remains a separate maintainer action recorded under [Recording A Submission](#recording-a-submission).
 
 ## Recording A Submission

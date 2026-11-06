@@ -21,8 +21,7 @@ Ask questions and discuss early ideas in [GitHub Discussions](https://github.com
 | [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Private vulnerability reporting and community conduct |
 | [LICENSE](LICENSE) | MIT license; `plugin/LICENSE` is a byte-identical copy that installs with the plugin |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
-| [evidence/](evidence/) | Current identity and status, policy ledger, compatibility schemas, and runtime digest histories |
-| [evals/](evals/README.md) | Versioned routing contracts, context budgets, and separately labeled host observations |
+| [evidence/](evidence/) | Current identity and status, policy ledger, and runtime digest histories |
 | [axiom_validation/](axiom_validation/) | Standard-library publication policy and installed-runtime input classification |
 | [tests/](tests/) | Focused unit tests and isolated policy fixtures |
 | [scripts/](scripts/) | Stable validation entrypoints |
@@ -45,18 +44,13 @@ Hosts install only `plugin/`; the rest of the repository supports development, v
 | Skills, routing, always-loaded context, or Hooks | [Runtime Changes](docs/maintainers/runtime-changes.md) |
 | Documentation, navigation, or public claims | [Documentation Policy](docs/maintainers/documentation-policy.md) |
 | Repository validators, tests, or validation results | [Contributor Validation](docs/maintainers/validation.md) |
-| Routing cases, benchmarks, or host evaluation records | [Routing Evaluations](evals/README.md) |
-| Compatibility observations or evidence formats | [Field Validation](docs/field-validation.md) |
+| Compatibility observations | [Field Validation](docs/field-validation.md) |
 | Repository controls or release provenance | [Repository Governance](docs/repository-governance.md) |
 | Changelog entries, version notes, or release evidence | [Release Documentation And Evidence](docs/maintainers/release-documentation.md) |
 
 English documentation is canonical and stays ASCII. A document may have a Simplified Chinese twin named `<name>.zh-CN.md` that translates prose and table headers only, keeps the same headings, code blocks, generated regions, and link targets, and changes in the same change as its source; the documentation validator rejects drift. Keep descriptions, examples, commands, and trigger definitions in English, and publish no localized aliases. Use `Axiom` for the brand and `axiom` for plugin, marketplace, route, path, and command identifiers. Link to the canonical owner of a fact instead of maintaining a second copy. The [documentation index](docs/README.md) provides task-oriented navigation across these references.
 
 Write current guides and references for the implementation in the same source snapshot, and update them with the code or contract they explain. Put change narratives in the Changelog or version notes. Preserve exact versions for schemas, compatibility requirements, and historical evidence; source support alone does not establish a published release or host observation. Follow the [source and version rules](docs/maintainers/documentation-policy.md#source-and-version-scope) when deciding whether a version belongs in current guidance.
-
-## Routing evaluation contracts
-
-[Routing Evaluations](evals/README.md) owns case versioning, benchmark membership, bounded host runs, and append-only observation records. Follow that contract before changing a case or collecting a result.
 
 ## Required local checks
 

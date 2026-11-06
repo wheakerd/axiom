@@ -6,7 +6,7 @@ import textwrap
 from typing import Any
 
 from .context import REPOSITORY_ROOT, display_path
-from .context_budget import load_json
+from .manifests import load_json
 from .yaml_subset import CanonicalYamlError, parse_skill_frontmatter_document
 
 

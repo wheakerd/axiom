@@ -35,8 +35,6 @@
 | 做出贡献 | [贡献指南](../CONTRIBUTING.md) | 贡献者 |
 | 更改技能、路由或 Hook | [运行时变更](maintainers/runtime-changes.md) | 贡献者 |
 | 运行仓库检查并解读结果 | [贡献者验证](maintainers/validation.md) | 贡献者 |
-| 维护路由用例或收集一次可选观测 | [路由评估](../evals/README.md) | 贡献者与评估者 |
-| 解读路由门控的大小与增长 | [路由上下文预算](../evals/context-budget/README.md) | 贡献者与审阅者 |
 
 在 [GitHub Discussions](https://github.com/wheakerd/axiom/discussions) 提问，并通过 [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) 表单提交可处理的报告。安全问题请按 [SECURITY.md](../SECURITY.md) 中的流程报告；社区期望见[行为准则](../CODE_OF_CONDUCT.md)。
 
@@ -46,9 +44,8 @@
 
 - [更新日志](../CHANGELOG.md)记录用户可见的变更及需要的操作。
 - [版本说明](releases/)保留与特定版本相关的迁移、架构、兼容性、安全与证据。较早的候选措辞描述的是其原始源码状态，而不是当前的发布状态。
-- [证据](../evidence/)与[评估结果](../evals/)包含机器事实与观测，各自带有版本、主体与日期。
-- [归档实验](field-validation.md#archived-experiments)链接到已验证的不可变来源处的已退役宿主快照与无 Hook 工作。
-- [历史路由方法](../evals/history/codex-core-v1-v2.md)保留较早的基准流程与运行叙述；当前契约请使用当前的[评估入口](../evals/README.md)。
+- [证据](../evidence/)包含机器事实，各自带有版本、主体与日期。
+- [归档实验](field-validation.md#archived-experiments)链接到已验证的不可变来源处的已退役宿主快照、无 Hook 工作，以及路由评估及其观测记录。
 
 当前指南请使用上面的任务参考。历史记录既不确立当前的宿主支持，也不把已退役的流程强加于当前工作。
 
@@ -67,9 +64,7 @@
 | `docs/reference/` | 确切的公开技术参考：技能参考与经校验的 Hook 渲染 |
 | `docs/maintainers/` | 运行时编写、验证、文档与发布流程 |
 | `docs/releases/` | 保留的特定版本说明与候选证据 |
-| `evals/README.md` 与 `evals/context-budget/README.md` | 当前的评估契约以及对静态测量的解读 |
-| `evals/history/` 与 `evals/results/` | 历史方法与绑定版本的观测记录 |
-| `evidence/` | 机器可读的身份、状态、策略修订、模式与运行时历史 |
+| `evidence/` | 机器可读的身份、状态、策略修订与运行时历史 |
 | 英文文档旁的 `<name>.zh-CN.md` | 该文档的简体中文翻译；英文为规范版本，翻译与其源文档在同一次变更中更新 |
 
 `docs/getting-started.md` 仍作为历史链接的兼容入口保留。维护中的指南请使用[快速开始](guides/getting-started.zh-CN.md)，完整的仓库地图见[贡献指南](../CONTRIBUTING.md#repository-layout)。

@@ -35,8 +35,6 @@ Current guidance describes the same source snapshot as the document. See [Source
 | Make a contribution | [Contributing](../CONTRIBUTING.md) | Contributors |
 | Change a Skill, route, or Hook | [Runtime Changes](maintainers/runtime-changes.md) | Contributors |
 | Run repository checks and interpret results | [Contributor Validation](maintainers/validation.md) | Contributors |
-| Maintain routing cases or collect an optional observation | [Routing Evaluations](../evals/README.md) | Contributors and evaluators |
-| Interpret routing-gate size and growth | [Routing Context Budget](../evals/context-budget/README.md) | Contributors and reviewers |
 
 Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussions) and file actionable reports through the [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose) forms. Report security concerns through the process in [SECURITY.md](../SECURITY.md), and see the [Code of Conduct](../CODE_OF_CONDUCT.md) for community expectations.
 
@@ -46,9 +44,8 @@ The [checked-in release status](../evidence/release-status.json) owns the source
 
 - [Changelog](../CHANGELOG.md) records user-visible changes and required action.
 - [Version notes](releases/) preserve version-specific migrations, architecture, compatibility, security, and evidence. Earlier candidate wording describes its original source state, not the current publication state.
-- [Evidence](../evidence/) and [evaluation results](../evals/) contain machine facts and observations with their own version, subject, and date.
-- [Archived experiments](field-validation.md#archived-experiments) link the retired host snapshots and no-Hook work at verified immutable sources.
-- [Historical routing methods](../evals/history/codex-core-v1-v2.md) preserve earlier benchmark procedures and run narratives; use the current [evaluation entry point](../evals/README.md) for present contracts.
+- [Evidence](../evidence/) contains machine facts with their own version, subject, and date.
+- [Archived experiments](field-validation.md#archived-experiments) link the retired host snapshots, the no-Hook work, and the routing evaluations with their observation records at verified immutable sources.
 
 Use the task references above for current guidance. Historical records neither establish current host support nor impose retired procedures on current work.
 
@@ -67,9 +64,7 @@ Use the task references above for current guidance. Historical records neither e
 | `docs/reference/` | Exact public technical references: the Skill Reference and the checked Hook rendering |
 | `docs/maintainers/` | Runtime authoring, validation, documentation, and release procedures |
 | `docs/releases/` | Preserved version-specific notes and candidate evidence |
-| `evals/README.md` and `evals/context-budget/README.md` | Current evaluation contracts and interpretation of static measurements |
-| `evals/history/` and `evals/results/` | Historical methods and version-bound observation records |
-| `evidence/` | Machine-readable identity, status, policy revisions, schemas, and runtime histories |
+| `evidence/` | Machine-readable identity, status, policy revisions, and runtime histories |
 | `<name>.zh-CN.md` beside an English document | Simplified Chinese translation of that document; English is canonical, and the translation changes in the same change as its source |
 
 `docs/getting-started.md` remains a compatibility entry for historical links. Use [Getting Started](guides/getting-started.md) for the maintained guide and [Contributing](../CONTRIBUTING.md#repository-layout) for the full repository map.

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import re
-import subprocess
-import sys
 from pathlib import Path
 
 from .context import (
@@ -44,10 +42,6 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "docs/runtime-identity.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
-    "evidence/schema-v1.json",
-    "evidence/schema-v2.json",
-    "evidence/schema-v3.json",
-    "evidence/schema-v4.json",
     "evidence/release-status.json",
     "evidence/runtime-identity.json",
     "evidence/runtime-contract-history-v1.json",
@@ -55,40 +49,10 @@ _BASE_REQUIRED_PUBLIC_FILES = (
     "evidence/runtime-contract-history-v3.json",
     "evidence/runtime-contract-history-v4.json",
     "evidence/repository-policy-revisions-v1.json",
-    "evals/README.md",
-    "evals/history/codex-core-v1-v2.md",
-    "evals/schema-v1.json",
-    "evals/schema-v2.json",
-    "evals/host-response-schema-v1.json",
-    "evals/host-response-schema-v2.json",
-    "evals/host-response-schema-v3.json",
-    "evals/review-response-schema-v1.json",
-    "evals/review-sequences-v1.json",
-    "evals/codex-exec-jsonl-observer-v2.json",
-    "evals/codex-exec-jsonl-observer-v3.json",
-    "evals/claude-code-stream-json-observer-v1.json",
-    "evals/benchmarks/claude-code-core-v5.json",
-    "evals/benchmarks/claude-code-core-v6.json",
-    "evals/review-sequences-claude-code-v1.json",
-    "evals/in-session-routing-v1.json",
-    "evals/in-session-routing-claude-code-v1.json",
-    "evals/benchmarks/codex-core-v1.json",
-    "evals/benchmarks/codex-core-v2.json",
-    "evals/context-budget/README.md",
-    "evals/context-budget/schema-v1.json",
-    "evals/context-budget/schema-v2.json",
-    "evals/context-budget/schema-v3.json",
-    f"evals/context-budget/results/v{RELEASE_VERSION}.json",
-    "evals/results/v0.7.7/codex/linux.json",
-    "evals/results/v0.7.7/codex/linux-recovery-1.json",
-    "evals/results/v0.7.7/codex/linux-recovery-2.json",
-    "evals/results/v0.7.7/claude-code/linux.json",
-    "scripts/check-compatibility-evidence.py",
     "scripts/check-documentation.py",
     "scripts/check-runtime-identity.py",
     "scripts/check-release-evidence.py",
     "scripts/create-release-tag.py",
-    "scripts/measure-routing-context.py",
     "scripts/render-release-facts.py",
     "scripts/release-pipeline.py",
     "scripts/build-listing-variant.py",
@@ -795,37 +759,21 @@ def check_packaged_skills(failures: list[str]) -> None:
         )
 
 
-def check_compatibility_evidence(failures: list[str]) -> tuple[int, int]:
-    """Execute the standalone standard-library evidence validator."""
-    validator = REPOSITORY_ROOT / "scripts" / "check-compatibility-evidence.py"
+ROUTING_GATE_RELATIVE = "plugin/skills/using-axiom/SKILL.md"
+# Both hosts deliver the gate through a startup hook; the ceiling keeps 10% headroom
+# below the 8192-byte instruction-file limit.
+ROUTING_GATE_MAX_BYTES = 8192 * 90 // 100
+
+
+def check_routing_gate_size(failures: list[str]) -> None:
+    """Keep the startup gate under its byte ceiling."""
     try:
-        result = subprocess.run(
-            [sys.executable, "-B", str(validator), "--self-test"],
-            cwd=REPOSITORY_ROOT,
-            text=True,
-            capture_output=True,
-            timeout=30,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired) as error:
-        failures.append(f"compatibility evidence validator could not run: {error}")
-        return 0, 0
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
+        size = len((REPOSITORY_ROOT / ROUTING_GATE_RELATIVE).read_bytes())
+    except OSError as error:
+        failures.append(f"cannot read {ROUTING_GATE_RELATIVE}: {error}")
+        return
+    if size > ROUTING_GATE_MAX_BYTES:
         failures.append(
-            "compatibility evidence validator failed"
-            + (f": {detail}" if detail else "")
+            f"{ROUTING_GATE_RELATIVE} has {size} bytes; the routing gate must stay within "
+            f"{ROUTING_GATE_MAX_BYTES} bytes"
         )
-        return 0, 0
-    pattern = re.compile(
-        rf"^Compatibility evidence validation passed: ([0-9]+) records, "
-        rf"([0-9]+) negative fixtures, current release v{re.escape(RELEASE_VERSION)} "
-        rf"STATIC-ONLY\.$"
-    )
-    match = pattern.fullmatch(result.stdout.strip())
-    if match is None:
-        failures.append(
-            "compatibility evidence validator returned an unrecognized success summary"
-        )
-        return 0, 0
-    return int(match.group(1)), int(match.group(2))

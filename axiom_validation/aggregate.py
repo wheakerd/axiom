@@ -22,7 +22,6 @@ from .cases.release_policy import check_release_script_runtime_contract
 from .cases.rollback import check_reversible_safety_scenarios
 from .cases.routing import ROUTING_SCENARIOS
 from .context import RELEASE_VERSION, REPOSITORY_ROOT
-from .context_budget import check_context_budget
 from .documentation import check_documentation
 from .hooks import (
     check_codex_windows_hook_security,
@@ -43,15 +42,14 @@ from .release_pipeline import check_release_pipeline_workflow_contract
 from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
 from .readme_facts import check_readme_facts
-from .release_facts import check_release_facts
 from .reporting import run_policy
 from .repository_policy import (
     REQUIRED_PUBLIC_FILES,
-    check_compatibility_evidence,
     check_packaged_skills,
     check_repository_governance_contract,
     check_release_version_surfaces,
     check_required_files,
+    check_routing_gate_size,
     check_skill_contracts,
 )
 from .routing_contracts import (
@@ -61,11 +59,6 @@ from .routing_contracts import (
     check_routing_source_contracts,
 )
 from .route_catalog import check_route_catalog
-from .routing_evals import (
-    check_in_session_sequence_contracts,
-    check_review_sequence_contracts,
-    check_routing_evaluations,
-)
 from .runtime_identity import check_runtime_identity
 from .skill_text import check_skill_text
 
@@ -78,9 +71,6 @@ def main() -> int:
         "repository-governance", check_repository_governance_contract, failures
     )
     run_policy("release", check_release_version_surfaces, failures)
-    release_fact_surface_count = run_policy(
-        "release-facts", check_release_facts, failures
-    )
     readme_skill_count = run_policy("readme-facts", check_readme_facts, failures)
     route_catalog_scenario_count = run_policy(
         "route-catalog", check_route_catalog, failures
@@ -88,14 +78,8 @@ def main() -> int:
     runtime_contract_input_count = run_policy(
         "runtime-identity", check_runtime_identity, failures
     )
-    context_scenario_count = run_policy(
-        "context-budget", check_context_budget, failures
-    )
     validator_fixture_count = run_policy(
         "parsers", check_validator_negative_fixtures, failures
-    )
-    evidence_record_count, evidence_fixture_count = run_policy(
-        "compatibility-evidence", check_compatibility_evidence, failures
     )
 
     documents: dict[str, dict[str, Any]] = {}
@@ -194,6 +178,7 @@ def main() -> int:
 
     run_policy("routing", check_lifecycle_guide_commands, failures)
     run_policy("repository", check_packaged_skills, failures)
+    run_policy("repository", check_routing_gate_size, failures)
     run_policy("repository", check_skill_contracts, failures)
     skill_text_entry_count = run_policy("repository", check_skill_text, failures)
     run_policy("routing", check_routing_source_contracts, failures)
@@ -206,15 +191,6 @@ def main() -> int:
             ROUTING_SCENARIOS, domain_failures
         ),
         failures,
-    )
-    routing_eval_case_count, routing_benchmark_case_count, routing_result_count = (
-        run_policy("routing-evals", check_routing_evaluations, failures)
-    )
-    review_sequence_count, review_checkpoint_count = run_policy(
-        "review-evals", check_review_sequence_contracts, failures
-    )
-    in_session_family_count, in_session_case_count = run_policy(
-        "in-session-evals", check_in_session_sequence_contracts, failures
     )
     traceable_security_scenarios = run_policy(
         "git-contracts", check_traceable_security_contracts, failures
@@ -257,15 +233,6 @@ def main() -> int:
         f"{documentation_report.markdown_count} Markdown files, "
         f"{documentation_fixture_count} documentation negative fixtures, "
         f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
-        f"{routing_eval_case_count} black-box routing cases, "
-        f"{routing_benchmark_case_count} fixed host benchmark cases, "
-        f"{routing_result_count} labeled host result records, "
-        f"{review_sequence_count} bounded-review sequences with "
-        f"{review_checkpoint_count} review checkpoints, "
-        f"{in_session_family_count} in-session routing families over "
-        f"{in_session_case_count} measured cases, "
-        f"{context_scenario_count} routing-context lifecycle scenarios, "
-        f"{release_fact_surface_count} canonical release-fact surfaces, "
         f"{readme_skill_count} generated README skill rows, "
         f"{skill_text_entry_count} skill readability contracts, "
         f"{route_catalog_scenario_count} structured Git route-boundary scenarios, "
@@ -276,8 +243,6 @@ def main() -> int:
         f"{rollback_scenarios} rollback gate fixtures, "
         f"{cross_route_contract_count} source-linked cross-route, resume, and delegated-choice contracts, "
         f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
-        f"{evidence_record_count} compatibility evidence records, "
-        f"{evidence_fixture_count} compatibility evidence negative fixtures, "
         f"{manifest_schema_fixture_count} manifest schema fixtures, "
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
         f"{pull_request_fixture_count} pull-request event-graph fixtures, "

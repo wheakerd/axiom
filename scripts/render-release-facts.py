@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check or explicitly render canonical release facts and route boundaries."""
+"""Check or explicitly render the managed route-boundary, runtime-identity, and README blocks."""
 
 from __future__ import annotations
 
@@ -18,13 +18,6 @@ from axiom_validation.readme_facts import (  # noqa: E402
     load_skill_summaries,
     readme_surfaces,
     replace_readme_blocks,
-)
-from axiom_validation.release_facts import (  # noqa: E402
-    FACTS_SURFACES,
-    FACTS_SURFACE_VERSIONS,
-    check_release_facts,
-    load_release_facts,
-    replace_release_block,
 )
 from axiom_validation.route_catalog import (  # noqa: E402
     ROUTE_SURFACES,
@@ -69,11 +62,6 @@ def _load_regular_text(path: Path) -> str:
 
 def _render() -> tuple[int, list[str]]:
     failures: list[str] = []
-    release_documents = {
-        version: document
-        for version in sorted(set(FACTS_SURFACE_VERSIONS.values()))
-        if (document := load_release_facts(version, failures)) is not None
-    }
     route_document = load_route_catalog(failures)
     identity_document = load_json_document(
         REPOSITORY_ROOT / IDENTITY_RELATIVE,
@@ -85,8 +73,7 @@ def _render() -> tuple[int, list[str]]:
     )
     skill_summaries = load_skill_summaries(failures)
     if (
-        len(release_documents) != len(set(FACTS_SURFACE_VERSIONS.values()))
-        or route_document is None
+        route_document is None
         or identity_document is None
         or ledger_document is None
         or skill_summaries is None
@@ -98,7 +85,6 @@ def _render() -> tuple[int, list[str]]:
     for relative_path in sorted(
         set(
             (
-                *FACTS_SURFACES,
                 *ROUTE_SURFACES,
                 *RUNTIME_IDENTITY_SURFACES,
                 *POLICY_LEDGER_SURFACES,
@@ -109,11 +95,6 @@ def _render() -> tuple[int, list[str]]:
         path = REPOSITORY_ROOT / relative_path
         try:
             text = _load_regular_text(path)
-            if relative_path in FACTS_SURFACES:
-                release_document = release_documents[
-                    FACTS_SURFACE_VERSIONS[relative_path]
-                ]
-                text = replace_release_block(relative_path, text, release_document)
             if relative_path in ROUTE_SURFACES:
                 text = replace_route_block(text, route_document)
             if relative_path in RUNTIME_IDENTITY_SURFACES:
@@ -140,13 +121,12 @@ def _render() -> tuple[int, list[str]]:
     return changed, failures
 
 
-def _check() -> tuple[int, int, int, int, list[str]]:
+def _check() -> tuple[int, int, int, list[str]]:
     failures: list[str] = []
-    fact_surfaces = check_release_facts(failures)
     route_scenarios = check_route_catalog(failures)
     runtime_inputs = check_runtime_identity(failures)
     readme_skills = check_readme_facts(failures)
-    return fact_surfaces, route_scenarios, runtime_inputs, readme_skills, failures
+    return route_scenarios, runtime_inputs, readme_skills, failures
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -160,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"- {failure}", file=sys.stderr)
             return 1
 
-    fact_surfaces, route_scenarios, runtime_inputs, readme_skills, failures = _check()
+    route_scenarios, runtime_inputs, readme_skills, failures = _check()
     if failures:
         print("Canonical fact validation failed:", file=sys.stderr)
         for failure in failures:
@@ -169,11 +149,9 @@ def main(argv: list[str] | None = None) -> int:
     action = f"rendered {changed} changed files and " if arguments.render else ""
     print(
         "Canonical fact validation passed: "
-        f"{action}{fact_surfaces} release-fact surfaces and "
-        f"{route_scenarios} structured route scenarios with "
+        f"{action}{route_scenarios} structured route scenarios with "
         f"{runtime_inputs} canonical runtime inputs, plus a README index of "
-        f"{readme_skills} bundled skills; static counts remain "
-        "proxies, token figures remain estimates, and host observation is not inferred."
+        f"{readme_skills} bundled skills."
     )
     return 0
 

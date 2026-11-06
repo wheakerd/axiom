@@ -21,7 +21,6 @@ from .markdown import (
     mask_inline_code,
 )
 from .readme_facts import check_readme_facts
-from .release_facts import check_release_facts
 from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
 from .route_catalog import check_route_catalog
 from .runtime_identity import check_runtime_identity
@@ -35,10 +34,6 @@ ROOT_CURRENT_DOCUMENTS = (
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
-)
-EVALUATION_CURRENT_DOCUMENTS = (
-    "evals/README.md",
-    "evals/context-budget/README.md",
 )
 COMPATIBILITY_ENTRY = "docs/getting-started.md"
 # Keep retired project paths classified for legacy-document and navigation checks.
@@ -58,8 +53,6 @@ FORBIDDEN_TASK_PREFIXES = (
     "docs/releases/",
     "project/",
     "evidence/",
-    "evals/results/",
-    "evals/history/",
 )
 
 
@@ -114,7 +107,7 @@ def is_current_document(relative_path: str) -> bool:
     """Return whether a Markdown path belongs to the maintained current set."""
     if is_translation(relative_path):
         return False
-    if relative_path in (*ROOT_CURRENT_DOCUMENTS, *EVALUATION_CURRENT_DOCUMENTS):
+    if relative_path in ROOT_CURRENT_DOCUMENTS:
         return True
     if not relative_path.startswith("docs/"):
         return False
@@ -288,9 +281,7 @@ def _allowed_lifecycle(relative_path: str) -> frozenset[str] | None:
         return frozenset({"historical", "archived"})
     if relative_path.startswith(LEGACY_PROJECT_PREFIXES):
         return frozenset({"project-plan", "historical", "archived"})
-    if relative_path.startswith("evals/history/"):
-        return frozenset({"historical", "archived"})
-    if relative_path.startswith(("evidence/", "evals/results/")):
+    if relative_path.startswith("evidence/"):
         return frozenset({"historical", "generated", "archived"})
     if is_current_document(relative_path):
         return frozenset({"current", "generated"})
@@ -646,7 +637,6 @@ def check_hook_reference(root: Path, failures: list[str]) -> None:
 def check_machine_derived_documentation(failures: list[str]) -> None:
     """Run existing canonical owners for generated public facts."""
     check_runtime_identity(failures)
-    check_release_facts(failures)
     check_route_catalog(failures)
     check_readme_facts(failures)
     check_release_version_surfaces(failures)

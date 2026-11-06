@@ -99,7 +99,7 @@ The Codex catalog format was last verified on 2026-10-24 against the official [m
 
 ## Candidate And Final Evidence
 
-Candidate evidence is limited to facts observable at its source commit. It can bind checked-in files, static validation, a candidate commit and tree, fresh-session routing observation records bound to the candidate's runtime digest, and already existing remote prerequisites. It cannot claim its future merge, tag, Release, assets, Latest selection, immutable state, post-publication checks, or new host observation.
+Candidate evidence is limited to facts observable at its source commit. It can bind checked-in files, static validation, a candidate commit and tree, and already existing remote prerequisites. It cannot claim its future merge, tag, Release, assets, Latest selection, immutable state, post-publication checks, or new host observation.
 
 Final evidence exists only after all of the following are directly verified:
 
