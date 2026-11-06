@@ -4,7 +4,7 @@ Apply these rules to every Git command in a traceable phase. They keep untrusted
 
 ## Literal Arguments
 
-- Treat paths, remote names, refs, refspecs, OIDs, and messages as untrusted data. Pass each value as one argument-vector element and put `--` before paths; never build a command string from them for a shell, `eval`, or an equivalent. If the host can only run a shell string, stop that phase.
+- Treat paths, remote names, refs, refspecs, OIDs, and messages as untrusted data. Pass each value as one argument-vector element and put `--` before paths; never build a command string from them for a shell, `eval`, or an equivalent. Where the host's tool runs only a POSIX shell string, each command-line value is one single-quoted literal with no expansion inside it; reject a value that contains a single quote, NUL, CR, or LF or that begins with `-` before it reaches the command. Never wrap a Git value in `eval`, backticks, or `$()`, and stop on a shell in which a single quote is not a literal delimiter, such as `cmd.exe`.
 - Validate a full ref with `git check-ref-format` before use; require the expected `refs/heads/`, `refs/remotes/`, or `refs/axiom/backups/` namespace, and reject a component that begins with `-`. Short branch and remote names must be currently enumerated by Git and not option-shaped; a network remote is never `.`.
 - Require OIDs of the repository's object format (`git rev-parse --show-object-format`): 40 hex characters for `sha1`, 64 for `sha256`. Reject abbreviations and revision expressions; the same-width all-zero OID is only the old-value sentinel of `update-ref`.
 - Build a refspec only from two validated full refs; the exact-refresh exception is one validated source ref with `--refmap=`. Never accept a refspec from configuration or prose.
@@ -13,7 +13,7 @@ Apply these rules to every Git command in a traceable phase. They keep untrusted
 
 ## Commit Messages
 
-Compose a message from lines you validated and join them with LF. Pass it to `commit-tree` on standard input or through a file you created for it, and delete that file afterwards. Put no raw remote URL, credential, username, or private endpoint in a public message.
+Compose a message from lines you validated and join them with LF. Pass it to `git commit` or `git tag` on standard input with `-F -` or through a file you created for it, and delete that file afterwards. On a shell-string host, write the message with the host's file tool and pass `-F <file>`, or feed `-F -` from a here-document whose quoted delimiter equals no message line; never an unquoted here-document, `-m`, or command substitution. Put no raw remote URL, credential, username, or private endpoint in a public message.
 
 ## Git Metadata State
 
@@ -21,4 +21,4 @@ Resolve every Axiom state path through Git, never by hand: `git -C <repo> rev-pa
 
 ## Endpoints
 
-Report a remote by its configured name, never by URL. Keep push targets out of commit messages, records, and reports; the output of `git remote get-url --push --all <remote>` stays in memory for classification only. Push and fetch only to `https://`, `ssh://`, `git+ssh://`, or SCP-like SSH targets; stop on plaintext `http://` or `git://`, a local path or `file://` target, `<helper>::<address>`, or `ext::`.
+Report a remote by its configured name, never by URL. Keep push targets out of commit messages, records, and reports; the output of `git remote get-url --push --all <remote>` stays in memory for classification only, and a push command may name its target by that URL only when the remote has several push URLs, so that one command reaches one target. Push and fetch only to `https://`, `ssh://`, `git+ssh://`, or SCP-like SSH targets; stop on plaintext `http://` or `git://`, a local path or `file://` target, `<helper>::<address>`, or `ext::`.

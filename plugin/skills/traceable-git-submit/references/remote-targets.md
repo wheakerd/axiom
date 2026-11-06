@@ -18,7 +18,7 @@ For a hardened push of existing commits, freeze `finalSha` as current `HEAD` and
 
 ## Push And Read-Back
 
-Immediately before the first push, re-resolve the identity, re-list the targets, require the branch ref to equal `finalSha` (or the recorded `newCommit`), check that no operation is in progress, and query every target's merge ref. Any missing, changed, non-commit, or non-ancestor result means zero pushes. Then push once per frozen target in order with one exact ref update and repository hooks running:
+Immediately before the first push, re-resolve the identity, re-list the targets, require the branch ref to equal `finalSha` (or the recorded `newCommit`), check that no operation is in progress, and query every target's merge ref. Any missing, changed, non-commit, or non-ancestor result means zero pushes. Then push once per frozen target in order with one exact ref update and repository hooks running. A remote with one push URL is named by its remote name; when the remote has several push URLs, run the command once per URL with the URL in place of the remote name, so that one command reaches one target and the first failure stops the sequence. When the URL is one the remote is configured with, Git resolves it to that remote and updates its remote-tracking refs as a push by name would, and `pre-push` receives the URL, not the remote name, as its remote argument:
 
 ```bash
 git -C <repo> push --no-follow-tags <push-remote> <branch-ref>:<merge-ref>

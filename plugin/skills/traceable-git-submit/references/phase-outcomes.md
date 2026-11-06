@@ -6,9 +6,9 @@ For a simple direct push, follow `direct-submit.md`: the exact named-remote comm
 
 For a hardened or multi-target push, verify the current branch and upstream identity, the operation state, the exact targets, and immediate remote drift through `remote-targets.md`. Every live target must satisfy its local-object and ancestry gates before mutation, and every target is read back afterwards.
 
-For a checkpoint, require a clean index, exact adoption of any existing unpublished commits, current baseline identity, a frozen write set, exact index equality, a tree-bound verified candidate, branch compare-and-swap, and an atomic record append. Preserve concurrent index state. Do not update the cache.
+For a checkpoint, require a clean index, exact adoption of any existing unpublished commits, current baseline identity, a frozen write set, exact index equality, a commit proved against the recorded tree and parent with a compare-and-swap restore when a proof fails, and an atomic record append. Reject a concurrent index change instead of committing it. Do not update the cache.
 
-For consolidation, require every unpublished commit to match the active record, a backup ref created before the branch moves, one commit with the exact final tree, a branch update by compare-and-swap, and persisted recovery state. Without push authority, retain the backup and the record with `pushRemote` unset and stop locally.
+For consolidation, require every unpublished commit to match the active record, a backup ref created before the branch moves, a branch move to the upstream by compare-and-swap, one commit with the exact final tree, and persisted recovery state. Without push authority, retain the backup and the record with `pushRemote` unset and stop locally.
 
 For combined consolidation submission or its recovery, recheck every target before the push, bind the push remote once, verify every target and the refreshed upstream, then persist `cleanupReady`. Cleanup requires separate exact authority. Drift, partial state, or uncertainty retains the recovery state.
 
