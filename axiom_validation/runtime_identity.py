@@ -1,4 +1,4 @@
-"""Deterministic installed-runtime identity and repository-policy revision checks."""
+"""Deterministic installed-runtime identity checks."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ import re
 import stat
 import unicodedata
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -19,33 +18,13 @@ from .release_versions import parse_production_release_version
 CURRENT_SCHEMA_VERSION = "4"
 INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v4.json"
 IDENTITY_RELATIVE = "evidence/runtime-identity.json"
-HISTORY_RELATIVE = "evidence/runtime-contract-history-v4.json"
-LEGACY_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v1.json"
-LEGACY_HISTORY_RELATIVE = "evidence/runtime-contract-history-v1.json"
-V2_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v2.json"
-V2_HISTORY_RELATIVE = "evidence/runtime-contract-history-v2.json"
-V3_INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v3.json"
-V3_HISTORY_RELATIVE = "evidence/runtime-contract-history-v3.json"
-SCHEMA_FILES = {
-    "1": (LEGACY_INPUT_MANIFEST_RELATIVE, LEGACY_HISTORY_RELATIVE),
-    "2": (V2_INPUT_MANIFEST_RELATIVE, V2_HISTORY_RELATIVE),
-    "3": (V3_INPUT_MANIFEST_RELATIVE, V3_HISTORY_RELATIVE),
-    CURRENT_SCHEMA_VERSION: (INPUT_MANIFEST_RELATIVE, HISTORY_RELATIVE),
-}
-SCHEMA_V3_FIRST_VERSION = "0.15.0"
-SCHEMA_V4_FIRST_VERSION = "0.17.0"
-POLICY_REVISIONS_RELATIVE = "evidence/repository-policy-revisions-v1.json"
+IDENTITY_SCHEMA_VERSION = "2"
 RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
 RUNTIME_IDENTITY_END = "<!-- runtime-identity:current:end -->"
-POLICY_LEDGER_SURFACES = ("docs/repository-policy-revisions.md",)
-POLICY_LEDGER_START = "<!-- policy-ledger:current:start -->"
-POLICY_LEDGER_END = "<!-- policy-ledger:current:end -->"
-ISSUE_URL_PREFIX = "https://github.com/wheakerd/axiom/issues/"
 
 MAX_JSON_BYTES = 512 * 1024
 DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
-COMMIT_PATTERN = re.compile(r"[0-9a-f]{40}\Z")
 WINDOWS_RESERVED_NAMES = frozenset(
     {
         "CON",
@@ -223,17 +202,6 @@ def _inspect_contained_path(
     return current
 
 
-def _path_entry_is_missing(path: Path) -> bool:
-    """Return true only for a genuinely absent entry, never for a broken symlink."""
-    try:
-        path.lstat()
-    except FileNotFoundError:
-        return True
-    except OSError:
-        return False
-    return False
-
-
 def _walk_regular_files(
     root: Path,
     relative_path: str,
@@ -324,10 +292,9 @@ def _manifest_shape(
         "exclusions",
     }
     _exact_object(document, expected_keys, "runtime input manifest", failures)
-    if document.get("schemaVersion") not in set(SCHEMA_FILES):
+    if document.get("schemaVersion") != CURRENT_SCHEMA_VERSION:
         failures.append(
-            "runtime input manifest schemaVersion must be one of "
-            + ", ".join(repr(version) for version in sorted(SCHEMA_FILES))
+            f"runtime input manifest schemaVersion must be {CURRENT_SCHEMA_VERSION!r}"
         )
     if document.get("digestAlgorithm") != "sha256":
         failures.append("runtime input manifest digestAlgorithm must be 'sha256'")
@@ -381,8 +348,6 @@ def compute_runtime_contract(
     root: Path,
     manifest: dict[str, Any],
     failures: list[str],
-    *,
-    historical: bool = False,
 ) -> RuntimeContract | None:
     """Compute one canonical runtime digest from a checked package tree."""
     initial_failure_count = len(failures)
@@ -394,9 +359,6 @@ def compute_runtime_contract(
 
     inventory: set[str] = set()
     for relative_path in roots:
-        path = root / relative_path
-        if historical and _path_entry_is_missing(path):
-            continue
         inventory.update(_walk_regular_files(root, relative_path, failures))
 
     records: list[dict[str, Any]] = []
@@ -426,9 +388,6 @@ def compute_runtime_contract(
         ):
             failures.append(f"{label}.path is outside installedSurfaceRoots")
         if kind == "tree":
-            if historical and _path_entry_is_missing(root / relative_path):
-                # A tree classified after an old tag contributes no record there.
-                continue
             files = _walk_regular_files(root, relative_path, failures)
             if not files:
                 failures.append(f"runtime input tree {relative_path!r} must contain a file")
@@ -446,9 +405,6 @@ def compute_runtime_contract(
                     }
                 )
         elif kind == "json-fields":
-            if historical and _path_entry_is_missing(root / relative_path):
-                # A manifest classified after an old tag contributes no record there.
-                continue
             classify(relative_path, f"input:{relative_path}")
             included = _sorted_unique_strings(
                 entry.get("includedFields"), f"{label}.includedFields", failures
@@ -470,7 +426,7 @@ def compute_runtime_contract(
                     f"{relative_path} has unclassified manifest fields: {', '.join(unclassified)}"
                 )
             missing_included = sorted(set(included) - set(flattened))
-            if missing_included and not historical:
+            if missing_included:
                 failures.append(
                     f"{relative_path} is missing included fields: {', '.join(missing_included)}"
                 )
@@ -500,9 +456,6 @@ def compute_runtime_contract(
         _nonempty_string(entry.get("classification"), f"{label}.classification", failures)
         _nonempty_string(entry.get("rationale"), f"{label}.rationale", failures)
         if relative_path is None:
-            continue
-        target = root / relative_path
-        if historical and _path_entry_is_missing(target):
             continue
         files = _walk_regular_files(root, relative_path, failures)
         if kind == "file" and files != [relative_path]:
@@ -553,21 +506,11 @@ def compute_runtime_contract(
     )
 
 
-def _manifest_sha256(root: Path, relative: str = INPUT_MANIFEST_RELATIVE) -> str:
+def _manifest_sha256(root: Path) -> str:
     # Universal-newline decoding keeps this binding stable for LF and CRLF
     # checkouts while preserving every other manifest byte as policy evidence.
-    text = (root / relative).read_text(encoding="utf-8")
+    text = (root / INPUT_MANIFEST_RELATIVE).read_text(encoding="utf-8")
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def runtime_schema_for_version(version: str | None) -> str:
-    """Return the runtime contract schema that owns one plugin version."""
-    parsed = parse_production_release_version(version) if version is not None else None
-    if parsed is not None and parsed < parse_production_release_version(SCHEMA_V3_FIRST_VERSION):
-        return "2"
-    if parsed is not None and parsed < parse_production_release_version(SCHEMA_V4_FIRST_VERSION):
-        return "3"
-    return CURRENT_SCHEMA_VERSION
 
 
 def _validate_identity(
@@ -575,30 +518,21 @@ def _validate_identity(
     contract: RuntimeContract,
     root: Path,
     failures: list[str],
-    *,
-    schema_version: str = CURRENT_SCHEMA_VERSION,
-    manifest_relative: str = INPUT_MANIFEST_RELATIVE,
-) -> tuple[str | None, int | None]:
+) -> None:
     label = IDENTITY_RELATIVE
     _exact_object(
         document,
-        {"schemaVersion", "pluginVersion", "repositoryPolicyRevision", "runtimeContract"},
+        {"schemaVersion", "pluginVersion", "runtimeContract"},
         label,
         failures,
     )
-    if document.get("schemaVersion") != "1":
-        failures.append(f"{label}.schemaVersion must be '1'")
+    if document.get("schemaVersion") != IDENTITY_SCHEMA_VERSION:
+        failures.append(f"{label}.schemaVersion must be {IDENTITY_SCHEMA_VERSION!r}")
     plugin_version = document.get("pluginVersion")
     if parse_production_release_version(plugin_version) is None:
         failures.append(f"{label}.pluginVersion must be stable strict SemVer")
-        plugin_version = None
-    manifest_version = release_version(root)
-    if plugin_version != manifest_version:
+    elif plugin_version != release_version(root):
         failures.append(f"{label}.pluginVersion must match the Codex plugin manifest")
-    revision = document.get("repositoryPolicyRevision")
-    if type(revision) is not int or revision < 1:
-        failures.append(f"{label}.repositoryPolicyRevision must be a positive integer")
-        revision = None
     runtime = _exact_object(
         document.get("runtimeContract"),
         {"schemaVersion", "inputManifest", "inputManifestSha256", "digest", "recordCount"},
@@ -606,274 +540,26 @@ def _validate_identity(
         failures,
     )
     if runtime is not None:
-        if runtime.get("schemaVersion") != schema_version:
+        if runtime.get("schemaVersion") != CURRENT_SCHEMA_VERSION:
             failures.append(
-                f"{label}.runtimeContract.schemaVersion must be {schema_version!r}"
+                f"{label}.runtimeContract.schemaVersion must be {CURRENT_SCHEMA_VERSION!r}"
             )
-        if runtime.get("inputManifest") != manifest_relative:
+        if runtime.get("inputManifest") != INPUT_MANIFEST_RELATIVE:
             failures.append(f"{label}.runtimeContract.inputManifest drifted")
-        if runtime.get("inputManifestSha256") != _manifest_sha256(root, manifest_relative):
+        if runtime.get("inputManifestSha256") != _manifest_sha256(root):
             failures.append(f"{label}.runtimeContract.inputManifestSha256 drifted")
         if runtime.get("digest") != contract.digest:
             failures.append(f"{label}.runtimeContract.digest does not match computed inputs")
         if runtime.get("recordCount") != contract.record_count:
             failures.append(f"{label}.runtimeContract.recordCount does not match computed inputs")
-    return plugin_version, revision
-
-
-def _version_key(version: str) -> tuple[int, int, int]:
-    parsed = parse_production_release_version(version)
-    if parsed is None:
-        return (-1, -1, -1)
-    return tuple(int(part) for part in version.split("."))
-
-
-def _allows_v0131_repository_release(
-    previous_version: str,
-    previous_commit: str,
-    previous_digest: str,
-    current_digest: str,
-    current_revision: int | None,
-    policy_revisions: dict[str, Any] | None,
-) -> bool:
-    """Match this authorized version-policy record, not grant publication authority."""
-    digest = "sha256:9a1ff3534fde91c79ab7972bbf2a8efedd56d58fe914ef82532385b942b54fc8"
-    revisions = policy_revisions.get("revisions") if type(policy_revisions) is dict else None
-    latest = revisions[-1] if type(revisions) is list and revisions else None
-    return (
-        previous_version == "0.13.0"
-        and previous_commit == "c0f0266c653f9a34b67d0c86d9287e94df7783f0"
-        and previous_digest == current_digest == digest
-        and type(current_revision) is int
-        and current_revision == 35
-        and type(latest) is dict
-        and type(latest.get("revision")) is int
-        and latest.get("revision") == 35
-        and latest.get("baselineCommit") == "9ff4a7bfaddd7215ae517d7a74085298ebf2f44a"
-        and latest.get("runtimeContractDigest") == digest
-    )
-
-
-def _validate_history(
-    document: dict[str, Any],
-    manifest_sha256: str,
-    current_version: str | None,
-    current_digest: str,
-    failures: list[str],
-    *,
-    schema_version: str = CURRENT_SCHEMA_VERSION,
-    input_manifest: str = INPUT_MANIFEST_RELATIVE,
-    history_path: str = HISTORY_RELATIVE,
-    current_revision: int | None = None,
-    policy_revisions: dict[str, Any] | None = None,
-) -> dict[str, dict[str, Any]]:
-    label = history_path
-    _exact_object(
-        document,
-        {"schemaVersion", "inputManifest", "inputManifestSha256", "entries", "characterizations"},
-        label,
-        failures,
-    )
-    if document.get("schemaVersion") != schema_version:
-        failures.append(f"{label}.schemaVersion must be {schema_version!r}")
-    if document.get("inputManifest") != input_manifest:
-        failures.append(f"{label}.inputManifest drifted")
-    if document.get("inputManifestSha256") != manifest_sha256:
-        failures.append(f"{label}.inputManifestSha256 drifted")
-    entries_value = document.get("entries")
-    if type(entries_value) is not list or not entries_value:
-        failures.append(f"{label}.entries must be a non-empty array")
-        return {}
-    entries: dict[str, dict[str, Any]] = {}
-    ordered_versions: list[str] = []
-    for index, value in enumerate(entries_value):
-        item_label = f"{label}.entries[{index}]"
-        entry = _exact_object(
-            value,
-            {"pluginVersion", "tag", "commit", "runtimeContractDigest", "derivation"},
-            item_label,
-            failures,
-        )
-        if entry is None:
-            continue
-        version = entry.get("pluginVersion")
-        if parse_production_release_version(version) is None:
-            failures.append(f"{item_label}.pluginVersion must be stable strict SemVer")
-            continue
-        if version in entries:
-            failures.append(f"{label}.entries repeats pluginVersion {version}")
-        entries[version] = entry
-        ordered_versions.append(version)
-        if entry.get("tag") != f"v{version}":
-            failures.append(f"{item_label}.tag must match pluginVersion")
-        if type(entry.get("commit")) is not str or COMMIT_PATTERN.fullmatch(entry["commit"]) is None:
-            failures.append(f"{item_label}.commit must be a lowercase full Git SHA")
-        if type(entry.get("runtimeContractDigest")) is not str or DIGEST_PATTERN.fullmatch(entry["runtimeContractDigest"]) is None:
-            failures.append(f"{item_label}.runtimeContractDigest must be a SHA-256 identity")
-        if entry.get("derivation") != f"derived-from-immutable-tag-with-schema-v{schema_version}":
-            failures.append(f"{item_label}.derivation drifted")
-    if ordered_versions != sorted(ordered_versions, key=_version_key):
-        failures.append(f"{label}.entries must be ordered by pluginVersion")
-
-    characterizations = document.get("characterizations")
-    characterized_pairs: set[tuple[str, str]] = set()
-    if type(characterizations) is not list:
-        failures.append(f"{label}.characterizations must be an array")
-    else:
-        pairs = []
-        for index, value in enumerate(characterizations):
-            item_label = f"{label}.characterizations[{index}]"
-            item = _exact_object(
-                value,
-                {"fromVersion", "toVersion", "changeClass", "expectedDigestRelation", "rationale"},
-                item_label,
-                failures,
-            )
-            if item is None:
-                continue
-            from_version = item.get("fromVersion")
-            to_version = item.get("toVersion")
-            if from_version not in entries or to_version not in entries:
-                failures.append(f"{item_label} must reference history entries")
-                continue
-            pair = (from_version, to_version)
-            if pair in characterized_pairs:
-                failures.append(f"{label}.characterizations repeats {pair}")
-            characterized_pairs.add(pair)
-            pairs.append(pair)
-            relation = item.get("expectedDigestRelation")
-            if relation not in {"equal", "different"}:
-                failures.append(f"{item_label}.expectedDigestRelation is invalid")
-            actual_equal = (
-                entries[from_version].get("runtimeContractDigest")
-                == entries[to_version].get("runtimeContractDigest")
-            )
-            if (relation == "equal") is not actual_equal:
-                failures.append(f"{item_label} digest relation does not match its history entries")
-            change_class = item.get("changeClass")
-            if change_class not in {"installed-runtime-change", "repository-policy-only"}:
-                failures.append(f"{item_label}.changeClass is invalid")
-            if change_class == "installed-runtime-change" and relation != "different":
-                failures.append(f"{item_label} installed-runtime change must alter the digest")
-            if change_class == "repository-policy-only" and relation != "equal":
-                failures.append(f"{item_label} repository-policy change must retain the digest")
-            _nonempty_string(item.get("rationale"), f"{item_label}.rationale", failures)
-        if pairs != sorted(pairs, key=lambda pair: (_version_key(pair[0]), _version_key(pair[1]))):
-            failures.append(f"{label}.characterizations must be ordered by version pair")
-
-    adjacent_recent_pairs = {
-        (first, second)
-        for first, second in zip(ordered_versions, ordered_versions[1:])
-        if _version_key(first)[:2] == _version_key(second)[:2]
-        and _version_key(second)[2] == _version_key(first)[2] + 1
-    }
-    if characterized_pairs != adjacent_recent_pairs:
-        failures.append(f"{label}.characterizations must cover every contiguous recorded release")
-
-    if entries and current_version is not None:
-        latest_version = max(entries, key=_version_key)
-        if _version_key(current_version) < _version_key(latest_version):
-            failures.append(f"current pluginVersion predates runtime-contract history")
-        elif current_version == latest_version:
-            if entries[latest_version].get("runtimeContractDigest") != current_digest:
-                failures.append(
-                    "installed runtime changed without advancing pluginVersion from its immutable tag"
-                )
-        elif current_version == "0.13.1":
-            # The user authorized only this repository-tools release. A stale
-            # predecessor, another policy baseline, or changed runtime cannot
-            # turn that decision into a general version-policy relaxation.
-            if schema_version != "2" or not _allows_v0131_repository_release(
-                latest_version,
-                entries[latest_version].get("commit"),
-                entries[latest_version].get("runtimeContractDigest"),
-                current_digest,
-                current_revision,
-                policy_revisions,
-            ):
-                failures.append(
-                    "v0.13.1 repository-release exception requires v0.13.0, "
-                    "the authorized unchanged runtime digest, and policy 35 "
-                    "bound to repository fix 9ff4a7bfaddd7215ae517d7a74085298ebf2f44a"
-                )
-        elif entries[latest_version].get("runtimeContractDigest") == current_digest:
-            failures.append(
-                "pluginVersion advanced while runtimeContractDigest stayed unchanged; use repositoryPolicyRevision"
-            )
-    return entries
-
-
-def _validate_policy_revisions(
-    document: dict[str, Any],
-    current_revision: int | None,
-    current_digest: str,
-    failures: list[str],
-) -> None:
-    label = POLICY_REVISIONS_RELATIVE
-    _exact_object(document, {"schemaVersion", "revisions"}, label, failures)
-    if document.get("schemaVersion") != "1":
-        failures.append(f"{label}.schemaVersion must be '1'")
-    revisions = document.get("revisions")
-    if type(revisions) is not list or not revisions:
-        failures.append(f"{label}.revisions must be a non-empty append-only array")
-        return
-    observed: list[int] = []
-    for index, value in enumerate(revisions):
-        item_label = f"{label}.revisions[{index}]"
-        item = _exact_object(
-            value,
-            {
-                "revision",
-                "recordedOn",
-                "baselineCommit",
-                "sourceIssue",
-                "summary",
-                "runtimeContractDigest",
-            },
-            item_label,
-            failures,
-        )
-        if item is None:
-            continue
-        revision = item.get("revision")
-        if type(revision) is not int or revision < 1:
-            failures.append(f"{item_label}.revision must be a positive integer")
-        else:
-            observed.append(revision)
-        recorded_on = item.get("recordedOn")
-        try:
-            if type(recorded_on) is not str:
-                raise ValueError
-            date.fromisoformat(recorded_on)
-        except ValueError:
-            failures.append(f"{item_label}.recordedOn must be an ISO calendar date")
-        if type(item.get("baselineCommit")) is not str or COMMIT_PATTERN.fullmatch(item["baselineCommit"]) is None:
-            failures.append(f"{item_label}.baselineCommit must be a lowercase full Git SHA")
-        # Direct maintenance requests have no owning GitHub Issue.
-        issue = item.get("sourceIssue")
-        if issue is not None and (type(issue) is not int or issue < 1):
-            failures.append(f"{item_label}.sourceIssue must be null or a positive integer")
-        summary = _nonempty_string(item.get("summary"), f"{item_label}.summary", failures)
-        if summary is not None and len(summary) > 200:
-            failures.append(f"{item_label}.summary must contain at most 200 characters")
-        if type(item.get("runtimeContractDigest")) is not str or DIGEST_PATTERN.fullmatch(item["runtimeContractDigest"]) is None:
-            failures.append(f"{item_label}.runtimeContractDigest must be a SHA-256 identity")
-    if observed != list(range(1, len(revisions) + 1)):
-        failures.append(f"{label}.revisions must be contiguous, ordered, and append-only")
-    last = revisions[-1] if type(revisions[-1]) is dict else {}
-    if current_revision is not None and last.get("revision") != current_revision:
-        failures.append(f"{label} latest revision must match runtime identity")
-    if last.get("runtimeContractDigest") != current_digest:
-        failures.append(f"{label} latest revision must bind the current runtime digest")
 
 
 def render_runtime_identity(document: dict[str, Any]) -> str:
-    """Render the current three-subject identity as stable Markdown."""
+    """Render the current identity as stable Markdown."""
     runtime = document["runtimeContract"]
     return "\n".join(
         (
             f"- `pluginVersion`: `{document['pluginVersion']}`",
-            f"- `repositoryPolicyRevision`: `{document['repositoryPolicyRevision']}`",
             f"- `runtimeContractDigest` (schema v{runtime['schemaVersion']}): `{runtime['digest']}`",
             f"- Digest input manifest: [`{runtime['inputManifest']}`](../{runtime['inputManifest']})",
         )
@@ -889,132 +575,46 @@ def replace_runtime_identity_block(text: str, document: dict[str, Any]) -> str:
     return text[:start] + "\n" + render_runtime_identity(document) + "\n" + text[end:]
 
 
-def render_policy_ledger(document: dict[str, Any]) -> str:
-    """Render the policy ledger as one table, newest revision first."""
-    rows = [
-        "| Revision | Recorded on | Source Issue | Baseline commit | Summary |",
-        "| --- | --- | --- | --- | --- |",
-    ]
-    for item in sorted(document["revisions"], key=lambda item: item["revision"], reverse=True):
-        issue = item.get("sourceIssue")
-        issue_cell = f"[#{issue}]({ISSUE_URL_PREFIX}{issue})" if issue is not None else "none"
-        summary = str(item["summary"]).replace("|", "\\|")
-        rows.append(
-            f"| {item['revision']} | {item['recordedOn']} | {issue_cell} | "
-            f"`{item['baselineCommit']}` | {summary} |"
-        )
-    return "\n".join(rows)
-
-
-def replace_policy_ledger_block(text: str, document: dict[str, Any]) -> str:
-    """Replace the managed ledger table in the policy-revisions reference."""
-    if text.count(POLICY_LEDGER_START) != 1 or text.count(POLICY_LEDGER_END) != 1:
-        raise ValueError("policy-ledger markers must each appear exactly once")
-    start = text.index(POLICY_LEDGER_START) + len(POLICY_LEDGER_START)
-    end = text.index(POLICY_LEDGER_END, start)
-    return text[:start] + "\n" + render_policy_ledger(document) + "\n" + text[end:]
-
-
 def check_runtime_identity(
     failures: list[str],
     *,
     root: Path = REPOSITORY_ROOT,
     check_surfaces: bool = True,
 ) -> int:
-    """Validate the current runtime identity, append-only records, and rendered facts."""
+    """Validate the current runtime identity and its rendered facts."""
     root = root.resolve()
-    schema = runtime_schema_for_version(release_version(root))
-    manifest_relative, history_relative = SCHEMA_FILES[schema]
-    manifest = load_json_document(root / manifest_relative, failures, root=root)
+    manifest = load_json_document(root / INPUT_MANIFEST_RELATIVE, failures, root=root)
     if manifest is None:
         return 0
     contract = compute_runtime_contract(root, manifest, failures)
     if contract is None:
         return 0
     identity = load_json_document(root / IDENTITY_RELATIVE, failures, root=root)
-    history = load_json_document(root / history_relative, failures, root=root)
-    revisions = load_json_document(root / POLICY_REVISIONS_RELATIVE, failures, root=root)
-    if identity is None or history is None or revisions is None:
+    if identity is None:
         return contract.record_count
-    plugin_version, policy_revision = _validate_identity(
-        identity,
-        contract,
-        root,
-        failures,
-        schema_version=schema,
-        manifest_relative=manifest_relative,
-    )
-    _validate_history(
-        history,
-        _manifest_sha256(root, manifest_relative),
-        plugin_version,
-        contract.digest,
-        failures,
-        schema_version=schema,
-        input_manifest=manifest_relative,
-        history_path=history_relative,
-        current_revision=policy_revision,
-        policy_revisions=revisions,
-    )
-    legacy_schemas = [
-        (version, *SCHEMA_FILES[version])
-        for version in sorted(SCHEMA_FILES)
-        if int(version) < int(schema)
-    ]
-    for schema_version, legacy_manifest, legacy_path in legacy_schemas:
-        legacy_history = load_json_document(root / legacy_path, failures, root=root)
-        if legacy_history is not None:
-            _validate_history(
-                legacy_history,
-                _manifest_sha256(root, legacy_manifest),
-                None,
-                "",
-                failures,
-                schema_version=schema_version,
-                input_manifest=legacy_manifest,
-                history_path=legacy_path,
-            )
-    _validate_policy_revisions(
-        revisions,
-        policy_revision,
-        contract.digest,
-        failures,
-    )
+    _validate_identity(identity, contract, root, failures)
     if check_surfaces:
         for relative_path in RUNTIME_IDENTITY_SURFACES:
             try:
                 text = (root / relative_path).read_text(encoding="utf-8")
                 expected = replace_runtime_identity_block(text, identity)
-            except (OSError, UnicodeError, ValueError) as error:
+            except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
                 failures.append(f"cannot validate {relative_path} runtime identity: {error}")
             else:
                 if text != expected:
                     failures.append(f"{relative_path} runtime identity block is stale")
-        for relative_path in POLICY_LEDGER_SURFACES:
-            try:
-                text = (root / relative_path).read_text(encoding="utf-8")
-                expected = replace_policy_ledger_block(text, revisions)
-            except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
-                failures.append(f"cannot validate {relative_path} policy ledger: {error}")
-            else:
-                if text != expected:
-                    failures.append(f"{relative_path} policy ledger block is stale")
     return contract.record_count
 
 
 __all__ = [
-    "HISTORY_RELATIVE",
+    "DIGEST_PATTERN",
     "IDENTITY_RELATIVE",
     "INPUT_MANIFEST_RELATIVE",
-    "POLICY_LEDGER_SURFACES",
-    "POLICY_REVISIONS_RELATIVE",
     "RUNTIME_IDENTITY_SURFACES",
     "RuntimeContract",
     "check_runtime_identity",
     "compute_runtime_contract",
     "load_json_document",
-    "render_policy_ledger",
     "render_runtime_identity",
-    "replace_policy_ledger_block",
     "replace_runtime_identity_block",
 ]

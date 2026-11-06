@@ -24,10 +24,9 @@
 | 显式地跨会话延续一项任务 | [Continuous Progress](../plugin/skills/continuous-progress/SKILL.md) | 用户 |
 | 通过本地浏览器或客户端做检索 | [Local Web Search 示例](examples.zh-CN.md#local-web-search) | 用户 |
 | 报告宿主结果 | [报告兼容性结果](compatibility.md#report-a-compatibility-result) | 测试者与审计者 |
-| 理解包身份 | [运行时与仓库身份](runtime-identity.md) | 维护者与审计者 |
+| 理解包身份 | [运行时身份](runtime-identity.md) | 维护者与审计者 |
 | 决定某项变更的版本增量或打包方式 | [版本增量](runtime-identity.md#version-increment) | 维护者 |
 | 审阅仓库控制 | [仓库治理](repository-governance.md) | 维护者 |
-| 追溯一次仓库策略修订 | [仓库策略修订](repository-policy-revisions.md) | 维护者与审计者 |
 | 贡献文档 | [文档策略](maintainers/documentation-policy.md) | 贡献者 |
 | 准备发布文档与证据 | [发布文档与证据](maintainers/release-documentation.md) | 维护者与审计者 |
 | 决定 Axiom 在哪里上架并记录提交 | [分发渠道](maintainers/distribution-channels.md) | 维护者 |
@@ -40,10 +39,10 @@
 
 ## 发布历史
 
-[签入的发布状态](../evidence/release-status.json)负责源码候选的版本与绑定；发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
+发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
 
 - [更新日志](../CHANGELOG.md)记录每个版本的用户可见变更及需要的操作。
-- [证据](../evidence/)包含机器事实，各自带有版本、主体与日期。
+- [运行时身份](../evidence/runtime-identity.json)记录当前版本与已安装文件的摘要。
 - [早期记录](compatibility.md#earlier-records)指明保留版本说明、路由评估与宿主观测记录的发布标签。
 
 ## 当前结构
@@ -60,7 +59,7 @@
 | `docs/` 下的主题文档 | 架构、示例、信任、兼容性、身份以及仓库治理 |
 | `docs/reference/` | 确切的公开技术参考：技能参考与经校验的 Hook 渲染 |
 | `docs/maintainers/` | 运行时编写、验证、文档与发布流程 |
-| `evidence/` | 机器可读的身份、状态、策略修订与运行时历史 |
+| `evidence/` | 机器可读的运行时身份 |
 | 英文文档旁的 `<name>.zh-CN.md` | 该文档的简体中文翻译；英文为规范版本，翻译与其源文档在同一次变更中更新 |
 
 完整的仓库地图见[贡献指南](../CONTRIBUTING.md#repository-layout)。

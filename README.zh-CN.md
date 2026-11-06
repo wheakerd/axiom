@@ -125,7 +125,7 @@ Summarize the purpose of this README. Do not modify files.
 - [文档索引](docs/README.zh-CN.md)：按任务组织的指南与参考。
 - [技能参考](docs/reference/skills.md)：捆绑技能与示例。
 - [最新 Release](https://github.com/wheakerd/axiom/releases/latest) 与[更新日志](CHANGELOG.md)：每个版本的变更以及需要的操作。
-- [兼容性](docs/compatibility.md)：支持的宿主与已知限制，以[发布状态记录](evidence/release-status.json)为依据。
+- [兼容性](docs/compatibility.md)：支持的宿主与已知限制。
 - [信任模型](docs/trust-model.zh-CN.md)：安全边界。Axiom 处于公开测试阶段；它的指令不替代宿主权限，也不提供沙箱。
 - [GitHub Discussions](https://github.com/wheakerd/axiom/discussions)：提问与早期想法。
 - [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose)：缺陷报告、功能请求、路由用例与兼容性报告。

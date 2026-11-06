@@ -41,7 +41,7 @@ Current package checks use the repository's publication aggregate. A native pack
 
 ## Current Bounded Status
 
-The machine-readable [release status](../evidence/release-status.json) binds the checked-in tree to its plugin version and runtime identity. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state. Read its `targetRelease` and `runtimeIdentity` fields for the candidate version, immutable binding, and installed-runtime contract schema.
+The machine-readable [runtime identity](../evidence/runtime-identity.json) binds the checked-in tree to its plugin version and installed-file digest, as [Runtime Identity](runtime-identity.md) describes. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
 
 | Host | What the repository checks for each release |
 | --- | --- |
@@ -79,13 +79,9 @@ Report what you observed in a host session. Report a pass, a failure, an unknown
 
 A report lives in its issue; the repository checks in no observation records.
 
-## Evidence Paths
-
-The [current release status](../evidence/release-status.json) and the [runtime identity](../evidence/runtime-identity.json), with its [policy](runtime-identity.md), are the machine-readable records for the current tree.
-
 ## Earlier Records
 
-Version notes, routing evaluations, host observation records, and the index of earlier experiment archives are not part of the current tree. They remain in the tree at tag [`v0.27.2`](https://github.com/wheakerd/axiom/tree/v0.27.2), under `docs/releases/`, `evals/`, `evidence/`, and `docs/field-validation.md`. Each record keeps its original host, version, date, and outcome and says nothing about the current release.
+Version notes, routing evaluations, host observation records, runtime digest histories, and the index of earlier experiment archives are not part of the current tree. They remain in the tree at tag [`v0.27.2`](https://github.com/wheakerd/axiom/tree/v0.27.2), under `docs/releases/`, `evals/`, `evidence/`, and `docs/field-validation.md`. Each record keeps its original host, version, date, and outcome and says nothing about the current release.
 
 ## Version Interpretation
 

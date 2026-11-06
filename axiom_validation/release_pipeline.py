@@ -44,7 +44,7 @@ from .release_tag_controller import (
     SIGNED_MAIN_CHECK,
 )
 from .release_versions import parse_production_release_version
-from .runtime_identity import replace_policy_ledger_block, replace_runtime_identity_block
+from .runtime_identity import DIGEST_PATTERN, IDENTITY_RELATIVE
 from .yaml_subset import (
     CanonicalYamlError,
     CanonicalYamlScalar,
@@ -74,11 +74,6 @@ REHEARSAL_COMMANDS: tuple[tuple[str, ...], ...] = (
 )
 REHEARSAL_OUTPUT_LIMIT = 4000
 CHANGELOG_RELATIVE = "CHANGELOG.md"
-LEDGER_RELATIVE = "evidence/repository-policy-revisions-v1.json"
-IDENTITY_RELATIVE = "evidence/runtime-identity.json"
-STATUS_RELATIVE = "evidence/release-status.json"
-IDENTITY_DOCUMENT_RELATIVE = "docs/runtime-identity.md"
-LEDGER_DOCUMENT_RELATIVE = "docs/repository-policy-revisions.md"
 POLL_SECONDS = 20
 CHECK_TIMEOUT_SECONDS = 75 * 60
 RUN_DISCOVERY_SECONDS = 5 * 60
@@ -285,6 +280,21 @@ def manifest_version_at(root: Path, commit: str) -> str:
         f"{CODEX_MANIFEST} at {commit} must declare one stable production version",
     )
     return version
+
+
+def runtime_digest_at(root: Path, commit: str) -> str:
+    """Return the installed-runtime digest the runtime identity records at a commit."""
+    try:
+        document = json.loads(git(root, "show", f"{commit}:{IDENTITY_RELATIVE}"))
+    except json.JSONDecodeError as error:
+        raise PipelineError(f"{IDENTITY_RELATIVE} at {commit} is not valid JSON") from error
+    runtime = document.get("runtimeContract") if isinstance(document, dict) else None
+    digest = runtime.get("digest") if isinstance(runtime, dict) else None
+    _require(
+        isinstance(digest, str) and DIGEST_PATTERN.fullmatch(digest) is not None,
+        f"{IDENTITY_RELATIVE} at {commit} must record one runtime digest",
+    )
+    return digest
 
 
 def immediate_successors(version: str) -> tuple[str, str, str]:
@@ -714,9 +724,7 @@ def rehearse_catalog_handoff(
         tree = Path(directory) / "tree"
         git(root, "worktree", "add", "--detach", str(tree), commit)
         try:
-            apply_catalog_handoff(
-                tree, tag=tag, release_date=today, baseline_commit=commit, recorded_on=today
-            )
+            apply_catalog_handoff(tree, tag=tag, release_date=today)
             for command in commands:
                 result = subprocess.run(
                     [sys.executable, "-B", *command],
@@ -765,6 +773,11 @@ def run_candidate(
         head_version in immediate_successors(base_version),
         f"version {head_version} is not the next patch, minor, or major version after "
         f"{base_version}",
+    )
+    _require(
+        runtime_digest_at(root, head_commit) != runtime_digest_at(root, base_commit),
+        f"version {head_version} changes no installed file: its runtime digest equals "
+        f"{base_version}'s, and a repository-only change keeps the plugin version",
     )
     base_tag, head_tag = f"v{base_version}", f"v{head_version}"
     _require(
@@ -944,72 +957,18 @@ def _read_round_trip_json(path: Path) -> Any:
     return document
 
 
-def apply_catalog_handoff(
-    root: Path,
-    *,
-    tag: str,
-    release_date: str,
-    baseline_commit: str,
-    recorded_on: str,
-) -> tuple[str, ...]:
-    """Advance both catalogs to the tag and record the next policy revision."""
+def apply_catalog_handoff(root: Path, *, tag: str, release_date: str) -> tuple[str, ...]:
+    """Advance both catalogs to the tag and date the released Changelog heading."""
     version = validate_tag(tag)
-    validate_commit(baseline_commit, "handoff baseline")
-    for value, label in ((release_date, "release date"), (recorded_on, "record date")):
-        _require(re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) is not None, f"invalid {label} {value!r}")
-
-    identity_path = root / IDENTITY_RELATIVE
-    identity = _read_round_trip_json(identity_path)
+    _require(
+        re.fullmatch(r"\d{4}-\d{2}-\d{2}", release_date) is not None,
+        f"invalid release date {release_date!r}",
+    )
+    identity = _read_round_trip_json(root / IDENTITY_RELATIVE)
     _require(
         identity.get("pluginVersion") == version,
         f"main declares plugin version {identity.get('pluginVersion')}, not {version}; "
         "the catalog handoff no longer applies",
-    )
-    previous = identity.get("repositoryPolicyRevision")
-    _require(type(previous) is int and previous > 0, "the runtime identity has no policy revision")
-    revision = previous + 1
-    digest = identity["runtimeContract"]["digest"]
-
-    ledger_path = root / LEDGER_RELATIVE
-    ledger = _read_round_trip_json(ledger_path)
-    _require(
-        ledger["revisions"][-1]["revision"] == previous,
-        "the policy ledger and runtime identity disagree on the current revision",
-    )
-    ledger["revisions"].append(
-        {
-            "revision": revision,
-            "recordedOn": recorded_on,
-            "baselineCommit": baseline_commit,
-            "sourceIssue": None,
-            "summary": (
-                "Advance the Codex and Claude Code marketplace sources to verified "
-                f"immutable Latest {tag}."
-            ),
-            "runtimeContractDigest": digest,
-        }
-    )
-    _write_json(ledger_path, ledger)
-
-    identity["repositoryPolicyRevision"] = revision
-    _write_json(identity_path, identity)
-    status_path = root / STATUS_RELATIVE
-    status = _read_round_trip_json(status_path)
-    _require(
-        status["runtimeIdentity"]["repositoryPolicyRevision"] == previous,
-        "the release status and runtime identity disagree on the current revision",
-    )
-    status["runtimeIdentity"]["repositoryPolicyRevision"] = revision
-    _write_json(status_path, status)
-    identity_document = root / IDENTITY_DOCUMENT_RELATIVE
-    identity_document.write_text(
-        replace_runtime_identity_block(identity_document.read_text(encoding="utf-8"), identity),
-        encoding="utf-8",
-    )
-    ledger_document = root / LEDGER_DOCUMENT_RELATIVE
-    ledger_document.write_text(
-        replace_policy_ledger_block(ledger_document.read_text(encoding="utf-8"), ledger),
-        encoding="utf-8",
     )
 
     for host, relative in MARKETPLACE_CATALOGS:
@@ -1029,15 +988,7 @@ def apply_catalog_handoff(
     )
     changelog = changelog.replace(unreleased, f"\n## {version} - {release_date}\n")
     changelog_path.write_text(changelog, encoding="utf-8")
-    return (
-        CHANGELOG_RELATIVE,
-        IDENTITY_DOCUMENT_RELATIVE,
-        LEDGER_DOCUMENT_RELATIVE,
-        STATUS_RELATIVE,
-        LEDGER_RELATIVE,
-        IDENTITY_RELATIVE,
-        *(relative for _, relative in MARKETPLACE_CATALOGS),
-    )
+    return (CHANGELOG_RELATIVE, *(relative for _, relative in MARKETPLACE_CATALOGS))
 
 
 def _run_publication_checks(root: Path) -> None:
@@ -1055,14 +1006,7 @@ def _run_publication_checks(root: Path) -> None:
         )
 
 
-HANDOFF_REQUIRED_PATHS = (
-    CHANGELOG_RELATIVE,
-    IDENTITY_DOCUMENT_RELATIVE,
-    LEDGER_DOCUMENT_RELATIVE,
-    STATUS_RELATIVE,
-    LEDGER_RELATIVE,
-    IDENTITY_RELATIVE,
-)
+HANDOFF_REQUIRED_PATHS = (CHANGELOG_RELATIVE,)
 
 
 def _stage_handoff(root: Path, paths: tuple[str, ...]) -> tuple[str, tuple[str, ...]]:
@@ -1092,7 +1036,6 @@ def run_catalog(
     tag: str,
     reporter: Reporter,
     clock: Clock,
-    today: str,
     run_url: str,
     publication_checks: Callable[[Path], None] = _run_publication_checks,
 ) -> str:
@@ -1118,19 +1061,13 @@ def run_catalog(
         f"branch {branch} already exists from an earlier attempt; inspect, then delete it "
         "before rerunning this job",
     )
-    paths = apply_catalog_handoff(
-        root,
-        tag=tag,
-        release_date=release_date,
-        baseline_commit=main,
-        recorded_on=today,
-    )
+    paths = apply_catalog_handoff(root, tag=tag, release_date=release_date)
     publication_checks(root)
     expected_tree, staged = _stage_handoff(root, paths)
     headline = f"chore: advance the marketplace catalogs to the immutable release {tag}"
     body = (
-        f"Advance both marketplace catalogs to the verified immutable Latest release {tag}, "
-        "date its Changelog heading, and record the next repository policy revision in the ledger.\n\n"
+        f"Advance both marketplace catalogs to the verified immutable Latest release {tag} "
+        "and date its Changelog heading.\n\n"
         f"Prepared by the Release pipeline run {run_url} from main {main}."
     )
     write_api.post(
@@ -1450,6 +1387,7 @@ __all__ = (
     "run_candidate",
     "run_catalog",
     "run_publish",
+    "runtime_digest_at",
     "stage_draft",
     "utc_today",
     "wait_for_checks",

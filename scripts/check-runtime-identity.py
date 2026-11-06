@@ -27,7 +27,7 @@ def parser() -> argparse.ArgumentParser:
     modes.add_argument(
         "--check",
         action="store_true",
-        help="validate checked-in identity, history, policy revisions, and rendered facts",
+        help="validate the checked-in identity and its rendered facts",
     )
     modes.add_argument(
         "--digest-root",
@@ -39,11 +39,6 @@ def parser() -> argparse.ArgumentParser:
         type=Path,
         default=REPOSITORY_ROOT / INPUT_MANIFEST_RELATIVE,
         help="input manifest used with --digest-root (defaults to the checked-in current manifest)",
-    )
-    argument_parser.add_argument(
-        "--historical",
-        action="store_true",
-        help="allow absent newly classified inputs, fields, or excluded roots when deriving an old tag",
     )
     return argument_parser
 
@@ -58,16 +53,13 @@ def report_failures(failures: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     arguments = parser().parse_args(argv)
     if arguments.check:
-        if arguments.historical:
-            parser().error("--historical requires --digest-root")
         failures: list[str] = []
         record_count = check_runtime_identity(failures)
         if failures:
             return report_failures(failures)
         print(
             "Runtime identity validation passed: "
-            f"{record_count} canonical installed inputs, distinct plugin, policy, "
-            "and runtime identities."
+            f"{record_count} canonical installed inputs."
         )
         return 0
 
@@ -80,12 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         root=manifest_path.parent,
     )
     contract = (
-        compute_runtime_contract(
-            root,
-            manifest,
-            failures,
-            historical=arguments.historical,
-        )
+        compute_runtime_contract(root, manifest, failures)
         if manifest is not None
         else None
     )

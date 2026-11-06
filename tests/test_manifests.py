@@ -90,6 +90,17 @@ class ManifestPolicyTests(unittest.TestCase):
         self.assertEqual(RELEASE_VERSION, release_version())
         self.assertIsNotNone(release_version())
 
+    def test_release_version_needs_a_stable_codex_manifest_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.assertIsNone(release_version(root))
+            manifest = root / "plugin/.codex-plugin/plugin.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text('{"version": "0.11.0"}\n')
+            self.assertEqual("0.11.0", release_version(root))
+            manifest.write_text('{"version": "0.11.0-beta"}\n')
+            self.assertIsNone(release_version(root))
+
     def test_canonical_production_release_grammar(self):
         for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
             with self.subTest(case_id=case_id, surface="manifest"):

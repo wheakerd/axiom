@@ -106,7 +106,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Current plugin version | Codex plugin manifest | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |
 | Git workflow routing boundary | The `traceable-git-submit` skill | Current; `docs/architecture.md` summarizes it |
-| Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
+| Current compatibility boundary | `docs/compatibility.md` | Current |
 | Records from earlier releases | The release tags; `docs/compatibility.md` names the tag that keeps them | Not part of the current tree; they do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
 | GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
@@ -114,7 +114,6 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | `docs/repository-governance.md`; the live rulesets are the source for their own settings | Current |
 | Simplified Chinese translations | The English source and its `<name>.zh-CN.md` twin | Current; the twin translates prose and table headers and changes with its source |
-| Repository policy revisions | `evidence/repository-policy-revisions-v1.json` | Current; `docs/repository-policy-revisions.md` renders the ledger and preserves the archived changelog entries |
 
 Machine-derived facts should use bounded generated regions or deterministic checks where practical. Human prose may explain their meaning but must not redefine their values.
 
