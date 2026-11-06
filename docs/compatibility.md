@@ -45,7 +45,7 @@ Current package checks use the repository's publication aggregate. A native pack
 
 ## Current Bounded Status
 
-The machine-readable [release status](../evidence/release-status.json) is the canonical current summary. It binds the current plugin and runtime identity, keeps current host states separate from prior evidence, and requires an immutable subject before a host pass can be claimed.
+The machine-readable [release status](../evidence/release-status.json) is the canonical static summary of the checked-in tree: it binds the current plugin and runtime identity, keeps current host states separate from prior evidence, and requires an immutable subject before a host pass can be claimed. By design it stays `STATIC-ONLY` and never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
 
 The table summarizes that record. Read its `targetRelease` and `runtimeIdentity` fields for the candidate version, immutable binding, and installed-runtime contract schema.
 
