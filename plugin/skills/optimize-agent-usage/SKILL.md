@@ -9,7 +9,7 @@ Reduce total agent consumption while preserving the requested outcome, the autho
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Quality bar first.** Define the required quality, safety, authorization, rollback, and evidence bar before optimizing; a reduction counts only when that bar still passes.
 2. **No safety trade.** Never remove required tests, rollback checks, secret handling, destructive safeguards, or outcome-owning evidence to save context or calls.

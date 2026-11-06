@@ -9,7 +9,7 @@ Rebuild a completion, progress, or success claim from current direct evidence be
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Observed facts only.** Only a fact observed in this session, and still current after the last mutation of its subject, supports `met`; recalled and summarized facts are claims to re-verify.
 2. **Criteria from the source.** Freeze the acceptance criteria from the earliest available source and the user's latest explicit decisions, never from the latest summary alone; settled decisions are not reopened.

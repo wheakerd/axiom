@@ -8,6 +8,28 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository policy revisions, which change no installed file, are not changelog entries. The [policy ledger](evidence/repository-policy-revisions-v1.json) records them and [Repository Policy Revisions](docs/repository-policy-revisions.md) renders it, together with the entries that revisions up to 116 carried here.
 
+## 0.27.2 - unreleased
+
+### Changed
+
+- The startup gate states what it is: it selects bundled skills and states the session rules, instead of claiming to select skills "and nothing else" while also setting session-wide rules.
+- Invariant 2 of the gate binds every prohibition a skill or its references state (a never, only, or stop) as a boundary, not an adaptable default, and each bundled skill's invariants section names that exception; previously only the three to six listed invariants bound and every other sentence, including secret-handling and manifest rules, was by the text's own definition a default.
+- The gate's Before Acting section is removed, because each action route already requires presenting the exact action, and its Output Language rule applies only to a turn in which a bundled route is selected, as the Trust Model already stated.
+- The invocation notice names a bundled skill as `axiom:<skill-name>`, matching the host's own listing of plugin skills; the documentation follows.
+- The gate's description no longer names local web research, which left the body in 0.26.0; the terms list drops definitions that the owning skills carry; two chained sentences are split into short rules; the refresh rule joins the standing rules. The gate shrinks from 7,363 to 6,843 bytes.
+- The `agents-architect` description states its host boundary: it writes only `AGENTS.md`, and a Claude Code project that has a `CLAUDE.md` does not load `AGENTS.md`, so there the skill stops and says so; Compatibility records the same boundary.
+- No hook or manifest content other than the version changes.
+
+### Behavioral impact
+
+Prohibitions anywhere in a skill or its references now bind on both hosts. A session no longer receives a pre-action sentence rule or an English working-output rule outside Axiom-guided turns. Notices use the host's lowercase plugin prefix. The gate's selection rules are unchanged; the two-arm requirement does not apply because the change has no routing purpose, and no host session was run for this release, which repository policy revision 138 no longer requires.
+
+### Required action
+
+None.
+
+See the [version notes](docs/releases/v0.27.2.md) for the review findings behind each change and the evidence boundary.
+
 ## 0.27.1 - 2026-11-06
 
 ### Fixed

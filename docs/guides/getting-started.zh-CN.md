@@ -50,9 +50,9 @@ Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定
 
 预期契约是选中 `agents-architect`、给出只读的证据报告，且不改动任何文件。路由选择不是修改仓库的许可。在 `using-axiom` 生效时，模型与宿主可以按你的输出详细程度偏好说明这次调用。例如：
 
-`Axiom:agents-architect` Review the repository's instruction structure.
+`axiom:agents-architect` Review the repository's instruction structure.
 
-整个 Axiom 技能标记是行内代码。外部或仓库本地的技能、插件或 MCP 能力保留其自身的行内代码名称和简短原因，不加 `Axiom:` 前缀。模型自行决定是否说明调用以及如何安排周围的输出。
+整个 Axiom 技能标记是行内代码。外部或仓库本地的技能、插件或 MCP 能力保留其自身的行内代码名称和简短原因，不加 `axiom:` 前缀。模型自行决定是否说明调用以及如何安排周围的输出。
 
 这项可选指引属于 `using-axiom`：它通过已启用的启动门控或对该技能的显式调用生效。门控被禁用时，单独调用另一个 Axiom 技能并不会激活通知指引。
 

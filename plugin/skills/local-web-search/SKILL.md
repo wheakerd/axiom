@@ -9,7 +9,7 @@ Keep research that runs through the user's own client relevant, free of agent-ad
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Boundary before the first request.** Decide where the request will run from the tool's documentation, the host's context, and the user's words; never probe a site, enumerate machine identifiers, or inspect secrets to decide.
 2. **No agent-added disclosure.** Send only the terms and destination the question needs; add no hostnames, device or installation IDs, usernames, local paths, environment details, or tracking headers, and strip machine-specific values from local context before sending it.

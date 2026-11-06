@@ -9,7 +9,7 @@ Turn one material ambiguity into a user decision while keeping the requested out
 
 ## Invariants
 
-These invariants bind in every phase. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Need, not caution.** Ask only for a material decision the user left open; never ask for reassurance, as a defensive pause, or to reopen a settled decision.
 2. **Facts first.** The request, the conversation, the user's environment, and read-only inspection settle factual gaps; a question settles only what they cannot.

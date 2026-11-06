@@ -9,7 +9,7 @@ Produce a self-contained plan that describes the work currently requested. The p
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart.
 
 1. **Planning is not execution.** A planning request authorizes planning; execution, scheduling, another host task, and saving a file need their own user intent, and a produced plan adds no confirmation gate.
 2. **Requirements over suggestions.** User requirements and still-valid decisions survive a revision; an assistant suggestion in an earlier draft is not a requirement.

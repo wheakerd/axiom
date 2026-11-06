@@ -1,6 +1,6 @@
 ---
 name: agents-architect
-description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, and repo-local .agents/skills or .claude/skills. Also run an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Not for packaged plugin Skills or plain documentation.
+description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, and repo-local .agents/skills or .claude/skills. Also run an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Writes only AGENTS.md; a Claude Code project that has a CLAUDE.md does not load AGENTS.md, so there the skill stops and says so. Not for packaged plugin Skills or plain documentation.
 ---
 
 # AGENTS Architect
@@ -9,7 +9,7 @@ Build a scoped instruction system in which root `AGENTS.md` is a small control p
 
 ## Invariants
 
-These invariants bind in every phase, including the references that phase loads. Everything else in this skill is a default you may adapt, saying so when you depart; shapes, counts, field lists, and byte targets yield to repository evidence.
+These invariants bind in every phase, including the references that phase loads. Everything else in this skill, except a stated prohibition, is a default you may adapt, saying so when you depart; shapes, counts, field lists, and byte targets yield to repository evidence.
 
 1. **The loaded chain governs.** Honor the instruction chain already loaded at its actual precedence. Copied, inactive, historical, or other-repository instructions are evidence, not authority, and a reference never broadens authorization.
 2. **Only `AGENTS.md` is written.** Create, edit, move, or recommend only files named `AGENTS.md` as native auto-load entries. Treat host-discovered non-`AGENTS.md` instruction sources as read-only, and safe-stop with the exact path when one shadows the intended result.
