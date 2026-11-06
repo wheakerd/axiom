@@ -1088,6 +1088,14 @@
       "sourceIssue": 259,
       "summary": "Release 0.27.1: traceable-git-submit commits with ordinary git commit so hooks run, passes shell-string values as quoted literals, pushes per URL, and creates the tag with git tag alone.",
       "runtimeContractDigest": "sha256:6f1286a4fb4c172356f3142f5da42f2aef4901f355f8f636edecef561c2e2c5e"
+    },
+    {
+      "revision": 137,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "7c3fedd18c17ebc937e2a110041dd26a09022c77",
+      "sourceIssue": null,
+      "summary": "Advance the Codex and Claude Code marketplace sources to verified immutable Latest v0.27.1.",
+      "runtimeContractDigest": "sha256:6f1286a4fb4c172356f3142f5da42f2aef4901f355f8f636edecef561c2e2c5e"
     }
   ]
 }
