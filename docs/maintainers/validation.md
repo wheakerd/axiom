@@ -18,17 +18,16 @@ python3 -B -m unittest discover -s tests -p 'test_*.py'
 git diff --check
 ```
 
-Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, compatibility evidence, routing context, documentation, publication checks, and the bundled skill readability contract (an Invariants list of three to six items per skill, no sentence over 300 characters, and no blanket binding clause). Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs the first two commands on the rehearsed catalog handoff before it creates a tag.
+Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, the routing gate's byte ceiling, documentation, publication checks, and the bundled skill readability contract (an Invariants list of three to six items per skill, no sentence over 300 characters, and no blanket binding clause). Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs the first two commands on the rehearsed catalog handoff before it creates a tag.
 
 Run additional checks required by the changed surface, read the final diff, confirm that the manifest version matches the release identity, and inspect `git status --short` for unrelated paths. Classify every changed path under [Runtime and Repository Identity](../runtime-identity.md#classify-a-change) before calling the result repository-only.
 
 | Changed surface | Additional acceptance owner |
 | --- | --- |
-| Skills, routing, or always-loaded context | [Runtime Changes](runtime-changes.md) and [Routing Context Budget](../../evals/context-budget/README.md) |
+| Skills, routing, or always-loaded context | [Runtime Changes](runtime-changes.md) |
 | Hooks or Hook workflows | [Hook runtime integration](#hook-runtime-integration) |
 | Documentation or navigation | [Documentation Policy](documentation-policy.md#validation-expectations) |
-| Routing contracts or host observations | [Routing Evaluations](../../evals/README.md) |
-| Compatibility evidence | [Field Validation](../field-validation.md) |
+| Compatibility observations | [Field Validation](../field-validation.md) |
 | Release documents or provenance | [Release Documentation And Evidence](release-documentation.md) and [Repository Governance](../repository-governance.md) |
 
 ## Code Security Scanning
@@ -57,7 +56,7 @@ The native matrix and its stable `hook-runtime-gate` aggregate are described in 
 
 Focused `unittest` modules under [tests/](../../tests/) own domain-local assertions. [tests/fixtures/](../../tests/fixtures/) holds test-specific mutations and synthetic data, not all aggregate fixtures.
 
-Tests pin fixture totals and invariants, not release facts. A total that grows with every release, such as the required public files, the Markdown files, the release-fact surfaces, or the installed-runtime inputs, comes from the same production owner the aggregate reports, and the current routing-context record is checked for consistency with the measured bytes rather than for the outcome of one release. A release that changes no validator behavior therefore needs no test edit; a lost fixture still fails.
+Tests pin fixture totals and invariants, not release facts. A total that grows with every release, such as the required public files, the Markdown files, or the installed-runtime inputs, comes from the same production owner the aggregate reports. A release that changes no validator behavior therefore needs no test edit; a lost fixture still fails.
 
 Source-contract anchors pin authority, safety, and evidence invariants in skill text, such as an authorization boundary or the rule that routing never silently picks among alternatives. Skill descriptions are pinned only for the consent and permission-bypass rule of delegation, the explicit-only activation of supervised progress, and the rollback requirement of persistent change; trigger wording is covered by the routing corpus and fresh-session observations, not by phrase pins. Do not pin procedural counts, formats, orderings, or phrasing; cover procedure, such as when the startup gate asks a clarification question or lets the model settle a delegated choice, with offline route scenarios in [axiom_validation/cases/routing.py](../../axiom_validation/cases/routing.py). Every skill body that accepts a delegated choice pins its rule to ask or keep the choice open otherwise, the condition that every alternative is reversible and already authorized, and the statement of which and why before acting; bodies that state the offered-option limit pin it too. The offline choice model recognizes one literal "either ... or" pair to regression-test that boundary; it neither defines nor limits how the host's model handles more alternatives, the request's specifics, problems that arise, deviations from the expected result, external interference, or gaps between a plan and the ideal behavior, which the model decides within the binding rules, pinned or not.
 
@@ -65,7 +64,7 @@ Keep fixture names in failure messages, and let the aggregate reporter add the p
 
 The aggregate summary's `immutable external action and image pins` total adds one for each validated full-SHA GitHub Action, digest-pinned `docker://` action, workflow job or service image, and digest-pinned remote Dockerfile source. Its parenthetical breakdown reports remote `FROM` sources as `Dockerfile base-image pins` and digest-pinned `COPY --from` or `RUN --mount=from` sources as `other Dockerfile input pins`. `FROM scratch`, references to an already validated local build stage, and validated action-local `COPY` or `ADD` sources are accepted but do not increase either Dockerfile count.
 
-The compatibility validator uses [tests/fixtures/compatibility-v3.json](../../tests/fixtures/compatibility-v3.json) for synthetic schema regression. A fixture is test data, never a host observation. The [evidence inventory](../field-validation.md#evidence-directory) owns format versions and runtime-history bindings; the [experiment archive](../field-validation.md#archived-experiments) owns retired observations and methods.
+A fixture is test data, never a host observation. The [evidence inventory](../field-validation.md#evidence-directory) owns the runtime-history bindings; the [experiment archive](../field-validation.md#archived-experiments) owns retired observations, formats, and methods.
 
 ## Optional Native Package Inspection
 
@@ -85,6 +84,6 @@ The repository aggregate owns Axiom's strict package checks. The retired `plugin
 
 ## Host Observations And Publication
 
-Static validation, native parsing, installed-host observations, and independent reproduction establish different facts. Use [Field Validation](../field-validation.md#recording-a-result) for compatibility records and [Routing Evaluations](../../evals/README.md) for bounded routing runs. Preserve original subjects, outcomes, and unavailable cases; never relabel earlier evidence as a new host, lifecycle, version, or date.
+Static validation and native parsing check structure; they do not establish how a host's model behaves, and the repository measures no host model behavior for a release. Use [Field Validation](../field-validation.md#recording-a-result) to report an observation of an installed host. Never relabel earlier evidence as a new host, lifecycle, version, or date.
 
-The checked-in release status remains `STATIC-ONLY`. A later observation is a separate artifact bound to its immutable subject. From repository policy revision 138 the Release pipeline requires no observation record for any release candidate; [Candidate Observations](../../evals/README.md#candidate-observations) records the earlier requirement. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).
+The checked-in release status remains `STATIC-ONLY`. A later observation is a separate artifact bound to its immutable subject. The Release pipeline requires no observation record for any release candidate: repository policy revision 138 removed the earlier requirement, and revision 141 archived the routing evaluations, as [Field Validation](../field-validation.md#archived-experiments) records. Passing contributor checks does not authorize tag creation or publication; only a merged release pull request starts the Release pipeline, and its actions and evidence follow [Repository Governance](../repository-governance.md) and [Release Documentation And Evidence](release-documentation.md).

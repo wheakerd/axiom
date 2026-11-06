@@ -9,7 +9,6 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
 from axiom_validation.context import RELEASE_VERSION
 from axiom_validation.release_evidence import (
@@ -27,7 +26,6 @@ from axiom_validation.release_evidence import (
     verify_release_snapshot,
 )
 from axiom_validation.release_versions import PRODUCTION_RELEASE_VERSION_CASES
-from tests.test_routing_evals import external_current_observation
 
 
 COMMIT = "b" * 40
@@ -1037,11 +1035,8 @@ None.
                 )
                 self.assertTrue(failures, name)
 
-    def test_repository_policy_never_invokes_legacy_observation_validation(self):
-        with tempfile.TemporaryDirectory() as temporary_directory, mock.patch(
-            "axiom_validation.release_evidence.validate_external_routing_observation",
-            side_effect=AssertionError("legacy observation validation called"),
-        ):
+    def test_repository_policy_attestation_names_its_scope(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
             directory = Path(temporary_directory)
             plan, asset, _ = self.prepare(directory)
             failures = []
@@ -1055,33 +1050,14 @@ None.
                 json.loads(attestation.read_text())["validation"]["scope"],
             )
 
-    def test_legacy_observation_contract_keeps_valid_and_invalid_results(self):
+    def test_assets_before_the_repository_checks_policy_are_refused(self):
         subject = {"version": "0.10.1", "tag": "v0.10.1", "commit": COMMIT, "tree": TREE}
-        record = external_current_observation()
-        record["axiom"] = subject
-        mutations = [None, "incomplete", "failed", "retrying", "mutating", "wrong-subject"]
-        with mock.patch("axiom_validation.routing_evals.external.RELEASE_VERSION", "0.10.1"):
-            for mutation in mutations:
-                document = json.loads(json.dumps(record))
-                if mutation == "incomplete":
-                    document["cases"].pop()
-                elif mutation == "failed":
-                    document["cases"][0]["status"] = "fail"
-                elif mutation == "retrying":
-                    document["run"]["repeatCount"] = 2
-                elif mutation == "mutating":
-                    document["cases"][0]["mutationAttempted"] = True
-                    document["summary"]["mutationAttempts"] = 1
-                elif mutation == "wrong-subject":
-                    document["axiom"]["tree"] = "d" * 40
-                with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
-                    payload = (json.dumps(document, indent=2) + "\n").encode("ascii")
-                    digest = hashlib.sha256(payload).hexdigest()
-                    path = Path(directory) / f"axiom-v0.10.1-codex-core-v2-{digest}.json"
-                    path.write_bytes(payload)
-                    failures = []
-                    validate_release_asset(path, subject, failures, root=Path(__file__).resolve().parents[1])
-                    self.assertEqual(mutation is not None, bool(failures), failures)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "axiom-v0.10.1-codex-core-v2-asset.json"
+            path.write_text("{}\n")
+            failures = []
+            validate_release_asset(path, subject, failures, root=Path(__file__).resolve().parents[1])
+            self.assertEqual(["release policy records apply from v0.11.0 onward"], failures)
 
     def test_repository_policy_version_boundary_and_rendering(self):
         for version, expected in (("0.10.999", False), ("0.11.0", True), ("1.0.0", True),

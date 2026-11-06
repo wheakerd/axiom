@@ -73,9 +73,8 @@ The current repository assigns these responsibilities:
 - `docs/reference/hooks.md` renders the canonical Hook declarations and wrapper, while `docs/getting-started.md` is a compatibility entry for historical links;
 - `docs/compatibility.md` owns the concise current support contract and links to historical records without reproducing their run narratives;
 - `docs/releases/` contains version notes;
-- `docs/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases;
-- `evidence/` and `evals/results/` retain machine records and observations; `docs/field-validation.md` indexes retired records at immutable archive sources;
-- `evals/README.md` and `evals/context-budget/README.md` own current evaluation guidance; `evals/history/` retains earlier methods and run narratives.
+- `docs/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases; and
+- `evidence/` retains machine records; `docs/field-validation.md` indexes retired records, including the routing evaluations, at immutable archive sources.
 
 [The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content, inbound links, and lifecycle classification move in one merged change.
 
@@ -96,7 +95,6 @@ docs/
 |-- maintainers/
 `-- releases/
 evidence/
-evals/
 ```
 
 Topical current references may remain directly under `docs/` when another directory would create artificial fragmentation.
@@ -129,7 +127,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |
 | Git workflow routing boundary | `axiom_validation/route-boundaries-v1.json` and the routing skill | Current; `docs/architecture.md` renders the checked summary |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
-| Historical host observations | Version-bound records under `evidence/**`, `evals/results/**`, and immutable sources indexed by `docs/field-validation.md` | Preserve original subjects and outcomes; archived records do not establish current support |
+| Historical host observations | Immutable sources indexed by `docs/field-validation.md` | Preserve original subjects and outcomes; archived records do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
 | Exceptional migration, architecture, security, compatibility, or evidence detail | `docs/releases/v<version>.md` when warranted | Candidate detail until publication; then preserved history, never reused as the final Release body |
 | GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
@@ -138,8 +136,6 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Repository governance | Dated governance evidence and maintainer reference | Current |
 | Simplified Chinese translations | The English source and its `<name>.zh-CN.md` twin | Current; the twin translates prose and table headers and changes with its source |
 | Repository policy revisions | `evidence/repository-policy-revisions-v1.json` | Current; `docs/repository-policy-revisions.md` renders the ledger and preserves the archived changelog entries |
-| Routing evaluation contracts and optional observation method | `evals/README.md` with versioned cases, schemas, and benchmark manifests | Current; earlier methods remain under `evals/history/` |
-| Routing-context measurements | Versioned `evals/context-budget/results/` records with `evals/context-budget/README.md` | Counts are static proxies; historical records keep their original bindings |
 
 Machine-derived facts should use bounded generated regions or deterministic checks where practical. Human prose may explain their meaning but must not redefine their values.
 
@@ -178,14 +174,14 @@ Every documentation change must, at minimum:
 - keep `README.md` at or below the enforced 16 KiB ceiling;
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and avoid skipped heading levels;
-- keep `docs/README.md` complete for current public documents and reject current-document orphans, including the current evaluation and context-budget entry points outside `docs/`;
+- keep `docs/README.md` complete for current public documents and reject current-document orphans;
 - accept only the documented lifecycle values;
 - preserve generated marker boundaries and compare rendered machine facts with their canonical sources;
 - require current entry points to link their canonical status and identity owners, while the Changelog and selected version note retain exact release bindings; a repeated version number is not a substitute for those links;
 - keep current public guidance from linking to non-public sources;
 - keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
 - validate the public Hook reference against checked-in declarations and wrappers; and
-- keep historical and project-plan documents, including `evals/history/`, out of current task navigation;
+- keep historical and project-plan documents out of current task navigation;
 - keep every English Markdown file ASCII; and
 - keep each `<name>.zh-CN.md` twin bound to its English source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, lifecycle metadata, and link targets match.
 

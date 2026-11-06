@@ -49,8 +49,8 @@ class DocumentationValidationTests(unittest.TestCase):
         # only with a deliberate documentation change.
         markdown = discover_markdown(REPOSITORY_ROOT)
         self.assertEqual(len(markdown), report.markdown_count)
-        self.assertEqual(26, report.current_document_count)
-        self.assertEqual(20, report.indexed_document_count)
+        self.assertEqual(24, report.current_document_count)
+        self.assertEqual(18, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
         self.assertEqual(6, report.translation_count)
@@ -59,7 +59,7 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         rejected = check_documentation_negative_fixtures(failures)
         self.assertEqual(len(NEGATIVE_FIXTURES), rejected)
-        self.assertEqual(29, rejected)
+        self.assertEqual(25, rejected)
         self.assertEqual([], failures)
 
     def test_standard_library_command_line_entrypoint(self):
@@ -77,7 +77,7 @@ class DocumentationValidationTests(unittest.TestCase):
             "(ceiling 16 KiB)", result.stdout
         )
         self.assertIn("6 translations", result.stdout)
-        self.assertIn("29 negative fixtures", result.stdout)
+        self.assertIn("25 negative fixtures", result.stdout)
 
     def test_skill_inventory_ignores_headings_in_usage_examples(self):
         for fence in ("```", "~~~~"):
@@ -147,8 +147,6 @@ class DocumentationValidationTests(unittest.TestCase):
             "releases/", "releases/v0.1.0.md",
             "../project/", "../project/plan.md",
             "../evidence/", "../evidence/record.json",
-            "../evals/results/", "../evals/results/record.json",
-            "../evals/history/", "../evals/history/method.md",
         ):
             with self.subTest(destination=destination):
                 failures: list[str] = []
@@ -159,12 +157,6 @@ class DocumentationValidationTests(unittest.TestCase):
                     failures,
                 )
                 self.assertTrue(any("historical or project-plan" in failure for failure in failures))
-
-    def test_evaluation_guides_are_current_but_history_is_not(self):
-        for path in ("evals/README.md", "evals/context-budget/README.md"):
-            with self.subTest(path=path):
-                self.assertTrue(is_current_document(path))
-        self.assertFalse(is_current_document("evals/history/codex-core-v1-v2.md"))
 
     def test_translations_are_not_current_documents_and_name_their_source(self):
         self.assertTrue(is_translation("docs/examples.zh-CN.md"))
@@ -214,15 +206,6 @@ class DocumentationValidationTests(unittest.TestCase):
             "docs/guide.zh-CN.md", "# Guide\n\n<!-- lifecycle: historical -->\n", failures
         )
         self.assertTrue(any("conflicts with its document class" in failure for failure in failures))
-
-    def test_historical_evaluation_accepts_preserved_lifecycle(self):
-        failures: list[str] = []
-        check_lifecycle_text(
-            "evals/history/codex-core-v1-v2.md",
-            "# Historical Method\n\n<!-- lifecycle: historical -->\n",
-            failures,
-        )
-        self.assertEqual([], failures)
 
 
 if __name__ == "__main__":

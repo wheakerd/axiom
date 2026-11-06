@@ -13,7 +13,6 @@ from axiom_validation.cases.routing import ROUTING_SCENARIOS
 from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.documentation import discover_markdown
 from axiom_validation.manifests import JSON_FILES
-from axiom_validation.release_facts import FACTS_SURFACES
 from axiom_validation.repository_policy import EXPECTED_DIRECT_SKILLS, REQUIRED_PUBLIC_FILES
 
 
@@ -28,13 +27,8 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
     f"{len(JSON_FILES)} JSON files, "
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
-    "29 documentation negative fixtures, "
+    "25 documentation negative fixtures, "
     f"{len(ROUTING_SCENARIOS)} offline route contract fixtures, "
-    "206 black-box routing cases, 79 fixed host benchmark cases, "
-    "11 labeled host result records, 8 bounded-review sequences with "
-    "11 review checkpoints, 6 in-session routing families over 18 measured cases, "
-    "8 routing-context lifecycle scenarios, "
-    f"{len(FACTS_SURFACES)} canonical release-fact surfaces, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     f"{len(EXPECTED_DIRECT_SKILLS)} skill readability contracts, "
     "10 structured Git route-boundary scenarios, "
@@ -42,8 +36,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     "13 critical-path CODEOWNERS entries, 241 traceable-Git contract fixtures, "
     "155 external-action gate fixtures, 127 rollback gate fixtures, "
     "7 source-linked cross-route, resume, and delegated-choice contracts, 102 validator parser fixtures, "
-    f"version {RELEASE_VERSION}, 2 compatibility evidence records, "
-    "12 compatibility evidence negative fixtures, 27 manifest schema fixtures, "
+    f"version {RELEASE_VERSION}, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
     "55 release-provenance fixtures, 30 immutable external action and image pins "
     "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "

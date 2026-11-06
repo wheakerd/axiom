@@ -642,7 +642,7 @@ These fixes change repository validation tools. Installed Skills, hooks, action 
 
 ### Required action
 
-None for installed plugin workflows. Contributors collecting new optional routing observations should use the current contract in [Routing Evaluations](evals/README.md): `codex-core-v3`, observation schema v3, and response schema V4. Existing historical records retain their original contracts.
+None for installed plugin workflows. Contributors collecting new optional routing observations should use the current contract in [Routing Evaluations](https://github.com/wheakerd/axiom/blob/v0.27.2/evals/README.md): `codex-core-v3`, observation schema v3, and response schema V4. Existing historical records retain their original contracts.
 
 ## 0.13.0 - 2026-09-16
 

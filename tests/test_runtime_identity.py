@@ -323,61 +323,6 @@ class RuntimeIdentityTests(unittest.TestCase):
                 check_runtime_identity(failures, root=root)
                 self.assertTrue(any(expected in failure for failure in failures), failures)
 
-    def test_new_external_evidence_requires_v2_and_canonical_digest(self):
-        source_path = REPOSITORY_ROOT / "tests/fixtures/compatibility-v3.json"
-        source = json.loads(source_path.read_text(encoding="utf-8"))
-        history = json.loads(
-            (REPOSITORY_ROOT / "evidence/runtime-contract-history-v1.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        history_entry = next(
-            entry for entry in history["entries"] if entry["runtimeContractDigest"]
-        )
-        source["release"] = {
-            "version": history_entry["pluginVersion"],
-            "tag": history_entry["tag"],
-            "commit": history_entry["commit"],
-        }
-        source["installation"]["targetPluginVersion"] = source["release"]["version"]
-        source["schemaVersion"] = "1"
-        del source["runtimeIdentity"], source["observationSubject"]
-        command = [
-            sys.executable,
-            str(REPOSITORY_ROOT / "scripts/check-compatibility-evidence.py"),
-            "--record",
-            "PLACEHOLDER",
-            "--expected-tag",
-            source["release"]["tag"],
-            "--expected-commit",
-            source["release"]["commit"],
-        ]
-        with tempfile.TemporaryDirectory() as temporary:
-            record_path = Path(temporary) / "record.json"
-            command[3] = str(record_path)
-
-            record_path.write_text(json.dumps(source), encoding="utf-8")
-            legacy = subprocess.run(command, capture_output=True, text=True, check=False)
-            self.assertNotEqual(0, legacy.returncode)
-            self.assertIn("new external observations must use", legacy.stderr)
-
-            source["schemaVersion"] = "2"
-            source["runtimeIdentity"] = {
-                "pluginVersion": source["release"]["version"],
-                "runtimeContractSchemaVersion": "1",
-                "runtimeContractDigest": history_entry["runtimeContractDigest"],
-            }
-            source["observationSubject"] = "installed-runtime-contract"
-            record_path.write_text(json.dumps(source), encoding="utf-8")
-            current = subprocess.run(command, capture_output=True, text=True, check=False)
-            self.assertEqual(0, current.returncode, current.stderr)
-
-            source["runtimeIdentity"]["runtimeContractDigest"] = "sha256:" + "0" * 64
-            record_path.write_text(json.dumps(source), encoding="utf-8")
-            mismatched = subprocess.run(command, capture_output=True, text=True, check=False)
-            self.assertNotEqual(0, mismatched.returncode)
-            self.assertIn("disagrees with canonical identity", mismatched.stderr)
-
     def test_missing_duplicate_unordered_escaping_symlink_and_unclassified_inputs_fail(self):
         fixtures = (
             ("missing", self.remove_hook_tree, "cannot inspect plugin/hooks"),
