@@ -28,8 +28,8 @@ Keep the existing owners and load this reference once:
 | Send a secret across a trust boundary | `confirm-external-action`; this protocol grants no disclosure authority |
 | Reveal or print a current secret | No lifecycle authority; protect the secret |
 
-Add no `credential-lifecycle` route unless later fixed-corpus and host evidence
-prove this composition materially incomplete. Routing authorizes no transition.
+This protocol composes the two existing owners and adds no
+`credential-lifecycle` route. Routing authorizes no transition.
 Each owner keeps its authority, write-set, rollback and verification gates.
 
 ## Frozen Lifecycle Record

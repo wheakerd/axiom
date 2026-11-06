@@ -56,9 +56,9 @@ Explicit `effective-instructions:reconcile-preview` requests a read-only compari
 
 ## `agent-plugin-architect`
 
-> Audit this packaged plugin's shared Skills, route ownership, manifests, hooks, and version-bound compatibility evidence.
+> Audit this packaged plugin's shared Skills, route ownership, manifests, and hooks.
 
-[Agent Plugin Architect](../plugin/skills/agent-plugin-architect/SKILL.md) inventories the package and loads only the active architecture references. It can design another project's Codex or Claude Code integration; Axiom itself supports both hosts. An explicit release-readiness audit returns classified evidence and the next bounded decision while remaining read-only.
+[Agent Plugin Architect](../plugin/skills/agent-plugin-architect/SKILL.md) inventories the package and loads only the active architecture references. It can design another project's Codex or Claude Code integration; Axiom itself supports both hosts. An explicit release-readiness audit reports what each gate showed and the next bounded decision while remaining read-only.
 
 Repo-local instruction systems belong to `agents-architect`; ordinary plugin source or documentation stays host-native. Installation, publication, deployment, and Git submission require their own active-phase ownership and authority. An explicit context-cost redesign may add `optimize-agent-usage`. See the [route contract](agent-plugin-architect-route-contract.md).
 

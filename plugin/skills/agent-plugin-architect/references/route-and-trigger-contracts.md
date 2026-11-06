@@ -6,8 +6,8 @@ Route from direct user intent, not from the repository name or the word
 "plugin" alone.
 
 For `agent-plugin-architect`, require explicit packaged Codex or Claude Code
-plugin architecture involving shared Skills, routes, manifests, wrappers,
-hooks, or version-bound evidence. Keep these boundaries:
+plugin architecture involving shared Skills, routes, manifests, wrappers, or
+hooks. Keep these boundaries:
 
 - repo-local `AGENTS.md`, `.agents/skills`, and `.claude/skills` systems select
   `agents-architect`;

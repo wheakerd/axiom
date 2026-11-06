@@ -15,7 +15,7 @@ data.
 
 Run only confirmed read-only checks against the candidate. Isolate any
 potentially writing validator or uncertain package command in a disposable
-copy outside publishable trees; that run is not installed-host evidence.
+copy outside publishable trees; that run does not show installed-host behavior.
 
 ## Establish The Target Contract
 
@@ -27,9 +27,9 @@ require GitHub infrastructure.
 Derive identity fields, version grammar and progression, tag conventions,
 required checks, release identities, signatures, and publication constraints
 from that contract. Do not import another repository's digest schema, policy
-revision, stable-only version, named check, controller, or ruleset. Report an
-unresolved material requirement as `incomplete` with the bounded decision
-needed; do not invent policy.
+revision, stable-only version, named check, controller, or ruleset. When a
+material requirement is unresolved, say the audit is incomplete and name the
+one decision needed; do not invent policy.
 
 ## Freeze One Candidate
 
@@ -47,30 +47,32 @@ Record current direct evidence for:
 - timestamp, source, subject, access boundary, and result of each remote read.
 
 Stale refs, Issue baselines, plans, versions, prose, counts, and prior reports
-are not current proof. If the subject cannot be frozen, report `incomplete`.
+are not current proof. If the subject cannot be frozen, say the audit is
+incomplete.
 
-## Candidate Impact Classification
+## Classify The Candidate's Impact
 
-Classify every changed surface into one or more subjects and cite the files and
-evidence for each classification:
+Say which of these each changed surface touches, and cite the files and
+evidence:
 
-- `installed-runtime`: shipped Skills, references, Hooks, wrappers, or another
-  behavior-bearing input;
-- `routing-contract`: selection, ownership, trigger, overlap, or phase behavior;
-- `action-authority`: permission, retry, stop, or mutation boundaries;
-- `host-compatibility`: host discovery, lifecycle, schema, or version behavior;
-- `release-infrastructure`: validators, workflows, controllers, or evidence;
-- `repository-policy`: CI, governance, validation, or repository identity; and
-- `documentation-only`: prose changing none of the subjects above.
+- the installed runtime: shipped Skills, references, Hooks, wrappers, or
+  another behavior-bearing input;
+- the routing contract: selection, ownership, trigger, overlap, or phase
+  behavior;
+- action authority: permission, retry, stop, or mutation boundaries;
+- host compatibility: host discovery, lifecycle, schema, or version behavior;
+- release infrastructure: validators, workflows, controllers, or evidence;
+- repository policy: CI, governance, validation, or repository identity; or
+- documentation only: prose changing none of the above.
 
-Subjects may overlap. Apply the target's impact-to-version rules, including
-defined breaking-change, prerelease, shared-version, and policy-only handling.
-Derive required digests or revisions from their observed schemas; version or
-prose never proves content equality. Add no undefined identity fields. If
-identity or version selection remains ambiguous, return `incomplete` with one
-bounded `nextDecision`.
+A surface may touch several. Apply the target's impact-to-version rules,
+including defined breaking-change, prerelease, shared-version, and policy-only
+handling. Derive required digests or revisions from their observed schemas;
+version or prose never proves content equality. Add no undefined identity
+fields. If identity or version selection remains ambiguous, say the audit is
+incomplete and name the one decision needed.
 
-## Read-Only Gate Matrix
+## Read-Only Gates
 
 Derive required gates from the target contract and requested readiness claim.
 Inspect every applicable gate and record its source, phase, and evidence:
@@ -89,84 +91,53 @@ Inspect every applicable gate and record its source, phase, and evidence:
    candidate checks, naming/absence conditions, identities, permissions, and
    integrity controls. Use exact target-defined subjects and check names.
 
-Before ready, satisfy every required-now gate for the exact candidate. Separate
-pre-publication checks from later object checks and name each phase owner.
-Read drift-sensitive state fresh and identify required rereads before mutation.
-This phase never creates a tag, release, or marketplace entry.
+Before calling the candidate ready, satisfy every gate required now for the
+exact candidate. Separate pre-publication checks from later object checks and
+name each phase owner. Read drift-sensitive state fresh and identify required
+rereads before mutation. This phase never creates a tag, release, or
+marketplace entry.
 
-Remote evidence comes from a current owning-object read or is `unavailable`.
-Record `observedAt` and subject. Authentication failure, rate limit, ambiguous
-`404`, missing host access, or an unreachable policy never proves absence.
+Remote evidence comes from a current read of the owning object; otherwise say
+it could not be read. Record what you read and when. Authentication failure,
+rate limit, ambiguous `404`, missing host access, or an unreachable policy
+never proves absence.
 
-## Evidence Classification
+## What Each Gate Showed
 
-Use these states without substitution:
+For each gate say plainly what happened: current direct evidence satisfied
+it, contradicted it, the check was not attempted, the check could not run or
+be read here, or the target contract and selected phase show that it does not
+apply (cite that evidence). Missing evidence, tooling, or access never shows
+that a gate does not apply, and an unresolved requirement is never silently
+omitted.
 
-- `passed`: current direct evidence satisfied the criterion;
-- `failed`: current direct evidence contradicted the criterion;
-- `notRun`: the applicable check was not attempted;
-- `unavailable`: the applicable check could not run or be read in the current
-  environment;
-- `notApplicable`: the observed target contract and selected phase establish
-  that the criterion does not apply; cite that evidence;
-- `blocked`: a required external prerequisite or access boundary is unresolved;
-- `incomplete`: the subject, evidence set, or one decision is not specified.
+A required gate that failed, was not attempted, or could not run means the
+candidate is not ready. Say which holds: a failure, an unresolved external
+prerequisite or access boundary, or an unfrozen subject, pending check, or
+open decision. A gate that belongs to a later phase is not required now; name
+its owner.
 
-Missing evidence, tooling, or access never establishes `notApplicable`. Unknown
-applicability is `incomplete`; do not silently omit an unresolved requirement.
-Required `failed`, `notRun`, or `unavailable` gates cannot be ready. Use
-`not-ready` for failures, `blocked` for required external gates, and
-`incomplete` for an unfrozen subject, pending check, or decision. Mark a
-phase-later `notRun` gate non-required now and name its owner.
+## Report
 
-## Report Contract
+Report in Markdown or YAML. Identity and distribution fields come from the
+target contract; local packages need no remote repository ID. Cover:
 
-Return Markdown or YAML with these semantics. Identity and distribution fields
-come from the target contract; local packages need no remote repository ID.
-
-```yaml
-subject:
-  repository: <path-or-observed-identifier>
-  pluginRoot: <exact-path>
-  baseline: <observed-state-or-ref>
-  candidate: <scope-and-state-including-available-commit/tree-IDs>
-  identity: {} # Target-defined fields only.
-  runtimeImpact: changed | unchanged | unavailable
-
-releaseContract:
-  sources: []
-  channel: <local-or-remote-channel>
-  destination: <exact-path-or-remote-subject>
-
-classification: []
-
-gates:
-  - criterion: <target-derived-check>
-    contractSource: <exact-source>
-    requiredNow: true | false
-    phaseOwner: <current-or-later-owner>
-    status: <evidence-state-defined-above>
-    evidence: <observation-and-applicability-basis>
-    observedAt: <timestamp-or-null>
-
-mutationAuthority:
-  edit: false
-  commit: false
-  tag: false
-  push: false
-  release: false
-  marketplace: false
-  install: false
-  deploy: false
-
-outcome:
-  status: ready-for-separate-authorized-phase | not-ready | blocked | incomplete
-  nextDecision: <one-bounded-decision-or-null>
-```
+- the subject: repository, plugin root, baseline, candidate scope and state
+  with available commit and tree IDs, the target-defined identity fields, and
+  whether the installed runtime changed;
+- the release contract: its sources, the channel, and the exact destination;
+- the impact of each changed surface;
+- each gate: the criterion, its contract source, whether it is required now,
+  its phase owner, what the check showed, the evidence, and when it was
+  observed;
+- that this audit performed and authorizes no edit, commit, tag, push,
+  release, marketplace change, install, or deploy; and
+- the outcome: whether another authorized owner may begin its own preflight
+  and, if not, why, with at most one bounded next decision.
 
 Observations name exact subject, source, access boundary, and result, with
-timestamps for remote reads. Ask at most one bounded next decision. Ready only
-permits another authorized owner to begin its own preflight.
+timestamps for remote reads. A ready outcome only permits another authorized
+owner to begin its own preflight.
 
 ## Route And Promotion Boundary
 
@@ -174,8 +145,6 @@ Release-note summaries, generic SemVer questions, and source fixes stay
 host-native. Git, publication, installation, and deployment re-route to their
 owners; readiness is not authorization.
 
-Propose no public `release-readiness` Skill unless fixed-corpus and host-observed
-selection evidence show this owner unreliable, or measured cost favors a
-separate route. Include current routing headroom. Add no telemetry, daemon,
-watcher, automatic update, background release process, write token, or mutation
-shortcut.
+Propose no public `release-readiness` Skill unless the user asks for one. Add
+no telemetry, daemon, watcher, automatic update, background release process,
+write token, or mutation shortcut.

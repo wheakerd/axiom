@@ -42,4 +42,4 @@ Distinguish a session ending from the human canceling or pausing the whole run. 
 
 ## Report
 
-Report the outcome, the current coordinator, the evidence location, unresolved work, and the real supervision status. Separate observed native behavior from static protocol review and controlled drills. Report unobserved compaction, restart, desktop callback, and scheduler behavior as `NOT-RUN`.
+Report the outcome, the current coordinator, the evidence location, unresolved work, and the real supervision status. Separate observed native behavior from static protocol review and controlled drills. Say which compaction, restart, desktop callback, and scheduler behavior you did not observe.

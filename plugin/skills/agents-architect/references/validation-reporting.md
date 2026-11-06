@@ -104,8 +104,8 @@ an explicit unambiguous non-English normalization, and these boundaries:
 - worker conflict is resolved from direct evidence, not majority vote, and an
   active rule found stale remains binding for the current run; and
 - preview never writes, apply uses one writer after ledger freeze, and missing
-  roles or writer isolation safe-stop with completion and writes marked
-  `NOT-RUN`.
+  roles or writer isolation safe-stop, reported as incomplete with nothing
+  written.
 
 Include material staged, unstaged, untracked, and ignored content in the
 baseline scenarios.

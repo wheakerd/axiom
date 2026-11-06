@@ -8,6 +8,24 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository-only changes, which change no installed file, are not changelog entries; Git history records them. Entries that name a repository policy revision refer to the [ledger kept through tag `v0.27.2`](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/repository-policy-revisions.md).
 
+## 0.27.3 - unreleased
+
+### Changed
+
+- Skills state in plain words what was and was not checked. The status labels `NOT-RUN`, `UNAVAILABLE`, `notRun`, and `not-run` are removed from `agent-plugin-architect`, `agents-architect`, `continuous-progress`, `review-axiom-task`, and `verify-completion` and their references; each passage now says, for example, "say which checks you did not run or could not run".
+- `agent-plugin-architect` keeps two rules about evaluation and host behavior: use the evaluation assets the target plugin already has and never create one for it, and never infer host behavior from files. Its description no longer names compatibility evidence. Its evaluation reference drops the scenario coverage list and the evidence classes; its release-readiness reference replaces the state values and the YAML report template with a plain description of what each gate showed and what the report covers.
+- The startup gate and the `verify-completion` description use one condition: an explicit verification request, or a completion claim that rests on recalled or summarized facts. The gate previously said "a completion claim".
+- The credential-lifecycle reference and the release-readiness reference no longer make a new route conditional on fixed-corpus and host evidence, which the repository no longer collects.
+- No hook or manifest content other than the version changes.
+
+### Behavioral impact
+
+Reports from these skills describe unrun and unavailable checks in ordinary words instead of fixed labels. `agent-plugin-architect` no longer asks for a scenario coverage review, an evidence class for every claim, or a fixed report template; it still refuses to infer host behavior from files and still leaves a target's evaluation assets as they are. After compaction the gate selects `verify-completion` only for a completion claim that rests on recalled or summarized facts, as the skill's description already said. No host session was run for this release.
+
+### Required action
+
+None.
+
 ## 0.27.2 - 2026-11-06
 
 ### Changed

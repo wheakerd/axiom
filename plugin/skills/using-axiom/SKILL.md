@@ -52,7 +52,7 @@ An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary perfor
 - With a native prompt, exact existing authorization needs no reconfirmation unless scope changes.
 - Prior refusal or assistant prose creates no policy.
 - Ordinary named-remote Git remains host-native.
-- Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim.
+- Routine continuation after compaction selects no route; `verify-completion` needs an explicit verification request or a completion claim that rests on recalled or summarized facts.
 - Read `references/updating.md` only on an explicit Axiom update or refresh request; never check, fetch, install or announce updates.
 
 ## Invocation Notes
