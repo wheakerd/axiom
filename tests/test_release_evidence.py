@@ -192,25 +192,13 @@ class ReleaseEvidenceTests(unittest.TestCase):
             self.assertNotEqual(0, rejected.returncode)
             self.assertEqual("", rejected.stdout)
 
-    def test_release_body_is_rendered_from_changelog_not_version_notes(self):
+    def test_release_body_is_rendered_from_the_current_changelog_entry(self):
         failures: list[str] = []
         body = render_release_body(RELEASE_VERSION, failures)
         self.assertEqual([], failures)
         self.assertIsNotNone(body)
         assert body is not None
-        version_notes = (
-            Path(__file__).resolve().parents[1]
-            / "docs"
-            / "releases"
-            / f"v{RELEASE_VERSION}.md"
-        ).read_text(encoding="utf-8")
-        self.assertNotEqual(version_notes, body)
-        self.assertNotIn("unreleased candidate", body.casefold())
-        self.assertIn(
-            f"https://github.com/wheakerd/axiom/blob/v{RELEASE_VERSION}/"
-            f"docs/releases/v{RELEASE_VERSION}.md",
-            body,
-        )
+        self.assertNotIn(f"## {RELEASE_VERSION} - ", body)
 
     def test_render_body_cli_emits_exact_current_body(self):
         failures: list[str] = []

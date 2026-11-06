@@ -1160,6 +1160,14 @@
       "sourceIssue": 277,
       "summary": "Rewrite the governance page to the controls in force and remove the remaining phrase pins on documents and on the agent-plugin-architect description; CODEOWNERS and changelog checks stay.",
       "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
+    },
+    {
+      "revision": 146,
+      "recordedOn": "2026-11-06",
+      "baselineCommit": "637cf27061a5b64f961d2c9cbb6de8757ae70f74",
+      "sourceIssue": 279,
+      "summary": "Move history off main: remove version notes, Field Validation, the redirect page, and lifecycle labels; changelog links point at release tags; the reporting procedure joins Compatibility.",
+      "runtimeContractDigest": "sha256:b265825883bffb58d87c0e3310f9e70b0571dbdc29ec19be4312e1c63574ae65"
     }
   ]
 }

@@ -72,6 +72,6 @@ Keep reports free of credentials, private conversation text, and sensitive repos
 
 - Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) for a bounded host result.
 - Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml) for a false positive, false negative, or unexpected clarification.
-- Follow [Field Validation](../field-validation.md) for evidence labels and the non-destructive observation protocol.
+- Follow [Report A Compatibility Result](../compatibility.md#report-a-compatibility-result) for the non-destructive observation procedure.
 
 For update, removal, disable, or troubleshooting procedures, continue with [Managing an Installation](managing-installation.md).

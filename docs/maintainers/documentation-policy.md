@@ -6,14 +6,14 @@ This policy defines how Axiom's public documentation is organized and kept accur
 
 1. Each document has one primary audience and responsibility.
 2. Each durable fact has one canonical owner. Other documents link, summarize, or render that fact instead of maintaining a competing manual copy.
-3. Current guidance, historical evidence, generated facts, and project plans remain visibly distinct.
+3. The tree describes the current implementation. Release history lives in the Changelog, the release tags, and Git history.
 4. Static validation is not host-observed evidence, and a plan is not an implemented capability.
 5. Navigation favors user tasks without hiding maintainer and audit material.
 6. Documentation must not grant action authority or imply behavior that the checked-in runtime does not provide.
 
 ## Source And Version Scope
 
-Current guides, concepts, references, and contributor procedures describe the implementation and contracts in the same repository snapshot. Write the supported workflow in the present tense, verify it against its source owner, and replace obsolete instructions in place. Put release-by-release additions, removals, and migration narratives in the Changelog or version notes.
+Current guides, concepts, references, and contributor procedures describe the implementation and contracts in the same repository snapshot. Write the supported workflow in the present tense, verify it against its source owner, and replace obsolete instructions in place. Put release-by-release additions, removals, and migration narratives in the Changelog.
 
 "Current" means the checked-in tree that accompanies the document. `main` may contain unreleased changes; its documentation does not prove that the latest published or installed package has those changes. Users checking an installed release should use the documentation at that release's tag. Source inspection establishes declared behavior; installation, host observations, and remote publication still require evidence from their own owners.
 
@@ -21,8 +21,8 @@ Current guides, concepts, references, and contributor procedures describe the im
 | --- | --- |
 | Current usage, architecture, security, and contribution guidance | Follow the same checked-in source; avoid manual copies of the current release number and version-by-version narration |
 | Current version, digest, status, or measured counts | Link to the canonical manifest, record, or measurement command; use a checked generated region when displaying the values |
-| Changelog, version notes, and migration history | Retain the version whose change or migration they describe |
-| Observations, failures, evaluation results, and historical methods | Preserve the exact original subject, version, date, schema, and outcome; never relabel them as current |
+| Changelog entries and migration history | Retain the version whose change or migration they describe |
+| Observations and failures | Preserve the exact original subject, version, date, and outcome; never relabel them as current |
 | Supported schema or protocol selectors, compatibility limits, and prerequisites | Keep exact versions when they determine valid behavior; update their current selection only with the owning implementation |
 
 Version information is therefore not limited to change history. A format such as `schema-v3.json`, an immutable evidence link, or an exact compatibility boundary is part of a usable contract. Do not remove it merely to make prose appear version-neutral. Conversely, a heading such as "Current vX.Y.Z" or a manually copied measurement table does not belong in a maintained guide when its canonical source already supplies that value.
@@ -43,24 +43,6 @@ A document may link across classes, but it must not silently acquire another cla
 
 Project-operation plans, marketing drafts, and channel-status ledgers belong outside the plugin release tree. Retired material remains in Git history and does not establish current product guidance or external state.
 
-## Lifecycle States
-
-Use this vocabulary when a document's role is not obvious from its location:
-
-| State | Meaning |
-| --- | --- |
-| `current` | Maintained guidance for the implementation in the same checked-in tree |
-| `historical` | Immutable or append-only past evidence or narrative |
-| `generated` | Content derived from a canonical machine-readable source |
-| `project-plan` | Intended work or channel activity, not product capability |
-| `archived` | Retained for traceability and excluded from current navigation |
-
-Lifecycle metadata is optional when the directory and index make the state unambiguous. If metadata is present, it must use one of these values. A claim about an external platform or channel must include an absolute `last_verified` date; conceptual prose does not need an artificial timestamp. Place optional metadata near the document H1 using this exact form:
-
-```markdown
-<!-- lifecycle: current -->
-```
-
 ## Current Repository State
 
 The current repository assigns these responsibilities:
@@ -70,13 +52,12 @@ The current repository assigns these responsibilities:
 - `SECURITY.md` owns vulnerability reporting and security boundaries, while `CHANGELOG.md` owns user-visible changes and required action;
 - `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement contact;
 - `docs/guides/` owns installation, first use, update, removal, and troubleshooting;
-- `docs/reference/hooks.md` renders the canonical Hook declarations and wrapper, while `docs/getting-started.md` is a compatibility entry for historical links;
-- `docs/compatibility.md` owns the concise current support contract and links to historical records without reproducing their run narratives;
-- `docs/releases/` contains version notes;
+- `docs/reference/hooks.md` renders the canonical Hook declarations and wrapper;
+- `docs/compatibility.md` owns the concise current support contract, the procedure for reporting a host result, and the pointer to the release tag that keeps earlier records;
 - `docs/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases; and
-- `evidence/` retains machine records; `docs/field-validation.md` indexes retired records, including the routing evaluations, at immutable archive sources.
+- `evidence/` retains machine records.
 
-[The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content, inbound links, and lifecycle classification move in one merged change.
+[The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content and inbound links move in one merged change.
 
 ## Canonical Structure
 
@@ -92,8 +73,7 @@ docs/
 |-- README.md
 |-- guides/
 |-- reference/
-|-- maintainers/
-`-- releases/
+`-- maintainers/
 evidence/
 ```
 
@@ -103,7 +83,7 @@ README stays a landing page: identity, a generated skill index, installation, up
 
 ## Translations
 
-English documentation is canonical and the default; every English Markdown file stays ASCII. A document may have one Simplified Chinese twin beside it, named `<name>.zh-CN.md`, for readers who prefer Chinese. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, lifecycle metadata, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
+English documentation is canonical and the default; every English Markdown file stays ASCII. A document may have one Simplified Chinese twin beside it, named `<name>.zh-CN.md`, for readers who prefer Chinese. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
 
 A twin is not indexed separately and does not count as a current document of its own; it is reached through its source. It changes in the same change as its source, and the documentation validator rejects a twin whose structure, code, generated facts, or links drift from the source. Maintainer, evidence, release, and reference documents stay English unless a twin is deliberately added under the same rules.
 
@@ -122,16 +102,15 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
 | Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering and `README.md` a generated index of each skill's short description |
 | Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
-| Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current; `docs/getting-started.md` is a compatibility entry only |
+| Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current |
 | Current plugin version | Codex plugin manifest | Current |
 | Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |
 | Git workflow routing boundary | The `traceable-git-submit` skill | Current; `docs/architecture.md` summarizes it |
 | Current compatibility boundary | Current release-status evidence with `docs/compatibility.md` as the concise reference | Current |
-| Historical host observations | Immutable sources indexed by `docs/field-validation.md` | Preserve original subjects and outcomes; archived records do not establish current support |
+| Records from earlier releases | The release tags; `docs/compatibility.md` names the tag that keeps them | Not part of the current tree; they do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
-| Exceptional migration, architecture, security, compatibility, or evidence detail | `docs/releases/v<version>.md` when warranted | Candidate detail until publication; then preserved history, never reused as the final Release body |
 | GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
-| Candidate evidence | Checked-in version note and machine records bound to the source commit | Current; may state only what that commit can prove |
+| Candidate evidence | Checked-in machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | `docs/repository-governance.md`; the live rulesets are the source for their own settings | Current |
 | Simplified Chinese translations | The English source and its `<name>.zh-CN.md` twin | Current; the twin translates prose and table headers and changes with its source |
@@ -148,18 +127,17 @@ Machine-derived facts should use bounded generated regions or deterministic chec
 | Installation, update, removal, or troubleshooting behavior | Update the canonical guide; keep README install/update quick-start commands aligned and link to the guide for full procedures |
 | Host support or observed compatibility | Update current status from the owning evidence and preserve prior records unchanged |
 | Manifest version or runtime digest | Render the current identity from its machine-readable owner |
-| Current guidance contains release-specific narration or copied measurements | Replace the narration with the implemented workflow and link to version notes or the canonical measurement source; preserve original evidence |
+| Current guidance contains release-specific narration or copied measurements | Replace the narration with the implemented workflow and link to the canonical measurement source |
 | User-visible change | Add a concise `CHANGELOG.md` entry that states impact and required action |
-| Exceptional migration, architecture, security, compatibility, or evidence detail | Add or update a version note only when the detail is material |
 | External publication or channel state | Record an absolute verification date and do not promote planned or submitted work to published |
-| Document move or lifecycle change | Update inbound links, the documentation index, and the lifecycle classification atomically |
+| Document move | Update inbound links and the documentation index atomically |
 
 ## Migration And Move Rules
 
 - Use staged, reviewable changes and keep links valid at every merged phase.
 - Describe the current repository before the target state; do not claim a later phase has completed.
 - Move a fact only after identifying its canonical owner. Remove the competing copy or replace it with a concise link in the same change.
-- Preserve Git history where practical and never delete or rewrite immutable evidence, evaluation results, failure records, or historical Release facts to simplify navigation. Retired experiments may leave the current tree after their exact bytes are verified at an immutable Git commit and the canonical evidence owner links to that archive. Retire their active commands, default checks, and CI dependencies together; preserve applicable generic regression coverage with synthetic fixtures.
+- Never rewrite a published tag, a Release, or its assets. Material that describes an earlier release leaves the current tree once it exists at a release tag; link the tag instead of keeping a copy, and retire its active commands, default checks, and CI dependencies in the same change.
 - Keep project plans and channel status outside the plugin release tree. Preserve retired records in Git history with their absolute verification dates and truthful planned, submitted, or published state.
 - Do not copy candidate-only absence or future-tense publication text into a final Release body. Render future bodies from the tagged Changelog entry and establish final evidence only from the immutable remote objects.
 - Use repository-relative links for checked-in files. External URLs are permitted when the external destination is the actual owner.
@@ -175,15 +153,12 @@ Every documentation change must, at minimum:
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and avoid skipped heading levels;
 - keep `docs/README.md` complete for current public documents and reject current-document orphans;
-- accept only the documented lifecycle values;
 - preserve generated marker boundaries and compare rendered machine facts with their canonical sources;
-- require current entry points to link their canonical status and identity owners, while the Changelog and selected version note retain exact release bindings; a repeated version number is not a substitute for those links;
 - keep current public guidance from linking to non-public sources;
 - keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
-- validate the public Hook reference against checked-in declarations and wrappers; and
-- keep historical and project-plan documents out of current task navigation;
+- validate the public Hook reference against checked-in declarations and wrappers;
 - keep every English Markdown file ASCII; and
-- keep each `<name>.zh-CN.md` twin bound to its English source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, lifecycle metadata, and link targets match.
+- keep each `<name>.zh-CN.md` twin bound to its English source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, and link targets match.
 
 Run the deterministic, Python-standard-library-only documentation validator from the repository root:
 

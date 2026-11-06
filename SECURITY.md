@@ -38,7 +38,7 @@ Read the [Trust Model](docs/trust-model.md) before assessing impact. In particul
 - request acceptance and command exit status are not proof of the intended outcome; and
 - missing or unavailable evidence must not be reported as a pass.
 
-Axiom is not a sandbox, policy-enforcement kernel, credential broker, malware detector, or guarantee that an agent, host, dependency, or external service is correct. It does not prevent every error or unsafe instruction. See the [field-validation protocol](docs/field-validation.md) for evidence labels and safe reproduction prompts.
+Axiom is not a sandbox, policy-enforcement kernel, credential broker, malware detector, or guarantee that an agent, host, dependency, or external service is correct. It does not prevent every error or unsafe instruction. See [Report A Compatibility Result](docs/compatibility.md#report-a-compatibility-result) for the safe reproduction procedure.
 
 ## Repository Workflow Boundary
 

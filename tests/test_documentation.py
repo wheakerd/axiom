@@ -15,10 +15,8 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.documentation import (
     GENERATED_MARKER,
     check_documentation,
-    check_lifecycle_text,
     check_markdown_language,
     check_skill_reference_inventory_text,
-    check_task_navigation_text,
     check_translation_text,
     check_translations,
     discover_markdown,
@@ -44,13 +42,13 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         report = check_documentation(failures)
         self.assertEqual([], failures)
-        # The Markdown and generated-region totals grow with every release note, so
-        # they are recomputed here; the current and indexed document totals change
-        # only with a deliberate documentation change.
+        # The Markdown and generated-region totals are recomputed here; the current
+        # and indexed document totals change only with a deliberate documentation
+        # change.
         markdown = discover_markdown(REPOSITORY_ROOT)
         self.assertEqual(len(markdown), report.markdown_count)
-        self.assertEqual(24, report.current_document_count)
-        self.assertEqual(18, report.indexed_document_count)
+        self.assertEqual(23, report.current_document_count)
+        self.assertEqual(17, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
         self.assertEqual(6, report.translation_count)
@@ -59,7 +57,7 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         rejected = check_documentation_negative_fixtures(failures)
         self.assertEqual(len(NEGATIVE_FIXTURES), rejected)
-        self.assertEqual(25, rejected)
+        self.assertEqual(20, rejected)
         self.assertEqual([], failures)
 
     def test_standard_library_command_line_entrypoint(self):
@@ -77,7 +75,7 @@ class DocumentationValidationTests(unittest.TestCase):
             "(ceiling 16 KiB)", result.stdout
         )
         self.assertIn("6 translations", result.stdout)
-        self.assertIn("25 negative fixtures", result.stdout)
+        self.assertIn("20 negative fixtures", result.stdout)
 
     def test_skill_inventory_ignores_headings_in_usage_examples(self):
         for fence in ("```", "~~~~"):
@@ -141,23 +139,6 @@ class DocumentationValidationTests(unittest.TestCase):
             for failure in failures
         ))
 
-    def test_task_navigation_rejects_archive_directories_and_their_files(self):
-        root = Path("/fixture").resolve()
-        for destination in (
-            "releases/", "releases/v0.1.0.md",
-            "../project/", "../project/plan.md",
-            "../evidence/", "../evidence/record.json",
-        ):
-            with self.subTest(destination=destination):
-                failures: list[str] = []
-                check_task_navigation_text(
-                    root / "docs" / "README.md",
-                    f"# Index\n\n## Start By Task\n\n[Record]({destination})\n",
-                    root,
-                    failures,
-                )
-                self.assertTrue(any("historical or project-plan" in failure for failure in failures))
-
     def test_translations_are_not_current_documents_and_name_their_source(self):
         self.assertTrue(is_translation("docs/examples.zh-CN.md"))
         self.assertFalse(is_current_document("docs/examples.zh-CN.md"))
@@ -199,13 +180,6 @@ class DocumentationValidationTests(unittest.TestCase):
             root=root,
         )
         self.assertEqual([], failures)
-
-    def test_translation_lifecycle_follows_its_source_class(self):
-        failures: list[str] = []
-        check_lifecycle_text(
-            "docs/guide.zh-CN.md", "# Guide\n\n<!-- lifecycle: historical -->\n", failures
-        )
-        self.assertTrue(any("conflicts with its document class" in failure for failure in failures))
 
 
 if __name__ == "__main__":

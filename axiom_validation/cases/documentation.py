@@ -13,12 +13,10 @@ from axiom_validation.documentation import (
     check_generated_marker_text,
     check_heading_text,
     check_hook_reference,
-    check_lifecycle_text,
     check_markdown_language,
     check_private_guidance_text,
     check_readme_budget,
     check_skill_reference_inventory_text,
-    check_task_navigation_text,
     check_translations,
 )
 from axiom_validation.markdown import check_markdown_links
@@ -91,7 +89,7 @@ def _index_missing_current() -> list[str]:
         docs = root / "docs"
         docs.mkdir()
         (docs / "README.md").write_text(
-            "# Index\n\n## Start By Task\n\n[A](a.md)\n", encoding="utf-8"
+            "# Index\n\n[A](a.md)\n", encoding="utf-8"
         )
         (docs / "a.md").write_text("# A\n\n[B](b.md)\n", encoding="utf-8")
         (docs / "b.md").write_text("# B\n", encoding="utf-8")
@@ -108,7 +106,7 @@ def _current_orphan() -> list[str]:
         docs = root / "docs"
         docs.mkdir()
         (docs / "README.md").write_text(
-            "# Index\n\n## Start By Task\n\n[A](a.md)\n", encoding="utf-8"
+            "# Index\n\n[A](a.md)\n", encoding="utf-8"
         )
         (docs / "a.md").write_text("# A\n", encoding="utf-8")
         (docs / "orphan.md").write_text("# Orphan\n", encoding="utf-8")
@@ -117,26 +115,6 @@ def _current_orphan() -> list[str]:
         return failures
     finally:
         temporary.cleanup()
-
-
-
-
-def _invalid_lifecycle() -> list[str]:
-    failures: list[str] = []
-    check_lifecycle_text(
-        "docs/fixture.md", "# Fixture\n\n<!-- lifecycle: future -->\n", failures
-    )
-    return failures
-
-
-def _lifecycle_path_mismatch() -> list[str]:
-    failures: list[str] = []
-    check_lifecycle_text(
-        "docs/fixture.md",
-        "# Fixture\n\n<!-- lifecycle: project-plan -->\n",
-        failures,
-    )
-    return failures
 
 
 def _unmatched_generated_marker() -> list[str]:
@@ -166,36 +144,6 @@ def _private_maintenance_link() -> list[str]:
         failures,
     )
     return failures
-
-
-def _historical_task_navigation() -> list[str]:
-    failures: list[str] = []
-    root = Path("/fixture").resolve()
-    check_task_navigation_text(
-        root / "docs" / "README.md",
-        "# Index\n\n## Start By Task\n\n[Old](releases/v0.1.0.md)\n",
-        root,
-        failures,
-    )
-    return failures
-
-
-def _project_task_navigation() -> list[str]:
-    failures: list[str] = []
-    root = Path("/fixture").resolve()
-    check_task_navigation_text(
-        root / "docs" / "README.md",
-        "# Index\n\n## Start By Task\n\n[Plan](../project/README.md)\n",
-        root,
-        failures,
-    )
-    return failures
-
-
-
-
-
-
 
 
 def _skill_inventory_drift() -> list[str]:
@@ -286,13 +234,6 @@ def _translation_missing_switcher() -> list[str]:
     )
 
 
-def _translation_lifecycle_drift() -> list[str]:
-    return _translation_pair(
-        "# Guide\n\n<!-- lifecycle: current -->\n\n[zh-CN](guide.zh-CN.md)\n",
-        "# Guide\n\n[English](guide.md)\n",
-    )
-
-
 def _english_source_with_non_ascii() -> list[str]:
     temporary, root = _temporary_root()
     try:
@@ -314,13 +255,9 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("heading-level-skip", _heading_skip, "skips a heading level"),
     ("index-missing-current", _index_missing_current, "does not directly index"),
     ("current-document-orphan", _current_orphan, "is orphaned"),
-    ("invalid-lifecycle", _invalid_lifecycle, "invalid lifecycle value"),
-    ("lifecycle-path-mismatch", _lifecycle_path_mismatch, "conflicts with its document class"),
     ("unmatched-generated-marker", _unmatched_generated_marker, "without an end"),
     ("nested-generated-marker", _nested_generated_marker, "nests generated marker"),
     ("private-maintenance-link", _private_maintenance_link, "private maintenance content"),
-    ("historical-task-navigation", _historical_task_navigation, "historical or project-plan"),
-    ("project-task-navigation", _project_task_navigation, "historical or project-plan"),
     ("skill-inventory-drift", _skill_inventory_drift, "differs from the canonical skill order"),
     ("hook-reference-drift", _hook_reference_drift, "not present in the checked-in declarations"),
     ("translation-missing-source", _translation_missing_source, "has no English source"),
@@ -329,7 +266,6 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("translation-generated-drift", _translation_generated_drift, "generated regions differ"),
     ("translation-link-drift", _translation_link_drift, "link targets differ"),
     ("translation-missing-switcher", _translation_missing_switcher, "must link to its English source"),
-    ("translation-lifecycle-drift", _translation_lifecycle_drift, "lifecycle metadata differs"),
     ("english-source-non-ascii", _english_source_with_non_ascii, "contains non-ASCII text"),
 )
 

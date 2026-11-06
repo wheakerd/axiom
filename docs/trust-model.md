@@ -56,7 +56,7 @@ Local web research limits agent-added machine information in queries, URLs, and 
 
 Use current direct evidence from the owning Git state, affected system layers, or external system of record. A backup file or successful backup job does not prove a working restore path. An accepted external request does not prove the final effect. A smaller instruction set does not prove a quality improvement. A task review distinguishes observed, reconstructed, and unavailable claims; present state alone cannot prove historical authority or causation.
 
-Missing tools, permissions, host observations, and unavailable history remain unavailable or unverified. Keep `PASS`, `FAIL`, `NOT-RUN`, and `UNAVAILABLE` separate. See [Compatibility](compatibility.md) and [Field Validation](field-validation.md).
+Missing tools, permissions, host observations, and unavailable history remain unavailable or unverified. Keep `PASS`, `FAIL`, `NOT-RUN`, and `UNAVAILABLE` separate. See [Compatibility](compatibility.md).
 
 Startup routing is read-only and foreground. Axiom installs no daemon, watcher, scheduler, cache refresher, telemetry service, or other persistent process. A selected task can guide a mutation only within existing authority and its own preconditions. After an installed update, Codex holds the changed Hook until you trust it again, and Claude Code runs it at the next `SessionStart`; [Managing an Installation](guides/managing-installation.md) owns each host's steps.
 

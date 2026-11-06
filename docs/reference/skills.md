@@ -189,4 +189,4 @@ and its rollback. Do not execute it.
 
 ## Renamed and retired skills
 
-`optimize-codex-usage` was renamed `optimize-agent-usage` in [v0.16.0](../releases/v0.16.0.md) and now runs in both hosts. Invoke the new name; the old name is no longer bundled. A Claude Code installation cached before v0.11.0 updates through the [README update commands](../../README.md#updating). The [Changelog](../../CHANGELOG.md) records earlier removals and restored host support.
+`optimize-codex-usage` was renamed `optimize-agent-usage` in [v0.16.0](https://github.com/wheakerd/axiom/blob/v0.16.0/docs/releases/v0.16.0.md) and now runs in both hosts. Invoke the new name; the old name is no longer bundled. A Claude Code installation cached before v0.11.0 updates through the [README update commands](../../README.md#updating). The [Changelog](../../CHANGELOG.md) records earlier removals and restored host support.
