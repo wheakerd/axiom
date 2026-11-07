@@ -1,0 +1,4 @@
+interface:
+  display_name: "Delegate Simple Task"
+  short_description: "Delegate simple work to your ordered candidate models"
+  default_prompt: "Use $delegate-simple-task to assess this bounded work for my ordered candidate models, show the exact model and brief before delegating, and keep the main model responsible for checking the result."

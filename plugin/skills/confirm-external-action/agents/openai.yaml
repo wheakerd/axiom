@@ -1,0 +1,4 @@
+interface:
+  display_name: "Confirm External Action"
+  short_description: "Bind and verify consequential external actions"
+  default_prompt: "Use $confirm-external-action to bind, authorize, execute once, and verify this consequential external action."

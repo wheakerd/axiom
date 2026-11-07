@@ -1,0 +1,4 @@
+interface:
+  display_name: "AGENTS Architect"
+  short_description: "Initialize, maintain, and validate scoped AGENTS.md systems"
+  default_prompt: "Use $agents-architect to initialize, audit, split, refactor, or maintain this repository's AGENTS.md instruction architecture."

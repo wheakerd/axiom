@@ -1,0 +1,4 @@
+interface:
+  display_name: "Local Web Search"
+  short_description: "Constrain local searches and stop at site challenges"
+  default_prompt: "Use $local-web-search before researching through a local browser or client. Minimize machine information in requests, browse in sequence, and stop at challenges or rate limits without bypassing detection."

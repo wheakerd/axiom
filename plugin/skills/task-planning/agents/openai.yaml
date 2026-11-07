@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Planning"
+  short_description: "Create and revise plans around current requirements"
+  default_prompt: "Use $task-planning to create or revise this task plan from my current requirements, preserving valid decisions and keeping steps, dependencies, and acceptance criteria consistent."

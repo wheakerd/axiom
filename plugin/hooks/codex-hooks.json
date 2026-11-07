@@ -1,0 +1,19 @@
+{
+  "description": "Load Axiom's documented routing gate at session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact|fork",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '%s\\n\\n' 'You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:'; cat \"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md\"",
+            "commandWindows": "\"%PLUGIN_ROOT%\\hooks\\codex-session-start.cmd\"",
+            "timeout": 5,
+            "statusMessage": "Loading Axiom routing"
+          }
+        ]
+      }
+    ]
+  }
+}
