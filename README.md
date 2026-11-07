@@ -16,7 +16,7 @@ Focused workflow skills for Codex and Claude Code that turn requests into clear,
 
 [Install](#installation) | [Update](#updating) | [Use](#usage) | [Skills](#skills) | [Documentation](docs/en/README.md) | [Changelog](CHANGELOG.md)
 
-![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](docs/assets/social-preview.png)
+![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](.github/assets/social-preview.png)
 
 If Axiom helps your agent work, consider starring the repository. Stars help other Codex and Claude Code users find it.
 
