@@ -9,9 +9,10 @@ import sys
 from pathlib import Path
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-if str(REPOSITORY_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPOSITORY_ROOT))
+CI_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = CI_ROOT.parent
+if str(CI_ROOT) not in sys.path:
+    sys.path.insert(0, str(CI_ROOT))
 
 from axiom_validation.readme_facts import (  # noqa: E402
     check_readme_facts,

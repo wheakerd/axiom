@@ -170,7 +170,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             latest_path = directory / "latest.json"
             write_json(plan_path, plan)
             write_json(latest_path, release_metadata(asset, draft=False, immutable=True))
-            script = Path(__file__).resolve().parents[1] / "scripts/check-release-evidence.py"
+            script = Path(__file__).resolve().parents[2] / ".ci/scripts/check-release-evidence.py"
             arguments = [
                 sys.executable, "-B", str(script), "render-marketplace",
                 "--plan", str(plan_path), "--latest-release-metadata", str(latest_path),
@@ -206,12 +206,12 @@ class ReleaseEvidenceTests(unittest.TestCase):
         result = subprocess.run(
             [
                 sys.executable,
-                "scripts/check-release-evidence.py",
+                ".ci/scripts/check-release-evidence.py",
                 "render-body",
                 "--expected-version",
                 RELEASE_VERSION,
             ],
-            cwd=Path(__file__).resolve().parents[1],
+            cwd=Path(__file__).resolve().parents[2],
             text=True,
             capture_output=True,
             check=False,
@@ -319,7 +319,7 @@ None.
 
     def test_publish_workflow_contract_rejects_an_appended_command(self):
         workflow = (
-            Path(__file__).resolve().parents[1]
+            Path(__file__).resolve().parents[2]
             / ".github"
             / "workflows"
             / "publish-immutable-release.yml"
@@ -336,7 +336,7 @@ None.
 
     def test_publish_workflow_contract_rejects_a_broader_version_gate(self):
         workflow = (
-            Path(__file__).resolve().parents[1]
+            Path(__file__).resolve().parents[2]
             / ".github"
             / "workflows"
             / "publish-immutable-release.yml"
@@ -385,7 +385,7 @@ None.
 
     def test_publish_workflow_avoids_admin_only_settings_endpoint(self):
         workflow = (
-            Path(__file__).resolve().parents[1]
+            Path(__file__).resolve().parents[2]
             / ".github"
             / "workflows"
             / "publish-immutable-release.yml"
@@ -673,7 +673,7 @@ None.
             before = directory / "release-before.json"
             plan = directory / "plan.json"
             write_json(before, release_metadata(observation_asset))
-            script = Path(__file__).resolve().parents[1] / "scripts" / "check-release-evidence.py"
+            script = Path(__file__).resolve().parents[2] / ".ci" / "scripts" / "check-release-evidence.py"
 
             def run(*arguments: str) -> subprocess.CompletedProcess[str]:
                 return subprocess.run(
@@ -1033,10 +1033,10 @@ None.
 
     def test_repository_policy_rendering(self):
         result = subprocess.run(
-            [sys.executable, "scripts/check-release-evidence.py", "render-policy",
+            [sys.executable, ".ci/scripts/check-release-evidence.py", "render-policy",
              "--expected-version", RELEASE_VERSION, "--expected-tag", TAG,
              "--expected-commit", COMMIT, "--expected-tree", TREE],
-            cwd=Path(__file__).resolve().parents[1], capture_output=True, check=True,
+            cwd=Path(__file__).resolve().parents[2], capture_output=True, check=True,
         )
         self.assertEqual(current_observation(), json.loads(result.stdout))
 

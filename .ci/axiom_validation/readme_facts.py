@@ -125,7 +125,7 @@ def check_readme_facts(failures: list[str], *, root: Path = REPOSITORY_ROOT) -> 
         if text != expected:
             failures.append(
                 f"{relative} generated skill facts are stale; run "
-                "python3 scripts/render-release-facts.py --render"
+                "python3 .ci/scripts/render-release-facts.py --render"
             )
     return len(summaries)
 

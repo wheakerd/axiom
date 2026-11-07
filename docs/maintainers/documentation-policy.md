@@ -55,7 +55,7 @@ The current repository assigns these responsibilities:
 - `docs/reference/hooks.md` renders the canonical Hook declarations and wrapper;
 - `docs/compatibility.md` owns the concise current support contract, the procedure for reporting a host result, and the pointer to the release tag that keeps earlier records;
 - `docs/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases; and
-- `evidence/` retains machine records.
+- `.ci/` holds the repository checks and the machine-readable runtime identity.
 
 [The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content and inbound links move in one merged change.
 
@@ -74,12 +74,12 @@ docs/
 |-- guides/
 |-- reference/
 `-- maintainers/
-evidence/
+.ci/
 ```
 
 Topical current references may remain directly under `docs/` when another directory would create artificial fragmentation.
 
-README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
+README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 .ci/scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
 
 ## Translations
 
@@ -160,7 +160,7 @@ Every documentation change must, at minimum:
 Run the deterministic, Python-standard-library-only documentation validator from the repository root:
 
 ```bash
-python3 scripts/check-documentation.py
+python3 .ci/scripts/check-documentation.py
 ```
 
 It runs offline checks for repository-owned facts and is included in the publication aggregate and full unit suite. External URL availability, spelling, and prose style remain advisory or scheduled signals rather than unstable required gates.

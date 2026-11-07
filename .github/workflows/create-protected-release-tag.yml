@@ -45,7 +45,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: >-
-          python3 scripts/create-release-tag.py validate-request
+          python3 .ci/scripts/create-release-tag.py validate-request
           --repository "$GITHUB_REPOSITORY"
           --version "$RELEASE_VERSION"
           --tag "$RELEASE_TAG"
@@ -73,7 +73,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: >-
-          python3 scripts/create-release-tag.py create
+          python3 .ci/scripts/create-release-tag.py create
           --repository "$GITHUB_REPOSITORY"
           --version "$RELEASE_VERSION"
           --tag "$RELEASE_TAG"

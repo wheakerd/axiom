@@ -27,7 +27,7 @@ ATTESTATION_SCHEMA_VERSION = "1"
 PLAN_SCHEMA_VERSION = "2"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
-PUBLISH_WORKFLOW_SHA256 = "cdc297bc7ce203dc1454d5b8876f4278d4516b59ddd85f4201ae330c3ea631a5"
+PUBLISH_WORKFLOW_SHA256 = "8a547762668714bed8ce90aeda12a39b0a43d7455c5d1496046fe5a8d27db147"
 # GitHub rejects a Release body above this many characters; the tag would already exist.
 RELEASE_BODY_MAX_CHARACTERS = 125_000
 PUBLIC_REPOSITORY_BLOB_ROOT = "https://github.com/wheakerd/axiom/blob"
@@ -895,7 +895,7 @@ def _attestation_document(plan: dict[str, Any], digest: str) -> dict[str, Any]:
         "validation": {
             "scope": "release-policy-and-artifact-integrity",
             "status": "pass",
-            "validator": "scripts/check-release-evidence.py",
+            "validator": ".ci/scripts/check-release-evidence.py",
         },
     }
     return document
@@ -1238,26 +1238,26 @@ def check_publish_workflow_contract(
         'git rev-parse "refs/tags/${RELEASE_TAG}^{commit}"',
         "git/ref/heads/main",
         "git/ref/tags/$RELEASE_TAG",
-        "scripts/check-release-evidence.py ref-commit",
+        ".ci/scripts/check-release-evidence.py ref-commit",
         "compare/$commit...$main_sha",
         "commits/$commit",
-        "scripts/check-release-evidence.py preflight",
-        "scripts/check-release-evidence.py select",
-        "scripts/check-release-evidence.py prepare",
+        ".ci/scripts/check-release-evidence.py preflight",
+        ".ci/scripts/check-release-evidence.py select",
+        ".ci/scripts/check-release-evidence.py prepare",
         "releases/assets/$observation_id",
-        "scripts/check-release-evidence.py validate",
+        ".ci/scripts/check-release-evidence.py validate",
         "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets",
-        "scripts/check-release-evidence.py verify",
+        ".ci/scripts/check-release-evidence.py verify",
         'draft=false',
         'make_latest=true',
-        "scripts/check-release-evidence.py publication-state",
+        ".ci/scripts/check-release-evidence.py publication-state",
         'test "$release_phase" = "published-mutable"',
         "remote_preflight draft-mutation true",
         "gh api --method DELETE",
-        "scripts/check-release-evidence.py assert-absent",
+        ".ci/scripts/check-release-evidence.py assert-absent",
         "releases/latest",
         "--final",
-        "scripts/check-release-evidence.py render-marketplace",
+        ".ci/scripts/check-release-evidence.py render-marketplace",
         '--summary >> "$GITHUB_STEP_SUMMARY"',
     )
     for anchor in required_anchors:

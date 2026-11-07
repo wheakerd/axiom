@@ -33,4 +33,4 @@ jobs:
       - name: Record today's counts and commit the chart to the stats branch
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python3 -B scripts/record-star-history.py --repository "$GITHUB_REPOSITORY" --branch stats
+        run: python3 -B .ci/scripts/record-star-history.py --repository "$GITHUB_REPOSITORY" --branch stats

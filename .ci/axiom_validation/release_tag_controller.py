@@ -918,13 +918,13 @@ def check_controller_workflow_contract(failures: list[str]) -> None:
             f"{label} must bind the exact App-token identity outputs into the controller"
         )
 
-    if "python3 scripts/create-release-tag.py validate-request" not in text:
+    if "python3 .ci/scripts/create-release-tag.py validate-request" not in text:
         failures.append(f"{label} must validate the request before minting a secret token")
-    if "python3 scripts/create-release-tag.py create" not in text:
+    if "python3 .ci/scripts/create-release-tag.py create" not in text:
         failures.append(f"{label} must execute the closed creation controller")
-    request_offset = text.find("python3 scripts/create-release-tag.py validate-request")
+    request_offset = text.find("python3 .ci/scripts/create-release-tag.py validate-request")
     token_offset = text.find("actions/create-github-app-token@")
-    create_offset = text.find("python3 scripts/create-release-tag.py create")
+    create_offset = text.find("python3 .ci/scripts/create-release-tag.py create")
     if not (0 <= request_offset < token_offset < create_offset):
         failures.append(f"{label} controller steps must preserve request, token, create order")
     if text.count("${{ secrets.AXIOM_RELEASE_APP_PRIVATE_KEY }}") != 1:

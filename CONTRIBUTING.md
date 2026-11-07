@@ -21,10 +21,7 @@ Ask questions and discuss early ideas in [GitHub Discussions](https://github.com
 | [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Private vulnerability reporting and community conduct |
 | [LICENSE](LICENSE) | MIT license; `plugin/LICENSE` is a byte-identical copy that installs with the plugin |
 | [docs/](docs/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
-| [evidence/](evidence/) | Current runtime identity |
-| [axiom_validation/](axiom_validation/) | Standard-library publication policy and installed-runtime input classification |
-| [tests/](tests/) | Focused unit tests and isolated policy fixtures |
-| [scripts/](scripts/) | Stable validation entrypoints |
+| [.ci/](.ci/) | Repository checks: `check.py` runs them as CI does; `axiom_validation/` holds the standard-library policy and parsers, `tests/` the unit and integration tests, `scripts/` the validation and release entrypoints, and `runtime-identity.json` the current runtime identity |
 | [.github/](.github/) | CI workflows, Issue forms, pull-request template, and code owners |
 
 Hosts install only `plugin/`; the rest of the repository supports development, validation, and release. Top-level Skills include the `using-axiom` startup gate and the workflows it selects. A Skill's supporting references and agent resources are not separate public routes. Repository validators, tests, and CI are contributor tooling; they are not installed plugin dependencies or proof of host behavior.

@@ -1342,7 +1342,7 @@ def check_distribution_workflow_text(
         if (
             set(publication) != {"name", "run"}
             or scalar(publication.get("name")) != "Check publication invariants"
-            or scalar(publication.get("run")) != "python -B scripts/check-publication.py"
+            or scalar(publication.get("run")) != "python -B .ci/check.py publication"
         ):
             failures.append(
                 f"{label} must run exact read-only validator step 'Check publication invariants'"
@@ -1523,7 +1523,7 @@ def check_unit_test_workflow_text(
             set(tests) != {"name", "run"}
             or scalar(tests.get("name")) != "Run unit and integration tests"
             or scalar(tests.get("run"))
-            != "python3 -m unittest discover -s tests -p 'test_*.py' -v"
+            != "python3 -B .ci/check.py tests -v"
         ):
             failures.append(f"{label} must run the exact complete unittest discovery command")
 
@@ -1714,12 +1714,12 @@ def check_hook_runtime_workflow_text(
             (
                 environment,
                 "Report canonical environment",
-                "python -B -m tests.hook_runtime_integration --report-environment",
+                "python -B .ci/check.py hook-runtime --report-environment",
             ),
             (
                 runtime,
                 "Execute exact SessionStart hooks",
-                "python -B -m unittest tests.hook_runtime_integration -v",
+                "python -B .ci/check.py hook-runtime",
             ),
         )
         for step, expected_name, expected_command in expected_commands:

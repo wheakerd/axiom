@@ -1,13 +1,13 @@
 # Runtime Identity
 
-Axiom separates installed plugin behavior from repository maintenance. The [machine-readable identity](../evidence/runtime-identity.json) owns the current version, digest schema, digest, and input count. This page renders the current identity and explains how to interpret it.
+Axiom separates installed plugin behavior from repository maintenance. The [machine-readable identity](../.ci/runtime-identity.json) owns the current version, digest schema, digest, and input count. This page renders the current identity and explains how to interpret it.
 
 ## Current Identity
 
 <!-- runtime-identity:current:start -->
 - `pluginVersion`: `0.27.6`
 - `runtimeContractDigest` (schema v4): `sha256:694996fb0892ffdde7842878c568de4900e5f8e0a034316133b50da34f4b8234`
-- Digest input manifest: [`axiom_validation/runtime-contract-inputs-v4.json`](../axiom_validation/runtime-contract-inputs-v4.json)
+- Digest input manifest: [`.ci/axiom_validation/runtime-contract-inputs-v4.json`](../.ci/axiom_validation/runtime-contract-inputs-v4.json)
 <!-- runtime-identity:current:end -->
 
 ## Identity Fields
@@ -15,11 +15,11 @@ Axiom separates installed plugin behavior from repository maintenance. The [mach
 | Field | Meaning | Canonical source |
 | --- | --- | --- |
 | `pluginVersion` | Installed package version; a candidate label does not prove publication | [Codex manifest](../plugin/.codex-plugin/plugin.json) |
-| `runtimeContractDigest` | Digest of classified installed behavior inputs under a named schema | [Runtime identity](../evidence/runtime-identity.json) |
+| `runtimeContractDigest` | Digest of classified installed behavior inputs under a named schema | [Runtime identity](../.ci/runtime-identity.json) |
 
 ## Current Runtime Contract
 
-The [schema v4 input policy](../axiom_validation/runtime-contract-inputs-v4.json) classifies the installed `plugin/` subtree for both hosts. It includes every file under `plugin/skills/` and `plugin/hooks/`, the Codex manifest's `name`, `skills`, `hooks`, `interface.capabilities`, and `interface.defaultPrompt` fields, and the Claude Code manifest's `name`, `skills`, and `hooks` fields.
+The [schema v4 input policy](../.ci/axiom_validation/runtime-contract-inputs-v4.json) classifies the installed `plugin/` subtree for both hosts. It includes every file under `plugin/skills/` and `plugin/hooks/`, the Codex manifest's `name`, `skills`, `hooks`, `interface.capabilities`, and `interface.defaultPrompt` fields, and the Claude Code manifest's `name`, `skills`, and `hooks` fields.
 
 The policy excludes manifest versions, publisher and presentation fields, the license copy, and branding assets used only by excluded presentation fields. Both marketplace catalogs lie outside the installed subtree. These exclusions distinguish distribution and presentation from loaded behavior; they do not exempt those files from package validation.
 

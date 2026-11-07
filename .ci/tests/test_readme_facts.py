@@ -55,7 +55,7 @@ class ReadmeFactsTests(unittest.TestCase):
         mirror = self.root / README_TRANSLATIONS[0]
         mirror.write_text(mirror.read_text().replace("| --- | --- |", "| --- | ---- |", 1))
         check_readme_facts(failures, root=self.root)
-        self.assertEqual([f"{README_TRANSLATIONS[0]} generated skill facts are stale; run python3 scripts/render-release-facts.py --render"], failures)
+        self.assertEqual([f"{README_TRANSLATIONS[0]} generated skill facts are stale; run python3 .ci/scripts/render-release-facts.py --render"], failures)
 
     def test_a_changed_short_description_makes_the_readme_stale(self):
         path = self.metadata("task-planning")

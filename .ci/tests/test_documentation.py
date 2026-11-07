@@ -59,7 +59,7 @@ class DocumentationValidationTests(unittest.TestCase):
 
     def test_standard_library_command_line_entrypoint(self):
         result = subprocess.run(
-            [sys.executable, "scripts/check-documentation.py"],
+            [sys.executable, ".ci/scripts/check-documentation.py"],
             cwd=REPOSITORY_ROOT,
             text=True,
             capture_output=True,

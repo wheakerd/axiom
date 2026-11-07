@@ -40,7 +40,7 @@ A record at an earlier release tag does not keep retired functionality enabled o
 For a future tag that contains this policy, render the body offline from its exact Changelog entry:
 
 ```bash
-python3 scripts/check-release-evidence.py render-body --expected-version X.Y.Z
+python3 .ci/scripts/check-release-evidence.py render-body --expected-version X.Y.Z
 ```
 
 The renderer:
@@ -55,9 +55,9 @@ The separately authorized draft must use the exact rendered bytes. The tag-owned
 
 ## Release Verification
 
-Release verification uses repository checks, exact signed-main and created-tag checks, and immutable Release verification. The checked-in [tag controller](../../axiom_validation/release_tag_controller.py) requires `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate` against the exact release commit. The [governance page](../repository-governance.md#main-branch-policy) describes the required checks.
+Release verification uses repository checks, exact signed-main and created-tag checks, and immutable Release verification. The checked-in [tag controller](../../.ci/axiom_validation/release_tag_controller.py) requires `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate` against the exact release commit. The [governance page](../repository-governance.md#main-branch-policy) describes the required checks.
 
-The draft starts with one `axiom-v<version>-release-policy-<sha256>.json` asset. Render it with `scripts/check-release-evidence.py render-policy` and the exact version, tag, commit and tree arguments. Its closed `repository-checks-v1` schema records `repository-guards` and `unit-and-integration-tests` and binds the release subject. This artifact is not the complete live ruleset: the tag controller separately enforces its current prerequisites, including `hook-runtime-gate`. Preserve the artifact schema's meaning rather than treating its shorter list as permission to skip a current gate. The publisher validates the downloaded bytes, uploads an integrity attestation, and verifies both assets after publication. This record describes verification policy; actual check results remain bound to their GitHub Actions runs. The attestation states its `release-policy-and-artifact-integrity` scope.
+The draft starts with one `axiom-v<version>-release-policy-<sha256>.json` asset. Render it with `.ci/scripts/check-release-evidence.py render-policy` and the exact version, tag, commit and tree arguments. Its closed `repository-checks-v1` schema records `repository-guards` and `unit-and-integration-tests` and binds the release subject. This artifact is not the complete live ruleset: the tag controller separately enforces its current prerequisites, including `hook-runtime-gate`. Preserve the artifact schema's meaning rather than treating its shorter list as permission to skip a current gate. The publisher validates the downloaded bytes, uploads an integrity attestation, and verifies both assets after publication. This record describes verification policy; actual check results remain bound to their GitHub Actions runs. The attestation states its `release-policy-and-artifact-integrity` scope.
 
 ## Release Pipeline
 

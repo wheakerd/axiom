@@ -42,4 +42,4 @@ jobs:
           git --version
 
       - name: Run unit and integration tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+        run: python3 -B .ci/check.py tests -v

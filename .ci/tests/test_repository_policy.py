@@ -34,7 +34,7 @@ class RepositoryPolicyTests(unittest.TestCase):
             environment.pop("PYTHONDONTWRITEBYTECODE", None)
             environment.pop("PYTHONPYCACHEPREFIX", None)
             result = subprocess.run(
-                [sys.executable, "-B", "scripts/check-publication.py"],
+                [sys.executable, "-B", ".ci/scripts/check-publication.py"],
                 cwd=root,
                 env=environment,
                 text=True,
@@ -84,13 +84,13 @@ class RepositoryPolicyTests(unittest.TestCase):
 
     def test_codeowners_rejects_a_missing_sibling_owner(self):
         codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(encoding="utf-8")
-        mutated = codeowners.replace("/axiom_validation/ @wheakerd\n", "", 1)
+        mutated = codeowners.replace("/.ci/ @wheakerd\n", "", 1)
         self.assertNotEqual(codeowners, mutated)
 
         failures = []
         count = check_critical_path_owners(mutated, failures)
         self.assertEqual(len(CRITICAL_CODEOWNER_PATTERNS) - 1, count)
-        self.assertTrue(any("/axiom_validation/" in failure for failure in failures), failures)
+        self.assertTrue(any("/.ci/" in failure for failure in failures), failures)
 
     def test_codeowners_rejects_a_later_owner_override(self):
         codeowners = (REPOSITORY_ROOT / ".github/CODEOWNERS").read_text(encoding="utf-8")

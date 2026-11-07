@@ -7,8 +7,6 @@
 /.agents/plugins/ @wheakerd
 /plugin/hooks/ @wheakerd
 /plugin/skills/using-axiom/ @wheakerd
-/scripts/ @wheakerd
-/axiom_validation/ @wheakerd
-/tests/ @wheakerd
+/.ci/ @wheakerd
 /SECURITY.md @wheakerd
 /docs/repository-governance.md @wheakerd
