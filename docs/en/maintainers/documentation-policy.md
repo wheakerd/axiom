@@ -47,14 +47,14 @@ Project-operation plans, marketing drafts, and channel-status ledgers belong out
 
 The current repository assigns these responsibilities:
 
-- `README.md` owns the bounded public introduction, the generated skill index, installation and update quick start, and first-use example; each skill's `SKILL.md` owns its description and `docs/examples.md` owns example requests;
-- `CONTRIBUTING.md` owns contribution intake and the repository map; `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and `docs/maintainers/validation.md` owns contributor check procedures;
+- `README.md` owns the bounded public introduction, the generated skill index, installation and update quick start, and first-use example; each skill's `SKILL.md` owns its description and `docs/en/examples.md` owns example requests;
+- `CONTRIBUTING.md` owns contribution intake and the repository map; `docs/en/maintainers/runtime-changes.md` owns runtime-authoring rules and `docs/en/maintainers/validation.md` owns contributor check procedures;
 - `SECURITY.md` owns vulnerability reporting and security boundaries, while `CHANGELOG.md` owns user-visible changes and required action;
 - `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement contact;
-- `docs/guides/` owns installation, first use, update, removal, and troubleshooting;
-- `docs/reference/hooks.md` renders the canonical Hook declarations and wrapper;
-- `docs/compatibility.md` owns the concise current support contract, the procedure for reporting a host result, and the pointer to the release tag that keeps earlier records;
-- `docs/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases; and
+- `docs/en/guides/` owns installation, first use, update, removal, and troubleshooting;
+- `docs/en/reference/hooks.md` renders the canonical Hook declarations and wrapper;
+- `docs/en/compatibility.md` owns the concise current support contract, the procedure for reporting a host result, and the pointer to the release tag that keeps earlier records;
+- `docs/en/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases; and
 - `.ci/` holds the repository checks and the machine-readable runtime identity.
 
 [The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content and inbound links move in one merged change.
@@ -96,24 +96,24 @@ A twin is not indexed separately and does not count as a current document of its
 | --- | --- | --- |
 | Product introduction and safe first step | `README.md` | Current and within the documented size budget |
 | Contribution intake and repository map | `CONTRIBUTING.md` | Current; links to detailed authoring and validation owners |
-| Runtime-authoring requirements | `docs/maintainers/runtime-changes.md` | Contributor policy; installed behavior remains owned by Skills, hooks, and manifests |
-| Contributor check procedures | `docs/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
-| Discoverability facts and external listing status | `docs/maintainers/distribution-channels.md` | Dated observations; a submission is recorded only when it was made |
+| Runtime-authoring requirements | `docs/en/maintainers/runtime-changes.md` | Contributor policy; installed behavior remains owned by Skills, hooks, and manifests |
+| Contributor check procedures | `docs/en/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
+| Discoverability facts and external listing status | `docs/en/maintainers/distribution-channels.md` | Dated observations; a submission is recorded only when it was made |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
 | Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `README.md` keeps a generated index of each skill's short description |
-| Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
-| Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current |
+| Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/en/reference/hooks.md` is the validated rendering |
+| Installation, first use, update, removal, troubleshooting | `docs/en/guides/getting-started.md` and `docs/en/guides/managing-installation.md` | Current |
 | Current plugin version | Codex plugin manifest | Current |
-| Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/runtime-identity.md` renders the checked identity |
-| Git workflow routing boundary | The `traceable-git-submit` skill | Current; `docs/architecture.md` summarizes it |
-| Current compatibility boundary | `docs/compatibility.md` | Current |
-| Records from earlier releases | The release tags; `docs/compatibility.md` names the tag that keeps them | Not part of the current tree; they do not establish current support |
+| Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/en/runtime-identity.md` renders the checked identity |
+| Git workflow routing boundary | The `traceable-git-submit` skill | Current; `docs/en/architecture.md` summarizes it |
+| Current compatibility boundary | `docs/en/compatibility.md` | Current |
+| Records from earlier releases | The release tags; `docs/en/compatibility.md` names the tag that keeps them | Not part of the current tree; they do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
 | GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current |
 | Candidate evidence | Checked-in machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
-| Repository governance | `docs/repository-governance.md`; the live rulesets are the source for their own settings | Current |
+| Repository governance | `docs/en/repository-governance.md`; the live rulesets are the source for their own settings | Current |
 | Simplified Chinese translations | The English source in `docs/en/` and its twin at the same path under `docs/zh-CN/` | Current; the twin translates prose and table headers and changes with its source |
 
 Machine-derived facts should use bounded generated regions or deterministic checks where practical. Human prose may explain their meaning but must not redefine their values.
