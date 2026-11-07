@@ -121,7 +121,7 @@ final commit. Otherwise report failure or unknown as observed and do not retry.
 Retain no endpoint, credential, command output, wrapper, generated runner, or
 auxiliary tracking mutation. Report the selected simple phase, repository and
 branch identity, named remote, exact push count, Git result, whether the sole
-conditional query was needed, and the final evidence classification.
+conditional query was needed, and what the final check showed.
 
 ## Stop Conditions
 

@@ -8,6 +8,21 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository-only changes, which change no installed file, are not changelog entries; Git history records them. Entries that name a repository policy revision refer to the [ledger kept through tag `v0.27.2`](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/repository-policy-revisions.md).
 
+## 0.27.5 - unreleased
+
+### Changed
+
+- `traceable-git-submit`: the direct-submit reference's report list ends with "what the final check showed" instead of "the final evidence classification". No other wording changes.
+- Both manifests move to 0.27.5. No other installed file changes.
+
+### Behavioral impact
+
+None beyond the report wording. No host session was run for this release.
+
+### Required action
+
+None.
+
 ## 0.27.4 - 2026-11-07
 
 ### Changed
