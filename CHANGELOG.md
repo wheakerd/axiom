@@ -8,6 +8,21 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository-only changes, which change no installed file, are not changelog entries; Git history records them. Entries that name a repository policy revision refer to the [ledger kept through tag `v0.27.2`](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/repository-policy-revisions.md).
 
+## 0.27.4 - unreleased
+
+### Changed
+
+- `agents-architect`: the implementation-reconciliation reference states its ledger rules in plain words. Each claim records its text, owner, scope, baseline, evidence for and against, what the evidence showed, and separately what to do with it and whether that writes anything. The fixed vocabulary is removed: the five claim kinds, the five status values, and the seven disposition and action pairs. The rules themselves are unchanged: each kind of claim needs its own kind of evidence, a search miss proves nothing, a claim that could not be verified is deferred and never removed, and a missing rule is added only when the user explicitly includes it and current evidence supports it.
+- Both manifests move to 0.27.4. No other installed file changes.
+
+### Behavioral impact
+
+Reconciliation reports describe each claim's evidence and decision in ordinary words instead of fixed tokens. What the skill checks, what it may write, and when it stops are unchanged. No host session was run for this release.
+
+### Required action
+
+None.
+
 ## 0.27.3 - 2026-11-07
 
 ### Changed
