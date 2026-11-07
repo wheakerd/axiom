@@ -16,7 +16,7 @@
 
 [安装](#安装) | [更新](#更新) | [用法](#用法) | [技能](#技能) | [文档](docs/zh-CN/README.md) | [更新日志](CHANGELOG.md)
 
-![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](docs/assets/social-preview.png)
+![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](.github/assets/social-preview.png)
 
 如果 Axiom 对你的智能体工作有帮助，欢迎为仓库加星。星标能帮助其他 Codex 与 Claude Code 用户发现它。
 

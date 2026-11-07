@@ -29,6 +29,32 @@ DOCS_ROOT = "docs/en/"
 TRANSLATIONS_ROOT = "docs/zh-CN/"
 README_TRANSLATION = "README.zh-CN.md"
 DOCS_INDEX = "docs/en/README.md"
+DOCS_DIRECTORY = "docs"
+LANGUAGE_SELECTOR = "README.md"
+
+# RFC 5646 section 2.1 ABNF, matched case-insensitively over ASCII only. The
+# primary language subtag keeps only its 2*3ALPHA form: 4ALPHA is reserved and
+# 5*8ALPHA is for registration, so an ordinary word such as "assets" is no tag.
+_LANGTAG = (
+    r"[a-z]{2,3}(?:-[a-z]{3}){0,3}"  # language, extlang
+    r"(?:-[a-z]{4})?"  # script
+    r"(?:-(?:[a-z]{2}|[0-9]{3}))?"  # region
+    r"(?:-(?:[a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*"  # variant
+    r"(?:-[0-9a-wyz](?:-[a-z0-9]{2,8})+)*"  # extension
+    r"(?:-x(?:-[a-z0-9]{1,8})+)?"  # privateuse
+)
+_PRIVATEUSE = r"x(?:-[a-z0-9]{1,8})+"
+_GRANDFATHERED = (
+    "en-GB-oed", "i-ami", "i-bnn", "i-default", "i-enochian", "i-hak", "i-klingon",
+    "i-lux", "i-mingo", "i-navajo", "i-pwn", "i-tao", "i-tay", "i-tsu", "sgn-BE-FR",
+    "sgn-BE-NL", "sgn-CH-DE", "art-lojban", "cel-gaulish", "no-bok", "no-nyn",
+    "zh-guoyu", "zh-hakka", "zh-min", "zh-min-nan", "zh-xiang",
+)
+LANGUAGE_TAG = re.compile(
+    rf"{_LANGTAG}|{_PRIVATEUSE}|"
+    + "|".join(re.escape(tag) for tag in _GRANDFATHERED),
+    re.IGNORECASE | re.ASCII,
+)
 
 ROOT_CURRENT_DOCUMENTS = (
     "README.md",
@@ -420,6 +446,36 @@ def check_translations(root: Path, failures: list[str]) -> int:
     return len(paths)
 
 
+def is_language_tag(name: str) -> bool:
+    """Return whether a name is a syntactically valid BCP 47 language tag."""
+    return LANGUAGE_TAG.fullmatch(name) is not None
+
+
+def check_docs_layout(root: Path, failures: list[str]) -> int:
+    """Require language-tag directories and the language selector directly under docs/."""
+    docs = root.resolve() / DOCS_DIRECTORY
+    if not docs.is_dir():
+        failures.append(f"{DOCS_DIRECTORY}/ must be a directory")
+        return 0
+    language_count = 0
+    for entry in sorted(docs.iterdir()):
+        label = f"{DOCS_DIRECTORY}/{entry.name}"
+        if entry.is_dir():
+            if is_language_tag(entry.name):
+                language_count += 1
+            else:
+                failures.append(
+                    f"{label}/ must be named by a BCP 47 language tag; each direct "
+                    f"subdirectory of {DOCS_DIRECTORY}/ is one localized documentation set"
+                )
+        elif entry.name != LANGUAGE_SELECTOR:
+            failures.append(
+                f"{label} is not allowed; {DOCS_DIRECTORY}/{LANGUAGE_SELECTOR} is the "
+                f"only direct file under {DOCS_DIRECTORY}/"
+            )
+    return language_count
+
+
 def check_hook_reference(root: Path, failures: list[str]) -> None:
     """Compare every documented Hook command with declarations and wrapper bytes."""
     documents: dict[str, dict[str, object]] = {}
@@ -469,6 +525,7 @@ def check_documentation(
     """Validate the complete public documentation architecture."""
     root = root.resolve()
     markdown_count = check_markdown_links(failures, root=root)
+    check_docs_layout(root, failures)
     current_count = check_current_headings(root, failures)
     indexed_count = check_docs_index_and_orphans(root, failures)
     generated_count = check_generated_markers(root, failures)
@@ -499,6 +556,7 @@ __all__ = (
     "TRANSLATIONS_ROOT",
     "check_current_headings",
     "check_docs_index_and_orphans",
+    "check_docs_layout",
     "check_documentation",
     "check_generated_marker_text",
     "check_guidance_boundaries",
@@ -509,6 +567,7 @@ __all__ = (
     "check_translations",
     "current_documents",
     "discover_markdown",
+    "is_language_tag",
     "is_translation",
     "translation_documents",
     "translation_source",

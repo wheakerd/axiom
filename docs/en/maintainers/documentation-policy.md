@@ -80,7 +80,7 @@ docs/
 .ci/
 ```
 
-Topical current references may remain directly under `docs/` when another directory would create artificial fragmentation.
+Each direct subdirectory of `docs/` is a localized documentation set named by its BCP 47 language tag, and `docs/README.md` only selects the language. Topical current references may remain directly under a language directory such as `docs/en/` when another directory would create artificial fragmentation.
 
 README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 .ci/scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
 
@@ -152,6 +152,7 @@ Every documentation change must, at minimum:
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and avoid skipped heading levels;
 - keep `docs/README.md` complete for current public documents and reject current-document orphans;
+- name every direct subdirectory of `docs/` by a BCP 47 language tag and keep the language selector as its only direct file;
 - preserve generated marker boundaries and compare rendered machine facts with their canonical sources;
 - keep current public guidance from linking to non-public sources;
 - validate the public Hook reference against checked-in declarations and wrappers;
