@@ -138,7 +138,7 @@ claude plugin uninstall axiom@axiom
 
 如果在任一宿主中压缩或分叉之后路由缺失，确认 `compact` 与 `fork` 仍在已安装的 `SessionStart` 匹配器中。在 Windows 上，确认 Claude Code 可以使用 Git Bash；没有它，Claude Code 会在 PowerShell 中运行 Hook，而 PowerShell 不支持该命令。
 
-不要为了让路由出现而删除宿主数据、清理缓存、编辑已安装的插件、更改全局配置、安装专有验证器或创建第二个 Hook。把不可用的工具记录为 `UNAVAILABLE`，而不是通过。
+不要为了让路由出现而删除宿主数据、清理缓存、编辑已安装的插件、更改全局配置、安装专有验证器或创建第二个 Hook。说明该工具不可用，不要把它报告为通过。
 
 ## 报告问题
 

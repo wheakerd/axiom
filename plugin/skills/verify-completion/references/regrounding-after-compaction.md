@@ -48,8 +48,7 @@ summary.
 
 State what the summary claimed, what the artifacts showed, each difference,
 the user decisions re-anchored, the routes reselected, and whether any claim
-was downgraded from done to open. Report `NOT-RUN` for artifacts that could not
-be read.
+was downgraded from done to open. Say which artifacts could not be read.
 
 ## Prohibited
 

@@ -13,7 +13,7 @@ These invariants bind in every phase, including the references that phase loads.
 
 1. **Observed facts only.** Only a fact observed in this session, and still current after the last mutation of its subject, supports `met`; recalled and summarized facts are claims to re-verify.
 2. **Criteria from the source.** Freeze the acceptance criteria from the earliest available source and the user's latest explicit decisions, never from the latest summary alone; settled decisions are not reopened.
-3. **No backfill.** Never fabricate, infer, or round up evidence; a check that cannot run is `NOT-RUN` with its reason, and its criterion stays `unverifiable`.
+3. **No backfill.** Never fabricate, infer, or round up evidence; a check that cannot run is reported as not run, with its reason, and its criterion stays `unverifiable`.
 4. **Advice before compliance.** When evidence conflicts with the request, the plan, or safety, state the conflict, its consequence, and a recommendation before acting within the user's authority; an irreversible or unauthorized action stops instead.
 5. **Verification observes.** It reads, runs tests and read-only commands, and queries state within existing permissions; it does not fix, commit, push, deploy, or delete, and a verified gap authorizes nothing.
 
@@ -47,7 +47,7 @@ When the request or claim arrives after compaction, a fork, or a handoff, follow
 
 ## Report
 
-State the criteria source, the ledger, the fact class of every input the claim relied on, each `NOT-RUN` check, the advice given and whether the user's instruction was then followed, and the next action. Report in the user's language and keep ledger terms in English. Keep it short enough to read before the next step.
+State the criteria source, the ledger, the fact class of every input the claim relied on, each check that did not run, the advice given and whether the user's instruction was then followed, and the next action. Report in the user's language and keep ledger terms in English. Keep it short enough to read before the next step.
 
 ## References
 

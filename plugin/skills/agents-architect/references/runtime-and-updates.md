@@ -101,7 +101,8 @@ redefining them here.
 Editing an `AGENTS.md` file does not retroactively change the instruction chain
 already loaded for the current run. Treat the edit as durable input for later
 in-scope runs. Report fresh host loading as verified only when it was directly
-checked in a new run or session; otherwise mark it `NOT-RUN` or unavailable.
+checked in a new run or session; otherwise say it was not checked or could
+not be checked.
 A runtime capsule, when justified, carries current-task state; a durable AGENTS
 update does not replace that role.
 
@@ -119,7 +120,7 @@ For every triggered update, report:
 - Task-state location when a capsule or generated file was created or removed.
 - Validation results.
 - Current-run versus later-run activation status, including whether fresh host
-  loading was verified, `NOT-RUN`, or unavailable.
+  loading was verified, not checked, or could not be checked.
 
 For `effective-instructions` and `effective-instructions:preview`, also report confirmed, superseded, unresolved, and rejected candidate dispositions with reasons, plus retrieval-friction dispositions and remaining source checks. Report the review-window start, the reviewed-through point, the baseline reason, turn coverage, raw-output coverage, and unread required history. For either
 reconciliation mode, use the baseline, ledger, collaboration, and stop fields

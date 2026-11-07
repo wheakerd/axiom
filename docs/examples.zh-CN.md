@@ -56,9 +56,9 @@
 
 ## `agent-plugin-architect`
 
-> Audit this packaged plugin's shared Skills, route ownership, manifests, hooks, and version-bound compatibility evidence.
+> Audit this packaged plugin's shared Skills, route ownership, manifests, and hooks.
 
-[Agent Plugin Architect](../plugin/skills/agent-plugin-architect/SKILL.md) 清点该包并只加载活动的架构参考。它可以为另一个项目设计 Codex 或 Claude Code 集成；Axiom 自身同时支持两个宿主。显式的发布就绪审计返回分类后的证据与下一个有边界的决定，同时保持只读。
+[Agent Plugin Architect](../plugin/skills/agent-plugin-architect/SKILL.md) 清点该包并只加载活动的架构参考。它可以为另一个项目设计 Codex 或 Claude Code 集成；Axiom 自身同时支持两个宿主。显式的发布就绪审计报告每个关卡的检查结果与下一个有边界的决定，同时保持只读。
 
 仓库本地的指令系统属于 `agents-architect`；普通的插件源码或文档留在宿主原生处理。安装、发布、部署与 Git 提交需要各自的活动阶段归属与权限。显式的上下文成本重设计可以加上 `optimize-agent-usage`。见[路由契约](agent-plugin-architect-route-contract.md)。
 

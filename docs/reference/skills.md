@@ -100,7 +100,7 @@ Report findings only.
 
 **Link:** [Packaged plugin architecture](../../plugin/skills/agent-plugin-architect/SKILL.md)
 
-**Description:** Designs or audits skills, routes, manifests, hooks, and compatibility evidence for a packaged agent plugin.
+**Description:** Designs or audits skills, routes, manifests, and hooks for a packaged agent plugin.
 
 **Usage:**
 
@@ -139,7 +139,7 @@ Do not retry it.
 
 **Link:** [Completion verification](../../plugin/skills/verify-completion/SKILL.md)
 
-**Description:** Verifies completion or progress claims against current direct evidence on an explicit request or before a completion claim, including one carried by a compaction summary, and advises before complying when evidence conflicts. Routine continuation after compaction stays with the host.
+**Description:** Verifies completion or progress claims against current direct evidence on an explicit request or when a completion claim rests on recalled or summarized facts, including a compaction summary, and advises before complying when evidence conflicts. Routine continuation after compaction stays with the host.
 
 **Usage:**
 

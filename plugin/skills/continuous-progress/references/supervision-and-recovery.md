@@ -95,5 +95,5 @@ Record the host version with every claim. Distinguish a scheduled wake after the
 
 A controlled drill proves only its observed path. Fresh instruction loading,
 unattended scheduling, app restart, and another operating system remain
-`NOT-RUN` without direct native evidence. Do not publish a general survival or
+unobserved without direct native evidence. Do not publish a general survival or
 attention-quality claim based on one short arithmetic example.

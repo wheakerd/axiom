@@ -101,7 +101,7 @@ Whoever coordinates records authority, fixes scope and baseline, integrates the 
 
 After the material-state recheck, freeze the ledger, the exact target paths, and the authorized operations. Exactly one writer performs the frozen AGENTS-system edits; every other participant or pass writes nothing. After writing, the coordinator directly reviews every frozen path, including untracked or ignored paths, and verifies unrelated baseline preservation; a tracked diff is insufficient.
 
-If a review was not independently run, decisive evidence cannot be checked, or writer isolation is uncertain, safe-stop before writing. Report the mode incomplete and completion and writes as `NOT-RUN`; partial findings are not a completed preview.
+If a review was not independently run, decisive evidence cannot be checked, or writer isolation is uncertain, safe-stop before writing. Report the mode as incomplete and say that nothing was completed or written; partial findings are not a completed preview.
 
 ## Handoff And Stops
 

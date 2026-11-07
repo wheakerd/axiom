@@ -4,7 +4,7 @@
 
 ## Scope
 
-The route covers package inventory, shared Skills, route ownership, manifests, marketplace wrappers, hooks, trust boundaries, release readiness, and version-bound compatibility evidence. It can design plugins for Codex or Claude Code. That target-project capability is separate from Axiom's own installation and runtime support, described in [Compatibility](compatibility.md).
+The route covers package inventory, shared Skills, route ownership, manifests, marketplace wrappers, hooks, trust boundaries, and release readiness. It can design plugins for Codex or Claude Code. That target-project capability is separate from Axiom's own installation and runtime support, described in [Compatibility](compatibility.md).
 
 | Request | Owner |
 | --- | --- |
@@ -27,9 +27,9 @@ The [startup gate](../plugin/skills/using-axiom/SKILL.md) owns route selection. 
 1. Resolve material ambiguity before selecting an implementation. When architecture and installation are mutually exclusive choices, preserve both original goals and ask one focused question, unless the user explicitly delegated the choice and both are reversible and already authorized; then state which and why before acting. Permission or feasibility limits cannot silently substitute an audit for installation.
 2. Inventory the package and its canonical sources before editing.
 3. Load only the references needed for the active phase. Keep public Skill entries directly discoverable and references reachable from their parent; preserve a shared tree when supported by the target hosts.
-4. Return the inventory, ownership and trust decisions, changed surfaces, validation evidence, compatibility class, and checks that were `NOT-RUN` or `UNAVAILABLE`.
+4. Return the inventory, ownership and trust decisions, changed surfaces, the validation run with its results, and the host or lifecycle checks that were not run or could not run.
 
-For a release-readiness audit, the [readiness reference](../plugin/skills/agent-plugin-architect/references/release-readiness.md) owns impact classification, target-repository release requirements, available evidence, and the next bounded decision. Readiness remains read-only; it does not authorize a later commit, tag, install, publication, or deployment.
+For a release-readiness audit, the [readiness reference](../plugin/skills/agent-plugin-architect/references/release-readiness.md) owns impact classification, target-repository release requirements, what each gate showed, and the next bounded decision. Readiness remains read-only; it does not authorize a later commit, tag, install, publication, or deployment.
 
 ## Trust And Evidence
 

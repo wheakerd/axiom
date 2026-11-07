@@ -138,7 +138,7 @@ If expected Axiom capabilities are unavailable or a request routes incorrectly:
 
 If routing is missing after compaction or a fork in either host, confirm that `compact` and `fork` remain in the installed `SessionStart` matcher. On Windows, confirm that Git Bash is available for Claude Code; without it Claude Code runs the Hook in PowerShell, which does not support the command.
 
-Do not delete host data, clear caches, edit the installed plugin, change global configuration, install a proprietary validator, or create a second Hook merely to make routing appear. Record unavailable tooling as `UNAVAILABLE`, not passed.
+Do not delete host data, clear caches, edit the installed plugin, change global configuration, install a proprietary validator, or create a second Hook merely to make routing appear. Say that a tool was unavailable; do not report it as passed.
 
 ## Reporting A Problem
 

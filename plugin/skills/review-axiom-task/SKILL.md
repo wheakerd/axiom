@@ -84,7 +84,7 @@ Use this structure and omit empty detail:
 ### Actions
 - Inspections
 - Local or external mutations
-- Stopped, failed, skipped, or not-run actions
+- Actions that stopped, failed, were skipped, or did not run
 
 ### Evidence
 - Material evidence with observed, reconstructed, or unavailable state
