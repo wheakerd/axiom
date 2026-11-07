@@ -47,57 +47,52 @@ ambiguous; competing intended baselines or unfinished work that makes
 "implemented" unclear is. Mark affected claims unresolved and ask before
 apply. Recheck material state before ledger freeze; changes invalidate rows.
 
-## Atomized Evidence Ledger
+## Evidence Ledger
 
-Split compound rules into independently decidable claims before classification.
-For every existing claim in scope and every proposed correction, record:
+Split compound rules into claims that can each be decided on their own. For
+every existing claim in scope and every proposed correction, record its text,
+owner, and scope; the baseline it was checked against; the evidence for and
+against it and what stays uncertain; what the evidence showed; separately, what
+to do with the claim and whether that writes anything; and which worker found
+what, with the coordinator's own decisive recheck.
 
-- claim ID, text, owner, and scope;
-- exactly one kind: `implementation-claim`, `normative-constraint`,
-  `routing-owner`, `validation-requirement`, or `source-of-truth-pointer`;
-- baseline, evidence, counterevidence, and uncertainty;
-- observed status, separate from disposition and write action; and
-- worker sources plus the coordinator's decisive direct recheck.
+Say what the evidence showed in plain words: current evidence confirms the
+claim, confirms part of it, contradicts it, could not be found, or conflicts
+with other evidence. Keep that finding apart from the decision: keep the claim
+and write nothing; correct it, including an evidence-backed narrowing or split;
+add it, only for explicitly scoped missing guidance; remove it as stale; move
+or merge it; defer it as unresolved; or reject it as a new addition and write
+nothing.
 
-Use observed status `confirmed`, `partially-confirmed`, `contradicted`,
-`unverified`, or `conflicting`. Record a separate disposition/action pair:
-
-- `keep` / `no-write`;
-- `correct` / `edit`, including an evidence-backed narrow or split;
-- `add-supported` / `add` only for explicitly scoped missing guidance;
-- `remove-stale` / `remove`;
-- `move-or-merge` / `move` or `merge`;
-- `unresolved` / `defer`; or
-- `reject-new` / `no-write`.
-
-Implementation claims need current code, configuration, test, command, or
-runtime evidence. Judge normative constraints by authoritative policy, scope,
-owner, and continued need, not code. Routing owners need direct tree,
-discovery, link, or loading evidence; validation requirements need the current
-acceptance contract and configuration; source pointers must resolve to the
-canonical owner.
+Each kind of claim needs its own evidence. A claim about the implementation
+needs current code, configuration, test, command, or runtime evidence. A rule
+that constrains behavior is judged by authoritative policy, scope, owner, and
+continued need, not by code. A claim about which file owns a route needs direct
+tree, discovery, link, or loading evidence; a validation requirement needs the
+current acceptance contract and configuration; a pointer to a source must
+resolve to the canonical owner.
 
 Treat negative evidence as bounded investigation, not proof by search miss.
 Check the authoritative owner, expected entry points and possible rename or
 replacement, relevant configuration and tests, and scoped untracked or ignored
-content. If that remains inconclusive, use `unverified` plus
-`unresolved` / `defer`. Missing code or tests cannot by itself remove a
-normative constraint, validation rule, route owner, or source pointer.
+content. If that remains inconclusive, say the claim could not be verified and
+defer it. Missing code or tests cannot by itself remove a behavioral rule,
+validation rule, route owner, or source pointer.
 
-Use `remove-stale` only when direct baseline evidence disproves applicability,
-adjacent ownership is checked, no normative basis remains, and removal is
-authorized. Prefer `correct` for partial drift. Default to existing claims. A
-missing rule may be `add-supported` only when the user explicitly includes
-missing implemented guidance, direct current evidence supports it, and the
-durable gate in `maintenance-application.md` passes. A repository scan alone
-cannot expand scope; otherwise use `reject-new`. Never copy an implementation
-inventory into AGENTS.
+Remove a claim as stale only when direct baseline evidence disproves its
+applicability, adjacent ownership is checked, no normative basis remains, and
+removal is authorized. Prefer correcting a claim over removing it for partial
+drift. Default to existing claims. Add a missing rule only when the user
+explicitly includes missing implemented guidance, direct current evidence
+supports it, and the durable gate in `maintenance-application.md` passes. A
+repository scan alone cannot expand scope; otherwise reject the addition. Never
+copy an implementation inventory into AGENTS.
 
 ## Independent Review Contract
 
 Both modes need three independent read-only reviews before any write. The instruction audit atomizes rules and inspects owners and inheritance; the implementation audit inspects implementation and test or runtime evidence; the provenance check establishes baseline state and provenance. Run them as separate read-only subagents when the host offers them. Otherwise one session performs them as sequential passes, records each pass's findings before starting the next, and never rewrites an earlier pass's ledger from a later one.
 
-Whoever coordinates records authority, fixes scope and baseline, integrates the ledger, directly rechecks decisive evidence, resolves routing, and validates. All participants obey the loaded chain and remain read-only during audit. Never decide by majority vote: resolve a conflict by checking the owning source directly; otherwise the claim remains `conflicting` and `unresolved` / `defer`.
+Whoever coordinates records authority, fixes scope and baseline, integrates the ledger, directly rechecks decisive evidence, resolves routing, and validates. All participants obey the loaded chain and remain read-only during audit. Never decide by majority vote: resolve a conflict by checking the owning source directly; otherwise record the conflict and defer the claim.
 
 After the material-state recheck, freeze the ledger, the exact target paths, and the authorized operations. Exactly one writer performs the frozen AGENTS-system edits; every other participant or pass writes nothing. After writing, the coordinator directly reviews every frozen path, including untracked or ignored paths, and verifies unrelated baseline preservation; a tracked diff is insufficient.
 
@@ -117,4 +112,4 @@ Stop or remain read-only when target, baseline, authority, owner, or removal sco
 
 ## Report Required
 
-Report the mode; the target, scope, and baseline; material Git and ignored state; authority versus evidence; and the reviewers, conflicts, and rechecks. Report each status and disposition; the writer scope or stop; the terminal owner; changed files and bytes; the direct post-write review; validation; unresolved items; and activation timing.
+Report the mode; the target, scope, and baseline; material Git and ignored state; authority versus evidence; and the reviewers, conflicts, and rechecks. Report what the evidence showed for each claim and what was decided; the writer scope or stop; the terminal owner; changed files and bytes; the direct post-write review; validation; unresolved items; and activation timing.
