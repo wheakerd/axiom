@@ -19,15 +19,15 @@ flowchart TD
 
 | Source | Responsibility |
 | --- | --- |
-| [Installed plugin root](../plugin/) | The only subtree a host installs: manifests, Hooks, Skills, artwork, and a license copy |
-| [Codex manifest](../plugin/.codex-plugin/plugin.json) | Codex plugin identity, `./skills/`, and explicit hook path |
-| [Codex marketplace descriptor](../.agents/plugins/marketplace.json) | Codex installation and catalog metadata for this repository root |
-| [Codex hook definition](../plugin/hooks/codex-hooks.json) | Codex `SessionStart` handler for `startup`, `resume`, `clear`, `compact`, and `fork` |
-| [Claude Code manifest](../plugin/.claude-plugin/plugin.json) | Claude Code plugin identity, `./skills/`, and hook path |
-| [Claude Code catalog](../.claude-plugin/marketplace.json) | Claude Code installation and catalog metadata for this repository |
-| [Claude Code hook definition](../plugin/hooks/claude-hooks.json) | Claude Code `SessionStart` handler for the same five sources |
-| [Routing gate](../plugin/skills/using-axiom/SKILL.md) | Request matching, route ownership, composition, and no-match continuation |
-| [Packaged Skills](../plugin/skills/) | Direct public entries with parent-owned references and optional agent metadata |
+| [Installed plugin root](../../plugin) | The only subtree a host installs: manifests, Hooks, Skills, artwork, and a license copy |
+| [Codex manifest](../../plugin/.codex-plugin/plugin.json) | Codex plugin identity, `./skills/`, and explicit hook path |
+| [Codex marketplace descriptor](../../.agents/plugins/marketplace.json) | Codex installation and catalog metadata for this repository root |
+| [Codex hook definition](../../plugin/hooks/codex-hooks.json) | Codex `SessionStart` handler for `startup`, `resume`, `clear`, `compact`, and `fork` |
+| [Claude Code manifest](../../plugin/.claude-plugin/plugin.json) | Claude Code plugin identity, `./skills/`, and hook path |
+| [Claude Code catalog](../../.claude-plugin/marketplace.json) | Claude Code installation and catalog metadata for this repository |
+| [Claude Code hook definition](../../plugin/hooks/claude-hooks.json) | Claude Code `SessionStart` handler for the same five sources |
+| [Routing gate](../../plugin/skills/using-axiom/SKILL.md) | Request matching, route ownership, composition, and no-match continuation |
+| [Packaged Skills](../../plugin/skills) | Direct public entries with parent-owned references and optional agent metadata |
 
 Each hook prints a loading message and reads the gate using the host-provided plugin root. Its bounded foreground command performs no writes, network requests, background launches, or updates. It exposes instructions; it does not select a task route or authorize an action. The [Hook Reference](reference/hooks.md) renders the exact declarations, including the Codex Windows wrapper, for comparison with the installed definition.
 
@@ -41,7 +41,7 @@ Reassess when a later tool choice starts research through the user's own browser
 
 ## Workflow Ownership
 
-The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using-axiom/SKILL.md) are canonical. This table summarizes responsibilities; concrete requests and controls are in [Examples](examples.md).
+The [Skill sources](../../plugin/skills) and [routing gate](../../plugin/skills/using-axiom/SKILL.md) are canonical. This table summarizes responsibilities; concrete requests and controls are in [Examples](examples.md).
 
 | Route | Responsibility |
 | --- | --- |
@@ -59,7 +59,7 @@ The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using
 | `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared plugin releases, and explicitly traceable or hardened Git submission |
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |
 
-`agent-plugin-architect` can design another project's Codex or Claude Code plugin. Axiom itself supports both hosts with the same routes; see [Compatibility](compatibility.md). The skill's [route and trigger contracts](../plugin/skills/agent-plugin-architect/references/route-and-trigger-contracts.md) state the boundary.
+`agent-plugin-architect` can design another project's Codex or Claude Code plugin. Axiom itself supports both hosts with the same routes; see [Compatibility](compatibility.md). The skill's [route and trigger contracts](../../plugin/skills/agent-plugin-architect/references/route-and-trigger-contracts.md) state the boundary.
 
 ## Composition And Phase Changes
 
@@ -67,7 +67,7 @@ The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using
 
 Composition follows the gate's ownership rules, not a precautionary load of every related Skill. A persistent deployment or migration with a consequential external effect selects both `reversible-system-change` and `confirm-external-action`. Each keeps its own authority and verification gates. Publishing an already-prepared artifact alone selects the external-action owner.
 
-Machine-credential work uses one shared [lifecycle reference](../plugin/skills/using-axiom/references/credential-lifecycle.md). Metadata inventory and persistent consumer activation belong to the reversible owner; provider creation, revocation, and disclosure belong to the external owner. An end-to-end rotation needs both. Generic authentication help and human login do not create another route.
+Machine-credential work uses one shared [lifecycle reference](../../plugin/skills/using-axiom/references/credential-lifecycle.md). Metadata inventory and persistent consumer activation belong to the reversible owner; provider creation, revocation, and disclosure belong to the external owner. An end-to-end rotation needs both. Generic authentication help and human login do not create another route.
 
 After resume (including a fork) or compaction, active routes are reselected from direct evidence before new mutation. Each owner's handoff contract determines how interrupted attempts are reconstructed. Route selection, prior assistant prose, and tool availability never supply missing authorization.
 
@@ -84,7 +84,7 @@ The paragraph above names the explicit invocation in its Codex form; in Claude C
 
 ## No-Match Continuation And Trust
 
-Ordinary source edits, tests, explanations, status queries, local staging or commits, and named-remote non-force pushes stay host-native unless a specific description matches. No match is a normal result, not a denial or evidence of a repository conflict. Active instructions and user authority still govern the work. A host permission denial is likewise a stop, not a conflict: the gate's boundary presents the exact action for the user's grant before the first attempt and never retries by another tool, flag, path, or configuration change; the [host permission reference](../plugin/skills/using-axiom/references/host-permission.md) labels each host's mechanics. See the [Trust Model](trust-model.md).
+Ordinary source edits, tests, explanations, status queries, local staging or commits, and named-remote non-force pushes stay host-native unless a specific description matches. No match is a normal result, not a denial or evidence of a repository conflict. Active instructions and user authority still govern the work. A host permission denial is likewise a stop, not a conflict: the gate's boundary presents the exact action for the user's grant before the first attempt and never retries by another tool, flag, path, or configuration change; the [host permission reference](../../plugin/skills/using-axiom/references/host-permission.md) labels each host's mechanics. See the [Trust Model](trust-model.md).
 
 ## Identity, Lifecycle, And Evidence
 

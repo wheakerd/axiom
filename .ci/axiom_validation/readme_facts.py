@@ -22,7 +22,7 @@ RELEASE_BADGE = (
 )
 HOSTS_BADGE = (
     "[![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-"
-    "Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md)"
+    "Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/en/compatibility.md)"
 )
 LICENSE_BADGE = (
     "[![License: MIT](https://img.shields.io/badge/license-MIT-b45309"

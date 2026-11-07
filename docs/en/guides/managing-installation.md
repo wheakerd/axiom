@@ -1,6 +1,6 @@
 # Managing an Axiom Installation
 
-English | [简体中文](managing-installation.zh-CN.md)
+English | [简体中文](../../zh-CN/guides/managing-installation.md)
 
 This guide owns Axiom's current update, disable, removal, and non-destructive troubleshooting procedures. The host owns the plugin lifecycle; Axiom does not check for, download, install, or announce updates by itself.
 
@@ -27,7 +27,7 @@ Whether updates are checked or installed automatically, and their timing, are co
 
 ## Version Selection
 
-The [marketplace entry](../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and an immutable release-tag `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's published source independently. A normal `main` commit leaves that selection unchanged.
+The [marketplace entry](../../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and an immutable release-tag `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's published source independently. A normal `main` commit leaves that selection unchanged.
 
 The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same repository and release-tag `ref` through its `git-subdir` source with `path` `plugin`. Both catalogs advance together.
 
@@ -144,4 +144,4 @@ Before reporting, record the host and exact version, operating system, Axiom ver
 
 - Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) for an installation or host observation.
 - Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml) for unexpected routing behavior.
-- Use the private reporting process in [SECURITY.md](../../SECURITY.md) for a vulnerability.
+- Use the private reporting process in [SECURITY.md](../../../SECURITY.md) for a vulnerability.

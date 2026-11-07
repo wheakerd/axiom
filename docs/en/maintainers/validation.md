@@ -1,6 +1,6 @@
 # Contributor Validation
 
-This guide owns contributor check commands, validation-tool structure, and the limits of each result. Start with [CONTRIBUTING.md](../../CONTRIBUTING.md) for scope, change classification, and the pull-request checklist.
+This guide owns contributor check commands, validation-tool structure, and the limits of each result. Start with [CONTRIBUTING.md](../../../CONTRIBUTING.md) for scope, change classification, and the pull-request checklist.
 
 Repository checks use Python's standard library. They are contributor tooling, not dependencies of the installed Axiom plugin. Use a disposable repository copy for any check that may write files; keep caches, temporary fixtures, and tool output out of the contribution.
 
@@ -31,7 +31,7 @@ Run additional checks required by the changed surface, read the final diff, conf
 
 ## Code Security Scanning
 
-The [CodeQL workflow](../../.github/workflows/codeql.yml) analyzes Python and GitHub Actions with the `security-extended` query suite on pull requests to `main`, pushes to `main`, and manual dispatch. Actions use full commit pins; checkout credentials are not persisted. The analysis job can read source and upload security findings, but cannot push repository content.
+The [CodeQL workflow](../../../.github/workflows/codeql.yml) analyzes Python and GitHub Actions with the `security-extended` query suite on pull requests to `main`, pushes to `main`, and manual dispatch. Actions use full commit pins; checkout credentials are not persisted. The analysis job can read source and upload security findings, but cannot push repository content.
 
 Review findings in the repository's [code scanning results](https://github.com/wheakerd/axiom/security/code-scanning). A successful analysis run does not mean there are no findings. The README badge reports workflow status; code-scanning alerts and repository rules own any merge-blocking decision. This workflow does not scan Markdown instructions for prompt injection or establish installed-host behavior.
 
@@ -51,13 +51,13 @@ The native matrix and its stable `hook-runtime-gate` aggregate are described in 
 
 ## Validation Tooling
 
-[.ci/check.py](../../.ci/check.py) is the entrypoint CI and contributors share. Thin wrappers in [.ci/scripts/](../../.ci/scripts/) call production parsers and policy gates in [.ci/axiom_validation/](../../.ci/axiom_validation/); `.ci/scripts/check-publication.py` is the publication aggregate. Reusable negative cases and mutation fixtures used by the aggregate live in [.ci/axiom_validation/cases/](../../.ci/axiom_validation/cases/); the aggregate must remain usable without importing the test package.
+[.ci/check.py](../../../.ci/check.py) is the entrypoint CI and contributors share. Thin wrappers in [.ci/scripts/](../../../.ci/scripts) call production parsers and policy gates in [.ci/axiom_validation/](../../../.ci/axiom_validation); `.ci/scripts/check-publication.py` is the publication aggregate. Reusable negative cases and mutation fixtures used by the aggregate live in [.ci/axiom_validation/cases/](../../../.ci/axiom_validation/cases); the aggregate must remain usable without importing the test package.
 
-Focused `unittest` modules under [.ci/tests/](../../.ci/tests/) own domain-local assertions.
+Focused `unittest` modules under [.ci/tests/](../../../.ci/tests) own domain-local assertions.
 
 Tests pin fixture totals and invariants, not release facts. A total that grows with every release, such as the required public files, the Markdown files, or the installed-runtime inputs, comes from the same production owner the aggregate reports. A release that changes no validator behavior therefore needs no test edit; a lost fixture still fails.
 
-The validators check structure, not wording: a skill's frontmatter, its references, its size, the manifests, the hooks, and the documentation links. They pin no sentence of a skill or a document and model no routing or gate decision, because each host's model decides how to act within the binding rules a skill states. The fixture tests in [.ci/tests/test_git_contracts.py](../../.ci/tests/test_git_contracts.py) run the Git procedures and configuration rules that `traceable-git-submit` documents against disposable repositories, so a documented command that stops working fails a test.
+The validators check structure, not wording: a skill's frontmatter, its references, its size, the manifests, the hooks, and the documentation links. They pin no sentence of a skill or a document and model no routing or gate decision, because each host's model decides how to act within the binding rules a skill states. The fixture tests in [.ci/tests/test_git_contracts.py](../../../.ci/tests/test_git_contracts.py) run the Git procedures and configuration rules that `traceable-git-submit` documents against disposable repositories, so a documented command that stops working fails a test.
 
 Keep fixture names in failure messages, and let the aggregate reporter add the policy domain. Keep fixture payloads separate from production policy modules, and do not add a third-party test or runtime dependency. Prefer focused validation using Python's standard library, without third-party Python packages; the host executable prerequisites above still apply.
 

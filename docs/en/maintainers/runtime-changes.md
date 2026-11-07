@@ -1,12 +1,12 @@
 # Runtime Changes
 
-Use this guide when changing installed Skills, route matching, always-loaded context, package declarations, or Hooks. Start with the contributor workflow in [CONTRIBUTING.md](../../CONTRIBUTING.md) and classify the exact final diff under [Runtime Identity](../runtime-identity.md#classify-a-change), which also assigns the version increment and governs bundling.
+Use this guide when changing installed Skills, route matching, always-loaded context, package declarations, or Hooks. Start with the contributor workflow in [CONTRIBUTING.md](../../../CONTRIBUTING.md) and classify the exact final diff under [Runtime Identity](../runtime-identity.md#classify-a-change), which also assigns the version increment and governs bundling.
 
 This is contributor guidance. The checked-in Skills, declarations, and wrappers remain the executable or instruction sources; documentation does not grant action authority.
 
 ## Skill And Package Ownership
 
-Codex and Claude Code install the same shared [skills/](../../plugin/skills/) source. Keep the [Codex manifest](../../plugin/.codex-plugin/plugin.json) and the [Claude Code manifest](../../plugin/.claude-plugin/plugin.json) pointed at `./skills/`, with one version bound to the current runtime identity. Do not create a platform-specific copy of a shared Skill.
+Codex and Claude Code install the same shared [skills/](../../../plugin/skills) source. Keep the [Codex manifest](../../../plugin/.codex-plugin/plugin.json) and the [Claude Code manifest](../../../plugin/.claude-plugin/plugin.json) pointed at `./skills/`, with one version bound to the current runtime identity. Do not create a platform-specific copy of a shared Skill.
 
 The top-level `using-axiom` Skill is the startup routing gate. Other top-level Skills provide the focused workflows it selects. Supporting `references/` and `agents/` resources belong to their owning Skill and load on demand; they are not independent public routes.
 
@@ -23,7 +23,7 @@ Axiom installs Markdown Skills and foreground Hook definitions. Explicit continu
 - Keep route definitions and triggers in English. Unambiguous requests in other languages may normalize to the canonical English route; they do not create localized aliases.
 - Preserve existing user work and treat missing evidence, tooling, or access as unverified rather than as a passing result.
 - Keep volatile model prices, plan limits, and quotas out of always-loaded instructions. Label byte, word, and call measurements as proxies unless the host exposes exact scoped usage. Never auto-change the main model or reasoning settings.
-- Simple-task child model selection belongs to `delegate-simple-task`. Its [activation](../../plugin/skills/delegate-simple-task/SKILL.md#activation) requires an explicit invocation or a clear delegation request and the user's consent, which the one model-and-brief confirmation can supply; the startup gate's delivery is advisory context for ambiguity, and the host's reasoning level is not a condition. Preserve consent in route metadata, direct requests, and resume behavior before applying assignment permissions.
+- Simple-task child model selection belongs to `delegate-simple-task`. Its [activation](../../../plugin/skills/delegate-simple-task/SKILL.md#activation) requires an explicit invocation or a clear delegation request and the user's consent, which the one model-and-brief confirmation can supply; the startup gate's delivery is advisory context for ambiguity, and the host's reasoning level is not a condition. Preserve consent in route metadata, direct requests, and resume behavior before applying assignment permissions.
 - `continuous-progress` inherits the observed model and effort for its workers and successors. Its explicit activation, host capability checks, independent native supervisor, compaction recovery, and shutdown remain separate from simple-task delegation. It must not install a scheduler or change the hook.
 
 When editing a route, review its direct references and examples for accidental permission expansion. State separately whether the change affects matching, planning, mutation authority, stop conditions, rollback, or completion evidence. The repository does not measure installed behavior, so do not describe behavior you did not observe as observed.
@@ -36,7 +36,7 @@ Keep at least 10% headroom below the 8,192-byte authoring boundary for the gate.
 
 ## Hook Changes
 
-Codex declares [plugin/hooks/codex-hooks.json](../../plugin/hooks/codex-hooks.json) and Claude Code declares [plugin/hooks/claude-hooks.json](../../plugin/hooks/claude-hooks.json). Both read the [startup routing gate](../../plugin/skills/using-axiom/SKILL.md) through `SessionStart`, including `compact` and `fork`. Keep the conventional `plugin/hooks/hooks.json` absent. The [Hook Reference](../reference/hooks.md) renders the canonical declarations and packaged wrappers for inspection.
+Codex declares [plugin/hooks/codex-hooks.json](../../../plugin/hooks/codex-hooks.json) and Claude Code declares [plugin/hooks/claude-hooks.json](../../../plugin/hooks/claude-hooks.json). Both read the [startup routing gate](../../../plugin/skills/using-axiom/SKILL.md) through `SessionStart`, including `compact` and `fork`. Keep the conventional `plugin/hooks/hooks.json` absent. The [Hook Reference](../reference/hooks.md) renders the canonical declarations and packaged wrappers for inspection.
 
 Review any Hook change command by command. A Hook must remain foreground-only, locally inspectable, and limited to loading the routing gate. Do not add file writes, network calls, credential access, a daemon, watcher, scheduled task, or automatic update behavior. Update the relevant manifest and public trust documentation whenever a declared Hook path or command changes.
 

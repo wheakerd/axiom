@@ -11,6 +11,7 @@ from urllib.parse import unquote, urlsplit
 from .context import REPOSITORY_ROOT
 from .hooks import HOOK_FILES
 from .markdown import (
+    HOOK_REFERENCE_RELATIVE,
     ATX_HEADING,
     REFERENCE_LINK,
     check_markdown_links,
@@ -24,7 +25,10 @@ from .readme_facts import check_readme_facts
 from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
 from .runtime_identity import check_runtime_identity
 
-TRANSLATION_SUFFIX = ".zh-CN.md"
+DOCS_ROOT = "docs/en/"
+TRANSLATIONS_ROOT = "docs/zh-CN/"
+README_TRANSLATION = "README.zh-CN.md"
+DOCS_INDEX = "docs/en/README.md"
 
 ROOT_CURRENT_DOCUMENTS = (
     "README.md",
@@ -77,19 +81,21 @@ def discover_markdown(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
 
 def is_translation(relative_path: str) -> bool:
     """Return whether a Markdown path is a Simplified Chinese twin of an English source."""
-    return relative_path.endswith(TRANSLATION_SUFFIX)
+    return relative_path.startswith(TRANSLATIONS_ROOT) or relative_path == README_TRANSLATION
 
 
 def translation_source(relative_path: str) -> str:
     """Return the English source path that owns a translation."""
-    return relative_path[: -len(TRANSLATION_SUFFIX)] + ".md"
+    if relative_path == README_TRANSLATION:
+        return "README.md"
+    return DOCS_ROOT + relative_path[len(TRANSLATIONS_ROOT):]
 
 
 def is_current_document(relative_path: str) -> bool:
     """Return whether a Markdown path belongs to the maintained current set."""
     if is_translation(relative_path):
         return False
-    return relative_path in ROOT_CURRENT_DOCUMENTS or relative_path.startswith("docs/")
+    return relative_path in ROOT_CURRENT_DOCUMENTS or relative_path.startswith(DOCS_ROOT)
 
 
 def current_documents(root: Path = REPOSITORY_ROOT) -> tuple[Path, ...]:
@@ -186,13 +192,13 @@ def check_current_headings(root: Path, failures: list[str]) -> int:
 def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
     """Require direct index coverage and reachability for current docs."""
     root = root.resolve()
-    index = root / "docs" / "README.md"
+    index = root / DOCS_INDEX
     current = {
         path.relative_to(root).as_posix(): path
         for path in current_documents(root)
         if path.relative_to(root).as_posix() not in ROOT_CURRENT_DOCUMENTS
     }
-    expected = set(current) - {"docs/README.md"}
+    expected = set(current) - {DOCS_INDEX}
     index_text = _read_text(index, root, failures)
     if index_text is None:
         return 0
@@ -204,7 +210,7 @@ def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
     }
     for missing in sorted(expected - direct_targets):
         failures.append(
-            f"docs/README.md does not directly index current document {missing}"
+            f"{DOCS_INDEX} does not directly index current document {missing}"
         )
 
     graph: dict[str, set[str]] = {relative: set() for relative in current}
@@ -217,8 +223,8 @@ def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
             for raw in _raw_destinations(text)
             if (target := _local_target(path, raw, root)) in current
         }
-    reachable = {"docs/README.md"}
-    pending = ["docs/README.md"]
+    reachable = {DOCS_INDEX}
+    pending = [DOCS_INDEX]
     while pending:
         source = pending.pop()
         for target in sorted(graph.get(source, ())):
@@ -227,7 +233,7 @@ def check_docs_index_and_orphans(root: Path, failures: list[str]) -> int:
                 pending.append(target)
     for orphan in sorted(expected - reachable):
         failures.append(
-            f"current document {orphan} is orphaned from docs/README.md navigation"
+            f"current document {orphan} is orphaned from {DOCS_INDEX} navigation"
         )
     return len(expected & direct_targets)
 
@@ -435,7 +441,7 @@ def check_hook_reference(root: Path, failures: list[str]) -> None:
     wrapper_path = root / "plugin" / "hooks" / "codex-session-start.cmd"
     wrapper = _read_text(wrapper_path, root, failures)
 
-    reference_path = root / "docs" / "reference" / "hooks.md"
+    reference_path = root / HOOK_REFERENCE_RELATIVE
     reference = _read_text(reference_path, root, failures)
     if reference is None or wrapper is None:
         return
@@ -487,7 +493,10 @@ def check_documentation(
 
 __all__ = (
     "DocumentationReport",
-    "TRANSLATION_SUFFIX",
+    "DOCS_INDEX",
+    "DOCS_ROOT",
+    "README_TRANSLATION",
+    "TRANSLATIONS_ROOT",
     "check_current_headings",
     "check_docs_index_and_orphans",
     "check_documentation",

@@ -167,7 +167,7 @@ class RuntimeIdentityTests(unittest.TestCase):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 self.copy_identity_fixture(root)
-                reference = root / "docs/runtime-identity.md"
+                reference = root / "docs/en/runtime-identity.md"
                 original = reference.read_text(encoding="utf-8")
                 if mutation == "stale-value":
                     identity = json.loads((root / ".ci/runtime-identity.json").read_text())
@@ -175,7 +175,7 @@ class RuntimeIdentityTests(unittest.TestCase):
                         f"`pluginVersion`: `{identity['pluginVersion']}`",
                         "`pluginVersion`: `0.0.0`",
                     )
-                    expected = "docs/runtime-identity.md runtime identity block is stale"
+                    expected = "docs/en/runtime-identity.md runtime identity block is stale"
                 else:
                     changed = original.replace("<!-- runtime-identity:current:start -->", "")
                     expected = "runtime-identity markers must each appear exactly once"

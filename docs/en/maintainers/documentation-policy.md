@@ -71,9 +71,12 @@ CONTRIBUTING.md
 SECURITY.md
 docs/
 |-- README.md
-|-- guides/
-|-- reference/
-`-- maintainers/
+|-- en/
+|   |-- README.md
+|   |-- guides/
+|   |-- reference/
+|   `-- maintainers/
+`-- zh-CN/
 .ci/
 ```
 
@@ -83,7 +86,7 @@ README stays a landing page: identity, a generated skill index, installation, up
 
 ## Translations
 
-English documentation is canonical and the default. A document may have one Simplified Chinese twin beside it, named `<name>.zh-CN.md`, for readers who prefer Chinese. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
+English documentation is canonical and the default. English documents live in `docs/en/`. A document may have one Simplified Chinese twin at the same path under `docs/zh-CN/`, for readers who prefer Chinese; the root `README.zh-CN.md` is the twin of `README.md`. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
 
 A twin is not indexed separately and does not count as a current document of its own; it is reached through its source. It changes in the same change as its source, and the documentation validator rejects a twin whose structure, code, generated facts, or links drift from the source. Maintainer, evidence, release, and reference documents stay English unless a twin is deliberately added under the same rules.
 
@@ -113,7 +116,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Candidate evidence | Checked-in machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | `docs/repository-governance.md`; the live rulesets are the source for their own settings | Current |
-| Simplified Chinese translations | The English source and its `<name>.zh-CN.md` twin | Current; the twin translates prose and table headers and changes with its source |
+| Simplified Chinese translations | The English source in `docs/en/` and its twin at the same path under `docs/zh-CN/` | Current; the twin translates prose and table headers and changes with its source |
 
 Machine-derived facts should use bounded generated regions or deterministic checks where practical. Human prose may explain their meaning but must not redefine their values.
 
@@ -155,7 +158,7 @@ Every documentation change must, at minimum:
 - keep current public guidance from linking to non-public sources;
 - keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
 - validate the public Hook reference against checked-in declarations and wrappers;
-- keep each `<name>.zh-CN.md` twin bound to its English source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, and link targets match.
+- keep each `docs/zh-CN/` twin bound to its `docs/en/` source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, and link targets match.
 
 Run the deterministic, Python-standard-library-only documentation validator from the repository root:
 
