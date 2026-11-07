@@ -8,6 +8,21 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository-only changes, which change no installed file, are not changelog entries; Git history records them. Entries that name a repository policy revision refer to the [ledger kept through tag `v0.27.2`](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/repository-policy-revisions.md).
 
+## 0.27.7 - unreleased
+
+### Changed
+
+- `agents-architect`: `references/memory-and-state.md` no longer prescribes a decision ledger for a target repository. The memory tiers are durable rules and task state; archiving a rule deletes it and says why; a retired slug is simply never reused; the growth signal about dated verification notes is stated in words. `references/maintenance/maintenance-application.md` lists the canonical homes without the ledger.
+- Both manifests move to 0.27.7. No other installed file changes.
+
+### Behavioral impact
+
+`agents-architect` stops proposing a `.agents/decisions.md` ledger with status entries when it designs or maintains an AGENTS system; what it writes into `AGENTS.md`, the routed owners, and task state is otherwise unchanged. No host session was run for this release.
+
+### Required action
+
+None.
+
 ## 0.27.6 - 2026-11-07
 
 ### Fixed
