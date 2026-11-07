@@ -38,16 +38,10 @@ Establish repository facts and narrow the reading scope before designing instruc
   docs.
 - Record candidate path, size, line count, and relevant Git state. Add
   modification time only when freshness affects the decision.
-- Record leftover `.agents/.runtime/` or `.agents/.generated/` directories as
-  migration candidates for the Git-metadata state directory in
-  `memory-and-state.md`.
-- Classify evidence as one of four kinds: live source, persistent rule, runtime
-  state, or historical reference. Use current files/config as live source;
-  active instruction sources or canonical docs as persistent rules; current
-  Git/tool state
-  as runtime state; and diffs, history, transcripts, or prior reports as
-  historical references. Historical reference alone does not prove current
-  behavior or completion.
+- Current files and configuration show current state; active instruction
+  sources and canonical docs are the rules; diffs, history, transcripts, and
+  prior reports are history, which alone does not prove current behavior or
+  completion.
 - Classify an instruction source as current-session active only when the visible
   instruction context, a current session record, or a direct host loading check
   proves it. Filesystem presence alone proves only a discovery candidate; it

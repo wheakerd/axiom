@@ -49,9 +49,8 @@ authorization for that pair. A directory name, broad scope, or request such as
 content. Ask for the precise asset and action; repeat the gate for every newly
 discovered path or changed use.
 
-Record facts as direct live observations, persistent rules, runtime state, or
-historical reference. Historical state and copied instructions do not override
-active instructions or prove current state.
+Historical state and copied instructions do not override active instructions
+or prove current state.
 
 ## Freeze The Write Set
 
@@ -76,12 +75,12 @@ Order a multi-step sequence so that a denial or failure between steps leaves a r
 
 ## Establish A Rollback Point
 
-Choose a rollback mechanism native to the target when possible: an inactive
-version slot, pac## Establish A Rollback Point
+Before candidate or active-state mutation, establish the rollback point and its evidence under `rollback-point.md`, which this reference routes to for every phase that may mutate.
 
-Before candidate or active-state mutation, establish the rollback point and its evidence states under `rollback-point.md`, which this reference routes to for every phase that may mutate.
+## Candidate And Dry Run
 
-ew. Verify authenticity or integrity with authoritative
+Prefer an isolated candidate location or the platform's dry-run, plan, check,
+or transaction preview. Verify authenticity or integrity with authoritative
 metadata when available, then validate format, dependencies, migrations,
 configuration, and affected tests before promotion.
 

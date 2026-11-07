@@ -8,6 +8,30 @@ A version heading names the UTC date on which its GitHub Release was published, 
 
 Repository-only changes, which change no installed file, are not changelog entries; Git history records them. Entries that name a repository policy revision refer to the [ledger kept through tag `v0.27.2`](https://github.com/wheakerd/axiom/blob/v0.27.2/docs/repository-policy-revisions.md).
 
+## 0.27.6 - unreleased
+
+### Fixed
+
+- `reversible-system-change`: `references/preflight-and-rollback.md` had a damaged passage since 0.25.0: the heading `## Establish A Rollback Point` appeared twice around two sentence fragments. The section now points to `rollback-point.md`, and the lost `## Candidate And Dry Run` paragraph is restored.
+
+### Changed
+
+- `review-axiom-task`: the skill says in plain words how you know each claim (observed directly, reconstructed, or could not be read) and what counts as a material effect; the closed-sets invariant, the status tokens, and the Markdown report template are replaced by a list of what the report covers.
+- `agents-architect`: `maintenance/context-evidence.md`, `maintenance/maintenance-application.md`, `runtime-and-updates.md`, and `validation-reporting.md` say how far back you read and where retrieval friction came from instead of coverage tokens and signal labels; `inventory-audit.md`, `migration-policy.md`, and `memory-and-state.md` drop the four-kind evidence taxonomy, the decision-ledger status tokens, and the rules for state directories that earlier versions wrote.
+- `continuous-progress`: the evidence section of `references/supervision-and-recovery.md` becomes one paragraph on which host behaviors you observed; two shutdown states and the two values in `assets/run-record.json` are plain words or empty.
+- `verify-completion`: the report asks, for every input, whether you observed, recalled, or were told it, instead of its "fact class"; the ledger's Source column is described in words.
+- `traceable-git-submit`: `references/baseline-and-preflight.md` drops the migration rule for a baseline file that earlier versions wrote.
+- `using-axiom`: `references/updating.md` keeps the commands and the Hook facts; the in-session steps live in the installation guide.
+- Both manifests move to 0.27.6. No hook content changes.
+
+### Behavioral impact
+
+`reversible-system-change` reads a coherent rollback-point section again. Reports from `review-axiom-task`, `agents-architect`, `continuous-progress`, and `verify-completion` describe evidence and decisions in ordinary words instead of fixed tokens; what each skill checks, may write, and stops on is unchanged. `agents-architect` and `traceable-git-submit` no longer look for state files from earlier versions. No host session was run for this release.
+
+### Required action
+
+None.
+
 ## 0.27.5 - 2026-11-07
 
 ### Changed

@@ -22,8 +22,6 @@ Resolve the cache path with `git -C <repo> rev-parse --path-format=absolute --gi
 
 Initialize it only when an authorized checkpoint, baseline, or consolidation workflow starts, check it before consolidation or a recovery push, and update it only after every authorized remote ref equals the final commit.
 
-A legacy file at `.agents/.cache/traceable-git-submit-baseline.json` in the worktree is migrated only when its `repo`, `branch`, `upstream`, and `lastRemotePushSha` equal the current facts. Add `upstreamRemote` and `mergeRef` from preflight, leave the legacy file untouched, and report any mismatch or invalid JSON without copying it. Never stage, commit, delete, or rewrite that file automatically.
-
 ## Required Git Facts
 
 ```bash

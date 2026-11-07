@@ -85,8 +85,8 @@ When task-context maintenance, update-trigger, or compaction handling changes,
 include one regression scenario with an early proposal that a later user
 message narrows or reverses, followed by compaction before the durable update.
 Verify that the canonical mode is reported, only the controlling decision is
-admitted, superseded and unrelated one-off candidates are rejected, turn and
-raw-output coverage are reported separately, and the current-run versus
+admitted, superseded and unrelated one-off candidates are rejected, read depth
+and unopened raw outputs are reported apart, and the current-run versus
 later-run activation boundary is explicit. Use a Markdown scenario or a
 disposable host prompt; do not add a custom harness merely for this case.
 

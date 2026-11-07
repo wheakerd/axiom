@@ -47,7 +47,7 @@ When the request or claim arrives after compaction, a fork, or a handoff, follow
 
 ## Report
 
-State the criteria source, the ledger, the fact class of every input the claim relied on, each check that did not run, the advice given and whether the user's instruction was then followed, and the next action. Report in the user's language and keep ledger terms in English. Keep it short enough to read before the next step.
+State the criteria source, the ledger, for every input the claim relied on whether you observed it, recalled it, or were told it, each check that did not run, the advice given and whether the user's instruction was then followed, and the next action. Report in the user's language and keep ledger terms in English. Keep it short enough to read before the next step.
 
 ## References
 
