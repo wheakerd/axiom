@@ -4,9 +4,9 @@ The immutable publisher derives the release subject from the tag with
 ``.ci/scripts/release.py subject``: the tag object, tagged commit and tree, the
 ``release`` branch commit and its stamped tree, the plugin zip, the runtime
 digest, the previous release, and the notes digest. This validator binds the
-Draft, its policy and zip assets, and the evidence asset it emits to that
-subject before publication and again after GitHub reports the Release
-immutable.
+Draft and its plugin zip to that subject, and writes the one evidence asset
+that records every derived fact once. It checks the Release and both assets
+again before publication and after GitHub reports the Release immutable.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from .context import REPOSITORY_ROOT, display_path
-from .release import release_policy_record, zip_name
+from .release import REQUIRED_CHECKS, zip_name
 from .release_versions import (
     PRODUCTION_RELEASE_TAG_ERE_PATTERN,
     PRODUCTION_RELEASE_VERSION_CASES,
@@ -32,12 +32,14 @@ from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonica
 
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "publish-immutable-release.yml"
 EVIDENCE_KIND = "axiom-release-evidence"
-EVIDENCE_SCHEMA_VERSION = "2"
-PLAN_SCHEMA_VERSION = "3"
+EVIDENCE_SCHEMA_VERSION = "3"
+EVIDENCE_SCOPE = "release-policy-and-artifact-integrity"
+EVIDENCE_VALIDATOR = ".ci/scripts/check-release-evidence.py"
+PLAN_SCHEMA_VERSION = "4"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
 RUNTIME_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
-PUBLISH_WORKFLOW_SHA256 = "cedb00d83c9962b3a3f386dea70bc541c204fbd1737cf3a123f7a61fa6fc236f"
+PUBLISH_WORKFLOW_SHA256 = "95cd8660632c009b1c8c7e571c488d6acb380d26a884835caa5e4929cae9b6be"
 SUBJECT_KEYS = frozenset(
     {
         "bootstrap",
@@ -168,10 +170,6 @@ def load_subject(path: Path, failures: list[str]) -> dict[str, Any] | None:
     return subject
 
 
-def _policy_prefix(tag: str) -> str:
-    return f"axiom-{tag}-release-policy-"
-
-
 def _evidence_prefix(tag: str) -> str:
     return f"axiom-{tag}-release-evidence-"
 
@@ -258,34 +256,23 @@ def _inspect_release(
 
 def _select_assets(
     document: dict[str, Any], subject: dict[str, Any], *, evidence: str, failures: list[str]
-) -> tuple[dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
-    """Select the policy, zip, and evidence assets; ``evidence`` is required, optional, or absent."""
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """Select the zip and evidence assets; ``evidence`` is required, optional, or absent."""
     assets = document.get("assets")
     if type(assets) is not list:
         failures.append("release.assets must be an array")
-        return None, None, None
+        return None, None
     tag = subject["tag"]
     named = [asset for asset in assets if type(asset) is dict and type(asset.get("name")) is str]
-    policies = [asset for asset in named if asset["name"].startswith(_policy_prefix(tag))]
     zips = [asset for asset in named if asset["name"] == subject["zip"]["name"]]
     evidences = [asset for asset in named if asset["name"].startswith(_evidence_prefix(tag))]
-    if len(policies) + len(zips) + len(evidences) != len(assets):
+    if len(zips) + len(evidences) != len(assets):
         failures.append("release contains an unrecognized asset")
-    selected: list[dict[str, Any] | None] = []
-    for label, candidates, prefix in (
-        ("policy", policies, _policy_prefix(tag)),
-        ("zip", zips, None),
-    ):
-        if len(candidates) != 1:
-            failures.append(f"release must contain exactly one {label} asset")
-            selected.append(None)
-            continue
-        asset = _normalize_asset(candidates[0], f"release {label} asset", failures)
-        if asset is not None and prefix is not None and re.fullmatch(
-            re.escape(prefix) + r"[0-9a-f]{64}\.json", asset["name"]
-        ) is None:
-            failures.append(f"release {label} asset name must contain one full lowercase SHA-256")
-        selected.append(asset)
+    archive: dict[str, Any] | None = None
+    if len(zips) != 1:
+        failures.append("release must contain exactly one zip asset")
+    else:
+        archive = _normalize_asset(zips[0], "release zip asset", failures)
     evidence_asset: dict[str, Any] | None = None
     if evidence == "absent" and evidences:
         failures.append("the release already contains an evidence asset")
@@ -297,7 +284,7 @@ def _select_assets(
             re.escape(_evidence_prefix(tag)) + r"[0-9a-f]{64}\.json", evidence_asset["name"]
         ) is None:
             failures.append("release evidence asset name must contain one full lowercase SHA-256")
-    return selected[0], selected[1], evidence_asset
+    return archive, evidence_asset
 
 
 def _flatten_collection(document: Any, failures: list[str]) -> list[Any] | None:
@@ -347,20 +334,19 @@ def prepare_release_plan(
         )
         return None
     release = _inspect_release(document, subject, expected_phase=phase, failures=failures)
-    policy, archive, evidence = _select_assets(
+    archive, evidence = _select_assets(
         document,
         subject,
         evidence="optional" if phase == "draft" else "required",
         failures=failures,
     )
-    if release is None or policy is None or archive is None or failures:
+    if release is None or archive is None or failures:
         return None
     return {
         "schemaVersion": PLAN_SCHEMA_VERSION,
         "phase": phase,
         "release": release,
         "subject": subject,
-        "policyAsset": policy,
         "zipAsset": archive,
         "evidenceAsset": evidence,
     }
@@ -372,7 +358,6 @@ def _validate_plan(plan: Any, failures: list[str]) -> bool:
         "phase",
         "release",
         "subject",
-        "policyAsset",
         "zipAsset",
         "evidenceAsset",
     }:
@@ -394,7 +379,7 @@ def _validate_plan(plan: Any, failures: list[str]) -> bool:
         "notesSha256": subject["notesSha256"],
     } or type(release.get("id")) is not int or release["id"] <= 0:
         failures.append("release evidence plan release binding is malformed")
-    for field in ("policyAsset", "zipAsset", "evidenceAsset"):
+    for field in ("zipAsset", "evidenceAsset"):
         asset = plan[field]
         if asset is None and field == "evidenceAsset":
             continue
@@ -591,14 +576,9 @@ def _validate_downloaded_asset(
 
 
 def _validate_artifacts(
-    plan: dict[str, Any], policy_path: Path, zip_path: Path, expected_zip_path: Path, failures: list[str]
+    plan: dict[str, Any], zip_path: Path, expected_zip_path: Path, failures: list[str]
 ) -> None:
     subject = plan["subject"]
-    policy = _validate_downloaded_asset(
-        policy_path, plan["policyAsset"], "downloaded policy asset", failures, named_digest=True
-    )
-    if policy is not None and policy != _canonical_json_bytes(release_policy_record(subject)):
-        failures.append("the policy asset must be exactly the record of the derived subject")
     archive = _validate_downloaded_asset(
         zip_path, plan["zipAsset"], "downloaded plugin zip", failures, named_digest=False
     )
@@ -613,48 +593,28 @@ def _validate_artifacts(
         failures.append("the locally built plugin zip does not match the subject")
 
 
-def evidence_document(plan: dict[str, Any]) -> dict[str, Any]:
-    """Return the evidence record that binds the Release, its assets, and its subject."""
-    subject = plan["subject"]
+def evidence_document(subject: dict[str, Any]) -> dict[str, Any]:
+    """Return the evidence record: every fact the publisher derived from the tag, once.
 
-    def asset(binding: dict[str, Any]) -> dict[str, Any]:
-        return {
-            "githubDigest": binding["digest"],
-            "id": binding["id"],
-            "name": binding["name"],
-            "size": binding["size"],
-        }
-
+    The runtime digest is recorded under ``runtimeContract.digest``, where the
+    next release reads it, and nowhere else.
+    """
     return {
-        "assets": {"policy": asset(plan["policyAsset"]), "zip": asset(plan["zipAsset"])},
+        "evidenceScope": EVIDENCE_SCOPE,
         "kind": EVIDENCE_KIND,
-        "release": {
-            "bootstrap": subject["bootstrap"],
-            "commit": subject["commit"],
-            "id": plan["release"]["id"],
-            "notesSha256": subject["notesSha256"],
-            "previousTag": subject["previousTag"],
-            "releaseCommit": subject["releaseCommit"],
-            "releaseTree": subject["releaseTree"],
-            "tag": subject["tag"],
-            "tagObject": subject["tagObject"],
-            "tree": subject["tree"],
-            "version": subject["version"],
-            "zipSha256": subject["zip"]["sha256"],
-        },
         "runtimeContract": {"digest": subject["runtimeDigest"]},
         "schemaVersion": EVIDENCE_SCHEMA_VERSION,
-        "validation": {
-            "scope": "release-policy-and-artifact-integrity",
+        "subject": {key: value for key, value in subject.items() if key != "runtimeDigest"},
+        "verification": {
+            "requiredChecks": list(REQUIRED_CHECKS),
             "status": "pass",
-            "validator": ".ci/scripts/check-release-evidence.py",
+            "validator": EVIDENCE_VALIDATOR,
         },
     }
 
 
 def emit_evidence(
     plan: dict[str, Any],
-    policy_path: Path,
     zip_path: Path,
     expected_zip_path: Path,
     *,
@@ -662,10 +622,10 @@ def emit_evidence(
     failures: list[str],
     root: Path = REPOSITORY_ROOT,
 ) -> Path | None:
-    """Validate the downloaded assets and write the deterministic evidence asset."""
+    """Validate the downloaded plugin zip and write the deterministic evidence asset."""
     if not _validate_plan(plan, failures):
         return None
-    _validate_artifacts(plan, policy_path, zip_path, expected_zip_path, failures)
+    _validate_artifacts(plan, zip_path, expected_zip_path, failures)
     if failures:
         return None
     try:
@@ -676,7 +636,7 @@ def emit_evidence(
     if directory.is_relative_to(root.resolve()):
         failures.append("release evidence must be generated outside the checked-in tree")
         return None
-    payload = _canonical_json_bytes(evidence_document(plan))
+    payload = _canonical_json_bytes(evidence_document(plan["subject"]))
     path = directory / f"{_evidence_prefix(plan['subject']['tag'])}{hashlib.sha256(payload).hexdigest()}.json"
     try:
         with path.open("xb") as stream:
@@ -690,7 +650,6 @@ def emit_evidence(
 def verify_release_snapshot(
     plan: dict[str, Any],
     metadata_path: Path,
-    policy_path: Path,
     zip_path: Path,
     expected_zip_path: Path,
     evidence_path: Path,
@@ -708,18 +667,16 @@ def verify_release_snapshot(
     if document is None:
         return
     release = _inspect_release(document, subject, expected_phase="final" if final else "draft", failures=failures)
-    policy, archive, evidence = _select_assets(document, subject, evidence="required", failures=failures)
+    archive, evidence = _select_assets(document, subject, evidence="required", failures=failures)
     if release is not None and release != plan["release"]:
         failures.append("release identity changed after the draft was frozen")
-    if policy is not None and policy != plan["policyAsset"]:
-        failures.append("policy asset identity or metadata changed after validation")
     if archive is not None and archive != plan["zipAsset"]:
         failures.append("plugin zip asset identity or metadata changed after validation")
     if plan["evidenceAsset"] is not None and evidence is not None and evidence != plan["evidenceAsset"]:
         failures.append("evidence asset identity or metadata changed after validation")
-    _validate_artifacts(plan, policy_path, zip_path, expected_zip_path, failures)
+    _validate_artifacts(plan, zip_path, expected_zip_path, failures)
     local = _load_json_object(evidence_path, "local release evidence", failures)
-    if local is not None and local != evidence_document(plan):
+    if local is not None and local != evidence_document(subject):
         failures.append("the evidence asset does not match the validated binding")
     if evidence is not None:
         _validate_downloaded_asset(evidence_path, evidence, "release evidence asset", failures, named_digest=True)
@@ -734,7 +691,6 @@ def verify_release_snapshot(
             if _inspect_release(prepublish, subject, expected_phase="draft", failures=failures) != plan["release"]:
                 failures.append("pre-publication release identity differs from the frozen draft")
             if _select_assets(prepublish, subject, evidence="required", failures=failures) != (
-                policy,
                 archive,
                 evidence,
             ):
@@ -922,8 +878,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         choices=(
             "release-id",
             "phase",
-            "policy-id",
-            "policy-name",
             "zip-id",
             "zip-name",
             "evidence-present",
@@ -935,7 +889,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     for name in ("validate", "verify"):
         command = commands.add_parser(name)
         command.add_argument("--plan", type=Path, required=True)
-        command.add_argument("--policy", type=Path, required=True)
         command.add_argument("--zip", type=Path, required=True)
         command.add_argument("--expected-zip", type=Path, required=True)
         if name == "validate":
@@ -1013,7 +966,7 @@ def main(argv: list[str] | None = None) -> int:
         plan = load_release_plan(args.plan, failures)
         if plan is not None:
             path = emit_evidence(
-                plan, args.policy, args.zip, args.expected_zip,
+                plan, args.zip, args.expected_zip,
                 evidence_directory=args.evidence_directory, failures=failures,
             )
             if path is not None and not failures:
@@ -1024,7 +977,6 @@ def main(argv: list[str] | None = None) -> int:
             verify_release_snapshot(
                 plan,
                 args.release_metadata,
-                args.policy,
                 args.zip,
                 args.expected_zip,
                 args.evidence,

@@ -22,8 +22,8 @@ GitHub and the tagged tree before the first write:
 
 Only then does it write: one GitHub-signed ``createCommitOnBranch`` commit that
 fast-forwards ``release`` to the stamped ``plugin/`` tree and ``LICENSE``, the
-Draft with the plugin zip and the release-policy asset, the immutable
-publisher run, and the published-release observation. A failure after the tag
+Draft with the plugin zip, the immutable publisher run, which adds the one
+evidence asset, and the published-release observation. A failure after the tag
 exists leaves no Release; the next attempt uses the next version.
 
 The ``release`` branch never carries ``.github/workflows/``: ``GITHUB_TOKEN``
@@ -85,8 +85,6 @@ PUBLISHER_WORKFLOW = "publish-immutable-release.yml"
 SIGNATURE_GUARD_WORKFLOW = "release-signature-guard.yml"
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "release.yml"
 RELEASE_NOTES_MAX_CHARACTERS = 125_000
-POLICY_KIND = "axiom-release-policy"
-POLICY_SCHEMA_VERSION = "2"
 FILE_MODE = "100644"
 FIXED_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 POLL_SECONDS = 20
@@ -915,24 +913,8 @@ def build_release(root: Path, api: Api, repository: str, tag: str) -> ReleaseBui
     )
 
 
-def release_policy_record(subject: dict[str, Any]) -> dict[str, Any]:
-    """Describe the exact release and the repository checks that gate it."""
-    return {
-        "schemaVersion": POLICY_SCHEMA_VERSION,
-        "kind": POLICY_KIND,
-        "subject": subject,
-        "verification": {"policy": "repository-checks-v2", "requiredChecks": list(REQUIRED_CHECKS)},
-        "evidenceScope": "release-policy-and-artifact-integrity",
-    }
-
-
 def canonical_json(document: dict[str, Any]) -> bytes:
     return (json.dumps(document, indent=2, sort_keys=True) + "\n").encode("utf-8")
-
-
-def policy_asset(subject: dict[str, Any]) -> tuple[str, bytes]:
-    data = canonical_json(release_policy_record(subject))
-    return f"axiom-{subject['tag']}-release-policy-{hashlib.sha256(data).hexdigest()}.json", data
 
 
 # --- Checks on the stamped tree ----------------------------------------------
@@ -1141,17 +1123,13 @@ def run_release(
         commit=commit,
     )
     subject = build.subject(release_commit, bootstrap)
-    policy_name, policy_bytes = policy_asset(subject)
     release = stage_draft(
         api,
         repository,
         tag=tag,
         commit=commit,
         body=build.notes,
-        assets=(
-            (subject["zip"]["name"], build.zip_bytes, "application/zip"),
-            (policy_name, policy_bytes, "application/json"),
-        ),
+        assets=((subject["zip"]["name"], build.zip_bytes, "application/zip"),),
     )
     dispatch_and_wait(
         api, repository, PUBLISHER_WORKFLOW, tag, {"tag": tag}, commit, clock, "immutable publisher"
@@ -1352,10 +1330,8 @@ __all__ = (
     "is_bootstrap",
     "require_runtime_change",
     "latest_runtime_digest",
-    "policy_asset",
     "release_branch_commit",
     "release_notes",
-    "release_policy_record",
     "resolve_tag",
     "run_release",
     "stamp_files",
