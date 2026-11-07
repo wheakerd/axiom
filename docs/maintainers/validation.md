@@ -48,7 +48,7 @@ python3 -B -m unittest tests.hook_runtime_integration -v
 
 Run the module from a disposable repository copy. One local operating system is sufficient: the host tool owns hook triggering, and the required CI matrix runs the same module on Linux, Windows, and macOS, which covers each system's command variant. Static inspection, emulation, and a successful package read cannot replace a native result.
 
-The native matrix and its stable `hook-runtime-gate` aggregate are described in [Repository Governance](../repository-governance.md#hook-runtime-gate). That owner records required-check status and the dated remote observation. The weekly scheduled run remains read-only compatibility evidence.
+The native matrix and its stable `hook-runtime-gate` aggregate are described in [Repository Governance](../repository-governance.md#hook-runtime-gate). That page describes the gate's workflow conditions and the weekly scheduled run, which only reports drift.
 
 ## Validation Tooling
 

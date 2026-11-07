@@ -15,7 +15,7 @@ No surface grants commit, tag, Release, asset-upload, publication, or Latest aut
 
 ## Changelog Contract
 
-Every new version after `0.10.0` has one entry whose heading is `## X.Y.Z - <state or date>`. The entry must contain:
+Every version has one entry whose heading is `## X.Y.Z - <state or date>`. The entry must contain:
 
 - at least one change section such as `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, or `Security`;
 - `### Behavioral impact`; and
@@ -48,7 +48,7 @@ The renderer:
 - omits the Changelog version heading, so `unreleased` is not copied into the final body;
 - promotes entry subsections by one heading level;
 - rewrites repository-relative links to immutable links under the exact tag;
-- rejects traversal links, candidate-only publication text, duplicate version entries, missing fix-forward sections, and bodies above 8 KiB; and
+- rejects traversal links, duplicate version entries, missing sections, hard-wrapped paragraphs, and bodies above GitHub's 125,000-character limit; and
 - uses only the Python standard library, the checked-in Changelog, and standard output.
 
 The separately authorized draft must use the exact rendered bytes. The tag-owned release-evidence validator compares the draft, pre-publication, and final body to the same rendering. The `notesSha256` attestation field binds the GitHub Release body digest.

@@ -50,14 +50,13 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(22, report.current_document_count)
         self.assertEqual(16, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
-        self.assertEqual((REPOSITORY_ROOT / "README.md").stat().st_size, report.readme_bytes)
         self.assertEqual(6, report.translation_count)
 
     def test_named_negative_fixtures_are_all_rejected(self):
         failures: list[str] = []
         rejected = check_documentation_negative_fixtures(failures)
         self.assertEqual(len(NEGATIVE_FIXTURES), rejected)
-        self.assertEqual(20, rejected)
+        self.assertEqual(19, rejected)
         self.assertEqual([], failures)
 
     def test_standard_library_command_line_entrypoint(self):
@@ -70,12 +69,8 @@ class DocumentationValidationTests(unittest.TestCase):
         )
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("", result.stderr)
-        self.assertIn(
-            f"README {(REPOSITORY_ROOT / 'README.md').stat().st_size} bytes "
-            "(ceiling 16 KiB)", result.stdout
-        )
         self.assertIn("6 translations", result.stdout)
-        self.assertIn("20 negative fixtures", result.stdout)
+        self.assertIn("19 negative fixtures", result.stdout)
 
     def test_skill_inventory_ignores_headings_in_usage_examples(self):
         for fence in ("```", "~~~~"):

@@ -24,7 +24,6 @@ from .readme_facts import check_readme_facts
 from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
 from .runtime_identity import check_runtime_identity
 
-README_MAX_BYTES = 16 * 1024
 TRANSLATION_SUFFIX = ".zh-CN.md"
 
 ROOT_CURRENT_DOCUMENTS = (
@@ -44,13 +43,12 @@ SKILL_REFERENCE_SHARED_HEADING = "## Shared skills"
 
 @dataclass(frozen=True)
 class DocumentationReport:
-    """Counts and README size for one validation run."""
+    """Counts for one validation run."""
 
     markdown_count: int
     current_document_count: int
     indexed_document_count: int
     generated_region_count: int
-    readme_bytes: int
     translation_count: int = 0
 
 
@@ -145,21 +143,6 @@ def _local_target(
         return candidate.relative_to(root.resolve()).as_posix()
     except ValueError:
         return None
-
-
-def check_readme_budget(root: Path, failures: list[str]) -> int:
-    path = root / "README.md"
-    try:
-        byte_count = len(path.read_bytes())
-    except OSError as error:
-        failures.append(f"cannot read README.md for size validation: {error}")
-        return 0
-    if byte_count > README_MAX_BYTES:
-        failures.append(
-            f"README.md is {byte_count} bytes; the migration ceiling is "
-            f"{README_MAX_BYTES} bytes"
-        )
-    return byte_count
 
 
 def _heading_levels(searchable: str) -> tuple[int, ...]:
@@ -543,7 +526,6 @@ def check_documentation(
 ) -> DocumentationReport:
     """Validate the complete public documentation architecture."""
     root = root.resolve()
-    readme_bytes = check_readme_budget(root, failures)
     markdown_count = check_markdown_links(failures, root=root)
     current_count = check_current_headings(root, failures)
     indexed_count = check_docs_index_and_orphans(root, failures)
@@ -565,14 +547,12 @@ def check_documentation(
         current_document_count=current_count,
         indexed_document_count=indexed_count,
         generated_region_count=generated_count,
-        readme_bytes=readme_bytes,
         translation_count=translation_count,
     )
 
 
 __all__ = (
     "DocumentationReport",
-    "README_MAX_BYTES",
     "SKILL_REFERENCE_PATH",
     "TRANSLATION_SUFFIX",
     "check_current_headings",
@@ -584,7 +564,6 @@ __all__ = (
     "check_hook_reference",
     "check_markdown_language",
     "check_private_guidance_text",
-    "check_readme_budget",
     "check_skill_reference_inventory_text",
     "check_translation_text",
     "check_translations",
