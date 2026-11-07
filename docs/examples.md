@@ -1,6 +1,6 @@
 # Examples
 
-English | [Simplified Chinese (zh-CN)](examples.zh-CN.md)
+English | [简体中文](examples.zh-CN.md)
 
 These examples describe routing contracts, not execution transcripts. Active instructions and the user's actual authorization remain decisive. Follow the linked Skill for full procedures; [Architecture](architecture.md) explains how the gate selects and composes owners.
 

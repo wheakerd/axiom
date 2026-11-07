@@ -7,7 +7,7 @@
 [English](README.md) | 简体中文
 
 <!-- readme:badges:start -->
-[![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](docs/reference/skills.md) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](plugin/skills) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
 <!-- readme:badges:end -->
 
 [![Unit and integration tests](https://github.com/wheakerd/axiom/actions/workflows/unit-and-integration-tests.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/unit-and-integration-tests.yml) [![Cross-platform hook runtime](https://github.com/wheakerd/axiom/actions/workflows/hook-runtime-integration.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/hook-runtime-integration.yml) [![Distribution and publication guards](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml) [![CodeQL](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml)
@@ -33,23 +33,23 @@
 <!-- readme:skill-index:start -->
 | Skill | What it does |
 | --- | --- |
-| [`using-axiom`](docs/reference/skills.md#using-axiom) | Route installed Axiom skills from a session bootstrap |
-| [`clarify-intent`](docs/reference/skills.md#clarify-intent) | Resolve unclear requests with options or a custom answer |
-| [`delegate-simple-task`](docs/reference/skills.md#delegate-simple-task) | Delegate simple work to your ordered candidate models |
-| [`task-planning`](docs/reference/skills.md#task-planning) | Create and revise plans around current requirements |
-| [`continuous-progress`](docs/reference/skills.md#continuous-progress) | Supervised progress on a native scheduler |
-| [`local-web-search`](docs/reference/skills.md#local-web-search) | Constrain local searches and stop at site challenges |
-| [`agents-architect`](docs/reference/skills.md#agents-architect) | Initialize, maintain, and validate scoped AGENTS.md systems |
-| [`agent-plugin-architect`](docs/reference/skills.md#agent-plugin-architect) | Design and audit packaged plugin architecture |
-| [`optimize-agent-usage`](docs/reference/skills.md#optimize-agent-usage) | Reduce agent context and workflow overhead |
-| [`review-axiom-task`](docs/reference/skills.md#review-axiom-task) | Audit Axiom decisions from observable evidence |
-| [`verify-completion`](docs/reference/skills.md#verify-completion) | Check completion claims against current evidence |
-| [`confirm-external-action`](docs/reference/skills.md#confirm-external-action) | Bind and verify consequential external actions |
-| [`traceable-git-submit`](docs/reference/skills.md#traceable-git-submit) | Trace checkpoints and explicit Git submissions |
-| [`reversible-system-change`](docs/reference/skills.md#reversible-system-change) | Plan and verify reversible system changes |
+| [`using-axiom`](plugin/skills/using-axiom/SKILL.md) | Route installed Axiom skills from a session bootstrap |
+| [`clarify-intent`](plugin/skills/clarify-intent/SKILL.md) | Resolve unclear requests with options or a custom answer |
+| [`delegate-simple-task`](plugin/skills/delegate-simple-task/SKILL.md) | Delegate simple work to your ordered candidate models |
+| [`task-planning`](plugin/skills/task-planning/SKILL.md) | Create and revise plans around current requirements |
+| [`continuous-progress`](plugin/skills/continuous-progress/SKILL.md) | Supervised progress on a native scheduler |
+| [`local-web-search`](plugin/skills/local-web-search/SKILL.md) | Constrain local searches and stop at site challenges |
+| [`agents-architect`](plugin/skills/agents-architect/SKILL.md) | Initialize, maintain, and validate scoped AGENTS.md systems |
+| [`agent-plugin-architect`](plugin/skills/agent-plugin-architect/SKILL.md) | Design and audit packaged plugin architecture |
+| [`optimize-agent-usage`](plugin/skills/optimize-agent-usage/SKILL.md) | Reduce agent context and workflow overhead |
+| [`review-axiom-task`](plugin/skills/review-axiom-task/SKILL.md) | Audit Axiom decisions from observable evidence |
+| [`verify-completion`](plugin/skills/verify-completion/SKILL.md) | Check completion claims against current evidence |
+| [`confirm-external-action`](plugin/skills/confirm-external-action/SKILL.md) | Bind and verify consequential external actions |
+| [`traceable-git-submit`](plugin/skills/traceable-git-submit/SKILL.md) | Trace checkpoints and explicit Git submissions |
+| [`reversible-system-change`](plugin/skills/reversible-system-change/SKILL.md) | Plan and verify reversible system changes |
 <!-- readme:skill-index:end -->
 
-[技能参考](docs/reference/skills.md)给出每个技能的完整描述和一个可复制的示例。
+每个技能的 `SKILL.md` 完整描述该技能；[示例](docs/examples.md)展示请求与预期行为。
 
 ## 安装
 
@@ -123,7 +123,6 @@ Summarize the purpose of this README. Do not modify files.
 ## 文档与支持
 
 - [文档索引](docs/README.zh-CN.md)：按任务组织的指南与参考。
-- [技能参考](docs/reference/skills.md)：捆绑技能与示例。
 - [最新 Release](https://github.com/wheakerd/axiom/releases/latest) 与[更新日志](CHANGELOG.md)：每个版本的变更以及需要的操作。
 - [兼容性](docs/compatibility.md)：支持的宿主与已知限制。
 - [信任模型](docs/trust-model.zh-CN.md)：安全边界。Axiom 处于公开测试阶段；它的指令不替代宿主权限，也不提供沙箱。

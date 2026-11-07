@@ -1,6 +1,6 @@
 # Managing an Axiom Installation
 
-English | [Simplified Chinese (zh-CN)](managing-installation.zh-CN.md)
+English | [简体中文](managing-installation.zh-CN.md)
 
 This guide owns Axiom's current update, disable, removal, and non-destructive troubleshooting procedures. The host owns the plugin lifecycle; Axiom does not check for, download, install, or announce updates by itself.
 
@@ -43,7 +43,7 @@ In Claude Code, `claude plugin list` prints each installed plugin's `Version`, `
 
 Keep deliberate user pins. A catalog pin fixes the **catalog snapshot**; it does not override a plugin entry's own `source.ref`. In Codex, use the marketplace `--ref` option. In Claude Code, add the marketplace with a `#ref` suffix, such as `wheakerd/axiom#<tag>`; a marketplace added with a tag or branch updates only to the latest commit of that ref. To hold a specific plugin version, select an immutable catalog snapshot whose entry resolves to that version, using the client's supported source controls. Inspect the entry before assuming that a catalog tag and the plugin version match. For a workspace-managed installation, the workspace administrator owns the configured repository, path, ref, and native sync policy.
 
-The Codex source format was last verified on 2026-10-25 and the lifecycle semantics on 2026-10-13 against the official [marketplace format](https://developers.openai.com/plugins/build/plugins#marketplace-metadata), [marketplace configuration](https://learn.chatgpt.com/docs/config-file/config-reference), and [workspace sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management). Workspace sync timing is not a promise about personal Codex installations. The Claude Code source format was last verified on 2026-10-25 against the official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources), and the other Claude Code statements on 2026-10-22 against the official [plugin installation guide](https://code.claude.com/docs/en/discover-plugins) and [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
+The Codex source format and lifecycle semantics follow the official [marketplace format](https://developers.openai.com/plugins/build/plugins#marketplace-metadata), [marketplace configuration](https://learn.chatgpt.com/docs/config-file/config-reference), and [workspace sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management). Workspace sync timing is not a promise about personal Codex installations. The Claude Code source format follows the official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources), and the other Claude Code statements the official [plugin installation guide](https://code.claude.com/docs/en/discover-plugins) and [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
 
 ## Marketplace Clone Timeouts
 
@@ -80,7 +80,7 @@ Run the two listing commands again. Check the registered source, installed versi
 
 The clone deadline applies to the catalog download. A complete refresh may also download plugin sources and can take longer than 30 seconds. Sparse checkout does not change the client's timeout or guarantee completion on a slow or unavailable network. If the error persists, record the exact failing phase, CLI version, exit status, and sanitized error for the [problem report](#reporting-a-problem).
 
-The supported CLI options and sparse-path requirements were last verified on 2026-10-13 against the official [marketplace CLI documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli) and [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+The supported CLI options and sparse-path requirements follow the official [marketplace CLI documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli) and [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
 
 ### Claude Code Clone Timeouts
 
@@ -91,7 +91,7 @@ export CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS=300000
 claude plugin marketplace update axiom
 ```
 
-In PowerShell, set `$env:CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS = "300000"` instead. For a new registration, `claude plugin marketplace add wheakerd/axiom --sparse .claude-plugin` fetches only the catalog, because its plugin entry uses a separate `git-subdir` source. Removing a marketplace also uninstalls its plugins, so do not re-register an existing installation only to add sparse checkout. These options were last verified on 2026-10-22 against the official [plugin troubleshooting](https://code.claude.com/docs/en/plugins/troubleshooting) and [plugin commands](https://code.claude.com/docs/en/plugins/cli-reference) references.
+In PowerShell, set `$env:CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS = "300000"` instead. For a new registration, `claude plugin marketplace add wheakerd/axiom --sparse .claude-plugin` fetches only the catalog, because its plugin entry uses a separate `git-subdir` source. Removing a marketplace also uninstalls its plugins, so do not re-register an existing installation only to add sparse checkout. These options follow the official [plugin troubleshooting](https://code.claude.com/docs/en/plugins/troubleshooting) and [plugin commands](https://code.claude.com/docs/en/plugins/cli-reference) references.
 
 ## Disabling Or Removing
 
@@ -104,7 +104,7 @@ enabled = false
 
 Set `enabled = true` to enable it again. The key combines the plugin name and marketplace name. Project configuration is loaded only for trusted projects and remains subject to managed requirements. Disabling leaves the installation in place; marketplace refresh may still update its files. In Codex, installing or enabling a plugin does not automatically trust its hooks; review the current definition in `/hooks` before use.
 
-This project setting applies to local-marketplace installations, not the enabled state of workspace-managed plugins. These configuration semantics were last verified on 2026-09-16 against the official [project plugin settings](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo) and [hook trust requirements](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks).
+This project setting applies to local-marketplace installations, not the enabled state of workspace-managed plugins. These configuration semantics follow the official [project plugin settings](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo) and [hook trust requirements](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks).
 
 Remove the exact Codex installation from the `axiom` marketplace:
 
@@ -120,7 +120,7 @@ claude plugin enable axiom@axiom
 claude plugin uninstall axiom@axiom
 ```
 
-Without `--scope`, `disable` and `enable` act on the first of the local, project, and user scopes whose settings mention Axiom. That is usually `user`, so disabling turns Axiom off in every project. To turn it off only in the current project, add `--scope local` for yourself or `--scope project` to share the override through the project's settings. Once Axiom is enabled and loads again, at a session start or a plugin reload, its Hook runs at the next `SessionStart` event without a separate trust step. These Claude Code commands were last verified on 2026-10-24 against the official [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
+Without `--scope`, `disable` and `enable` act on the first of the local, project, and user scopes whose settings mention Axiom. That is usually `user`, so disabling turns Axiom off in every project. To turn it off only in the current project, add `--scope local` for yourself or `--scope project` to share the override through the project's settings. Once Axiom is enabled and loads again, at a session start or a plugin reload, its Hook runs at the next `SessionStart` event without a separate trust step. These Claude Code commands follow the official [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
 
 After a change on either host, start a new session. In Claude Code, `/reload-plugins` unloads the plugin from a running session, but the routing gate already delivered stays in that session's context. Confirm that Axiom is absent or disabled in the host's plugin list and that its Hook is absent from `/hooks` before treating it as inactive. Do not edit installed files or delete host caches as a substitute for the host-managed lifecycle. Disabling or removing Axiom leaves any task state that routes wrote into your repositories' Git metadata in place; the [Trust Model](../trust-model.md#repository-state-written-by-routes) lists those locations and how to remove them.
 

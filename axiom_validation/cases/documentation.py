@@ -14,7 +14,6 @@ from axiom_validation.documentation import (
     check_heading_text,
     check_hook_reference,
     check_private_guidance_text,
-    check_skill_reference_inventory_text,
     check_translations,
 )
 from axiom_validation.markdown import check_markdown_links
@@ -133,16 +132,6 @@ def _private_maintenance_link() -> list[str]:
     return failures
 
 
-def _skill_inventory_drift() -> list[str]:
-    failures: list[str] = []
-    check_skill_reference_inventory_text(
-        "# A\n\n## Shared skills\n\n### using-axiom\n",
-        failures,
-        inventory=("using-axiom", "fixture-route"),
-    )
-    return failures
-
-
 def _hook_reference_drift() -> list[str]:
     temporary, root = _temporary_root()
     try:
@@ -232,7 +221,6 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("unmatched-generated-marker", _unmatched_generated_marker, "without an end"),
     ("nested-generated-marker", _nested_generated_marker, "nests generated marker"),
     ("private-maintenance-link", _private_maintenance_link, "private maintenance content"),
-    ("skill-inventory-drift", _skill_inventory_drift, "differs from the canonical skill order"),
     ("hook-reference-drift", _hook_reference_drift, "not present in the checked-in declarations"),
     ("translation-missing-source", _translation_missing_source, "has no English source"),
     ("translation-heading-drift", _translation_heading_drift, "heading structure differs"),

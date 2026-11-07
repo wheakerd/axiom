@@ -85,7 +85,7 @@ def release_metadata(
         "id": 501,
         "tag_name": TAG,
         "target_commitish": COMMIT,
-        "name": f"Axiom {TAG}",
+        "name": TAG,
         "body": body,
         "draft": draft,
         "prerelease": False,

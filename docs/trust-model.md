@@ -1,6 +1,6 @@
 # Trust Model
 
-English | [Simplified Chinese (zh-CN)](trust-model.zh-CN.md)
+English | [简体中文](trust-model.zh-CN.md)
 
 Axiom provides workflow instructions within the host's existing trust model. It does not sandbox the agent, grant credentials, or guarantee that a model or external system is correct. Selecting a route loads instructions; it does not authorize an action.
 

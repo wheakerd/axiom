@@ -42,7 +42,7 @@ class ReadmeFactsTests(unittest.TestCase):
         failures: list[str] = []
         index = render_skill_index(load_skill_summaries(failures))
         self.assertEqual([], failures)
-        positions = [index.index(f"](docs/reference/skills.md#{name})") for name in SKILL_REFERENCE_ORDER]
+        positions = [index.index(f"](plugin/skills/{name}/SKILL.md)") for name in SKILL_REFERENCE_ORDER]
         self.assertEqual(sorted(positions), positions)
 
     def test_checked_in_readme_translation_carries_the_same_generated_regions(self):

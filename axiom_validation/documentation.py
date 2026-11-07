@@ -37,8 +37,6 @@ GENERATED_MARKER = re.compile(
     r"<!--\s*([a-z0-9][a-z0-9._:-]*?):(start|end)\s*-->"
 )
 SETEXT_HEADING = re.compile(r"^[ \t]{0,3}(=+|-+)[ \t]*$")
-SKILL_REFERENCE_PATH = "docs/reference/skills.md"
-SKILL_REFERENCE_SHARED_HEADING = "## Shared skills"
 
 
 @dataclass(frozen=True)
@@ -416,47 +414,6 @@ def check_translations(root: Path, failures: list[str]) -> int:
     return len(paths)
 
 
-def _skill_reference_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
-    _, masked = fenced_blocks_and_masked_text(text)
-    lines = masked.splitlines()
-    starts = [
-        index for index, line in enumerate(lines)
-        if line.rstrip() == SKILL_REFERENCE_SHARED_HEADING
-    ]
-    if len(starts) != 1:
-        failures.append(
-            f"{SKILL_REFERENCE_PATH} must contain exactly one parseable Shared skills heading"
-        )
-        return ()
-    inventory = []
-    for line in lines[starts[0] + 1:]:
-        if re.match(r"^[ \t]{0,3}#{1,2}(?:[ \t]+|$)", line):
-            break
-        skill = re.fullmatch(r"### ([a-z0-9-]+)[ \t]*", line)
-        if skill is not None:
-            inventory.append(skill.group(1))
-    return tuple(inventory)
-
-
-def check_skill_reference_inventory_text(
-    reference_text: str,
-    failures: list[str],
-    inventory: tuple[str, ...] = SKILL_REFERENCE_ORDER,
-) -> None:
-    actual = _skill_reference_inventory(reference_text, failures)
-    if actual != inventory:
-        failures.append(
-            "Skill Reference Shared skills inventory differs from the canonical skill order: "
-            + ", ".join(actual)
-        )
-
-
-def check_skill_reference_inventory(root: Path, failures: list[str]) -> None:
-    reference = _read_text(root / SKILL_REFERENCE_PATH, root, failures)
-    if reference is not None:
-        check_skill_reference_inventory_text(reference, failures)
-
-
 def check_hook_reference(root: Path, failures: list[str]) -> None:
     """Compare every documented Hook command with declarations and wrapper bytes."""
     documents: dict[str, dict[str, object]] = {}
@@ -511,7 +468,6 @@ def check_documentation(
     generated_count = check_generated_markers(root, failures)
     translation_count = check_translations(root, failures)
     check_guidance_boundaries(root, failures)
-    check_skill_reference_inventory(root, failures)
     check_hook_reference(root, failures)
     if include_canonical_owners:
         if root != REPOSITORY_ROOT.resolve():
@@ -531,7 +487,6 @@ def check_documentation(
 
 __all__ = (
     "DocumentationReport",
-    "SKILL_REFERENCE_PATH",
     "TRANSLATION_SUFFIX",
     "check_current_headings",
     "check_docs_index_and_orphans",
@@ -541,7 +496,6 @@ __all__ = (
     "check_heading_text",
     "check_hook_reference",
     "check_private_guidance_text",
-    "check_skill_reference_inventory_text",
     "check_translation_text",
     "check_translations",
     "current_documents",

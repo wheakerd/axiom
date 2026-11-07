@@ -1,6 +1,6 @@
 # Axiom Documentation
 
-English | [Simplified Chinese (zh-CN)](README.zh-CN.md)
+English | [简体中文](README.zh-CN.md)
 
 Use this index to find the document that owns the task or fact you need. The locations below are the current canonical public structure.
 
@@ -13,7 +13,6 @@ Current guidance describes the same source snapshot as the document. See [Source
 | Install Axiom and try one routed request | [Getting Started](guides/getting-started.md) | Users |
 | Update, disable, remove, or troubleshoot Axiom | [Managing an Installation](guides/managing-installation.md) | Users |
 | Inspect exact Hook commands | [Hook Reference](reference/hooks.md) | Users and auditors |
-| Find a skill and copy an example | [Skill Reference](reference/skills.md) | Users |
 | Understand what Axiom does | [Architecture](architecture.md) | Users and reviewers |
 | Review permissions and trust boundaries | [Trust Model](trust-model.md) | Users and security reviewers |
 | Check current host support | [Compatibility](compatibility.md) | Users and auditors |

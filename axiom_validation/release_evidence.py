@@ -351,7 +351,7 @@ def _inspect_release(
     expected_fields = {
         "tag_name": tag,
         "target_commitish": commit,
-        "name": f"Axiom {tag}",
+        "name": tag,
         "draft": expected_phase == "draft",
         "prerelease": False,
     }
@@ -376,7 +376,7 @@ def _inspect_release(
         "id": release_id,
         "tag": tag,
         "targetCommit": commit,
-        "name": f"Axiom {tag}",
+        "name": tag,
         "notesSha256": (
             hashlib.sha256(expected_body.encode("utf-8")).hexdigest()
             if expected_body is not None
@@ -631,7 +631,7 @@ def _validate_plan(plan: dict[str, Any], failures: list[str]) -> bool:
         failures.append("release evidence plan release and subject bindings disagree")
     if _require_positive_int(release.get("id"), "plan.release.id", failures) is None:
         pass
-    if release.get("name") != f"Axiom {subject.get('tag')}":
+    if release.get("name") != subject.get("tag"):
         failures.append("release evidence plan title does not match its tag")
     if type(release.get("notesSha256")) is not str or DIGEST_PATTERN.fullmatch(
         release["notesSha256"]
