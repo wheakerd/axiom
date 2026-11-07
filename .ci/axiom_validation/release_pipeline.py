@@ -992,18 +992,19 @@ def apply_catalog_handoff(root: Path, *, tag: str, release_date: str) -> tuple[s
 
 
 def _run_publication_checks(root: Path) -> None:
-    result = subprocess.run(
-        [sys.executable, "-B", str(root / "scripts" / "check-publication.py")],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        raise PipelineError(
-            "the rendered catalog handoff fails the publication checks:\n"
-            + (result.stderr or result.stdout).strip()
+    for command in REHEARSAL_COMMANDS:
+        result = subprocess.run(
+            [sys.executable, "-B", *command],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
         )
+        if result.returncode != 0:
+            raise PipelineError(
+                "the rendered catalog handoff fails the publication checks:\n"
+                + (result.stderr or result.stdout).strip()[-REHEARSAL_OUTPUT_LIMIT:]
+            )
 
 
 HANDOFF_REQUIRED_PATHS = (CHANGELOG_RELATIVE,)
