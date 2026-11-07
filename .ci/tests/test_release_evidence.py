@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from axiom_validation.release import canonical_json, policy_asset
+from axiom_validation.release import REQUIRED_CHECKS, canonical_json
 from axiom_validation.release_evidence import (
     assert_release_absent_from_collection,
     check_publish_workflow_contract,
@@ -67,15 +67,20 @@ def asset(asset_id: int, name: str, data: bytes) -> dict:
     }
 
 
+def leaf_values(value: object) -> list:
+    if isinstance(value, dict):
+        return [leaf for item in value.values() for leaf in leaf_values(item)]
+    if isinstance(value, list):
+        return [leaf for item in value for leaf in leaf_values(item)]
+    return [value]
+
+
 class Fixture:
-    """Files for one Draft: the policy, zip, and optional evidence asset."""
+    """Files for one Draft: the plugin zip and the optional evidence asset."""
 
     def __init__(self, directory: Path, release_subject: dict | None = None) -> None:
         self.directory = directory
         self.subject = release_subject or subject()
-        self.policy_name, self.policy_bytes = policy_asset(self.subject)
-        self.policy = directory / self.policy_name
-        self.policy.write_bytes(self.policy_bytes)
         self.zip = directory / self.subject["zip"]["name"]
         self.zip.write_bytes(ZIP_BYTES)
         self.expected_zip = directory / "expected.zip"
@@ -85,10 +90,7 @@ class Fixture:
 
     def release(self, *, draft: bool = True, immutable: bool = False, evidence: Path | None = None,
                 body: str = NOTES) -> dict:
-        assets = [
-            asset(11, self.policy_name, self.policy_bytes),
-            asset(12, self.subject["zip"]["name"], ZIP_BYTES),
-        ]
+        assets = [asset(12, self.subject["zip"]["name"], ZIP_BYTES)]
         if evidence is not None:
             assets.append(asset(13, evidence.name, evidence.read_bytes()))
         return {
@@ -118,7 +120,7 @@ class Fixture:
     def evidence(self, plan: dict, directory: Path) -> Path:
         failures: list[str] = []
         path = emit_evidence(
-            plan, self.policy, self.zip, self.expected_zip,
+            plan, self.zip, self.expected_zip,
             evidence_directory=directory, failures=failures, root=self.directory / "repository",
         )
         if path is None or failures:
@@ -191,15 +193,20 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(first.name, second.name)
         self.assertEqual(first.read_bytes(), second.read_bytes())
         document = json.loads(first.read_text(encoding="utf-8"))
-        self.assertEqual(evidence_document(plan), document)
-        self.assertEqual("v1.2.3", document["release"]["tag"])
-        self.assertEqual(COMMIT, document["release"]["commit"])
-        self.assertEqual(RELEASE_COMMIT, document["release"]["releaseCommit"])
-        self.assertEqual(RELEASE_TREE, document["release"]["releaseTree"])
-        self.assertEqual(subject()["zip"]["sha256"], document["release"]["zipSha256"])
-        self.assertEqual(subject()["runtimeDigest"], document["runtimeContract"]["digest"])
-        self.assertEqual(subject()["notesSha256"], document["release"]["notesSha256"])
-        self.assertIs(False, document["release"]["bootstrap"])
+        self.assertEqual(evidence_document(plan["subject"]), document)
+        self.assertEqual(
+            {"evidenceScope", "kind", "runtimeContract", "schemaVersion", "subject", "verification"},
+            set(document),
+        )
+        self.assertEqual("3", document["schemaVersion"])
+        expected_subject = subject()
+        self.assertEqual(expected_subject.pop("runtimeDigest"), document["runtimeContract"]["digest"])
+        self.assertEqual(expected_subject, document["subject"])
+        self.assertEqual(list(REQUIRED_CHECKS), document["verification"]["requiredChecks"])
+        self.assertEqual("release-policy-and-artifact-integrity", document["evidenceScope"])
+        self.assertIs(False, document["subject"]["bootstrap"])
+        values = [json.dumps(value) for value in leaf_values(document)]
+        self.assertEqual(len(values), len(set(values)), "an evidence value is recorded twice")
         self.assertEqual(f"axiom-v1.2.3-release-evidence-{hashlib.sha256(first.read_bytes()).hexdigest()}.json", first.name)
 
     def test_evidence_is_refused_inside_the_checked_in_tree(self):
@@ -208,31 +215,20 @@ class ReleaseEvidenceTests(unittest.TestCase):
         inside = self.root / "repository" / "out"
         inside.mkdir()
         self.assertIsNone(
-            emit_evidence(plan, self.fixture.policy, self.fixture.zip, self.fixture.expected_zip,
+            emit_evidence(plan, self.fixture.zip, self.fixture.expected_zip,
                           evidence_directory=inside, failures=failures, root=self.root / "repository")
         )
         self.assertTrue(any("outside the checked-in tree" in failure for failure in failures), failures)
 
-    def test_tampered_policy_zip_or_body_is_rejected(self):
+    def test_tampered_zip_or_body_is_rejected(self):
         plan = self.fixture.plan(self.fixture.release())
         tampered_zip = self.root / "tampered" / self.fixture.zip.name
         tampered_zip.parent.mkdir()
         tampered_zip.write_bytes(ZIP_BYTES[:-1] + b"X")
         failures: list[str] = []
-        emit_evidence(plan, self.fixture.policy, tampered_zip, self.fixture.expected_zip,
+        emit_evidence(plan, tampered_zip, self.fixture.expected_zip,
                       evidence_directory=self.evidence_directory, failures=failures, root=self.root / "repository")
         self.assertTrue(any("differs from the zip built from the tag" in failure for failure in failures), failures)
-
-        other = subject()
-        other["releaseCommit"] = "9" * 40
-        other_fixture_directory = self.root / "other"
-        other_fixture_directory.mkdir()
-        other_fixture = Fixture(other_fixture_directory, other)
-        failures = []
-        emit_evidence(plan, other_fixture.policy, self.fixture.zip, self.fixture.expected_zip,
-                      evidence_directory=self.evidence_directory, failures=failures, root=self.root / "repository")
-        self.assertTrue(any("filename does not match" in failure or "exactly the record" in failure
-                            for failure in failures), failures)
 
         failures = []
         result = prepare_release_plan(
@@ -243,11 +239,18 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertTrue(any("release.body must be exactly the notes" in failure for failure in failures), failures)
 
     def test_unexpected_asset_or_target_is_rejected(self):
-        release = self.fixture.release()
-        release["assets"].append(asset(99, "extra.txt", b"extra"))
-        failures: list[str] = []
-        self.assertIsNone(prepare_release_plan(self.fixture.write("extra.json", release), self.fixture.subject, failures))
-        self.assertTrue(any("unrecognized asset" in failure for failure in failures), failures)
+        for label, extra in (
+            ("extra", asset(99, "extra.txt", b"extra")),
+            ("second-record", asset(98, "axiom-v1.2.3-release-policy-" + "0" * 64 + ".json", b"{}\n")),
+        ):
+            with self.subTest(label=label):
+                release = self.fixture.release()
+                release["assets"].append(extra)
+                failures: list[str] = []
+                self.assertIsNone(
+                    prepare_release_plan(self.fixture.write(f"{label}.json", release), self.fixture.subject, failures)
+                )
+                self.assertTrue(any("unrecognized asset" in failure for failure in failures), failures)
         release = self.fixture.release()
         release["target_commitish"] = RELEASE_COMMIT
         failures = []
@@ -262,7 +265,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.name, current_plan["evidenceAsset"]["name"])
         draft_path = self.fixture.write("draft.json", draft)
         failures: list[str] = []
-        verify_release_snapshot(current_plan, draft_path, self.fixture.policy, self.fixture.zip,
+        verify_release_snapshot(current_plan, draft_path, self.fixture.zip,
                                 self.fixture.expected_zip, evidence, final=False,
                                 latest_metadata_path=None, prepublish_metadata_path=None, failures=failures)
         self.assertEqual([], failures)
@@ -270,14 +273,14 @@ class ReleaseEvidenceTests(unittest.TestCase):
         final_path = self.fixture.write("final.json", final)
         latest_path = self.fixture.write("latest.json", final)
         failures = []
-        verify_release_snapshot(current_plan, final_path, self.fixture.policy, self.fixture.zip,
+        verify_release_snapshot(current_plan, final_path, self.fixture.zip,
                                 self.fixture.expected_zip, evidence, final=True,
                                 latest_metadata_path=latest_path, prepublish_metadata_path=draft_path,
                                 failures=failures)
         self.assertEqual([], failures)
         stale_latest = dict(final, id=699, tag_name="v1.2.2")
         failures = []
-        verify_release_snapshot(current_plan, final_path, self.fixture.policy, self.fixture.zip,
+        verify_release_snapshot(current_plan, final_path, self.fixture.zip,
                                 self.fixture.expected_zip, evidence, final=True,
                                 latest_metadata_path=self.fixture.write("stale.json", stale_latest),
                                 prepublish_metadata_path=draft_path, failures=failures)

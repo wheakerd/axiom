@@ -352,11 +352,9 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(subject["releaseTree"], tree_sha(head["files"]))
         self.assertIs(True, subject["bootstrap"])
         draft = next(r for r in api.releases if r["id"] == 700)
-        self.assertEqual("axiom-v1.2.3-plugin.zip", draft["assets"][0]["name"])
-        self.assertEqual(2, len(draft["assets"]))
-        self.assertTrue(draft["assets"][1]["name"].startswith("axiom-v1.2.3-release-policy-"))
+        self.assertEqual(["axiom-v1.2.3-plugin.zip"], [asset["name"] for asset in draft["assets"]])
         self.assertEqual(
-            ["/git/refs", "createCommitOnBranch", "/releases", "UPLOAD", "UPLOAD",
+            ["/git/refs", "createCommitOnBranch", "/releases", "UPLOAD",
              "publish-immutable-release.yml", "release-signature-guard.yml"],
             [path.removeprefix(f"/repos/{REPOSITORY}").split("/")[3] if path.endswith("/dispatches")
              else ("UPLOAD" if method == "UPLOAD" else path.removeprefix(f"/repos/{REPOSITORY}"))

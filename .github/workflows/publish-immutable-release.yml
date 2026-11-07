@@ -136,9 +136,7 @@ jobs:
             local plan="$1"
             local directory="$2"
             mkdir "$directory"
-            downloaded_policy="$directory/$(emit "$plan" policy-name)"
             downloaded_zip="$directory/$(emit "$plan" zip-name)"
-            download_asset "$(emit "$plan" policy-id)" "$downloaded_policy"
             download_asset "$(emit "$plan" zip-id)" "$downloaded_zip"
             if test "$(emit "$plan" evidence-present)" = "true"; then
               downloaded_evidence="$directory/$(emit "$plan" evidence-name)"
@@ -179,7 +177,6 @@ jobs:
           download_assets "$initial_plan" "$release_workdir/initial-assets"
           expected_evidence="$(python3 .ci/scripts/check-release-evidence.py validate \
             --plan "$initial_plan" \
-            --policy "$downloaded_policy" \
             --zip "$downloaded_zip" \
             --expected-zip "$expected_zip" \
             --evidence-directory "$release_workdir")"
@@ -218,8 +215,7 @@ jobs:
             python3 .ci/scripts/check-release-evidence.py verify \
               --plan "$current_plan" \
               --release-metadata "$final_release" \
-              --policy "$downloaded_policy" \
-              --zip "$downloaded_zip" \
+                --zip "$downloaded_zip" \
               --expected-zip "$expected_zip" \
               --evidence "$downloaded_evidence" \
               --latest-release-metadata "$latest_release" \
@@ -233,7 +229,6 @@ jobs:
           python3 .ci/scripts/check-release-evidence.py verify \
             --plan "$current_plan" \
             --release-metadata "$current_release" \
-            --policy "$downloaded_policy" \
             --zip "$downloaded_zip" \
             --expected-zip "$expected_zip" \
             --evidence "$downloaded_evidence"
@@ -244,7 +239,6 @@ jobs:
           python3 .ci/scripts/check-release-evidence.py verify \
             --plan "$current_plan" \
             --release-metadata "$prepublish_release" \
-            --policy "$downloaded_policy" \
             --zip "$downloaded_zip" \
             --expected-zip "$expected_zip" \
             --evidence "$downloaded_evidence"
@@ -275,7 +269,6 @@ jobs:
           python3 .ci/scripts/check-release-evidence.py verify \
             --plan "$current_plan" \
             --release-metadata "$final_release" \
-            --policy "$downloaded_policy" \
             --zip "$downloaded_zip" \
             --expected-zip "$expected_zip" \
             --evidence "$downloaded_evidence" \
