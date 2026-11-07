@@ -78,8 +78,6 @@ codex plugin marketplace upgrade axiom
 
 再次运行那两条列表命令。对照预期的目录条目与你记录的设置，检查已注册的来源、已安装版本、插件源引用与启用状态。按[更新检查](#更新)开启新会话并检查 Hook。
 
-这次注册迁移于 2026-10-13 在 Linux 上使用 Codex CLI `0.162.1`，在一个隔离的 Axiom `v0.14.0` 安装中得到验证。既有的插件缓存与启用设置被保留，完整的原生升级成功。这并不确立另一台安装上的桌面刷新、Hook 信任或自动更新时机。
-
 克隆超时时限适用于目录下载。一次完整刷新还可能下载插件源，耗时可能超过 30 秒。稀疏检出不会改变客户端的超时，也不保证在缓慢或不可用的网络上完成。如果错误持续，请记录确切的失败阶段、CLI 版本、退出状态以及脱敏后的错误，用于[问题报告](#报告问题)。
 
 受支持的 CLI 选项与稀疏路径要求最后一次核对于 2026-10-13，依据官方的[市场 CLI 文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)与[配置参考](https://learn.chatgpt.com/docs/config-file/config-reference)。

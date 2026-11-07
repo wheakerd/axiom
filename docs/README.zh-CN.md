@@ -30,7 +30,6 @@
 | 贡献文档 | [文档策略](maintainers/documentation-policy.md) | 贡献者 |
 | 准备发布文档与证据 | [发布文档与证据](maintainers/release-documentation.md) | 维护者与审计者 |
 | 决定 Axiom 在哪里上架并记录提交 | [分发渠道](maintainers/distribution-channels.md) | 维护者 |
-| 审阅插件架构审计规则 | [Agent Plugin Architect 路由契约](agent-plugin-architect-route-contract.md) | 维护者 |
 | 做出贡献 | [贡献指南](../CONTRIBUTING.md) | 贡献者 |
 | 更改技能、路由或 Hook | [运行时变更](maintainers/runtime-changes.md) | 贡献者 |
 | 运行仓库检查并解读结果 | [贡献者验证](maintainers/validation.md) | 贡献者 |

@@ -30,7 +30,6 @@ Current guidance describes the same source snapshot as the document. See [Source
 | Contribute documentation | [Documentation Policy](maintainers/documentation-policy.md) | Contributors |
 | Prepare release documentation and evidence | [Release Documentation And Evidence](maintainers/release-documentation.md) | Maintainers and auditors |
 | Decide where Axiom is listed and record a submission | [Distribution Channels](maintainers/distribution-channels.md) | Maintainers |
-| Review plugin-architecture audit rules | [Agent Plugin Architect Route Contract](agent-plugin-architect-route-contract.md) | Maintainers |
 | Make a contribution | [Contributing](../CONTRIBUTING.md) | Contributors |
 | Change a Skill, route, or Hook | [Runtime Changes](maintainers/runtime-changes.md) | Contributors |
 | Run repository checks and interpret results | [Contributor Validation](maintainers/validation.md) | Contributors |

@@ -8,7 +8,7 @@ Repository checks use Python's standard library. They are contributor tooling, n
 
 Provide Python 3, Node.js available as `node` on `PATH`, and Git. The [canonical CI environment](../repository-governance.md#repository-guards-canonical-environment) owns their current selections. The publication aggregate invokes Node.js to validate the exact JavaScript release-workflow guard.
 
-A disposable Git copy must preserve the candidate's tracked-file inventory in its index and the historical objects required by the [runtime-identity fixtures](../../tests/test_runtime_identity.py). A filesystem-only or shallow copy may lack those prerequisites; the [unit-test workflow](../../.github/workflows/unit-and-integration-tests.yml) checks out full history.
+A disposable Git copy must preserve the candidate's tracked-file inventory in its index; a filesystem-only copy may not.
 
 Run these checks from the repository root and record exact commands and outcomes:
 

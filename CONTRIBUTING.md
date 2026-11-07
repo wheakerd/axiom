@@ -65,7 +65,6 @@ Use the [pull-request template](.github/pull_request_template.md) and include:
 - route-selection and action-authorization impact, including an explicit `none` when there is no impact, and any changed stop conditions;
 - documentation changes or a reason none are needed;
 - every validation command and its exact result, including unavailable optional host checks;
-- a behavior review on each affected host when Skills or packaging changes; and
 - confirmation that unrelated work was not reset, hidden, staged, or rewritten.
 
 Do not mix opportunistic cleanup with the requested change. Do not commit generated caches, disposable validation copies, local maintenance notes, or tool output.

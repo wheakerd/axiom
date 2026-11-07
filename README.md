@@ -49,7 +49,7 @@ Describe the outcome you want, or name a skill. Axiom selects a bundled skill fr
 | [`reversible-system-change`](docs/reference/skills.md#reversible-system-change) | Plan and verify reversible system changes |
 <!-- readme:skill-index:end -->
 
-The [Skill Reference](docs/reference/skills.md) gives each skill's full description, a copyable example, and rename notices.
+The [Skill Reference](docs/reference/skills.md) gives each skill's full description and a copyable example.
 
 ## Installation
 
