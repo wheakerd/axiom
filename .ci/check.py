@@ -6,11 +6,16 @@ Usage:
   python3 -B .ci/check.py publication     # publication aggregate only
   python3 -B .ci/check.py tests [args]    # unit and integration tests (args go to unittest)
   python3 -B .ci/check.py hook-runtime [--report-environment]
+
+Any command may start with `--release-version X.Y.Z` to check a release tree
+whose plugin manifests carry that stamped version; without it the checks
+validate main, whose manifests declare no version.
 """
 
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -18,10 +23,15 @@ from pathlib import Path
 
 CI_ROOT = Path(__file__).resolve().parent
 REPOSITORY_ROOT = CI_ROOT.parent
+RELEASE_VERSION = re.compile(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
+release_version: str | None = None
 
 
 def _run(*arguments: str) -> int:
     environment = {**os.environ, "PYTHONPATH": str(CI_ROOT)}
+    environment.pop("AXIOM_RELEASE_VERSION", None)
+    if release_version is not None:
+        environment["AXIOM_RELEASE_VERSION"] = release_version
     return subprocess.run(
         [sys.executable, "-B", *arguments], cwd=REPOSITORY_ROOT, env=environment, check=False
     ).returncode
@@ -45,6 +55,12 @@ def hook_runtime(extra: list[str]) -> int:
 
 
 def main(argv: list[str]) -> int:
+    global release_version
+    if argv[:1] == ["--release-version"]:
+        if len(argv) < 2 or RELEASE_VERSION.fullmatch(argv[1]) is None:
+            print(__doc__, file=sys.stderr)
+            return 2
+        release_version, argv = argv[1], argv[2:]
     command, extra = (argv[0], argv[1:]) if argv else ("all", [])
     if command == "publication" and not extra:
         return publication()

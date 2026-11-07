@@ -8,6 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from .context import REPOSITORY_ROOT, display_path
+from .release import (
+    CREATED_TAG_CHECK,
+    PUBLISHED_RELEASE_CHECK,
+    RELEASE_BRANCH_CHECK,
+    RELEASE_BRANCH_REF,
+    RELEASE_BRANCH_ROOT,
+)
 from .release_versions import PRODUCTION_RELEASE_VERSION_PATTERN
 from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonical_yaml_document
 
@@ -46,6 +53,16 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
         failures.append(str(error))
         document = {}
 
+    def scalar_values(value: Any) -> list[str] | None:
+        if not isinstance(value, list) or any(
+            not isinstance(item, CanonicalYamlScalar) for item in value
+        ):
+            return None
+        return [item.value for item in value]
+
+    def scalar(value: Any) -> str | None:
+        return value.value if isinstance(value, CanonicalYamlScalar) else None
+
     triggers = document.get("on")
     if not isinstance(triggers, dict) or set(triggers) != {
         "push",
@@ -59,17 +76,6 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     else:
         push = triggers.get("push")
         release = triggers.get("release")
-
-        def scalar_values(value: Any) -> list[str] | None:
-            if not isinstance(value, list) or any(
-                not isinstance(item, CanonicalYamlScalar) for item in value
-            ):
-                return None
-            return [item.value for item in value]
-
-        def scalar(value: Any) -> str | None:
-            return value.value if isinstance(value, CanonicalYamlScalar) else None
-
         if (
             not isinstance(push, dict)
             or scalar_values(push.get("branches")) != ["main"]
@@ -95,18 +101,19 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             or set(phase) != {"description", "required", "type", "options"}
             or scalar(phase.get("required")) != "true"
             or scalar(phase.get("type")) != "choice"
-            or scalar_values(phase.get("options")) != ["candidate", "published-release"]
+            or scalar_values(phase.get("options")) != ["release-branch", "published-release"]
         ):
             failures.append(
-                f"{label} workflow_dispatch must select only candidate or published-release"
+                f"{label} workflow_dispatch must select only release-branch or published-release"
             )
 
     context_name = (
         "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && "
         "'Verify signed main history' || github.event_name == 'push' && "
         "startsWith(github.ref, 'refs/tags/') && 'Verify created release tag' || "
-        "github.event_name == 'workflow_dispatch' && inputs.phase == 'candidate' && "
-        "'Verify release candidate' || 'Observe published immutable release' }}"
+        "github.event_name == 'workflow_dispatch' && inputs.phase == 'release-branch' && "
+        "'Verify release branch commit' || "
+        "'Observe published immutable release' }}"
     )
     jobs = document.get("jobs")
     job = jobs.get("verify-github-signature") if isinstance(jobs, dict) else None
@@ -118,9 +125,9 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
         failures.append(f"{label} must use the fixed ubuntu-24.04 runner")
     for check_context in (
         "Verify signed main history",
-        "Verify release candidate",
-        "Verify created release tag",
-        "Observe published immutable release",
+        CREATED_TAG_CHECK,
+        RELEASE_BRANCH_CHECK,
+        PUBLISHED_RELEASE_CHECK,
     ):
         owners = [
             candidate
@@ -135,12 +142,14 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     canonical_version_declaration = (
         f"const productionReleaseVersion = /^{PRODUCTION_RELEASE_VERSION_PATTERN}$/;"
     )
+    root_declaration = f'const releaseBranchRoot = "{RELEASE_BRANCH_ROOT}";'
     require_ordered_contract_anchors(
         path,
         (
             "const defaultRef = `refs/heads/${defaultBranch}`;",
             canonical_version_declaration,
-            'const releaseBranchPrefix = "refs/heads/release/";',
+            f'const releaseBranchRef = "{RELEASE_BRANCH_REF}";',
+            root_declaration,
             "function releaseTagVersion(tagName)",
             "return productionReleaseVersion.test(version) ? version : null;",
             "function isSingleTagCreation(payload)",
@@ -149,17 +158,18 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             "payload.forced === false",
             "/^0{40}$/.test(payload.before)",
             "/^(?!0{40}$)[0-9a-f]{40}$/i.test(payload.after)",
-            "function failClosedTagMutation(reason)",
-            "true server-side prevention still depends on a GitHub tag ruleset",
+            "function failClosedRefMutation(reason)",
+            "true server-side prevention still depends on a GitHub ruleset",
             "async function readJsonAtCommit(path, commitSha)",
-            "async function packageVersionAtCommit(commitSha)",
+            "async function stampedVersionAtCommit(commitSha)",
+            '"plugin/.claude-plugin/plugin.json"',
             '"plugin/.codex-plugin/plugin.json"',
             "!productionReleaseVersion.test(version)",
+            "versions[0] !== versions[1]",
             "async function peelRefToCommit(qualifiedRef, expectedObjectSha = null)",
             "object.sha !== expectedObjectSha",
             "let targetPhase;",
             "context.payload.release?.tag_name",
-            "const version = releaseTagVersion(tagName);",
             "context.ref !== targetRef",
             "GitHub Release tag ${targetRef} does not match event ref ${context.ref}.",
             "targetCommit = await peelRefToCommit(targetRef);",
@@ -168,23 +178,19 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
             'context.ref.startsWith("refs/tags/")',
             'targetPhase = "created-tag";',
             "!isSingleTagCreation(context.payload)",
-            "failClosedTagMutation(",
             "targetCommit = await peelRefToCommit(targetRef, context.payload.after);",
-            'const manualPhase = context.payload.inputs?.phase;',
-            'manualPhase === "published-release"',
-            'manualPhase === "candidate" && context.ref.startsWith(releaseBranchPrefix)',
-            'targetPhase = "release-candidate";',
-            "const candidateTagName = context.ref.slice(releaseBranchPrefix.length);",
-            "Manual release-candidate verification requires",
-            "const packageVersion = await packageVersionAtCommit(targetCommit);",
-            "packageVersion !== targetVersion",
-            "names version ${targetVersion}, but manifests declare ${packageVersion}",
+            "const manualPhase = context.payload.inputs?.phase;",
+            '!["release-branch", "published-release"].includes(manualPhase)',
+            'dispatchedVersion = releaseTagVersion(context.ref.slice("refs/tags/".length));',
+            'targetRef = manualPhase === "release-branch" ? releaseBranchRef : context.ref;',
+            'if (targetPhase === "release-branch")',
+            "const stampedVersion = await stampedVersionAtCommit(targetCommit);",
+            "stampedVersion !== dispatchedVersion",
+            "historyBase = releaseBranchRoot;",
             'targetPhase === "published-release"',
             "github.rest.repos.getReleaseByTag",
             "publishedRelease.immutable !== true",
             "Release event ID does not match the live immutable release",
-            "const defaultCommit = await peelRefToCommit(defaultRef);",
-            "const historyBase = targetMustDescendFromDefault",
             "github.rest.repos.compareCommitsWithBasehead",
             "comparison.data.merge_base_commit?.sha !== historyBase",
             "const result = await github.graphql",
@@ -196,10 +202,11 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     for owner in (
         "          script: |",
         canonical_version_declaration,
+        root_declaration,
         "function releaseTagVersion(tagName)",
         "function isSingleTagCreation(payload)",
-        "function failClosedTagMutation(reason)",
-        "async function packageVersionAtCommit(commitSha)",
+        "function failClosedRefMutation(reason)",
+        "async function stampedVersionAtCommit(commitSha)",
     ):
         if text.count(owner) != 1:
             failures.append(f"{label} must contain exactly one critical owner {owner!r}")

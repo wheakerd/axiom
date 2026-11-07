@@ -17,7 +17,7 @@ from .cases.hooks import check_hook_lifecycle_fixtures
 from .cases.manifests import check_manifest_schema_fixtures
 from .cases.parsers import check_validator_negative_fixtures
 from .cases.release_policy import check_release_script_runtime_contract
-from .context import RELEASE_VERSION, REPOSITORY_ROOT
+from .context import EXPECTED_RELEASE_VERSION, REPOSITORY_ROOT
 from .documentation import check_documentation
 from .hooks import (
     check_codex_windows_hook_security,
@@ -33,9 +33,8 @@ from .manifests import (
     check_shared_source_roots,
     load_json,
 )
+from .release import check_release_workflow_contract
 from .release_policy import check_release_signature_workflow_contract
-from .release_pipeline import check_release_pipeline_workflow_contract
-from .release_tag_controller import check_controller_workflow_contract
 from .release_evidence import check_publish_workflow_contract
 from .readme_facts import check_readme_facts
 from .reporting import run_policy
@@ -43,7 +42,6 @@ from .repository_policy import (
     REQUIRED_PUBLIC_FILES,
     check_packaged_skills,
     check_repository_governance_contract,
-    check_release_version_surfaces,
     check_required_files,
     check_routing_gate_size,
     check_skill_contracts,
@@ -58,7 +56,6 @@ def main() -> int:
     governance_owner_count = run_policy(
         "repository-governance", check_repository_governance_contract, failures
     )
-    run_policy("release", check_release_version_surfaces, failures)
     readme_skill_count = run_policy("readme-facts", check_readme_facts, failures)
     runtime_contract_input_count = run_policy(
         "runtime-identity", check_runtime_identity, failures
@@ -139,8 +136,7 @@ def main() -> int:
     release_workflow_text = run_policy(
         "release", check_release_signature_workflow_contract, failures
     )
-    run_policy("release", check_controller_workflow_contract, failures)
-    run_policy("release-pipeline", check_release_pipeline_workflow_contract, failures)
+    run_policy("release", check_release_workflow_contract, failures)
     run_policy("release-evidence", check_publish_workflow_contract, failures)
     pull_request_fixture_count = run_policy(
         "action-graph",
@@ -198,7 +194,8 @@ def main() -> int:
         f"{readme_skill_count} generated README skill rows, "
         f"{runtime_contract_input_count} canonical installed-runtime inputs, "
         f"{governance_owner_count} critical-path CODEOWNERS entries, "
-        f"{validator_fixture_count} validator parser fixtures, version {RELEASE_VERSION}, "
+        f"{validator_fixture_count} validator parser fixtures, "
+        f"{'release version ' + EXPECTED_RELEASE_VERSION if EXPECTED_RELEASE_VERSION else 'versionless main'}, "
         f"{manifest_schema_fixture_count} manifest schema fixtures, "
         f"{hook_lifecycle_fixture_count} hook lifecycle fixtures, "
         f"{pull_request_fixture_count} pull-request event-graph fixtures, "

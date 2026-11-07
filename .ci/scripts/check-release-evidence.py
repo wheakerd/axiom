@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and bind exact GitHub Release evidence before publication."""
+"""Verify a Draft against its derived release subject and emit its evidence asset."""
 
 from __future__ import annotations
 

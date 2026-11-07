@@ -14,7 +14,7 @@ English | [简体中文](README.zh-CN.md)
 
 Focused workflow skills for Codex and Claude Code that turn requests into clear, actionable work.
 
-[Install](#installation) | [Update](#updating) | [Use](#usage) | [Skills](#skills) | [Documentation](docs/en/README.md) | [Changelog](CHANGELOG.md)
+[Install](#installation) | [Update](#updating) | [Use](#usage) | [Skills](#skills) | [Documentation](docs/en/README.md) | [Releases](https://github.com/wheakerd/axiom/releases)
 
 ![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](.github/assets/social-preview.png)
 
@@ -69,7 +69,7 @@ claude plugin marketplace add wheakerd/axiom
 claude plugin install axiom@axiom
 ```
 
-Each marketplace selects an immutable published version. A new version reaches both marketplaces only after its release is published and verified; development commits on `main` do not advance that selection.
+Both marketplaces select the `release` branch, which holds only published versions: CI adds a version to it when its release is cut, and development commits on `main` never reach it.
 
 In Codex, start a new session and trust the Hook in `/hooks`: Codex skips a new or changed Hook until you do, and Axiom's routing begins after that step. Claude Code has no separate Hook trust step and runs the Hook at the next `SessionStart` after the plugin loads. On Windows, Claude Code needs Git Bash for the Hook, and neither host has a recorded Windows observation yet; see [Compatibility](docs/en/compatibility.md#current-bounded-status). Verifying an installed Hook against its checked-in definition is an optional reviewer step described in the [Trust Model](docs/en/trust-model.md#hook-trust-boundary). The [Getting Started guide](docs/en/guides/getting-started.md) owns the full installation and first-use procedure.
 
@@ -123,7 +123,7 @@ The [Record star history workflow](.github/workflows/record-star-history.yml) re
 ## Documentation and Support
 
 - [Documentation index](docs/en/README.md): guides and references by task.
-- [Latest release](https://github.com/wheakerd/axiom/releases/latest) and [Changelog](CHANGELOG.md): what changed in each version and any required action.
+- [Latest release](https://github.com/wheakerd/axiom/releases/latest) and [all Releases](https://github.com/wheakerd/axiom/releases): what changed in each version and any required action.
 - [Compatibility](docs/en/compatibility.md): supported hosts and known limitations.
 - [Trust Model](docs/en/trust-model.md): security boundaries. Axiom is a public beta; its instructions do not replace host permissions or provide a sandbox.
 - [GitHub Discussions](https://github.com/wheakerd/axiom/discussions): questions and early ideas.

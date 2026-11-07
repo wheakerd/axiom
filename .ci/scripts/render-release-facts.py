@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check or explicitly render the managed runtime-identity and README blocks."""
+"""Check or explicitly render the managed README blocks."""
 
 from __future__ import annotations
 
@@ -20,13 +20,6 @@ from axiom_validation.readme_facts import (  # noqa: E402
     readme_surfaces,
     replace_readme_blocks,
 )
-from axiom_validation.runtime_identity import (  # noqa: E402
-    IDENTITY_RELATIVE,
-    RUNTIME_IDENTITY_SURFACES,
-    check_runtime_identity,
-    load_json_document,
-    replace_runtime_identity_block,
-)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -35,7 +28,7 @@ def parser() -> argparse.ArgumentParser:
     modes.add_argument(
         "--check",
         action="store_true",
-        help="verify canonical data and every managed surface without writing",
+        help="verify every managed surface without writing",
     )
     modes.add_argument(
         "--render",
@@ -54,47 +47,28 @@ def _load_regular_text(path: Path) -> str:
 
 def _render() -> tuple[int, list[str]]:
     failures: list[str] = []
-    identity_document = load_json_document(
-        REPOSITORY_ROOT / IDENTITY_RELATIVE,
-        failures,
-    )
     skill_summaries = load_skill_summaries(failures)
-    if identity_document is None or skill_summaries is None:
+    if skill_summaries is None:
         return 0, failures
 
-    readme_paths = readme_surfaces(REPOSITORY_ROOT)
     rendered: dict[Path, str] = {}
-    for relative_path in sorted({*RUNTIME_IDENTITY_SURFACES, *readme_paths}):
+    for relative_path in sorted(readme_surfaces(REPOSITORY_ROOT)):
         path = REPOSITORY_ROOT / relative_path
         try:
-            text = _load_regular_text(path)
-            if relative_path in RUNTIME_IDENTITY_SURFACES:
-                text = replace_runtime_identity_block(text, identity_document)
-            if relative_path in readme_paths:
-                text = replace_readme_blocks(text, skill_summaries)
+            rendered[path] = replace_readme_blocks(_load_regular_text(path), skill_summaries)
         except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
             failures.append(f"cannot render {relative_path}: {error}")
-            continue
-        rendered[path] = text
 
     if failures:
         return 0, failures
 
     changed = 0
     for path, text in rendered.items():
-        current = path.read_text(encoding="utf-8")
-        if text == current:
+        if text == path.read_text(encoding="utf-8"):
             continue
         path.write_text(text, encoding="utf-8")
         changed += 1
     return changed, failures
-
-
-def _check() -> tuple[int, int, list[str]]:
-    failures: list[str] = []
-    runtime_inputs = check_runtime_identity(failures)
-    readme_skills = check_readme_facts(failures)
-    return runtime_inputs, readme_skills, failures
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -103,22 +77,22 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.render:
         changed, render_failures = _render()
         if render_failures:
-            print("Canonical fact rendering failed:", file=sys.stderr)
+            print("README fact rendering failed:", file=sys.stderr)
             for failure in render_failures:
                 print(f"- {failure}", file=sys.stderr)
             return 1
 
-    runtime_inputs, readme_skills, failures = _check()
+    failures: list[str] = []
+    readme_skills = check_readme_facts(failures)
     if failures:
-        print("Canonical fact validation failed:", file=sys.stderr)
+        print("README fact validation failed:", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         return 1
     action = f"rendered {changed} changed files and " if arguments.render else ""
     print(
-        "Canonical fact validation passed: "
-        f"{action}{runtime_inputs} canonical runtime inputs, plus a README index of "
-        f"{readme_skills} bundled skills."
+        "README fact validation passed: "
+        f"{action}a README index of {readme_skills} bundled skills."
     )
     return 0
 

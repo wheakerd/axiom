@@ -12,7 +12,7 @@
         "source": "git-subdir",
         "url": "https://github.com/wheakerd/axiom.git",
         "path": "plugin",
-        "ref": "v0.27.7"
+        "ref": "release"
       },
       "description": "Think before AI thinks.",
       "category": "productivity"

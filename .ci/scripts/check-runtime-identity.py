@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check Axiom runtime identity or derive a digest from one package tree."""
+"""Check the installed-runtime input policy or derive a digest from one package tree."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def parser() -> argparse.ArgumentParser:
     modes.add_argument(
         "--check",
         action="store_true",
-        help="validate the checked-in identity and its rendered facts",
+        help="require the input policy to classify every installed file",
     )
     modes.add_argument(
         "--digest-root",
@@ -45,7 +45,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def report_failures(failures: list[str]) -> int:
-    print("Runtime identity validation failed:", file=sys.stderr)
+    print("Runtime contract validation failed:", file=sys.stderr)
     for failure in failures:
         print(f"- {failure}", file=sys.stderr)
     return 1
@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         if failures:
             return report_failures(failures)
         print(
-            "Runtime identity validation passed: "
+            "Runtime contract validation passed: "
             f"{record_count} canonical installed inputs."
         )
         return 0

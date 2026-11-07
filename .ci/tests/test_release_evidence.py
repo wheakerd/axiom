@@ -1,1095 +1,383 @@
-"""Focused tests for draft Release evidence validation and immutable publication."""
+"""Focused tests for the publisher's Draft verification and evidence asset."""
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
-import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from axiom_validation.context import RELEASE_VERSION
+from axiom_validation.release import canonical_json, policy_asset
 from axiom_validation.release_evidence import (
     assert_release_absent_from_collection,
     check_publish_workflow_contract,
     classify_publication_state,
+    emit_evidence,
+    evidence_document,
+    load_release_plan,
     prepare_release_plan,
-    render_release_body,
-    render_marketplace_source,
     select_release_from_collection,
-    validate_downloaded_observation,
-    validate_release_asset,
-    verify_remote_release_preflight,
+    validate_subject,
     verify_release_snapshot,
+    verify_remote_release_preflight,
 )
-from axiom_validation.release_versions import PRODUCTION_RELEASE_VERSION_CASES
 
 
-COMMIT = "b" * 40
-TREE = "c" * 40
-TAG = f"v{RELEASE_VERSION}"
+NOTES = "Fixed the startup gate.\n\nhttps://github.com/wheakerd/axiom/compare/v1.2.2...v1.2.3\n"
+ZIP_BYTES = b"PK\x03\x04 deterministic plugin zip fixture"
+COMMIT = "a" * 40
+TREE = "b" * 40
+RELEASE_COMMIT = "c" * 40
+RELEASE_TREE = "d" * 40
+TAG_OBJECT = "e" * 40
 
 
-def current_observation() -> dict:
+def subject() -> dict:
     return {
-        "schemaVersion": "1",
-        "kind": "axiom-release-policy",
-        "subject": {
-            "version": RELEASE_VERSION, "tag": TAG, "commit": COMMIT, "tree": TREE,
+        "version": "1.2.3",
+        "tag": "v1.2.3",
+        "tagObject": {"type": "tag", "sha": TAG_OBJECT},
+        "commit": COMMIT,
+        "tree": TREE,
+        "releaseCommit": RELEASE_COMMIT,
+        "releaseTree": RELEASE_TREE,
+        "zip": {
+            "name": "axiom-v1.2.3-plugin.zip",
+            "sha256": hashlib.sha256(ZIP_BYTES).hexdigest(),
+            "size": len(ZIP_BYTES),
         },
-        "verification": {
-            "policy": "repository-checks-v1",
-            "requiredChecks": ["repository-guards", "unit-and-integration-tests"],
-        },
-        "evidenceScope": "release-policy-and-artifact-integrity",
+        "runtimeDigest": "sha256:" + "f" * 64,
+        "previousTag": "v1.2.2",
+        "notesSha256": hashlib.sha256(NOTES.encode("utf-8")).hexdigest(),
     }
 
 
-def write_observation(directory: Path, record: dict) -> tuple[Path, str]:
-    payload = (json.dumps(record, indent=2) + "\n").encode("ascii")
-    digest = hashlib.sha256(payload).hexdigest()
-    path = directory / f"axiom-v{RELEASE_VERSION}-release-policy-{digest}.json"
-    path.write_bytes(payload)
-    return path, digest
-
-
-def asset_metadata(path: Path, digest: str, *, asset_id: int = 101) -> dict:
+def asset(asset_id: int, name: str, data: bytes) -> dict:
     return {
         "id": asset_id,
-        "name": path.name,
-        "size": path.stat().st_size,
+        "name": name,
+        "size": len(data),
         "state": "uploaded",
-        "digest": f"sha256:{digest}",
-        "created_at": "2026-08-26T08:00:00Z",
-        "updated_at": "2026-08-26T08:00:00Z",
+        "digest": f"sha256:{hashlib.sha256(data).hexdigest()}",
+        "created_at": "2026-11-07T00:00:00Z",
+        "updated_at": "2026-11-07T00:00:00Z",
     }
 
 
-def release_metadata(
-    observation: dict,
-    *,
-    draft: bool = True,
-    immutable: bool = False,
-    attestation: dict | None = None,
-) -> dict:
-    body_failures: list[str] = []
-    body = render_release_body(RELEASE_VERSION, body_failures)
-    if body is None or body_failures:
-        raise AssertionError(body_failures)
-    assets = [observation]
-    if attestation is not None:
-        assets.append(attestation)
-    return {
-        "id": 501,
-        "tag_name": TAG,
-        "target_commitish": COMMIT,
-        "name": TAG,
-        "body": body,
-        "draft": draft,
-        "prerelease": False,
-        "immutable": immutable,
-        "assets": assets,
-    }
+class Fixture:
+    """Files for one Draft: the policy, zip, and optional evidence asset."""
 
+    def __init__(self, directory: Path, release_subject: dict | None = None) -> None:
+        self.directory = directory
+        self.subject = release_subject or subject()
+        self.policy_name, self.policy_bytes = policy_asset(self.subject)
+        self.policy = directory / self.policy_name
+        self.policy.write_bytes(self.policy_bytes)
+        self.zip = directory / self.subject["zip"]["name"]
+        self.zip.write_bytes(ZIP_BYTES)
+        self.expected_zip = directory / "expected.zip"
+        self.expected_zip.write_bytes(ZIP_BYTES)
+        self.subject_path = directory / "subject.json"
+        self.subject_path.write_bytes(canonical_json(self.subject))
 
-def write_json(path: Path, document: object) -> None:
-    path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    def release(self, *, draft: bool = True, immutable: bool = False, evidence: Path | None = None,
+                body: str = NOTES) -> dict:
+        assets = [
+            asset(11, self.policy_name, self.policy_bytes),
+            asset(12, self.subject["zip"]["name"], ZIP_BYTES),
+        ]
+        if evidence is not None:
+            assets.append(asset(13, evidence.name, evidence.read_bytes()))
+        return {
+            "id": 700,
+            "tag_name": self.subject["tag"],
+            "target_commitish": self.subject["commit"],
+            "name": self.subject["tag"],
+            "body": body,
+            "draft": draft,
+            "prerelease": False,
+            "immutable": immutable,
+            "assets": assets,
+        }
+
+    def write(self, name: str, document: object) -> Path:
+        path = self.directory / name
+        path.write_text(json.dumps(document), encoding="utf-8")
+        return path
+
+    def plan(self, release: dict) -> dict:
+        failures: list[str] = []
+        plan = prepare_release_plan(self.write("release.json", release), self.subject, failures)
+        if plan is None or failures:
+            raise AssertionError(failures)
+        return plan
+
+    def evidence(self, plan: dict, directory: Path) -> Path:
+        failures: list[str] = []
+        path = emit_evidence(
+            plan, self.policy, self.zip, self.expected_zip,
+            evidence_directory=directory, failures=failures, root=self.directory / "repository",
+        )
+        if path is None or failures:
+            raise AssertionError(failures)
+        return path
 
 
 class ReleaseEvidenceTests(unittest.TestCase):
-    def prepare(self, directory: Path, record: dict | None = None):
-        observation_path, digest = write_observation(
-            directory, record if record is not None else current_observation()
-        )
-        observation_asset = asset_metadata(observation_path, digest)
-        metadata_path = directory / "release-before.json"
-        write_json(metadata_path, release_metadata(observation_asset))
-        failures: list[str] = []
-        plan = prepare_release_plan(
-            metadata_path,
-            expected_version=RELEASE_VERSION,
-            expected_tag=TAG,
-            expected_commit=COMMIT,
-            expected_tree=TREE,
-            failures=failures,
-        )
-        self.assertEqual([], failures)
-        self.assertIsNotNone(plan)
-        return plan, observation_path, observation_asset
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        (self.root / "repository").mkdir()
+        self.fixture = Fixture(self.root)
+        self.evidence_directory = self.root / "evidence"
+        self.evidence_directory.mkdir()
 
-    def test_checked_in_publish_workflow_is_narrow_and_pinned(self):
+    def test_checked_in_publisher_workflow_contract(self):
         failures: list[str] = []
         self.assertIsNotNone(check_publish_workflow_contract(failures))
         self.assertEqual([], failures)
 
-    def test_marketplace_handoff_uses_only_the_verified_latest_release(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, _, asset = self.prepare(directory)
-            latest_path = directory / "latest.json"
-            latest = release_metadata(asset, draft=False, immutable=True)
-            write_json(latest_path, latest)
-            failures = []
-            rendered = render_marketplace_source(plan, latest_path, failures)
-            self.assertEqual([], failures)
-            self.assertEqual(
-                {
-                    ".agents/plugins/marketplace.json": {
-                        "source": "git-subdir",
-                        "url": "https://github.com/wheakerd/axiom.git",
-                        "path": "./plugin",
-                        "ref": TAG,
-                    },
-                    ".claude-plugin/marketplace.json": {
-                        "source": "git-subdir",
-                        "url": "https://github.com/wheakerd/axiom.git",
-                        "path": "plugin",
-                        "ref": TAG,
-                    },
-                },
-                json.loads(rendered),
-            )
-            for field, value in (
-                ("id", 999), ("tag_name", "v999.0.0"),
-                ("target_commitish", "d" * 40), ("draft", True),
-                ("prerelease", True), ("immutable", False),
-            ):
-                with self.subTest(field=field):
-                    write_json(latest_path, {**latest, field: value})
-                    failures = []
-                    self.assertIsNone(render_marketplace_source(plan, latest_path, failures))
-                    self.assertTrue(failures)
-
-    def test_marketplace_command_reports_pending_publication_without_writes(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, _, asset = self.prepare(directory)
-            plan_path = directory / "plan.json"
-            latest_path = directory / "latest.json"
-            write_json(plan_path, plan)
-            write_json(latest_path, release_metadata(asset, draft=False, immutable=True))
-            script = Path(__file__).resolve().parents[2] / ".ci/scripts/check-release-evidence.py"
-            arguments = [
-                sys.executable, "-B", str(script), "render-marketplace",
-                "--plan", str(plan_path), "--latest-release-metadata", str(latest_path),
-            ]
-            before = {path.name: path.read_bytes() for path in directory.iterdir()}
-            result = subprocess.run(arguments, capture_output=True, text=True, check=False)
-            self.assertEqual(0, result.returncode, result.stderr)
-            self.assertEqual({TAG}, {source["ref"] for source in json.loads(result.stdout).values()})
-            summary = subprocess.run(arguments + ["--summary"], capture_output=True, text=True, check=False)
-            self.assertEqual(0, summary.returncode, summary.stderr)
-            self.assertIn("Marketplace publication pending", summary.stdout)
-            self.assertIn("existing signed PR", summary.stdout)
-            for catalog in (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"):
-                self.assertIn(catalog, summary.stdout)
-            self.assertEqual(before, {path.name: path.read_bytes() for path in directory.iterdir()})
-            write_json(latest_path, release_metadata(asset))
-            rejected = subprocess.run(arguments, capture_output=True, text=True, check=False)
-            self.assertNotEqual(0, rejected.returncode)
-            self.assertEqual("", rejected.stdout)
-
-    def test_release_body_is_rendered_from_the_current_changelog_entry(self):
-        failures: list[str] = []
-        body = render_release_body(RELEASE_VERSION, failures)
-        self.assertEqual([], failures)
-        self.assertIsNotNone(body)
-        assert body is not None
-        self.assertNotIn(f"## {RELEASE_VERSION} - ", body)
-
-    def test_render_body_cli_emits_exact_current_body(self):
-        failures: list[str] = []
-        expected = render_release_body(RELEASE_VERSION, failures)
-        self.assertEqual([], failures)
-        result = subprocess.run(
-            [
-                sys.executable,
-                ".ci/scripts/check-release-evidence.py",
-                "render-body",
-                "--expected-version",
-                RELEASE_VERSION,
-            ],
-            cwd=Path(__file__).resolve().parents[2],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual(expected, result.stdout)
-
-    def test_release_body_contract_requires_the_entry_sections(self):
-        valid = """# Changelog
-
-## 0.27.9 - unreleased
-
-### Fixed
-
-- Fixed the [guide](docs/en/guides/getting-started.md).
-
-### Behavioral impact
-
-- Existing behavior is unchanged.
-
-### Required action
-
-- None.
-"""
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            changelog = root / "CHANGELOG.md"
-            for case_id, payload, expected_failure in (
-                (
-                    "missing-action",
-                    valid.replace("### Required action\n\n- None.\n", ""),
-                    "missing required sections",
-                ),
-                (
-                    "no-change-section",
-                    valid.replace("### Fixed\n", "### Notes\n"),
-                    "at least one change section",
-                ),
-            ):
-                with self.subTest(case_id=case_id):
-                    changelog.write_text(payload, encoding="utf-8")
-                    failures: list[str] = []
-                    self.assertIsNone(
-                        render_release_body("0.27.9", failures, root=root)
-                    )
-                    self.assertTrue(
-                        any(expected_failure in failure for failure in failures),
-                        failures,
-                    )
-
-            changelog.write_text(valid, encoding="utf-8")
-            failures = []
-            body = render_release_body("0.27.9", failures, root=root)
-            self.assertEqual([], failures)
-            self.assertIsNotNone(body)
-            assert body is not None
-            self.assertIn("## Fixed", body)
-            self.assertIn(
-                "https://github.com/wheakerd/axiom/blob/v0.27.9/"
-                "docs/en/guides/getting-started.md",
-                body,
-            )
-
-    def test_changelog_entries_reject_hard_wrapped_prose(self):
-        single_line = """# Changelog
-
-## {version} - unreleased
-
-### Fixed
-
-- Keep this list item on one line.
-
-### Behavioral impact
-
-Existing behavior is unchanged.
-
-### Required action
-
-None.
-"""
-        wrapped = single_line.replace(
-            "- Keep this list item on one line.",
-            "- Keep this list item\n  on one line.",
-        )
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            changelog = root / "CHANGELOG.md"
-            for version, payload, rejected in (
-                ("0.27.9", wrapped, True),
-                ("0.27.9", single_line, False),
-            ):
-                with self.subTest(version=version, rejected=rejected):
-                    changelog.write_text(payload.format(version=version), encoding="utf-8")
-                    failures: list[str] = []
-                    body = render_release_body(version, failures, root=root)
-                    if rejected:
-                        self.assertIsNone(body)
-                        self.assertTrue(
-                            any("one source line" in failure for failure in failures),
-                            failures,
-                        )
-                    else:
-                        self.assertEqual([], failures)
-                        self.assertIsNotNone(body)
-
-    def test_publish_workflow_contract_rejects_an_appended_command(self):
-        workflow = (
-            Path(__file__).resolve().parents[2]
-            / ".github"
-            / "workflows"
-            / "publish-immutable-release.yml"
-        )
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            modified = Path(temporary_directory) / "publish.yml"
-            modified.write_text(
-                workflow.read_text(encoding="utf-8") + "          curl https://example.invalid\n",
-                encoding="utf-8",
-            )
-            failures: list[str] = []
-            check_publish_workflow_contract(failures, modified)
-            self.assertTrue(any("complete publication command" in item for item in failures))
-
-    def test_publish_workflow_contract_rejects_a_broader_version_gate(self):
-        workflow = (
-            Path(__file__).resolve().parents[2]
-            / ".github"
-            / "workflows"
-            / "publish-immutable-release.yml"
-        )
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            modified = Path(temporary_directory) / "publish.yml"
-            modified.write_text(
-                workflow.read_text(encoding="utf-8").replace(
-                    '[[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$ ]]',
-                    '[[ "$RELEASE_TAG" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+.*$ ]]',
-                    1,
-                ),
-                encoding="utf-8",
-            )
-            failures: list[str] = []
-            check_publish_workflow_contract(failures, modified)
-            self.assertTrue(any("canonical stable" in item for item in failures))
-
-    def test_release_subject_rejects_every_unsupported_production_version(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            observation_path, digest = write_observation(directory, current_observation())
-            metadata_path = directory / "release-before.json"
-            write_json(
-                metadata_path,
-                release_metadata(asset_metadata(observation_path, digest)),
-            )
-            for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
-                if accepted:
-                    continue
-                with self.subTest(case_id=case_id):
-                    failures: list[str] = []
-                    plan = prepare_release_plan(
-                        metadata_path,
-                        expected_version=version,
-                        expected_tag=f"v{version}",
-                        expected_commit=COMMIT,
-                        expected_tree=TREE,
-                        failures=failures,
-                    )
-                    self.assertIsNone(plan)
-                    self.assertTrue(
-                        any("stable numeric production" in item for item in failures),
-                        failures,
-                    )
-
-    def test_publish_workflow_avoids_admin_only_settings_endpoint(self):
-        workflow = (
-            Path(__file__).resolve().parents[2]
-            / ".github"
-            / "workflows"
-            / "publish-immutable-release.yml"
-        ).read_text(encoding="utf-8")
-        self.assertNotIn("/immutable-releases", workflow)
-        self.assertIn("git/ref/tags/$RELEASE_TAG", workflow)
-        self.assertIn("publication-state", workflow)
-        self.assertIn("assert-absent", workflow)
-
-    def test_release_collection_selection_and_remote_preflight(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            observation_path, digest = write_observation(directory, current_observation())
-            release = release_metadata(asset_metadata(observation_path, digest))
-            collection = directory / "collection.json"
-            selected = directory / "selected.json"
-            write_json(collection, [[{"tag_name": "v0.0.1"}, release]])
-            failures: list[str] = []
-            self.assertEqual(
-                release,
-                select_release_from_collection(
-                    collection, selected, expected_tag=TAG, failures=failures
-                ),
-            )
-            self.assertEqual([], failures)
-
-            repository = directory / "repository.json"
-            latest_release = directory / "latest.json"
-            main_ref = directory / "main-ref.json"
-            tag_ref = directory / "tag-ref.json"
-            history = directory / "history.json"
-            commit_metadata = directory / "commit.json"
-            signature = directory / "signature.json"
-            write_json(repository, {"default_branch": "main"})
-            write_json(
-                latest_release,
-                {"tag_name": "v0.8.5", "draft": False, "prerelease": False},
-            )
-            commit = {
-                "sha": COMMIT,
-                "commit": {"verification": {"verified": True, "reason": "valid"}},
-            }
-            write_json(
-                main_ref,
-                {"ref": "refs/heads/main", "object": {"type": "commit", "sha": COMMIT}},
-            )
-            write_json(
-                tag_ref,
-                {"ref": f"refs/tags/{TAG}", "object": {"type": "commit", "sha": COMMIT}},
-            )
-            write_json(
-                history,
-                {
-                    "status": "identical",
-                    "merge_base_commit": {"sha": COMMIT},
-                    "base_commit": {"sha": COMMIT},
-                },
-            )
-            write_json(commit_metadata, commit)
-            write_json(
-                signature,
-                {
-                    "data": {
-                        "repository": {
-                            "object": {
-                                "oid": COMMIT,
-                                "signature": {
-                                    "isValid": True,
-                                    "state": "VALID",
-                                    "wasSignedByGitHub": True,
-                                },
-                            }
-                        }
-                    }
-                },
-            )
-            failures = []
-            verify_remote_release_preflight(
-                repository,
-                latest_release,
-                main_ref,
-                tag_ref,
-                history,
-                commit_metadata,
-                signature,
-                expected_commit=COMMIT,
-                expected_tag=TAG,
-                require_main_tip=True,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-
-            ahead_commit = "d" * 40
-            write_json(
-                main_ref,
-                {
-                    "ref": "refs/heads/main",
-                    "object": {"type": "commit", "sha": ahead_commit},
-                },
-            )
-            write_json(
-                history,
-                {
-                    "status": "ahead",
-                    "merge_base_commit": {"sha": COMMIT},
-                    "base_commit": {"sha": COMMIT},
-                },
-            )
-            failures = []
-            verify_remote_release_preflight(
-                repository,
-                latest_release,
-                main_ref,
-                tag_ref,
-                history,
-                commit_metadata,
-                signature,
-                expected_commit=COMMIT,
-                expected_tag=TAG,
-                require_main_tip=False,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            failures = []
-            verify_remote_release_preflight(
-                repository,
-                latest_release,
-                main_ref,
-                tag_ref,
-                history,
-                commit_metadata,
-                signature,
-                expected_commit=COMMIT,
-                expected_tag=TAG,
-                require_main_tip=True,
-                failures=failures,
-            )
-            self.assertTrue(any("main tip" in item for item in failures), failures)
-            write_json(
-                main_ref,
-                {"ref": "refs/heads/main", "object": {"type": "commit", "sha": COMMIT}},
-            )
-            write_json(
-                history,
-                {
-                    "status": "identical",
-                    "merge_base_commit": {"sha": COMMIT},
-                    "base_commit": {"sha": COMMIT},
-                },
-            )
-
-            write_json(
-                tag_ref,
-                {"ref": f"refs/tags/{TAG}", "object": {"type": "tag", "sha": COMMIT}},
-            )
-            failures = []
-            verify_remote_release_preflight(
-                repository,
-                latest_release,
-                main_ref,
-                tag_ref,
-                history,
-                commit_metadata,
-                signature,
-                expected_commit=COMMIT,
-                expected_tag=TAG,
-                require_main_tip=True,
-                failures=failures,
-            )
-            self.assertTrue(any("lightweight ref" in item for item in failures), failures)
-
-            write_json(
-                tag_ref,
-                {"ref": f"refs/tags/{TAG}", "object": {"type": "commit", "sha": COMMIT}},
-            )
-            major, minor, patch = (int(part) for part in RELEASE_VERSION.split("."))
-            write_json(
-                latest_release,
-                {
-                    "tag_name": f"v{major}.{minor}.{patch + 1}",
-                    "draft": False,
-                    "prerelease": False,
-                },
-            )
-            failures = []
-            verify_remote_release_preflight(
-                repository,
-                latest_release,
-                main_ref,
-                tag_ref,
-                history,
-                commit_metadata,
-                signature,
-                expected_commit=COMMIT,
-                expected_tag=TAG,
-                require_main_tip=True,
-                failures=failures,
-            )
-            self.assertTrue(any("must not regress" in item for item in failures), failures)
-
-    def test_publication_state_and_bounded_cleanup_identity(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, observation_path, observation_asset = self.prepare(directory)
-            failures: list[str] = []
-            attestation_path = validate_downloaded_observation(
-                plan,
-                observation_path,
-                attestation_directory=directory,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertIsNotNone(attestation_path)
-            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
-            attestation_asset = asset_metadata(
-                attestation_path, attestation_digest, asset_id=102
-            )
-            published = directory / "published.json"
-            write_json(
-                published,
-                release_metadata(
-                    observation_asset,
-                    draft=False,
-                    immutable=False,
-                    attestation=attestation_asset,
-                ),
-            )
-            failures = []
-            self.assertEqual(
-                "mutable",
-                classify_publication_state(plan, published, failures),
-            )
-            self.assertEqual([], failures)
-
-            failures = []
-            mutable_plan = prepare_release_plan(
-                published,
-                expected_version=RELEASE_VERSION,
-                expected_tag=TAG,
-                expected_commit=COMMIT,
-                expected_tree=TREE,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertIsNotNone(mutable_plan)
-            self.assertEqual("published-mutable", mutable_plan["phase"])
-
-            immutable_document = release_metadata(
-                observation_asset,
-                draft=False,
-                immutable=True,
-                attestation=attestation_asset,
-            )
-            write_json(published, immutable_document)
-            failures = []
-            self.assertEqual(
-                "immutable",
-                classify_publication_state(plan, published, failures),
-            )
-            self.assertEqual([], failures)
-
-            wrong_release = dict(immutable_document)
-            wrong_release["id"] = 999
-            write_json(published, wrong_release)
-            failures = []
-            self.assertIsNone(classify_publication_state(plan, published, failures))
-            self.assertTrue(any("release.id" in item for item in failures), failures)
-
-            collection = directory / "after-cleanup.json"
-            write_json(collection, [[{"id": 400, "tag_name": "v0.8.5"}]])
-            failures = []
-            assert_release_absent_from_collection(collection, plan, failures)
-            self.assertEqual([], failures)
-
-            write_json(collection, [[{"id": 501, "tag_name": TAG}]])
-            failures = []
-            assert_release_absent_from_collection(collection, plan, failures)
-            self.assertTrue(any("did not remove" in item for item in failures), failures)
-
-    def test_stable_cli_prepares_emits_validates_and_verifies(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            observation_path, digest = write_observation(directory, current_observation())
-            observation_asset = asset_metadata(observation_path, digest)
-            before = directory / "release-before.json"
-            plan = directory / "plan.json"
-            write_json(before, release_metadata(observation_asset))
-            script = Path(__file__).resolve().parents[2] / ".ci" / "scripts" / "check-release-evidence.py"
-
-            def run(*arguments: str) -> subprocess.CompletedProcess[str]:
-                return subprocess.run(
-                    [sys.executable, str(script), *arguments],
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                )
-
-            prepared = run(
-                "prepare",
-                "--release-metadata",
-                str(before),
-                "--plan-output",
-                str(plan),
-                "--expected-version",
-                RELEASE_VERSION,
-                "--expected-tag",
-                TAG,
-                "--expected-commit",
-                COMMIT,
-                "--expected-tree",
-                TREE,
-            )
-            self.assertEqual(0, prepared.returncode, prepared.stderr)
-            emitted = run("emit", "--plan", str(plan), "--field", "asset-id")
-            self.assertEqual(0, emitted.returncode, emitted.stderr)
-            self.assertEqual("101", emitted.stdout.strip())
-            validated = run(
-                "validate",
-                "--plan",
-                str(plan),
-                "--asset",
-                str(observation_path),
-                "--attestation-directory",
-                str(directory),
-            )
-            self.assertEqual(0, validated.returncode, validated.stderr)
-            attestation_path = Path(validated.stdout.strip())
-            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
-            attestation_asset = asset_metadata(attestation_path, attestation_digest, asset_id=102)
-            after_upload = directory / "release-after-upload.json"
-            write_json(after_upload, release_metadata(observation_asset, attestation=attestation_asset))
-            verified = run(
-                "verify",
-                "--plan",
-                str(plan),
-                "--release-metadata",
-                str(after_upload),
-                "--asset",
-                str(observation_path),
-                "--attestation",
-                str(attestation_path),
-            )
-            self.assertEqual(0, verified.returncode, verified.stderr)
-
-            final = directory / "release-final.json"
-            latest = directory / "release-latest.json"
-            final_document = release_metadata(
-                observation_asset,
-                draft=False,
-                immutable=True,
-                attestation=attestation_asset,
-            )
-            write_json(final, final_document)
-            write_json(latest, final_document)
-            finalized = run(
-                "verify",
-                "--plan",
-                str(plan),
-                "--release-metadata",
-                str(final),
-                "--asset",
-                str(observation_path),
-                "--attestation",
-                str(attestation_path),
-                "--prepublish-release-metadata",
-                str(after_upload),
-                "--latest-release-metadata",
-                str(latest),
-                "--final",
-            )
-            self.assertEqual(0, finalized.returncode, finalized.stderr)
-
-    def test_draft_asset_attestation_and_final_immutable_snapshot_pass(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, observation_path, observation_asset = self.prepare(directory)
-            failures: list[str] = []
-            attestation_path = validate_downloaded_observation(
-                plan,
-                observation_path,
-                attestation_directory=directory,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertIsNotNone(attestation_path)
-            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
-            attestation_asset = asset_metadata(
-                attestation_path, attestation_digest, asset_id=102
-            )
-
-            after_upload = directory / "release-after-upload.json"
-            write_json(
-                after_upload,
-                release_metadata(observation_asset, attestation=attestation_asset),
-            )
-            failures = []
-            verify_release_snapshot(
-                plan,
-                after_upload,
-                observation_path,
-                attestation_path,
-                final=False,
-                latest_metadata_path=None,
-                prepublish_metadata_path=None,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-
-            final = directory / "release-final.json"
-            latest = directory / "release-latest.json"
-            final_document = release_metadata(
-                observation_asset,
-                draft=False,
-                immutable=True,
-                attestation=attestation_asset,
-            )
-            write_json(final, final_document)
-            write_json(latest, final_document)
-            failures = []
-            verify_release_snapshot(
-                plan,
-                final,
-                observation_path,
-                attestation_path,
-                final=True,
-                latest_metadata_path=latest,
-                prepublish_metadata_path=after_upload,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-
-    def test_existing_draft_attestation_and_final_only_recovery_pass(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            initial_plan, observation_path, observation_asset = self.prepare(directory)
-            failures: list[str] = []
-            attestation_path = validate_downloaded_observation(
-                initial_plan,
-                observation_path,
-                attestation_directory=directory,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertIsNotNone(attestation_path)
-            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
-            attestation_asset = asset_metadata(
-                attestation_path, attestation_digest, asset_id=102
-            )
-
-            resumed_draft = directory / "resumed-draft.json"
-            write_json(
-                resumed_draft,
-                release_metadata(observation_asset, attestation=attestation_asset),
-            )
-            failures = []
-            resumed_plan = prepare_release_plan(
-                resumed_draft,
-                expected_version=RELEASE_VERSION,
-                expected_tag=TAG,
-                expected_commit=COMMIT,
-                expected_tree=TREE,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertEqual("draft", resumed_plan["phase"])
-            self.assertEqual(attestation_asset["id"], resumed_plan["attestationAsset"]["id"])
-
-            final = directory / "final-recovery.json"
-            final_document = release_metadata(
-                observation_asset,
-                draft=False,
-                immutable=True,
-                attestation=attestation_asset,
-            )
-            write_json(final, final_document)
-            failures = []
-            final_plan = prepare_release_plan(
-                final,
-                expected_version=RELEASE_VERSION,
-                expected_tag=TAG,
-                expected_commit=COMMIT,
-                expected_tree=TREE,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertEqual("final", final_plan["phase"])
-            failures = []
-            verify_release_snapshot(
-                final_plan,
-                final,
-                observation_path,
-                attestation_path,
-                final=True,
-                latest_metadata_path=final,
-                prepublish_metadata_path=None,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-
-    def test_missing_duplicate_malformed_and_digest_mismatched_assets_fail(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            observation_path, digest = write_observation(directory, current_observation())
-            valid_asset = asset_metadata(observation_path, digest)
-            fixtures = []
-            missing = release_metadata(valid_asset)
-            missing["assets"] = []
-            fixtures.append(("missing", missing, "exactly one"))
-            duplicate = release_metadata(valid_asset)
-            duplicate["assets"].append({**valid_asset, "id": 102})
-            fixtures.append(("duplicate", duplicate, "exactly one"))
-            malformed = release_metadata({**valid_asset, "name": f"axiom-v{RELEASE_VERSION}-release-policy-bad.json"})
-            fixtures.append(("malformed", malformed, "full lowercase SHA-256"))
-            mismatched = release_metadata({**valid_asset, "digest": f"sha256:{'0' * 64}"})
-            fixtures.append(("digest", mismatched, "GitHub digest"))
-            unexposed = release_metadata({**valid_asset, "digest": None})
-            fixtures.append(("unexposed-digest", unexposed, "exposed lowercase SHA-256"))
-            unrecognized = release_metadata(valid_asset)
-            unrecognized["assets"].append(
-                {**valid_asset, "id": 777, "name": "unexpected-evidence.json"}
-            )
-            fixtures.append(("unrecognized", unrecognized, "unrecognized evidence asset"))
-            wrong_body = release_metadata(valid_asset)
-            wrong_body["body"] = ""
-            fixtures.append(("release-body", wrong_body, "release.body"))
-
-            for name, metadata, expected in fixtures:
-                with self.subTest(name=name):
-                    metadata_path = directory / f"{name}.json"
-                    write_json(metadata_path, metadata)
-                    failures: list[str] = []
-                    plan = prepare_release_plan(
-                        metadata_path,
-                        expected_version=RELEASE_VERSION,
-                        expected_tag=TAG,
-                        expected_commit=COMMIT,
-                        expected_tree=TREE,
-                        failures=failures,
-                    )
-                    if name == "digest":
-                        self.assertIsNotNone(plan)
-                        failures = []
-                        validate_downloaded_observation(
-                            plan,
-                            observation_path,
-                            attestation_directory=directory,
-                            failures=failures,
-                        )
-                    else:
-                        self.assertIsNone(plan)
-                    self.assertTrue(any(expected in failure for failure in failures), failures)
-
-    def test_modified_download_and_replaced_release_asset_fail(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, observation_path, observation_asset = self.prepare(directory)
-            observation_path.write_bytes(observation_path.read_bytes() + b" ")
-            failures: list[str] = []
-            self.assertIsNone(
-                validate_downloaded_observation(
-                    plan,
-                    observation_path,
-                    attestation_directory=directory,
-                    failures=failures,
-                )
-            )
-            self.assertTrue(any("SHA-256" in failure for failure in failures), failures)
-
-            observation_path, _ = write_observation(directory, current_observation())
-            failures = []
-            attestation_path = validate_downloaded_observation(
-                plan,
-                observation_path,
-                attestation_directory=directory,
-                failures=failures,
-            )
-            self.assertEqual([], failures)
-            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
-            attestation_asset = asset_metadata(
-                attestation_path, attestation_digest, asset_id=102
-            )
-            replaced_asset = {**observation_asset, "id": 999}
-            current = directory / "release-replaced.json"
-            write_json(
-                current,
-                release_metadata(replaced_asset, attestation=attestation_asset),
-            )
-            failures = []
-            verify_release_snapshot(
-                plan,
-                current,
-                observation_path,
-                attestation_path,
-                final=False,
-                latest_metadata_path=None,
-                prepublish_metadata_path=None,
-                failures=failures,
-            )
-            self.assertTrue(any("metadata changed" in failure for failure in failures), failures)
-
-    def test_missing_checks_extra_claims_and_wrong_subject_policy_records_fail(self):
-        mutations = []
-        incomplete = current_observation()
-        incomplete["verification"]["requiredChecks"].pop()
-        mutations.append(("incomplete", incomplete))
-        failed = current_observation()
-        failed["verification"]["policy"] = "unchecked"
-        mutations.append(("wrong-policy", failed))
-        extra = current_observation()
-        extra["unverifiedResult"] = "pass"
-        mutations.append(("extra-claim", extra))
-        wrong_subject = current_observation()
-        wrong_subject["subject"]["tree"] = "d" * 40
-        mutations.append(("wrong-subject", wrong_subject))
-
-        for name, record in mutations:
-            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary_directory:
-                directory = Path(temporary_directory)
-                plan, observation_path, _ = self.prepare(directory, record)
+    def test_publisher_workflow_rejects_a_changed_command_or_trigger(self):
+        source = Path(__file__).resolve().parents[2] / ".github/workflows/publish-immutable-release.yml"
+        text = source.read_text(encoding="utf-8")
+        for label, old, new, expected in (
+            ("anchor", "check-release-evidence.py assert-absent", "check-release-evidence.py removed",
+             "missing required publication anchor"),
+            ("trigger", "on:\n  workflow_dispatch:", "on:\n  pull_request:\n  workflow_dispatch:",
+             "workflow_dispatch-only"),
+        ):
+            with self.subTest(label=label):
+                path = self.root / f"{label}.yml"
+                path.write_text(text.replace(old, new, 1), encoding="utf-8")
                 failures: list[str] = []
-                self.assertIsNone(
-                    validate_downloaded_observation(
-                        plan,
-                        observation_path,
-                        attestation_directory=directory,
-                        failures=failures,
-                    )
-                )
-                self.assertTrue(failures, name)
+                check_publish_workflow_contract(failures, path)
+                self.assertTrue(any(expected in failure for failure in failures), failures)
+                self.assertTrue(any("command contract changed" in failure for failure in failures), failures)
 
-    def test_repository_policy_attestation_names_its_scope(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, asset, _ = self.prepare(directory)
-            failures = []
-            attestation = validate_downloaded_observation(
-                plan, asset, attestation_directory=directory, failures=failures,
-            )
-            self.assertEqual([], failures)
-            self.assertIsNotNone(attestation)
-            self.assertEqual(
-                "release-policy-and-artifact-integrity",
-                json.loads(attestation.read_text())["validation"]["scope"],
-            )
+    def test_subject_must_be_complete_and_consistent(self):
+        self.assertTrue(validate_subject(subject(), []))
+        cases = {
+            "missing-field": (lambda value: value.pop("releaseTree"), "unexpected or missing fields"),
+            "tag-mismatch": (lambda value: value.update(tag="v1.2.4"), "tag must be v<version>"),
+            "lightweight-tag-elsewhere": (
+                lambda value: value.update(tagObject={"type": "commit", "sha": "9" * 40}),
+                "lightweight release tag must point at the subject commit",
+            ),
+            "zip-name": (lambda value: value["zip"].update(name="plugin.zip"), "subject zip must name"),
+            "previous-not-older": (lambda value: value.update(previousTag="v1.2.3"), "older release tag"),
+            "digest": (lambda value: value.update(runtimeDigest="0" * 64), "runtimeDigest"),
+        }
+        for label, (mutate, expected) in cases.items():
+            with self.subTest(label=label):
+                value = subject()
+                mutate(value)
+                failures: list[str] = []
+                self.assertFalse(validate_subject(value, failures))
+                self.assertTrue(any(expected in failure for failure in failures), failures)
 
-    def test_repository_policy_rendering(self):
-        result = subprocess.run(
-            [sys.executable, ".ci/scripts/check-release-evidence.py", "render-policy",
-             "--expected-version", RELEASE_VERSION, "--expected-tag", TAG,
-             "--expected-commit", COMMIT, "--expected-tree", TREE],
-            cwd=Path(__file__).resolve().parents[2], capture_output=True, check=True,
+    def test_draft_plan_validates_assets_and_emits_deterministic_evidence(self):
+        plan = self.fixture.plan(self.fixture.release())
+        self.assertEqual("draft", plan["phase"])
+        self.assertIsNone(plan["evidenceAsset"])
+        first = self.fixture.evidence(plan, self.evidence_directory)
+        second_directory = self.root / "second"
+        second_directory.mkdir()
+        second = self.fixture.evidence(plan, second_directory)
+        self.assertEqual(first.name, second.name)
+        self.assertEqual(first.read_bytes(), second.read_bytes())
+        document = json.loads(first.read_text(encoding="utf-8"))
+        self.assertEqual(evidence_document(plan), document)
+        self.assertEqual("v1.2.3", document["release"]["tag"])
+        self.assertEqual(COMMIT, document["release"]["commit"])
+        self.assertEqual(RELEASE_COMMIT, document["release"]["releaseCommit"])
+        self.assertEqual(RELEASE_TREE, document["release"]["releaseTree"])
+        self.assertEqual(subject()["zip"]["sha256"], document["release"]["zipSha256"])
+        self.assertEqual(subject()["runtimeDigest"], document["runtimeContract"]["digest"])
+        self.assertEqual(subject()["notesSha256"], document["release"]["notesSha256"])
+        self.assertEqual(f"axiom-v1.2.3-release-evidence-{hashlib.sha256(first.read_bytes()).hexdigest()}.json", first.name)
+
+    def test_evidence_is_refused_inside_the_checked_in_tree(self):
+        plan = self.fixture.plan(self.fixture.release())
+        failures: list[str] = []
+        inside = self.root / "repository" / "out"
+        inside.mkdir()
+        self.assertIsNone(
+            emit_evidence(plan, self.fixture.policy, self.fixture.zip, self.fixture.expected_zip,
+                          evidence_directory=inside, failures=failures, root=self.root / "repository")
         )
-        self.assertEqual(current_observation(), json.loads(result.stdout))
+        self.assertTrue(any("outside the checked-in tree" in failure for failure in failures), failures)
 
-    def test_final_release_must_be_immutable_and_latest(self):
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            directory = Path(temporary_directory)
-            plan, observation_path, observation_asset = self.prepare(directory)
-            failures: list[str] = []
-            attestation_path = validate_downloaded_observation(
-                plan,
-                observation_path,
-                attestation_directory=directory,
-                failures=failures,
-            )
-            attestation_digest = hashlib.sha256(attestation_path.read_bytes()).hexdigest()
-            attestation_asset = asset_metadata(attestation_path, attestation_digest, asset_id=102)
-            final = directory / "release-final.json"
-            latest = directory / "release-latest.json"
-            write_json(
-                final,
-                release_metadata(
-                    observation_asset,
-                    draft=False,
-                    immutable=False,
-                    attestation=attestation_asset,
-                ),
-            )
-            wrong_latest = release_metadata(
-                observation_asset,
-                draft=False,
-                immutable=True,
-                attestation=attestation_asset,
-            )
-            wrong_latest["id"] = 999
-            write_json(latest, wrong_latest)
-            prepublish = directory / "release-prepublish.json"
-            write_json(
-                prepublish,
-                release_metadata(observation_asset, attestation=attestation_asset),
-            )
-            failures = []
-            verify_release_snapshot(
-                plan,
-                final,
-                observation_path,
-                attestation_path,
-                final=True,
-                latest_metadata_path=latest,
-                prepublish_metadata_path=prepublish,
-                failures=failures,
-            )
-            self.assertTrue(any("immutable=true" in failure for failure in failures), failures)
-            self.assertTrue(any("GitHub Latest" in failure for failure in failures), failures)
+    def test_tampered_policy_zip_or_body_is_rejected(self):
+        plan = self.fixture.plan(self.fixture.release())
+        tampered_zip = self.root / "tampered" / self.fixture.zip.name
+        tampered_zip.parent.mkdir()
+        tampered_zip.write_bytes(ZIP_BYTES[:-1] + b"X")
+        failures: list[str] = []
+        emit_evidence(plan, self.fixture.policy, tampered_zip, self.fixture.expected_zip,
+                      evidence_directory=self.evidence_directory, failures=failures, root=self.root / "repository")
+        self.assertTrue(any("differs from the zip built from the tag" in failure for failure in failures), failures)
+
+        other = subject()
+        other["releaseCommit"] = "9" * 40
+        other_fixture_directory = self.root / "other"
+        other_fixture_directory.mkdir()
+        other_fixture = Fixture(other_fixture_directory, other)
+        failures = []
+        emit_evidence(plan, other_fixture.policy, self.fixture.zip, self.fixture.expected_zip,
+                      evidence_directory=self.evidence_directory, failures=failures, root=self.root / "repository")
+        self.assertTrue(any("filename does not match" in failure or "exactly the record" in failure
+                            for failure in failures), failures)
+
+        failures = []
+        result = prepare_release_plan(
+            self.fixture.write("edited.json", self.fixture.release(body=NOTES + "edited\n")),
+            self.fixture.subject, failures,
+        )
+        self.assertIsNone(result)
+        self.assertTrue(any("release.body must be exactly the notes" in failure for failure in failures), failures)
+
+    def test_unexpected_asset_or_target_is_rejected(self):
+        release = self.fixture.release()
+        release["assets"].append(asset(99, "extra.txt", b"extra"))
+        failures: list[str] = []
+        self.assertIsNone(prepare_release_plan(self.fixture.write("extra.json", release), self.fixture.subject, failures))
+        self.assertTrue(any("unrecognized asset" in failure for failure in failures), failures)
+        release = self.fixture.release()
+        release["target_commitish"] = RELEASE_COMMIT
+        failures = []
+        self.assertIsNone(prepare_release_plan(self.fixture.write("target.json", release), self.fixture.subject, failures))
+        self.assertTrue(any("release.target_commitish" in failure for failure in failures), failures)
+
+    def test_verify_draft_then_final_and_latest(self):
+        draft_plan = self.fixture.plan(self.fixture.release())
+        evidence = self.fixture.evidence(draft_plan, self.evidence_directory)
+        draft = self.fixture.release(evidence=evidence)
+        current_plan = self.fixture.plan(draft)
+        self.assertEqual(evidence.name, current_plan["evidenceAsset"]["name"])
+        draft_path = self.fixture.write("draft.json", draft)
+        failures: list[str] = []
+        verify_release_snapshot(current_plan, draft_path, self.fixture.policy, self.fixture.zip,
+                                self.fixture.expected_zip, evidence, final=False,
+                                latest_metadata_path=None, prepublish_metadata_path=None, failures=failures)
+        self.assertEqual([], failures)
+        final = self.fixture.release(draft=False, immutable=True, evidence=evidence)
+        final_path = self.fixture.write("final.json", final)
+        latest_path = self.fixture.write("latest.json", final)
+        failures = []
+        verify_release_snapshot(current_plan, final_path, self.fixture.policy, self.fixture.zip,
+                                self.fixture.expected_zip, evidence, final=True,
+                                latest_metadata_path=latest_path, prepublish_metadata_path=draft_path,
+                                failures=failures)
+        self.assertEqual([], failures)
+        stale_latest = dict(final, id=699, tag_name="v1.2.2")
+        failures = []
+        verify_release_snapshot(current_plan, final_path, self.fixture.policy, self.fixture.zip,
+                                self.fixture.expected_zip, evidence, final=True,
+                                latest_metadata_path=self.fixture.write("stale.json", stale_latest),
+                                prepublish_metadata_path=draft_path, failures=failures)
+        self.assertTrue(any("GitHub Latest does not identify" in failure for failure in failures), failures)
+
+    def test_plan_round_trip_and_publication_state(self):
+        plan = self.fixture.plan(self.fixture.release())
+        path = self.root / "plan.json"
+        path.write_bytes(canonical_json(plan))
+        failures: list[str] = []
+        self.assertEqual(plan, load_release_plan(path, failures))
+        self.assertEqual([], failures)
+        broken = copy.deepcopy(plan)
+        broken["release"]["notesSha256"] = "0" * 64
+        path.write_bytes(canonical_json(broken))
+        failures = []
+        self.assertIsNone(load_release_plan(path, failures))
+        self.assertTrue(failures)
+        for immutable, expected in ((True, "immutable"), (False, "mutable")):
+            with self.subTest(immutable=immutable):
+                published = self.fixture.release(draft=False, immutable=immutable)
+                failures = []
+                state = classify_publication_state(plan, self.fixture.write("published.json", published), failures)
+                self.assertEqual(expected, state, failures)
+
+    def test_cleanup_requires_the_frozen_release_to_be_gone(self):
+        plan = self.fixture.plan(self.fixture.release())
+        failures: list[str] = []
+        assert_release_absent_from_collection(self.fixture.write("empty.json", [[]]), plan, failures)
+        self.assertEqual([], failures)
+        assert_release_absent_from_collection(
+            self.fixture.write("present.json", [[{"id": 700, "tag_name": "v1.2.3"}]]), plan, failures
+        )
+        self.assertTrue(any("did not remove" in failure for failure in failures), failures)
+
+    def test_select_requires_exactly_one_release(self):
+        output = self.root / "selected.json"
+        failures: list[str] = []
+        select_release_from_collection(
+            self.fixture.write("collection.json", [[self.fixture.release()]]), output,
+            expected_tag="v1.2.3", failures=failures,
+        )
+        self.assertEqual([], failures)
+        failures = []
+        select_release_from_collection(
+            self.fixture.write("double.json", [[self.fixture.release(), self.fixture.release()]]), output,
+            expected_tag="v1.2.3", failures=failures,
+        )
+        self.assertTrue(failures)
+
+    def preflight(self, **changes: object) -> list[str]:
+        signature = {"data": {"repository": {"object": {
+            "oid": COMMIT, "signature": {"isValid": True, "state": "VALID", "wasSignedByGitHub": True}}}}}
+        release_signature = copy.deepcopy(signature)
+        release_signature["data"]["repository"]["object"]["oid"] = RELEASE_COMMIT
+        documents = {
+            "repository": {"default_branch": "main"},
+            "latest": {"tag_name": "v1.2.2", "draft": False, "prerelease": False},
+            "main": {"ref": "refs/heads/main", "object": {"type": "commit", "sha": "1" * 40}},
+            "tag": {"ref": "refs/tags/v1.2.3", "object": {"type": "tag", "sha": TAG_OBJECT}},
+            "release": {"ref": "refs/heads/release", "object": {"type": "commit", "sha": RELEASE_COMMIT}},
+            "history": {"merge_base_commit": {"sha": COMMIT}, "base_commit": {"sha": COMMIT}, "status": "ahead"},
+            "commit": {"sha": COMMIT, "commit": {"verification": {"verified": True, "reason": "valid"}}},
+            "commit_signature": signature,
+            "release_signature": release_signature,
+        }
+        documents.update(changes)
+        paths = {name: self.fixture.write(f"preflight-{name}.json", value) for name, value in documents.items()}
+        failures: list[str] = []
+        verify_remote_release_preflight(
+            repository_metadata_path=paths["repository"],
+            latest_release_path=paths["latest"],
+            main_ref_path=paths["main"],
+            tag_ref_path=paths["tag"],
+            release_ref_path=paths["release"],
+            history_comparison_path=paths["history"],
+            commit_metadata_path=paths["commit"],
+            commit_signature_path=paths["commit_signature"],
+            release_signature_path=paths["release_signature"],
+            subject=self.fixture.subject,
+            failures=failures,
+        )
+        return failures
+
+    def test_preflight_accepts_live_state_and_rejects_each_drift(self):
+        self.assertEqual([], self.preflight())
+        unsigned = {"data": {"repository": {"object": {
+            "oid": RELEASE_COMMIT, "signature": {"isValid": True, "state": "VALID", "wasSignedByGitHub": False}}}}}
+        cases = {
+            "tag-moved": ({"tag": {"ref": "refs/tags/v1.2.3", "object": {"type": "tag", "sha": "9" * 40}}},
+                          "still point at the subject tag object"),
+            "release-moved": ({"release": {"ref": "refs/heads/release", "object": {"type": "commit", "sha": "9" * 40}}},
+                              "release branch head must be the subject release commit"),
+            "off-main": ({"history": {"merge_base_commit": {"sha": "9" * 40}, "base_commit": {"sha": COMMIT},
+                                      "status": "diverged"}}, "live main history"),
+            "newer-latest": ({"latest": {"tag_name": "v1.3.0", "draft": False, "prerelease": False}},
+                             "must not regress"),
+            "release-unsigned": ({"release_signature": unsigned}, "release commit signature must be VALID"),
+        }
+        for label, (change, expected) in cases.items():
+            with self.subTest(label=label):
+                failures = self.preflight(**change)
+                self.assertTrue(any(expected in failure for failure in failures), failures)
 
 
 if __name__ == "__main__":

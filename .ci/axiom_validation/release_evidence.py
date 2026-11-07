@@ -1,4 +1,13 @@
-"""Validate and bind GitHub Release routing evidence before publication."""
+"""Verify one Draft against its independently derived subject and publish its evidence.
+
+The immutable publisher derives the release subject from the tag with
+``.ci/scripts/release.py subject``: the tag object, tagged commit and tree, the
+``release`` branch commit and its stamped tree, the plugin zip, the runtime
+digest, the previous release, and the notes digest. This validator binds the
+Draft, its policy and zip assets, and the evidence asset it emits to that
+subject before publication and again after GitHub reports the Release
+immutable.
+"""
 
 from __future__ import annotations
 
@@ -10,8 +19,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
-from .manifests import CLAUDE_MARKETPLACE_RELATIVE, catalog_source
+from .context import REPOSITORY_ROOT, display_path
+from .release import release_policy_record, zip_name
 from .release_versions import (
     PRODUCTION_RELEASE_TAG_ERE_PATTERN,
     PRODUCTION_RELEASE_VERSION_CASES,
@@ -22,19 +31,29 @@ from .yaml_subset import CanonicalYamlError, CanonicalYamlScalar, parse_canonica
 
 
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "publish-immutable-release.yml"
-ATTESTATION_KIND = "axiom-release-evidence-attestation"
-ATTESTATION_SCHEMA_VERSION = "1"
-PLAN_SCHEMA_VERSION = "2"
+EVIDENCE_KIND = "axiom-release-evidence"
+EVIDENCE_SCHEMA_VERSION = "2"
+PLAN_SCHEMA_VERSION = "3"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
-PUBLISH_WORKFLOW_SHA256 = "8a547762668714bed8ce90aeda12a39b0a43d7455c5d1496046fe5a8d27db147"
-# GitHub rejects a Release body above this many characters; the tag would already exist.
-RELEASE_BODY_MAX_CHARACTERS = 125_000
-PUBLIC_REPOSITORY_BLOB_ROOT = "https://github.com/wheakerd/axiom/blob"
-RELEASE_BODY_CHANGE_HEADINGS = frozenset(
-    {"added", "changed", "fixed", "removed", "deprecated", "security"}
+RUNTIME_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
+PUBLISH_WORKFLOW_SHA256 = "cedb00d83c9962b3a3f386dea70bc541c204fbd1737cf3a123f7a61fa6fc236f"
+SUBJECT_KEYS = frozenset(
+    {
+        "version",
+        "tag",
+        "tagObject",
+        "commit",
+        "tree",
+        "releaseCommit",
+        "releaseTree",
+        "zip",
+        "runtimeDigest",
+        "previousTag",
+        "notesSha256",
+    }
 )
-RELEASE_BODY_REQUIRED_HEADINGS = frozenset({"behavioral impact", "required action"})
+ASSET_KEYS = frozenset({"id", "name", "size", "state", "digest", "createdAt", "updatedAt"})
 
 
 class DuplicateJsonKeyError(ValueError):
@@ -47,23 +66,6 @@ def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         if key in document:
             raise DuplicateJsonKeyError(f"duplicate JSON key {key!r}")
         document[key] = value
-    return document
-
-
-def _load_json_object(path: Path, label: str, failures: list[str]) -> dict[str, Any] | None:
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read {label}: {error}")
-        return None
-    try:
-        document = json.loads(text, object_pairs_hook=_reject_duplicate_json_keys)
-    except (json.JSONDecodeError, DuplicateJsonKeyError) as error:
-        failures.append(f"invalid JSON in {label}: {error}")
-        return None
-    if type(document) is not dict:
-        failures.append(f"{label} must contain one top-level object")
-        return None
     return document
 
 
@@ -80,6 +82,16 @@ def _load_json_value(path: Path, label: str, failures: list[str]) -> Any:
         return None
 
 
+def _load_json_object(path: Path, label: str, failures: list[str]) -> dict[str, Any] | None:
+    document = _load_json_value(path, label, failures)
+    if document is None:
+        return None
+    if type(document) is not dict:
+        failures.append(f"{label} must contain one top-level object")
+        return None
+    return document
+
+
 def _canonical_json_bytes(document: dict[str, Any]) -> bytes:
     return (json.dumps(document, indent=2, sort_keys=True) + "\n").encode("utf-8")
 
@@ -93,214 +105,82 @@ def _write_json(path: Path, document: dict[str, Any], failures: list[str]) -> bo
     return True
 
 
-def _require_positive_int(value: Any, label: str, failures: list[str]) -> int | None:
-    if type(value) is not int or value <= 0:
-        failures.append(f"{label} must be a positive integer")
-        return None
-    return value
+def _oid(value: Any) -> bool:
+    return type(value) is str and OID_PATTERN.fullmatch(value) is not None
 
 
-def _validate_subject(
-    version: str,
-    tag: str,
-    commit: str,
-    tree: str,
-    failures: list[str],
-) -> None:
+def validate_subject(subject: Any, failures: list[str]) -> bool:
+    """Require one complete, internally consistent release subject."""
+    if type(subject) is not dict or set(subject) != SUBJECT_KEYS:
+        failures.append("release subject has unexpected or missing fields")
+        return False
+    version = subject["version"]
     if parse_production_release_version(version) is None:
-        failures.append(
-            "expected release version must be one stable numeric production release version"
-        )
-    if type(version) is str and version != RELEASE_VERSION:
-        failures.append("expected release version must match the current Codex manifest")
-    if type(tag) is not str or tag != f"v{version}":
-        failures.append("expected release tag must match the exact version")
-    if type(commit) is not str or OID_PATTERN.fullmatch(commit) is None:
-        failures.append("expected release commit must be a lowercase 40-character Git SHA")
-    if type(tree) is not str or OID_PATTERN.fullmatch(tree) is None:
-        failures.append("expected release tree must be a lowercase 40-character Git SHA")
+        failures.append("release subject version must be one strict SemVer release version")
+        return False
+    if subject["tag"] != f"v{version}":
+        failures.append("release subject tag must be v<version>")
+    tag_object = subject["tagObject"]
+    if (
+        type(tag_object) is not dict
+        or set(tag_object) != {"type", "sha"}
+        or tag_object.get("type") not in {"tag", "commit"}
+        or not _oid(tag_object.get("sha"))
+    ):
+        failures.append("release subject tagObject must name one tag or commit object")
+    elif tag_object["type"] == "commit" and tag_object["sha"] != subject["commit"]:
+        failures.append("a lightweight release tag must point at the subject commit")
+    for field in ("commit", "tree", "releaseCommit", "releaseTree"):
+        if not _oid(subject[field]):
+            failures.append(f"release subject {field} must be a lowercase 40-character Git SHA")
+    archive = subject["zip"]
+    if (
+        type(archive) is not dict
+        or set(archive) != {"name", "sha256", "size"}
+        or archive.get("name") != zip_name(version)
+        or type(archive.get("sha256")) is not str
+        or DIGEST_PATTERN.fullmatch(archive["sha256"]) is None
+        or type(archive.get("size")) is not int
+        or archive["size"] <= 0
+    ):
+        failures.append("release subject zip must name the plugin zip with its SHA-256 and size")
+    if type(subject["runtimeDigest"]) is not str or RUNTIME_DIGEST_PATTERN.fullmatch(
+        subject["runtimeDigest"]
+    ) is None:
+        failures.append("release subject runtimeDigest must be one sha256 digest")
+    previous = subject["previousTag"]
+    if previous is not None:
+        previous_version = parse_production_release_tag(previous)
+        if previous_version is None or previous_version >= parse_production_release_version(version):
+            failures.append("release subject previousTag must name an older release tag")
+    if type(subject["notesSha256"]) is not str or DIGEST_PATTERN.fullmatch(subject["notesSha256"]) is None:
+        failures.append("release subject notesSha256 must be one SHA-256 digest")
+    return not failures
 
 
-def _asset_prefix(version: str) -> str:
-    return f"axiom-v{version}-release-policy-"
-
-
-def release_policy_record(subject: dict[str, str]) -> dict[str, Any]:
-    """Describe repository verification requirements for the exact release."""
-    return {
-        "schemaVersion": "1",
-        "kind": "axiom-release-policy",
-        "subject": subject,
-        "verification": {
-            "policy": "repository-checks-v1",
-            "requiredChecks": ["repository-guards", "unit-and-integration-tests"],
-        },
-        "evidenceScope": "release-policy-and-artifact-integrity",
-    }
-
-
-def validate_release_asset(
-    path: Path, subject: dict[str, str], failures: list[str], *, root: Path
-) -> None:
-    try:
-        canonical = path.resolve(strict=True)
-        if not path.is_absolute() or canonical != path:
-            failures.append("release policy asset path must be absolute and canonical")
-        if canonical.is_relative_to(root.resolve()):
-            failures.append("release policy asset must remain outside the checked-in tree")
-    except OSError:
-        failures.append("release policy asset must exist")
-        return
-    record = _load_json_object(path, "release policy asset", failures)
-    if record is not None and record != release_policy_record(subject):
-        failures.append("release policy asset must match the exact subject and repository-checks policy")
-
-
-def _attestation_prefix(version: str) -> str:
-    return f"axiom-v{version}-release-evidence-"
-
-
-_BLOCK_START = re.compile(r"(?:#{1,6} |[-*+] |\d+[.)] |\||>|<!--)")
-
-
-def _hard_wrapped_lines(entry: str) -> list[str]:
-    """Return prose lines that continue the previous paragraph or list item."""
-    wrapped: list[str] = []
-    previous = ""
-    in_fence = False
-    for line in entry.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("```"):
-            in_fence = not in_fence
-            previous = ""
-            continue
-        if in_fence:
-            continue
-        if (
-            stripped
-            and previous
-            and not previous.startswith("#")
-            and _BLOCK_START.match(stripped) is None
-        ):
-            wrapped.append(stripped)
-        previous = stripped
-    return wrapped
-
-
-def render_release_body(
-    version: str,
-    failures: list[str],
-    *,
-    root: Path = REPOSITORY_ROOT,
-) -> str | None:
-    """Render one future GitHub Release body from its exact Changelog entry."""
-    if parse_production_release_version(version) is None:
-        failures.append("release body version must be one stable numeric production version")
+def load_subject(path: Path, failures: list[str]) -> dict[str, Any] | None:
+    subject = _load_json_object(path, "release subject", failures)
+    if subject is None or not validate_subject(subject, failures):
         return None
-    changelog_path = root / "CHANGELOG.md"
-    try:
-        changelog = changelog_path.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read {display_path(changelog_path)}: {error}")
-        return None
+    return subject
 
-    heading_pattern = re.compile(
-        rf"^## {re.escape(version)} - [^\n]+$",
-        flags=re.MULTILINE,
-    )
-    matches = list(heading_pattern.finditer(changelog))
-    if len(matches) != 1:
-        failures.append(
-            f"CHANGELOG.md must contain exactly one release entry for {version}"
-        )
-        return None
-    start = matches[0].end()
-    if changelog[start : start + 1] == "\n":
-        start += 1
-    next_heading = re.search(r"^## ", changelog[start:], flags=re.MULTILINE)
-    end = start + next_heading.start() if next_heading is not None else len(changelog)
-    entry = changelog[start:end].strip()
-    if not entry:
-        failures.append(f"CHANGELOG.md release entry for {version} is empty")
-        return None
 
-    headings = {
-        heading.strip().casefold()
-        for heading in re.findall(r"^### ([^\n]+)$", entry, flags=re.MULTILINE)
-    }
-    if headings.isdisjoint(RELEASE_BODY_CHANGE_HEADINGS):
-        failures.append("Changelog entry must contain at least one change section")
-    missing = sorted(RELEASE_BODY_REQUIRED_HEADINGS - headings)
-    if missing:
-        failures.append(
-            "Changelog entry is missing required sections: " + ", ".join(missing)
-        )
+def _policy_prefix(tag: str) -> str:
+    return f"axiom-{tag}-release-policy-"
 
-    wrapped = _hard_wrapped_lines(entry)
-    if wrapped:
-        failures.append(
-            f"Changelog entry for {version} must keep each paragraph and list item "
-            f"on one source line; found {len(wrapped)} hard-wrapped continuation "
-            f"line(s), first: {wrapped[0]!r}"
-        )
 
-    body = re.sub(
-        r"^(#{3,6}) ",
-        lambda match: match.group(1)[:-1] + " ",
-        entry,
-        flags=re.MULTILINE,
-    )
-
-    relative_link_pattern = re.compile(r"\]\(([^)]+)\)")
-
-    def rewrite_link(match: re.Match[str]) -> str:
-        raw_target = match.group(1).strip()
-        target, *title = raw_target.split(maxsplit=1)
-        if target.startswith(("https://", "http://", "mailto:", "#")):
-            return match.group(0)
-        path, separator, fragment = target.partition("#")
-        parts = path.split("/")
-        if (
-            not path
-            or path.startswith(("/", "<"))
-            or any(part in {"", ".", ".."} for part in parts)
-        ):
-            failures.append(
-                "release body link must be repository-relative without traversal: "
-                f"{target!r}"
-            )
-            return match.group(0)
-        immutable = f"{PUBLIC_REPOSITORY_BLOB_ROOT}/v{version}/{path}"
-        if separator:
-            immutable += f"#{fragment}"
-        suffix = f" {title[0]}" if title else ""
-        return f"]({immutable}{suffix})"
-
-    body = relative_link_pattern.sub(rewrite_link, body).strip() + "\n"
-    remaining_relative = [
-        target
-        for target in relative_link_pattern.findall(body)
-        if not target.startswith(("https://", "http://", "mailto:", "#"))
-    ]
-    if remaining_relative:
-        failures.append(
-            "release body contains unbound repository-relative links: "
-            + ", ".join(remaining_relative)
-        )
-    if re.search(r"^# ", body, flags=re.MULTILINE):
-        failures.append("release body must not duplicate the GitHub Release title")
-    if len(body) > RELEASE_BODY_MAX_CHARACTERS:
-        failures.append(
-            f"release body exceeds GitHub's {RELEASE_BODY_MAX_CHARACTERS}-character limit"
-        )
-    return None if failures else body
+def _evidence_prefix(tag: str) -> str:
+    return f"axiom-{tag}-release-evidence-"
 
 
 def _normalize_asset(asset: Any, label: str, failures: list[str]) -> dict[str, Any] | None:
     if type(asset) is not dict:
         failures.append(f"{label} must be an object")
         return None
-    asset_id = _require_positive_int(asset.get("id"), f"{label}.id", failures)
+    asset_id = asset.get("id")
+    if type(asset_id) is not int or asset_id <= 0:
+        failures.append(f"{label}.id must be a positive integer")
+        asset_id = None
     name = asset.get("name")
     if type(name) is not str or not name:
         failures.append(f"{label}.name must be a non-empty string")
@@ -309,8 +189,7 @@ def _normalize_asset(asset: Any, label: str, failures: list[str]) -> dict[str, A
     if type(size) is not int or size < 0:
         failures.append(f"{label}.size must be a non-negative integer")
         size = None
-    state = asset.get("state")
-    if state != "uploaded":
+    if asset.get("state") != "uploaded":
         failures.append(f"{label}.state must be 'uploaded'")
     digest = asset.get("digest")
     if (
@@ -320,10 +199,8 @@ def _normalize_asset(asset: Any, label: str, failures: list[str]) -> dict[str, A
     ):
         failures.append(f"{label}.digest must be one exposed lowercase SHA-256 digest")
         digest = None
-    created_at = asset.get("created_at")
-    updated_at = asset.get("updated_at")
-    for field, value in (("created_at", created_at), ("updated_at", updated_at)):
-        if type(value) is not str or not value:
+    for field in ("created_at", "updated_at"):
+        if type(asset.get(field)) is not str or not asset.get(field):
             failures.append(f"{label}.{field} must be a non-empty string")
     if asset_id is None or name is None or size is None:
         return None
@@ -331,38 +208,33 @@ def _normalize_asset(asset: Any, label: str, failures: list[str]) -> dict[str, A
         "id": asset_id,
         "name": name,
         "size": size,
-        "state": state,
+        "state": asset.get("state"),
         "digest": digest,
-        "createdAt": created_at,
-        "updatedAt": updated_at,
+        "createdAt": asset.get("created_at"),
+        "updatedAt": asset.get("updated_at"),
     }
 
 
 def _inspect_release(
-    document: dict[str, Any],
-    *,
-    version: str,
-    tag: str,
-    commit: str,
-    expected_phase: str,
-    failures: list[str],
+    document: dict[str, Any], subject: dict[str, Any], *, expected_phase: str, failures: list[str]
 ) -> dict[str, Any] | None:
-    release_id = _require_positive_int(document.get("id"), "release.id", failures)
+    release_id = document.get("id")
+    if type(release_id) is not int or release_id <= 0:
+        failures.append("release.id must be a positive integer")
+        release_id = None
     expected_fields = {
-        "tag_name": tag,
-        "target_commitish": commit,
-        "name": tag,
+        "tag_name": subject["tag"],
+        "target_commitish": subject["commit"],
+        "name": subject["tag"],
         "draft": expected_phase == "draft",
         "prerelease": False,
     }
     for field, expected in expected_fields.items():
         if document.get(field) != expected:
             failures.append(f"release.{field} must equal {expected!r}")
-    expected_body = render_release_body(version, failures)
-    if expected_body is not None and document.get("body") != expected_body:
-        failures.append(
-            "release.body must exactly match the rendered Changelog entry at the release commit"
-        )
+    body = document.get("body")
+    if type(body) is not str or hashlib.sha256(body.encode("utf-8")).hexdigest() != subject["notesSha256"]:
+        failures.append("release.body must be exactly the notes the tag renders")
     immutable = document.get("immutable")
     if type(immutable) is not bool:
         failures.append("release.immutable must be a boolean")
@@ -374,170 +246,89 @@ def _inspect_release(
         return None
     return {
         "id": release_id,
-        "tag": tag,
-        "targetCommit": commit,
-        "name": tag,
-        "notesSha256": (
-            hashlib.sha256(expected_body.encode("utf-8")).hexdigest()
-            if expected_body is not None
-            else None
-        ),
+        "tag": subject["tag"],
+        "targetCommit": subject["commit"],
+        "name": subject["tag"],
+        "notesSha256": subject["notesSha256"],
     }
 
 
 def _select_assets(
-    document: dict[str, Any],
-    *,
-    version: str,
-    attestation_requirement: str,
-    failures: list[str],
-) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    document: dict[str, Any], subject: dict[str, Any], *, evidence: str, failures: list[str]
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
+    """Select the policy, zip, and evidence assets; ``evidence`` is required, optional, or absent."""
     assets = document.get("assets")
     if type(assets) is not list:
         failures.append("release.assets must be an array")
-        return None, None
-    allowed_counts = {1, 2} if attestation_requirement == "optional" else {
-        2 if attestation_requirement == "required" else 1
-    }
-    if len(assets) not in allowed_counts:
-        expected = (
-            "one or two"
-            if attestation_requirement == "optional"
-            else "two" if allowed_counts == {2} else "one"
-        )
-        failures.append(
-            f"release must contain exactly {expected} evidence asset"
-            f"{'s' if allowed_counts != {1} else ''} at this phase"
-        )
-    observation_candidates = [
-        asset
-        for asset in assets
-        if type(asset) is dict
-        and type(asset.get("name")) is str
-        and asset["name"].startswith(_asset_prefix(version))
-        and asset["name"].endswith(".json")
-    ]
-    if len(observation_candidates) != 1:
-        failures.append("release must contain exactly one routing-observation candidate")
-        observation = None
-    else:
-        observation = _normalize_asset(
-            observation_candidates[0], "release routing-observation asset", failures
-        )
-        if observation is not None:
-            expected_pattern = re.compile(
-                re.escape(_asset_prefix(version)) + r"[0-9a-f]{64}\.json"
-            )
-            if expected_pattern.fullmatch(observation["name"]) is None:
-                failures.append(
-                    "release routing-observation asset name must contain one full lowercase SHA-256"
-                )
-
-    attestation_candidates = [
-        asset
-        for asset in assets
-        if type(asset) is dict
-        and type(asset.get("name")) is str
-        and asset["name"].startswith(_attestation_prefix(version))
-        and asset["name"].endswith(".json")
-    ]
-    if len(observation_candidates) + len(attestation_candidates) != len(assets):
-        failures.append("release contains an unrecognized evidence asset")
-    attestation: dict[str, Any] | None = None
-    if attestation_requirement in {"required", "optional"}:
-        if len(attestation_candidates) != 1:
-            if attestation_requirement == "required" or len(attestation_candidates) > 1:
-                failures.append("release must contain exactly one release-evidence attestation")
-        else:
-            attestation = _normalize_asset(
-                attestation_candidates[0], "release evidence-attestation asset", failures
-            )
-            if attestation is not None:
-                expected_pattern = re.compile(
-                    re.escape(_attestation_prefix(version)) + r"[0-9a-f]{64}\.json"
-                )
-                if expected_pattern.fullmatch(attestation["name"]) is None:
-                    failures.append(
-                        "release evidence-attestation asset name must contain one full lowercase SHA-256"
-                    )
-    elif attestation_candidates:
-        failures.append("draft release already contains a release-evidence attestation")
-    return observation, attestation
+        return None, None, None
+    tag = subject["tag"]
+    named = [asset for asset in assets if type(asset) is dict and type(asset.get("name")) is str]
+    policies = [asset for asset in named if asset["name"].startswith(_policy_prefix(tag))]
+    zips = [asset for asset in named if asset["name"] == subject["zip"]["name"]]
+    evidences = [asset for asset in named if asset["name"].startswith(_evidence_prefix(tag))]
+    if len(policies) + len(zips) + len(evidences) != len(assets):
+        failures.append("release contains an unrecognized asset")
+    selected: list[dict[str, Any] | None] = []
+    for label, candidates, prefix in (
+        ("policy", policies, _policy_prefix(tag)),
+        ("zip", zips, None),
+    ):
+        if len(candidates) != 1:
+            failures.append(f"release must contain exactly one {label} asset")
+            selected.append(None)
+            continue
+        asset = _normalize_asset(candidates[0], f"release {label} asset", failures)
+        if asset is not None and prefix is not None and re.fullmatch(
+            re.escape(prefix) + r"[0-9a-f]{64}\.json", asset["name"]
+        ) is None:
+            failures.append(f"release {label} asset name must contain one full lowercase SHA-256")
+        selected.append(asset)
+    evidence_asset: dict[str, Any] | None = None
+    if evidence == "absent" and evidences:
+        failures.append("the release already contains an evidence asset")
+    elif len(evidences) > 1 or (evidence == "required" and len(evidences) != 1):
+        failures.append("release must contain exactly one evidence asset")
+    elif evidences and evidence != "absent":
+        evidence_asset = _normalize_asset(evidences[0], "release evidence asset", failures)
+        if evidence_asset is not None and re.fullmatch(
+            re.escape(_evidence_prefix(tag)) + r"[0-9a-f]{64}\.json", evidence_asset["name"]
+        ) is None:
+            failures.append("release evidence asset name must contain one full lowercase SHA-256")
+    return selected[0], selected[1], evidence_asset
 
 
-def select_release_from_collection(
-    collection_path: Path,
-    output_path: Path,
-    *,
-    expected_tag: str,
-    failures: list[str],
-) -> dict[str, Any] | None:
-    """Select one exact draft, mutable final, or immutable Release from a listing."""
-    document = _load_json_value(collection_path, "release collection", failures)
+def _flatten_collection(document: Any, failures: list[str]) -> list[Any] | None:
     if type(document) is not list:
         failures.append("release collection must be an array")
         return None
     releases: list[Any] = []
     for item in document:
-        if type(item) is list:
-            releases.extend(item)
-        else:
-            releases.append(item)
+        releases.extend(item if type(item) is list else [item])
+    return releases
+
+
+def select_release_from_collection(
+    collection_path: Path, output_path: Path, *, expected_tag: str, failures: list[str]
+) -> dict[str, Any] | None:
+    """Select one exact Release for the tag from a listing."""
+    releases = _flatten_collection(_load_json_value(collection_path, "release collection", failures), failures)
+    if releases is None:
+        return None
     candidates = [
-        release
-        for release in releases
-        if type(release) is dict and release.get("tag_name") == expected_tag
+        release for release in releases if type(release) is dict and release.get("tag_name") == expected_tag
     ]
     if len(candidates) != 1:
         failures.append(f"release collection must contain exactly one {expected_tag!r} Release")
         return None
-    selected = candidates[0]
-    if not _write_json(output_path, selected, failures):
+    if not _write_json(output_path, candidates[0], failures):
         return None
-    return selected
-
-
-def assert_release_absent_from_collection(
-    collection_path: Path,
-    plan: dict[str, Any],
-    failures: list[str],
-) -> None:
-    """Fail closed unless the frozen mutable Release disappeared after cleanup."""
-    if not _validate_plan(plan, failures):
-        return
-    document = _load_json_value(collection_path, "release collection", failures)
-    if type(document) is not list:
-        failures.append("release collection must be an array")
-        return
-    releases: list[Any] = []
-    for item in document:
-        if type(item) is list:
-            releases.extend(item)
-        else:
-            releases.append(item)
-    frozen_id = plan["release"]["id"]
-    frozen_tag = plan["subject"]["tag"]
-    for release in releases:
-        if type(release) is not dict:
-            failures.append("release collection contains a malformed entry")
-            continue
-        if release.get("id") == frozen_id or release.get("tag_name") == frozen_tag:
-            failures.append("compensating cleanup did not remove the frozen mutable Release")
+    return candidates[0]
 
 
 def prepare_release_plan(
-    metadata_path: Path,
-    *,
-    expected_version: str,
-    expected_tag: str,
-    expected_commit: str,
-    expected_tree: str,
-    failures: list[str],
+    metadata_path: Path, subject: dict[str, Any], failures: list[str]
 ) -> dict[str, Any] | None:
-    """Freeze one exact draft, mutable published, or immutable Release and its evidence."""
-    _validate_subject(
-        expected_version, expected_tag, expected_commit, expected_tree, failures
-    )
+    """Freeze one exact draft, mutable published, or immutable Release and its assets."""
     document = _load_json_object(metadata_path, "release metadata", failures)
     if document is None:
         return None
@@ -552,135 +343,62 @@ def prepare_release_plan(
             "release must be a mutable draft, published mutable Release, or immutable final Release"
         )
         return None
-    release = _inspect_release(
+    release = _inspect_release(document, subject, expected_phase=phase, failures=failures)
+    policy, archive, evidence = _select_assets(
         document,
-        version=expected_version,
-        tag=expected_tag,
-        commit=expected_commit,
-        expected_phase=phase,
+        subject,
+        evidence="optional" if phase == "draft" else "required",
         failures=failures,
     )
-    observation, attestation = _select_assets(
-        document,
-        version=expected_version,
-        attestation_requirement="optional" if phase == "draft" else "required",
-        failures=failures,
-    )
-    if release is None or observation is None or failures:
+    if release is None or policy is None or archive is None or failures:
         return None
     return {
         "schemaVersion": PLAN_SCHEMA_VERSION,
         "phase": phase,
         "release": release,
-        "subject": {
-            "version": expected_version,
-            "tag": expected_tag,
-            "commit": expected_commit,
-            "tree": expected_tree,
-        },
-        "observationAsset": observation,
-        "attestationAsset": attestation,
+        "subject": subject,
+        "policyAsset": policy,
+        "zipAsset": archive,
+        "evidenceAsset": evidence,
     }
 
 
-def _validate_plan(plan: dict[str, Any], failures: list[str]) -> bool:
-    if set(plan) != {
+def _validate_plan(plan: Any, failures: list[str]) -> bool:
+    if type(plan) is not dict or set(plan) != {
         "schemaVersion",
         "phase",
         "release",
         "subject",
-        "observationAsset",
-        "attestationAsset",
+        "policyAsset",
+        "zipAsset",
+        "evidenceAsset",
     }:
         failures.append("release evidence plan has unexpected or missing fields")
         return False
-    if plan.get("schemaVersion") != PLAN_SCHEMA_VERSION:
+    if plan["schemaVersion"] != PLAN_SCHEMA_VERSION:
         failures.append("release evidence plan schemaVersion is unsupported")
-    release = plan.get("release")
-    subject = plan.get("subject")
-    asset = plan.get("observationAsset")
-    attestation = plan.get("attestationAsset")
-    if plan.get("phase") not in {"draft", "published-mutable", "final"}:
+    if plan["phase"] not in {"draft", "published-mutable", "final"}:
         failures.append("release evidence plan phase is unsupported")
-    if type(release) is not dict or set(release) != {
-        "id",
-        "tag",
-        "targetCommit",
-        "name",
-        "notesSha256",
-    }:
-        failures.append("release evidence plan release binding is malformed")
-    if type(subject) is not dict or set(subject) != {"version", "tag", "commit", "tree"}:
-        failures.append("release evidence plan subject binding is malformed")
-    if type(asset) is not dict or set(asset) != {
-        "id",
-        "name",
-        "size",
-        "state",
-        "digest",
-        "createdAt",
-        "updatedAt",
-    }:
-        failures.append("release evidence plan asset binding is malformed")
-    if failures:
+    if not validate_subject(plan["subject"], failures):
         return False
-    _validate_subject(
-        subject["version"], subject["tag"], subject["commit"], subject["tree"], failures
-    )
-    if release["tag"] != subject["tag"] or release["targetCommit"] != subject["commit"]:
-        failures.append("release evidence plan release and subject bindings disagree")
-    if _require_positive_int(release.get("id"), "plan.release.id", failures) is None:
-        pass
-    if release.get("name") != subject.get("tag"):
-        failures.append("release evidence plan title does not match its tag")
-    if type(release.get("notesSha256")) is not str or DIGEST_PATTERN.fullmatch(
-        release["notesSha256"]
-    ) is None:
-        failures.append("release evidence plan notesSha256 is malformed")
-    normalized_asset = _normalize_asset(
-        {
-            "id": asset.get("id"),
-            "name": asset.get("name"),
-            "size": asset.get("size"),
-            "state": asset.get("state"),
-            "digest": asset.get("digest"),
-            "created_at": asset.get("createdAt"),
-            "updated_at": asset.get("updatedAt"),
-        },
-        "plan.observationAsset",
-        failures,
-    )
-    if normalized_asset is not None and normalized_asset != asset:
-        failures.append("release evidence plan asset binding is not canonical")
-    if attestation is not None:
-        if type(attestation) is not dict or set(attestation) != {
-            "id",
-            "name",
-            "size",
-            "state",
-            "digest",
-            "createdAt",
-            "updatedAt",
-        }:
-            failures.append("release evidence plan attestation binding is malformed")
-        else:
-            normalized_attestation = _normalize_asset(
-                {
-                    "id": attestation.get("id"),
-                    "name": attestation.get("name"),
-                    "size": attestation.get("size"),
-                    "state": attestation.get("state"),
-                    "digest": attestation.get("digest"),
-                    "created_at": attestation.get("createdAt"),
-                    "updated_at": attestation.get("updatedAt"),
-                },
-                "plan.attestationAsset",
-                failures,
-            )
-            if normalized_attestation is not None and normalized_attestation != attestation:
-                failures.append("release evidence plan attestation binding is not canonical")
-    if plan.get("phase") in {"published-mutable", "final"} and attestation is None:
-        failures.append("published release evidence plan requires one attestation binding")
+    subject = plan["subject"]
+    release = plan["release"]
+    if type(release) is not dict or release != {
+        "id": release.get("id") if type(release) is dict else None,
+        "tag": subject["tag"],
+        "targetCommit": subject["commit"],
+        "name": subject["tag"],
+        "notesSha256": subject["notesSha256"],
+    } or type(release.get("id")) is not int or release["id"] <= 0:
+        failures.append("release evidence plan release binding is malformed")
+    for field in ("policyAsset", "zipAsset", "evidenceAsset"):
+        asset = plan[field]
+        if asset is None and field == "evidenceAsset":
+            continue
+        if type(asset) is not dict or set(asset) != ASSET_KEYS:
+            failures.append(f"release evidence plan {field} binding is malformed")
+    if plan["phase"] != "draft" and plan["evidenceAsset"] is None:
+        failures.append("published release evidence plan requires one evidence binding")
     return not failures
 
 
@@ -691,151 +409,138 @@ def load_release_plan(path: Path, failures: list[str]) -> dict[str, Any] | None:
     return plan
 
 
+def exact_ref_object(
+    document: dict[str, Any], expected_ref: str, label: str, failures: list[str]
+) -> tuple[str, str] | None:
+    """Return the object type and ID of one exact GitHub Git reference."""
+    if document.get("ref") != expected_ref:
+        failures.append(f"{label} must equal {expected_ref!r}")
+    target = document.get("object")
+    if type(target) is not dict or target.get("type") not in {"commit", "tag"} or not _oid(target.get("sha")):
+        failures.append(f"{label} must point at one commit or tag object")
+        return None
+    return target["type"], target["sha"]
+
+
+def exact_ref_commit(
+    document: dict[str, Any], expected_ref: str, label: str, failures: list[str]
+) -> str | None:
+    """Return the commit of one exact lightweight branch reference."""
+    target = exact_ref_object(document, expected_ref, label, failures)
+    if target is None:
+        return None
+    if target[0] != "commit":
+        failures.append(f"{label} must point at a commit")
+        return None
+    return target[1]
+
+
+def _signature_valid(document: dict[str, Any] | None, commit: str, label: str, failures: list[str]) -> None:
+    if document is None:
+        return
+    try:
+        target = document["data"]["repository"]["object"]
+        signature = target["signature"]
+    except (KeyError, TypeError):
+        failures.append(f"GraphQL {label} signature response is malformed")
+        return
+    if target.get("oid") != commit:
+        failures.append(f"GraphQL {label} signature target must equal {commit}")
+    if (
+        type(signature) is not dict
+        or signature.get("isValid") is not True
+        or signature.get("state") != "VALID"
+        or signature.get("wasSignedByGitHub") is not True
+    ):
+        failures.append(f"GraphQL {label} signature must be VALID and made by GitHub")
+
+
 def verify_remote_release_preflight(
+    *,
     repository_metadata_path: Path,
     latest_release_path: Path,
     main_ref_path: Path,
     tag_ref_path: Path,
+    release_ref_path: Path,
     history_comparison_path: Path,
     commit_metadata_path: Path,
-    graphql_signature_path: Path,
-    *,
-    expected_commit: str,
-    expected_tag: str,
-    require_main_tip: bool,
+    commit_signature_path: Path,
+    release_signature_path: Path,
+    subject: dict[str, Any],
     failures: list[str],
 ) -> None:
-    """Fail closed unless exact live refs and GitHub signature still match."""
-    if OID_PATTERN.fullmatch(expected_commit) is None:
-        failures.append("preflight expected commit must be one lowercase 40-character Git SHA")
-        return
+    """Fail closed unless the live tag, release branch, history, and signatures match the subject."""
+    commit = subject["commit"]
+    tag = subject["tag"]
     repository = _load_json_object(repository_metadata_path, "repository metadata", failures)
     latest = _load_json_object(latest_release_path, "current GitHub Latest Release", failures)
     main_ref = _load_json_object(main_ref_path, "live main ref", failures)
     tag_ref = _load_json_object(tag_ref_path, "live release tag ref", failures)
-    comparison = _load_json_object(
-        history_comparison_path, "release-to-main history comparison", failures
-    )
-    commit_metadata = _load_json_object(
-        commit_metadata_path, "live release commit", failures
-    )
-    graphql = _load_json_object(
-        graphql_signature_path, "GraphQL commit signature", failures
-    )
+    release_ref = _load_json_object(release_ref_path, "live release branch ref", failures)
+    comparison = _load_json_object(history_comparison_path, "tag-to-main history comparison", failures)
+    commit_metadata = _load_json_object(commit_metadata_path, "live tagged commit", failures)
+    commit_signature = _load_json_object(commit_signature_path, "tagged commit signature", failures)
+    release_signature = _load_json_object(release_signature_path, "release commit signature", failures)
     if repository is not None and repository.get("default_branch") != "main":
         failures.append("repository default branch must remain main")
-    target_version = parse_production_release_tag(expected_tag)
-    if target_version is None:
-        failures.append(
-            "preflight expected tag must be one stable numeric production release tag"
-        )
     if latest is not None:
         latest_tag = latest.get("tag_name")
         latest_version = parse_production_release_tag(latest_tag)
         if latest.get("draft") is not False or latest.get("prerelease") is not False:
             failures.append("GitHub Latest must be one published stable Release")
         if latest_version is None:
-            failures.append("GitHub Latest must use one stable numeric production release tag")
-        elif target_version is not None:
-            if latest_tag != expected_tag and latest_version >= target_version:
-                failures.append("publication must not regress the GitHub Latest release version")
-    main_commit = (
+            failures.append("GitHub Latest must use one strict SemVer release tag")
+        elif latest_tag != tag and latest_version >= parse_production_release_tag(tag):
+            failures.append("publication must not regress the GitHub Latest release version")
+    if main_ref is not None:
         exact_ref_commit(main_ref, "refs/heads/main", "live main ref", failures)
-        if main_ref is not None
-        else None
-    )
-    tag_commit = (
-        exact_ref_commit(
-            tag_ref, f"refs/tags/{expected_tag}", "live release tag ref", failures
-        )
-        if tag_ref is not None
-        else None
-    )
-    if tag_commit is not None and tag_commit != expected_commit:
-        failures.append("live release tag ref must target the exact release commit")
-    if require_main_tip and main_commit is not None and main_commit != expected_commit:
-        failures.append("live main tip must equal the release commit before publication mutation")
-    if comparison is not None and main_commit is not None:
+    if tag_ref is not None:
+        target = exact_ref_object(tag_ref, f"refs/tags/{tag}", "live release tag ref", failures)
+        if target is not None and {"type": target[0], "sha": target[1]} != subject["tagObject"]:
+            failures.append("live release tag ref must still point at the subject tag object")
+    if release_ref is not None:
+        head = exact_ref_commit(release_ref, "refs/heads/release", "live release branch ref", failures)
+        if head is not None and head != subject["releaseCommit"]:
+            failures.append("live release branch head must be the subject release commit")
+    if comparison is not None:
         merge_base = comparison.get("merge_base_commit")
         base = comparison.get("base_commit")
         if (
             type(merge_base) is not dict
-            or merge_base.get("sha") != expected_commit
+            or merge_base.get("sha") != commit
             or type(base) is not dict
-            or base.get("sha") != expected_commit
+            or base.get("sha") != commit
             or comparison.get("status") not in {"ahead", "identical"}
         ):
-            failures.append("release commit must remain on the exact live main history")
+            failures.append("tagged commit must remain on the live main history")
     if commit_metadata is not None:
-        if commit_metadata.get("sha") != expected_commit:
-            failures.append("live release commit metadata must match the exact release commit")
+        if commit_metadata.get("sha") != commit:
+            failures.append("live tagged commit metadata must match the subject commit")
         commit_document = commit_metadata.get("commit")
-        verification = (
-            commit_document.get("verification") if type(commit_document) is dict else None
-        )
+        verification = commit_document.get("verification") if type(commit_document) is dict else None
         if type(verification) is not dict:
-            failures.append("REST release commit signature verification is missing")
+            failures.append("REST tagged commit signature verification is missing")
         elif verification.get("verified") is not True or verification.get("reason") != "valid":
-            failures.append("REST release commit signature must be verified with reason 'valid'")
-    if graphql is not None:
-        try:
-            commit = graphql["data"]["repository"]["object"]
-            signature = commit["signature"]
-        except (KeyError, TypeError):
-            failures.append("GraphQL tag target signature response is malformed")
-        else:
-            if commit.get("oid") != expected_commit:
-                failures.append("GraphQL signature target must equal the exact release commit")
-            if (
-                type(signature) is not dict
-                or signature.get("isValid") is not True
-                or signature.get("state") != "VALID"
-                or signature.get("wasSignedByGitHub") is not True
-            ):
-                failures.append("GraphQL signature must be VALID and made by GitHub")
+            failures.append("REST tagged commit signature must be verified with reason 'valid'")
+    _signature_valid(commit_signature, commit, "tagged commit", failures)
+    _signature_valid(release_signature, subject["releaseCommit"], "release commit", failures)
 
 
-def exact_ref_commit(
-    document: dict[str, Any],
-    expected_ref: str,
-    label: str,
-    failures: list[str],
-) -> str | None:
-    """Return the commit for one exact lightweight GitHub Git-reference object."""
-    if document.get("ref") != expected_ref:
-        failures.append(f"{label} must equal {expected_ref!r}")
-    ref_object = document.get("object")
-    if type(ref_object) is not dict:
-        failures.append(f"{label} object is missing")
-        return None
-    sha = ref_object.get("sha")
-    if ref_object.get("type") != "commit" or type(sha) is not str or OID_PATTERN.fullmatch(sha) is None:
-        failures.append(f"{label} must be one lightweight ref to a lowercase commit SHA")
-        return None
-    return sha
-
-
-def classify_publication_state(
-    plan: dict[str, Any],
-    metadata_path: Path,
-    failures: list[str],
-) -> str | None:
-    """Classify only an exact frozen, newly published Release as immutable or mutable."""
+def classify_publication_state(plan: dict[str, Any], metadata_path: Path, failures: list[str]) -> str | None:
+    """Classify only the exact frozen, newly published Release as immutable or mutable."""
     if not _validate_plan(plan, failures):
         return None
     document = _load_json_object(metadata_path, "post-publication release metadata", failures)
     if document is None:
         return None
-    release = plan["release"]
     subject = plan["subject"]
-    expected_fields = {
-        "id": release["id"],
+    for field, expected in {
+        "id": plan["release"]["id"],
         "tag_name": subject["tag"],
         "target_commitish": subject["commit"],
         "draft": False,
         "prerelease": False,
-    }
-    for field, expected in expected_fields.items():
+    }.items():
         if document.get(field) != expected:
             failures.append(f"post-publication release.{field} must equal {expected!r}")
     immutable = document.get("immutable")
@@ -846,12 +551,25 @@ def classify_publication_state(
     return "immutable" if immutable else "mutable"
 
 
-def _validate_local_asset(
-    path: Path,
-    metadata: dict[str, Any],
-    label: str,
-    failures: list[str],
-) -> str | None:
+def assert_release_absent_from_collection(
+    collection_path: Path, plan: dict[str, Any], failures: list[str]
+) -> None:
+    """Fail closed unless the frozen mutable Release disappeared after cleanup."""
+    if not _validate_plan(plan, failures):
+        return
+    releases = _flatten_collection(_load_json_value(collection_path, "release collection", failures), failures)
+    if releases is None:
+        return
+    for release in releases:
+        if type(release) is not dict:
+            failures.append("release collection contains a malformed entry")
+        elif release.get("id") == plan["release"]["id"] or release.get("tag_name") == plan["subject"]["tag"]:
+            failures.append("compensating cleanup did not remove the frozen mutable Release")
+
+
+def _validate_downloaded_asset(
+    path: Path, metadata: dict[str, Any], label: str, failures: list[str], *, named_digest: bool
+) -> bytes | None:
     try:
         payload = path.read_bytes()
     except OSError as error:
@@ -862,85 +580,105 @@ def _validate_local_asset(
         failures.append(f"{label} filename does not match the GitHub asset name")
     if len(payload) != metadata["size"]:
         failures.append(f"{label} byte count does not match the GitHub asset size")
-    filename_digest = metadata["name"].removesuffix(".json").rsplit("-", 1)[-1]
-    if filename_digest != digest:
+    if named_digest and metadata["name"].removesuffix(".json").rsplit("-", 1)[-1] != digest:
         failures.append(f"{label} filename SHA-256 does not match downloaded bytes")
-    github_digest = metadata["digest"]
-    if github_digest is not None and github_digest != f"sha256:{digest}":
+    if metadata["digest"] is not None and metadata["digest"] != f"sha256:{digest}":
         failures.append(f"{label} GitHub digest does not match downloaded bytes")
-    return digest
+    return payload
 
 
-def _attestation_document(plan: dict[str, Any], digest: str) -> dict[str, Any]:
+def _validate_artifacts(
+    plan: dict[str, Any], policy_path: Path, zip_path: Path, expected_zip_path: Path, failures: list[str]
+) -> None:
     subject = plan["subject"]
-    asset = plan["observationAsset"]
-    document = {
-        "asset": {
-            "githubDigest": asset["digest"],
-            "id": asset["id"],
-            "name": asset["name"],
-            "sha256": digest,
-            "size": asset["size"],
-        },
-        "kind": ATTESTATION_KIND,
+    policy = _validate_downloaded_asset(
+        policy_path, plan["policyAsset"], "downloaded policy asset", failures, named_digest=True
+    )
+    if policy is not None and policy != _canonical_json_bytes(release_policy_record(subject)):
+        failures.append("the policy asset must be exactly the record of the derived subject")
+    archive = _validate_downloaded_asset(
+        zip_path, plan["zipAsset"], "downloaded plugin zip", failures, named_digest=False
+    )
+    try:
+        expected = expected_zip_path.read_bytes()
+    except OSError as error:
+        failures.append(f"cannot read the locally built plugin zip: {error}")
+        return
+    if archive is not None and archive != expected:
+        failures.append("the plugin zip asset differs from the zip built from the tag")
+    if hashlib.sha256(expected).hexdigest() != subject["zip"]["sha256"] or len(expected) != subject["zip"]["size"]:
+        failures.append("the locally built plugin zip does not match the subject")
+
+
+def evidence_document(plan: dict[str, Any]) -> dict[str, Any]:
+    """Return the evidence record that binds the Release, its assets, and its subject."""
+    subject = plan["subject"]
+
+    def asset(binding: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "githubDigest": binding["digest"],
+            "id": binding["id"],
+            "name": binding["name"],
+            "size": binding["size"],
+        }
+
+    return {
+        "assets": {"policy": asset(plan["policyAsset"]), "zip": asset(plan["zipAsset"])},
+        "kind": EVIDENCE_KIND,
         "release": {
             "commit": subject["commit"],
             "id": plan["release"]["id"],
-            "notesSha256": plan["release"]["notesSha256"],
+            "notesSha256": subject["notesSha256"],
+            "previousTag": subject["previousTag"],
+            "releaseCommit": subject["releaseCommit"],
+            "releaseTree": subject["releaseTree"],
             "tag": subject["tag"],
+            "tagObject": subject["tagObject"],
             "tree": subject["tree"],
             "version": subject["version"],
+            "zipSha256": subject["zip"]["sha256"],
         },
-        "schemaVersion": ATTESTATION_SCHEMA_VERSION,
+        "runtimeContract": {"digest": subject["runtimeDigest"]},
+        "schemaVersion": EVIDENCE_SCHEMA_VERSION,
         "validation": {
             "scope": "release-policy-and-artifact-integrity",
             "status": "pass",
             "validator": ".ci/scripts/check-release-evidence.py",
         },
     }
-    return document
 
 
-def validate_downloaded_observation(
+def emit_evidence(
     plan: dict[str, Any],
-    asset_path: Path,
+    policy_path: Path,
+    zip_path: Path,
+    expected_zip_path: Path,
     *,
-    attestation_directory: Path,
+    evidence_directory: Path,
     failures: list[str],
     root: Path = REPOSITORY_ROOT,
 ) -> Path | None:
-    """Validate exact downloaded bytes and emit one deterministic attestation."""
+    """Validate the downloaded assets and write the deterministic evidence asset."""
     if not _validate_plan(plan, failures):
         return None
-    subject = plan["subject"]
-    digest = _validate_local_asset(
-        asset_path, plan["observationAsset"], "downloaded routing-observation asset", failures
-    )
-    validate_release_asset(asset_path, subject, failures, root=root)
-    if digest is None or failures:
+    _validate_artifacts(plan, policy_path, zip_path, expected_zip_path, failures)
+    if failures:
         return None
     try:
-        canonical_directory = attestation_directory.resolve(strict=True)
-        canonical_directory.relative_to(root.resolve())
-    except ValueError:
-        pass
+        directory = evidence_directory.resolve(strict=True)
     except OSError as error:
-        failures.append(f"cannot resolve attestation directory: {error}")
+        failures.append(f"cannot resolve evidence directory: {error}")
         return None
-    else:
-        failures.append("release attestation must be generated outside the checked-in tree")
+    if directory.is_relative_to(root.resolve()):
+        failures.append("release evidence must be generated outside the checked-in tree")
         return None
-    document = _attestation_document(plan, digest)
-    payload = _canonical_json_bytes(document)
-    attestation_digest = hashlib.sha256(payload).hexdigest()
-    path = canonical_directory / (
-        f"{_attestation_prefix(subject['version'])}{attestation_digest}.json"
-    )
+    payload = _canonical_json_bytes(evidence_document(plan))
+    path = directory / f"{_evidence_prefix(plan['subject']['tag'])}{hashlib.sha256(payload).hexdigest()}.json"
     try:
         with path.open("xb") as stream:
             stream.write(payload)
     except OSError as error:
-        failures.append(f"cannot write release attestation: {error}")
+        failures.append(f"cannot write release evidence: {error}")
         return None
     return path
 
@@ -948,140 +686,80 @@ def validate_downloaded_observation(
 def verify_release_snapshot(
     plan: dict[str, Any],
     metadata_path: Path,
-    asset_path: Path,
-    attestation_path: Path,
+    policy_path: Path,
+    zip_path: Path,
+    expected_zip_path: Path,
+    evidence_path: Path,
     *,
     final: bool,
     latest_metadata_path: Path | None,
     prepublish_metadata_path: Path | None,
     failures: list[str],
-    root: Path = REPOSITORY_ROOT,
 ) -> None:
-    """Revalidate the exact asset set before publication and after immutability."""
+    """Revalidate the exact Release and asset set before publication and after immutability."""
     if not _validate_plan(plan, failures):
         return
     subject = plan["subject"]
     document = _load_json_object(metadata_path, "current release metadata", failures)
     if document is None:
         return
-    release = _inspect_release(
-        document,
-        version=subject["version"],
-        tag=subject["tag"],
-        commit=subject["commit"],
-        expected_phase="final" if final else "draft",
-        failures=failures,
-    )
-    observation, attestation = _select_assets(
-        document,
-        version=subject["version"],
-        attestation_requirement="required",
-        failures=failures,
-    )
+    release = _inspect_release(document, subject, expected_phase="final" if final else "draft", failures=failures)
+    policy, archive, evidence = _select_assets(document, subject, evidence="required", failures=failures)
     if release is not None and release != plan["release"]:
-        failures.append("release identity changed after draft evidence was frozen")
-    if observation is not None and observation != plan["observationAsset"]:
-        failures.append("routing-observation asset identity or metadata changed after validation")
-    if (
-        plan["attestationAsset"] is not None
-        and attestation is not None
-        and attestation != plan["attestationAsset"]
-    ):
-        failures.append("release-attestation asset identity or metadata changed after validation")
-    digest = _validate_local_asset(
-        asset_path, plan["observationAsset"], "downloaded routing-observation asset", failures
-    )
-    validate_release_asset(asset_path, subject, failures, root=root)
-    if digest is not None:
-        expected_attestation = _attestation_document(plan, digest)
-        actual_attestation = _load_json_object(
-            attestation_path, "local release attestation", failures
-        )
-        if actual_attestation is not None and actual_attestation != expected_attestation:
-            failures.append("local release attestation does not match the validated binding")
-        if attestation is not None:
-            _validate_local_asset(
-                attestation_path, attestation, "release evidence-attestation asset", failures
-            )
-    if final:
-        if prepublish_metadata_path is None:
-            if plan["phase"] != "final":
-                failures.append("initial final verification requires pre-publication metadata")
-        else:
-            prepublish_document = _load_json_object(
-                prepublish_metadata_path, "pre-publication release metadata", failures
-            )
-            if prepublish_document is not None:
-                prepublish_release = _inspect_release(
-                    prepublish_document,
-                    version=subject["version"],
-                    tag=subject["tag"],
-                    commit=subject["commit"],
-                    expected_phase="draft",
-                    failures=failures,
-                )
-                prepublish_observation, prepublish_attestation = _select_assets(
-                    prepublish_document,
-                    version=subject["version"],
-                    attestation_requirement="required",
-                    failures=failures,
-                )
-                if prepublish_release is not None and prepublish_release != plan["release"]:
-                    failures.append("pre-publication release identity differs from the frozen draft")
-                if prepublish_observation != observation:
-                    failures.append("routing-observation asset changed during final publication")
-                if prepublish_attestation != attestation:
-                    failures.append("release attestation asset changed during final publication")
-        if latest_metadata_path is None:
-            failures.append("final verification requires latest-release metadata")
-        else:
-            latest = _load_json_object(
-                latest_metadata_path, "latest release metadata", failures
-            )
-            if latest is not None and (
-                latest.get("id") != plan["release"]["id"]
-                or latest.get("tag_name") != subject["tag"]
+        failures.append("release identity changed after the draft was frozen")
+    if policy is not None and policy != plan["policyAsset"]:
+        failures.append("policy asset identity or metadata changed after validation")
+    if archive is not None and archive != plan["zipAsset"]:
+        failures.append("plugin zip asset identity or metadata changed after validation")
+    if plan["evidenceAsset"] is not None and evidence is not None and evidence != plan["evidenceAsset"]:
+        failures.append("evidence asset identity or metadata changed after validation")
+    _validate_artifacts(plan, policy_path, zip_path, expected_zip_path, failures)
+    local = _load_json_object(evidence_path, "local release evidence", failures)
+    if local is not None and local != evidence_document(plan):
+        failures.append("the evidence asset does not match the validated binding")
+    if evidence is not None:
+        _validate_downloaded_asset(evidence_path, evidence, "release evidence asset", failures, named_digest=True)
+    if not final:
+        return
+    if prepublish_metadata_path is None:
+        if plan["phase"] != "final":
+            failures.append("initial final verification requires pre-publication metadata")
+    else:
+        prepublish = _load_json_object(prepublish_metadata_path, "pre-publication release metadata", failures)
+        if prepublish is not None:
+            if _inspect_release(prepublish, subject, expected_phase="draft", failures=failures) != plan["release"]:
+                failures.append("pre-publication release identity differs from the frozen draft")
+            if _select_assets(prepublish, subject, evidence="required", failures=failures) != (
+                policy,
+                archive,
+                evidence,
             ):
-                failures.append("GitHub Latest does not identify the immutable release")
+                failures.append("the asset set changed during final publication")
+    if latest_metadata_path is None:
+        failures.append("final verification requires latest-release metadata")
+    else:
+        latest = _load_json_object(latest_metadata_path, "latest release metadata", failures)
+        if latest is not None and (
+            latest.get("id") != plan["release"]["id"] or latest.get("tag_name") != subject["tag"]
+        ):
+            failures.append("GitHub Latest does not identify the immutable release")
 
 
-MARKETPLACE_CATALOGS = (
-    ("codex", ".agents/plugins/marketplace.json"),
-    ("claude-code", CLAUDE_MARKETPLACE_RELATIVE),
-)
-
-
-def render_marketplace_source(
-    plan: dict[str, Any], latest_metadata_path: Path, failures: list[str]
-) -> str | None:
-    """Render each host catalog's source for the verified Latest release.
-
-    Each catalog selects the plugin subtree through its own git-subdir path.
-    The publisher calls this after final evidence verification. This renderer
-    neither publishes a catalog nor changes a user's installation or settings.
-    """
-    if not _validate_plan(plan, failures):
-        return None
-    latest = _load_json_object(latest_metadata_path, "latest release metadata", failures)
-    if latest is None:
-        return None
+def render_summary(plan: dict[str, Any]) -> str:
     subject = plan["subject"]
-    release = _inspect_release(
-        latest,
-        version=subject["version"],
-        tag=subject["tag"],
-        commit=subject["commit"],
-        expected_phase="final",
-        failures=failures,
+    return (
+        f"## Published immutable {subject['tag']}\n\n"
+        "| Field | Value |\n| --- | --- |\n"
+        f"| Release | `{plan['release']['id']}` |\n"
+        f"| Tagged commit | `{subject['commit']}` |\n"
+        f"| `release` commit | `{subject['releaseCommit']}` |\n"
+        f"| Installed tree | `{subject['releaseTree']}` |\n"
+        f"| Plugin zip sha256 | `{subject['zip']['sha256']}` |\n"
+        f"| Runtime digest | `{subject['runtimeDigest']}` |\n"
+        f"| Notes sha256 | `{subject['notesSha256']}` |\n\n"
+        "Both marketplace catalogs select the `release` branch, so hosts see this "
+        "version on their next marketplace refresh.\n"
     )
-    if release != plan["release"]:
-        failures.append("GitHub Latest must still identify the verified release")
-    if failures:
-        return None
-    return json.dumps(
-        {path: catalog_source(subject["tag"], host) for host, path in MARKETPLACE_CATALOGS},
-        indent=2,
-    ) + "\n"
 
 
 def _scalar(value: Any) -> str | None:
@@ -1089,100 +767,77 @@ def _scalar(value: Any) -> str | None:
 
 
 def _check_publish_version_gate(text: str, label: str, failures: list[str]) -> None:
-    owners = re.findall(
-        r'^\s*\[\[ "\$RELEASE_TAG" =~ (?P<pattern>\S+) \]\]\s*$',
-        text,
-        flags=re.MULTILINE,
-    )
+    owners = re.findall(r'^\s*\[\[ "\$RELEASE_TAG" =~ (?P<pattern>\S+) \]\]\s*$', text, flags=re.MULTILINE)
     if owners != [PRODUCTION_RELEASE_TAG_ERE_PATTERN]:
-        failures.append(
-            f"{label} must contain one canonical stable production release tag gate"
-        )
+        failures.append(f"{label} must contain one canonical strict SemVer release tag gate")
         return
     pattern = re.compile(owners[0])
     for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
-        observed = pattern.fullmatch(f"v{version}") is not None
-        if observed != accepted:
-            failures.append(
-                f"{label} publication version gate disagrees with canonical case "
-                f"{case_id!r}"
-            )
+        if (pattern.fullmatch(f"v{version}") is not None) != accepted:
+            failures.append(f"{label} publication version gate disagrees with canonical case {case_id!r}")
 
 
 def check_publish_workflow_contract(
     failures: list[str], workflow_path: Path = WORKFLOW_PATH
 ) -> dict[str, Any] | None:
-    """Validate the narrow manually authorized draft-to-immutable workflow."""
+    """Validate the narrow dispatched draft-to-immutable workflow."""
+    label = display_path(workflow_path)
     try:
         payload = workflow_path.read_bytes()
         text = payload.decode("utf-8")
     except OSError as error:
-        failures.append(f"cannot read {display_path(workflow_path)}: {error}")
+        failures.append(f"cannot read {label}: {error}")
         return None
     except UnicodeDecodeError as error:
-        failures.append(f"invalid UTF-8 in {display_path(workflow_path)}: {error}")
+        failures.append(f"invalid UTF-8 in {label}: {error}")
         return None
-    label = display_path(workflow_path)
     try:
         document = parse_canonical_yaml_document(text, label)
     except CanonicalYamlError as error:
         failures.append(str(error))
         return None
     if set(document) != {"name", "on", "permissions", "concurrency", "jobs"}:
-        failures.append(
-            f"{label} must contain only name, on, permissions, concurrency, and jobs"
-        )
+        failures.append(f"{label} must contain only name, on, permissions, concurrency, and jobs")
     if _scalar(document.get("name")) != "Publish immutable release":
         failures.append(f"{label} must keep its exact public workflow name")
     triggers = document.get("on")
+    dispatch = triggers.get("workflow_dispatch") if isinstance(triggers, dict) else None
+    inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
+    tag_input = inputs.get("tag") if isinstance(inputs, dict) else None
     if not isinstance(triggers, dict) or set(triggers) != {"workflow_dispatch"}:
         failures.append(f"{label} must be workflow_dispatch-only")
-    else:
-        dispatch = triggers.get("workflow_dispatch")
-        inputs = dispatch.get("inputs") if isinstance(dispatch, dict) else None
-        tag_input = inputs.get("tag") if isinstance(inputs, dict) else None
-        if not isinstance(inputs, dict) or set(inputs) != {"tag"}:
-            failures.append(f"{label} must accept only one tag input")
-        if not isinstance(tag_input, dict) or {
-            key: _scalar(value) for key, value in tag_input.items()
-        } != {
-            "description": "Existing stable numeric release tag on signed main history",
-            "required": "true",
-            "type": "string",
-        }:
-            failures.append(f"{label} tag input contract changed")
-    permissions = document.get("permissions")
-    if not isinstance(permissions, dict) or set(permissions) != {"contents"}:
-        failures.append(f"{label} must grant only contents permission")
-    elif _scalar(permissions.get("contents")) != "write":
-        failures.append(f"{label} requires exactly contents: write")
-    concurrency = document.get("concurrency")
-    if not isinstance(concurrency, dict) or {
-        key: _scalar(value) for key, value in concurrency.items()
+    elif not isinstance(inputs, dict) or set(inputs) != {"tag"} or not isinstance(tag_input, dict) or {
+        key: _scalar(value) for key, value in tag_input.items()
     } != {
+        "description": "Existing strict SemVer release tag whose release branch commit is staged",
+        "required": "true",
+        "type": "string",
+    }:
+        failures.append(f"{label} must accept exactly one tag input")
+    permissions = document.get("permissions")
+    if not isinstance(permissions, dict) or {key: _scalar(value) for key, value in permissions.items()} != {
+        "contents": "write"
+    }:
+        failures.append(f"{label} must grant exactly contents: write")
+    concurrency = document.get("concurrency")
+    if not isinstance(concurrency, dict) or {key: _scalar(value) for key, value in concurrency.items()} != {
         "group": "publish-immutable-release",
         "cancel-in-progress": "false",
     }:
         failures.append(f"{label} must serialize all Latest publication without cancellation")
     jobs = document.get("jobs")
     job = jobs.get("publish-immutable-release") if isinstance(jobs, dict) else None
-    if not isinstance(jobs, dict) or set(jobs) != {"publish-immutable-release"}:
-        failures.append(f"{label} must declare only publish-immutable-release")
-    if not isinstance(job, dict):
-        failures.append(f"{label} publish-immutable-release job is malformed")
+    if not isinstance(jobs, dict) or set(jobs) != {"publish-immutable-release"} or not isinstance(job, dict):
+        failures.append(f"{label} must declare only the publish-immutable-release job")
     else:
         if set(job) != {"if", "runs-on", "timeout-minutes", "env", "steps"}:
             failures.append(f"{label} publication job contains unexpected fields")
         if _scalar(job.get("runs-on")) != "ubuntu-24.04":
             failures.append(f"{label} must use the fixed ubuntu-24.04 runner")
-        if _scalar(job.get("timeout-minutes")) != "15":
-            failures.append(f"{label} must keep the 15-minute timeout")
         if _scalar(job.get("if")) != "github.ref == format('refs/tags/{0}', inputs.tag)":
             failures.append(f"{label} must run only when dispatched from the exact input tag")
         env = job.get("env")
-        if not isinstance(env, dict) or {
-            key: _scalar(value) for key, value in env.items()
-        } != {
+        if not isinstance(env, dict) or {key: _scalar(value) for key, value in env.items()} != {
             "GH_TOKEN": "${{ github.token }}",
             "RELEASE_TAG": "${{ inputs.tag }}",
             "GITHUB_API_VERSION": "2026-03-10",
@@ -1191,145 +846,70 @@ def check_publish_workflow_contract(
         steps = job.get("steps")
         if not isinstance(steps, list) or len(steps) != 3:
             failures.append(f"{label} must contain exactly checkout, Python, and publication steps")
-        else:
-            expected_steps = (
-                {
-                    "name": "Check out the authorized release tag commit",
-                    "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
-                    "with": {
-                        "ref": "${{ github.sha }}",
-                        "persist-credentials": "false",
-                        "fetch-depth": "0",
-                    },
-                },
-                {
-                    "name": "Set up Python",
-                    "uses": "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
-                    "with": {"python-version": "3.14.7"},
-                },
-            )
-            for step, expected in zip(steps[:2], expected_steps):
-                if not isinstance(step, dict) or {
-                    key: (
-                        {nested: _scalar(value) for nested, value in current.items()}
-                        if isinstance(current, dict)
-                        else _scalar(current)
-                    )
-                    for key, current in step.items()
-                } != expected:
-                    failures.append(f"{label} pinned setup step contract changed")
-            publication_step = steps[2]
-            if not isinstance(publication_step, dict) or {
-                key: _scalar(value) for key, value in publication_step.items()
-            } != {
-                "name": "Validate evidence and publish the immutable release",
-                "shell": "bash",
-                "run": "|",
-            }:
-                failures.append(f"{label} publication step envelope changed")
     required_anchors = (
         "uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
         "ref: ${{ github.sha }}",
         "persist-credentials: false",
         "fetch-depth: 0",
         "uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
-        'python-version: "3.14.7"',
-        '[[ "$RELEASE_TAG" =~ ^v',
-        'git rev-parse "refs/tags/${RELEASE_TAG}^{commit}"',
+        'python3 -B .ci/scripts/release.py subject',
         "git/ref/heads/main",
+        "git/ref/heads/release",
         "git/ref/tags/$RELEASE_TAG",
-        ".ci/scripts/check-release-evidence.py ref-commit",
-        "compare/$commit...$main_sha",
-        "commits/$commit",
         ".ci/scripts/check-release-evidence.py preflight",
         ".ci/scripts/check-release-evidence.py select",
         ".ci/scripts/check-release-evidence.py prepare",
-        "releases/assets/$observation_id",
         ".ci/scripts/check-release-evidence.py validate",
         "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets",
         ".ci/scripts/check-release-evidence.py verify",
-        'draft=false',
-        'make_latest=true',
+        "draft=false",
+        "make_latest=true",
         ".ci/scripts/check-release-evidence.py publication-state",
-        'test "$release_phase" = "published-mutable"',
-        "remote_preflight draft-mutation true",
         "gh api --method DELETE",
         ".ci/scripts/check-release-evidence.py assert-absent",
-        "releases/latest",
         "--final",
-        ".ci/scripts/check-release-evidence.py render-marketplace",
-        '--summary >> "$GITHUB_STEP_SUMMARY"',
+        ".ci/scripts/check-release-evidence.py summary",
     )
     for anchor in required_anchors:
         if anchor not in text:
             failures.append(f"{label} is missing required publication anchor {anchor!r}")
     _check_publish_version_gate(text, label, failures)
-    if 'GITHUB_API_VERSION: "2026-03-10"' not in text:
-        failures.append(f"{label} must pin GitHub REST API version 2026-03-10")
     if hashlib.sha256(payload).hexdigest() != PUBLISH_WORKFLOW_SHA256:
         failures.append(f"{label} complete publication command contract changed")
-    for forbidden in (
-        "pull_request:",
-        "pull_request_target:",
-        "schedule:",
-        "${{ secrets.",
-        "immutable-releases",
-        "--clobber",
-        "force",
-    ):
+    for forbidden in ("pull_request", "schedule:", "${{ secrets.", "--clobber", "force"):
         if forbidden in text:
             failures.append(f"{label} exposes forbidden publication surface {forbidden!r}")
     return document
 
 
-def _add_subject_arguments(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--expected-version", required=True)
-    parser.add_argument("--expected-tag", required=True)
-    parser.add_argument("--expected-commit", required=True)
-    parser.add_argument("--expected-tree", required=True)
-
-
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    render_body = commands.add_parser(
-        "render-body", help="render the exact future GitHub Release body"
-    )
-    render_body.add_argument("--expected-version", required=True)
-    render_policy = commands.add_parser(
-        "render-policy", help="render the release repository-verification policy"
-    )
-    _add_subject_arguments(render_policy)
-    marketplace = commands.add_parser(
-        "render-marketplace", help="render the verified Latest release's marketplace source entry"
-    )
-    marketplace.add_argument("--plan", type=Path, required=True)
-    marketplace.add_argument("--latest-release-metadata", type=Path, required=True)
-    marketplace.add_argument("--summary", action="store_true", help="render a workflow handoff")
+    ref_commit = commands.add_parser("ref-commit", help="emit the commit of one exact branch ref")
+    ref_commit.add_argument("--ref-metadata", type=Path, required=True)
+    ref_commit.add_argument("--expected-ref", required=True)
+    preflight = commands.add_parser("preflight", help="verify the live refs, history, and signatures")
+    for option in (
+        "--repository-metadata",
+        "--latest-release-metadata",
+        "--main-ref-metadata",
+        "--tag-ref-metadata",
+        "--release-ref-metadata",
+        "--history-comparison",
+        "--commit-metadata",
+        "--commit-signature",
+        "--release-signature",
+        "--subject",
+    ):
+        preflight.add_argument(option, type=Path, required=True)
     select = commands.add_parser("select", help="select one exact Release from a listing")
     select.add_argument("--release-collection", type=Path, required=True)
     select.add_argument("--release-output", type=Path, required=True)
     select.add_argument("--expected-tag", required=True)
-    preflight = commands.add_parser("preflight", help="verify exact live release refs and target")
-    preflight.add_argument("--repository-metadata", type=Path, required=True)
-    preflight.add_argument("--latest-release-metadata", type=Path, required=True)
-    preflight.add_argument("--main-ref-metadata", type=Path, required=True)
-    preflight.add_argument("--tag-ref-metadata", type=Path, required=True)
-    preflight.add_argument("--history-comparison", type=Path, required=True)
-    preflight.add_argument("--commit-metadata", type=Path, required=True)
-    preflight.add_argument("--graphql-signature", type=Path, required=True)
-    preflight.add_argument("--expected-commit", required=True)
-    preflight.add_argument("--expected-tag", required=True)
-    preflight.add_argument("--require-main-tip", action="store_true")
-    ref_commit = commands.add_parser(
-        "ref-commit", help="emit the commit for one exact lightweight GitHub ref"
-    )
-    ref_commit.add_argument("--ref-metadata", type=Path, required=True)
-    ref_commit.add_argument("--expected-ref", required=True)
     prepare = commands.add_parser("prepare", help="freeze one exact Release and its assets")
     prepare.add_argument("--release-metadata", type=Path, required=True)
     prepare.add_argument("--plan-output", type=Path, required=True)
-    _add_subject_arguments(prepare)
+    prepare.add_argument("--subject", type=Path, required=True)
     emit = commands.add_parser("emit", help="emit one allowlisted plan field")
     emit.add_argument("--plan", type=Path, required=True)
     emit.add_argument(
@@ -1337,151 +917,99 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         choices=(
             "release-id",
             "phase",
-            "asset-id",
-            "asset-name",
-            "attestation-present",
-            "attestation-id",
-            "attestation-name",
+            "policy-id",
+            "policy-name",
+            "zip-id",
+            "zip-name",
+            "evidence-present",
+            "evidence-id",
+            "evidence-name",
         ),
         required=True,
     )
-    validate = commands.add_parser("validate", help="validate downloaded asset bytes")
-    validate.add_argument("--plan", type=Path, required=True)
-    validate.add_argument("--asset", type=Path, required=True)
-    validate.add_argument("--attestation-directory", type=Path, required=True)
-    verify = commands.add_parser("verify", help="verify pre-publish or final release state")
-    verify.add_argument("--plan", type=Path, required=True)
-    verify.add_argument("--release-metadata", type=Path, required=True)
-    verify.add_argument("--asset", type=Path, required=True)
-    verify.add_argument("--attestation", type=Path, required=True)
-    verify.add_argument("--final", action="store_true")
-    verify.add_argument("--latest-release-metadata", type=Path)
-    verify.add_argument("--prepublish-release-metadata", type=Path)
-    publication_state = commands.add_parser(
-        "publication-state",
-        help="classify one exact post-publication Release for bounded compensation",
-    )
-    publication_state.add_argument("--plan", type=Path, required=True)
-    publication_state.add_argument("--release-metadata", type=Path, required=True)
-    absent = commands.add_parser(
-        "assert-absent", help="verify bounded cleanup removed the frozen mutable Release"
-    )
+    for name in ("validate", "verify"):
+        command = commands.add_parser(name)
+        command.add_argument("--plan", type=Path, required=True)
+        command.add_argument("--policy", type=Path, required=True)
+        command.add_argument("--zip", type=Path, required=True)
+        command.add_argument("--expected-zip", type=Path, required=True)
+        if name == "validate":
+            command.add_argument("--evidence-directory", type=Path, required=True)
+        else:
+            command.add_argument("--release-metadata", type=Path, required=True)
+            command.add_argument("--evidence", type=Path, required=True)
+            command.add_argument("--final", action="store_true")
+            command.add_argument("--latest-release-metadata", type=Path)
+            command.add_argument("--prepublish-release-metadata", type=Path)
+    state = commands.add_parser("publication-state", help="classify one exact post-publication Release")
+    state.add_argument("--plan", type=Path, required=True)
+    state.add_argument("--release-metadata", type=Path, required=True)
+    absent = commands.add_parser("assert-absent", help="verify cleanup removed the frozen mutable Release")
     absent.add_argument("--plan", type=Path, required=True)
     absent.add_argument("--release-collection", type=Path, required=True)
+    summary = commands.add_parser("summary", help="render the publication job summary")
+    summary.add_argument("--plan", type=Path, required=True)
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     failures: list[str] = []
-    if args.command == "render-body":
-        if args.expected_version != RELEASE_VERSION:
-            failures.append("release body version must match the current Codex manifest")
-        else:
-            body = render_release_body(args.expected_version, failures)
-            if body is not None and not failures:
-                sys.stdout.write(body)
-    elif args.command == "render-policy":
-        subject = {
-            "version": args.expected_version,
-            "tag": args.expected_tag,
-            "commit": args.expected_commit,
-            "tree": args.expected_tree,
-        }
-        _validate_subject(*subject.values(), failures)
-        if not failures:
-            sys.stdout.buffer.write(_canonical_json_bytes(release_policy_record(subject)))
-    elif args.command == "render-marketplace":
-        plan = load_release_plan(args.plan, failures)
-        if plan is not None:
-            source = render_marketplace_source(plan, args.latest_release_metadata, failures)
-            if source is not None and not failures:
-                if args.summary:
-                    sys.stdout.write(
-                        "## Marketplace publication pending\n\n"
-                        "Apply each catalog's source below to the axiom entry in "
-                        "`.agents/plugins/marketplace.json` and `.claude-plugin/marketplace.json` "
-                        "through the existing signed PR process. Recheck GitHub Latest before "
-                        "merging and verify both merged catalogs. Until then, both catalogs "
-                        "retain their previous version. "
-                        "See [the catalog publication procedure]"
-                        "(https://github.com/wheakerd/axiom/blob/main/docs/en/maintainers/"
-                        "release-documentation.md#marketplace-publication).\n\n"
-                        f"```json\n{source}```\n"
-                    )
-                else:
-                    sys.stdout.write(source)
-    elif args.command == "select":
-        select_release_from_collection(
-            args.release_collection,
-            args.release_output,
-            expected_tag=args.expected_tag,
-            failures=failures,
-        )
-    elif args.command == "preflight":
-        verify_remote_release_preflight(
-            args.repository_metadata,
-            args.latest_release_metadata,
-            args.main_ref_metadata,
-            args.tag_ref_metadata,
-            args.history_comparison,
-            args.commit_metadata,
-            args.graphql_signature,
-            expected_commit=args.expected_commit,
-            expected_tag=args.expected_tag,
-            require_main_tip=args.require_main_tip,
-            failures=failures,
-        )
-    elif args.command == "ref-commit":
+    if args.command == "ref-commit":
         document = _load_json_object(args.ref_metadata, "GitHub ref metadata", failures)
         if document is not None:
-            commit = exact_ref_commit(
-                document,
-                args.expected_ref,
-                "GitHub ref metadata",
-                failures,
-            )
+            commit = exact_ref_commit(document, args.expected_ref, "GitHub ref metadata", failures)
             if commit is not None and not failures:
                 print(commit)
-    elif args.command == "prepare":
-        plan = prepare_release_plan(
-            args.release_metadata,
-            expected_version=args.expected_version,
-            expected_tag=args.expected_tag,
-            expected_commit=args.expected_commit,
-            expected_tree=args.expected_tree,
-            failures=failures,
+    elif args.command == "preflight":
+        subject = load_subject(args.subject, failures)
+        if subject is not None:
+            verify_remote_release_preflight(
+                repository_metadata_path=args.repository_metadata,
+                latest_release_path=args.latest_release_metadata,
+                main_ref_path=args.main_ref_metadata,
+                tag_ref_path=args.tag_ref_metadata,
+                release_ref_path=args.release_ref_metadata,
+                history_comparison_path=args.history_comparison,
+                commit_metadata_path=args.commit_metadata,
+                commit_signature_path=args.commit_signature,
+                release_signature_path=args.release_signature,
+                subject=subject,
+                failures=failures,
+            )
+    elif args.command == "select":
+        select_release_from_collection(
+            args.release_collection, args.release_output, expected_tag=args.expected_tag, failures=failures
         )
-        if plan is not None and not failures:
-            _write_json(args.plan_output, plan, failures)
+    elif args.command == "prepare":
+        subject = load_subject(args.subject, failures)
+        if subject is not None:
+            plan = prepare_release_plan(args.release_metadata, subject, failures)
+            if plan is not None and not failures:
+                _write_json(args.plan_output, plan, failures)
     elif args.command == "emit":
         plan = load_release_plan(args.plan, failures)
         if plan is not None:
-            values = {
-                "release-id": plan["release"]["id"],
-                "phase": plan["phase"],
-                "asset-id": plan["observationAsset"]["id"],
-                "asset-name": plan["observationAsset"]["name"],
-                "attestation-present": (
-                    "true" if plan["attestationAsset"] is not None else "false"
-                ),
-            }
-            if args.field in {"attestation-id", "attestation-name"}:
-                attestation = plan["attestationAsset"]
-                if attestation is None:
-                    failures.append("release evidence plan has no attestation asset")
-                else:
-                    print(attestation[args.field.removeprefix("attestation-")])
+            field = args.field
+            if field == "release-id":
+                print(plan["release"]["id"])
+            elif field == "phase":
+                print(plan["phase"])
+            elif field == "evidence-present":
+                print("true" if plan["evidenceAsset"] is not None else "false")
             else:
-                print(values[args.field])
+                kind, attribute = field.split("-", 1)
+                binding = plan[f"{kind}Asset"]
+                if binding is None:
+                    failures.append(f"release evidence plan has no {kind} asset")
+                else:
+                    print(binding[attribute])
     elif args.command == "validate":
         plan = load_release_plan(args.plan, failures)
         if plan is not None:
-            path = validate_downloaded_observation(
-                plan,
-                args.asset,
-                attestation_directory=args.attestation_directory,
-                failures=failures,
+            path = emit_evidence(
+                plan, args.policy, args.zip, args.expected_zip,
+                evidence_directory=args.evidence_directory, failures=failures,
             )
             if path is not None and not failures:
                 print(path)
@@ -1491,8 +1019,10 @@ def main(argv: list[str] | None = None) -> int:
             verify_release_snapshot(
                 plan,
                 args.release_metadata,
-                args.asset,
-                args.attestation,
+                args.policy,
+                args.zip,
+                args.expected_zip,
+                args.evidence,
                 final=args.final,
                 latest_metadata_path=args.latest_release_metadata,
                 prepublish_metadata_path=args.prepublish_release_metadata,
@@ -1507,11 +1037,11 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "assert-absent":
         plan = load_release_plan(args.plan, failures)
         if plan is not None:
-            assert_release_absent_from_collection(
-                args.release_collection,
-                plan,
-                failures,
-            )
+            assert_release_absent_from_collection(args.release_collection, plan, failures)
+    elif args.command == "summary":
+        plan = load_release_plan(args.plan, failures)
+        if plan is not None:
+            sys.stdout.write(render_summary(plan))
     if failures:
         print("Release evidence validation failed:", file=sys.stderr)
         for failure in failures:

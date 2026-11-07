@@ -1,16 +1,11 @@
-"""Repository layout, skill, and release-surface policy."""
+"""Repository layout, skill, and governance policy."""
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-from .context import (
-    RELEASE_VERSION,
-    REPOSITORY_ROOT,
-    display_path,
-)
-from .release_evidence import render_release_body
+from .context import REPOSITORY_ROOT, display_path
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document, parse_skill_frontmatter_document
 
 REQUIRED_PUBLIC_FILES = (
@@ -32,20 +27,16 @@ REQUIRED_PUBLIC_FILES = (
     "docs/en/compatibility.md",
     "docs/en/repository-governance.md",
     "docs/en/runtime-identity.md",
-    "CHANGELOG.md",
     "CONTRIBUTING.md",
-    ".ci/runtime-identity.json",
     ".ci/scripts/check-documentation.py",
     ".ci/scripts/check-runtime-identity.py",
     ".ci/scripts/check-release-evidence.py",
-    ".ci/scripts/create-release-tag.py",
     ".ci/scripts/render-release-facts.py",
-    ".ci/scripts/release-pipeline.py",
+    ".ci/scripts/release.py",
     ".ci/scripts/build-listing-variant.py",
     ".ci/axiom_validation/runtime-contract-inputs-v4.json",
     ".github/workflows/publish-immutable-release.yml",
-    ".github/workflows/create-protected-release-tag.yml",
-    ".github/workflows/release-pipeline.yml",
+    ".github/workflows/release.yml",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
     ".github/pull_request_template.md",
@@ -263,19 +254,6 @@ def check_repository_governance_contract(failures: list[str]) -> int:
     owner_count = check_critical_path_owners(codeowners_text, failures)
     check_critical_path_targets(failures)
     return owner_count
-
-
-def check_release_version_surfaces(failures: list[str]) -> None:
-    """Require the current version's changelog entry and a Release body it renders."""
-    changelog_path = REPOSITORY_ROOT / "CHANGELOG.md"
-    try:
-        changelog = changelog_path.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read {display_path(changelog_path)}: {error}")
-        return
-    if f"## {RELEASE_VERSION} - " not in changelog:
-        failures.append(f"CHANGELOG.md has no entry heading for {RELEASE_VERSION}")
-    render_release_body(RELEASE_VERSION, failures)
 
 
 def check_packaged_skills(failures: list[str]) -> None:

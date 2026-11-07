@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  # A strict SemVer tag vX.Y.Z on a main commit releases that version. Every
+  # gate runs before the first write; a failure after the tag exists leaves no
+  # Release, and the next attempt uses the next version.
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+    steps:
+      - name: Check out the tagged commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14.7"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+          package-manager-cache: false
+
+      - name: Gate, build, and publish the release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          python3 -B .ci/scripts/release.py run
+          --repository "$GITHUB_REPOSITORY"
+          --tag "$RELEASE_TAG"

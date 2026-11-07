@@ -1,4 +1,4 @@
-"""Focused tests for the installed-runtime identity."""
+"""Focused tests for the installed-runtime digest generator."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ import unittest
 from pathlib import Path
 
 from axiom_validation.context import REPOSITORY_ROOT
+from axiom_validation.release import stamp_manifest
 from axiom_validation.runtime_identity import (
     INPUT_MANIFEST_RELATIVE,
-    RUNTIME_IDENTITY_SURFACES,
     check_runtime_identity,
     compute_runtime_contract,
     load_json_document,
@@ -31,9 +31,10 @@ class RuntimeIdentityTests(unittest.TestCase):
         if manifest is None or failures:
             raise AssertionError(failures)
         cls.manifest = manifest
-        cls.expected_record_count = json.loads(
-            (REPOSITORY_ROOT / ".ci/runtime-identity.json").read_text(encoding="utf-8")
-        )["runtimeContract"]["recordCount"]
+        contract = compute_runtime_contract(REPOSITORY_ROOT, manifest, failures)
+        if contract is None or failures:
+            raise AssertionError(failures)
+        cls.expected_record_count = contract.record_count
 
     def copy_installed_surfaces(self, target: Path) -> None:
         for relative in self.manifest["installedSurfaceRoots"]:
@@ -45,27 +46,41 @@ class RuntimeIdentityTests(unittest.TestCase):
             else:
                 shutil.copy2(source, destination)
 
-    def copy_identity_fixture(self, target: Path) -> None:
+    def copy_input_fixture(self, target: Path) -> None:
         self.copy_installed_surfaces(target)
-        for relative in (
-            INPUT_MANIFEST_RELATIVE,
-            ".ci/runtime-identity.json",
-            *RUNTIME_IDENTITY_SURFACES,
-        ):
-            destination = target / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(REPOSITORY_ROOT / relative, destination)
+        destination = target / INPUT_MANIFEST_RELATIVE
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(REPOSITORY_ROOT / INPUT_MANIFEST_RELATIVE, destination)
 
     def compute(self, root: Path, manifest: dict | None = None):
         failures: list[str] = []
         result = compute_runtime_contract(root, manifest or self.manifest, failures)
         return result, failures
 
-    def test_checked_in_identity_and_rendered_surface(self):
+    def test_checked_in_input_policy_classifies_every_installed_file(self):
         failures: list[str] = []
         record_count = check_runtime_identity(failures)
         self.assertEqual(self.expected_record_count, record_count)
+        self.assertGreater(record_count, 0)
         self.assertEqual([], failures)
+
+    def test_stamping_the_release_version_leaves_the_digest_unchanged(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.copy_installed_surfaces(root)
+            for relative in ("plugin/.codex-plugin/plugin.json", "plugin/.claude-plugin/plugin.json"):
+                path = root / relative
+                document = json.loads(path.read_text(encoding="utf-8"))
+                document.pop("version", None)
+                path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            versionless, failures = self.compute(root)
+            self.assertEqual([], failures)
+            for relative in ("plugin/.codex-plugin/plugin.json", "plugin/.claude-plugin/plugin.json"):
+                path = root / relative
+                path.write_bytes(stamp_manifest(path.read_bytes(), "1.2.3", relative))
+            stamped, stamped_failures = self.compute(root)
+            self.assertEqual([], stamped_failures)
+            self.assertEqual(versionless.digest, stamped.digest)
 
     def test_each_installed_behavior_class_changes_the_digest(self):
         mutations = {
@@ -122,10 +137,10 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.assertEqual([], windows_failures)
             self.assertEqual(baseline.digest, windows_checkout.digest)
 
-    def test_identity_manifest_binding_is_stable_for_crlf_checkout(self):
+    def test_input_policy_is_stable_for_crlf_checkout(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            self.copy_identity_fixture(root)
+            self.copy_input_fixture(root)
             manifest_path = root / INPUT_MANIFEST_RELATIVE
             manifest_text = manifest_path.read_text(encoding="utf-8")
             manifest_path.write_bytes(manifest_text.replace("\n", "\r\n").encode("utf-8"))
@@ -134,56 +149,6 @@ class RuntimeIdentityTests(unittest.TestCase):
             record_count = check_runtime_identity(failures, root=root)
             self.assertEqual(self.expected_record_count, record_count)
             self.assertEqual([], failures)
-
-    def test_identity_rejects_values_that_disagree_with_the_tree(self):
-        mutations = {
-            "unknown-field": (
-                lambda identity: identity.update(repositoryPolicyRevision=1),
-                "contains unknown fields: repositoryPolicyRevision",
-            ),
-            "other-version": (
-                lambda identity: identity.update(pluginVersion="9.9.9"),
-                "pluginVersion must match the Codex plugin manifest",
-            ),
-            "other-digest": (
-                lambda identity: identity["runtimeContract"].update(digest="sha256:" + "0" * 64),
-                "runtimeContract.digest does not match computed inputs",
-            ),
-        }
-        for label, (mutate, expected) in mutations.items():
-            with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary)
-                self.copy_identity_fixture(root)
-                path = root / ".ci/runtime-identity.json"
-                identity = json.loads(path.read_text(encoding="utf-8"))
-                mutate(identity)
-                path.write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
-                failures: list[str] = []
-                check_runtime_identity(failures, root=root, check_surfaces=False)
-                self.assertTrue(any(expected in failure for failure in failures), failures)
-
-    def test_identity_reference_rejects_stale_values_and_missing_markers(self):
-        for mutation in ("stale-value", "missing-marker"):
-            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary)
-                self.copy_identity_fixture(root)
-                reference = root / "docs/en/runtime-identity.md"
-                original = reference.read_text(encoding="utf-8")
-                if mutation == "stale-value":
-                    identity = json.loads((root / ".ci/runtime-identity.json").read_text())
-                    changed = original.replace(
-                        f"`pluginVersion`: `{identity['pluginVersion']}`",
-                        "`pluginVersion`: `0.0.0`",
-                    )
-                    expected = "docs/en/runtime-identity.md runtime identity block is stale"
-                else:
-                    changed = original.replace("<!-- runtime-identity:current:start -->", "")
-                    expected = "runtime-identity markers must each appear exactly once"
-                self.assertNotEqual(original, changed)
-                reference.write_text(changed, encoding="utf-8")
-                failures = []
-                check_runtime_identity(failures, root=root)
-                self.assertTrue(any(expected in failure for failure in failures), failures)
 
     def test_missing_duplicate_unordered_escaping_symlink_and_unclassified_inputs_fail(self):
         fixtures = (

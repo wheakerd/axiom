@@ -3,25 +3,26 @@
 from __future__ import annotations
 
 import ast
-import json
 import subprocess
 import sys
 import unittest
 from pathlib import Path
 
-from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
+from axiom_validation.context import EXPECTED_RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.documentation import discover_markdown
 from axiom_validation.manifests import JSON_FILES
 from axiom_validation.repository_policy import EXPECTED_DIRECT_SKILLS, REQUIRED_PUBLIC_FILES
+from axiom_validation.runtime_identity import check_runtime_identity
 
 
 # Totals that can change with a release (installed inputs, skills) come from the
 # production owners the aggregate reports, so a release that changes no validator
 # behavior needs no edit here. Fixture totals stay literal: losing a fixture must
 # fail this test.
-RUNTIME_INPUT_COUNT = json.loads(
-    (REPOSITORY_ROOT / ".ci" / "runtime-identity.json").read_text(encoding="utf-8")
-)["runtimeContract"]["recordCount"]
+RUNTIME_INPUT_COUNT = check_runtime_identity([])
+TREE_VERSION = (
+    f"release version {EXPECTED_RELEASE_VERSION}" if EXPECTED_RELEASE_VERSION else "versionless main"
+)
 EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
     f"{len(JSON_FILES)} JSON files, "
@@ -30,9 +31,9 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "11 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
-    f"version {RELEASE_VERSION}, 27 manifest schema fixtures, "
+    f"{TREE_VERSION}, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
-    "55 release-provenance fixtures, 30 immutable external action and image pins "
+    "48 release-provenance fixtures, 20 immutable external action and image pins "
     "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "
     "packaged skills."
 )

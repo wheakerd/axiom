@@ -14,7 +14,7 @@
 
 面向 Codex 与 Claude Code 的专注型工作流技能，把请求转化为清晰、可执行的工作。
 
-[安装](#安装) | [更新](#更新) | [用法](#用法) | [技能](#技能) | [文档](docs/zh-CN/README.md) | [更新日志](CHANGELOG.md)
+[安装](#安装) | [更新](#更新) | [用法](#用法) | [技能](#技能) | [文档](docs/zh-CN/README.md) | [版本发布](https://github.com/wheakerd/axiom/releases)
 
 ![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](.github/assets/social-preview.png)
 
@@ -69,7 +69,7 @@ claude plugin marketplace add wheakerd/axiom
 claude plugin install axiom@axiom
 ```
 
-每个市场都选定一个不可变的已发布版本。新版本只有在其 Release 发布并通过验证后才会进入两个市场；`main` 上的开发提交不会推进该选择。
+两个市场都选定 `release` 分支，该分支只包含已发布的版本：发布某个版本时由 CI 把它加入该分支，`main` 上的开发提交永远不会进入它。
 
 在 Codex 中，开启新会话并在 `/hooks` 中信任该 Hook：Codex 会跳过新的或已更改的 Hook，直到你信任它，Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤，会在插件加载后的下一次 `SessionStart` 运行该 Hook。在 Windows 上，Claude Code 运行 Hook 需要 Git Bash，而且两个宿主目前都没有 Windows 观测记录；见[兼容性](docs/en/compatibility.md#current-bounded-status)。将已安装的 Hook 与其签入定义进行比对，是审阅者的可选步骤，见[信任模型](docs/zh-CN/trust-model.md#hook-信任边界)。完整的安装与首次使用流程由[快速开始指南](docs/zh-CN/guides/getting-started.md)负责。
 
@@ -123,7 +123,7 @@ Summarize the purpose of this README. Do not modify files.
 ## 文档与支持
 
 - [文档索引](docs/zh-CN/README.md)：按任务组织的指南与参考。
-- [最新 Release](https://github.com/wheakerd/axiom/releases/latest) 与[更新日志](CHANGELOG.md)：每个版本的变更以及需要的操作。
+- [最新 Release](https://github.com/wheakerd/axiom/releases/latest) 与[全部 Releases](https://github.com/wheakerd/axiom/releases)：每个版本的变更以及需要的操作。
 - [兼容性](docs/en/compatibility.md)：支持的宿主与已知限制。
 - [信任模型](docs/zh-CN/trust-model.md)：安全边界。Axiom 处于公开测试阶段；它的指令不替代宿主权限，也不提供沙箱。
 - [GitHub Discussions](https://github.com/wheakerd/axiom/discussions)：提问与早期想法。

@@ -7,7 +7,7 @@ import unittest
 import zlib
 from pathlib import Path
 
-from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT, release_version
+from axiom_validation.context import EXPECTED_RELEASE_VERSION
 from axiom_validation.release_versions import (
     PRODUCTION_RELEASE_VERSION_CASES,
     parse_production_release_tag,
@@ -86,20 +86,53 @@ class ManifestPolicyTests(unittest.TestCase):
         self.assertEqual([], failures)
         return documents
 
-    def test_synchronized_manifests_are_the_release_source(self):
-        self.assertEqual(RELEASE_VERSION, release_version())
-        self.assertIsNotNone(release_version())
+    def test_main_manifests_declare_no_version(self):
+        documents = self.documents()
+        if EXPECTED_RELEASE_VERSION is None:
+            for relative in ("plugin/.codex-plugin/plugin.json", "plugin/.claude-plugin/plugin.json"):
+                self.assertNotIn("version", documents[relative])
+        failures = []
+        check_manifest_versions(documents, failures)
+        self.assertEqual([], failures)
 
-    def test_release_version_needs_a_stable_codex_manifest_version(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            self.assertIsNone(release_version(root))
-            manifest = root / "plugin/.codex-plugin/plugin.json"
-            manifest.parent.mkdir(parents=True)
-            manifest.write_text('{"version": "0.11.0"}\n')
-            self.assertEqual("0.11.0", release_version(root))
-            manifest.write_text('{"version": "0.11.0-beta"}\n')
-            self.assertIsNone(release_version(root))
+    def test_version_is_forbidden_on_main_and_required_on_a_stamped_tree(self):
+        codex, claude = "plugin/.codex-plugin/plugin.json", "plugin/.claude-plugin/plugin.json"
+        versionless = self.documents()
+        for relative in (codex, claude):
+            versionless[relative].pop("version", None)
+        stamped = copy.deepcopy(versionless)
+        for relative in (codex, claude):
+            stamped[relative]["version"] = "1.2.3"
+        cases = (
+            ("main-versionless", versionless, None, None),
+            ("main-with-version", stamped, None, "must not declare a version on main"),
+            ("stamped-matching", stamped, "1.2.3", None),
+            ("stamped-other-version", stamped, "1.2.4", "the stamped release tree requires '1.2.4'"),
+            ("stamped-missing", versionless, "1.2.3", "the stamped release tree requires '1.2.3'"),
+            ("stamped-malformed", stamped, "1.2", "is not strict SemVer"),
+        )
+        for label, documents, expected, failure in cases:
+            with self.subTest(label=label):
+                failures = []
+                check_manifest_versions(documents, failures, expected)
+                if failure is None:
+                    self.assertEqual([], failures)
+                else:
+                    self.assertTrue(any(failure in item for item in failures), failures)
+        disagreeing = copy.deepcopy(stamped)
+        disagreeing[claude]["version"] = "1.2.4"
+        failures = []
+        check_manifest_versions(disagreeing, failures, "1.2.3")
+        self.assertEqual(1, len(failures), failures)
+        self.assertIn(claude, failures[0])
+
+    def test_schema_accepts_a_stamped_version_without_listing_it(self):
+        documents = self.documents()
+        for relative in ("plugin/.codex-plugin/plugin.json", "plugin/.claude-plugin/plugin.json"):
+            documents[relative]["version"] = "1.2.3"
+        failures = []
+        check_manifest_capability_schema(documents, failures)
+        self.assertEqual([], failures)
 
     def test_canonical_production_release_grammar(self):
         for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES:
@@ -138,14 +171,17 @@ class ManifestPolicyTests(unittest.TestCase):
         self.assertEqual(27, count)
         self.assertEqual([], failures)
 
-    def test_catalog_can_retain_a_published_version_during_development(self):
-        documents = self.documents()
-        for relative in (".agents/plugins/marketplace.json", CLAUDE_MARKETPLACE_RELATIVE):
-            documents[relative]["plugins"][0]["source"]["ref"] = "v0.27.4"
-        failures = []
-        check_manifest_capability_schema(documents, failures)
-        check_manifest_versions(documents, failures)
-        self.assertEqual([], failures)
+    def test_catalogs_select_only_the_release_branch(self):
+        for ref in ("v0.27.4", "main", "releases", "refs/heads/release"):
+            for relative in (".agents/plugins/marketplace.json", CLAUDE_MARKETPLACE_RELATIVE):
+                with self.subTest(ref=ref, catalog=relative):
+                    documents = self.documents()
+                    documents[relative]["plugins"][0]["source"]["ref"] = ref
+                    failures = []
+                    check_manifest_capability_schema(documents, failures)
+                    self.assertTrue(
+                        any("at the 'release' branch" in failure for failure in failures), failures
+                    )
 
     def test_catalog_source_matches_the_selected_release_layout(self):
         codex = ".agents/plugins/marketplace.json"
@@ -154,13 +190,13 @@ class ManifestPolicyTests(unittest.TestCase):
                 "source": "git-subdir",
                 "url": "https://github.com/wheakerd/axiom.git",
                 "path": "./plugin",
-                "ref": "v0.17.0",
+                "ref": "release",
             },
             CLAUDE_MARKETPLACE_RELATIVE: {
                 "source": "git-subdir",
                 "url": "https://github.com/wheakerd/axiom.git",
                 "path": "plugin",
-                "ref": "v0.17.0",
+                "ref": "release",
             },
         }
 
@@ -188,13 +224,14 @@ class ManifestPolicyTests(unittest.TestCase):
                 self.assertTrue(any(expected in failure for failure in failures), failures)
 
     def test_rendered_catalog_source_satisfies_the_layout_rule(self):
-        for tag in ("v0.27.4", "v0.27.5"):
-            for host in ("codex", "claude-code"):
-                with self.subTest(tag=tag, host=host):
-                    source = catalog_source(tag, host)
-                    self.assertEqual(tag, source["ref"])
-                    self.assertEqual(catalog_source_keys(source), frozenset(source))
-                    self.assertIsNone(catalog_layout_failure(source, host))
+        documents = self.documents()
+        for host, relative in (("codex", ".agents/plugins/marketplace.json"), ("claude-code", CLAUDE_MARKETPLACE_RELATIVE)):
+            with self.subTest(host=host):
+                source = catalog_source(host)
+                self.assertEqual("release", source["ref"])
+                self.assertEqual(catalog_source_keys(source), frozenset(source))
+                self.assertIsNone(catalog_layout_failure(source, host))
+                self.assertEqual(source, documents[relative]["plugins"][0]["source"])
 
     def test_required_catalogs_and_independent_manifest_identity(self):
         self.assertIn(CLAUDE_MARKETPLACE_RELATIVE, JSON_FILES)

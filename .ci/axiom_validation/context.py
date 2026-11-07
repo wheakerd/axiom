@@ -1,18 +1,17 @@
-"""Shared repository context and manifest-derived release identity."""
+"""Shared repository context and the release version a stamped tree carries."""
 
 from __future__ import annotations
 
-import json
+import os
 from pathlib import Path
-
-from .release_versions import parse_production_release_version
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 README_PATH = REPOSITORY_ROOT / "README.md"
-MANIFEST_FILES = (
-    "plugin/.codex-plugin/plugin.json",
-)
+# `.ci/check.py --release-version X.Y.Z` sets this for its checks. Unset, the
+# checks validate main, whose plugin manifests declare no version; set, they
+# validate a release tree whose manifests CI stamped with that version.
+RELEASE_VERSION_ENVIRONMENT = "AXIOM_RELEASE_VERSION"
 
 
 def display_path(path: Path) -> str:
@@ -23,19 +22,9 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
-def release_version(root: Path = REPOSITORY_ROOT) -> str | None:
-    """Return the stable production version declared by the Codex manifest."""
-    versions: list[str] = []
-    for relative_path in MANIFEST_FILES:
-        try:
-            document = json.loads((root / relative_path).read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            return None
-        version = document.get("version") if isinstance(document, dict) else None
-        if parse_production_release_version(version) is None:
-            return None
-        versions.append(version)
-    return versions[0] if len(set(versions)) == 1 else None
+def expected_release_version() -> str | None:
+    """Return the version a stamped release tree must declare, or None for main."""
+    return os.environ.get(RELEASE_VERSION_ENVIRONMENT) or None
 
 
-RELEASE_VERSION = release_version() or "0.0.0"
+EXPECTED_RELEASE_VERSION = expected_release_version()

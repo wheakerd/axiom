@@ -17,11 +17,10 @@ Ask questions and discuss early ideas in [GitHub Discussions](https://github.com
 | [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) | Codex marketplace wrapper |
 | [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) | Claude Code marketplace catalog |
 | [README.md](README.md) | Product landing page and safe-start entry point |
-| [CHANGELOG.md](CHANGELOG.md) | User-visible changes, impact, and required action |
 | [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Private vulnerability reporting and community conduct |
 | [LICENSE](LICENSE) | MIT license; `plugin/LICENSE` is a byte-identical copy that installs with the plugin |
 | [docs/](docs/en/README.md) | Task navigation, user guides, concepts, references, and maintainer policy |
-| [.ci/](.ci) | Repository checks: `check.py` runs them as CI does; `axiom_validation/` holds the standard-library policy and parsers, `tests/` the unit and integration tests, `scripts/` the validation and release entrypoints, and `runtime-identity.json` the current runtime identity |
+| [.ci/](.ci) | Repository checks: `check.py` runs them as CI does; `axiom_validation/` holds the standard-library policy and parsers, `tests/` the unit and integration tests, `scripts/` the validation and release entrypoints |
 | [.github/](.github) | CI workflows, Issue forms, pull-request template, and code owners |
 
 Hosts install only `plugin/`; the rest of the repository supports development, validation, and release. Top-level Skills include the `using-axiom` startup gate and the workflows it selects. A Skill's supporting references and agent resources are not separate public routes. Repository validators, tests, and CI are contributor tooling; they are not installed plugin dependencies or proof of host behavior.
@@ -30,7 +29,7 @@ Hosts install only `plugin/`; the rest of the repository supports development, v
 
 1. Inspect the worktree and preserve edits you did not create. Do not reset, stash, clean, stage, or rewrite unrelated work to make your change appear clean.
 2. Identify the intended outcome and the owning surface: installed Skills and Hooks, a host package, documentation, or repository tooling.
-3. Classify the change against [Runtime Identity](docs/en/runtime-identity.md#classify-a-change). An included runtime change must alter the digest and advance `pluginVersion`; a repository-only change must retain both. The same section owns the version increment and bundling standard.
+3. Classify the change against [Runtime Identity](docs/en/runtime-identity.md#classify-a-change). An included runtime change alters the runtime digest and ships in the next release; a repository-only change retains the digest and ships in no release. The same section owns the version increment and bundling standard.
 4. Separate route selection from action authorization. Loading a Skill never grants permission to commit, push, deploy, delete, promote, read a secret, or mutate a remote system.
 5. Keep the change within its stated scope and identify any routing or authorization impact before implementation.
 
@@ -43,11 +42,11 @@ Hosts install only `plugin/`; the rest of the repository supports development, v
 | Repository validators, tests, or validation results | [Contributor Validation](docs/en/maintainers/validation.md) |
 | Compatibility observations | [Compatibility](docs/en/compatibility.md#report-a-compatibility-result) |
 | Repository controls or release provenance | [Repository Governance](docs/en/repository-governance.md) |
-| Changelog entries or release evidence | [Release Documentation And Evidence](docs/en/maintainers/release-documentation.md) |
+| Releases, release notes, or release evidence | [Release Documentation And Evidence](docs/en/maintainers/release-documentation.md) |
 
 English documentation is canonical and lives in `docs/en/`. A document may have a Simplified Chinese twin at the same path under `docs/zh-CN/` (the root `README.zh-CN.md` is the twin of `README.md`) that translates prose and table headers only, keeps the same headings, code blocks, generated regions, and link targets, and changes in the same change as its source; the documentation validator rejects drift. Keep descriptions, examples, commands, and trigger definitions in English, and publish no localized aliases. Use `Axiom` for the brand and `axiom` for plugin, marketplace, route, path, and command identifiers. Link to the canonical owner of a fact instead of maintaining a second copy. The [documentation index](docs/en/README.md) provides task-oriented navigation across these references.
 
-Write current guides and references for the implementation in the same source snapshot, and update them with the code or contract they explain. Put change narratives in the Changelog. Preserve exact versions for schemas and compatibility requirements; source support alone does not establish a published release or host observation. Follow the [source and version rules](docs/en/maintainers/documentation-policy.md#source-and-version-scope) when deciding whether a version belongs in current guidance.
+Write current guides and references for the implementation in the same source snapshot, and update them with the code or contract they explain. Put change narratives in the release notes. Preserve exact versions for schemas and compatibility requirements; source support alone does not establish a published release or host observation. Follow the [source and version rules](docs/en/maintainers/documentation-policy.md#source-and-version-scope) when deciding whether a version belongs in current guidance.
 
 ## Required local checks
 
@@ -70,4 +69,4 @@ Do not mix opportunistic cleanup with the requested change. Do not commit genera
 
 Contributor checks validate the proposed merge tree. They do not require a GitHub-signed contributor commit or a same-repository head, establish release provenance, or authorize publication. Review the separate [pull-request and release trust boundaries](docs/en/repository-governance.md#pull-request-validation-and-release-provenance) when a change affects CI or release controls.
 
-A pull request that changes the plugin version in the Codex manifest is a release pull request: once it merges, the [Release pipeline](docs/en/maintainers/release-documentation.md#release-pipeline) publishes that version. Leave the version unchanged in other contributions.
+Pull requests never carry a version: the plugin manifests on `main` declare none. A maintainer releases by pushing a tag, as [Cut A Release](docs/en/maintainers/release-documentation.md#cut-a-release) describes.

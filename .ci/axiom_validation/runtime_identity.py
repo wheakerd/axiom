@@ -1,4 +1,9 @@
-"""Deterministic installed-runtime identity checks."""
+"""Deterministic installed-runtime digest of a plugin tree.
+
+The digest is computed at release time from the tagged tree and recorded in the
+Release's evidence asset; the repository keeps only the input policy and this
+generator.
+"""
 
 from __future__ import annotations
 
@@ -11,17 +16,11 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from .context import REPOSITORY_ROOT, release_version
-from .release_versions import parse_production_release_version
+from .context import REPOSITORY_ROOT
 
 
 CURRENT_SCHEMA_VERSION = "4"
 INPUT_MANIFEST_RELATIVE = ".ci/axiom_validation/runtime-contract-inputs-v4.json"
-IDENTITY_RELATIVE = ".ci/runtime-identity.json"
-IDENTITY_SCHEMA_VERSION = "2"
-RUNTIME_IDENTITY_SURFACES = ("docs/en/runtime-identity.md",)
-RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
-RUNTIME_IDENTITY_END = "<!-- runtime-identity:current:end -->"
 
 MAX_JSON_BYTES = 512 * 1024
 DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
@@ -506,116 +505,21 @@ def compute_runtime_contract(
     )
 
 
-def _manifest_sha256(root: Path) -> str:
-    # Universal-newline decoding keeps this binding stable for LF and CRLF
-    # checkouts while preserving every other manifest byte as policy evidence.
-    text = (root / INPUT_MANIFEST_RELATIVE).read_text(encoding="utf-8")
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def _validate_identity(
-    document: dict[str, Any],
-    contract: RuntimeContract,
-    root: Path,
-    failures: list[str],
-) -> None:
-    label = IDENTITY_RELATIVE
-    _exact_object(
-        document,
-        {"schemaVersion", "pluginVersion", "runtimeContract"},
-        label,
-        failures,
-    )
-    if document.get("schemaVersion") != IDENTITY_SCHEMA_VERSION:
-        failures.append(f"{label}.schemaVersion must be {IDENTITY_SCHEMA_VERSION!r}")
-    plugin_version = document.get("pluginVersion")
-    if parse_production_release_version(plugin_version) is None:
-        failures.append(f"{label}.pluginVersion must be stable strict SemVer")
-    elif plugin_version != release_version(root):
-        failures.append(f"{label}.pluginVersion must match the Codex plugin manifest")
-    runtime = _exact_object(
-        document.get("runtimeContract"),
-        {"schemaVersion", "inputManifest", "inputManifestSha256", "digest", "recordCount"},
-        f"{label}.runtimeContract",
-        failures,
-    )
-    if runtime is not None:
-        if runtime.get("schemaVersion") != CURRENT_SCHEMA_VERSION:
-            failures.append(
-                f"{label}.runtimeContract.schemaVersion must be {CURRENT_SCHEMA_VERSION!r}"
-            )
-        if runtime.get("inputManifest") != INPUT_MANIFEST_RELATIVE:
-            failures.append(f"{label}.runtimeContract.inputManifest drifted")
-        if runtime.get("inputManifestSha256") != _manifest_sha256(root):
-            failures.append(f"{label}.runtimeContract.inputManifestSha256 drifted")
-        if runtime.get("digest") != contract.digest:
-            failures.append(f"{label}.runtimeContract.digest does not match computed inputs")
-        if runtime.get("recordCount") != contract.record_count:
-            failures.append(f"{label}.runtimeContract.recordCount does not match computed inputs")
-
-
-def render_runtime_identity(document: dict[str, Any], surface: str = RUNTIME_IDENTITY_SURFACES[0]) -> str:
-    """Render the current identity as stable Markdown for one managed surface."""
-    runtime = document["runtimeContract"]
-    to_root = "../" * (len(surface.split("/")) - 1)
-    return "\n".join(
-        (
-            f"- `pluginVersion`: `{document['pluginVersion']}`",
-            f"- `runtimeContractDigest` (schema v{runtime['schemaVersion']}): `{runtime['digest']}`",
-            f"- Digest input manifest: [`{runtime['inputManifest']}`]({to_root}{runtime['inputManifest']})",
-        )
-    )
-
-
-def replace_runtime_identity_block(text: str, document: dict[str, Any]) -> str:
-    """Replace the managed block in the runtime-identity reference."""
-    if text.count(RUNTIME_IDENTITY_START) != 1 or text.count(RUNTIME_IDENTITY_END) != 1:
-        raise ValueError("runtime-identity markers must each appear exactly once")
-    start = text.index(RUNTIME_IDENTITY_START) + len(RUNTIME_IDENTITY_START)
-    end = text.index(RUNTIME_IDENTITY_END, start)
-    return text[:start] + "\n" + render_runtime_identity(document) + "\n" + text[end:]
-
-
-def check_runtime_identity(
-    failures: list[str],
-    *,
-    root: Path = REPOSITORY_ROOT,
-    check_surfaces: bool = True,
-) -> int:
-    """Validate the current runtime identity and its rendered facts."""
+def check_runtime_identity(failures: list[str], *, root: Path = REPOSITORY_ROOT) -> int:
+    """Require the input policy to classify every installed file; return the input count."""
     root = root.resolve()
     manifest = load_json_document(root / INPUT_MANIFEST_RELATIVE, failures, root=root)
     if manifest is None:
         return 0
     contract = compute_runtime_contract(root, manifest, failures)
-    if contract is None:
-        return 0
-    identity = load_json_document(root / IDENTITY_RELATIVE, failures, root=root)
-    if identity is None:
-        return contract.record_count
-    _validate_identity(identity, contract, root, failures)
-    if check_surfaces:
-        for relative_path in RUNTIME_IDENTITY_SURFACES:
-            try:
-                text = (root / relative_path).read_text(encoding="utf-8")
-                expected = replace_runtime_identity_block(text, identity)
-            except (KeyError, OSError, TypeError, UnicodeError, ValueError) as error:
-                failures.append(f"cannot validate {relative_path} runtime identity: {error}")
-            else:
-                if text != expected:
-                    failures.append(f"{relative_path} runtime identity block is stale")
-    return contract.record_count
+    return 0 if contract is None else contract.record_count
 
 
 __all__ = [
     "DIGEST_PATTERN",
-    "IDENTITY_RELATIVE",
     "INPUT_MANIFEST_RELATIVE",
-    "RUNTIME_IDENTITY_SURFACES",
     "RuntimeContract",
     "check_runtime_identity",
     "compute_runtime_contract",
     "load_json_document",
-    "render_runtime_identity",
-    "replace_runtime_identity_block",
 ]

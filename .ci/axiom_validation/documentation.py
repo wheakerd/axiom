@@ -22,7 +22,7 @@ from .markdown import (
     mask_inline_code,
 )
 from .readme_facts import check_readme_facts
-from .repository_policy import BUNDLED_SKILL_ORDER, check_release_version_surfaces
+from .repository_policy import BUNDLED_SKILL_ORDER
 from .runtime_identity import check_runtime_identity
 
 DOCS_ROOT = "docs/en/"
@@ -58,7 +58,6 @@ LANGUAGE_TAG = re.compile(
 
 ROOT_CURRENT_DOCUMENTS = (
     "README.md",
-    "CHANGELOG.md",
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
@@ -513,7 +512,6 @@ def check_machine_derived_documentation(failures: list[str]) -> None:
     """Run existing canonical owners for generated public facts."""
     check_runtime_identity(failures)
     check_readme_facts(failures)
-    check_release_version_surfaces(failures)
 
 
 def check_documentation(

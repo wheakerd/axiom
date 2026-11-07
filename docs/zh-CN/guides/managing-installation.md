@@ -27,11 +27,11 @@ Claude Code 运行更新后的 Hook 不需要单独的信任步骤，会在插�
 
 ## 版本选择
 
-[市场条目](../../../.agents/plugins/marketplace.json)使用 Codex 官方的 `git-subdir` 源：仓库 `url`、作为其 `path` 的已安装插件根目录 `./plugin`，以及一个不可变的发布标签 `ref`。默认市场仍可从仓库的默认分支发现，而该条目独立地选定插件的已发布源。一次普通的 `main` 提交不会改变该选择。
+[市场条目](../../../.agents/plugins/marketplace.json)使用 Codex 官方的 `git-subdir` 源：仓库 `url`、作为其 `path` 的已安装插件根目录 `./plugin`，以及作为其 `ref` 的 `release` 分支。默认市场仍可从仓库的默认分支发现，而该条目独立地选定插件的已发布源。一次普通的 `main` 提交不会改变该选择。
 
-`.claude-plugin/marketplace.json` 中的 Claude Code 目录通过其 `git-subdir` 源使用同一仓库与发布标签 `ref`，`path` 为 `plugin`。两个目录一起推进。
+`.claude-plugin/marketplace.json` 中的 Claude Code 目录通过其 `git-subdir` 源使用同一仓库与 `release` `ref`，`path` 为 `plugin`。
 
-稳定版本成为 GitHub Latest 后，维护者通过既有的签名 PR 流程发布匹配的目录引用。在该目录变更合并之前，客户端继续解析到前一个选择。GitHub Release、其 Latest 标记以及字面名为 `latest` 的 Git 标签是不同的对象；客户端不会从其中一个推断另一个。
+每个已发布版本都会向 `release` 添加一个提交，其插件清单带有该版本号，因此刷新市场即可解析到最新的已发布版本；发布时目录本身从不改变。GitHub Release、其 Latest 标记以及字面名为 `latest` 的 Git 标签是不同的对象；客户端不会从其中一个推断另一个。
 
 对于已有的默认分支注册，先使用上面的原生市场升级，再检查已安装的版本。在 Codex 中运行：
 
@@ -41,13 +41,13 @@ codex plugin list --marketplace axiom --json
 
 在 Claude Code 中，`claude plugin list` 会打印每个已安装插件的 `Version`、`Scope` 与 `Status` 行。
 
-保留有意为之的用户固定。目录固定锁定的是**目录快照**，并不覆盖插件条目自身的 `source.ref`。在 Codex 中使用市场的 `--ref` 选项。在 Claude Code 中，添加市场时加上 `#ref` 后缀，例如 `wheakerd/axiom#<tag>`；以标签或分支添加的市场只会更新到该引用的最新提交。要锁定某个特定的插件版本，请用客户端支持的源控制手段，选择一个其条目解析到该版本的不可变目录快照。在假定目录标签与插件版本一致之前，先检查该条目。对于由工作区管理的安装，工作区管理员负责所配置的仓库、路径、引用与原生同步策略。
+保留有意为之的用户固定。目录固定锁定的是**目录快照**，并不覆盖插件条目自身的 `source.ref`。在 Codex 中使用市场的 `--ref` 选项。在 Claude Code 中，添加市场时加上 `#ref` 后缀，例如 `wheakerd/axiom#<tag>`；以标签或分支添加的市场只会更新到该引用的最新提交。要锁定某个特定的插件版本，请用客户端支持的源控制手段，在你自己的目录中按 `sha` 选定 `release` 上该版本的提交；`release` 上的每个提交都在其提交信息中写明对应的标签。在假定目录标签与插件版本一致之前，先检查该条目。对于由工作区管理的安装，工作区管理员负责所配置的仓库、路径、引用与原生同步策略。
 
 Codex 源格式与生命周期语义依据官方的[市场格式](https://developers.openai.com/plugins/build/plugins#marketplace-metadata)、[市场配置](https://learn.chatgpt.com/docs/config-file/config-reference)与[工作区同步文档](https://learn.chatgpt.com/docs/enterprise/plugin-management)。工作区同步时机不是对个人 Codex 安装的承诺。Claude Code 源格式依据官方的[市场参考](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources)；其他 Claude Code 陈述依据官方的[插件安装指南](https://code.claude.com/docs/en/discover-plugins)与[插件命令参考](https://code.claude.com/docs/en/plugins/cli-reference)。
 
 ## 市场克隆超时
 
-在 Codex 中，包含 `git clone marketplace source timed out after 30s` 的错误表示下载市场目录失败。Codex 支持对 Git 市场使用 `--sparse` 以缩减目录检出。Axiom 当前的目录只需要 `.agents/plugins`：其插件条目使用一个带不可变发布引用的独立 `git-subdir` 源。下面的步骤适用于 Codex；[Claude Code](#claude-code-克隆超时) 有自己的步骤。
+在 Codex 中，包含 `git clone marketplace source timed out after 30s` 的错误表示下载市场目录失败。Codex 支持对 Git 市场使用 `--sparse` 以缩减目录检出。Axiom 当前的目录只需要 `.agents/plugins`：其插件条目使用一个带 `release` 引用的独立 `git-subdir` 源。下面的步骤适用于 Codex；[Claude Code](#claude-code-克隆超时) 有自己的步骤。
 
 ### 检查注册信息
 

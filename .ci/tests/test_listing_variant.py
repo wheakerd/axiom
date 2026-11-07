@@ -12,6 +12,8 @@ import zipfile
 from pathlib import Path
 
 from axiom_validation.context import REPOSITORY_ROOT
+from axiom_validation.manifests import MANIFEST_FILES
+from axiom_validation.release import stamp_manifest
 
 SCRIPT = REPOSITORY_ROOT / ".ci" / "scripts" / "build-listing-variant.py"
 GIT = ("git", "-c", "user.name=variant-test", "-c", "user.email=variant-test@invalid", "-c", "commit.gpgsign=false")
@@ -39,6 +41,13 @@ class ListingVariantBuildTests(unittest.TestCase):
         cls.repository = Path(cls.temporary.name) / "source"
         cls.repository.mkdir()
         shutil.copytree(REPOSITORY_ROOT / "plugin", cls.repository / "plugin")
+        # The variant builds from a release-branch tree, whose manifests CI stamped.
+        for relative in MANIFEST_FILES:
+            path = cls.repository / relative
+            document = json.loads(path.read_text(encoding="utf-8"))
+            document.pop("version", None)
+            versionless = (json.dumps(document, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+            path.write_bytes(stamp_manifest(versionless, "1.2.3", relative))
         _git(cls.repository, "init", "-q", "-b", "main")
         _git(cls.repository, "add", "-A")
         _git(cls.repository, "commit", "-q", "-m", "plugin tree under test")
@@ -119,6 +128,22 @@ class ListingVariantBuildTests(unittest.TestCase):
             version = json.loads((source_root / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
             self.assertEqual(version, manifest["pluginVersion"])
             self.assertEqual(f"axiom-{version}-codex-directory-variant.zip", archive_path.name)
+
+    def test_versionless_main_tree_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            source = Path(scratch) / "main"
+            source.mkdir()
+            shutil.copytree(REPOSITORY_ROOT / "plugin", source / "plugin")
+            for relative in MANIFEST_FILES:
+                document = json.loads((source / relative).read_text(encoding="utf-8"))
+                document.pop("version", None)
+                (source / relative).write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+            _git(source, "init", "-q", "-b", "main")
+            _git(source, "add", "-A")
+            _git(source, "commit", "-q", "-m", "versionless main")
+            result = _build(source, "HEAD", Path(scratch) / "out")
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn("declares no version; build from the release branch", result.stderr)
 
     def test_tree_without_plugin_directory_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as scratch:
