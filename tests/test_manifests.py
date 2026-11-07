@@ -141,11 +141,7 @@ class ManifestPolicyTests(unittest.TestCase):
     def test_catalog_can_retain_a_published_version_during_development(self):
         documents = self.documents()
         for relative in (".agents/plugins/marketplace.json", CLAUDE_MARKETPLACE_RELATIVE):
-            documents[relative]["plugins"][0]["source"] = {
-                "source": "url",
-                "url": "https://github.com/wheakerd/axiom.git",
-                "ref": "v0.13.4",
-            }
+            documents[relative]["plugins"][0]["source"]["ref"] = "v0.27.4"
         failures = []
         check_manifest_capability_schema(documents, failures)
         check_manifest_versions(documents, failures)
@@ -178,8 +174,7 @@ class ManifestPolicyTests(unittest.TestCase):
         check_manifest_capability_schema(subtree_documents(), failures)
         self.assertEqual([], failures)
         rejected = (
-            ("root url after the subtree", {"source": "url", "ref": "v0.17.0"}, "must use git-subdir"),
-            ("subtree before it existed", {"ref": "v0.16.0"}, "must use url for releases before"),
+            ("root url source", {"source": "url"}, "must remain the owned Git repository"),
             ("wrong subtree path", {"path": "plugin"}, "must use git-subdir with path './plugin'"),
         )
         for label, change, expected in rejected:
@@ -187,15 +182,13 @@ class ManifestPolicyTests(unittest.TestCase):
                 documents = subtree_documents()
                 source = documents[codex]["plugins"][0]["source"]
                 source.update(change)
-                if source["source"] == "url":
-                    source.pop("path")
                 documents[CLAUDE_MARKETPLACE_RELATIVE]["plugins"][0]["source"]["ref"] = source["ref"]
                 failures = []
                 check_manifest_capability_schema(documents, failures)
                 self.assertTrue(any(expected in failure for failure in failures), failures)
 
     def test_rendered_catalog_source_satisfies_the_layout_rule(self):
-        for tag in ("v0.16.0", "v0.17.0", "v0.17.1"):
+        for tag in ("v0.27.4", "v0.27.5"):
             for host in ("codex", "claude-code"):
                 with self.subTest(tag=tag, host=host):
                     source = catalog_source(tag, host)

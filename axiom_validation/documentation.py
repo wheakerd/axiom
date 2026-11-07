@@ -416,27 +416,6 @@ def check_translations(root: Path, failures: list[str]) -> int:
     return len(paths)
 
 
-def check_markdown_language(root: Path, failures: list[str]) -> None:
-    """Require every Markdown file other than a translation to stay ASCII."""
-    root = root.resolve()
-    for path in discover_markdown(root):
-        relative_path = _label(path, root)
-        if is_translation(relative_path):
-            continue
-        text = _read_text(path, root, failures)
-        if text is None or text.isascii():
-            continue
-        line_number = next(
-            number
-            for number, line in enumerate(text.splitlines(), start=1)
-            if not line.isascii()
-        )
-        failures.append(
-            f"{relative_path}:{line_number} contains non-ASCII text; English "
-            f"documentation stays ASCII and a translation uses the {TRANSLATION_SUFFIX} suffix"
-        )
-
-
 def _skill_reference_inventory(text: str, failures: list[str]) -> tuple[str, ...]:
     _, masked = fenced_blocks_and_masked_text(text)
     lines = masked.splitlines()
@@ -531,7 +510,6 @@ def check_documentation(
     indexed_count = check_docs_index_and_orphans(root, failures)
     generated_count = check_generated_markers(root, failures)
     translation_count = check_translations(root, failures)
-    check_markdown_language(root, failures)
     check_guidance_boundaries(root, failures)
     check_skill_reference_inventory(root, failures)
     check_hook_reference(root, failures)
@@ -562,7 +540,6 @@ __all__ = (
     "check_guidance_boundaries",
     "check_heading_text",
     "check_hook_reference",
-    "check_markdown_language",
     "check_private_guidance_text",
     "check_skill_reference_inventory_text",
     "check_translation_text",

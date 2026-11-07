@@ -29,7 +29,7 @@ Claude Code 运行更新后的 Hook 不需要单独的信任步骤，会在插�
 
 [市场条目](../../.agents/plugins/marketplace.json)使用 Codex 官方的 `git-subdir` 源：仓库 `url`、作为其 `path` 的已安装插件根目录 `./plugin`，以及一个不可变的发布标签 `ref`。默认市场仍可从仓库的默认分支发现，而该条目独立地选定插件的已发布源。一次普通的 `main` 提交不会改变该选择。
 
-`.claude-plugin/marketplace.json` 中的 Claude Code 目录通过其 `git-subdir` 源使用同一仓库与发布标签 `ref`，`path` 为 `plugin`。两个目录一起推进。选定 `v0.17.0` 之前标签的目录改用 Git `url` 源，因为那些标签把插件放在仓库根目录。
+`.claude-plugin/marketplace.json` 中的 Claude Code 目录通过其 `git-subdir` 源使用同一仓库与发布标签 `ref`，`path` 为 `plugin`。两个目录一起推进。
 
 稳定版本成为 GitHub Latest 后，维护者通过既有的签名 PR 流程发布匹配的目录引用。在该目录变更合并之前，客户端继续解析到前一个选择。GitHub Release、其 Latest 标记以及字面名为 `latest` 的 Git 标签是不同的对象；客户端不会从其中一个推断另一个。
 

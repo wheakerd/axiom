@@ -1056,9 +1056,8 @@ def render_marketplace_source(
 ) -> str | None:
     """Render each host catalog's source for the verified Latest release.
 
-    From v0.17.0 each catalog selects the plugin subtree through its own
-    git-subdir path; earlier tags use the same url source in both catalogs. The
-    publisher calls this after final evidence verification. This renderer
+    Each catalog selects the plugin subtree through its own git-subdir path.
+    The publisher calls this after final evidence verification. This renderer
     neither publishes a catalog nor changes a user's installation or settings.
     """
     if not _validate_plan(plan, failures):
