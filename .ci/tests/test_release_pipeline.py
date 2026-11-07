@@ -13,6 +13,7 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
+from axiom_validation import release_pipeline
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.manifests import catalog_source
 from axiom_validation.release_pipeline import (
@@ -937,3 +938,12 @@ class CatalogHandoffTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PipelineCommandPathsTests(unittest.TestCase):
+    def test_every_command_the_pipeline_runs_exists_in_the_tree(self):
+        root = Path(__file__).resolve().parents[2]
+        for command in release_pipeline.REHEARSAL_COMMANDS:
+            self.assertTrue((root / command[0]).is_file(), command)
+        self.assertTrue((root / ".ci" / "scripts" / "check-release-evidence.py").is_file())
+
