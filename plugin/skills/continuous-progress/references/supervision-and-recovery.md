@@ -59,11 +59,11 @@ original request, the evidence is available, ownership is current, and no
 outstanding operation could invalidate the outcome. It need not repeat an
 unchanged conclusive check merely because a session changed.
 
-Then transition to completion-pending-shutdown, disable or remove the exact
+Then, with the goal met and shutdown pending, disable or remove the exact
 task-owned schedule through its supported host tool, and verify the scheduler
 state. Ensure task-owned workers have ended or have been handled within the
 existing authority. Mark completed only when the goal and shutdown checks hold.
-On shutdown failure, retain cleanup-pending status and explain the remaining
+On shutdown failure, say that cleanup is still pending and explain the remaining
 active mechanism. Do not delete unrelated schedules, chats, branches, or files.
 
 Verify shutdown through the surface that owns the mechanism, as the current host's facts describe; the model's own statement, a rendered card, or a green indicator is not a terminal-state observation.
@@ -77,23 +77,9 @@ and drain its task-owned command handles; an interrupted model turn alone does
 not prove its tools stopped. Verify command completion and reconcile partial
 effects before marking canceled. Use the host's execution identity: a sandbox
 PID may belong to a different PID namespace and must not be used as a host PID.
-If a command cannot be stopped or observed, retain cleanup-pending and name it.
+If a command cannot be stopped or observed, say cleanup is still pending and name it.
 Disable the task-owned wake mechanism even while that cleanup remains pending.
 
-## Evidence For This Experimental Capability
+## What You Observed
 
-Keep these claims separate:
-
-- Static protocol and metadata checks.
-- Native CLI invocation, results, session IDs, and configured model/effort.
-- Controlled coordinator-exit and handoff-recovery drills.
-- Actual desktop callback and independent scheduler wakeups.
-- Automatic pre-compaction transfer and post-compaction recovery.
-- Duplicate-delivery handling, cancellation, and verified scheduler shutdown.
-
-Record the host version with every claim. Distinguish a scheduled wake after the coordinator exited, recovery of a failed handoff, worker and successor completion with session IDs, actual compaction with a durable reread, cancellation of active work, and observed scheduler shutdown after both completion and cancellation.
-
-A controlled drill proves only its observed path. Fresh instruction loading,
-unattended scheduling, app restart, and another operating system remain
-unobserved without direct native evidence. Do not publish a general survival or
-attention-quality claim based on one short arithmetic example.
+Say which host behaviors you observed directly, with the host version, and which you did not: a scheduled wake after the coordinator exited, recovery of a failed handoff, worker and successor completion with session IDs, compaction with a durable reread, cancellation of active work, and scheduler shutdown after completion and after cancellation. A drill proves only the path it ran; fresh instruction loading, unattended scheduling, app restart, and another operating system stay unobserved until you observe them.

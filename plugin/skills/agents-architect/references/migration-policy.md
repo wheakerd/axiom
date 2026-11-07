@@ -56,9 +56,7 @@ Reject rules that fail any gate.
 
 - Build a migration table before moving files.
 - Track original path, Git status, size, canonical content, duplicate content, target path, operation, and reason.
-- Track whether each source is live source, a persistent rule, runtime state, or
-  historical reference. Do not promote runtime or historical material merely
-  because it is recent.
+- Do not promote runtime or historical material merely because it is recent.
 - Apply `instruction-document-contracts.md` as the canonical document and size
   contract. Route-sink every instruction document that reaches its boundary.
 - Preserve precise executable rules during migration and move scoped detail to the correct canonical home.
@@ -104,9 +102,7 @@ safe-stop and report its exact path and observed precedence.
 - Put personal rules under `.agents/local/`.
 - Prefer `.git/info/exclude` for user-local ignores.
 - Put runtime and generated artifacts in the Git-metadata state directory that
-  `memory-and-state.md` resolves, never under `.agents/`; treat leftover
-  `.agents/.runtime/` or `.agents/.generated/` directories as migration
-  candidates.
+  `memory-and-state.md` resolves, never under `.agents/`.
 - Add ignores to `.gitignore` only when all contributors should ignore them.
 
 ## Prohibited actions

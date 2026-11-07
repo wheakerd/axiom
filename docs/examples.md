@@ -72,13 +72,13 @@ Repo-local instruction systems belong to `agents-architect`; ordinary plugin sou
 
 > Explain the observable trigger, blocked effect, permitted remainder, and evidence for Axiom's prior refusal without revealing hidden reasoning.
 
-[Review Axiom Task](../plugin/skills/review-axiom-task/SKILL.md) evaluates the bounded review independently and labels claims observed, reconstructed, or unavailable. Prior refusals and assistant prose have no policy authority. Current state may verify a present outcome, but cannot establish past authorization or causation. The review does not rerun the task, invent missing history, open unrelated targets, mutate state, or persist a trace.
+[Review Axiom Task](../plugin/skills/review-axiom-task/SKILL.md) evaluates the bounded review independently and says for each claim whether it was observed directly, reconstructed, or could not be read. Prior refusals and assistant prose have no policy authority. Current state may verify a present outcome, but cannot establish past authorization or causation. The review does not rerun the task, invent missing history, open unrelated targets, mutate state, or persist a trace.
 
 ## `verify-completion`
 
 > Verify that this task is actually complete against current evidence before I accept the summary. List each criterion with what you observed now.
 
-[Verify Completion](../plugin/skills/verify-completion/SKILL.md) freezes the original criteria, re-checks each one directly, and reports `met`, `not met`, or `unverifiable` per criterion with the fact class of every input. After compaction it treats the carried summary as an index of what to check and re-reads the recorded artifacts before any new mutation. When evidence conflicts with the request it states the conflict and a recommendation first, then acts within the user's authority. A status question or routine continuation, including continuation after compaction, does not select this route; the startup gate owns that moment, and reviewing an identified Axiom task's routing stays with `review-axiom-task`.
+[Verify Completion](../plugin/skills/verify-completion/SKILL.md) freezes the original criteria, re-checks each one directly, and reports `met`, `not met`, or `unverifiable` per criterion and says for every input whether it was observed, recalled, or told. After compaction it treats the carried summary as an index of what to check and re-reads the recorded artifacts before any new mutation. When evidence conflicts with the request it states the conflict and a recommendation first, then acts within the user's authority. A status question or routine continuation, including continuation after compaction, does not select this route; the startup gate owns that moment, and reviewing an identified Axiom task's routing stays with `review-axiom-task`.
 
 ## `confirm-external-action`
 

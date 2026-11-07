@@ -25,7 +25,7 @@ shape that fits the repository and records the choice and its reason.
 | Tier | Holds | Lives in | Lifetime |
 | --- | --- | --- | --- |
 | Durable rules | Constraints and routed guidance the team shares | Root `AGENTS.md` and routed `.agents/**` owners, tracked by Git | Until superseded through the admission gate |
-| Decision ledger | Dated project decisions with status | `.agents/decisions.md`, tracked, append-only | Permanent; entries change status, never disappear |
+| Decision ledger | Project decisions, why they were made, and whether each still stands | `.agents/decisions.md`, tracked, append-only | Permanent; a later line records a change, entries never disappear |
 | Task state | Capsules, inventories, migration tables, scratch | Git metadata resolved below; never under `.agents/` | One task; deleted or marked obsolete at completion |
 
 Durable rules answer "what always applies here". The ledger answers "why" and
@@ -48,10 +48,6 @@ linked worktree whose `.git` is a file resolves correctly. Require an absolute
 canonical path, reject a symbolic link or junction at any component, and never
 place state under the installed plugin root or under `.agents/`, `.claude/`, or
 `.codex/` inside the repository.
-
-Earlier Axiom versions wrote `.agents/.runtime/` and `.agents/.generated/`.
-Treat leftovers as migration candidates: delete obsolete capsules, move
-anything still needed to the resolved directory, and report both.
 
 For a target without Git metadata, use the host's session scratch directory
 when the host provides one; otherwise ask the user for a directory outside the
@@ -89,7 +85,7 @@ Treat these as signals to decide, not as faults:
 | --- | --- | --- | --- |
 | Two owners share signals | Consolidate into one owner; or sharpen both applies-when lines | Consolidate when the rules always co-apply; sharpen when tasks differ | Merged or sharpened owners and the retired slug |
 | An owner holds long detail | Demote detail into a parent-owned reference | The detail is needed only after the owner is selected | Owner, new reference, bytes moved |
-| A rule no longer applies | Archive: mark the ledger entry `retired` and delete the rule | Implementation or policy changed and the user confirms | Ledger entry, removed path |
+| A rule no longer applies | Archive: record in the ledger that the decision is retired and delete the rule | Implementation or policy changed and the user confirms | Ledger entry, removed path |
 | One owner serves unrelated tasks | Split by signal, not by symmetry | Normal tasks load siblings they do not need | New owners and their signals |
 | Task state accumulates | Expire: delete obsolete capsules and generated files | The owning task is complete or abandoned | Deleted paths |
 | Root grows | Re-route: move scoped rules to owners; keep root global | A rule applies only to some tasks | Moved rules and their owners |
@@ -105,15 +101,16 @@ content to satisfy a count; move it to its owner or the ledger.
   directly, or root to the registry to the owner.
 - Add a group index only when the registry's growth signals make one-hop
   selection unreliable; record why.
-- Never reuse a slug. A retired slug keeps its ledger entry with status.
+- Never reuse a slug. A retired slug keeps its ledger entry.
 - Each registry line names the ledger entry its rule derives from when one
   exists.
 
 ## Decision Ledger
 
-`.agents/decisions.md` holds one line per decision: date, slug, decision,
-status (`accepted`, `superseded`, or `retired`), and the slug it supersedes.
-Append only; change status instead of rewriting history. Create the ledger when
+`.agents/decisions.md` holds one line per decision: the date, the slug, the
+decision, whether it still stands or which later decision superseded or
+retired it, and the slug it supersedes. Append only; add a line instead of
+rewriting history. Create the ledger when
 the first decision needs a durable "why"; do not create it for symmetry.
 
 ## Report

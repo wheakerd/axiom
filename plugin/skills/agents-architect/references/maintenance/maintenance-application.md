@@ -49,15 +49,14 @@ history. Review coverage and accepted-rule count remain independent.
 
 When task evidence flags retrieval friction:
 
-- For `instruction-gap`, add or repair only the durable rule in its canonical
-  owner.
-- For `routing-gap`, repair the smallest next hop needed to reach the existing
+- A missing rule: add or repair only the durable rule in its canonical owner.
+- A missing route: repair the smallest next hop needed to reach the existing
   owner; do not copy the owner into the route.
-- For `validation-gap`, add the focused acceptance step that would prevent the
-  same contract from being reconstructed from history.
-- For `expected-live-verification`, report the read as still required and
+- A missing validation step: add the focused acceptance step that would prevent
+  the same contract from being reconstructed from history.
+- A read that will always be needed: report the read as still required and
   reject an AGENTS update.
-- For `one-off-code-defect`, reject an AGENTS update and report source or
+- A one-off code defect: reject an AGENTS update and report source or
   regression-test repair as separately authorized work unless other evidence
   establishes a reusable project rule.
 

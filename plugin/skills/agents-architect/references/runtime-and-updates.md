@@ -122,7 +122,7 @@ For every triggered update, report:
 - Current-run versus later-run activation status, including whether fresh host
   loading was verified, not checked, or could not be checked.
 
-For `effective-instructions` and `effective-instructions:preview`, also report confirmed, superseded, unresolved, and rejected candidate dispositions with reasons, plus retrieval-friction dispositions and remaining source checks. Report the review-window start, the reviewed-through point, the baseline reason, turn coverage, raw-output coverage, and unread required history. For either
+For `effective-instructions` and `effective-instructions:preview`, also report which candidates were confirmed, superseded, left unresolved, or rejected, with reasons, what you decided about each retrieval-friction signal, and the source checks that remain. Report the review-window start, the reviewed-through point, the baseline reason, how far back you read, which raw outputs you did not open, and any required history that stayed unread. For either
 reconciliation mode, use the baseline, ledger, collaboration, and stop fields
 defined by `maintenance/implementation-reconciliation.md` instead.
 

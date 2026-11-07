@@ -21,7 +21,7 @@ Record one line per criterion:
 | Check | The direct check that proves it now: file read, command, test, service query, record entry |
 | Observed | The result as produced in this session, with enough detail to re-run the check |
 | Verdict | `met`, `not met`, or `unverifiable` |
-| Source | `observed` with the step or command, or the reason the check could not run |
+| Source | The step or command that observed it, or the reason the check could not run |
 
 Keep the ledger as plain text or a small table in the report. Do not store it
 as a durable rule; it describes one task at one moment.
