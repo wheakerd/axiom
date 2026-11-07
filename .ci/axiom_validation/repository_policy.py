@@ -98,7 +98,7 @@ CRITICAL_CODEOWNER_PATTERNS = (
     "/plugin/skills/using-axiom/",
     "/.ci/",
     "/SECURITY.md",
-    "/docs/repository-governance.md",
+    "/docs/en/repository-governance.md",
 )
 
 
