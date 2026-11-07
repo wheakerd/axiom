@@ -69,7 +69,7 @@ EXPECTED_DIRECT_SKILLS = (
 )
 # The order in which the public Skill Reference lists the bundled skills: the
 # startup gate first, then the routes in their reviewed order.
-SKILL_REFERENCE_ORDER = (
+BUNDLED_SKILL_ORDER = (
     "using-axiom",
     "clarify-intent",
     "delegate-simple-task",
@@ -168,10 +168,10 @@ def check_skill_contracts(failures: list[str]) -> None:
                 f"{INSTRUCTION_MAX_BYTES}"
             )
 
-    if tuple(sorted(SKILL_REFERENCE_ORDER)) != EXPECTED_DIRECT_SKILLS:
+    if tuple(sorted(BUNDLED_SKILL_ORDER)) != EXPECTED_DIRECT_SKILLS:
         failures.append(
             "canonical skill order is not the exact direct skill set: "
-            + ", ".join(SKILL_REFERENCE_ORDER)
+            + ", ".join(BUNDLED_SKILL_ORDER)
         )
 
 

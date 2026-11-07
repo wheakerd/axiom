@@ -86,7 +86,7 @@ The Release pipeline's `Advance marketplace catalogs` job then completes the cat
 
 The directory update is complete only after that merge and readback. Release publication or a generated job summary alone does not update the directory or an installed client. A failed or delayed handoff leaves the previous catalog selection available; rerun the catalog job or resume the steps above without republishing the immutable Release.
 
-The Codex catalog format was last verified on 2026-10-24 against the official [marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata), whose `git-subdir` plugin source takes `url`, `path`, and `ref` or `sha`. The Claude Code catalog format was last verified on 2026-10-24 against the official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources), whose `git-subdir` plugin source takes `url`, `path`, `ref`, and `sha` and checks out only that subdirectory. Use each format's native fields; do not add an Axiom update channel or schedule to either plugin manifest.
+The Codex catalog format follows the official [marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata), whose `git-subdir` plugin source takes `url`, `path`, and `ref` or `sha`. The Claude Code catalog format follows the official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources), whose `git-subdir` plugin source takes `url`, `path`, `ref`, and `sha` and checks out only that subdirectory. Use each format's native fields; do not add an Axiom update channel or schedule to either plugin manifest.
 
 ## Candidate And Final Evidence
 

@@ -35,7 +35,7 @@ The [CodeQL workflow](../../../.github/workflows/codeql.yml) analyzes Python and
 
 Review findings in the repository's [code scanning results](https://github.com/wheakerd/axiom/security/code-scanning). A successful analysis run does not mean there are no findings. The README badge reports workflow status; code-scanning alerts and repository rules own any merge-blocking decision. This workflow does not scan Markdown instructions for prompt injection or establish installed-host behavior.
 
-Configuration was checked against GitHub's [CodeQL workflow reference](https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options) (`last_verified: 2026-10-11`). Remote execution and alert results require an actual GitHub Actions run; local publication checks validate the workflow's repository policy, not the CodeQL analysis itself.
+Configuration follows GitHub's [CodeQL workflow reference](https://docs.github.com/en/code-security/reference/code-scanning/workflow-configuration-options). Remote execution and alert results require an actual GitHub Actions run; local publication checks validate the workflow's repository policy, not the CodeQL analysis itself.
 
 ## Hook Runtime Integration
 

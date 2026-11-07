@@ -19,7 +19,7 @@ codex plugin add axiom@axiom
 
 [市场条目](../../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定一个已发布版本。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.md#版本选择)。
 
-官方的 `--sparse` 选项把市场检出限制在存放市场目录的子目录中。目录中的 Git `url` 条目会单独获取插件，因此插件的技能与 Hook 不需要额外的市场稀疏路径。该 CLI 选项最后一次核对于 2026-10-13，依据官方的[市场注册文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。如果 `axiom` 已在没有稀疏检出的情况下注册，请按[迁移流程](managing-installation.md#市场克隆超时)操作。
+官方的 `--sparse` 选项把市场检出限制在存放市场目录的子目录中。目录的 `git-subdir` 源会单独获取插件，因此插件的技能与 Hook 不需要额外的市场稀疏路径。该 CLI 选项依据官方的[市场注册文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。如果 `axiom` 已在没有稀疏检出的情况下注册，请按[迁移流程](managing-installation.md#市场克隆超时)操作。
 
 开启一个新的 Codex 聊天或 CLI 会话。已有会话可能仍保留较旧的 Hook 或技能快照。
 

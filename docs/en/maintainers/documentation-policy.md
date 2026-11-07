@@ -90,8 +90,6 @@ English documentation is canonical and the default. English documents live in `d
 
 A twin is not indexed separately and does not count as a current document of its own; it is reached through its source. It changes in the same change as its source, and the documentation validator rejects a twin whose structure, code, generated facts, or links drift from the source. Maintainer, evidence, release, and reference documents stay English unless a twin is deliberately added under the same rules.
 
-Under the Skill Reference `## Shared skills`, give each skill a `### skill-name` heading in canonical startup-route order. Each entry contains **Link**, **Description**, and **Usage** fields: a repository-relative link to its `SKILL.md`, a concise summary, and a copyable prompt in a fenced `text` block. Keep detailed requirements in the linked source. New entries use the same structure; add optional detail within an entry without creating another skill-level heading.
-
 ## Canonical Ownership
 
 | Fact | Canonical owner | Current rule |
@@ -156,7 +154,6 @@ Every documentation change must, at minimum:
 - keep `docs/README.md` complete for current public documents and reject current-document orphans;
 - preserve generated marker boundaries and compare rendered machine facts with their canonical sources;
 - keep current public guidance from linking to non-public sources;
-- keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
 - validate the public Hook reference against checked-in declarations and wrappers;
 - keep each `docs/zh-CN/` twin bound to its `docs/en/` source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, and link targets match.
 

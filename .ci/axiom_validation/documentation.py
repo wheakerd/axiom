@@ -22,7 +22,7 @@ from .markdown import (
     mask_inline_code,
 )
 from .readme_facts import check_readme_facts
-from .repository_policy import SKILL_REFERENCE_ORDER, check_release_version_surfaces
+from .repository_policy import BUNDLED_SKILL_ORDER, check_release_version_surfaces
 from .runtime_identity import check_runtime_identity
 
 DOCS_ROOT = "docs/en/"
