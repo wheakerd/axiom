@@ -16,7 +16,7 @@ GFM_PUNCTUATION = re.compile(r"[\\!\"#$%&'()*+,./:;<=>?@\[\]^`{|}~]")
 REFERENCE_LINK = re.compile(
     r"^[ \t]{0,3}\[([^]]+)\]:[ \t]*(?:<([^>]+)>|(\S+))"
 )
-HOOK_REFERENCE_RELATIVE = "docs/reference/hooks.md"
+HOOK_REFERENCE_RELATIVE = "docs/en/reference/hooks.md"
 HOOK_REFERENCE_PATH = REPOSITORY_ROOT / HOOK_REFERENCE_RELATIVE
 
 

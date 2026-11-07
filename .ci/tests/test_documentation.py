@@ -71,10 +71,10 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertIn("17 negative fixtures", result.stdout)
 
     def test_translations_are_not_current_documents_and_name_their_source(self):
-        self.assertTrue(is_translation("docs/examples.zh-CN.md"))
-        self.assertFalse(is_current_document("docs/examples.zh-CN.md"))
+        self.assertTrue(is_translation("docs/zh-CN/examples.md"))
+        self.assertFalse(is_current_document("docs/zh-CN/examples.md"))
         self.assertFalse(is_current_document("README.zh-CN.md"))
-        self.assertEqual("docs/examples.md", translation_source("docs/examples.zh-CN.md"))
+        self.assertEqual("docs/en/examples.md", translation_source("docs/zh-CN/examples.md"))
         self.assertEqual("README.md", translation_source("README.zh-CN.md"))
 
     def test_checked_in_translations_mirror_their_sources(self):
@@ -85,11 +85,11 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(
             {
                 "README.zh-CN.md",
-                "docs/README.zh-CN.md",
-                "docs/examples.zh-CN.md",
-                "docs/guides/getting-started.zh-CN.md",
-                "docs/guides/managing-installation.zh-CN.md",
-                "docs/trust-model.zh-CN.md",
+                "docs/zh-CN/README.md",
+                "docs/zh-CN/examples.md",
+                "docs/zh-CN/guides/getting-started.md",
+                "docs/zh-CN/guides/managing-installation.md",
+                "docs/zh-CN/trust-model.md",
             },
             {path.relative_to(REPOSITORY_ROOT).as_posix() for path in translation_documents(REPOSITORY_ROOT)},
         )
@@ -98,10 +98,10 @@ class DocumentationValidationTests(unittest.TestCase):
         root = Path("/fixture").resolve()
         failures: list[str] = []
         check_translation_text(
-            "docs/a.zh-CN.md",
-            "# A\n\n[English](a.md) | \u7b80\u4f53\u4e2d\u6587\n\n[B](b.zh-CN.md) [C](c.md#anchor)\n",
-            "docs/a.md",
-            "# A\n\nEnglish | [Simplified Chinese (zh-CN)](a.zh-CN.md)\n\n[B](b.md) [C](c.md#other)\n",
+            "docs/zh-CN/a.md",
+            "# A\n\n[English](../en/a.md) | \u7b80\u4f53\u4e2d\u6587\n\n[B](b.md) [C](c.md#anchor)\n",
+            "docs/en/a.md",
+            "# A\n\nEnglish | [\u7b80\u4f53\u4e2d\u6587](../zh-CN/a.md)\n\n[B](b.md) [C](c.md#other)\n",
             failures,
             root=root,
         )

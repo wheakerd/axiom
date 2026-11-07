@@ -461,7 +461,7 @@ In Claude Code, `delegate-simple-task` stays inactive below the host's top reaso
 
 ### Required action
 
-Invoke `optimize-agent-usage` where you invoked `optimize-codex-usage`, and rename any host setting or permission rule that names `axiom:optimize-codex-usage`. Claude Code users receive these routes after the Claude Code catalog selects this release. Review the updated Hook before it runs: in Codex, review and trust it in `/hooks`; in Claude Code, compare the installed copy with the [Hook Reference](docs/reference/hooks.md) before the plugin loads in a new or reloaded session.
+Invoke `optimize-agent-usage` where you invoked `optimize-codex-usage`, and rename any host setting or permission rule that names `axiom:optimize-codex-usage`. Claude Code users receive these routes after the Claude Code catalog selects this release. Review the updated Hook before it runs: in Codex, review and trust it in `/hooks`; in Claude Code, compare the installed copy with the [Hook Reference](docs/en/reference/hooks.md) before the plugin loads in a new or reloaded session.
 
 See the [version notes](https://github.com/wheakerd/axiom/blob/v0.16.0/docs/releases/v0.16.0.md) for the delegation gate, the supervision boundary, the usage route migration, and static context evidence.
 
@@ -492,7 +492,7 @@ In Claude Code, the shared routes load natively. `delegate-simple-task`, `optimi
 
 ### Required action
 
-None for Codex. To use Axiom in Claude Code, add the `wheakerd/axiom` marketplace and install `axiom@axiom` as described in [Managing Installation](docs/guides/managing-installation.md).
+None for Codex. To use Axiom in Claude Code, add the `wheakerd/axiom` marketplace and install `axiom@axiom` as described in [Managing Installation](docs/en/guides/managing-installation.md).
 
 See the [version notes](https://github.com/wheakerd/axiom/blob/v0.15.0/docs/releases/v0.15.0.md) for the host boundary, runtime schema, and static context evidence.
 
@@ -772,7 +772,7 @@ Axiom installs and runs in Codex. The plugin architecture skill retains guidance
 
 ### Required action
 
-Existing Claude Code users must disable or uninstall their old Axiom installation in that host; cached installations are not removed by a repository update. For continued Axiom use, follow the [Codex installation guide](docs/guides/getting-started.md) and start a new session. See [v0.11.0 notes](https://github.com/wheakerd/axiom/blob/v0.11.0/docs/releases/v0.11.0.md) for details.
+Existing Claude Code users must disable or uninstall their old Axiom installation in that host; cached installations are not removed by a repository update. For continued Axiom use, follow the [Codex installation guide](docs/en/guides/getting-started.md) and start a new session. See [v0.11.0 notes](https://github.com/wheakerd/axiom/blob/v0.11.0/docs/releases/v0.11.0.md) for details.
 
 ## 0.10.1 - 2026-09-15
 

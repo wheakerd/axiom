@@ -1,6 +1,6 @@
 # Getting Started
 
-English | [简体中文](getting-started.zh-CN.md)
+English | [简体中文](../../zh-CN/guides/getting-started.md)
 
 This guide owns Axiom installation, first use, and the initial safe comparison between one routed request and one ordinary control request. Axiom supports Codex and Claude Code through separate host manifests, marketplaces, and Hooks over the same checked-in Skills.
 
@@ -17,7 +17,7 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-The [marketplace entry](../../.agents/plugins/marketplace.json) selects a published version through its Git source `ref`. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
+The [marketplace entry](../../../.agents/plugins/marketplace.json) selects a published version through its Git source `ref`. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
 
 The official `--sparse` option limits the marketplace checkout to its catalog directory. The catalog's Git `url` entry fetches the plugin separately, so the plugin's Skills and Hook do not need additional marketplace sparse paths. This CLI option was last verified on 2026-10-13 against the official [marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If `axiom` is already registered without sparse checkout, follow the [migration procedure](managing-installation.md#marketplace-clone-timeouts).
 
@@ -62,13 +62,13 @@ Use this ordinary request:
 
 > Summarize the purpose of this README. Do not modify files.
 
-The expected contract is normal host execution with no additional Axiom route. Startup and a no-route result receive no notice. A no-route result is not a safety certification; host permissions and repository instructions remain in force. See the [notice guidance](../../plugin/skills/using-axiom/SKILL.md#invocation-notes) for activation and naming boundaries.
+The expected contract is normal host execution with no additional Axiom route. Startup and a no-route result receive no notice. A no-route result is not a safety certification; host permissions and repository instructions remain in force. See the [notice guidance](../../../plugin/skills/using-axiom/SKILL.md#invocation-notes) for activation and naming boundaries.
 
 ## Interpret And Report The Result
 
 The expected results above are contracts, not claims that your installation has already reproduced them. Record the host name and version, operating system, Axiom version or immutable commit, installation method, lifecycle source, exact request, selected route, clarification count, and whether any mutation was attempted.
 
-Keep reports free of credentials, private conversation text, and sensitive repository content. If a result may expose a vulnerability or unauthorized action, use the private reporting process in [SECURITY.md](../../SECURITY.md) before sharing details publicly.
+Keep reports free of credentials, private conversation text, and sensitive repository content. If a result may expose a vulnerability or unauthorized action, use the private reporting process in [SECURITY.md](../../../SECURITY.md) before sharing details publicly.
 
 - Use the [compatibility report](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml) for a bounded host result.
 - Use the [routing-case report](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml) for a false positive, false negative, or unexpected clarification.

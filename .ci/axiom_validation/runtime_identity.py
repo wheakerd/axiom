@@ -19,7 +19,7 @@ CURRENT_SCHEMA_VERSION = "4"
 INPUT_MANIFEST_RELATIVE = ".ci/axiom_validation/runtime-contract-inputs-v4.json"
 IDENTITY_RELATIVE = ".ci/runtime-identity.json"
 IDENTITY_SCHEMA_VERSION = "2"
-RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
+RUNTIME_IDENTITY_SURFACES = ("docs/en/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"
 RUNTIME_IDENTITY_END = "<!-- runtime-identity:current:end -->"
 
@@ -554,14 +554,15 @@ def _validate_identity(
             failures.append(f"{label}.runtimeContract.recordCount does not match computed inputs")
 
 
-def render_runtime_identity(document: dict[str, Any]) -> str:
-    """Render the current identity as stable Markdown."""
+def render_runtime_identity(document: dict[str, Any], surface: str = RUNTIME_IDENTITY_SURFACES[0]) -> str:
+    """Render the current identity as stable Markdown for one managed surface."""
     runtime = document["runtimeContract"]
+    to_root = "../" * (len(surface.split("/")) - 1)
     return "\n".join(
         (
             f"- `pluginVersion`: `{document['pluginVersion']}`",
             f"- `runtimeContractDigest` (schema v{runtime['schemaVersion']}): `{runtime['digest']}`",
-            f"- Digest input manifest: [`{runtime['inputManifest']}`](../{runtime['inputManifest']})",
+            f"- Digest input manifest: [`{runtime['inputManifest']}`]({to_root}{runtime['inputManifest']})",
         )
     )
 

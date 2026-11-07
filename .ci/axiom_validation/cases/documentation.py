@@ -72,8 +72,8 @@ def _heading_skip() -> list[str]:
 def _index_missing_current() -> list[str]:
     temporary, root = _temporary_root()
     try:
-        docs = root / "docs"
-        docs.mkdir()
+        docs = root / "docs" / "en"
+        docs.mkdir(parents=True)
         (docs / "README.md").write_text(
             "# Index\n\n[A](a.md)\n", encoding="utf-8"
         )
@@ -89,8 +89,8 @@ def _index_missing_current() -> list[str]:
 def _current_orphan() -> list[str]:
     temporary, root = _temporary_root()
     try:
-        docs = root / "docs"
-        docs.mkdir()
+        docs = root / "docs" / "en"
+        docs.mkdir(parents=True)
         (docs / "README.md").write_text(
             "# Index\n\n[A](a.md)\n", encoding="utf-8"
         )
@@ -138,12 +138,12 @@ def _hook_reference_drift() -> list[str]:
         for relative_path in (
             "plugin/hooks/codex-hooks.json",
             "plugin/hooks/codex-session-start.cmd",
-            "docs/reference/hooks.md",
+            "docs/en/reference/hooks.md",
         ):
             destination = root / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPOSITORY_ROOT / relative_path, destination)
-        reference = root / "docs" / "reference" / "hooks.md"
+        reference = root / "docs" / "en" / "reference" / "hooks.md"
         reference.write_text(
             reference.read_text(encoding="utf-8")
             + "\n```bash\ncat \"${PLUGIN_ROOT}/skills/using-axiom/EXTRA.md\"\n```\n",
@@ -159,11 +159,13 @@ def _hook_reference_drift() -> list[str]:
 def _translation_pair(source: str, mirror: str) -> list[str]:
     temporary, root = _temporary_root()
     try:
-        docs = root / "docs"
-        docs.mkdir()
+        english = root / "docs" / "en"
+        chinese = root / "docs" / "zh-CN"
+        english.mkdir(parents=True)
+        chinese.mkdir(parents=True)
         if source is not None:
-            (docs / "guide.md").write_text(source, encoding="utf-8")
-        (docs / "guide.zh-CN.md").write_text(mirror, encoding="utf-8")
+            (english / "guide.md").write_text(source, encoding="utf-8")
+        (chinese / "guide.md").write_text(mirror, encoding="utf-8")
         failures: list[str] = []
         check_translations(root, failures)
         return failures
@@ -172,40 +174,40 @@ def _translation_pair(source: str, mirror: str) -> list[str]:
 
 
 def _translation_missing_source() -> list[str]:
-    return _translation_pair(None, "# Guide\n\n[English](guide.md)\n")
+    return _translation_pair(None, "# Guide\n\n[English](../en/guide.md)\n")
 
 
 def _translation_heading_drift() -> list[str]:
     return _translation_pair(
-        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n\n## Install\n",
-        "# Guide\n\n[English](guide.md)\n",
+        "# Guide\n\n[zh-CN](../zh-CN/guide.md)\n\n## Install\n",
+        "# Guide\n\n[English](../en/guide.md)\n",
     )
 
 
 def _translation_code_drift() -> list[str]:
     return _translation_pair(
-        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n\n```bash\ncodex plugin add axiom@axiom\n```\n",
-        "# Guide\n\n[English](guide.md)\n\n```bash\ncodex plugin add axiom\n```\n",
+        "# Guide\n\n[zh-CN](../zh-CN/guide.md)\n\n```bash\ncodex plugin add axiom@axiom\n```\n",
+        "# Guide\n\n[English](../en/guide.md)\n\n```bash\ncodex plugin add axiom\n```\n",
     )
 
 
 def _translation_generated_drift() -> list[str]:
     return _translation_pair(
-        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n\n<!-- facts:v1:start -->\nvalue\n<!-- facts:v1:end -->\n",
-        "# Guide\n\n[English](guide.md)\n\n<!-- facts:v1:start -->\nother\n<!-- facts:v1:end -->\n",
+        "# Guide\n\n[zh-CN](../zh-CN/guide.md)\n\n<!-- facts:v1:start -->\nvalue\n<!-- facts:v1:end -->\n",
+        "# Guide\n\n[English](../en/guide.md)\n\n<!-- facts:v1:start -->\nother\n<!-- facts:v1:end -->\n",
     )
 
 
 def _translation_link_drift() -> list[str]:
     return _translation_pair(
-        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n",
-        "# Guide\n\n[English](guide.md) [Extra](README.md)\n",
+        "# Guide\n\n[zh-CN](../zh-CN/guide.md)\n",
+        "# Guide\n\n[English](../en/guide.md) [Extra](README.md)\n",
     )
 
 
 def _translation_missing_switcher() -> list[str]:
     return _translation_pair(
-        "# Guide\n\n[zh-CN](guide.zh-CN.md)\n",
+        "# Guide\n\n[zh-CN](../zh-CN/guide.md)\n",
         "# Guide\n\nNo way back.\n",
     )
 

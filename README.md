@@ -7,14 +7,14 @@
 English | [简体中文](README.zh-CN.md)
 
 <!-- readme:badges:start -->
-[![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](plugin/skills) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](plugin/skills) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/en/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
 <!-- readme:badges:end -->
 
 [![Unit and integration tests](https://github.com/wheakerd/axiom/actions/workflows/unit-and-integration-tests.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/unit-and-integration-tests.yml) [![Cross-platform hook runtime](https://github.com/wheakerd/axiom/actions/workflows/hook-runtime-integration.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/hook-runtime-integration.yml) [![Distribution and publication guards](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml) [![CodeQL](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml)
 
 Focused workflow skills for Codex and Claude Code that turn requests into clear, actionable work.
 
-[Install](#installation) | [Update](#updating) | [Use](#usage) | [Skills](#skills) | [Documentation](docs/README.md) | [Changelog](CHANGELOG.md)
+[Install](#installation) | [Update](#updating) | [Use](#usage) | [Skills](#skills) | [Documentation](docs/en/README.md) | [Changelog](CHANGELOG.md)
 
 ![Axiom: workflow guardrails for Codex and Claude Code. Scope, authority, evidence, rollback.](docs/assets/social-preview.png)
 
@@ -49,7 +49,7 @@ Describe the outcome you want, or name a skill. Axiom selects a bundled skill fr
 | [`reversible-system-change`](plugin/skills/reversible-system-change/SKILL.md) | Plan and verify reversible system changes |
 <!-- readme:skill-index:end -->
 
-Each skill's `SKILL.md` describes it in full; [Examples](docs/examples.md) shows requests and expected behavior.
+Each skill's `SKILL.md` describes it in full; [Examples](docs/en/examples.md) shows requests and expected behavior.
 
 ## Installation
 
@@ -71,7 +71,7 @@ claude plugin install axiom@axiom
 
 Each marketplace selects an immutable published version. A new version reaches both marketplaces only after its release is published and verified; development commits on `main` do not advance that selection.
 
-In Codex, start a new session and trust the Hook in `/hooks`: Codex skips a new or changed Hook until you do, and Axiom's routing begins after that step. Claude Code has no separate Hook trust step and runs the Hook at the next `SessionStart` after the plugin loads. On Windows, Claude Code needs Git Bash for the Hook, and neither host has a recorded Windows observation yet; see [Compatibility](docs/compatibility.md#current-bounded-status). Verifying an installed Hook against its checked-in definition is an optional reviewer step described in the [Trust Model](docs/trust-model.md#hook-trust-boundary). The [Getting Started guide](docs/guides/getting-started.md) owns the full installation and first-use procedure.
+In Codex, start a new session and trust the Hook in `/hooks`: Codex skips a new or changed Hook until you do, and Axiom's routing begins after that step. Claude Code has no separate Hook trust step and runs the Hook at the next `SessionStart` after the plugin loads. On Windows, Claude Code needs Git Bash for the Hook, and neither host has a recorded Windows observation yet; see [Compatibility](docs/en/compatibility.md#current-bounded-status). Verifying an installed Hook against its checked-in definition is an optional reviewer step described in the [Trust Model](docs/en/trust-model.md#hook-trust-boundary). The [Getting Started guide](docs/en/guides/getting-started.md) owns the full installation and first-use procedure.
 
 ## Updating
 
@@ -90,7 +90,7 @@ claude plugin marketplace update axiom
 claude plugin update axiom@axiom
 ```
 
-After updating, start a new session; Codex holds the changed Hook until you trust it again in `/hooks`. Automatic update behavior is controlled by each host and your settings. See [Managing an Installation](docs/guides/managing-installation.md) for in-app updates, disabling, removal, and troubleshooting. For a marketplace clone timeout in either host, follow the guide's [recovery procedure](docs/guides/managing-installation.md#marketplace-clone-timeouts).
+After updating, start a new session; Codex holds the changed Hook until you trust it again in `/hooks`. Automatic update behavior is controlled by each host and your settings. See [Managing an Installation](docs/en/guides/managing-installation.md) for in-app updates, disabling, removal, and troubleshooting. For a marketplace clone timeout in either host, follow the guide's [recovery procedure](docs/en/guides/managing-installation.md#marketplace-clone-timeouts).
 
 ## Usage
 
@@ -112,20 +112,20 @@ The first request should select `agents-architect` and say so in one line, `axio
 > [!IMPORTANT]
 > A request that matches no Axiom skill still follows your host's permissions and repository instructions. No match is not a safety certification. Selecting a skill does not grant permission to edit, publish, deploy, or delete anything.
 
-[Examples](docs/examples.md) shows more requests and their expected behavior.
+[Examples](docs/en/examples.md) shows more requests and their expected behavior.
 
 ## Star History
 
 ![Star history of wheakerd/axiom](https://raw.githubusercontent.com/wheakerd/axiom/stats/stars.svg)
 
-The [Record star history workflow](.github/workflows/record-star-history.yml) re-renders the chart daily from [`stars.csv` on the `stats` branch](https://github.com/wheakerd/axiom/blob/stats/stars.csv); see the [stats branch policy](docs/repository-governance.md#stats-branch-policy).
+The [Record star history workflow](.github/workflows/record-star-history.yml) re-renders the chart daily from [`stars.csv` on the `stats` branch](https://github.com/wheakerd/axiom/blob/stats/stars.csv); see the [stats branch policy](docs/en/repository-governance.md#stats-branch-policy).
 
 ## Documentation and Support
 
-- [Documentation index](docs/README.md): guides and references by task.
+- [Documentation index](docs/en/README.md): guides and references by task.
 - [Latest release](https://github.com/wheakerd/axiom/releases/latest) and [Changelog](CHANGELOG.md): what changed in each version and any required action.
-- [Compatibility](docs/compatibility.md): supported hosts and known limitations.
-- [Trust Model](docs/trust-model.md): security boundaries. Axiom is a public beta; its instructions do not replace host permissions or provide a sandbox.
+- [Compatibility](docs/en/compatibility.md): supported hosts and known limitations.
+- [Trust Model](docs/en/trust-model.md): security boundaries. Axiom is a public beta; its instructions do not replace host permissions or provide a sandbox.
 - [GitHub Discussions](https://github.com/wheakerd/axiom/discussions): questions and early ideas.
 - [GitHub Issues](https://github.com/wheakerd/axiom/issues/new/choose): bug reports, feature requests, routing cases, and compatibility reports.
 - [SECURITY.md](SECURITY.md): report a vulnerability privately.

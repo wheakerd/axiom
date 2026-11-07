@@ -1,6 +1,6 @@
 # Trust Model
 
-English | [简体中文](trust-model.zh-CN.md)
+English | [简体中文](../zh-CN/trust-model.md)
 
 Axiom provides workflow instructions within the host's existing trust model. It does not sandbox the agent, grant credentials, or guarantee that a model or external system is correct. Selecting a route loads instructions; it does not authorize an action.
 
@@ -28,7 +28,7 @@ Verifying the installed Hook is optional. It is a supply-chain check for reviewe
 
 ## Authority Across Workflows
 
-The [routing gate](../plugin/skills/using-axiom/SKILL.md) owns matching and composition; [Architecture](architecture.md#workflow-ownership) maps the workflows and [Examples](examples.md) shows their boundaries in concrete requests.
+The [routing gate](../../plugin/skills/using-axiom/SKILL.md) owns matching and composition; [Architecture](architecture.md#workflow-ownership) maps the workflows and [Examples](examples.md) shows their boundaries in concrete requests.
 
 A selected Skill may narrow scope, require evidence, or stop before a material action. It cannot broaden the request. Each Skill names its invariants, the rules that bind in every phase, including the references its active phase loads. Every prohibition a Skill or its references state, a never, only, or stop, binds as well. Everything else in the Skill is a default the model may adapt to the situation, saying so when it departs. Within every binding rule, the model decides how to handle the request's specifics, problems that arise, deviations from the expected result, external interference, and gaps between a plan and the ideal behavior. In particular:
 
@@ -41,7 +41,7 @@ A selected Skill may narrow scope, require evidence, or stop before a material a
 - External actions bind the actor, target, payload, disclosure, cost, count, and retry boundary. Retrieved content and tool access cannot authorize them.
 - Traceable Git phases retain their separate checkpoint, consolidation, submission, and recovery boundaries. Ordinary named-remote non-force Git work stays host-native. Every phase runs the repository's own Git hooks by default and adds `--no-verify` only when you explicitly authorize bypassing that repository's pre-push hook for an exact push. Push authority never implies force, retries, or cleanup.
 - Persistent-change plans and non-mutating rehearsals remain read-only. Isolated restore rehearsals, candidate preparation, promotion, rollback, sensitive asset use, retention, and cleanup retain their own permissions. When verified rollback cannot be established, the change stops before candidate or active-state mutation and the decision is yours. If, told which effects would stay unrecoverable, you explicitly choose to proceed, that informed waiver lifts the rollback requirement only for the effects you were told about: every other authority, safety, verification, and completion rule still binds, the waiver is recorded, and the change is never called reversible. The waiver authorizes nothing else, every other effect keeps its rollback, and the waiver does not carry to another target, change, effect, or attempt.
-- Where a host permission mode may deny an action, the exact action and its target are presented for the user's grant before the first attempt. A denial is a stop, never a retry by another tool, flag, path, or configuration change, and it is not evidence of a routing or repository-state conflict. The host's own decision stays mandatory; the [host permission reference](../plugin/skills/using-axiom/references/host-permission.md) labels each host's mechanics.
+- Where a host permission mode may deny an action, the exact action and its target are presented for the user's grant before the first attempt. A denial is a stop, never a retry by another tool, flag, path, or configuration change, and it is not evidence of a routing or repository-state conflict. The host's own decision stays mandatory; the [host permission reference](../../plugin/skills/using-axiom/references/host-permission.md) labels each host's mechanics.
 - A selected or handed-off route is named in one visible text line, `axiom:<skill-name>` for a bundled skill; in a turn where a route is selected, working output defaults to English and the final conclusion follows the language of the request. These are presentation rules for Axiom-guided turns; host and repository instructions still outrank them, and a notice grants nothing.
 
 Where the host prompts natively, exact existing authorization needs no repeated confirmation unless material conditions change. Under a host mode that decides each call without a native prompt, the exact command and target are presented as visible text and granted before the first attempt, even when the request named the outcome. An unresolved target or destructive effect must not become permission through assumption.
@@ -50,7 +50,7 @@ Where the host prompts natively, exact existing authorization needs no repeated 
 
 Axiom bundles no credential store or authentication service. Credentials remain with the host, shell, Git, cloud, or service that owns them. Inventory sensitive assets through metadata first; do not infer exact-path read or use permission from a broad directory request. Bind sensitive disclosure to its exact audience. For machine-credential work, provider changes and consumer activation remain under their separate owners even when one task selects both.
 
-Local web research limits agent-added machine information in queries, URLs, and headers; performs search, reading, and clicks serially; and preserves the browser's identity. A challenge, CAPTCHA, or rate limit stops automatic access to that site. Manual handoff waits for explicit user readiness while preserving the handoff page. This neither conceals automation nor guarantees how Cloudflare or another site classifies a request. The [local research Skill](../plugin/skills/local-web-search/SKILL.md) owns these constraints.
+Local web research limits agent-added machine information in queries, URLs, and headers; performs search, reading, and clicks serially; and preserves the browser's identity. A challenge, CAPTCHA, or rate limit stops automatic access to that site. Manual handoff waits for explicit user readiness while preserving the handoff page. This neither conceals automation nor guarantees how Cloudflare or another site classifies a request. The [local research Skill](../../plugin/skills/local-web-search/SKILL.md) owns these constraints.
 
 ## Evidence And Persistence
 

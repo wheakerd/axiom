@@ -226,7 +226,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
 
 ### Fixed
 
-- Fixed the [guide](docs/guides/getting-started.md).
+- Fixed the [guide](docs/en/guides/getting-started.md).
 
 ### Behavioral impact
 
@@ -271,7 +271,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             self.assertIn("## Fixed", body)
             self.assertIn(
                 "https://github.com/wheakerd/axiom/blob/v0.27.9/"
-                "docs/guides/getting-started.md",
+                "docs/en/guides/getting-started.md",
                 body,
             )
 

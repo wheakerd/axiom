@@ -35,11 +35,11 @@ OpenAI still supports `.codex-plugin/plugin.json` as a compatibility manifest. I
 
 The `hooks` declaration is supported in this layout. The listing schema also supports `interface.brandColorDark` and `interface.supportURL`; their value, contrast, and HTTPS requirements still apply. See the official [hook specification](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks) and [interface requirements](https://developers.openai.com/plugins/deploy/submission-errors#listing-and-interface-errors).
 
-Current package checks use the repository's publication aggregate. A native package read is a separate parsing check; it does not prove strict schema validation, installation, hook trust, or execution. The response may omit listing fields, so it cannot establish whether those fields render in the UI. Contributor check ownership is in [CONTRIBUTING.md](../CONTRIBUTING.md#required-local-checks).
+Current package checks use the repository's publication aggregate. A native package read is a separate parsing check; it does not prove strict schema validation, installation, hook trust, or execution. The response may omit listing fields, so it cannot establish whether those fields render in the UI. Contributor check ownership is in [CONTRIBUTING.md](../../CONTRIBUTING.md#required-local-checks).
 
 ## Current Bounded Status
 
-The machine-readable [runtime identity](../.ci/runtime-identity.json) binds the checked-in tree to its plugin version and installed-file digest, as [Runtime Identity](runtime-identity.md) describes. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
+The machine-readable [runtime identity](../../.ci/runtime-identity.json) binds the checked-in tree to its plugin version and installed-file digest, as [Runtime Identity](runtime-identity.md) describes. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
 
 | Host | What the repository checks for each release |
 | --- | --- |
@@ -85,4 +85,4 @@ Version notes, routing evaluations, host observation records, runtime digest his
 
 Use the synchronized manifests to identify the source package version and an immutable version tag when describing a published release. A working-tree checkout, floating tag, or marketplace cache does not establish publication or the installed version. An installed marketplace snapshot may lag the source, so compare its behavior with documentation and Hook declarations from the same release or commit. Current observations include an explicit version and Hook review.
 
-User-visible release history belongs in the [Changelog](../CHANGELOG.md). Contributor requirements for compatibility claims and optional native validation are in [CONTRIBUTING.md](../CONTRIBUTING.md).
+User-visible release history belongs in the [Changelog](../../CHANGELOG.md). Contributor requirements for compatibility claims and optional native validation are in [CONTRIBUTING.md](../../CONTRIBUTING.md).

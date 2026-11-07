@@ -1,12 +1,12 @@
 # 快速开始
 
-[English](getting-started.md) | 简体中文
+[English](../../en/guides/getting-started.md) | 简体中文
 
 本指南负责 Axiom 的安装、首次使用，以及一个路由请求与一个普通对照请求之间的首次安全比较。Axiom 通过各自独立的宿主清单、市场与 Hook，在同一套签入的技能之上支持 Codex 与 Claude Code。
 
 ## 安装前
 
-先查看当前的[兼容性边界](../compatibility.md)，并记住：已签入或经静态验证的支持并不是对你宿主的一次新鲜观测。路由门控是只读的，因此在任何仓库中的首次尝试都不会改变任何东西，除非你提出变更请求。
+先查看当前的[兼容性边界](../../en/compatibility.md)，并记住：已签入或经静态验证的支持并不是对你宿主的一次新鲜观测。路由门控是只读的，因此在任何仓库中的首次尝试都不会改变任何东西，除非你提出变更请求。
 
 ## 为 Codex 安装
 
@@ -17,9 +17,9 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-[市场条目](../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定一个已发布版本。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.zh-CN.md#版本选择)。
+[市场条目](../../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定一个已发布版本。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.md#版本选择)。
 
-官方的 `--sparse` 选项把市场检出限制在存放市场目录的子目录中。目录中的 Git `url` 条目会单独获取插件，因此插件的技能与 Hook 不需要额外的市场稀疏路径。该 CLI 选项最后一次核对于 2026-10-13，依据官方的[市场注册文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。如果 `axiom` 已在没有稀疏检出的情况下注册，请按[迁移流程](managing-installation.zh-CN.md#市场克隆超时)操作。
+官方的 `--sparse` 选项把市场检出限制在存放市场目录的子目录中。目录中的 Git `url` 条目会单独获取插件，因此插件的技能与 Hook 不需要额外的市场稀疏路径。该 CLI 选项最后一次核对于 2026-10-13，依据官方的[市场注册文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。如果 `axiom` 已在没有稀疏检出的情况下注册，请按[迁移流程](managing-installation.md#市场克隆超时)操作。
 
 开启一个新的 Codex 聊天或 CLI 会话。已有会话可能仍保留较旧的 Hook 或技能快照。
 
@@ -40,7 +40,7 @@ Claude Code 插件加载同一套技能与路由。用自然语言或 `/axiom:<s
 
 ## 信任 Hook
 
-Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定义：在新会话中打开 `/hooks`，阅读 Axiom 条目并信任它。Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤：插件加载后，其 Hook 会在下一次 `SessionStart` 事件时运行，例如新会话、`/clear`、`/resume`、分叉或压缩，而 `/hooks` 会显示已加载的条目。将已安装的定义与 [Hook 参考](../reference/hooks.md)比对是审阅者的可选检查；[信任模型](../trust-model.zh-CN.md#hook-信任边界)说明了它在何时重要，以及定义不一致时该怎么做。
+Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定义：在新会话中打开 `/hooks`，阅读 Axiom 条目并信任它。Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤：插件加载后，其 Hook 会在下一次 `SessionStart` 事件时运行，例如新会话、`/clear`、`/resume`、分叉或压缩，而 `/hooks` 会显示已加载的条目。将已安装的定义与 [Hook 参考](../../en/reference/hooks.md)比对是审阅者的可选检查；[信任模型](../trust-model.md#hook-信任边界)说明了它在何时重要，以及定义不一致时该怎么做。
 
 ## 尝试一个路由请求
 
@@ -62,16 +62,16 @@ Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定
 
 > Summarize the purpose of this README. Do not modify files.
 
-预期契约是宿主正常执行，不附加任何 Axiom 路由。启动与无路由结果都不会收到通知。无路由结果不是安全认证；宿主权限与仓库指令仍然有效。激活与命名边界见[通知指引](../../plugin/skills/using-axiom/SKILL.md#invocation-notes)。
+预期契约是宿主正常执行，不附加任何 Axiom 路由。启动与无路由结果都不会收到通知。无路由结果不是安全认证；宿主权限与仓库指令仍然有效。激活与命名边界见[通知指引](../../../plugin/skills/using-axiom/SKILL.md#invocation-notes)。
 
 ## 解读并报告结果
 
 上面的预期结果是契约，而不是你的安装已经复现它们的断言。请记录宿主名称与版本、操作系统、Axiom 版本或不可变提交、安装方式、生命周期来源、确切请求、选中的路由、澄清次数，以及是否尝试过任何变更。
 
-报告中不要包含凭证、私人对话文本或敏感的仓库内容。如果某个结果可能暴露漏洞或未经授权的操作，在公开分享细节之前，先使用 [SECURITY.md](../../SECURITY.md) 中的私下报告流程。
+报告中不要包含凭证、私人对话文本或敏感的仓库内容。如果某个结果可能暴露漏洞或未经授权的操作，在公开分享细节之前，先使用 [SECURITY.md](../../../SECURITY.md) 中的私下报告流程。
 
 - 有边界的宿主结果使用[兼容性报告](https://github.com/wheakerd/axiom/issues/new?template=compatibility_report.yml)。
 - 误报、漏报或意外的澄清使用[路由用例报告](https://github.com/wheakerd/axiom/issues/new?template=routing_case.yml)。
-- 非破坏性观测流程遵循[报告兼容性结果](../compatibility.md#report-a-compatibility-result)。
+- 非破坏性观测流程遵循[报告兼容性结果](../../en/compatibility.md#report-a-compatibility-result)。
 
-更新、移除、禁用或排障流程，请继续阅读[管理安装](managing-installation.zh-CN.md)。
+更新、移除、禁用或排障流程，请继续阅读[管理安装](managing-installation.md)。

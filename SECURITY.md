@@ -30,7 +30,7 @@ If a routing case caused or could plausibly cause unauthorized credential use, e
 
 ## Security Boundaries
 
-Read the [Trust Model](docs/trust-model.md) before assessing impact. In particular:
+Read the [Trust Model](docs/en/trust-model.md) before assessing impact. In particular:
 
 - selecting a route loads instructions; it never grants action authority;
 - installed hooks can be compared with the exact checked-in definitions, an optional reviewer step described in the Trust Model;
@@ -38,7 +38,7 @@ Read the [Trust Model](docs/trust-model.md) before assessing impact. In particul
 - request acceptance and command exit status are not proof of the intended outcome; and
 - missing or unavailable evidence must not be reported as a pass.
 
-Axiom is not a sandbox, policy-enforcement kernel, credential broker, malware detector, or guarantee that an agent, host, dependency, or external service is correct. It does not prevent every error or unsafe instruction. See [Report A Compatibility Result](docs/compatibility.md#report-a-compatibility-result) for the safe reproduction procedure.
+Axiom is not a sandbox, policy-enforcement kernel, credential broker, malware detector, or guarantee that an agent, host, dependency, or external service is correct. It does not prevent every error or unsafe instruction. See [Report A Compatibility Result](docs/en/compatibility.md#report-a-compatibility-result) for the safe reproduction procedure.
 
 ## Repository Workflow Boundary
 
@@ -46,4 +46,4 @@ Pull-request validation and release provenance are separate trust domains. Contr
 
 Release provenance depends on protected history, immutable release subjects, and independently verified publication evidence. Workflow detection cannot replace server-side prevention of unsigned protected updates or mutable release tags. A reusable commit-level check is evidence about that commit, not authorization for an exact tag-creation request.
 
-[Repository Governance](docs/repository-governance.md#pull-request-validation-and-release-provenance) owns the workflow trust boundaries, required checks, and rulesets. Its [release-tag policy](docs/repository-governance.md#release-tag-policy) and [manual re-verification procedure](docs/repository-governance.md#manual-re-verification) define what to inspect before relying on live remote state. See [Release Documentation And Evidence](docs/maintainers/release-documentation.md#candidate-and-final-evidence) for the distinction between candidate records and final publication evidence.
+[Repository Governance](docs/en/repository-governance.md#pull-request-validation-and-release-provenance) owns the workflow trust boundaries, required checks, and rulesets. Its [release-tag policy](docs/en/repository-governance.md#release-tag-policy) and [manual re-verification procedure](docs/en/repository-governance.md#manual-re-verification) define what to inspect before relying on live remote state. See [Release Documentation And Evidence](docs/en/maintainers/release-documentation.md#candidate-and-final-evidence) for the distinction between candidate records and final publication evidence.

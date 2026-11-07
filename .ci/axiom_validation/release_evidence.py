@@ -1405,7 +1405,7 @@ def main(argv: list[str] | None = None) -> int:
                         "merging and verify both merged catalogs. Until then, both catalogs "
                         "retain their previous version. "
                         "See [the catalog publication procedure]"
-                        "(https://github.com/wheakerd/axiom/blob/main/docs/maintainers/"
+                        "(https://github.com/wheakerd/axiom/blob/main/docs/en/maintainers/"
                         "release-documentation.md#marketplace-publication).\n\n"
                         f"```json\n{source}```\n"
                     )
