@@ -649,7 +649,7 @@ def stage_draft(
             {
                 "tag_name": tag,
                 "target_commitish": commit,
-                "name": f"Axiom {tag}",
+                "name": tag,
                 "body": body,
                 "draft": True,
                 "prerelease": False,
@@ -663,7 +663,7 @@ def stage_draft(
         and release.get("prerelease") is False
         and release.get("tag_name") == tag
         and release.get("target_commitish") == commit
-        and release.get("name") == f"Axiom {tag}"
+        and release.get("name") == tag
         and release.get("body") == body,
         f"Release {release_id} is not the exact Draft for {tag}; inspect it before any retry",
     )

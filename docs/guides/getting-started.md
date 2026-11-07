@@ -1,6 +1,6 @@
 # Getting Started
 
-English | [Simplified Chinese (zh-CN)](getting-started.zh-CN.md)
+English | [简体中文](getting-started.zh-CN.md)
 
 This guide owns Axiom installation, first use, and the initial safe comparison between one routed request and one ordinary control request. Axiom supports Codex and Claude Code through separate host manifests, marketplaces, and Hooks over the same checked-in Skills.
 

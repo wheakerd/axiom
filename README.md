@@ -4,10 +4,10 @@
 
 **Think before AI thinks.**
 
-English | [Simplified Chinese (zh-CN)](README.zh-CN.md)
+English | [简体中文](README.zh-CN.md)
 
 <!-- readme:badges:start -->
-[![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](docs/reference/skills.md) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/wheakerd/axiom?sort=semver&style=for-the-badge&label=release&color=0f766e)](https://github.com/wheakerd/axiom/releases/latest) [![Skills: 14](https://img.shields.io/badge/skills-14-0369a1?style=for-the-badge)](plugin/skills) [![Hosts: Codex and Claude Code](https://img.shields.io/badge/hosts-Codex%20%7C%20Claude%20Code-6d28d9?style=for-the-badge)](docs/compatibility.md) [![License: MIT](https://img.shields.io/badge/license-MIT-b45309?style=for-the-badge)](LICENSE)
 <!-- readme:badges:end -->
 
 [![Unit and integration tests](https://github.com/wheakerd/axiom/actions/workflows/unit-and-integration-tests.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/unit-and-integration-tests.yml) [![Cross-platform hook runtime](https://github.com/wheakerd/axiom/actions/workflows/hook-runtime-integration.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/hook-runtime-integration.yml) [![Distribution and publication guards](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/distribution-drift.yml) [![CodeQL](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/wheakerd/axiom/actions/workflows/codeql.yml)
@@ -33,23 +33,23 @@ Describe the outcome you want, or name a skill. Axiom selects a bundled skill fr
 <!-- readme:skill-index:start -->
 | Skill | What it does |
 | --- | --- |
-| [`using-axiom`](docs/reference/skills.md#using-axiom) | Route installed Axiom skills from a session bootstrap |
-| [`clarify-intent`](docs/reference/skills.md#clarify-intent) | Resolve unclear requests with options or a custom answer |
-| [`delegate-simple-task`](docs/reference/skills.md#delegate-simple-task) | Delegate simple work to your ordered candidate models |
-| [`task-planning`](docs/reference/skills.md#task-planning) | Create and revise plans around current requirements |
-| [`continuous-progress`](docs/reference/skills.md#continuous-progress) | Supervised progress on a native scheduler |
-| [`local-web-search`](docs/reference/skills.md#local-web-search) | Constrain local searches and stop at site challenges |
-| [`agents-architect`](docs/reference/skills.md#agents-architect) | Initialize, maintain, and validate scoped AGENTS.md systems |
-| [`agent-plugin-architect`](docs/reference/skills.md#agent-plugin-architect) | Design and audit packaged plugin architecture |
-| [`optimize-agent-usage`](docs/reference/skills.md#optimize-agent-usage) | Reduce agent context and workflow overhead |
-| [`review-axiom-task`](docs/reference/skills.md#review-axiom-task) | Audit Axiom decisions from observable evidence |
-| [`verify-completion`](docs/reference/skills.md#verify-completion) | Check completion claims against current evidence |
-| [`confirm-external-action`](docs/reference/skills.md#confirm-external-action) | Bind and verify consequential external actions |
-| [`traceable-git-submit`](docs/reference/skills.md#traceable-git-submit) | Trace checkpoints and explicit Git submissions |
-| [`reversible-system-change`](docs/reference/skills.md#reversible-system-change) | Plan and verify reversible system changes |
+| [`using-axiom`](plugin/skills/using-axiom/SKILL.md) | Route installed Axiom skills from a session bootstrap |
+| [`clarify-intent`](plugin/skills/clarify-intent/SKILL.md) | Resolve unclear requests with options or a custom answer |
+| [`delegate-simple-task`](plugin/skills/delegate-simple-task/SKILL.md) | Delegate simple work to your ordered candidate models |
+| [`task-planning`](plugin/skills/task-planning/SKILL.md) | Create and revise plans around current requirements |
+| [`continuous-progress`](plugin/skills/continuous-progress/SKILL.md) | Supervised progress on a native scheduler |
+| [`local-web-search`](plugin/skills/local-web-search/SKILL.md) | Constrain local searches and stop at site challenges |
+| [`agents-architect`](plugin/skills/agents-architect/SKILL.md) | Initialize, maintain, and validate scoped AGENTS.md systems |
+| [`agent-plugin-architect`](plugin/skills/agent-plugin-architect/SKILL.md) | Design and audit packaged plugin architecture |
+| [`optimize-agent-usage`](plugin/skills/optimize-agent-usage/SKILL.md) | Reduce agent context and workflow overhead |
+| [`review-axiom-task`](plugin/skills/review-axiom-task/SKILL.md) | Audit Axiom decisions from observable evidence |
+| [`verify-completion`](plugin/skills/verify-completion/SKILL.md) | Check completion claims against current evidence |
+| [`confirm-external-action`](plugin/skills/confirm-external-action/SKILL.md) | Bind and verify consequential external actions |
+| [`traceable-git-submit`](plugin/skills/traceable-git-submit/SKILL.md) | Trace checkpoints and explicit Git submissions |
+| [`reversible-system-change`](plugin/skills/reversible-system-change/SKILL.md) | Plan and verify reversible system changes |
 <!-- readme:skill-index:end -->
 
-The [Skill Reference](docs/reference/skills.md) gives each skill's full description and a copyable example.
+Each skill's `SKILL.md` describes it in full; [Examples](docs/examples.md) shows requests and expected behavior.
 
 ## Installation
 
@@ -123,7 +123,6 @@ The [Record star history workflow](.github/workflows/record-star-history.yml) re
 ## Documentation and Support
 
 - [Documentation index](docs/README.md): guides and references by task.
-- [Skill Reference](docs/reference/skills.md): bundled skills and examples.
 - [Latest release](https://github.com/wheakerd/axiom/releases/latest) and [Changelog](CHANGELOG.md): what changed in each version and any required action.
 - [Compatibility](docs/compatibility.md): supported hosts and known limitations.
 - [Trust Model](docs/trust-model.md): security boundaries. Axiom is a public beta; its instructions do not replace host permissions or provide a sandbox.

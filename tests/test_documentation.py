@@ -15,7 +15,6 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.documentation import (
     GENERATED_MARKER,
     check_documentation,
-    check_skill_reference_inventory_text,
     check_translation_text,
     check_translations,
     discover_markdown,
@@ -46,8 +45,8 @@ class DocumentationValidationTests(unittest.TestCase):
         # change.
         markdown = discover_markdown(REPOSITORY_ROOT)
         self.assertEqual(len(markdown), report.markdown_count)
-        self.assertEqual(21, report.current_document_count)
-        self.assertEqual(15, report.indexed_document_count)
+        self.assertEqual(20, report.current_document_count)
+        self.assertEqual(14, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual(6, report.translation_count)
 
@@ -55,7 +54,7 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         rejected = check_documentation_negative_fixtures(failures)
         self.assertEqual(len(NEGATIVE_FIXTURES), rejected)
-        self.assertEqual(18, rejected)
+        self.assertEqual(17, rejected)
         self.assertEqual([], failures)
 
     def test_standard_library_command_line_entrypoint(self):
@@ -69,69 +68,7 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("", result.stderr)
         self.assertIn("6 translations", result.stdout)
-        self.assertIn("18 negative fixtures", result.stdout)
-
-    def test_skill_inventory_ignores_headings_in_usage_examples(self):
-        for fence in ("```", "~~~~"):
-            with self.subTest(fence=fence):
-                failures: list[str] = []
-                check_skill_reference_inventory_text(
-                    "# A\n\n## Shared skills\n\n"
-                    "### using-axiom\n\n**Usage:**\n\n"
-                    f"{fence}text\n## Shared skills\n### example-only\n{fence}\n\n"
-                    "### fixture-route\n\n## Other\n\n"
-                    "### retired-route\n",
-                    failures,
-                    inventory=("using-axiom", "fixture-route"),
-                )
-                self.assertEqual([], failures)
-
-    def test_skill_inventory_does_not_leak_into_following_sections(self):
-        for heading in ("# Other", "## Other"):
-            with self.subTest(heading=heading):
-                failures: list[str] = []
-                check_skill_reference_inventory_text(
-                    "# A\n\n## Shared skills\n\n### using-axiom\n\n"
-                    f"{heading}\n\n### fixture-route\n",
-                    failures,
-                    inventory=("using-axiom", "fixture-route"),
-                )
-                self.assertTrue(any(
-                    "differs from the canonical skill order" in failure
-                    for failure in failures
-                ))
-
-    def test_skill_inventory_requires_each_skill_once_in_canonical_order(self):
-        for skills in (
-            ("using-axiom",),
-            ("using-axiom", "fixture-route", "fixture-route"),
-            ("fixture-route", "using-axiom"),
-        ):
-            with self.subTest(skills=skills):
-                failures: list[str] = []
-                check_skill_reference_inventory_text(
-                    "# A\n\n## Shared skills\n\n"
-                    + "\n\n".join(f"### {skill}" for skill in skills) + "\n",
-                    failures,
-                    inventory=("using-axiom", "fixture-route"),
-                )
-                self.assertTrue(any(
-                    "differs from the canonical skill order" in failure
-                    for failure in failures
-                ))
-
-    def test_skill_inventory_rejects_duplicate_shared_sections(self):
-        failures: list[str] = []
-        check_skill_reference_inventory_text(
-            "# A\n\n## Shared skills\n\n### using-axiom\n\n"
-            "## Shared skills\n\n### fixture-route\n",
-            failures,
-            inventory=("using-axiom", "fixture-route"),
-        )
-        self.assertTrue(any(
-            "exactly one parseable Shared skills heading" in failure
-            for failure in failures
-        ))
+        self.assertIn("17 negative fixtures", result.stdout)
 
     def test_translations_are_not_current_documents_and_name_their_source(self):
         self.assertTrue(is_translation("docs/examples.zh-CN.md"))

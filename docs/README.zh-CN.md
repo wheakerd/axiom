@@ -13,7 +13,6 @@
 | 安装 Axiom 并尝试一个路由请求 | [快速开始](guides/getting-started.zh-CN.md) | 用户 |
 | 更新、禁用、移除或排查 Axiom | [管理安装](guides/managing-installation.zh-CN.md) | 用户 |
 | 检查确切的 Hook 命令 | [Hook 参考](reference/hooks.md) | 用户与审计者 |
-| 找到某个技能并复制示例 | [技能参考](reference/skills.md) | 用户 |
 | 理解 Axiom 做什么 | [架构](architecture.md) | 用户与审阅者 |
 | 审阅权限与信任边界 | [信任模型](trust-model.zh-CN.md) | 用户与安全审阅者 |
 | 查看当前的宿主支持 | [兼容性](compatibility.md) | 用户与审计者 |

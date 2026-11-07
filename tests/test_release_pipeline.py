@@ -117,7 +117,7 @@ def final_release(identifier: int, tag: str, commit: str) -> dict:
         "id": identifier,
         "tag_name": tag,
         "target_commitish": commit,
-        "name": f"Axiom {tag}",
+        "name": tag,
         "draft": False,
         "prerelease": False,
         "immutable": True,

@@ -43,7 +43,7 @@ codex plugin list --marketplace axiom --json
 
 保留有意为之的用户固定。目录固定锁定的是**目录快照**，并不覆盖插件条目自身的 `source.ref`。在 Codex 中使用市场的 `--ref` 选项。在 Claude Code 中，添加市场时加上 `#ref` 后缀，例如 `wheakerd/axiom#<tag>`；以标签或分支添加的市场只会更新到该引用的最新提交。要锁定某个特定的插件版本，请用客户端支持的源控制手段，选择一个其条目解析到该版本的不可变目录快照。在假定目录标签与插件版本一致之前，先检查该条目。对于由工作区管理的安装，工作区管理员负责所配置的仓库、路径、引用与原生同步策略。
 
-Codex 源格式最后一次核对于 2026-10-25，生命周期语义最后一次核对于 2026-10-13，依据官方的[市场格式](https://developers.openai.com/plugins/build/plugins#marketplace-metadata)、[市场配置](https://learn.chatgpt.com/docs/config-file/config-reference)与[工作区同步文档](https://learn.chatgpt.com/docs/enterprise/plugin-management)。工作区同步时机不是对个人 Codex 安装的承诺。Claude Code 源格式最后一次核对于 2026-10-25，依据官方的[市场参考](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources)；其他 Claude Code 陈述最后一次核对于 2026-10-22，依据官方的[插件安装指南](https://code.claude.com/docs/en/discover-plugins)与[插件命令参考](https://code.claude.com/docs/en/plugins/cli-reference)。
+Codex 源格式与生命周期语义依据官方的[市场格式](https://developers.openai.com/plugins/build/plugins#marketplace-metadata)、[市场配置](https://learn.chatgpt.com/docs/config-file/config-reference)与[工作区同步文档](https://learn.chatgpt.com/docs/enterprise/plugin-management)。工作区同步时机不是对个人 Codex 安装的承诺。Claude Code 源格式依据官方的[市场参考](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources)；其他 Claude Code 陈述依据官方的[插件安装指南](https://code.claude.com/docs/en/discover-plugins)与[插件命令参考](https://code.claude.com/docs/en/plugins/cli-reference)。
 
 ## 市场克隆超时
 
@@ -80,7 +80,7 @@ codex plugin marketplace upgrade axiom
 
 克隆超时时限适用于目录下载。一次完整刷新还可能下载插件源，耗时可能超过 30 秒。稀疏检出不会改变客户端的超时，也不保证在缓慢或不可用的网络上完成。如果错误持续，请记录确切的失败阶段、CLI 版本、退出状态以及脱敏后的错误，用于[问题报告](#报告问题)。
 
-受支持的 CLI 选项与稀疏路径要求最后一次核对于 2026-10-13，依据官方的[市场 CLI 文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)与[配置参考](https://learn.chatgpt.com/docs/config-file/config-reference)。
+受支持的 CLI 选项与稀疏路径要求依据官方的[市场 CLI 文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)与[配置参考](https://learn.chatgpt.com/docs/config-file/config-reference)。
 
 ### Claude Code 克隆超时
 
@@ -91,7 +91,7 @@ export CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS=300000
 claude plugin marketplace update axiom
 ```
 
-在 PowerShell 中改为设置 `$env:CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS = "300000"`。对于新的注册，`claude plugin marketplace add wheakerd/axiom --sparse .claude-plugin` 只获取目录，因为其插件条目使用独立的 `git-subdir` 源。移除市场会同时卸载其插件，所以不要仅为了添加稀疏检出而重新注册一个已有安装。这些选项最后一次核对于 2026-10-22，依据官方的[插件排障](https://code.claude.com/docs/en/plugins/troubleshooting)与[插件命令](https://code.claude.com/docs/en/plugins/cli-reference)参考。
+在 PowerShell 中改为设置 `$env:CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS = "300000"`。对于新的注册，`claude plugin marketplace add wheakerd/axiom --sparse .claude-plugin` 只获取目录，因为其插件条目使用独立的 `git-subdir` 源。移除市场会同时卸载其插件，所以不要仅为了添加稀疏检出而重新注册一个已有安装。这些选项依据官方的[插件排障](https://code.claude.com/docs/en/plugins/troubleshooting)与[插件命令](https://code.claude.com/docs/en/plugins/cli-reference)参考。
 
 ## 禁用或移除
 
@@ -104,7 +104,7 @@ enabled = false
 
 设置 `enabled = true` 可再次启用。该键由插件名与市场名组合而成。项目配置仅对受信任的项目加载，并且仍受托管要求约束。禁用会保留安装；市场刷新仍可能更新其文件。在 Codex 中，安装或启用插件并不会自动信任其 Hook；使用前请在 `/hooks` 中审阅当前定义。
 
-该项目设置适用于本地市场安装，而不是工作区管理插件的启用状态。这些配置语义最后一次核对于 2026-09-16，依据官方的[项目插件设置](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo)与 [Hook 信任要求](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks)。
+该项目设置适用于本地市场安装，而不是工作区管理插件的启用状态。这些配置语义依据官方的[项目插件设置](https://developers.openai.com/plugins/build/plugins#enable-or-disable-a-plugin-for-a-repo)与 [Hook 信任要求](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks)。
 
 从 `axiom` 市场移除确切的 Codex 安装：
 
@@ -120,7 +120,7 @@ claude plugin enable axiom@axiom
 claude plugin uninstall axiom@axiom
 ```
 
-不带 `--scope` 时，`disable` 与 `enable` 作用于 local、project、user 三个范围中第一个在设置里提到 Axiom 的范围。那通常是 `user`，因此禁用会在所有项目中关闭 Axiom。要只在当前项目中关闭它，为你自己加上 `--scope local`，或加上 `--scope project` 通过项目设置共享该覆盖。一旦 Axiom 被启用并再次加载，无论是在会话开始还是插件重新加载时，其 Hook 都会在下一次 `SessionStart` 事件时运行，不需要单独的信任步骤。这些 Claude Code 命令最后一次核对于 2026-10-24，依据官方的[插件命令参考](https://code.claude.com/docs/en/plugins/cli-reference)。
+不带 `--scope` 时，`disable` 与 `enable` 作用于 local、project、user 三个范围中第一个在设置里提到 Axiom 的范围。那通常是 `user`，因此禁用会在所有项目中关闭 Axiom。要只在当前项目中关闭它，为你自己加上 `--scope local`，或加上 `--scope project` 通过项目设置共享该覆盖。一旦 Axiom 被启用并再次加载，无论是在会话开始还是插件重新加载时，其 Hook 都会在下一次 `SessionStart` 事件时运行，不需要单独的信任步骤。这些 Claude Code 命令依据官方的[插件命令参考](https://code.claude.com/docs/en/plugins/cli-reference)。
 
 在任一宿主上做出更改后，请开启新会话。在 Claude Code 中，`/reload-plugins` 会从运行中的会话卸载插件，但已经投递的路由门控仍留在该会话的上下文中。在把 Axiom 视为未激活之前，确认它在宿主的插件列表中不存在或已禁用，并且其 Hook 不在 `/hooks` 中。不要编辑已安装的文件或删除宿主缓存来替代由宿主管理的生命周期。禁用或移除 Axiom 会把路由写入你各个仓库 Git 元数据中的任务状态原样留下；[信任模型](../trust-model.zh-CN.md#路由写入的仓库状态)列出了这些位置以及如何移除它们。
 

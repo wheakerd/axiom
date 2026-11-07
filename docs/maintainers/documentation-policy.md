@@ -47,7 +47,7 @@ Project-operation plans, marketing drafts, and channel-status ledgers belong out
 
 The current repository assigns these responsibilities:
 
-- `README.md` owns the bounded public introduction, the generated skill index, installation and update quick start, and first-use example; `docs/reference/skills.md` owns the bundled-skill descriptions and copyable examples;
+- `README.md` owns the bounded public introduction, the generated skill index, installation and update quick start, and first-use example; each skill's `SKILL.md` owns its description and `docs/examples.md` owns example requests;
 - `CONTRIBUTING.md` owns contribution intake and the repository map; `docs/maintainers/runtime-changes.md` owns runtime-authoring rules and `docs/maintainers/validation.md` owns contributor check procedures;
 - `SECURITY.md` owns vulnerability reporting and security boundaries, while `CHANGELOG.md` owns user-visible changes and required action;
 - `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement contact;
@@ -79,7 +79,7 @@ evidence/
 
 Topical current references may remain directly under `docs/` when another directory would create artificial fragmentation.
 
-README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. The Skill Reference keeps each skill's full description and copyable usage. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
+README stays a landing page: identity, a generated skill index, installation, updating, first use, and links. The skill index and the badge row that counts the bundled skills are generated regions rendered in canonical order from each skill's `agents/openai.yaml` short description; `python3 scripts/render-release-facts.py --render` refreshes them, and the publication checks reject a stale rendering. README may ask readers once, in plain words, to star the repository; the request offers nothing in exchange and does not claim that a star brings release notifications.
 
 ## Translations
 
@@ -100,7 +100,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Discoverability facts and external listing status | `docs/maintainers/distribution-channels.md` | Dated observations; a submission is recorded only when it was made |
 | Vulnerability reporting | `SECURITY.md` | Private reporting instructions and bounded security claims |
 | Community conduct and enforcement contact | `CODE_OF_CONDUCT.md` | Current; adapted from the Contributor Covenant |
-| Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `docs/reference/skills.md` keeps a validated rendering and `README.md` a generated index of each skill's short description |
+| Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `README.md` keeps a generated index of each skill's short description |
 | Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/guides/getting-started.md` and `docs/guides/managing-installation.md` | Current |
 | Current plugin version | Codex plugin manifest | Current |

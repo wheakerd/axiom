@@ -10,7 +10,7 @@ from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document
 
 README_RELATIVE = "README.md"
 README_TRANSLATIONS = ("README.zh-CN.md",)
-SKILL_REFERENCE_RELATIVE = "docs/reference/skills.md"
+SKILLS_RELATIVE = "plugin/skills"
 README_BADGES_START = "<!-- readme:badges:start -->"
 README_BADGES_END = "<!-- readme:badges:end -->"
 README_SKILL_INDEX_START = "<!-- readme:skill-index:start -->"
@@ -64,16 +64,16 @@ def render_badges(summaries: tuple[tuple[str, str], ...]) -> str:
     count = len(summaries)
     skills_badge = (
         f"[![Skills: {count}](https://img.shields.io/badge/skills-{count}-0369a1"
-        f"?style=for-the-badge)]({SKILL_REFERENCE_RELATIVE})"
+        f"?style=for-the-badge)]({SKILLS_RELATIVE})"
     )
     return " ".join((RELEASE_BADGE, skills_badge, HOSTS_BADGE, LICENSE_BADGE))
 
 
 def render_skill_index(summaries: tuple[tuple[str, str], ...]) -> str:
-    """Render one table row per bundled skill, linked to its reference entry."""
+    """Render one table row per bundled skill, linked to its SKILL.md."""
     rows = ["| Skill | What it does |", "| --- | --- |"]
     rows.extend(
-        f"| [`{name}`]({SKILL_REFERENCE_RELATIVE}#{name}) | {summary} |"
+        f"| [`{name}`]({SKILLS_RELATIVE}/{name}/SKILL.md) | {summary} |"
         for name, summary in summaries
     )
     return "\n".join(rows)
