@@ -238,15 +238,31 @@ def check_critical_path_owners(codeowners_text: str, failures: list[str]) -> int
     return valid_count
 
 
+def check_critical_path_targets(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
+    """Require every critical-path CODEOWNERS pattern to match a file in the tree."""
+    for pattern in CRITICAL_CODEOWNER_PATTERNS:
+        target = root / pattern.strip("/")
+        if pattern.endswith("/"):
+            matched = target.is_dir() and any(path.is_file() for path in target.rglob("*"))
+        else:
+            matched = target.is_file()
+        if not matched:
+            failures.append(
+                f".github/CODEOWNERS pattern {pattern!r} matches no file in the repository"
+            )
+
+
 def check_repository_governance_contract(failures: list[str]) -> int:
-    """Validate the checked-in critical-path owners."""
+    """Validate the checked-in critical-path owners and the files they match."""
     relative_path = ".github/CODEOWNERS"
     try:
         codeowners_text = (REPOSITORY_ROOT / relative_path).read_text(encoding="utf-8")
     except OSError as error:
         failures.append(f"cannot read {relative_path}: {error}")
         return 0
-    return check_critical_path_owners(codeowners_text, failures)
+    owner_count = check_critical_path_owners(codeowners_text, failures)
+    check_critical_path_targets(failures)
+    return owner_count
 
 
 def check_release_version_surfaces(failures: list[str]) -> None:

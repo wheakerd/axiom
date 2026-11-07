@@ -13,6 +13,7 @@ from axiom_validation.context import RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.repository_policy import (
     CRITICAL_CODEOWNER_PATTERNS,
     check_critical_path_owners,
+    check_critical_path_targets,
     check_packaged_skills,
     check_release_version_surfaces,
     check_repository_governance_contract,
@@ -102,6 +103,50 @@ class RepositoryPolicyTests(unittest.TestCase):
             ".github/CODEOWNERS must retain the exact ordered critical-path owner set",
             failures,
         )
+
+    def _critical_path_tree(self, root):
+        for pattern in CRITICAL_CODEOWNER_PATTERNS:
+            target = root / pattern.strip("/")
+            if pattern.endswith("/"):
+                target = target / "nested" / "file.txt"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("x\n", encoding="utf-8")
+
+    def test_codeowners_targets_accept_a_tree_with_every_critical_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._critical_path_tree(root)
+
+            failures = []
+            check_critical_path_targets(failures, root)
+            self.assertEqual([], failures)
+
+    def test_codeowners_targets_reject_a_missing_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._critical_path_tree(root)
+            (root / "SECURITY.md").unlink()
+
+            failures = []
+            check_critical_path_targets(failures, root)
+            self.assertEqual(
+                [".github/CODEOWNERS pattern '/SECURITY.md' matches no file in the repository"],
+                failures,
+            )
+
+    def test_codeowners_targets_reject_a_directory_without_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._critical_path_tree(root)
+            shutil.rmtree(root / "plugin" / "hooks" / "nested")
+            self.assertTrue((root / "plugin" / "hooks").is_dir())
+
+            failures = []
+            check_critical_path_targets(failures, root)
+            self.assertEqual(
+                [".github/CODEOWNERS pattern '/plugin/hooks/' matches no file in the repository"],
+                failures,
+            )
 
 
 if __name__ == "__main__":
