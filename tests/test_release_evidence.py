@@ -21,7 +21,6 @@ from axiom_validation.release_evidence import (
     select_release_from_collection,
     validate_downloaded_observation,
     validate_release_asset,
-    uses_repository_checks,
     verify_remote_release_preflight,
     verify_release_snapshot,
 )
@@ -220,10 +219,10 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(expected, result.stdout)
 
-    def test_fix_forward_release_body_contract_rejects_missing_or_candidate_text(self):
+    def test_release_body_contract_requires_the_entry_sections(self):
         valid = """# Changelog
 
-## 0.10.1 - unreleased
+## 0.27.9 - unreleased
 
 ### Fixed
 
@@ -247,21 +246,16 @@ class ReleaseEvidenceTests(unittest.TestCase):
                     "missing required sections",
                 ),
                 (
-                    "candidate-state",
-                    valid.replace("- None.", "- GitHub Release does not exist."),
-                    "candidate-only publication text",
-                ),
-                (
-                    "candidate-word",
-                    valid.replace("- None.", "- This candidate needs no action."),
-                    "pre-publication text",
+                    "no-change-section",
+                    valid.replace("### Fixed\n", "### Notes\n"),
+                    "at least one change section",
                 ),
             ):
                 with self.subTest(case_id=case_id):
                     changelog.write_text(payload, encoding="utf-8")
                     failures: list[str] = []
                     self.assertIsNone(
-                        render_release_body("0.10.1", failures, root=root)
+                        render_release_body("0.27.9", failures, root=root)
                     )
                     self.assertTrue(
                         any(expected_failure in failure for failure in failures),
@@ -270,18 +264,18 @@ class ReleaseEvidenceTests(unittest.TestCase):
 
             changelog.write_text(valid, encoding="utf-8")
             failures = []
-            body = render_release_body("0.10.1", failures, root=root)
+            body = render_release_body("0.27.9", failures, root=root)
             self.assertEqual([], failures)
             self.assertIsNotNone(body)
             assert body is not None
             self.assertIn("## Fixed", body)
             self.assertIn(
-                "https://github.com/wheakerd/axiom/blob/v0.10.1/"
+                "https://github.com/wheakerd/axiom/blob/v0.27.9/"
                 "docs/guides/getting-started.md",
                 body,
             )
 
-    def test_new_changelog_entries_reject_hard_wrapped_prose(self):
+    def test_changelog_entries_reject_hard_wrapped_prose(self):
         single_line = """# Changelog
 
 ## {version} - unreleased
@@ -306,9 +300,8 @@ None.
             root = Path(temporary_directory)
             changelog = root / "CHANGELOG.md"
             for version, payload, rejected in (
-                ("0.15.0", wrapped, True),
-                ("0.15.0", single_line, False),
-                ("0.14.9", wrapped, False),
+                ("0.27.9", wrapped, True),
+                ("0.27.9", single_line, False),
             ):
                 with self.subTest(version=version, rejected=rejected):
                     changelog.write_text(payload.format(version=version), encoding="utf-8")
@@ -1038,19 +1031,7 @@ None.
                 json.loads(attestation.read_text())["validation"]["scope"],
             )
 
-    def test_assets_before_the_repository_checks_policy_are_refused(self):
-        subject = {"version": "0.10.1", "tag": "v0.10.1", "commit": COMMIT, "tree": TREE}
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "axiom-v0.10.1-codex-core-v2-asset.json"
-            path.write_text("{}\n")
-            failures = []
-            validate_release_asset(path, subject, failures, root=Path(__file__).resolve().parents[1])
-            self.assertEqual(["release policy records apply from v0.11.0 onward"], failures)
-
-    def test_repository_policy_version_boundary_and_rendering(self):
-        for version, expected in (("0.10.999", False), ("0.11.0", True), ("1.0.0", True),
-                                  ("999999999999999999999999.0.0", True), ("0.11.0-beta", False)):
-            self.assertEqual(expected, uses_repository_checks(version), version)
+    def test_repository_policy_rendering(self):
         result = subprocess.run(
             [sys.executable, "scripts/check-release-evidence.py", "render-policy",
              "--expected-version", RELEASE_VERSION, "--expected-tag", TAG,

@@ -26,7 +26,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
     f"{len(JSON_FILES)} JSON files, "
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
-    "20 documentation negative fixtures, "
+    "19 documentation negative fixtures, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 102 validator parser fixtures, "

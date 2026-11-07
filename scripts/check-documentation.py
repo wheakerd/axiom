@@ -14,10 +14,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
 from axiom_validation.cases.documentation import (  # noqa: E402
     check_documentation_negative_fixtures,
 )
-from axiom_validation.documentation import (  # noqa: E402
-    README_MAX_BYTES,
-    check_documentation,
-)
+from axiom_validation.documentation import check_documentation  # noqa: E402
 
 
 def main() -> int:
@@ -31,8 +28,6 @@ def main() -> int:
         return 1
     print(
         "Documentation validation passed: "
-        f"README {report.readme_bytes} bytes "
-        f"(ceiling {README_MAX_BYTES // 1024} KiB), "
         f"{report.markdown_count} Markdown files, "
         f"{report.current_document_count} current documents, "
         f"{report.indexed_document_count} indexed documents, "

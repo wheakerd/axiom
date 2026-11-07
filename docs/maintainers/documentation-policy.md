@@ -109,7 +109,7 @@ Under the Skill Reference `## Shared skills`, give each skill a `### skill-name`
 | Current compatibility boundary | `docs/compatibility.md` | Current |
 | Records from earlier releases | The release tags; `docs/compatibility.md` names the tag that keeps them | Not part of the current tree; they do not establish current support |
 | User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
-| GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current for future tags after v0.10.0 |
+| GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current |
 | Candidate evidence | Checked-in machine records bound to the source commit | Current; may state only what that commit can prove |
 | Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | `docs/repository-governance.md`; the live rulesets are the source for their own settings | Current |
@@ -148,7 +148,6 @@ Machine-derived facts should use bounded generated regions or deterministic chec
 Every documentation change must, at minimum:
 
 - review current instructions against their same-snapshot source owners and separate release history, schema selectors, and observed evidence from current capability claims;
-- keep `README.md` at or below the enforced 16 KiB ceiling;
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and avoid skipped heading levels;
 - keep `docs/README.md` complete for current public documents and reject current-document orphans;

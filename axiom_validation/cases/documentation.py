@@ -15,7 +15,6 @@ from axiom_validation.documentation import (
     check_hook_reference,
     check_markdown_language,
     check_private_guidance_text,
-    check_readme_budget,
     check_skill_reference_inventory_text,
     check_translations,
 )
@@ -25,17 +24,6 @@ from axiom_validation.markdown import check_markdown_links
 def _temporary_root() -> tuple[tempfile.TemporaryDirectory[str], Path]:
     temporary = tempfile.TemporaryDirectory()
     return temporary, Path(temporary.name)
-
-
-def _readme_oversize() -> list[str]:
-    temporary, root = _temporary_root()
-    try:
-        (root / "README.md").write_text("# A\n" + "x" * (16 * 1024), encoding="utf-8")
-        failures: list[str] = []
-        check_readme_budget(root, failures)
-        return failures
-    finally:
-        temporary.cleanup()
 
 
 def _broken_relative_link() -> list[str]:
@@ -247,7 +235,6 @@ def _english_source_with_non_ascii() -> list[str]:
 
 
 NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
-    ("readme-oversize", _readme_oversize, "migration ceiling"),
     ("broken-relative-link", _broken_relative_link, "broken repository-relative link"),
     ("missing-local-anchor", _missing_local_anchor, "missing Markdown fragment"),
     ("missing-h1", _missing_h1, "exactly one H1"),

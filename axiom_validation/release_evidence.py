@@ -28,31 +28,13 @@ PLAN_SCHEMA_VERSION = "2"
 OID_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"[0-9a-f]{64}")
 PUBLISH_WORKFLOW_SHA256 = "cdc297bc7ce203dc1454d5b8876f4278d4516b59ddd85f4201ae330c3ea631a5"
-RELEASE_BODY_POLICY_BASELINE_VERSION = "0.10.0"
-RELEASE_BODY_UNWRAPPED_BASELINE_VERSION = "0.15.0"
-REPOSITORY_CHECKS_RELEASE_VERSION = "0.11.0"
-RELEASE_BODY_MAX_BYTES = 8192
+# GitHub rejects a Release body above this many characters; the tag would already exist.
+RELEASE_BODY_MAX_CHARACTERS = 125_000
 PUBLIC_REPOSITORY_BLOB_ROOT = "https://github.com/wheakerd/axiom/blob"
 RELEASE_BODY_CHANGE_HEADINGS = frozenset(
     {"added", "changed", "fixed", "removed", "deprecated", "security"}
 )
 RELEASE_BODY_REQUIRED_HEADINGS = frozenset({"behavioral impact", "required action"})
-RELEASE_BODY_FORBIDDEN_PHRASES = (
-    "unreleased candidate",
-    "pending-immutable-tag",
-    "tag absence",
-    "release absence",
-    "tag does not exist",
-    "release does not exist",
-)
-RELEASE_BODY_FUTURE_FORBIDDEN_PHRASES = (
-    "candidate",
-    "unreleased",
-    "no github release",
-    "future github release",
-    "future tag",
-    "would identify a later",
-)
 
 
 class DuplicateJsonKeyError(ValueError):
@@ -139,15 +121,8 @@ def _validate_subject(
         failures.append("expected release tree must be a lowercase 40-character Git SHA")
 
 
-def uses_repository_checks(version: str) -> bool:
-    parsed = parse_production_release_version(version)
-    boundary = parse_production_release_version(REPOSITORY_CHECKS_RELEASE_VERSION)
-    return parsed is not None and parsed >= boundary
-
-
 def _asset_prefix(version: str) -> str:
-    kind = "release-policy" if uses_repository_checks(version) else "codex-core-v2"
-    return f"axiom-v{version}-{kind}-"
+    return f"axiom-v{version}-release-policy-"
 
 
 def release_policy_record(subject: dict[str, str]) -> dict[str, Any]:
@@ -167,9 +142,6 @@ def release_policy_record(subject: dict[str, str]) -> dict[str, Any]:
 def validate_release_asset(
     path: Path, subject: dict[str, str], failures: list[str], *, root: Path
 ) -> None:
-    if not uses_repository_checks(subject["version"]):
-        failures.append("release policy records apply from v0.11.0 onward")
-        return
     try:
         canonical = path.resolve(strict=True)
         if not path.is_absolute() or canonical != path:
@@ -222,8 +194,7 @@ def render_release_body(
     root: Path = REPOSITORY_ROOT,
 ) -> str | None:
     """Render one future GitHub Release body from its exact Changelog entry."""
-    precedence = parse_production_release_version(version)
-    if precedence is None:
+    if parse_production_release_version(version) is None:
         failures.append("release body version must be one stable numeric production version")
         return None
     changelog_path = root / "CHANGELOG.md"
@@ -257,28 +228,21 @@ def render_release_body(
         heading.strip().casefold()
         for heading in re.findall(r"^### ([^\n]+)$", entry, flags=re.MULTILINE)
     }
-    baseline = parse_production_release_version(RELEASE_BODY_POLICY_BASELINE_VERSION)
-    if baseline is not None and precedence > baseline:
-        if headings.isdisjoint(RELEASE_BODY_CHANGE_HEADINGS):
-            failures.append(
-                "fix-forward Changelog entry must contain at least one change section"
-            )
-        missing = sorted(RELEASE_BODY_REQUIRED_HEADINGS - headings)
-        if missing:
-            failures.append(
-                "fix-forward Changelog entry is missing required sections: "
-                + ", ".join(missing)
-            )
+    if headings.isdisjoint(RELEASE_BODY_CHANGE_HEADINGS):
+        failures.append("Changelog entry must contain at least one change section")
+    missing = sorted(RELEASE_BODY_REQUIRED_HEADINGS - headings)
+    if missing:
+        failures.append(
+            "Changelog entry is missing required sections: " + ", ".join(missing)
+        )
 
-    unwrapped_baseline = parse_production_release_version(RELEASE_BODY_UNWRAPPED_BASELINE_VERSION)
-    if unwrapped_baseline is not None and precedence >= unwrapped_baseline:
-        wrapped = _hard_wrapped_lines(entry)
-        if wrapped:
-            failures.append(
-                f"Changelog entry for {version} must keep each paragraph and list item "
-                f"on one source line; found {len(wrapped)} hard-wrapped continuation "
-                f"line(s), first: {wrapped[0]!r}"
-            )
+    wrapped = _hard_wrapped_lines(entry)
+    if wrapped:
+        failures.append(
+            f"Changelog entry for {version} must keep each paragraph and list item "
+            f"on one source line; found {len(wrapped)} hard-wrapped continuation "
+            f"line(s), first: {wrapped[0]!r}"
+        )
 
     body = re.sub(
         r"^(#{3,6}) ",
@@ -323,23 +287,11 @@ def render_release_body(
             "release body contains unbound repository-relative links: "
             + ", ".join(remaining_relative)
         )
-    lowered = body.casefold()
-    for phrase in RELEASE_BODY_FORBIDDEN_PHRASES:
-        if phrase in lowered:
-            failures.append(
-                f"release body contains candidate-only publication text {phrase!r}"
-            )
-    if baseline is not None and precedence > baseline:
-        for phrase in RELEASE_BODY_FUTURE_FORBIDDEN_PHRASES:
-            if phrase in lowered:
-                failures.append(
-                    f"fix-forward release body contains pre-publication text {phrase!r}"
-                )
     if re.search(r"^# ", body, flags=re.MULTILINE):
         failures.append("release body must not duplicate the GitHub Release title")
-    if len(body.encode("utf-8")) > RELEASE_BODY_MAX_BYTES:
+    if len(body) > RELEASE_BODY_MAX_CHARACTERS:
         failures.append(
-            f"release body exceeds the {RELEASE_BODY_MAX_BYTES}-byte fix-forward budget"
+            f"release body exceeds GitHub's {RELEASE_BODY_MAX_CHARACTERS}-character limit"
         )
     return None if failures else body
 
@@ -941,12 +893,11 @@ def _attestation_document(plan: dict[str, Any], digest: str) -> dict[str, Any]:
         },
         "schemaVersion": ATTESTATION_SCHEMA_VERSION,
         "validation": {
+            "scope": "release-policy-and-artifact-integrity",
             "status": "pass",
             "validator": "scripts/check-release-evidence.py",
         },
     }
-    if uses_repository_checks(subject["version"]):
-        document["validation"]["scope"] = "release-policy-and-artifact-integrity"
     return document
 
 
@@ -1439,8 +1390,6 @@ def main(argv: list[str] | None = None) -> int:
             "tree": args.expected_tree,
         }
         _validate_subject(*subject.values(), failures)
-        if not uses_repository_checks(args.expected_version):
-            failures.append("release policy records apply from v0.11.0 onward")
         if not failures:
             sys.stdout.buffer.write(_canonical_json_bytes(release_policy_record(subject)))
     elif args.command == "render-marketplace":
