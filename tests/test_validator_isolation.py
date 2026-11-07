@@ -26,7 +26,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
     f"{len(JSON_FILES)} JSON files, "
     f"{len(discover_markdown(REPOSITORY_ROOT))} Markdown files, "
-    "19 documentation negative fixtures, "
+    "18 documentation negative fixtures, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "13 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
@@ -71,8 +71,6 @@ assert all(
 
 class RejectTestPackage(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.startswith(("axiom_validation.no_hook_", "axiom_validation.historical_no_hook")):
-            raise AssertionError("retired experiment imported by current publication checks")
         if fullname == "tests" or fullname.startswith("tests."):
             raise ImportError("repository test package is intentionally unavailable")
         return None

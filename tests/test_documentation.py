@@ -15,7 +15,6 @@ from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.documentation import (
     GENERATED_MARKER,
     check_documentation,
-    check_markdown_language,
     check_skill_reference_inventory_text,
     check_translation_text,
     check_translations,
@@ -56,7 +55,7 @@ class DocumentationValidationTests(unittest.TestCase):
         failures: list[str] = []
         rejected = check_documentation_negative_fixtures(failures)
         self.assertEqual(len(NEGATIVE_FIXTURES), rejected)
-        self.assertEqual(19, rejected)
+        self.assertEqual(18, rejected)
         self.assertEqual([], failures)
 
     def test_standard_library_command_line_entrypoint(self):
@@ -70,7 +69,7 @@ class DocumentationValidationTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("", result.stderr)
         self.assertIn("6 translations", result.stdout)
-        self.assertIn("19 negative fixtures", result.stdout)
+        self.assertIn("18 negative fixtures", result.stdout)
 
     def test_skill_inventory_ignores_headings_in_usage_examples(self):
         for fence in ("```", "~~~~"):
@@ -157,11 +156,6 @@ class DocumentationValidationTests(unittest.TestCase):
             },
             {path.relative_to(REPOSITORY_ROOT).as_posix() for path in translation_documents(REPOSITORY_ROOT)},
         )
-
-    def test_english_markdown_stays_ascii(self):
-        failures: list[str] = []
-        check_markdown_language(REPOSITORY_ROOT, failures)
-        self.assertEqual([], failures)
 
     def test_translation_may_substitute_its_own_translation_in_links(self):
         root = Path("/fixture").resolve()

@@ -967,51 +967,31 @@ def check_manifest_capability_schema(
 
 
 
-# From v0.17.0 each catalog installs only the plugin/ subtree of the tagged
-# release; earlier tags keep the repository root as the plugin root.
-PLUGIN_SUBTREE_FIRST_TAG = "v0.17.0"
+# Each catalog installs only the plugin/ subtree of the tagged release.
 CATALOG_SUBTREE_PATHS = {"codex": "./plugin", "claude-code": "plugin"}
-CATALOG_SOURCE_TYPES = frozenset({"url", "git-subdir"})
+CATALOG_SOURCE_TYPES = frozenset({"git-subdir"})
 
 
 def catalog_source_keys(source: Any) -> frozenset[str]:
-    """Return the exact key set of a catalog plugin source for its type."""
-    if isinstance(source, dict) and source.get("source") == "git-subdir":
-        return frozenset({"source", "url", "path", "ref"})
-    return frozenset({"source", "url", "ref"})
+    """Return the exact key set of a catalog plugin source."""
+    return frozenset({"source", "url", "path", "ref"})
 
 
 def catalog_source(tag: str, host: str) -> dict[str, str]:
     """Return the catalog plugin source that selects ``tag`` for ``host``."""
-    if parse_production_release_tag(tag) >= parse_production_release_tag(
-        PLUGIN_SUBTREE_FIRST_TAG
-    ):
-        return {
-            "source": "git-subdir",
-            "url": EXPECTED_PLUGIN_REPOSITORY,
-            "path": CATALOG_SUBTREE_PATHS[host],
-            "ref": tag,
-        }
-    return {"source": "url", "url": EXPECTED_PLUGIN_REPOSITORY, "ref": tag}
+    return {
+        "source": "git-subdir",
+        "url": EXPECTED_PLUGIN_REPOSITORY,
+        "path": CATALOG_SUBTREE_PATHS[host],
+        "ref": tag,
+    }
 
 
 def catalog_layout_failure(source: dict[str, Any], host: str) -> str | None:
-    """Require the source shape that matches the selected release's plugin root."""
-    if parse_production_release_tag(source["ref"]) >= parse_production_release_tag(
-        PLUGIN_SUBTREE_FIRST_TAG
-    ):
-        expected = CATALOG_SUBTREE_PATHS[host]
-        if source.get("source") != "git-subdir" or source.get("path") != expected:
-            return (
-                f"must use git-subdir with path {expected!r} for "
-                f"{PLUGIN_SUBTREE_FIRST_TAG} and later releases"
-            )
-        return None
-    if source.get("source") != "url":
-        return (
-            f"must use url for releases before {PLUGIN_SUBTREE_FIRST_TAG}, whose "
-            "plugin root is the repository root"
-        )
+    """Require the git-subdir source that selects the host's plugin path."""
+    expected = CATALOG_SUBTREE_PATHS[host]
+    if source.get("source") != "git-subdir" or source.get("path") != expected:
+        return f"must use git-subdir with path {expected!r}"
     return None
 
 

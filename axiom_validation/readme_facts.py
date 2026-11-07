@@ -47,9 +47,9 @@ def load_skill_summaries(
             failures.append(str(error))
             continue
         summary = interface["short_description"]
-        if not summary or not summary.isascii() or "|" in summary or "`" in summary:
+        if not summary or "|" in summary or "`" in summary:
             failures.append(
-                f"{relative} short_description must be non-empty ASCII without "
+                f"{relative} short_description must be non-empty without "
                 "table or code delimiters"
             )
             continue

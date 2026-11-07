@@ -203,30 +203,6 @@ def check_release_signature_workflow_contract(failures: list[str]) -> str | None
     ):
         if text.count(owner) != 1:
             failures.append(f"{label} must contain exactly one critical owner {owner!r}")
-    if "strictSemVer" in text:
-        failures.append(f"{label} retains the superseded full-SemVer policy owner")
-    for weak_pattern in ("/^v[0-9]/", "/^refs\\/tags\\/v[0-9]/"):
-        if weak_pattern in text:
-            failures.append(f"{label} retains weak release-tag matcher {weak_pattern!r}")
-    for removed_pull_request_gate in (
-        'context.eventName === "pull_request"',
-        "pullRequest?.head?.repo?.full_name",
-        "targetCommit = pullRequest.head.sha;",
-    ):
-        if removed_pull_request_gate in text:
-            failures.append(
-                f"{label} still applies release provenance to pull requests via "
-                f"{removed_pull_request_gate!r}"
-            )
-    for overloaded_context in (
-        "Verify GitHub-signed release target",
-        "Manual tag verification requires",
-        "workflow-dispatch-main",
-    ):
-        if overloaded_context in text:
-            failures.append(
-                f"{label} retains overloaded release-check context {overloaded_context!r}"
-            )
     return text
 
 

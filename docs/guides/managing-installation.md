@@ -29,7 +29,7 @@ Whether updates are checked or installed automatically, and their timing, are co
 
 The [marketplace entry](../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and an immutable release-tag `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's published source independently. A normal `main` commit leaves that selection unchanged.
 
-The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same repository and release-tag `ref` through its `git-subdir` source with `path` `plugin`. Both catalogs advance together. Catalogs that select a tag before `v0.17.0` use the Git `url` source instead, because those tags keep the plugin at the repository root.
+The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same repository and release-tag `ref` through its `git-subdir` source with `path` `plugin`. Both catalogs advance together.
 
 After a stable release becomes GitHub Latest, maintainers publish the matching catalog references through the existing signed PR process. Until that catalog change is merged, clients continue to resolve the preceding selection. A GitHub Release, its Latest marker, and a Git tag literally named `latest` are different objects; the client does not infer one from the others.
 

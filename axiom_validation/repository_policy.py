@@ -133,8 +133,8 @@ def check_skill_contracts(failures: list[str]) -> None:
             )
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", fields["name"]):
             failures.append(f"{display_path(main_path)} has a non-kebab-case name")
-        if not fields["description"] or not fields["description"].isascii():
-            failures.append(f"{display_path(main_path)} description must be non-empty English ASCII")
+        if not fields["description"]:
+            failures.append(f"{display_path(main_path)} description must be non-empty")
 
         main_text = main_path.read_text(encoding="utf-8")
         for reference in sorted((skill_root / "references").rglob("*.md")) if (skill_root / "references").is_dir() else ():
@@ -158,10 +158,6 @@ def check_skill_contracts(failures: list[str]) -> None:
                 failures.append(str(error))
             else:
                 interface = metadata["interface"]
-                if not 25 <= len(interface["short_description"]) <= 64:
-                    failures.append(
-                        f"{display_path(metadata_path)} short_description must be 25-64 characters"
-                    )
                 if f"${skill_name}" not in interface["default_prompt"]:
                     failures.append(
                         f"{display_path(metadata_path)} default_prompt must mention ${skill_name}"

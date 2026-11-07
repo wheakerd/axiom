@@ -83,7 +83,7 @@ README stays a landing page: identity, a generated skill index, installation, up
 
 ## Translations
 
-English documentation is canonical and the default; every English Markdown file stays ASCII. A document may have one Simplified Chinese twin beside it, named `<name>.zh-CN.md`, for readers who prefer Chinese. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
+English documentation is canonical and the default. A document may have one Simplified Chinese twin beside it, named `<name>.zh-CN.md`, for readers who prefer Chinese. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
 
 A twin is not indexed separately and does not count as a current document of its own; it is reached through its source. It changes in the same change as its source, and the documentation validator rejects a twin whose structure, code, generated facts, or links drift from the source. Maintainer, evidence, release, and reference documents stay English unless a twin is deliberately added under the same rules.
 
@@ -155,7 +155,6 @@ Every documentation change must, at minimum:
 - keep current public guidance from linking to non-public sources;
 - keep the Skill Reference `## Shared skills` section and its per-skill level-three headings parseable, with the inventory matching the canonical startup front door;
 - validate the public Hook reference against checked-in declarations and wrappers;
-- keep every English Markdown file ASCII; and
 - keep each `<name>.zh-CN.md` twin bound to its English source: the source exists, both carry the language switcher, and the heading structure, fenced code blocks, generated regions, and link targets match.
 
 Run the deterministic, Python-standard-library-only documentation validator from the repository root:

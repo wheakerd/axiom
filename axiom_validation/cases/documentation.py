@@ -13,7 +13,6 @@ from axiom_validation.documentation import (
     check_generated_marker_text,
     check_heading_text,
     check_hook_reference,
-    check_markdown_language,
     check_private_guidance_text,
     check_skill_reference_inventory_text,
     check_translations,
@@ -222,18 +221,6 @@ def _translation_missing_switcher() -> list[str]:
     )
 
 
-def _english_source_with_non_ascii() -> list[str]:
-    temporary, root = _temporary_root()
-    try:
-        (root / "docs").mkdir()
-        (root / "docs" / "guide.md").write_text("# Guide\n\nAxiom \u4e2d\u6587\n", encoding="utf-8")
-        failures: list[str] = []
-        check_markdown_language(root, failures)
-        return failures
-    finally:
-        temporary.cleanup()
-
-
 NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("broken-relative-link", _broken_relative_link, "broken repository-relative link"),
     ("missing-local-anchor", _missing_local_anchor, "missing Markdown fragment"),
@@ -253,7 +240,6 @@ NEGATIVE_FIXTURES: tuple[tuple[str, Callable[[], list[str]], str], ...] = (
     ("translation-generated-drift", _translation_generated_drift, "generated regions differ"),
     ("translation-link-drift", _translation_link_drift, "link targets differ"),
     ("translation-missing-switcher", _translation_missing_switcher, "must link to its English source"),
-    ("english-source-non-ascii", _english_source_with_non_ascii, "contains non-ASCII text"),
 )
 
 
