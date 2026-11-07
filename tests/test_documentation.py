@@ -46,8 +46,8 @@ class DocumentationValidationTests(unittest.TestCase):
         # change.
         markdown = discover_markdown(REPOSITORY_ROOT)
         self.assertEqual(len(markdown), report.markdown_count)
-        self.assertEqual(22, report.current_document_count)
-        self.assertEqual(16, report.indexed_document_count)
+        self.assertEqual(21, report.current_document_count)
+        self.assertEqual(15, report.indexed_document_count)
         self.assertEqual(generated_region_count(markdown), report.generated_region_count)
         self.assertEqual(6, report.translation_count)
 
@@ -79,7 +79,7 @@ class DocumentationValidationTests(unittest.TestCase):
                     "# A\n\n## Shared skills\n\n"
                     "### using-axiom\n\n**Usage:**\n\n"
                     f"{fence}text\n## Shared skills\n### example-only\n{fence}\n\n"
-                    "### fixture-route\n\n## Renamed and retired skills\n\n"
+                    "### fixture-route\n\n## Other\n\n"
                     "### retired-route\n",
                     failures,
                     inventory=("using-axiom", "fixture-route"),

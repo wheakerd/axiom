@@ -59,7 +59,7 @@ The [Skill sources](../plugin/skills/) and [routing gate](../plugin/skills/using
 | `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared plugin releases, and explicitly traceable or hardened Git submission |
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |
 
-`agent-plugin-architect` can design another project's Codex or Claude Code plugin. Axiom itself supports both hosts with the same routes; see [Compatibility](compatibility.md). The [route contract](agent-plugin-architect-route-contract.md) explains the boundary.
+`agent-plugin-architect` can design another project's Codex or Claude Code plugin. Axiom itself supports both hosts with the same routes; see [Compatibility](compatibility.md). The skill's [route and trigger contracts](../plugin/skills/agent-plugin-architect/references/route-and-trigger-contracts.md) state the boundary.
 
 ## Composition And Phase Changes
 

@@ -1,6 +1,6 @@
 # Compatibility
 
-Axiom's compatibility claims are bounded by what the repository checks. It checks structure: for each release, the manifests, marketplace catalogs, Hooks, wrappers, Skills, and documentation parse and agree with each other. It does not measure how a host's model behaves with the plugin installed, for this release or any other. An earlier observation stays attached to its original host, version, lifecycle, commit, and date; it is never promoted to the current release.
+Axiom's compatibility claims are bounded by what the repository checks. It checks structure: for each release, the manifests, marketplace catalogs, Hooks, wrappers, Skills, and documentation parse and agree with each other. It does not measure how a host's model behaves with the plugin installed.
 
 ## Support Levels
 
@@ -21,17 +21,15 @@ The release tree provides one integration per host over the same Skills:
 | Codex | `.agents/plugins/marketplace.json`, `plugin/.codex-plugin/plugin.json`, `plugin/hooks/codex-hooks.json`, `plugin/hooks/codex-session-start.cmd`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; POSIX and Windows command variants are declared |
 | Claude Code | `.claude-plugin/marketplace.json`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/claude-hooks.json`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; one POSIX shell command, which needs Git Bash on Windows |
 
-Both manifests point to `./skills/` inside the installed plugin root `plugin/`, and each catalog installs only that subtree through a `git-subdir` source. Codex and Claude Code are supported installation and runtime hosts from `0.15.0`; Claude Code records from `0.10.x` and earlier remain historical. From `0.16.0`, both hosts receive every bundled route, with one host-specific boundary: `agents-architect` writes only `AGENTS.md`, and a Claude Code project that has a `CLAUDE.md` does not load `AGENTS.md`, so there the skill stops and says so. `continuous-progress` keeps each host's operations detail in its own `references/`, and `delegate-simple-task` leaves the judgment of host settings to the host model. This is repository support, not proof of execution on every host release, operating system, shell, installation method, or policy configuration.
+Both manifests point to `./skills/` inside the installed plugin root `plugin/`, and each catalog installs only that subtree through a `git-subdir` source. Codex and Claude Code are supported installation and runtime hosts, and both receive every bundled route, with one host-specific boundary: `agents-architect` writes only `AGENTS.md`, and a Claude Code project that has a `CLAUDE.md` does not load `AGENTS.md`, so there the skill stops and says so. `continuous-progress` keeps each host's operations detail in its own `references/`, and `delegate-simple-task` leaves the judgment of host settings to the host model. This is repository support, not proof of execution on every host release, operating system, shell, installation method, or policy configuration.
 
 Codex holds a new or changed Hook until you trust it in `/hooks`; Claude Code runs it at the next `SessionStart` once the plugin loads. The [Hook Reference](reference/hooks.md) renders the exact checked-in commands for an optional comparison with an installed copy.
 
 ## Claude Code Package Format And Validation
 
-`claude plugin validate --strict` accepted the Claude Code manifest and every shared Skill with Claude Code `2.1.308` on 2026-10-22. That check validates schema and Skill metadata; it does not prove installation or execution. The manifest declares only fields that strict validation accepts.
+`claude plugin validate --strict` validates the Claude Code manifest and each Skill's metadata; it does not prove installation or execution. The manifest declares only fields that strict validation accepts.
 
 ## Codex Package Format And Validation
-
-Official documentation last verified: 2026-09-16.
 
 OpenAI still supports `.codex-plugin/plugin.json` as a compatibility manifest. Its newer portable format uses root `plugin.json` and `extensions.com.openai`. An inline OpenAI extension replaces the compatibility overlay rather than merging with it. Axiom keeps its supported Codex layout and explicit hook path; adding a second manifest is not required for compatibility. See the official [packaging specification](https://developers.openai.com/plugins/build/plugins#plugin-structure).
 

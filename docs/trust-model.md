@@ -74,4 +74,4 @@ git rev-parse --path-format=absolute --git-path axiom
 git for-each-ref refs/axiom/
 ```
 
-Remove a state file with your shell when no Axiom task is active, and delete a verified backup ref with `git update-ref -d <ref>`. Earlier versions wrote `.agents/.cache/traceable-git-submit-baseline.json`, `.agents/.runtime/`, and `.agents/.generated/` inside the working tree; current routes migrate or report such leftovers. Task state never goes under the installed plugin root or the repository's `.agents/`, `.claude/`, or `.codex/` directories. `agents-architect` edits instruction files there only as the requested change, and may list user-local rule directories such as `.agents/local/` in `.git/info/exclude`.
+Remove a state file with your shell when no Axiom task is active, and delete a verified backup ref with `git update-ref -d <ref>`. Task state never goes under the installed plugin root or the repository's `.agents/`, `.claude/`, or `.codex/` directories. `agents-architect` edits instruction files there only as the requested change, and may list user-local rule directories such as `.agents/local/` in `.git/info/exclude`.

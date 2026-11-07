@@ -74,4 +74,4 @@ git rev-parse --path-format=absolute --git-path axiom
 git for-each-ref refs/axiom/
 ```
 
-在没有 Axiom 任务处于活动状态时，用你的 shell 移除状态文件，并用 `git update-ref -d <ref>` 删除已验证的备份引用。较早的版本曾在工作树内写入 `.agents/.cache/traceable-git-submit-baseline.json`、`.agents/.runtime/` 与 `.agents/.generated/`；当前路由会迁移或报告此类遗留。任务状态绝不会放在已安装的插件根目录下，也不会放在仓库的 `.agents/`、`.claude/` 或 `.codex/` 目录中。`agents-architect` 只会把那里的指令文件作为被请求的变更来编辑，并且可以把 `.agents/local/` 这类用户本地规则目录列入 `.git/info/exclude`。
+在没有 Axiom 任务处于活动状态时，用你的 shell 移除状态文件，并用 `git update-ref -d <ref>` 删除已验证的备份引用。任务状态绝不会放在已安装的插件根目录下，也不会放在仓库的 `.agents/`、`.claude/` 或 `.codex/` 目录中。`agents-architect` 只会把那里的指令文件作为被请求的变更来编辑，并且可以把 `.agents/local/` 这类用户本地规则目录列入 `.git/info/exclude`。

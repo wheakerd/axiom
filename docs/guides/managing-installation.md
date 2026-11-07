@@ -78,8 +78,6 @@ Sparse checkout changes which catalog files are fetched. It preserves the defaul
 
 Run the two listing commands again. Check the registered source, installed version, plugin source ref, and enabled state against the intended catalog entry and your recorded settings. Follow the [update checks](#updating) for a fresh session and Hook inspection.
 
-This registration migration was verified on 2026-10-13 with Codex CLI `0.162.1` on Linux in an isolated Axiom `v0.14.0` installation. The existing plugin cache and enabled setting were preserved, and the complete native upgrade succeeded. This does not establish desktop refresh, Hook trust, or automatic update timing on another installation.
-
 The clone deadline applies to the catalog download. A complete refresh may also download plugin sources and can take longer than 30 seconds. Sparse checkout does not change the client's timeout or guarantee completion on a slow or unavailable network. If the error persists, record the exact failing phase, CLI version, exit status, and sanitized error for the [problem report](#reporting-a-problem).
 
 The supported CLI options and sparse-path requirements were last verified on 2026-10-13 against the official [marketplace CLI documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli) and [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).

@@ -48,7 +48,7 @@ Classification selects the path; the exact final diff selects the increment. Lab
 | Exact final installed-runtime change | Increment |
 | --- | --- |
 | A new Skill, route, mode, trigger, or Hook event; matching widened to requests a route did not select before; a new protocol, storage location, or evidence format; a packaging or layout change that alters the installed path or requires user action; deprecation or removal of a route | Next minor version |
-| A fix without new capability: narrowing a wrongly selected route, wording or reference corrections, Hook defect fixes, size or security hardening, evaluation-driven false-positive or false-negative fixes | Next patch version |
+| A fix without new capability: narrowing a wrongly selected route, wording or reference corrections, Hook defect fixes, size or security hardening, routing fixes | Next patch version |
 | Repository-only documentation, CI, validators, evidence, governance, README, marketplace catalogs, release scripts, or this standard | No version change |
 
 The major version stays `0` until a separate maintainer decision declares the 1.0 criteria. Before 1.0, a change that breaks a documented invocation advances the minor version and states its migration in the Changelog.

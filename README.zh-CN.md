@@ -49,7 +49,7 @@
 | [`reversible-system-change`](docs/reference/skills.md#reversible-system-change) | Plan and verify reversible system changes |
 <!-- readme:skill-index:end -->
 
-[技能参考](docs/reference/skills.md)给出每个技能的完整描述、一个可复制的示例以及更名说明。
+[技能参考](docs/reference/skills.md)给出每个技能的完整描述和一个可复制的示例。
 
 ## 安装
 

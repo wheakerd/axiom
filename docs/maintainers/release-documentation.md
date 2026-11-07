@@ -55,11 +55,9 @@ The separately authorized draft must use the exact rendered bytes. The tag-owned
 
 ## Release Verification
 
-From `0.11.0`, release verification uses repository checks, exact signed-main and created-tag checks, and immutable Release verification. The checked-in [tag controller](../../axiom_validation/release_tag_controller.py) requires `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate` against the exact release commit. The [governance snapshot](../repository-governance.md#main-branch-policy) records the dated server-side promotion of the hook aggregate.
+Release verification uses repository checks, exact signed-main and created-tag checks, and immutable Release verification. The checked-in [tag controller](../../axiom_validation/release_tag_controller.py) requires `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate` against the exact release commit. The [governance page](../repository-governance.md#main-branch-policy) describes the required checks.
 
 The draft starts with one `axiom-v<version>-release-policy-<sha256>.json` asset. Render it with `scripts/check-release-evidence.py render-policy` and the exact version, tag, commit and tree arguments. Its closed `repository-checks-v1` schema records `repository-guards` and `unit-and-integration-tests` and binds the release subject. This artifact is not the complete live ruleset: the tag controller separately enforces its current prerequisites, including `hook-runtime-gate`. Preserve the artifact schema's meaning rather than treating its shorter list as permission to skip a current gate. The publisher validates the downloaded bytes, uploads an integrity attestation, and verifies both assets after publication. This record describes verification policy; actual check results remain bound to their GitHub Actions runs. The attestation states its `release-policy-and-artifact-integrity` scope.
-
-Earlier version contracts and recorded experiments retain their historical meaning. Asset names and validators are selected by the release version; existing Releases and their evidence are not migrated.
 
 ## Release Pipeline
 
@@ -83,7 +81,7 @@ The Release pipeline's `Advance marketplace catalogs` job then completes the cat
 
 1. Verify the current Latest Release is final, stable, immutable, and identifies the intended tag and signed commit. For a deliberate Latest selection made outside the publisher, perform the same verification before preparing the catalog change; a Release event alone does not prove a Latest transition.
 2. On a task branch from current `main`, replace only the Axiom entry's source in each catalog with the verified Git URL, version tag, and the source type and subtree path that tag requires. Preserve other catalog metadata, and date the released version's Changelog heading as the [Changelog Contract](#changelog-contract) describes. Retain the installed runtime identity and run the contributor checks. The merged release pull request authorizes this catalog operation for its version.
-3. Recheck Latest before merging the signed PR with its required checks. If it changed, refresh the candidate for the selected release instead of merging a stale reference. Do not move a version tag or the legacy `latest` Git tag.
+3. Recheck Latest before merging the signed PR with its required checks. If it changed, refresh the candidate for the selected release instead of merging a stale reference. Do not move a version tag.
 4. Read back both merged catalogs and resolve their plugin tag. Confirm that the selected manifest version matches that tag. Record the catalog commit for users who need a fixed catalog snapshot. A tag on the marketplace repository may contain a different plugin reference; it is not a per-plugin pin.
 
 The directory update is complete only after that merge and readback. Release publication or a generated job summary alone does not update the directory or an installed client. A failed or delayed handoff leaves the previous catalog selection available; rerun the catalog job or resume the steps above without republishing the immutable Release.
