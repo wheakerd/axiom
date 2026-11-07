@@ -24,6 +24,8 @@ from axiom_validation.release import (
     build_release,
     check_release_workflow_contract,
     highest_tag_below,
+    is_bootstrap,
+    require_runtime_change,
     immediate_successors,
     inspect_release_branch,
     read_release_files,
@@ -348,6 +350,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(stamp_files(self.files, "1.2.3"), head["files"])
         self.assertEqual(subject["releaseCommit"], api.release_ref)
         self.assertEqual(subject["releaseTree"], tree_sha(head["files"]))
+        self.assertIs(True, subject["bootstrap"])
         draft = next(r for r in api.releases if r["id"] == 700)
         self.assertEqual("axiom-v1.2.3-plugin.zip", draft["assets"][0]["name"])
         self.assertEqual(2, len(draft["assets"]))
@@ -363,8 +366,9 @@ class ReleaseTests(unittest.TestCase):
     def test_next_release_fast_forwards_from_the_previous_release_commit(self):
         api = FakeGitHub(self.root, self.commit, release_head=self.files)
         previous = api.release_ref
-        self.run_release(api)
+        subject = self.run_release(api)
         self.assertEqual([previous], api.commits[api.release_ref]["parents"])
+        self.assertIs(False, subject["bootstrap"])
         self.assertNotIn(("POST", f"/repos/{REPOSITORY}/git/refs"), api.writes)
 
     def test_non_successor_version_fails_before_any_write(self):
@@ -383,13 +387,28 @@ class ReleaseTests(unittest.TestCase):
 
     def test_unchanged_runtime_digest_fails_before_any_write(self):
         digest = build_release(self.root, FakeGitHub(self.root, self.commit), REPOSITORY, "v1.2.3").runtime_digest
-        api = FakeGitHub(self.root, self.commit, latest_digest=digest)
+        api = FakeGitHub(self.root, self.commit, latest_digest=digest, release_head=self.files)
         with self.assertRaisesRegex(ReleaseError, "changes no installed file"):
             self.run_release(api)
         self.assertEqual([], api.writes)
 
+    def test_bootstrap_release_may_carry_latests_runtime(self):
+        digest = build_release(self.root, FakeGitHub(self.root, self.commit), REPOSITORY, "v1.2.3").runtime_digest
+        api = FakeGitHub(self.root, self.commit, latest_digest=digest)
+        subject = self.run_release(api)
+        self.assertIs(True, subject["bootstrap"])
+        self.assertEqual(digest, subject["runtimeDigest"])
+        self.assertEqual([RELEASE_BRANCH_ROOT], api.commits[api.release_ref]["parents"])
+        self.assertTrue(is_bootstrap(None))
+        self.assertTrue(is_bootstrap(RELEASE_BRANCH_ROOT))
+        self.assertFalse(is_bootstrap("9" * 40))
+        require_runtime_change(digest, digest, tag="v1.2.3", latest_tag="v1.2.2", bootstrap=True)
+        with self.assertRaisesRegex(ReleaseError, "changes no installed file"):
+            require_runtime_change(digest, digest, tag="v1.2.3", latest_tag="v1.2.2", bootstrap=False)
+        require_runtime_change(digest, "sha256:" + "0" * 64, tag="v1.2.3", latest_tag="v1.2.2", bootstrap=False)
+
     def test_latest_evidence_without_a_digest_uses_the_digest_of_latests_tree(self):
-        api = FakeGitHub(self.root, self.commit, latest_digest=None)
+        api = FakeGitHub(self.root, self.commit, latest_digest=None, release_head=self.files)
         # Latest's lightweight tag names the same tree here, so its computed digest is equal.
         api.lightweight["v1.2.2"] = self.commit
         with self.assertRaisesRegex(ReleaseError, "changes no installed file"):

@@ -55,7 +55,7 @@ The major version stays `0` until a separate maintainer decision declares the 1.
 - Use the immediate next version in SemVer order; never skip or reorder.
 - Every release requires the validated tagged tree and the always-loaded context review in [Runtime Changes](maintainers/runtime-changes.md#always-loaded-context) when the routing gate grows.
 
-A release changes the installed files. The Release workflow rejects a tag whose runtime digest equals the one recorded in the Latest release's evidence asset. When Latest's evidence asset records no digest, the workflow computes Latest's digest with the same generator on Latest's tagged tree.
+A release changes the installed files. The Release workflow rejects a tag whose runtime digest equals the one recorded in the Latest release's evidence asset, except for the [bootstrap release](maintainers/release-documentation.md#what-ci-does) that first creates the `release` branch. When Latest's evidence asset records no digest, the workflow computes Latest's digest with the same generator on Latest's tagged tree.
 
 A repository-only change creates no package tag, GitHub Release, Latest change, or marketplace publication. Classification does not authorize those actions. The [release documentation contract](maintainers/release-documentation.md) owns publication evidence; [Repository Governance](repository-governance.md) records the server-side controls.
 

@@ -40,6 +40,7 @@ RUNTIME_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 PUBLISH_WORKFLOW_SHA256 = "cedb00d83c9962b3a3f386dea70bc541c204fbd1737cf3a123f7a61fa6fc236f"
 SUBJECT_KEYS = frozenset(
     {
+        "bootstrap",
         "version",
         "tag",
         "tagObject",
@@ -114,6 +115,8 @@ def validate_subject(subject: Any, failures: list[str]) -> bool:
     if type(subject) is not dict or set(subject) != SUBJECT_KEYS:
         failures.append("release subject has unexpected or missing fields")
         return False
+    if type(subject["bootstrap"]) is not bool:
+        failures.append("release subject bootstrap must be a boolean")
     version = subject["version"]
     if parse_production_release_version(version) is None:
         failures.append("release subject version must be one strict SemVer release version")
@@ -626,6 +629,7 @@ def evidence_document(plan: dict[str, Any]) -> dict[str, Any]:
         "assets": {"policy": asset(plan["policyAsset"]), "zip": asset(plan["zipAsset"])},
         "kind": EVIDENCE_KIND,
         "release": {
+            "bootstrap": subject["bootstrap"],
             "commit": subject["commit"],
             "id": plan["release"]["id"],
             "notesSha256": subject["notesSha256"],
@@ -756,6 +760,7 @@ def render_summary(plan: dict[str, Any]) -> str:
         f"| Installed tree | `{subject['releaseTree']}` |\n"
         f"| Plugin zip sha256 | `{subject['zip']['sha256']}` |\n"
         f"| Runtime digest | `{subject['runtimeDigest']}` |\n"
+        f"| Bootstrap release | `{str(subject['bootstrap']).lower()}` |\n"
         f"| Notes sha256 | `{subject['notesSha256']}` |\n\n"
         "Both marketplace catalogs select the `release` branch, so hosts see this "
         "version on their next marketplace refresh.\n"

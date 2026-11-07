@@ -36,6 +36,7 @@ TAG_OBJECT = "e" * 40
 
 def subject() -> dict:
     return {
+        "bootstrap": False,
         "version": "1.2.3",
         "tag": "v1.2.3",
         "tagObject": {"type": "tag", "sha": TAG_OBJECT},
@@ -169,6 +170,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             "zip-name": (lambda value: value["zip"].update(name="plugin.zip"), "subject zip must name"),
             "previous-not-older": (lambda value: value.update(previousTag="v1.2.3"), "older release tag"),
             "digest": (lambda value: value.update(runtimeDigest="0" * 64), "runtimeDigest"),
+            "bootstrap": (lambda value: value.update(bootstrap="yes"), "bootstrap must be a boolean"),
         }
         for label, (mutate, expected) in cases.items():
             with self.subTest(label=label):
@@ -197,6 +199,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
         self.assertEqual(subject()["zip"]["sha256"], document["release"]["zipSha256"])
         self.assertEqual(subject()["runtimeDigest"], document["runtimeContract"]["digest"])
         self.assertEqual(subject()["notesSha256"], document["release"]["notesSha256"])
+        self.assertIs(False, document["release"]["bootstrap"])
         self.assertEqual(f"axiom-v1.2.3-release-evidence-{hashlib.sha256(first.read_bytes()).hexdigest()}.json", first.name)
 
     def test_evidence_is_refused_inside_the_checked_in_tree(self):

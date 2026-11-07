@@ -12,7 +12,8 @@ GitHub and the tagged tree before the first write:
    highest existing release tag below it, which is GitHub Latest's tag unless
    a later attempt failed after its tag was pushed;
 5. the installed-runtime digest differs from the one Latest's evidence asset
-   records;
+   records, except for the bootstrap release that creates the release
+   branch, which may carry Latest's runtime unchanged;
 6. neither a Release nor a ``release``-branch commit exists for this version,
    and the ``release`` branch still descends from its root and holds only
    ``plugin/`` and ``LICENSE``;
@@ -850,8 +851,9 @@ class ReleaseBuild:
     previous_tag: str | None
     notes: str
 
-    def subject(self, release_commit: str) -> dict[str, Any]:
+    def subject(self, release_commit: str, bootstrap: bool) -> dict[str, Any]:
         return {
+            "bootstrap": bootstrap,
             "version": self.version,
             "tag": self.tag,
             "tagObject": {"type": self.target.object_type, "sha": self.target.object_sha},
@@ -868,6 +870,26 @@ class ReleaseBuild:
             "previousTag": self.previous_tag,
             "notesSha256": hashlib.sha256(self.notes.encode("utf-8")).hexdigest(),
         }
+
+
+def require_runtime_change(
+    digest: str, latest_digest: str, *, tag: str, latest_tag: str, bootstrap: bool
+) -> None:
+    """Require a changed runtime digest, except for the bootstrap release.
+
+    The bootstrap release creates the release branch; until it exists, hosts
+    have no installed tree to resolve, so it may carry Latest's runtime.
+    """
+    _require(
+        bootstrap or digest != latest_digest,
+        f"{tag} changes no installed file: its runtime digest equals {latest_tag}'s "
+        f"({latest_digest}); a repository-only change publishes no release",
+    )
+
+
+def is_bootstrap(head: str | None) -> bool:
+    """Return whether the release branch holds no release commit yet."""
+    return head is None or head == RELEASE_BRANCH_ROOT
 
 
 def build_release(root: Path, api: Api, repository: str, tag: str) -> ReleaseBuild:
@@ -1080,6 +1102,8 @@ def run_release(
     require_github_signature(api, repository, commit)
     wait_for_checks(api, repository, commit, REQUIRED_CHECKS, clock, "tagged commit")
     wait_for_checks(api, repository, commit, (CREATED_TAG_CHECK,), clock, "created tag")
+    head = inspect_release_branch(api, repository, version)
+    bootstrap = is_bootstrap(head)
 
     latest = api.get(f"/repos/{repository}/releases/latest", allow_not_found=True)
     if latest is not None:
@@ -1090,11 +1114,12 @@ def run_release(
             build.previous_tag == latest_tag,
             f"GitHub Latest {latest_tag} is not the highest published release before {tag}",
         )
-        latest_digest = latest_runtime_digest(api, repository, latest, root)
-        _require(
-            build.runtime_digest != latest_digest,
-            f"{tag} changes no installed file: its runtime digest equals {latest_tag}'s "
-            f"({latest_digest}); a repository-only change publishes no release",
+        require_runtime_change(
+            build.runtime_digest,
+            latest_runtime_digest(api, repository, latest, root),
+            tag=tag,
+            latest_tag=str(latest_tag),
+            bootstrap=bootstrap,
         )
     base_tag = highest_tag_below(api, repository, version)
     if base_tag is not None:
@@ -1104,7 +1129,6 @@ def run_release(
             "the highest release tag below it",
         )
     _require(find_release(api, repository, tag) is None, f"a Release already uses {tag}")
-    head = inspect_release_branch(api, repository, version)
     check_tree(root, commit, version)
 
     release_commit = release_branch_commit(
@@ -1116,7 +1140,7 @@ def run_release(
         tag=tag,
         commit=commit,
     )
-    subject = build.subject(release_commit)
+    subject = build.subject(release_commit, bootstrap)
     policy_name, policy_bytes = policy_asset(subject)
     release = stage_draft(
         api,
@@ -1158,6 +1182,7 @@ def run_release(
         f"| Installed tree | `{build.release_tree}` |\n"
         f"| Plugin zip sha256 | `{subject['zip']['sha256']}` |\n"
         f"| Runtime digest | `{build.runtime_digest}` |\n"
+        f"| Bootstrap release | `{str(bootstrap).lower()}` |\n"
         "| Immutable | `true` |\n"
         "| GitHub Latest | `true` |\n"
     )
@@ -1182,7 +1207,8 @@ def subject_for_publisher(
         f"{RELEASE_BRANCH_REF} head {head} does not hold the stamped {tag} tree {build.release_tree}",
     )
     require_github_signature(api, repository, head)
-    subject = build.subject(head)
+    parents = [parent.get("sha") for parent in document.get("parents") or []]
+    subject = build.subject(head, parents == [RELEASE_BRANCH_ROOT])
     output.mkdir(parents=True, exist_ok=True)
     (output / "subject.json").write_bytes(canonical_json(subject))
     (output / subject["zip"]["name"]).write_bytes(build.zip_bytes)
@@ -1323,6 +1349,8 @@ __all__ = (
     "immediate_successors",
     "highest_tag_below",
     "inspect_release_branch",
+    "is_bootstrap",
+    "require_runtime_change",
     "latest_runtime_digest",
     "policy_asset",
     "release_branch_commit",

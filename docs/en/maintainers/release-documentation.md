@@ -36,6 +36,8 @@ The Release workflow runs [`.ci/scripts/release.py run`](../../../.ci/scripts/re
 
 The version must be the immediate patch, minor, or major successor of the highest release tag below it. That tag is GitHub Latest's unless a later attempt failed after its tag was pushed.
 
+The runtime digest must differ from Latest's, with one exception: the bootstrap release, the one that runs while the `release` branch holds no release commit yet, may carry Latest's runtime unchanged, because until then the catalogs have no installed tree to resolve. Every other gate still applies to it, and its policy and evidence assets record `"bootstrap": true`.
+
 It then writes, in order:
 
 1. one commit on `release`, made with the GraphQL `createCommitOnBranch` mutation and `GITHUB_TOKEN`, so GitHub signs it. Its tree is exactly the tagged `plugin/` directory with `"version": "X.Y.Z"` inserted after `name` in both plugin manifests, plus `LICENSE`. Its parent is the previous release commit. `createCommitOnBranch` always builds on an existing branch head, so when the branch does not exist, the workflow first creates it at `main`'s root commit `fb86eb61e8161642c627bcce84c214730634b570`, whose tree holds only `LICENSE`. The branch carries no other path, because `GITHUB_TOKEN` cannot be granted the `workflows` permission and GitHub refuses a token write that creates, changes, or deletes a file under `.github/workflows/`;
@@ -55,7 +57,7 @@ Each Release carries three assets and GitHub's own release attestation:
 
 - `axiom-vX.Y.Z-plugin.zip`: the stamped `plugin/` tree, members relative to the plugin root, sorted, stored without compression, with the fixed timestamp 1980-01-01 00:00 and Unix mode 0644. Equal trees give byte-identical zips; the publisher rebuilds it from the tag and compares bytes.
 - `axiom-vX.Y.Z-release-policy-<sha256>.json`: the release subject and the `repository-checks-v2` policy, which names the four required checks. The subject binds the version, tag object, tagged commit and tree, `release` commit and tree, zip name, SHA-256, and size, runtime digest, previous release tag, and notes SHA-256.
-- `axiom-vX.Y.Z-release-evidence-<sha256>.json`: written by the publisher after it validates the Draft. It records the tag, tagged commit, `release` commit, stamped tree, zip SHA-256, runtime digest under `runtimeContract.digest`, notes SHA-256, and the identities of the two other assets. The next release reads the digest from here; when Latest's evidence asset records no digest, the Release workflow computes Latest's digest with the same generator on Latest's tagged tree.
+- `axiom-vX.Y.Z-release-evidence-<sha256>.json`: written by the publisher after it validates the Draft. It records the tag, tagged commit, `release` commit, stamped tree, zip SHA-256, runtime digest under `runtimeContract.digest`, notes SHA-256, whether the release was the bootstrap release, and the identities of the two other assets. The next release reads the digest from here; when Latest's evidence asset records no digest, the Release workflow computes Latest's digest with the same generator on Latest's tagged tree.
 
 Verify a published Release and a downloaded zip with GitHub's attestation:
 

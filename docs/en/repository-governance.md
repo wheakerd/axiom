@@ -99,7 +99,7 @@ It runs these gates in order and writes nothing until all of them pass:
 2. the tagged commit is `main`'s head or an ancestor of it, and has a valid signature made with GitHub's signing key;
 3. `repository-guards`, `unit-and-integration-tests`, `hook-runtime-gate`, `Verify signed main history`, and `Verify created release tag` succeeded on the tagged commit;
 4. the version is the immediate patch, minor, or major successor of GitHub Latest, and Latest is the highest published release;
-5. the installed-runtime digest of the tagged tree differs from the one recorded in Latest's evidence asset;
+5. the installed-runtime digest of the tagged tree differs from the one recorded in Latest's evidence asset, except for the bootstrap release that runs while `release` holds no release commit yet;
 6. no Release uses the tag, and the release branch passes its [shape check](#release-branch-policy) with an older version; and
 7. the tagged tree with both manifests stamped passes `python3 -B .ci/check.py --release-version X.Y.Z` in a disposable worktree.
 
