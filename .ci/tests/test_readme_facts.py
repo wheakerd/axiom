@@ -17,7 +17,7 @@ from axiom_validation.readme_facts import (
     readme_surfaces,
     render_skill_index,
 )
-from axiom_validation.repository_policy import SKILL_REFERENCE_ORDER
+from axiom_validation.repository_policy import BUNDLED_SKILL_ORDER
 
 
 class ReadmeFactsTests(unittest.TestCase):
@@ -35,14 +35,14 @@ class ReadmeFactsTests(unittest.TestCase):
 
     def test_checked_in_readme_matches_the_skill_metadata(self):
         failures: list[str] = []
-        self.assertEqual(len(SKILL_REFERENCE_ORDER), check_readme_facts(failures))
+        self.assertEqual(len(BUNDLED_SKILL_ORDER), check_readme_facts(failures))
         self.assertEqual([], failures)
 
     def test_index_links_every_skill_reference_heading_in_order(self):
         failures: list[str] = []
         index = render_skill_index(load_skill_summaries(failures))
         self.assertEqual([], failures)
-        positions = [index.index(f"](plugin/skills/{name}/SKILL.md)") for name in SKILL_REFERENCE_ORDER]
+        positions = [index.index(f"](plugin/skills/{name}/SKILL.md)") for name in BUNDLED_SKILL_ORDER]
         self.assertEqual(sorted(positions), positions)
 
     def test_checked_in_readme_translation_carries_the_same_generated_regions(self):

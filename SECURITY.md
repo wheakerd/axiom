@@ -10,7 +10,7 @@ Security reports are evaluated against the latest published release and the curr
 
 Do not publish exploitable details, secrets, proof-of-concept payloads, or sensitive repository data in an Issue, Discussion, pull request, or public comment.
 
-GitHub private vulnerability reporting was verified as enabled on 2026-10-24. Use the repository's [Report a vulnerability](https://github.com/wheakerd/axiom/security/advisories/new) form to create a private security advisory. Do not open a public placeholder Issue for a vulnerability.
+GitHub private vulnerability reporting is enabled. Use the repository's [Report a vulnerability](https://github.com/wheakerd/axiom/security/advisories/new) form to create a private security advisory. Do not open a public placeholder Issue for a vulnerability.
 
 Include:
 

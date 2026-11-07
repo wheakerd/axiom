@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .context import REPOSITORY_ROOT
-from .repository_policy import SKILL_REFERENCE_ORDER
+from .repository_policy import BUNDLED_SKILL_ORDER
 from .yaml_subset import CanonicalYamlError, parse_agent_metadata_document
 
 README_RELATIVE = "README.md"
@@ -35,7 +35,7 @@ def load_skill_summaries(
 ) -> tuple[tuple[str, str], ...] | None:
     """Read each bundled skill's short description in Skill Reference order."""
     summaries: list[tuple[str, str]] = []
-    for name in SKILL_REFERENCE_ORDER:
+    for name in BUNDLED_SKILL_ORDER:
         relative = f"plugin/skills/{name}/agents/openai.yaml"
         try:
             text = (root / relative).read_text(encoding="utf-8")
@@ -54,7 +54,7 @@ def load_skill_summaries(
             )
             continue
         summaries.append((name, summary))
-    if len(summaries) != len(SKILL_REFERENCE_ORDER):
+    if len(summaries) != len(BUNDLED_SKILL_ORDER):
         return None
     return tuple(summaries)
 

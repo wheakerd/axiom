@@ -6,13 +6,12 @@ Installed distribution stays with the two marketplace catalogs described in [Man
 
 ## Discoverability Facts
 
-| Surface | State | Checked |
-| --- | --- | --- |
-| Repository topics | Twenty topics, the GitHub maximum, covering both hosts, plugin and skill terms, and workflow terms | 2026-10-25 |
-| Repository homepage | The [documentation index](../README.md) | Set 2026-10-25 |
-| `SKILL.md` frontmatter | All fourteen bundled skills satisfy the [Agent Skills specification](https://agentskills.io/specification): `name` matches its directory and its character rules, `description` is 1 to 1024 characters, and no field outside the specification is used | 2026-10-25 |
-| Marketplace catalogs | Both catalogs select the installed `plugin/` subtree at the immutable release tag; see [marketplace publication](release-documentation.md#marketplace-publication) | Per release |
-| README links and badges | Every absolute link and badge in the README returned HTTP 200 | 2026-10-25 |
+| Surface | State |
+| --- | --- |
+| Repository topics | Twenty topics, the GitHub maximum, covering both hosts, plugin and skill terms, and workflow terms |
+| Repository homepage | The [documentation index](../README.md) |
+| `SKILL.md` frontmatter | Every bundled skill satisfies the [Agent Skills specification](https://agentskills.io/specification): `name` matches its directory and its character rules, `description` is 1 to 1024 characters, and no field outside the specification is used |
+| Marketplace catalogs | Both catalogs select the installed `plugin/` subtree at the immutable release tag; see [marketplace publication](release-documentation.md#marketplace-publication) |
 
 ## Channels
 
@@ -27,8 +26,8 @@ Status values: `not submitted`, `submitted <date>`, `listed <date>`, `declined <
 | [RoggeOhta/awesome-codex-cli](https://github.com/RoggeOhta/awesome-codex-cli) | Curated README list | Entry through a pull request | not submitted |
 | [composio-community/awesome-codex-skills](https://github.com/composio-community/awesome-codex-skills) | Curated skill list | Entry through a pull request; skill-oriented | not submitted |
 | [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | Curated skill directory | Maintainer-curated; entry through a pull request | not submitted |
-| [travisvn/awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills) | Curated skill list | Entry through a pull request; last push observed 2026-04 | not submitted |
-| [majiayu000/claude-skill-registry](https://github.com/majiayu000/claude-skill-registry) | Automated registry | Crawls GitHub; already discovers this repository | automatic (observed 2026-10-25) |
+| [travisvn/awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills) | Curated skill list | Entry through a pull request | not submitted |
+| [majiayu000/claude-skill-registry](https://github.com/majiayu000/claude-skill-registry) | Automated registry | Crawls GitHub; discovers this repository without a submission | automatic |
 
 ## Listing Text
 

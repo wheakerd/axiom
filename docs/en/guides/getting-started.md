@@ -19,7 +19,7 @@ codex plugin add axiom@axiom
 
 The [marketplace entry](../../../.agents/plugins/marketplace.json) selects a published version through its Git source `ref`. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
 
-The official `--sparse` option limits the marketplace checkout to its catalog directory. The catalog's Git `url` entry fetches the plugin separately, so the plugin's Skills and Hook do not need additional marketplace sparse paths. This CLI option was last verified on 2026-10-13 against the official [marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If `axiom` is already registered without sparse checkout, follow the [migration procedure](managing-installation.md#marketplace-clone-timeouts).
+The official `--sparse` option limits the marketplace checkout to its catalog directory. The catalog's `git-subdir` source fetches the plugin separately, so the plugin's Skills and Hook do not need additional marketplace sparse paths. This CLI option follows the official [marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If `axiom` is already registered without sparse checkout, follow the [migration procedure](managing-installation.md#marketplace-clone-timeouts).
 
 Start a new Codex chat or CLI session. An existing session may retain an older Hook or Skill snapshot.
 
