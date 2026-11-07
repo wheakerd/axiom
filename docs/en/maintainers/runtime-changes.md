@@ -6,7 +6,7 @@ This is contributor guidance. The checked-in Skills, declarations, and wrappers 
 
 ## Skill And Package Ownership
 
-Codex and Claude Code install the same shared [skills/](../../../plugin/skills) source. Keep the [Codex manifest](../../../plugin/.codex-plugin/plugin.json) and the [Claude Code manifest](../../../plugin/.claude-plugin/plugin.json) pointed at `./skills/`, with one version bound to the current runtime identity. Do not create a platform-specific copy of a shared Skill.
+Codex and Claude Code install the same shared [skills/](../../../plugin/skills) source. Keep the [Codex manifest](../../../plugin/.codex-plugin/plugin.json) and the [Claude Code manifest](../../../plugin/.claude-plugin/plugin.json) pointed at `./skills/` and without a `version` field; the Release workflow stamps the released version into both on the `release` branch. Do not create a platform-specific copy of a shared Skill.
 
 The top-level `using-axiom` Skill is the startup routing gate. Other top-level Skills provide the focused workflows it selects. Supporting `references/` and `agents/` resources belong to their owning Skill and load on demand; they are not independent public routes.
 

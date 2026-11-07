@@ -17,7 +17,7 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-[市场条目](../../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定一个已发布版本。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.md#版本选择)。
+[市场条目](../../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定 `release` 分支，该分支只包含已发布的版本。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.md#版本选择)。
 
 官方的 `--sparse` 选项把市场检出限制在存放市场目录的子目录中。目录的 `git-subdir` 源会单独获取插件，因此插件的技能与 Hook 不需要额外的市场稀疏路径。该 CLI 选项依据官方的[市场注册文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。如果 `axiom` 已在没有稀疏检出的情况下注册，请按[迁移流程](managing-installation.md#市场克隆超时)操作。
 
@@ -32,7 +32,7 @@ claude plugin marketplace add wheakerd/axiom
 claude plugin install axiom@axiom
 ```
 
-在运行中的会话内，使用 `/plugin marketplace add wheakerd/axiom`，再用 `/plugin install axiom@axiom` 打开 Axiom 的详情并选择安装范围；安装摘要会说明是否需要重新加载。立即生效或触发重新加载的安装会把 Hook 载入该会话，并在下一次 `SessionStart` 事件时运行，例如 `/clear`、`/resume`、`/branch`，或一次自动或手动的压缩。`.claude-plugin/marketplace.json` 中的 Claude Code 目录通过 Git 源的 `ref` 选定与 Codex 目录相同的已发布版本；`main` 上的开发提交不会改变它。
+在运行中的会话内，使用 `/plugin marketplace add wheakerd/axiom`，再用 `/plugin install axiom@axiom` 打开 Axiom 的详情并选择安装范围；安装摘要会说明是否需要重新加载。立即生效或触发重新加载的安装会把 Hook 载入该会话，并在下一次 `SessionStart` 事件时运行，例如 `/clear`、`/resume`、`/branch`，或一次自动或手动的压缩。`.claude-plugin/marketplace.json` 中的 Claude Code 目录通过 Git 源的 `ref` 选定与 Codex 目录相同的 `release` 分支；`main` 上的开发提交不会进入它。
 
 开启一个新的 Claude Code 会话，使其 `SessionStart` Hook 投递路由门控；`/reload-plugins` 会把插件变更应用到运行中的会话，但不会重新运行该 Hook。在 Windows 上，启动 Hook 需要 Git Bash。
 

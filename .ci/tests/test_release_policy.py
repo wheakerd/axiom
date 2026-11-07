@@ -9,7 +9,6 @@ from unittest import mock
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.release_policy import check_release_signature_workflow_contract
 from axiom_validation.cases.release_policy import check_release_script_runtime_contract
-from axiom_validation.release_tag_controller import check_controller_workflow_contract
 
 
 class ReleasePolicyTests(unittest.TestCase):
@@ -18,7 +17,7 @@ class ReleasePolicyTests(unittest.TestCase):
         workflow = check_release_signature_workflow_contract(failures)
         self.assertIsNotNone(workflow)
         count = check_release_script_runtime_contract(workflow, failures)
-        self.assertEqual(55, count)
+        self.assertEqual(48, count)
         self.assertEqual([], failures)
 
     def test_release_workflow_rejects_moving_runner(self):
@@ -35,11 +34,6 @@ class ReleasePolicyTests(unittest.TestCase):
             with mock.patch("axiom_validation.release_policy.REPOSITORY_ROOT", root):
                 check_release_signature_workflow_contract(failures)
             self.assertEqual([f"{path} must use the fixed ubuntu-24.04 runner"], failures)
-
-    def test_checked_in_release_tag_controller_workflow(self):
-        failures = []
-        check_controller_workflow_contract(failures)
-        self.assertEqual([], failures)
 
 
 if __name__ == "__main__":

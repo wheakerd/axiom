@@ -39,8 +39,8 @@
 
 发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
 
-- [更新日志](../../CHANGELOG.md)记录每个版本的用户可见变更及需要的操作。
-- [运行时身份](../../.ci/runtime-identity.json)记录当前版本与已安装文件的摘要。
+- 每个 Release 的发布说明记录该版本的用户可见变更及需要的操作；其证据资产记录已安装文件的摘要，见[运行时身份](../en/runtime-identity.md)。
+- [`release` 分支](https://github.com/wheakerd/axiom/tree/release)保存每个已发布版本的已安装文件树。
 - [早期记录](../en/compatibility.md#earlier-records)指明保留版本说明、路由评估与宿主观测记录的发布标签。
 
 ## 当前结构
@@ -52,12 +52,11 @@
 | 根目录 `CONTRIBUTING.md` | 贡献入口、仓库地图与审阅清单 |
 | 根目录 `SECURITY.md` | 支持的安全范围与私下漏洞报告 |
 | 根目录 `CODE_OF_CONDUCT.md` | 社区行为期望与执行联系人 |
-| 根目录 `CHANGELOG.md` | 用户可见的变更、影响与需要的操作 |
 | `docs/en/guides/` | 首次使用以及由宿主管理的安装生命周期 |
 | `docs/en/` 下的主题文档 | 架构、示例、信任、兼容性、身份以及仓库治理 |
 | `docs/en/reference/` | 经校验的 Hook 渲染 |
 | `docs/en/maintainers/` | 运行时编写、验证、文档与发布流程 |
-| `.ci/` | 仓库检查、发布脚本与机器可读的运行时身份 |
+| `.ci/` | 仓库检查、发布脚本与运行时摘要的输入策略 |
 | `docs/zh-CN/` | 与 `docs/en/` 源文档路径相同的简体中文镜像；英文为规范版本，镜像与其源文档在同一次变更中更新 |
 
 完整的仓库地图见[贡献指南](../../CONTRIBUTING.md#repository-layout)。

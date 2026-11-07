@@ -39,8 +39,8 @@ Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussi
 
 Consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
 
-- [Changelog](../../CHANGELOG.md) records user-visible changes and required action for every version.
-- [Runtime identity](../../.ci/runtime-identity.json) records the current version and installed-file digest.
+- Each Release's notes record that version's user-visible changes and required action; its evidence asset records the installed-file digest, as [Runtime Identity](runtime-identity.md) describes.
+- The [`release` branch](https://github.com/wheakerd/axiom/tree/release) holds the installed tree of every published version.
 - [Earlier Records](compatibility.md#earlier-records) names the release tag that keeps version notes, routing evaluations, and host observation records.
 
 ## Current Structure
@@ -52,12 +52,11 @@ Consult the [published Releases](https://github.com/wheakerd/axiom/releases) for
 | Root `CONTRIBUTING.md` | Contribution intake, repository map, and review checklist |
 | Root `SECURITY.md` | Supported security scope and private vulnerability reporting |
 | Root `CODE_OF_CONDUCT.md` | Community conduct expectations and enforcement contact |
-| Root `CHANGELOG.md` | User-visible changes, impact, and required action |
 | `docs/en/guides/` | First use and host-managed installation lifecycle |
 | Topical documents in `docs/en/` | Architecture, examples, trust, compatibility, identity, and repository governance |
 | `docs/en/reference/` | The checked Hook rendering |
 | `docs/en/maintainers/` | Runtime authoring, validation, documentation, and release procedures |
-| `.ci/` | Repository checks, release scripts, and the machine-readable runtime identity |
+| `.ci/` | Repository checks, release scripts, and the runtime-digest input policy |
 | `docs/zh-CN/` | Simplified Chinese twins at the same paths as their `docs/en/` sources; English is canonical, and a twin changes in the same change as its source |
 
 See [Contributing](../../CONTRIBUTING.md#repository-layout) for the full repository map.

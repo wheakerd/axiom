@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from axiom_validation.context import RELEASE_VERSION
+from axiom_validation.release import RELEASE_BRANCH_ROOT
 from axiom_validation.release_policy import extract_canonical_yaml_literal_block, validate_release_workflow_script
 from axiom_validation.release_versions import PRODUCTION_RELEASE_VERSION_CASES
 
@@ -42,7 +42,12 @@ const Buffer = Object.freeze({
         if (outputEncoding !== "utf8") {
           throw new Error("Unexpected Buffer output encoding in offline release fixture.");
         }
-        return __stringify({ version: __scenario.packageVersion });
+        const versions = __scenario.packageVersions || {};
+        return __stringify({
+          version: Object.prototype.hasOwnProperty.call(versions, value)
+            ? versions[value]
+            : __scenario.packageVersion,
+        });
       },
     });
   },
@@ -55,7 +60,7 @@ const github = Object.freeze({
       },
       async getContent({ path, ref }) {
         if (
-          !["plugin/.codex-plugin/plugin.json"].includes(path) ||
+          !["plugin/.claude-plugin/plugin.json", "plugin/.codex-plugin/plugin.json"].includes(path) ||
           typeof ref !== "string" ||
           ref.length === 0
         ) {
@@ -65,7 +70,7 @@ const github = Object.freeze({
           data: {
             type: "file",
             encoding: "base64",
-            content: "offline-fixture",
+            content: path,
           },
         };
       },
@@ -78,7 +83,7 @@ const github = Object.freeze({
       },
       async compareCommitsWithBasehead({ basehead }) {
         const base = String(basehead).split("...")[0];
-        const configured = __scenario.comparison;
+        const configured = (__scenario.comparisons || {})[base] || __scenario.comparison;
         return {
           data: {
             merge_base_commit: {
@@ -179,9 +184,10 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
     old_tag_sha = "4" * 40
     outside_history_sha = "5" * 40
     repository = {"owner": "wheakerd", "repo": "axiom"}
-    release_tag = f"v{RELEASE_VERSION}"
-    major, minor, patch = RELEASE_VERSION.split(".")
-    mismatched_tag = f"v{major}.{minor}.{int(patch) + 1}"
+    version = "1.2.3"
+    release_tag = f"v{version}"
+    other_tag = "v1.2.4"
+    diverged = {"mergeBaseSha": outside_history_sha, "status": "diverged"}
 
     def fixture(
         name: str,
@@ -191,9 +197,12 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         *,
         target_ref: str | None = None,
         target_sha: str | None = None,
+        extra_refs: dict[str, str] | None = None,
         comparison: dict[str, str] | None = None,
+        comparisons: dict[str, dict[str, str]] | None = None,
         signature: dict[str, Any] | None = None,
-        package_version: str = RELEASE_VERSION,
+        package_version: str = version,
+        package_versions: dict[str, str] | None = None,
         published_release: dict[str, Any] | None = None,
         expected_failure: str | None = None,
     ) -> dict[str, Any]:
@@ -202,6 +211,8 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         }
         if target_ref is not None and target_sha is not None:
             refs[target_ref] = {"type": "commit", "sha": target_sha}
+        for extra_ref, sha in (extra_refs or {}).items():
+            refs[extra_ref] = {"type": "commit", "sha": sha}
         return {
             "name": name,
             "context": {
@@ -212,11 +223,44 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             },
             "refs": refs,
             "packageVersion": package_version,
+            "packageVersions": package_versions,
             "comparison": comparison,
+            "comparisons": comparisons,
             "signature": signature,
             "publishedRelease": published_release,
             "expectedFailure": expected_failure,
         }
+
+    def published(release_id: int, *, immutable: bool = True) -> dict[str, Any]:
+        return {
+            "id": release_id,
+            "tag_name": release_tag,
+            "target_commitish": tag_sha,
+            "draft": False,
+            "prerelease": False,
+            "immutable": immutable,
+        }
+
+    def release_branch(
+        name: str,
+        *,
+        dispatched: str = release_tag,
+        stamped: str = version,
+        tag_present: bool = True,
+        **options: Any,
+    ) -> dict[str, Any]:
+        refs = {f"refs/tags/v{stamped}": tag_sha} if tag_present else {}
+        return fixture(
+            name,
+            "workflow_dispatch",
+            f"refs/tags/{dispatched}",
+            {"inputs": {"phase": "release-branch"}},
+            target_ref="refs/heads/release",
+            target_sha=release_branch_sha,
+            extra_refs=refs,
+            package_version=stamped,
+            **options,
+        )
 
     def tag_push(
         name: str,
@@ -249,7 +293,8 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         )
 
     immutable_failure = "not a single immutable creation event"
-    production_tag_failure = "not one exact stable numeric production release tag"
+    production_tag_failure = "not one exact strict SemVer release tag"
+    stamped_failure = "must declare one matching strict SemVer version"
     baseline_scenarios = (
         fixture(
             "pull-request-provenance-rejected",
@@ -258,22 +303,13 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             {},
             expected_failure="Unsupported event pull_request.",
         ),
-        fixture(
-            "main-push",
-            "push",
-            "refs/heads/main",
-            {"after": main_sha},
-        ),
+        fixture("main-push", "push", "refs/heads/main", {"after": main_sha}),
         fixture(
             "main-push-unsigned",
             "push",
             "refs/heads/main",
             {"after": main_sha},
-            signature={
-                "isValid": False,
-                "state": "INVALID",
-                "wasSignedByGitHub": False,
-            },
+            signature={"isValid": False, "state": "INVALID", "wasSignedByGitHub": False},
             expected_failure="must have a valid signature made with GitHub's signing key",
         ),
         fixture(
@@ -283,14 +319,7 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             {"release": {"id": 700, "tag_name": release_tag}},
             target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
-            published_release={
-                "id": 700,
-                "tag_name": release_tag,
-                "target_commitish": tag_sha,
-                "draft": False,
-                "prerelease": False,
-                "immutable": True,
-            },
+            published_release=published(700),
         ),
         fixture(
             "release-not-immutable",
@@ -299,47 +328,34 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             {"release": {"id": 701, "tag_name": release_tag}},
             target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
-            published_release={
-                "id": 701,
-                "tag_name": release_tag,
-                "target_commitish": tag_sha,
-                "draft": False,
-                "prerelease": False,
-                "immutable": False,
-            },
+            published_release=published(701, immutable=False),
             expected_failure="must be final, immutable, non-prerelease",
         ),
         fixture(
             "release-event-ref-mismatch",
             "release",
-            f"refs/tags/{mismatched_tag}",
+            f"refs/tags/{other_tag}",
             {"release": {"id": 700, "tag_name": release_tag}},
             expected_failure="does not match event ref",
         ),
         fixture(
-            "release-version-mismatch",
+            "release-event-id-mismatch",
             "release",
-            f"refs/tags/{mismatched_tag}",
-            {"release": {"id": 700, "tag_name": mismatched_tag}},
-            target_ref=f"refs/tags/{mismatched_tag}",
+            f"refs/tags/{release_tag}",
+            {"release": {"id": 999, "tag_name": release_tag}},
+            target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
-            expected_failure="but manifests declare",
+            published_release=published(700),
+            expected_failure="Release event ID does not match",
         ),
         fixture(
             "workflow-dispatch-main-rejected",
             "workflow_dispatch",
             "refs/heads/main",
-            {"inputs": {"phase": "candidate"}},
-            expected_failure="Manual candidate verification cannot run",
+            {"inputs": {"phase": "release-branch"}},
+            expected_failure="Manual release-branch verification cannot run",
         ),
-        fixture(
-            "workflow-dispatch-release-branch",
-            "workflow_dispatch",
-            f"refs/heads/release/{release_tag}",
-            {"inputs": {"phase": "candidate"}},
-            target_ref=f"refs/heads/release/{release_tag}",
-            target_sha=release_branch_sha,
-        ),
+        release_branch("workflow-dispatch-release-branch"),
         fixture(
             "workflow-dispatch-release-tag",
             "workflow_dispatch",
@@ -347,24 +363,58 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             {"inputs": {"phase": "published-release"}},
             target_ref=f"refs/tags/{release_tag}",
             target_sha=tag_sha,
-            published_release={
-                "id": 700,
-                "tag_name": release_tag,
-                "target_commitish": tag_sha,
-                "draft": False,
-                "prerelease": False,
-                "immutable": True,
-            },
+            published_release=published(700),
         ),
         fixture(
             "workflow-dispatch-malformed-tag",
             "workflow_dispatch",
             "refs/tags/v01",
             {"inputs": {"phase": "published-release"}},
-            expected_failure=(
-                "Published-release observation requires one exact stable numeric "
-                "production release tag"
-            ),
+            expected_failure="Manual published-release verification requires one exact strict SemVer release tag",
+        ),
+        fixture(
+            "release-branch-push-rejected",
+            "push",
+            "refs/heads/release",
+            {"after": release_branch_sha, "deleted": False, "forced": False},
+            expected_failure="Unexpected push ref refs/heads/release.",
+        ),
+        fixture(
+            "workflow-dispatch-release-branch-on-branch-rejected",
+            "workflow_dispatch",
+            "refs/heads/release",
+            {"inputs": {"phase": "release-branch"}},
+            expected_failure="Manual release-branch verification cannot run on refs/heads/release.",
+        ),
+        release_branch(
+            "release-branch-names-another-version",
+            dispatched="v1.2.4",
+            expected_failure="declares version 1.2.3, not the dispatched v1.2.4",
+        ),
+        release_branch(
+            "release-branch-outside-root",
+            comparisons={RELEASE_BRANCH_ROOT: diverged},
+            expected_failure=f"does not descend from {RELEASE_BRANCH_ROOT}",
+        ),
+        release_branch(
+            "release-branch-tag-off-main",
+            comparisons={tag_sha: diverged},
+            expected_failure="is not on refs/heads/main",
+        ),
+        release_branch(
+            "release-branch-version-without-tag",
+            tag_present=False,
+            expected_failure=f"Unexpected ref lookup refs/tags/{release_tag}",
+        ),
+        release_branch(
+            "release-branch-manifests-disagree",
+            package_versions={"plugin/.claude-plugin/plugin.json": "1.2.4"},
+            expected_failure=stamped_failure,
+        ),
+        release_branch(
+            "release-branch-unsigned",
+            signature={"isValid": True, "state": "VALID", "wasSignedByGitHub": False},
+            expected_failure="must have a valid signature made with GitHub's signing key",
         ),
         tag_push(
             "tag-create",
@@ -384,25 +434,12 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             created=True,
             deleted=False,
             forced=False,
-            comparison={
-                "mergeBaseSha": outside_history_sha,
-                "status": "diverged",
-            },
+            comparison=diverged,
             expected_failure="is not on the refs/heads/main history policy",
         ),
         tag_push(
             "tag-v9oops",
             "v9oops",
-            before=null_sha,
-            after=tag_sha,
-            created=True,
-            deleted=False,
-            forced=False,
-            expected_failure=production_tag_failure,
-        ),
-        tag_push(
-            "tag-v01",
-            "v01",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -419,16 +456,6 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             deleted=False,
             forced=False,
             expected_failure=production_tag_failure,
-        ),
-        tag_push(
-            "tag-version-mismatch",
-            mismatched_tag,
-            before=null_sha,
-            after=tag_sha,
-            created=True,
-            deleted=False,
-            forced=False,
-            expected_failure="but manifests declare",
         ),
         tag_push(
             "tag-move",
@@ -472,42 +499,19 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
         ),
     )
 
-    manifest_version_scenarios = tuple(
-        fixture(
-            f"manifest-version-{case_id}",
-            "push",
-            "refs/heads/main",
-            {"after": main_sha},
-            package_version=version,
-            expected_failure=(
-                None
-                if accepted
-                else "matching stable numeric production release version"
-            ),
+    stamped_version_scenarios = tuple(
+        release_branch(
+            f"release-branch-version-{case_id}",
+            dispatched=f"v{candidate}" if accepted else release_tag,
+            stamped=candidate,
+            expected_failure=None if accepted else stamped_failure,
         )
-        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES
-    )
-    release_candidate_scenarios = tuple(
-        fixture(
-            f"release-candidate-version-{case_id}",
-            "workflow_dispatch",
-            f"refs/heads/release/v{version}",
-            {"inputs": {"phase": "candidate"}},
-            target_ref=f"refs/heads/release/v{version}",
-            target_sha=release_branch_sha,
-            package_version=version,
-            expected_failure=(
-                None
-                if accepted
-                else "Manual release-candidate verification requires"
-            ),
-        )
-        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES
+        for case_id, candidate, accepted in PRODUCTION_RELEASE_VERSION_CASES
     )
     invalid_tag_scenarios = tuple(
         tag_push(
             f"tag-version-{case_id}",
-            f"v{version}",
+            f"v{candidate}",
             before=null_sha,
             after=tag_sha,
             created=True,
@@ -515,26 +519,10 @@ def release_script_scenarios() -> tuple[dict[str, Any], ...]:
             forced=False,
             expected_failure=production_tag_failure,
         )
-        for case_id, version, accepted in PRODUCTION_RELEASE_VERSION_CASES
+        for case_id, candidate, accepted in PRODUCTION_RELEASE_VERSION_CASES
         if not accepted
     )
-    candidate_binding_scenario = fixture(
-        "release-candidate-manifest-version-mismatch",
-        "workflow_dispatch",
-        f"refs/heads/release/{release_tag}",
-        {"inputs": {"phase": "candidate"}},
-        target_ref=f"refs/heads/release/{release_tag}",
-        target_sha=release_branch_sha,
-        package_version=mismatched_tag.removeprefix("v"),
-        expected_failure="but manifests declare",
-    )
-    return (
-        baseline_scenarios
-        + manifest_version_scenarios
-        + release_candidate_scenarios
-        + invalid_tag_scenarios
-        + (candidate_binding_scenario,)
-    )
+    return baseline_scenarios + stamped_version_scenarios + invalid_tag_scenarios
 
 
 def check_release_script_runtime_contract(

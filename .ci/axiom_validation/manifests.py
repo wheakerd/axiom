@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from .context import RELEASE_VERSION, REPOSITORY_ROOT, display_path
-from .release_versions import parse_production_release_tag, parse_production_release_version
+from .context import EXPECTED_RELEASE_VERSION, REPOSITORY_ROOT, display_path
+from .release_versions import parse_production_release_version
 
 JSON_FILES = (
     "plugin/.codex-plugin/plugin.json",
@@ -72,7 +72,6 @@ EXPECTED_CODEX_POLICY = {
 CODEX_MANIFEST_KEYS = frozenset(
     {
         "name",
-        "version",
         "description",
         "author",
         "homepage",
@@ -91,7 +90,6 @@ AUTHOR_KEYS = frozenset({"name", "url"})
 CLAUDE_MANIFEST_KEYS = frozenset(
     {
         "name",
-        "version",
         "description",
         "author",
         "homepage",
@@ -824,13 +822,12 @@ def check_manifest_capability_schema(
     codex_path = "plugin/.codex-plugin/plugin.json"
     codex = documents.get(codex_path)
     if codex is not None:
-        exact_json_object(codex, codex_path, CODEX_MANIFEST_KEYS, failures)
+        exact_json_object(codex, codex_path, _manifest_keys(codex, CODEX_MANIFEST_KEYS), failures)
         require_json_strings(
             codex,
             frozenset(
                 {
                     "name",
-                    "version",
                     "description",
                     "homepage",
                     "repository",
@@ -919,11 +916,11 @@ def check_manifest_capability_schema(
                 if (
                     source.get("source") not in CATALOG_SOURCE_TYPES
                     or source.get("url") != EXPECTED_PLUGIN_REPOSITORY
-                    or parse_production_release_tag(source.get("ref")) is None
+                    or source.get("ref") != RELEASE_BRANCH
                 ):
                     failures.append(
                         f"{codex_marketplace_path}.plugins[0].source must remain the "
-                        "owned Git repository at an immutable production release tag"
+                        f"owned Git repository at the {RELEASE_BRANCH!r} branch"
                     )
                 elif (layout := catalog_layout_failure(source, "codex")) is not None:
                     failures.append(f"{codex_marketplace_path}.plugins[0].source {layout}")
@@ -949,7 +946,7 @@ def check_manifest_capability_schema(
     claude_path = "plugin/.claude-plugin/plugin.json"
     claude = documents.get(claude_path)
     if claude is not None:
-        exact_json_object(claude, claude_path, CLAUDE_MANIFEST_KEYS, failures)
+        exact_json_object(claude, claude_path, _manifest_keys(claude, CLAUDE_MANIFEST_KEYS), failures)
         require_json_strings(
             claude,
             frozenset(CLAUDE_MANIFEST_KEYS - {"author", "keywords"}),
@@ -967,9 +964,16 @@ def check_manifest_capability_schema(
 
 
 
-# Each catalog installs only the plugin/ subtree of the tagged release.
+# Each catalog installs only the plugin/ subtree of the release branch, which
+# CI advances to the stamped tree of every published version.
 CATALOG_SUBTREE_PATHS = {"codex": "./plugin", "claude-code": "plugin"}
 CATALOG_SOURCE_TYPES = frozenset({"git-subdir"})
+RELEASE_BRANCH = "release"
+
+
+def _manifest_keys(document: dict[str, Any], keys: frozenset[str]) -> frozenset[str]:
+    """Allow ``version`` only where it is present; check_manifest_versions owns it."""
+    return keys | {"version"} if "version" in document else keys
 
 
 def catalog_source_keys(source: Any) -> frozenset[str]:
@@ -977,13 +981,13 @@ def catalog_source_keys(source: Any) -> frozenset[str]:
     return frozenset({"source", "url", "path", "ref"})
 
 
-def catalog_source(tag: str, host: str) -> dict[str, str]:
-    """Return the catalog plugin source that selects ``tag`` for ``host``."""
+def catalog_source(host: str) -> dict[str, str]:
+    """Return the catalog plugin source that selects the release branch for ``host``."""
     return {
         "source": "git-subdir",
         "url": EXPECTED_PLUGIN_REPOSITORY,
         "path": CATALOG_SUBTREE_PATHS[host],
-        "ref": tag,
+        "ref": RELEASE_BRANCH,
     }
 
 
@@ -1033,11 +1037,11 @@ def check_claude_marketplace(
     if (
         source.get("source") not in CATALOG_SOURCE_TYPES
         or source.get("url") != EXPECTED_PLUGIN_REPOSITORY
-        or parse_production_release_tag(source.get("ref")) is None
+        or source.get("ref") != RELEASE_BRANCH
     ):
         failures.append(
-            f"{label}.plugins[0].source must be the owned Git repository at an "
-            "immutable production release tag"
+            f"{label}.plugins[0].source must be the owned Git repository at the "
+            f"{RELEASE_BRANCH!r} branch"
         )
         return
     layout = catalog_layout_failure(source, "claude-code")
@@ -1054,38 +1058,37 @@ def check_claude_marketplace(
         else None
     )
     if source.get("ref") != codex_ref:
-        failures.append(
-            f"{label} must select the same immutable release tag as the Codex catalog"
-        )
+        failures.append(f"{label} must select the same ref as the Codex catalog")
 
 
 def check_manifest_versions(
-    documents: dict[str, dict[str, Any]], failures: list[str]
+    documents: dict[str, dict[str, Any]],
+    failures: list[str],
+    expected_version: str | None = EXPECTED_RELEASE_VERSION,
 ) -> None:
-    versions: dict[str, str] = {}
+    """Forbid a version on main; require the stamped version on a release tree.
+
+    The release tag names the version. CI stamps it into both manifests of the
+    tagged tree on the release branch, and checks that tree with
+    ``.ci/check.py --release-version X.Y.Z``.
+    """
+    if expected_version is not None and parse_production_release_version(expected_version) is None:
+        failures.append(f"release version {expected_version!r} is not strict SemVer X.Y.Z")
+        return
     for relative_path in MANIFEST_FILES:
         document = documents.get(relative_path)
         if document is None:
             continue
-        version = document.get("version")
-        if not isinstance(version, str):
-            failures.append(f"{relative_path} must declare a string version")
-            continue
-        versions[relative_path] = version
-        if parse_production_release_version(version) is None:
+        if expected_version is None:
+            if "version" in document:
+                failures.append(
+                    f"{relative_path} must not declare a version on main; the release tag "
+                    "names the version and CI stamps it on the release branch"
+                )
+        elif document.get("version") != expected_version:
             failures.append(
-                f"{relative_path} version {version!r} is not a stable numeric "
-                "production release version"
-            )
-
-    if len(versions) == len(MANIFEST_FILES) and len(set(versions.values())) != 1:
-        rendered = ", ".join(f"{path}={version!r}" for path, version in versions.items())
-        failures.append(f"plugin manifest versions disagree: {rendered}")
-
-    for relative_path, version in versions.items():
-        if version != RELEASE_VERSION:
-            failures.append(
-                f"{relative_path} version is {version!r}; publication requires {RELEASE_VERSION!r}"
+                f"{relative_path} version is {document.get('version')!r}; the stamped "
+                f"release tree requires {expected_version!r}"
             )
 
 

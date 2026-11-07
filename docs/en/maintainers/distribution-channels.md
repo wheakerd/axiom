@@ -11,7 +11,7 @@ Installed distribution stays with the two marketplace catalogs described in [Man
 | Repository topics | Twenty topics, the GitHub maximum, covering both hosts, plugin and skill terms, and workflow terms |
 | Repository homepage | The [documentation index](../README.md) |
 | `SKILL.md` frontmatter | Every bundled skill satisfies the [Agent Skills specification](https://agentskills.io/specification): `name` matches its directory and its character rules, `description` is 1 to 1024 characters, and no field outside the specification is used |
-| Marketplace catalogs | Both catalogs select the installed `plugin/` subtree at the immutable release tag; see [marketplace publication](release-documentation.md#marketplace-publication) |
+| Marketplace catalogs | Both catalogs select the installed `plugin/` subtree of the `release` branch; see [marketplace distribution](release-documentation.md#marketplace-distribution) |
 
 ## Channels
 
@@ -35,17 +35,17 @@ The Codex manifest's `interface.shortDescription` and `interface.longDescription
 
 ## Codex Directory Listing Variant
 
-The OpenAI plugin directory does not accept lifecycle hooks, while the marketplace package keeps Axiom's startup Hook. `.ci/scripts/build-listing-variant.py` derives a hook-less variant from the `plugin/` tree of one tree-ish, normally the immutable tag of the release to be listed:
+The OpenAI plugin directory does not accept lifecycle hooks, while the marketplace package keeps Axiom's startup Hook. `.ci/scripts/build-listing-variant.py` derives a hook-less variant from the `plugin/` tree of one tree-ish whose manifests carry a version: the `release` branch, or the release commit of the version to be listed. The same tree is in that Release's `axiom-vX.Y.Z-plugin.zip`.
 
 ```bash
-python3 -B .ci/scripts/build-listing-variant.py --tree-ish <tag> --output /tmp/axiom-variant
+python3 -B .ci/scripts/build-listing-variant.py --tree-ish origin/release --output /tmp/axiom-variant
 ```
 
 The build keeps `.codex-plugin/plugin.json` with every field except `hooks`, copies `skills/`, `assets/`, and `LICENSE` byte for byte, and excludes `hooks/` and `.claude-plugin/` because the directory lists Codex plugins only. It writes `axiom-<version>-codex-directory-variant.zip` (stored entries in sorted order with fixed timestamps) and a JSON build manifest that names the source commit, the `plugin/` tree, the plugin version, every file digest, the removed paths and fields, and the archive digest. Two clean builds of the same tree are byte-identical; `.ci/tests/test_listing_variant.py` proves the exclusions and the determinism.
 
 Boundaries:
 
-- The variant is a derived distribution artifact identified by its source tag and archive digest. It is not an Axiom installed-runtime identity: the [runtime identity](../runtime-identity.md) binds versions to the marketplace `plugin/` tree, and the variant's manifest version only names its source.
+- The variant is a derived distribution artifact identified by its source commit and archive digest. It is not an Axiom installed-runtime identity: the [runtime identity](../runtime-identity.md) binds versions to the marketplace `plugin/` tree, and the variant's manifest version only names its source.
 - Without the startup Hook nothing loads the routing gate at session start. Route selection relies on each skill's description, and `using-axiom` with its cross-route rules loads only on explicit invocation. Observations of the marketplace package do not transfer to the variant.
 - Before a submission decision, observe the variant in a fresh Codex session installed from a local marketplace without the hook: routed requests select their skills from descriptions, near-miss requests stay unselected, and no-route requests continue normally. Record the observation date and host version in the channel row.
 - Building the variant installs and publishes nothing. Submission remains a separate maintainer action recorded under [Recording A Submission](#recording-a-submission).

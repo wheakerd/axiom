@@ -17,7 +17,7 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-The [marketplace entry](../../../.agents/plugins/marketplace.json) selects a published version through its Git source `ref`. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
+The [marketplace entry](../../../.agents/plugins/marketplace.json) selects the `release` branch through its Git source `ref`, and that branch holds only published versions. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
 
 The official `--sparse` option limits the marketplace checkout to its catalog directory. The catalog's `git-subdir` source fetches the plugin separately, so the plugin's Skills and Hook do not need additional marketplace sparse paths. This CLI option follows the official [marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If `axiom` is already registered without sparse checkout, follow the [migration procedure](managing-installation.md#marketplace-clone-timeouts).
 
@@ -32,7 +32,7 @@ claude plugin marketplace add wheakerd/axiom
 claude plugin install axiom@axiom
 ```
 
-Inside a running session, use `/plugin marketplace add wheakerd/axiom`, then `/plugin install axiom@axiom` to open Axiom's details and choose an install scope; the install summary says whether a reload is needed. An install that is active at once, or that reloads, loads the Hook into that session, where it runs at the next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an automatic or manual compaction. The Claude Code catalog in `.claude-plugin/marketplace.json` selects the same published version as the Codex catalog through a Git source `ref`; development commits on `main` do not change it.
+Inside a running session, use `/plugin marketplace add wheakerd/axiom`, then `/plugin install axiom@axiom` to open Axiom's details and choose an install scope; the install summary says whether a reload is needed. An install that is active at once, or that reloads, loads the Hook into that session, where it runs at the next `SessionStart` event, such as `/clear`, `/resume`, `/branch`, or an automatic or manual compaction. The Claude Code catalog in `.claude-plugin/marketplace.json` selects the same `release` branch as the Codex catalog through a Git source `ref`; development commits on `main` do not reach it.
 
 Start a new Claude Code session so its `SessionStart` Hook delivers the routing gate; `/reload-plugins` applies plugin changes to a running session but does not rerun that Hook. On Windows, the startup Hook needs Git Bash.
 

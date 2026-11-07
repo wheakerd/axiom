@@ -3,8 +3,9 @@
 
 Standard library only. The OpenAI plugin directory does not accept lifecycle
 hooks, while Axiom's marketplace package keeps its startup Hook. This script
-derives the listing variant from the ``plugin/`` tree of one tree-ish, normally
-an immutable release tag, without a second maintained Skill tree:
+derives the listing variant from the ``plugin/`` tree of one tree-ish whose
+manifests carry a version: the ``release`` branch or one of its commits, where
+CI stamped the released version. It keeps no second maintained Skill tree:
 
 - ``.codex-plugin/plugin.json`` keeps every field except ``hooks``;
 - ``skills/``, ``assets/``, and ``LICENSE`` are copied byte for byte;
@@ -106,7 +107,12 @@ def build(repository: Path, tree_ish: str, output: Path) -> OrderedDict:
         source_sha = _sha256(data)
         if relative == CODEX_MANIFEST:
             data, removed = strip_manifest_hooks(data)
-            version = json.loads(data.decode("utf-8"))["version"]
+            version = json.loads(data.decode("utf-8")).get("version")
+            if not isinstance(version, str):
+                raise BuildError(
+                    f"{tree_ish}:plugin/{CODEX_MANIFEST} declares no version; build from the "
+                    "release branch or one of its commits, whose manifests CI stamped"
+                )
             manifest_change = OrderedDict(
                 path=relative,
                 removedFields=removed,

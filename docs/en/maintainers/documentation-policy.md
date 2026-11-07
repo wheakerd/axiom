@@ -6,22 +6,22 @@ This policy defines how Axiom's public documentation is organized and kept accur
 
 1. Each document has one primary audience and responsibility.
 2. Each durable fact has one canonical owner. Other documents link, summarize, or render that fact instead of maintaining a competing manual copy.
-3. The tree describes the current implementation. Release history lives in the Changelog, the release tags, and Git history.
+3. The tree describes the current implementation. Release history lives in the release notes, the release tags, and Git history.
 4. Static validation is not host-observed evidence, and a plan is not an implemented capability.
 5. Navigation favors user tasks without hiding maintainer and audit material.
 6. Documentation must not grant action authority or imply behavior that the checked-in runtime does not provide.
 
 ## Source And Version Scope
 
-Current guides, concepts, references, and contributor procedures describe the implementation and contracts in the same repository snapshot. Write the supported workflow in the present tense, verify it against its source owner, and replace obsolete instructions in place. Put release-by-release additions, removals, and migration narratives in the Changelog.
+Current guides, concepts, references, and contributor procedures describe the implementation and contracts in the same repository snapshot. Write the supported workflow in the present tense, verify it against its source owner, and replace obsolete instructions in place. Put release-by-release additions, removals, and migration narratives in the release notes, which are the release tag's message.
 
 "Current" means the checked-in tree that accompanies the document. `main` may contain unreleased changes; its documentation does not prove that the latest published or installed package has those changes. Users checking an installed release should use the documentation at that release's tag. Source inspection establishes declared behavior; installation, host observations, and remote publication still require evidence from their own owners.
 
 | Content | Version rule |
 | --- | --- |
 | Current usage, architecture, security, and contribution guidance | Follow the same checked-in source; avoid manual copies of the current release number and version-by-version narration |
-| Current version, digest, status, or measured counts | Link to the canonical manifest, record, or measurement command; use a checked generated region when displaying the values |
-| Changelog entries and migration history | Retain the version whose change or migration they describe |
+| Current version, digest, status, or measured counts | Link to the release tag, the Release evidence, or the measurement command; use a checked generated region when displaying the values |
+| Release notes and migration history | Live in the release tag's message and its GitHub Release, for the version whose change or migration they describe |
 | Observations and failures | Preserve the exact original subject, version, date, and outcome; never relabel them as current |
 | Supported schema or protocol selectors, compatibility limits, and prerequisites | Keep exact versions when they determine valid behavior; update their current selection only with the owning implementation |
 
@@ -49,13 +49,13 @@ The current repository assigns these responsibilities:
 
 - `README.md` owns the bounded public introduction, the generated skill index, installation and update quick start, and first-use example; each skill's `SKILL.md` owns its description and `docs/en/examples.md` owns example requests;
 - `CONTRIBUTING.md` owns contribution intake and the repository map; `docs/en/maintainers/runtime-changes.md` owns runtime-authoring rules and `docs/en/maintainers/validation.md` owns contributor check procedures;
-- `SECURITY.md` owns vulnerability reporting and security boundaries, while `CHANGELOG.md` owns user-visible changes and required action;
+- `SECURITY.md` owns vulnerability reporting and security boundaries, while each release tag's message owns that version's user-visible changes and required action;
 - `CODE_OF_CONDUCT.md` owns community conduct expectations and the enforcement contact;
 - `docs/en/guides/` owns installation, first use, update, removal, and troubleshooting;
 - `docs/en/reference/hooks.md` renders the canonical Hook declarations and wrapper;
 - `docs/en/compatibility.md` owns the concise current support contract, the procedure for reporting a host result, and the pointer to the release tag that keeps earlier records;
-- `docs/en/maintainers/release-documentation.md` defines release-document and evidence responsibilities for future releases; and
-- `.ci/` holds the repository checks and the machine-readable runtime identity.
+- `docs/en/maintainers/release-documentation.md` owns the release procedure and the release notes, assets, and evidence; and
+- `.ci/` holds the repository checks, the release scripts, and the runtime-digest input policy.
 
 [The documentation index](../README.md) describes these current locations by audience and task. A proposed path does not become canonical until the content and inbound links move in one merged change.
 
@@ -65,7 +65,6 @@ The repository uses this responsibility split without creating unnecessary short
 
 ```text
 README.md
-CHANGELOG.md
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 SECURITY.md
@@ -104,15 +103,14 @@ A twin is not indexed separately and does not count as a current document of its
 | Public Skill inventory | `plugin/skills/*/SKILL.md` and manifests | Current; `README.md` keeps a generated index of each skill's short description |
 | Hook declarations and executable commands | `plugin/hooks/*.json` and packaged wrappers | Current; `docs/en/reference/hooks.md` is the validated rendering |
 | Installation, first use, update, removal, troubleshooting | `docs/en/guides/getting-started.md` and `docs/en/guides/managing-installation.md` | Current |
-| Current plugin version | Codex plugin manifest | Current |
-| Runtime contract identity | Versioned runtime-identity inputs and machine output | Current; `docs/en/runtime-identity.md` renders the checked identity |
+| Current plugin version | The latest release tag; CI stamps it into the manifests on the `release` branch | Current; the manifests on `main` declare no version |
+| Runtime contract identity | The versioned input policy and generator; each Release's evidence asset records its digest | Current; `docs/en/runtime-identity.md` describes the method |
 | Git workflow routing boundary | The `traceable-git-submit` skill | Current; `docs/en/architecture.md` summarizes it |
 | Current compatibility boundary | `docs/en/compatibility.md` | Current |
 | Records from earlier releases | The release tags; `docs/en/compatibility.md` names the tag that keeps them | Not part of the current tree; they do not establish current support |
-| User-visible release changes and required action | `CHANGELOG.md` | Current; future Release bodies render this entry at the exact tag |
-| GitHub Release body | Deterministic rendering of the tagged `CHANGELOG.md` entry | Current |
-| Candidate evidence | Checked-in machine records bound to the source commit | Current; may state only what that commit can prove |
-| Final remote publication facts | Immutable Release, assets, attestation, and verified remote postconditions | Current; produced only after those objects exist |
+| User-visible release changes and required action | The release tag's message | Written by the maintainer who pushes the tag |
+| GitHub Release body | The annotated tag's message, or the tagged commit's message, plus the compare link | Rendered by the Release workflow |
+| Final remote publication facts | Immutable Release, assets, evidence, attestation, and verified remote postconditions | Current; produced only after those objects exist |
 | Repository governance | `docs/en/repository-governance.md`; the live rulesets are the source for their own settings | Current |
 | Simplified Chinese translations | The English source in `docs/en/` and its twin at the same path under `docs/zh-CN/` | Current; the twin translates prose and table headers and changes with its source |
 
@@ -126,9 +124,9 @@ Machine-derived facts should use bounded generated regions or deterministic chec
 | Hook declaration or wrapper command | Regenerate or update the Hook reference and verify it against both sources |
 | Installation, update, removal, or troubleshooting behavior | Update the canonical guide; keep README install/update quick-start commands aligned and link to the guide for full procedures |
 | Host support or observed compatibility | Update current status from the owning evidence and preserve prior records unchanged |
-| Manifest version or runtime digest | Render the current identity from its machine-readable owner |
+| Runtime digest input policy | Update `docs/en/runtime-identity.md` with the policy in the same change |
 | Current guidance contains release-specific narration or copied measurements | Replace the narration with the implemented workflow and link to the canonical measurement source |
-| User-visible change | Add a concise `CHANGELOG.md` entry that states impact and required action |
+| User-visible change | State its impact and required action in the notes of the release tag that ships it |
 | External publication or channel state | Record an absolute verification date and do not promote planned or submitted work to published |
 | Document move | Update inbound links and the documentation index atomically |
 
@@ -139,7 +137,7 @@ Machine-derived facts should use bounded generated regions or deterministic chec
 - Move a fact only after identifying its canonical owner. Remove the competing copy or replace it with a concise link in the same change.
 - Never rewrite a published tag, a Release, or its assets. Material that describes an earlier release leaves the current tree once it exists at a release tag; link the tag instead of keeping a copy, and retire its active commands, default checks, and CI dependencies in the same change.
 - Keep project plans and channel status outside the plugin release tree. Preserve retired records in Git history with their absolute verification dates and truthful planned, submitted, or published state.
-- Do not copy candidate-only absence or future-tense publication text into a final Release body. Render future bodies from the tagged Changelog entry and establish final evidence only from the immutable remote objects.
+- Do not copy future-tense publication text into release notes. Establish final evidence only from the immutable remote objects.
 - Use repository-relative links for checked-in files. External URLs are permitted when the external destination is the actual owner.
 - Keep public documentation free of non-public repository content, credentials, internal endpoints, and operational coordination detail.
 - Reclassify the exact final diff against the runtime-identity contract. A documentation reorganization must not assume that a changed runtime input is policy-only.

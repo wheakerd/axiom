@@ -1,108 +1,92 @@
 # Release Documentation And Evidence
 
-This policy separates release communication from release evidence. It applies fix-forward to tags that contain it. Existing tags, GitHub Releases, assets, and attestations remain unchanged.
+A maintainer releases a version by pushing its tag. CI checks the tagged commit, builds the versioned installed tree on the `release` branch, and publishes an immutable GitHub Release with its notes and evidence. This page describes the procedure, what CI does, the notes and assets a Release carries, and recovery. Existing tags, Releases, assets, and attestations remain unchanged.
 
 ## Responsibility Map
 
-| Surface | Audience | It answers | Lifecycle and owner |
+| Surface | Audience | It answers | Source |
 | --- | --- | --- | --- |
-| `CHANGELOG.md` | Users and integrators | What changed, behavioral impact, and required action | Checked in with the candidate; canonical user-facing history |
-| GitHub Release body | Release consumers | A concise tagged summary and immutable links to deeper documentation | Rendered from the tagged Changelog entry |
-| Candidate evidence | Reviewers | What the source commit can prove before publication | Checked-in records and candidate reports; future remote states remain pending or unavailable |
-| Final immutable release evidence | Auditors | What tag, Release, assets, signatures, Latest state, and remote postconditions actually exist | Established only after publication and authoritative read-back |
+| Release tag `vX.Y.Z` | Everyone | Which `main` commit is that version | Pushed by a maintainer; the version's only source |
+| GitHub Release body | Users and integrators | What changed, behavioral impact, required action | The annotated tag's message, or the tagged commit's message |
+| `release` branch | Hosts | The installed tree of every published version | One GitHub-signed commit per release, made by the Release workflow |
+| Release assets | Auditors | The exact installed files, the release subject, and what was verified | Built and attached by the Release workflow and the publisher |
 
-No surface grants commit, tag, Release, asset-upload, publication, or Latest authority. Preparation and validation remain separate from those external actions.
+No surface grants commit, tag, Release, asset-upload, publication, or Latest authority.
 
-## Changelog Contract
+## Cut A Release
 
-Every version has one entry whose heading is `## X.Y.Z - <state or date>`. The entry must contain:
+1. Merge the change to `main` through the normal signed pull request, and wait until `repository-guards`, `unit-and-integration-tests`, `hook-runtime-gate`, and `Verify signed main history` have passed on the merge commit.
+2. Classify the change and choose the version with [Runtime Identity](../runtime-identity.md#classify-a-change). A repository-only change creates no tag.
+3. Write the release notes as the message of a signed annotated tag on that commit, and push the tag:
 
-- at least one change section such as `Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, or `Security`;
-- `### Behavioral impact`; and
-- `### Required action`, using `None` when users need do nothing.
+   ```bash
+   git tag -s vX.Y.Z -m "Release notes in Markdown" <commit>
+   git push origin vX.Y.Z
+   ```
 
-Keep the heading state `unreleased` until the GitHub Release is published; the tagged entry therefore always reads `unreleased`, and the rendered body omits the heading. After publication, replace the state with the Release's UTC publication date in the marketplace-publication pull request, or in the next repository-policy change when that handoff does not apply. A version tagged without a GitHub Release states that instead of a date.
+   For longer notes, write them to a file and use `git tag -s vX.Y.Z -F notes.md <commit>`. A lightweight tag on a GitHub-signed commit also releases; its notes are then the commit's full message.
 
-Keep the entry concise and user-facing. Case-level results, commit and tree IDs, timing, token counts, candidate investigations, and workflow internals belong in the release pull request or its issue rather than the Changelog.
+The [Release workflow](../../../.github/workflows/release.yml) starts on the tag push. Watch its run; its job summary names the Release, the tagged commit, the `release` commit, the installed tree, the zip digest, and the runtime digest.
 
-Repository-only changes are not Changelog entries; Git history records them. The catalog handoff dates the released version's heading without adding a Changelog entry.
+Write the notes for users: what changed, its behavioral impact, and the required action, saying `None` when users need do nothing. When a release retires a feature, command, configuration, or procedure, say so and name the replacement, and remove the retired active entry points, configuration, and instructions in the same change; a notice alone does not complete a removal. Case-level results, commit and tree IDs, timing, and workflow internals belong in the pull request or its Issue.
 
-## Deprecation And Removal
+## What CI Does
 
-Before publishing a version, review the behavior and guidance superseded by that release. Record each obsolete feature, command, configuration, validator, or procedure in its Changelog entry under `Deprecated` or `Removed`. Name the affected version, reason, supported replacement, and required user action.
+The Release workflow runs [`.ci/scripts/release.py run`](../../../.ci/scripts/release.py) on the tag. Before any write, it requires every gate that [Repository Governance](../repository-governance.md#release-workflow) lists: the tag name, the commit's place on `main` and its GitHub-made signature, the required checks, the version step, a changed runtime digest, an absent Release, a `release` branch of the expected shape, and the repository checks on the stamped tree.
 
-Retire obsolete functionality in the same change: remove its active entry points, calls, configuration, fallback paths, CI dependencies, and instructions. A deprecation notice alone does not complete removal. Current documentation must describe the supported replacement, and release checks must confirm that the obsolete behavior cannot still be selected by the active workflow. Verify actual support before retiring a format merely because a newer one exists.
+The version must be the immediate patch, minor, or major successor of the highest release tag below it. That tag is GitHub Latest's unless a later attempt failed after its tag was pushed.
 
-A record at an earlier release tag does not keep retired functionality enabled or turn its old diagnostics into current release requirements. For host-owned external tools, retire Axiom's dependency and invocations; removal from the user's system is a separate action outside the package release.
+The runtime digest must differ from Latest's, with one exception: the bootstrap release, the one that runs while the `release` branch holds no release commit yet, may carry Latest's runtime unchanged, because until then the catalogs have no installed tree to resolve. Every other gate still applies to it, and its policy and evidence assets record `"bootstrap": true`.
 
-## Deterministic Release Body
+It then writes, in order:
 
-For a future tag that contains this policy, render the body offline from its exact Changelog entry:
+1. one commit on `release`, made with the GraphQL `createCommitOnBranch` mutation and `GITHUB_TOKEN`, so GitHub signs it. Its tree is exactly the tagged `plugin/` directory with `"version": "X.Y.Z"` inserted after `name` in both plugin manifests, plus `LICENSE`. Its parent is the previous release commit. `createCommitOnBranch` always builds on an existing branch head, so when the branch does not exist, the workflow first creates it at `main`'s root commit `fb86eb61e8161642c627bcce84c214730634b570`, whose tree holds only `LICENSE`. The branch carries no other path, because `GITHUB_TOKEN` cannot be granted the `workflows` permission and GitHub refuses a token write that creates, changes, or deletes a file under `.github/workflows/`;
+2. the Draft at the tag, with the notes, the plugin zip, and the release-policy asset;
+3. the [immutable publisher](../../../.github/workflows/publish-immutable-release.yml) run, which derives the same subject on its own, adds the evidence asset, and publishes the Draft as the immutable Latest Release; and
+4. the `Verify release branch commit` and `Observe published immutable release` checks.
+
+Check a stamped tree locally with `python3 -B .ci/check.py --release-version X.Y.Z`; without the option the checks validate `main`, whose manifests declare no version.
+
+## Release Notes
+
+The Release body is the annotated tag's message when the tag is annotated, otherwise the tagged commit's full message. A trailing PGP or SSH signature block is removed, line endings become LF, and one final line links the comparison with the previous published release, `https://github.com/wheakerd/axiom/compare/vPREV...vX.Y.Z`; the line is omitted when there is no previous release. The workflow checks only structure: the notes must be non-empty and within GitHub's 125,000-character limit.
+
+## Release Assets And Evidence
+
+Each Release carries three assets and GitHub's own release attestation:
+
+- `axiom-vX.Y.Z-plugin.zip`: the stamped `plugin/` tree, members relative to the plugin root, sorted, stored without compression, with the fixed timestamp 1980-01-01 00:00 and Unix mode 0644. Equal trees give byte-identical zips; the publisher rebuilds it from the tag and compares bytes.
+- `axiom-vX.Y.Z-release-policy-<sha256>.json`: the release subject and the `repository-checks-v2` policy, which names the four required checks. The subject binds the version, tag object, tagged commit and tree, `release` commit and tree, zip name, SHA-256, and size, runtime digest, previous release tag, and notes SHA-256.
+- `axiom-vX.Y.Z-release-evidence-<sha256>.json`: written by the publisher after it validates the Draft. It records the tag, tagged commit, `release` commit, stamped tree, zip SHA-256, runtime digest under `runtimeContract.digest`, notes SHA-256, whether the release was the bootstrap release, and the identities of the two other assets. The next release reads the digest from here; when Latest's evidence asset records no digest, the Release workflow computes Latest's digest with the same generator on Latest's tagged tree.
+
+Verify a published Release and a downloaded zip with GitHub's attestation:
 
 ```bash
-python3 .ci/scripts/check-release-evidence.py render-body --expected-version X.Y.Z
+gh release verify vX.Y.Z --repo wheakerd/axiom
+gh release verify-asset vX.Y.Z axiom-vX.Y.Z-plugin.zip --repo wheakerd/axiom
 ```
 
-The renderer:
+These records describe verification policy and artifact integrity; check results remain bound to their GitHub Actions runs.
 
-- omits the Changelog version heading, so `unreleased` is not copied into the final body;
-- promotes entry subsections by one heading level;
-- rewrites repository-relative links to immutable links under the exact tag;
-- rejects traversal links, duplicate version entries, missing sections, hard-wrapped paragraphs, and bodies above GitHub's 125,000-character limit; and
-- uses only the Python standard library, the checked-in Changelog, and standard output.
+## Marketplace Distribution
 
-The separately authorized draft must use the exact rendered bytes. The tag-owned release-evidence validator compares the draft, pre-publication, and final body to the same rendering. The `notesSha256` attestation field binds the GitHub Release body digest.
+The default [marketplace](../../../.agents/plugins/marketplace.json) and the [Claude Code catalog](../../../.claude-plugin/marketplace.json) select the `release` branch of the same repository through a `git-subdir` source whose `path` is the installed plugin root, `./plugin` for Codex and `plugin` for Claude Code, so hosts install only that subtree. Releases never edit the catalogs. A host sees a new version when it refreshes the marketplace; the client and user own refresh and automatic-update policy.
 
-## Release Verification
-
-Release verification uses repository checks, exact signed-main and created-tag checks, and immutable Release verification. The checked-in [tag controller](../../../.ci/axiom_validation/release_tag_controller.py) requires `repository-guards`, `unit-and-integration-tests`, and `hook-runtime-gate` against the exact release commit. The [governance page](../repository-governance.md#main-branch-policy) describes the required checks.
-
-The draft starts with one `axiom-v<version>-release-policy-<sha256>.json` asset. Render it with `.ci/scripts/check-release-evidence.py render-policy` and the exact version, tag, commit and tree arguments. Its closed `repository-checks-v1` schema records `repository-guards` and `unit-and-integration-tests` and binds the release subject. This artifact is not the complete live ruleset: the tag controller separately enforces its current prerequisites, including `hook-runtime-gate`. Preserve the artifact schema's meaning rather than treating its shorter list as permission to skip a current gate. The publisher validates the downloaded bytes, uploads an integrity attestation, and verifies both assets after publication. This record describes verification policy; actual check results remain bound to their GitHub Actions runs. The attestation states its `release-policy-and-artifact-integrity` scope.
-
-## Release Pipeline
-
-A pull request that changes the plugin version in the Codex manifest is a release pull request; every other pull request publishes nothing. Prepare it with the new version, its `## X.Y.Z - unreleased` Changelog entry, and the identity record that [Runtime Identity](../runtime-identity.md) requires. Use the immediate next patch, minor, or major version after the latest published Release, and keep other changes out of `main` until the release completes.
-
-The [Release pipeline](../../../.github/workflows/release-pipeline.yml) then publishes the version from CI without a manual dispatch:
-
-1. On the pull request, `Release candidate` checks the version step and the absent tag and Release, previews the exact Release body in its job summary, and rehearses the catalog handoff on the pull-request head: it applies the catalog advance to a disposable worktree of that head and runs the publication aggregate and the unit tests there.
-2. After the squash merge, `Publish release` waits for the required checks, `Verify signed main history`, and every other check on the merged commit, rehearses the catalog handoff again on that exact commit, dispatches the protected tag controller, waits for `Verify created release tag` and the other tag-triggered checks, stages the Draft with the rendered body and release-policy asset, dispatches the immutable publisher on the tag, and dispatches the published-release observation. The rehearsal runs before the first irreversible step, so a release whose handoff would fail stops before any tag or Release exists.
-3. `Advance marketplace catalogs` then completes the [Marketplace Publication](#marketplace-publication) handoff; it merges only after every check on the handoff commit has finished without failing.
-
-The pipeline runs no AI model or agent. Every step reads current GitHub state before it acts, so rerunning a failed job, or dispatching the workflow on `main`, resumes the earliest unfinished step without repeating a completed one. A stopped job names the object to inspect; resolve it before any retry. [Repository Governance](../repository-governance.md#release-pipeline) records the workflow's permissions and fail-closed conditions.
-
-## Marketplace Publication
-
-The default [marketplace](../../../.agents/plugins/marketplace.json) and the [Claude Code catalog](../../../.claude-plugin/marketplace.json) select the same repository and immutable production `v<version>` ref, and both catalogs advance together. Each catalog uses a `git-subdir` source whose `path` is the installed plugin root, `./plugin` for Codex and `plugin` for Claude Code, so hosts install only that subtree. The selected release may precede the development manifest version. Keep the selection unchanged during ordinary `main` development and for releases that are not Latest. The client and user own refresh and automatic-update policy; there is no repository-side client updater or `main`-triggered release check.
-
-After verifying final immutable publication and GitHub Latest, the [publisher](../../../.github/workflows/publish-immutable-release.yml) renders each catalog's source object in its job summary. The same handoff runs during final-only recovery. It reports **Marketplace publication pending** because the workflow does not write to protected `main` or bypass its PR rules.
-
-The Release pipeline's `Advance marketplace catalogs` job then completes the catalog publication through this signed PR process; a maintainer follows the same steps when the job cannot run:
-
-1. Verify the current Latest Release is final, stable, immutable, and identifies the intended tag and signed commit. For a deliberate Latest selection made outside the publisher, perform the same verification before preparing the catalog change; a Release event alone does not prove a Latest transition.
-2. On a task branch from current `main`, replace only the Axiom entry's source in each catalog with the verified Git URL, version tag, and the source type and subtree path that tag requires. Preserve other catalog metadata, and date the released version's Changelog heading as the [Changelog Contract](#changelog-contract) describes. Retain the installed runtime identity and run the contributor checks. The merged release pull request authorizes this catalog operation for its version.
-3. Recheck Latest before merging the signed PR with its required checks. If it changed, refresh the candidate for the selected release instead of merging a stale reference. Do not move a version tag.
-4. Read back both merged catalogs and resolve their plugin tag. Confirm that the selected manifest version matches that tag. Record the catalog commit for users who need a fixed catalog snapshot. A tag on the marketplace repository may contain a different plugin reference; it is not a per-plugin pin.
-
-The directory update is complete only after that merge and readback. Release publication or a generated job summary alone does not update the directory or an installed client. A failed or delayed handoff leaves the previous catalog selection available; rerun the catalog job or resume the steps above without republishing the immutable Release.
+To install one fixed version, select the release commit by `sha` in a catalog of your own; each commit on `release` names its tag in its message.
 
 The Codex catalog format follows the official [marketplace source specification](https://developers.openai.com/plugins/build/plugins#marketplace-metadata), whose `git-subdir` plugin source takes `url`, `path`, and `ref` or `sha`. The Claude Code catalog format follows the official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources), whose `git-subdir` plugin source takes `url`, `path`, `ref`, and `sha` and checks out only that subdirectory. Use each format's native fields; do not add an Axiom update channel or schedule to either plugin manifest.
 
-## Candidate And Final Evidence
+## Recovery
 
-Candidate evidence is limited to facts observable at its source commit. It can bind checked-in files, static validation, a candidate commit and tree, and already existing remote prerequisites. It cannot claim its future merge, tag, Release, assets, Latest selection, immutable state, post-publication checks, or new host observation.
+The Release workflow has no resume path, and tags are never moved or deleted.
 
-Final evidence exists only after all of the following are directly verified:
+- **A gate fails.** Nothing was written except the tag. Fix the cause on `main` if needed, then tag the next version; the failed tag stays without a Release.
+- **The workflow fails after the `release` commit.** The branch then holds that version without a Release, and hosts that refresh may install it. Tag the next version promptly; its release commit supersedes the unreleased one.
+- **The publisher fails while the Draft exists.** Dispatch `Publish immutable release` on the same tag after inspecting its run. It resumes the exact Draft or performs final-only readback, and it requires the `release` head to still hold that tag's tree. If that is impossible, delete the Draft and tag the next version.
+- **GitHub publishes the Release without immutability.** The publisher deletes that exact mutable Release and fails; tag the next version.
 
-1. the immutable tag identifies the intended signed commit and tree;
-2. the GitHub Release identifies that tag and exact rendered body;
-3. the final asset set and content digests match their frozen identities;
-4. the Release reports immutable and non-prerelease state;
-5. GitHub Latest identifies the intended Release when that transition was authorized; and
-6. required post-publication signature and publication checks pass.
-
-An attestation generated while a draft is mutable is a candidate artifact. It becomes part of final evidence only when the immutable Release and all remote postconditions above are verified. A failed, unavailable, unknown, or unexecuted result remains separate and is never relabeled by publication.
+A failure, unavailable result, or unexecuted check stays as it happened and is never relabeled by a later publication.
 
 ## Fix-Forward Boundary
 
-Do not edit an immutable Release, move or recreate its tag, replace its assets, or rewrite historical evidence to adopt this architecture. If a published body or evidence design needs correction, document the discrepancy and apply the new contract to the next authorized version or publication.
+Do not edit an immutable Release, move or recreate its tag, replace its assets, or rewrite historical evidence. If a published body or evidence design needs correction, document the discrepancy and apply the new contract to the next version.

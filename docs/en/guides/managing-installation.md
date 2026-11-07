@@ -27,11 +27,11 @@ Whether updates are checked or installed automatically, and their timing, are co
 
 ## Version Selection
 
-The [marketplace entry](../../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and an immutable release-tag `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's published source independently. A normal `main` commit leaves that selection unchanged.
+The [marketplace entry](../../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and the `release` branch as its `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's published source independently. A normal `main` commit leaves that selection unchanged.
 
-The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same repository and release-tag `ref` through its `git-subdir` source with `path` `plugin`. Both catalogs advance together.
+The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same repository and `release` `ref` through its `git-subdir` source with `path` `plugin`.
 
-After a stable release becomes GitHub Latest, maintainers publish the matching catalog references through the existing signed PR process. Until that catalog change is merged, clients continue to resolve the preceding selection. A GitHub Release, its Latest marker, and a Git tag literally named `latest` are different objects; the client does not infer one from the others.
+Each published version adds one commit to `release` whose plugin manifests carry that version, so a marketplace refresh resolves the newest published version; the catalogs themselves never change for a release. A GitHub Release, its Latest marker, and a Git tag literally named `latest` are different objects; the client does not infer one from the others.
 
 For an existing default-branch registration, use the native marketplace upgrade above, then inspect the installed version. In Codex, run:
 
@@ -41,13 +41,13 @@ codex plugin list --marketplace axiom --json
 
 In Claude Code, `claude plugin list` prints each installed plugin's `Version`, `Scope`, and `Status` lines.
 
-Keep deliberate user pins. A catalog pin fixes the **catalog snapshot**; it does not override a plugin entry's own `source.ref`. In Codex, use the marketplace `--ref` option. In Claude Code, add the marketplace with a `#ref` suffix, such as `wheakerd/axiom#<tag>`; a marketplace added with a tag or branch updates only to the latest commit of that ref. To hold a specific plugin version, select an immutable catalog snapshot whose entry resolves to that version, using the client's supported source controls. Inspect the entry before assuming that a catalog tag and the plugin version match. For a workspace-managed installation, the workspace administrator owns the configured repository, path, ref, and native sync policy.
+Keep deliberate user pins. A catalog pin fixes the **catalog snapshot**; it does not override a plugin entry's own `source.ref`. In Codex, use the marketplace `--ref` option. In Claude Code, add the marketplace with a `#ref` suffix, such as `wheakerd/axiom#<tag>`; a marketplace added with a tag or branch updates only to the latest commit of that ref. To hold a specific plugin version, select that version's commit on `release` by `sha` in a catalog of your own, using the client's supported source controls; each commit on `release` names its tag in its message. Inspect the entry before assuming that a catalog tag and the plugin version match. For a workspace-managed installation, the workspace administrator owns the configured repository, path, ref, and native sync policy.
 
 The Codex source format and lifecycle semantics follow the official [marketplace format](https://developers.openai.com/plugins/build/plugins#marketplace-metadata), [marketplace configuration](https://learn.chatgpt.com/docs/config-file/config-reference), and [workspace sync documentation](https://learn.chatgpt.com/docs/enterprise/plugin-management). Workspace sync timing is not a promise about personal Codex installations. The Claude Code source format follows the official [marketplace reference](https://code.claude.com/docs/en/plugins/marketplace-reference#plugin-sources), and the other Claude Code statements the official [plugin installation guide](https://code.claude.com/docs/en/discover-plugins) and [plugin commands reference](https://code.claude.com/docs/en/plugins/cli-reference).
 
 ## Marketplace Clone Timeouts
 
-In Codex, an error containing `git clone marketplace source timed out after 30s` identifies a failure to download the marketplace catalog. Codex supports `--sparse` for Git marketplaces to reduce the catalog checkout. Axiom's current catalog needs only `.agents/plugins`: its plugin entry uses a separate `git-subdir` source with an immutable release ref. The steps below apply to Codex; [Claude Code](#claude-code-clone-timeouts) has its own.
+In Codex, an error containing `git clone marketplace source timed out after 30s` identifies a failure to download the marketplace catalog. Codex supports `--sparse` for Git marketplaces to reduce the catalog checkout. Axiom's current catalog needs only `.agents/plugins`: its plugin entry uses a separate `git-subdir` source with the `release` ref. The steps below apply to Codex; [Claude Code](#claude-code-clone-timeouts) has its own.
 
 ### Inspect The Registration
 
