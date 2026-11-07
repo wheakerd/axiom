@@ -8,7 +8,7 @@ from pathlib import Path
 from .release_versions import parse_production_release_version
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 README_PATH = REPOSITORY_ROOT / "README.md"
 MANIFEST_FILES = (
     "plugin/.codex-plugin/plugin.json",

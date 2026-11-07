@@ -88,7 +88,7 @@ jobs:
             gh api \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
               "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" > "$tag_ref"
-            main_sha="$(python3 scripts/check-release-evidence.py ref-commit \
+            main_sha="$(python3 .ci/scripts/check-release-evidence.py ref-commit \
               --ref-metadata "$main_ref" \
               --expected-ref refs/heads/main)"
             gh api \
@@ -105,7 +105,7 @@ jobs:
             if test "$require_main_tip" = "true"; then
               main_tip_argument=(--require-main-tip)
             fi
-            python3 scripts/check-release-evidence.py preflight \
+            python3 .ci/scripts/check-release-evidence.py preflight \
               --repository-metadata "$repository_metadata" \
               --latest-release-metadata "$latest_metadata" \
               --main-ref-metadata "$main_ref" \
@@ -121,7 +121,7 @@ jobs:
           prepare_plan() {
             local metadata="$1"
             local plan="$2"
-            python3 scripts/check-release-evidence.py prepare \
+            python3 .ci/scripts/check-release-evidence.py prepare \
               --release-metadata "$metadata" \
               --plan-output "$plan" \
               --expected-version "$version" \
@@ -137,10 +137,10 @@ jobs:
             local observation_name
             local attestation_id
             local attestation_name
-            observation_id="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field asset-id)"
-            observation_name="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field asset-name)"
-            attestation_id="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field attestation-id)"
-            attestation_name="$(python3 scripts/check-release-evidence.py emit --plan "$plan" --field attestation-name)"
+            observation_id="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$plan" --field asset-id)"
+            observation_name="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$plan" --field asset-name)"
+            attestation_id="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$plan" --field attestation-id)"
+            attestation_name="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$plan" --field attestation-name)"
             mkdir "$directory"
             downloaded_observation="$directory/$observation_name"
             downloaded_attestation="$directory/$attestation_name"
@@ -161,7 +161,7 @@ jobs:
             gh api \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
               "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$cleanup_release"
-            state="$(python3 scripts/check-release-evidence.py publication-state \
+            state="$(python3 .ci/scripts/check-release-evidence.py publication-state \
               --plan "$plan" \
               --release-metadata "$cleanup_release")"
             test "$state" = "mutable"
@@ -171,7 +171,7 @@ jobs:
             gh api --paginate --slurp \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
               "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$cleanup_collection"
-            python3 scripts/check-release-evidence.py assert-absent \
+            python3 .ci/scripts/check-release-evidence.py assert-absent \
               --plan "$plan" \
               --release-collection "$cleanup_collection"
             remote_preflight postcleanup
@@ -183,16 +183,16 @@ jobs:
           gh api --paginate --slurp \
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$collection"
-          python3 scripts/check-release-evidence.py select \
+          python3 .ci/scripts/check-release-evidence.py select \
             --release-collection "$collection" \
             --release-output "$initial_release" \
             --expected-tag "$RELEASE_TAG"
           prepare_plan "$initial_release" "$initial_plan"
 
-          release_id="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field release-id)"
-          release_phase="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field phase)"
-          observation_id="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field asset-id)"
-          observation_name="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field asset-name)"
+          release_id="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$initial_plan" --field release-id)"
+          release_phase="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$initial_plan" --field phase)"
+          observation_id="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$initial_plan" --field asset-id)"
+          observation_name="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$initial_plan" --field asset-name)"
           initial_directory="$release_workdir/initial-assets"
           mkdir "$initial_directory"
           initial_observation="$initial_directory/$observation_name"
@@ -200,7 +200,7 @@ jobs:
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             -H "Accept: application/octet-stream" \
             "repos/$GITHUB_REPOSITORY/releases/assets/$observation_id" > "$initial_observation"
-          expected_attestation="$(python3 scripts/check-release-evidence.py validate \
+          expected_attestation="$(python3 .ci/scripts/check-release-evidence.py validate \
             --plan "$initial_plan" \
             --asset "$initial_observation" \
             --attestation-directory "$release_workdir")"
@@ -208,7 +208,7 @@ jobs:
 
           if test "$release_phase" = "draft"; then
             remote_preflight draft-mutation true
-            attestation_present="$(python3 scripts/check-release-evidence.py emit --plan "$initial_plan" --field attestation-present)"
+            attestation_present="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$initial_plan" --field attestation-present)"
             if test "$attestation_present" = "false"; then
               gh api --method POST \
                 -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
@@ -223,9 +223,9 @@ jobs:
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$current_release"
           prepare_plan "$current_release" "$current_plan"
-          test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field release-id)" = "$release_id"
-          release_phase="$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field phase)"
-          test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field attestation-name)" = "$expected_attestation_name"
+          test "$(python3 .ci/scripts/check-release-evidence.py emit --plan "$current_plan" --field release-id)" = "$release_id"
+          release_phase="$(python3 .ci/scripts/check-release-evidence.py emit --plan "$current_plan" --field phase)"
+          test "$(python3 .ci/scripts/check-release-evidence.py emit --plan "$current_plan" --field attestation-name)" = "$expected_attestation_name"
           download_evidence "$current_plan" "$release_workdir/current-assets"
 
           if test "$release_phase" = "published-mutable"; then
@@ -240,22 +240,22 @@ jobs:
             gh api \
               -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
               "repos/$GITHUB_REPOSITORY/releases/latest" > "$latest_release"
-            python3 scripts/check-release-evidence.py verify \
+            python3 .ci/scripts/check-release-evidence.py verify \
               --plan "$current_plan" \
               --release-metadata "$final_release" \
               --asset "$downloaded_observation" \
               --attestation "$downloaded_attestation" \
               --latest-release-metadata "$latest_release" \
               --final
-            python3 scripts/check-release-evidence.py render-marketplace \
+            python3 .ci/scripts/check-release-evidence.py render-marketplace \
               --plan "$current_plan" \
               --latest-release-metadata "$latest_release" \
               --summary >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          test "$(python3 scripts/check-release-evidence.py emit --plan "$current_plan" --field phase)" = "draft"
-          python3 scripts/check-release-evidence.py verify \
+          test "$(python3 .ci/scripts/check-release-evidence.py emit --plan "$current_plan" --field phase)" = "draft"
+          python3 .ci/scripts/check-release-evidence.py verify \
             --plan "$current_plan" \
             --release-metadata "$current_release" \
             --asset "$downloaded_observation" \
@@ -265,7 +265,7 @@ jobs:
           gh api \
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$prepublish_release"
-          python3 scripts/check-release-evidence.py verify \
+          python3 .ci/scripts/check-release-evidence.py verify \
             --plan "$current_plan" \
             --release-metadata "$prepublish_release" \
             --asset "$downloaded_observation" \
@@ -281,7 +281,7 @@ jobs:
           gh api \
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases/$release_id" > "$final_release"
-          publication_state="$(python3 scripts/check-release-evidence.py publication-state \
+          publication_state="$(python3 .ci/scripts/check-release-evidence.py publication-state \
             --plan "$current_plan" \
             --release-metadata "$final_release")"
           if test "$publication_state" = "mutable"; then
@@ -297,7 +297,7 @@ jobs:
             -H "X-GitHub-Api-Version: $GITHUB_API_VERSION" \
             "repos/$GITHUB_REPOSITORY/releases/latest" > "$latest_release"
           download_evidence "$current_plan" "$release_workdir/final-assets"
-          python3 scripts/check-release-evidence.py verify \
+          python3 .ci/scripts/check-release-evidence.py verify \
             --plan "$current_plan" \
             --release-metadata "$final_release" \
             --asset "$downloaded_observation" \
@@ -305,7 +305,7 @@ jobs:
             --prepublish-release-metadata "$prepublish_release" \
             --latest-release-metadata "$latest_release" \
             --final
-          python3 scripts/check-release-evidence.py render-marketplace \
+          python3 .ci/scripts/check-release-evidence.py render-marketplace \
             --plan "$current_plan" \
             --latest-release-metadata "$latest_release" \
             --summary >> "$GITHUB_STEP_SUMMARY"

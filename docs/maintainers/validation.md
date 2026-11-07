@@ -13,12 +13,11 @@ A disposable Git copy must preserve the candidate's tracked-file inventory in it
 Run these checks from the repository root and record exact commands and outcomes:
 
 ```bash
-python3 -B scripts/check-publication.py
-python3 -B -m unittest discover -s tests -p 'test_*.py'
+python3 -B .ci/check.py
 git diff --check
 ```
 
-Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, the routing gate's byte ceiling, documentation, and publication checks. Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs the first two commands on the rehearsed catalog handoff before it creates a tag.
+`.ci/check.py` runs the publication aggregate and then the unit and integration tests, the same two commands CI runs; `python3 -B .ci/check.py publication` or `python3 -B .ci/check.py tests` runs one of them. Use the host's equivalent Python 3 launcher when it has a different name. The publication aggregate owns distribution agreement, runtime identity, the routing gate's byte ceiling, documentation, and publication checks. Use focused scripts to diagnose a failing domain; a passing aggregate does not require repeating those checks. The [Release pipeline](release-documentation.md#release-pipeline) runs both on the rehearsed catalog handoff before it creates a tag.
 
 Run additional checks required by the changed surface, read the final diff, confirm that the manifest version matches the release identity, and inspect `git status --short` for unrelated paths. Classify every changed path under [Runtime Identity](../runtime-identity.md#classify-a-change) before calling the result repository-only.
 
@@ -43,7 +42,7 @@ Configuration was checked against GitHub's [CodeQL workflow reference](https://d
 Hook or Hook-workflow changes require the dedicated native integration module on at least one supported operating system:
 
 ```bash
-python3 -B -m unittest tests.hook_runtime_integration -v
+python3 -B .ci/check.py hook-runtime
 ```
 
 Run the module from a disposable repository copy. One local operating system is sufficient: the host tool owns hook triggering, and the required CI matrix runs the same module on Linux, Windows, and macOS, which covers each system's command variant. Static inspection, emulation, and a successful package read cannot replace a native result.
@@ -52,13 +51,13 @@ The native matrix and its stable `hook-runtime-gate` aggregate are described in 
 
 ## Validation Tooling
 
-[scripts/check-publication.py](../../scripts/check-publication.py) is the stable aggregate entrypoint. Thin wrappers in [scripts/](../../scripts/) call production parsers and policy gates in [axiom_validation/](../../axiom_validation/). Reusable negative cases and mutation fixtures used by the aggregate live in [axiom_validation/cases/](../../axiom_validation/cases/); the aggregate must remain usable without importing the test package.
+[.ci/check.py](../../.ci/check.py) is the entrypoint CI and contributors share. Thin wrappers in [.ci/scripts/](../../.ci/scripts/) call production parsers and policy gates in [.ci/axiom_validation/](../../.ci/axiom_validation/); `.ci/scripts/check-publication.py` is the publication aggregate. Reusable negative cases and mutation fixtures used by the aggregate live in [.ci/axiom_validation/cases/](../../.ci/axiom_validation/cases/); the aggregate must remain usable without importing the test package.
 
-Focused `unittest` modules under [tests/](../../tests/) own domain-local assertions.
+Focused `unittest` modules under [.ci/tests/](../../.ci/tests/) own domain-local assertions.
 
 Tests pin fixture totals and invariants, not release facts. A total that grows with every release, such as the required public files, the Markdown files, or the installed-runtime inputs, comes from the same production owner the aggregate reports. A release that changes no validator behavior therefore needs no test edit; a lost fixture still fails.
 
-The validators check structure, not wording: a skill's frontmatter, its references, its size, the manifests, the hooks, and the documentation links. They pin no sentence of a skill or a document and model no routing or gate decision, because each host's model decides how to act within the binding rules a skill states. The fixture tests in [tests/test_git_contracts.py](../../tests/test_git_contracts.py) run the Git procedures and configuration rules that `traceable-git-submit` documents against disposable repositories, so a documented command that stops working fails a test.
+The validators check structure, not wording: a skill's frontmatter, its references, its size, the manifests, the hooks, and the documentation links. They pin no sentence of a skill or a document and model no routing or gate decision, because each host's model decides how to act within the binding rules a skill states. The fixture tests in [.ci/tests/test_git_contracts.py](../../.ci/tests/test_git_contracts.py) run the Git procedures and configuration rules that `traceable-git-submit` documents against disposable repositories, so a documented command that stops working fails a test.
 
 Keep fixture names in failure messages, and let the aggregate reporter add the policy domain. Keep fixture payloads separate from production policy modules, and do not add a third-party test or runtime dependency. Prefer focused validation using Python's standard library, without third-party Python packages; the host executable prerequisites above still apply.
 

@@ -109,8 +109,8 @@ class ActionGraphTests(unittest.TestCase):
             (
                 "retired validator substituted",
                 original.replace(
-                    "python -B scripts/check-publication.py",
-                    "python -B scripts/check-distribution-drift.py",
+                    "python -B .ci/check.py publication",
+                    "python -B .ci/scripts/check-distribution-drift.py",
                     1,
                 ),
                 "exact read-only validator step",
@@ -174,8 +174,8 @@ class ActionGraphTests(unittest.TestCase):
             (
                 "duplicated hook command",
                 original.replace(
-                    "python -B -m unittest tests.hook_runtime_integration -v",
-                    "python -B -m unittest tests.test_hooks -v",
+                    "python -B .ci/check.py hook-runtime\n",
+                    "python -B -m unittest tests.test_hooks -v\n",
                     1,
                 ),
                 "Execute exact SessionStart hooks",

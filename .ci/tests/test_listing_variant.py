@@ -13,7 +13,7 @@ from pathlib import Path
 
 from axiom_validation.context import REPOSITORY_ROOT
 
-SCRIPT = REPOSITORY_ROOT / "scripts" / "build-listing-variant.py"
+SCRIPT = REPOSITORY_ROOT / ".ci" / "scripts" / "build-listing-variant.py"
 GIT = ("git", "-c", "user.name=variant-test", "-c", "user.email=variant-test@invalid", "-c", "commit.gpgsign=false")
 
 

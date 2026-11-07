@@ -43,10 +43,10 @@ jobs:
           package-manager-cache: false
 
       - name: Report canonical environment
-        run: python -B -m tests.hook_runtime_integration --report-environment
+        run: python -B .ci/check.py hook-runtime --report-environment
 
       - name: Execute exact SessionStart hooks
-        run: python -B -m unittest tests.hook_runtime_integration -v
+        run: python -B .ci/check.py hook-runtime
 
   hook-runtime-gate:
     name: hook-runtime-gate

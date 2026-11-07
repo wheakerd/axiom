@@ -31,8 +31,7 @@
 
 | Command | Result |
 | --- | --- |
-| `python3 -B scripts/check-publication.py` | |
-| `python3 -B -m unittest discover -s tests -p 'test_*.py'` | |
+| `python3 -B .ci/check.py` | |
 | `git diff --check` | |
 | Additional targeted checks | |
 

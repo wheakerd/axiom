@@ -16,8 +16,8 @@ from .release_versions import parse_production_release_version
 
 
 CURRENT_SCHEMA_VERSION = "4"
-INPUT_MANIFEST_RELATIVE = "axiom_validation/runtime-contract-inputs-v4.json"
-IDENTITY_RELATIVE = "evidence/runtime-identity.json"
+INPUT_MANIFEST_RELATIVE = ".ci/axiom_validation/runtime-contract-inputs-v4.json"
+IDENTITY_RELATIVE = ".ci/runtime-identity.json"
 IDENTITY_SCHEMA_VERSION = "2"
 RUNTIME_IDENTITY_SURFACES = ("docs/runtime-identity.md",)
 RUNTIME_IDENTITY_START = "<!-- runtime-identity:current:start -->"

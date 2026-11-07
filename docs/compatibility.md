@@ -39,7 +39,7 @@ Current package checks use the repository's publication aggregate. A native pack
 
 ## Current Bounded Status
 
-The machine-readable [runtime identity](../evidence/runtime-identity.json) binds the checked-in tree to its plugin version and installed-file digest, as [Runtime Identity](runtime-identity.md) describes. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
+The machine-readable [runtime identity](../.ci/runtime-identity.json) binds the checked-in tree to its plugin version and installed-file digest, as [Runtime Identity](runtime-identity.md) describes. It never records publication; the tag, the GitHub Release, and the marketplace catalogs are the publication state.
 
 | Host | What the repository checks for each release |
 | --- | --- |

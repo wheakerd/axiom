@@ -40,7 +40,7 @@
 发布事实请查阅[已发布的 Releases](https://github.com/wheakerd/axiom/releases)。仅有发布并不能确立已安装宿主上的行为。
 
 - [更新日志](../CHANGELOG.md)记录每个版本的用户可见变更及需要的操作。
-- [运行时身份](../evidence/runtime-identity.json)记录当前版本与已安装文件的摘要。
+- [运行时身份](../.ci/runtime-identity.json)记录当前版本与已安装文件的摘要。
 - [早期记录](compatibility.md#earlier-records)指明保留版本说明、路由评估与宿主观测记录的发布标签。
 
 ## 当前结构
@@ -57,7 +57,7 @@
 | `docs/` 下的主题文档 | 架构、示例、信任、兼容性、身份以及仓库治理 |
 | `docs/reference/` | 确切的公开技术参考：技能参考与经校验的 Hook 渲染 |
 | `docs/maintainers/` | 运行时编写、验证、文档与发布流程 |
-| `evidence/` | 机器可读的运行时身份 |
+| `.ci/` | 仓库检查、发布脚本与机器可读的运行时身份 |
 | 英文文档旁的 `<name>.zh-CN.md` | 该文档的简体中文翻译；英文为规范版本，翻译与其源文档在同一次变更中更新 |
 
 完整的仓库地图见[贡献指南](../CONTRIBUTING.md#repository-layout)。

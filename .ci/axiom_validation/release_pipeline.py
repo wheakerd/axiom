@@ -69,8 +69,8 @@ SETTLED_CONCLUSIONS = frozenset({"success", "skipped", "neutral"})
 # The contributor checks that the rehearsed catalog handoff must pass, each run
 # as ``python -B <command>`` from the rehearsal tree.
 REHEARSAL_COMMANDS: tuple[tuple[str, ...], ...] = (
-    ("scripts/check-publication.py",),
-    ("-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"),
+    (".ci/check.py", "publication"),
+    (".ci/check.py", "tests"),
 )
 REHEARSAL_OUTPUT_LIMIT = 4000
 CHANGELOG_RELATIVE = "CHANGELOG.md"
@@ -573,7 +573,7 @@ def tree_at(root: Path, commit: str) -> Iterator[Path]:
 
 def _evidence_script(tree: Path, *arguments: str) -> bytes:
     result = subprocess.run(
-        [sys.executable, "-B", str(tree / "scripts" / "check-release-evidence.py"), *arguments],
+        [sys.executable, "-B", str(tree / ".ci" / "scripts" / "check-release-evidence.py"), *arguments],
         cwd=tree,
         capture_output=True,
         check=False,
@@ -1295,14 +1295,14 @@ EXPECTED_WORKFLOW = {
     },
 }
 REQUIRED_COMMAND_ANCHORS = (
-    "python3 -B scripts/release-pipeline.py candidate\n"
+    "python3 -B .ci/scripts/release-pipeline.py candidate\n"
     '          --repository "$GITHUB_REPOSITORY"\n'
     '          --base-sha "$BASE_SHA"\n'
     '          --head-sha "$HEAD_SHA"\n',
-    "python3 -B scripts/release-pipeline.py publish\n"
+    "python3 -B .ci/scripts/release-pipeline.py publish\n"
     '          --repository "$GITHUB_REPOSITORY"\n'
     '          --commit "$GITHUB_SHA"\n',
-    "python3 -B scripts/release-pipeline.py catalog\n"
+    "python3 -B .ci/scripts/release-pipeline.py catalog\n"
     '          --repository "$GITHUB_REPOSITORY"\n'
     '          --tag "$RELEASE_TAG"\n',
 )

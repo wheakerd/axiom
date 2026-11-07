@@ -32,7 +32,7 @@ class RuntimeIdentityTests(unittest.TestCase):
             raise AssertionError(failures)
         cls.manifest = manifest
         cls.expected_record_count = json.loads(
-            (REPOSITORY_ROOT / "evidence/runtime-identity.json").read_text(encoding="utf-8")
+            (REPOSITORY_ROOT / ".ci/runtime-identity.json").read_text(encoding="utf-8")
         )["runtimeContract"]["recordCount"]
 
     def copy_installed_surfaces(self, target: Path) -> None:
@@ -49,7 +49,7 @@ class RuntimeIdentityTests(unittest.TestCase):
         self.copy_installed_surfaces(target)
         for relative in (
             INPUT_MANIFEST_RELATIVE,
-            "evidence/runtime-identity.json",
+            ".ci/runtime-identity.json",
             *RUNTIME_IDENTITY_SURFACES,
         ):
             destination = target / relative
@@ -154,7 +154,7 @@ class RuntimeIdentityTests(unittest.TestCase):
             with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 self.copy_identity_fixture(root)
-                path = root / "evidence/runtime-identity.json"
+                path = root / ".ci/runtime-identity.json"
                 identity = json.loads(path.read_text(encoding="utf-8"))
                 mutate(identity)
                 path.write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
@@ -170,7 +170,7 @@ class RuntimeIdentityTests(unittest.TestCase):
                 reference = root / "docs/runtime-identity.md"
                 original = reference.read_text(encoding="utf-8")
                 if mutation == "stale-value":
-                    identity = json.loads((root / "evidence/runtime-identity.json").read_text())
+                    identity = json.loads((root / ".ci/runtime-identity.json").read_text())
                     changed = original.replace(
                         f"`pluginVersion`: `{identity['pluginVersion']}`",
                         "`pluginVersion`: `0.0.0`",

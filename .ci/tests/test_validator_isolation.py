@@ -20,7 +20,7 @@ from axiom_validation.repository_policy import EXPECTED_DIRECT_SKILLS, REQUIRED_
 # behavior needs no edit here. Fixture totals stay literal: losing a fixture must
 # fail this test.
 RUNTIME_INPUT_COUNT = json.loads(
-    (REPOSITORY_ROOT / "evidence" / "runtime-identity.json").read_text(encoding="utf-8")
+    (REPOSITORY_ROOT / ".ci" / "runtime-identity.json").read_text(encoding="utf-8")
 )["runtimeContract"]["recordCount"]
 EXPECTED_SUCCESS_SUMMARY = (
     f"Publication validation passed: {len(REQUIRED_PUBLIC_FILES)} required files, "
@@ -29,7 +29,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     "17 documentation negative fixtures, "
     f"{len(EXPECTED_DIRECT_SKILLS)} generated README skill rows, "
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
-    "13 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
+    "11 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
     f"version {RELEASE_VERSION}, 27 manifest schema fixtures, "
     "9 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
     "55 release-provenance fixtures, 30 immutable external action and image pins "
@@ -40,7 +40,7 @@ EXPECTED_SUCCESS_SUMMARY = (
 
 class ValidatorIsolationTests(unittest.TestCase):
     def test_production_validation_modules_do_not_import_tests(self):
-        validation_root = REPOSITORY_ROOT / "axiom_validation"
+        validation_root = REPOSITORY_ROOT / ".ci" / "axiom_validation"
         violations = []
         for path in sorted(validation_root.rglob("*.py")):
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -62,8 +62,9 @@ import pathlib
 import sys
 
 repository_root = pathlib.Path({str(REPOSITORY_ROOT)!r})
-tests_root = repository_root / "tests"
-sys.path.insert(0, str(repository_root))
+ci_root = repository_root / ".ci"
+tests_root = ci_root / "tests"
+sys.path.insert(0, str(ci_root))
 assert all(
     not entry or pathlib.Path(entry).resolve() != tests_root
     for entry in sys.path

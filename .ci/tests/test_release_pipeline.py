@@ -47,7 +47,7 @@ HANDOFF_CHANGED_FILES = (
     ".agents/plugins/marketplace.json",
     ".claude-plugin/marketplace.json",
 )
-HANDOFF_FILES = (*HANDOFF_CHANGED_FILES, "evidence/runtime-identity.json")
+HANDOFF_FILES = (*HANDOFF_CHANGED_FILES, ".ci/runtime-identity.json")
 
 
 def git(root: Path, *arguments: str) -> str:
@@ -77,7 +77,7 @@ def commit_versions(
     git(root, "init", "-q", "-b", "main")
     manifest = root / "plugin" / ".codex-plugin" / "plugin.json"
     manifest.parent.mkdir(parents=True)
-    identity = root / "evidence" / "runtime-identity.json"
+    identity = root / ".ci" / "runtime-identity.json"
     identity.parent.mkdir(parents=True)
     commits = []
     for index, version in enumerate(versions):
@@ -358,8 +358,8 @@ class ReleasePipelineTests(unittest.TestCase):
     def test_rehearsal_commands_are_the_contributor_checks(self):
         self.assertEqual(
             (
-                ("scripts/check-publication.py",),
-                ("-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"),
+                (".ci/check.py", "publication"),
+                (".ci/check.py", "tests"),
             ),
             REHEARSAL_COMMANDS,
         )
@@ -732,7 +732,7 @@ def prepare_handoff_repository(root: Path, version: str, previous_tag: str = "v0
         target = root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REPOSITORY_ROOT / relative, target)
-    identity_path = root / "evidence" / "runtime-identity.json"
+    identity_path = root / ".ci" / "runtime-identity.json"
     identity = json.loads(identity_path.read_text())
     identity["pluginVersion"] = version
     identity_path.write_text(json.dumps(identity, indent=2) + "\n")
@@ -905,7 +905,7 @@ class CatalogHandoffTests(unittest.TestCase):
 
     def test_catalog_handoff_opens_verifies_and_merges_one_signed_pull_request(self):
         main = prepare_handoff_repository(self.root, "0.21.0")
-        identity = (self.root / "evidence" / "runtime-identity.json").read_bytes()
+        identity = (self.root / ".ci" / "runtime-identity.json").read_bytes()
         api = FakeCatalogGitHub(self.root, main, "v0.21.0")
         summary = Path(self.directory.name) / "summary.md"
         outcome = run_catalog(
@@ -928,7 +928,7 @@ class CatalogHandoffTests(unittest.TestCase):
         ):
             catalog = json.loads((self.root / relative).read_text())
             self.assertEqual(catalog_source("v0.21.0", host), catalog["plugins"][0]["source"])
-        self.assertEqual(identity, (self.root / "evidence" / "runtime-identity.json").read_bytes())
+        self.assertEqual(identity, (self.root / ".ci" / "runtime-identity.json").read_bytes())
         changelog = (self.root / "CHANGELOG.md").read_text()
         self.assertIn("## 0.21.0 - 2026-11-02\n", changelog)
         self.assertNotIn("## 0.21.0 - unreleased", changelog)

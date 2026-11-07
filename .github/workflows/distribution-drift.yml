@@ -41,4 +41,4 @@ jobs:
           git --version
 
       - name: Check publication invariants
-        run: python -B scripts/check-publication.py
+        run: python -B .ci/check.py publication

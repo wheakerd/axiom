@@ -10,7 +10,7 @@ or the rendered chart differs from the branch, so a renderer change reaches
 the README on the next run.
 
 The chart embeds a printable-ASCII subset of the Patrick Hand typeface
-(``scripts/fonts/``, SIL Open Font License 1.1, copyright Patrick Wagesreiter)
+(``.ci/scripts/fonts/``, SIL Open Font License 1.1, copyright Patrick Wagesreiter)
 so the handwriting renders the same everywhere; without that asset the SVG
 falls back to the viewer's cursive fonts. Axes, line, and legend pass through
 one SVG displacement filter for the sketched look, the technique of the upstream

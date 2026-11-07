@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 # The repository keeps the installed plugin under plugin/; the paths below are
 # relative to that plugin root, as each host resolves them after installation.
 PLUGIN_SOURCE_ROOT = REPOSITORY_ROOT / "plugin"
@@ -443,7 +443,7 @@ def main() -> int:
         report_environment()
         return 0
     raise SystemExit(
-        "usage: python -B -m tests.hook_runtime_integration --report-environment"
+        "usage: python -B .ci/check.py hook-runtime --report-environment"
     )
 
 

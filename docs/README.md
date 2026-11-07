@@ -40,7 +40,7 @@ Ask questions in [GitHub Discussions](https://github.com/wheakerd/axiom/discussi
 Consult the [published Releases](https://github.com/wheakerd/axiom/releases) for publication facts. Publication alone does not establish installed-host behavior.
 
 - [Changelog](../CHANGELOG.md) records user-visible changes and required action for every version.
-- [Runtime identity](../evidence/runtime-identity.json) records the current version and installed-file digest.
+- [Runtime identity](../.ci/runtime-identity.json) records the current version and installed-file digest.
 - [Earlier Records](compatibility.md#earlier-records) names the release tag that keeps version notes, routing evaluations, and host observation records.
 
 ## Current Structure
@@ -57,7 +57,7 @@ Consult the [published Releases](https://github.com/wheakerd/axiom/releases) for
 | Topical documents in `docs/` | Architecture, examples, trust, compatibility, identity, and repository governance |
 | `docs/reference/` | Exact public technical references: the Skill Reference and the checked Hook rendering |
 | `docs/maintainers/` | Runtime authoring, validation, documentation, and release procedures |
-| `evidence/` | Machine-readable runtime identity |
+| `.ci/` | Repository checks, release scripts, and the machine-readable runtime identity |
 | `<name>.zh-CN.md` beside an English document | Simplified Chinese translation of that document; English is canonical, and the translation changes in the same change as its source |
 
 See [Contributing](../CONTRIBUTING.md#repository-layout) for the full repository map.
