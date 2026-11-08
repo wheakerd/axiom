@@ -137,7 +137,11 @@ def _hook_reference_drift() -> list[str]:
     try:
         for relative_path in (
             "plugin/hooks/codex-hooks.json",
+            "plugin/hooks/claude-hooks.json",
             "plugin/hooks/codex-session-start.cmd",
+            "plugin/hooks/codex-prompt-submit.cmd",
+            "plugin/hooks/codex-stop-check.cmd",
+            "plugin/hooks/stop-check.sh",
             "docs/en/reference/hooks.md",
         ):
             destination = root / relative_path

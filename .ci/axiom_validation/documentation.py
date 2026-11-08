@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from .context import REPOSITORY_ROOT
-from .hooks import HOOK_FILES
+from .hooks import HOOK_FILES, PACKAGED_WRAPPERS
 from .markdown import (
     HOOK_REFERENCE_RELATIVE,
     ATX_HEADING,
@@ -493,18 +493,21 @@ def check_hook_reference(root: Path, failures: list[str]) -> None:
             continue
         documents[relative_path] = document
 
-    wrapper_path = root / "plugin" / "hooks" / "codex-session-start.cmd"
-    wrapper = _read_text(wrapper_path, root, failures)
+    packaged_texts: dict[str, str] = {}
+    for relative_path in PACKAGED_WRAPPERS:
+        text = _read_text(root / relative_path, root, failures)
+        if text is not None:
+            packaged_texts[relative_path] = text
 
     reference_path = root / HOOK_REFERENCE_RELATIVE
     reference = _read_text(reference_path, root, failures)
-    if reference is None or wrapper is None:
+    if reference is None or len(packaged_texts) != len(PACKAGED_WRAPPERS):
         return
     check_documented_hook_command_text(
         reference,
         documents,
         failures,
-        wrapper_text=wrapper,
+        packaged_texts=packaged_texts,
     )
 
 

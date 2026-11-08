@@ -45,7 +45,7 @@ jobs:
       - name: Report canonical environment
         run: python -B .ci/check.py hook-runtime --report-environment
 
-      - name: Execute exact SessionStart hooks
+      - name: Execute exact lifecycle hooks
         run: python -B .ci/check.py hook-runtime
 
   hook-runtime-gate:

@@ -10,6 +10,7 @@ Verified against Claude Code 2.1.308 on 2026-10-30 from its installed help outpu
 - `@path` imports expand up to four hops from the importing file; `.claude/rules/` files without `paths` frontmatter load at session start; `claudeMdExcludes` skips files; `--add-dir` directories contribute instruction files only when configured (docs).
 - `/context` lists the instruction files the session loaded under Memory files; `/memory` also lists locations that do not exist yet (docs).
 - Plugin skills appear in the skill list as `axiom:<skill-name>`, and `/axiom:skill-name` invokes one. The plugin's `SessionStart` Hook delivers the gate at session start and again after compaction with `source` set to `compact`; `/reload-plugins` applies plugin changes without rerunning it.
+- The hooks documentation (`https://code.claude.com/docs/en/hooks`, read 2026-11-08) lists `UserPromptSubmit` and `Stop` as current events a plugin `hooks/hooks.json` may declare. `UserPromptSubmit` receives `prompt`, also fires for scheduled-task firings, background subagent reports, and cross-session messages, and adds plain stdout to context; its default timeout is 30 seconds. `Stop` receives `stop_hook_active` and `last_assistant_message`; plain stdout is not context there, `hookSpecificOutput.additionalContext` continues the turn as hook feedback, `decision: block` continues it as a hook error, and an 8-consecutive-continuation cap applies. `PostCompact` receives the summary text; Axiom declares no compaction Hook.
 
 ## Permission Modes
 

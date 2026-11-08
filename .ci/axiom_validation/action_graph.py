@@ -1718,7 +1718,7 @@ def check_hook_runtime_workflow_text(
             ),
             (
                 runtime,
-                "Execute exact SessionStart hooks",
+                "Execute exact lifecycle hooks",
                 "python -B .ci/check.py hook-runtime",
             ),
         )

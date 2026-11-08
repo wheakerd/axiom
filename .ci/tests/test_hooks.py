@@ -8,6 +8,9 @@ from axiom_validation.hooks import (
     CODEX_WINDOWS_COMMAND,
     CODEX_WINDOWS_WRAPPER_PATH,
     CODEX_WINDOWS_WRAPPER_TEXT,
+    PACKAGED_WRAPPERS,
+    PROMPT_TEXT,
+    STOP_TEXT,
     check_codex_windows_hook_security,
     check_declared_hook_paths,
     check_exact_hook_shapes,
@@ -38,7 +41,7 @@ class HookPolicyTests(unittest.TestCase):
     def test_lifecycle_mutations_are_rejected(self):
         failures = []
         count = check_hook_lifecycle_fixtures(self.documents(), failures)
-        self.assertEqual(9, count)
+        self.assertEqual(13, count)
         self.assertEqual([], failures)
 
     def test_windows_hook_uses_packaged_wrapper_with_bounded_timeout(self):
@@ -53,6 +56,28 @@ class HookPolicyTests(unittest.TestCase):
             CODEX_WINDOWS_WRAPPER_TEXT,
             (REPOSITORY_ROOT / CODEX_WINDOWS_WRAPPER_PATH).read_text(encoding="utf-8"),
         )
+
+    def test_every_packaged_script_is_pinned_and_present(self):
+        for relative_path, approved_text in PACKAGED_WRAPPERS.items():
+            with self.subTest(script=relative_path):
+                path = REPOSITORY_ROOT / relative_path
+                self.assertTrue(path.is_file(), relative_path)
+                self.assertEqual(approved_text, path.read_text(encoding="utf-8"))
+                self.assertNotIn("powershell", approved_text.casefold())
+                self.assertNotIn("curl", approved_text.casefold())
+
+    def test_lifecycle_texts_are_plain_json_safe_ascii(self):
+        for text in (PROMPT_TEXT, STOP_TEXT):
+            with self.subTest(text=text[:24]):
+                self.assertTrue(text.isascii())
+                for forbidden in ('"', "\\", "&", "|", "<", ">", "^", "%", "!", "(", ")"):
+                    self.assertNotIn(forbidden, text)
+                self.assertLess(len(text), 600)
+        for document_path in ("plugin/hooks/codex-hooks.json", "plugin/hooks/claude-hooks.json"):
+            hooks = self.documents()[document_path]["hooks"]
+            self.assertEqual({"SessionStart", "UserPromptSubmit", "Stop"}, set(hooks))
+            for event in ("UserPromptSubmit", "Stop"):
+                self.assertNotIn("matcher", hooks[event][0])
 
 
 if __name__ == "__main__":

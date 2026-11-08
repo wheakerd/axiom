@@ -129,12 +129,12 @@ After a change on either host, start a new session. In Claude Code, `/reload-plu
 If expected Axiom capabilities are unavailable or a request routes incorrectly:
 
 1. Confirm that Axiom is installed and enabled in the host's plugin list.
-2. Open `/hooks` and confirm that the `SessionStart` Hook is present and identical to the [checked-in reference](../reference/hooks.md); in Codex, also confirm that it is trusted.
+2. Open `/hooks` and confirm that the `SessionStart`, `UserPromptSubmit`, and `Stop` Hooks are present and identical to the [checked-in reference](../reference/hooks.md); in Codex, also confirm that each is trusted.
 3. Confirm that the installed Axiom version is the version you intended to test.
 4. Start a fresh session in either host.
 5. Retry one read-only routed request and one no-route control from [Getting Started](getting-started.md).
 
-If routing is missing after compaction or a fork in either host, confirm that `compact` and `fork` remain in the installed `SessionStart` matcher. On Windows, confirm that Git Bash is available for Claude Code; without it Claude Code runs the Hook in PowerShell, which does not support the command.
+If routing is missing after compaction or a fork in either host, confirm that `compact` and `fork` remain in the installed `SessionStart` matcher. On Windows, confirm that Git Bash is available for Claude Code; without it Claude Code runs the Hooks in PowerShell, which does not support the commands.
 
 Do not delete host data, clear caches, edit the installed plugin, change global configuration, install a proprietary validator, or create a second Hook merely to make routing appear. Say that a tool was unavailable; do not report it as passed.
 

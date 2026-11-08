@@ -178,7 +178,7 @@ class ActionGraphTests(unittest.TestCase):
                     "python -B -m unittest tests.test_hooks -v\n",
                     1,
                 ),
-                "Execute exact SessionStart hooks",
+                "Execute exact lifecycle hooks",
             ),
             (
                 "missing weekly observation",
