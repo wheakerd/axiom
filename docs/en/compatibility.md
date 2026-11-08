@@ -18,12 +18,12 @@ The release tree provides one integration per host over the same Skills:
 
 | Host | Checked-in integration | Lifecycle contract |
 | --- | --- | --- |
-| Codex | `.agents/plugins/marketplace.json`, `plugin/.codex-plugin/plugin.json`, `plugin/hooks/codex-hooks.json`, `plugin/hooks/codex-session-start.cmd`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; POSIX and Windows command variants are declared |
-| Claude Code | `.claude-plugin/marketplace.json`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/claude-hooks.json`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; one POSIX shell command, which needs Git Bash on Windows |
+| Codex | `.agents/plugins/marketplace.json`, `plugin/.codex-plugin/plugin.json`, `plugin/hooks/codex-hooks.json`, `plugin/hooks/stop-check.sh`, the `plugin/hooks/*.cmd` wrappers, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; `UserPromptSubmit` and `Stop` on every prompt and turn end; POSIX and Windows command variants are declared for each |
+| Claude Code | `.claude-plugin/marketplace.json`, `plugin/.claude-plugin/plugin.json`, `plugin/hooks/claude-hooks.json`, `plugin/hooks/stop-check.sh`, and `plugin/skills/` | `SessionStart` on `startup`, `resume`, `clear`, `compact`, and `fork`; `UserPromptSubmit` and `Stop` on every prompt and turn end; POSIX shell commands, which need Git Bash on Windows |
 
 Both manifests point to `./skills/` inside the installed plugin root `plugin/`, and each catalog installs only that subtree through a `git-subdir` source. Codex and Claude Code are supported installation and runtime hosts, and both receive every bundled route, with one host-specific boundary: `agents-architect` writes only `AGENTS.md`, and a Claude Code project that has a `CLAUDE.md` does not load `AGENTS.md`, so there the skill stops and says so. `continuous-progress` keeps each host's operations detail in its own `references/`, and `delegate-simple-task` leaves the judgment of host settings to the host model. This is repository support, not proof of execution on every host release, operating system, shell, installation method, or policy configuration.
 
-Codex holds a new or changed Hook until you trust it in `/hooks`; Claude Code runs it at the next `SessionStart` once the plugin loads. The [Hook Reference](reference/hooks.md) renders the exact checked-in commands for an optional comparison with an installed copy.
+Codex holds a new or changed Hook until you trust it in `/hooks`; Claude Code runs each Hook at its next event once the plugin loads. The [Hook Reference](reference/hooks.md) renders the exact checked-in commands and scripts for an optional comparison with an installed copy.
 
 ## Claude Code Package Format And Validation
 

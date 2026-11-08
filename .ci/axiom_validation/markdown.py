@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from .context import REPOSITORY_ROOT
-from .hooks import CODEX_WINDOWS_WRAPPER_TEXT, HOOK_FILES, hook_commands
+from .hooks import HOOK_FILES, PACKAGED_WRAPPERS, hook_commands
 
 FENCE_OPEN = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})(.*)$")
 ATX_HEADING = re.compile(r"^[ \t]{0,3}#{1,6}(?:[ \t]+|$)(.*)$")
@@ -59,7 +59,7 @@ def check_documented_hook_command_text(
     documents: dict[str, dict[str, Any]],
     failures: list[str],
     *,
-    wrapper_text: str = CODEX_WINDOWS_WRAPPER_TEXT,
+    packaged_texts: dict[str, str] | None = None,
 ) -> None:
     expected: dict[str, list[str]] = {}
     for relative_path in HOOK_FILES:
@@ -68,9 +68,8 @@ def check_documented_hook_command_text(
             continue
         for command, labels in hook_commands(relative_path, document, failures).items():
             expected.setdefault(command, []).extend(labels)
-    expected.setdefault(wrapper_text.strip(), []).append(
-        "plugin/hooks/codex-session-start.cmd"
-    )
+    for relative_path, packaged_text in (packaged_texts or PACKAGED_WRAPPERS).items():
+        expected.setdefault(packaged_text.strip(), []).append(relative_path)
 
     blocks, _ = fenced_blocks_and_masked_text(text)
     block_set = set(blocks)
@@ -84,12 +83,10 @@ def check_documented_hook_command_text(
     documented_hook_commands = {
         block
         for block in block_set
-        if "using-axiom" in block
-        and (
-            "PLUGIN_ROOT" in block
-            or "CLAUDE_PLUGIN_ROOT" in block
-            or "%~dp0" in block
-        )
+        if "PLUGIN_ROOT" in block
+        or "%~dp0" in block
+        or "stop_hook_active" in block
+        or "Axiom: before acting" in block
     }
     for command in sorted(documented_hook_commands - set(expected)):
         failures.append(

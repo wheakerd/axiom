@@ -71,7 +71,7 @@ claude plugin install axiom@axiom
 
 两个市场都选定 `release` 分支，该分支只包含已发布的版本：发布某个版本时由 CI 把它加入该分支，`main` 上的开发提交永远不会进入它。
 
-在 Codex 中，开启新会话并在 `/hooks` 中信任该 Hook：Codex 会跳过新的或已更改的 Hook，直到你信任它，Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤，会在插件加载后的下一次 `SessionStart` 运行该 Hook。在 Windows 上，Claude Code 运行 Hook 需要 Git Bash，而且两个宿主目前都没有 Windows 观测记录；见[兼容性](docs/en/compatibility.md#current-bounded-status)。将已安装的 Hook 与其签入定义进行比对，是审阅者的可选步骤，见[信任模型](docs/zh-CN/trust-model.md#hook-信任边界)。完整的安装与首次使用流程由[快速开始指南](docs/zh-CN/guides/getting-started.md)负责。
+在 Codex 中，开启新会话并在 `/hooks` 中信任这三个 Hook：Codex 会跳过新的或已更改的 Hook，直到你信任它，Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤，会在插件加载后各个 Hook 的下一次事件时运行它们。在 Windows 上，Claude Code 运行这些 Hook 需要 Git Bash，而且两个宿主目前都没有 Windows 观测记录；见[兼容性](docs/en/compatibility.md#current-bounded-status)。将已安装的 Hook 与其签入定义进行比对，是审阅者的可选步骤，见[信任模型](docs/zh-CN/trust-model.md#hook-信任边界)。完整的安装与首次使用流程由[快速开始指南](docs/zh-CN/guides/getting-started.md)负责。
 
 ## 更新
 
@@ -90,7 +90,7 @@ claude plugin marketplace update axiom
 claude plugin update axiom@axiom
 ```
 
-更新后请开启新会话；Codex 会保留已更改的 Hook，直到你在 `/hooks` 中再次信任它。自动更新行为由各宿主及你的设置控制。应用内更新、禁用、移除与排障见[管理安装](docs/zh-CN/guides/managing-installation.md)。任一宿主出现市场克隆超时时，按该指南的[恢复流程](docs/zh-CN/guides/managing-installation.md#市场克隆超时)处理。
+更新后请开启新会话；Codex 会保留每个已更改的 Hook 或脚本，直到你在 `/hooks` 中再次信任它。自动更新行为由各宿主及你的设置控制。应用内更新、禁用、移除与排障见[管理安装](docs/zh-CN/guides/managing-installation.md)。任一宿主出现市场克隆超时时，按该指南的[恢复流程](docs/zh-CN/guides/managing-installation.md#市场克隆超时)处理。
 
 ## 用法
 

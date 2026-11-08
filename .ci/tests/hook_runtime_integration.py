@@ -1,4 +1,4 @@
-"""Native runtime integration for the checked-in SessionStart commands.
+"""Native runtime integration for the checked-in lifecycle hook commands.
 
 This module is intentionally outside the ``test_*.py`` discovery pattern. The
 dedicated cross-platform workflow runs it on each native host while the normal
@@ -23,12 +23,26 @@ from pathlib import Path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPOSITORY_ROOT / ".ci"))
+from axiom_validation.hooks import PACKAGED_WRAPPERS, PROMPT_TEXT, STOP_TEXT  # noqa: E402
 # The repository keeps the installed plugin under plugin/; the paths below are
 # relative to that plugin root, as each host resolves them after installation.
 PLUGIN_SOURCE_ROOT = REPOSITORY_ROOT / "plugin"
 CODEX_HOOK_PATH = PLUGIN_SOURCE_ROOT / "hooks" / "codex-hooks.json"
 CLAUDE_HOOK_PATH = PLUGIN_SOURCE_ROOT / "hooks" / "claude-hooks.json"
 WINDOWS_WRAPPER = Path("hooks/codex-session-start.cmd")
+PACKAGED_SCRIPTS = tuple(
+    Path(relative_path.removeprefix("plugin/")) for relative_path in PACKAGED_WRAPPERS
+)
+STOP_INACTIVE_INPUT = (
+    b'{"session_id":"s","hook_event_name":"Stop","stop_hook_active":false,'
+    b'"last_assistant_message":"OK"}'
+)
+STOP_ACTIVE_INPUT = (
+    b'{"session_id":"s","hook_event_name":"Stop","stop_hook_active":true,'
+    b'"last_assistant_message":"The request is complete."}'
+)
+STOP_ACTIVE_SPACED_INPUT = b'{"hook_event_name": "Stop", "stop_hook_active": true}'
 SKILL_PATH = Path("skills/using-axiom/SKILL.md")
 HEADING = (
     "You have Axiom. Load this startup front door before deciding whether any "
@@ -69,12 +83,17 @@ class HookCommandTimedOut(TimeoutError):
         self.stderr = stderr
 
 
-def _load_session_start_handler(path: Path) -> dict[str, object]:
+def _load_handlers(path: Path) -> dict[str, dict[str, object]]:
     document = json.loads(path.read_text(encoding="utf-8"))
-    handler = document["hooks"]["SessionStart"][0]["hooks"][0]
-    if not isinstance(handler, dict) or handler.get("type") != "command":
-        raise AssertionError(f"{path.relative_to(REPOSITORY_ROOT)} has no command hook")
-    return handler
+    handlers: dict[str, dict[str, object]] = {}
+    for event_name, groups in document["hooks"].items():
+        handler = groups[0]["hooks"][0]
+        if not isinstance(handler, dict) or handler.get("type") != "command":
+            raise AssertionError(
+                f"{path.relative_to(REPOSITORY_ROOT)} {event_name} has no command hook"
+            )
+        handlers[event_name] = handler
+    return handlers
 
 
 def _absolute_program(name: str, candidates: tuple[Path, ...] = ()) -> str:
@@ -162,6 +181,7 @@ def _run_hook(
     cwd: Path,
     environment: dict[str, str],
     timeout: float,
+    stdin_bytes: bytes | None = None,
 ) -> HookResult:
     if invocation.shell == "cmd":
         cmd = _cmd_program()
@@ -185,13 +205,13 @@ def _run_hook(
         argv,
         cwd=cwd,
         env=environment,
-        stdin=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL if stdin_bytes is None else subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         **popen_arguments,
     )
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
+        stdout, stderr = process.communicate(input=stdin_bytes, timeout=timeout)
     except subprocess.TimeoutExpired:
         _terminate_process_tree(process)
         try:
@@ -236,14 +256,16 @@ def report_environment() -> None:
 
 
 class HookRuntimeIntegrationTests(unittest.TestCase):
-    """Execute every applicable checked-in SessionStart command natively."""
+    """Execute every applicable checked-in lifecycle hook command natively."""
 
     @classmethod
     def setUpClass(cls) -> None:
         if not sys.dont_write_bytecode:
             raise AssertionError("hook runtime integration must run Python with -B")
-        cls.codex_handler = _load_session_start_handler(CODEX_HOOK_PATH)
-        cls.claude_handler = _load_session_start_handler(CLAUDE_HOOK_PATH)
+        cls.codex_handlers = _load_handlers(CODEX_HOOK_PATH)
+        cls.claude_handlers = _load_handlers(CLAUDE_HOOK_PATH)
+        cls.codex_handler = cls.codex_handlers["SessionStart"]
+        cls.claude_handler = cls.claude_handlers["SessionStart"]
         cls.bash = _bash_program()
         if os.name == "nt":
             _cmd_program()
@@ -259,13 +281,17 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
 
         self.source_skill_bytes = (PLUGIN_SOURCE_ROOT / SKILL_PATH).read_bytes()
         self.source_wrapper_bytes = (PLUGIN_SOURCE_ROOT / WINDOWS_WRAPPER).read_bytes()
+        self.source_script_bytes = {
+            script: (PLUGIN_SOURCE_ROOT / script).read_bytes() for script in PACKAGED_SCRIPTS
+        }
         self.skill_bytes = self.source_skill_bytes
         self.skill_path = self.plugin_root / SKILL_PATH
         self.skill_path.parent.mkdir(parents=True)
         self.skill_path.write_bytes(self.skill_bytes)
         self.wrapper_path = self.plugin_root / WINDOWS_WRAPPER
         self.wrapper_path.parent.mkdir(parents=True)
-        self.wrapper_path.write_bytes(self.source_wrapper_bytes)
+        for script, content in self.source_script_bytes.items():
+            (self.plugin_root / script).write_bytes(content)
 
         profile_script = 'printf "%s\\n" profile-ran > "$HOME/profile-ran"; exit 71\n'
         for name in (".bash_profile", ".bashrc", ".profile"):
@@ -281,6 +307,8 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
                 self.source_wrapper_bytes,
                 (PLUGIN_SOURCE_ROOT / WINDOWS_WRAPPER).read_bytes(),
             )
+            for script, content in self.source_script_bytes.items():
+                self.assertEqual(content, (PLUGIN_SOURCE_ROOT / script).read_bytes())
         finally:
             self.temporary.cleanup()
 
@@ -336,13 +364,89 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
         environment["AXIOM_TEST_PYTHON"] = sys.executable
         return environment
 
-    def _run(self, invocation: HookInvocation, timeout: float = 5) -> HookResult:
+    def _run(
+        self,
+        invocation: HookInvocation,
+        timeout: float = 5,
+        stdin_bytes: bytes | None = None,
+    ) -> HookResult:
         return _run_hook(
             invocation,
             cwd=self.workspace,
             environment=self._environment(invocation),
             timeout=timeout,
+            stdin_bytes=stdin_bytes,
         )
+
+    def _lifecycle_invocations(self, event_name: str) -> tuple[HookInvocation, ...]:
+        """The exact checked-in commands for one lifecycle event on this host."""
+        codex_handler = self.codex_handlers[event_name]
+        claude_handler = self.claude_handlers[event_name]
+        claude_command = claude_handler.get("command")
+        if not isinstance(claude_command, str):
+            raise AssertionError(f"checked-in Claude Code {event_name} command must be a string")
+        claude = HookInvocation(
+            f"claude-{event_name}", claude_command, "bash", "CLAUDE_PLUGIN_ROOT", b""
+        )
+        if os.name == "nt":
+            windows_command = codex_handler.get("commandWindows")
+            if not isinstance(windows_command, str):
+                raise AssertionError(f"checked-in Codex Windows {event_name} command must be a string")
+            return (
+                HookInvocation(f"codex-windows-{event_name}", windows_command, "cmd", "PLUGIN_ROOT", b""),
+                claude,
+            )
+        codex_command = codex_handler.get("command")
+        if not isinstance(codex_command, str):
+            raise AssertionError(f"checked-in Codex {event_name} command must be a string")
+        return (
+            HookInvocation(f"codex-posix-{event_name}", codex_command, "bash", "PLUGIN_ROOT", b""),
+            claude,
+        )
+
+    @staticmethod
+    def _json_object(result: HookResult) -> dict[str, object]:
+        text = result.stdout.decode("utf-8", errors="strict")
+        parsed = json.loads(text)
+        if not isinstance(parsed, dict):
+            raise AssertionError(f"hook stdout is not one JSON object: {text!r}")
+        return parsed
+
+    def test_prompt_hooks_print_exactly_the_static_text(self) -> None:
+        for invocation in self._lifecycle_invocations("UserPromptSubmit"):
+            with self.subTest(hook=invocation.name):
+                result = self._run(invocation)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(b"", result.stderr)
+                lines = result.stdout.decode("utf-8", errors="strict").splitlines()
+                self.assertEqual([PROMPT_TEXT], lines)
+                self.assertFalse((self.home / "profile-ran").exists())
+                self.assertEqual([], list(self.workspace.iterdir()))
+
+    def test_stop_hooks_continue_once_then_allow_the_turn_to_end(self) -> None:
+        for invocation in self._lifecycle_invocations("Stop"):
+            with self.subTest(hook=invocation.name, stop_hook_active=False):
+                result = self._run(invocation, stdin_bytes=STOP_INACTIVE_INPUT)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(b"", result.stderr)
+                payload = self._json_object(result)
+                if invocation.name.startswith("claude"):
+                    self.assertEqual(
+                        {"hookSpecificOutput": {"hookEventName": "Stop", "additionalContext": STOP_TEXT}},
+                        payload,
+                    )
+                else:
+                    self.assertEqual({"decision": "block", "reason": STOP_TEXT}, payload)
+            for label, stdin_bytes in (
+                ("compact", STOP_ACTIVE_INPUT),
+                ("spaced", STOP_ACTIVE_SPACED_INPUT),
+            ):
+                with self.subTest(hook=invocation.name, stop_hook_active=label):
+                    result = self._run(invocation, stdin_bytes=stdin_bytes)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertEqual(b"", result.stderr)
+                    self.assertEqual({}, self._json_object(result))
+            self.assertEqual([], list(self.workspace.iterdir()))
 
     def test_exact_commands_expand_spaced_roots_and_preserve_skill_bytes(self) -> None:
         for invocation in self._invocations():

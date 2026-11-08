@@ -18,48 +18,102 @@ HOOK_FILES = (
     "plugin/hooks/codex-hooks.json",
     "plugin/hooks/claude-hooks.json",
 )
+HOOK_TIMEOUT_SECONDS = 5
+CLAUDE_HOOK_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS
+CODEX_HOOK_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS
+
+# The exact static texts the lifecycle hooks print. The Stop text travels as a JSON
+# string on both hosts, so it stays ASCII without quotes or backslashes.
+PROMPT_TEXT = 'Axiom: before acting, decide whether this request has a material ambiguity that context cannot resolve. If it does, clarify it first as the routing gate directs; if not, proceed. Tentative wording alone is not ambiguity.'
+STOP_TEXT = 'Axiom check before you end: Is the original request met against its own criteria? Does each completion claim rest on evidence observed in this session rather than recalled or summarized? Is anything unresolved, deferred, or risky that the user should hear? Is the final summary in the language of the request? If a claim rests on recalled facts, verify it first. Then end, or continue.'
+
 CLAUDE_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door "
     "before deciding whether any Axiom skill applies:'; "
     "cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
-CLAUDE_HOOK_TIMEOUT_SECONDS = 5
 CODEX_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom. Load this startup front door before deciding "
     "whether any Axiom skill applies:'; cat \"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
+PROMPT_COMMAND = "printf '%s\\n' '" + PROMPT_TEXT + "'"
+CLAUDE_STOP_COMMAND = 'sh "${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh" claude'
+CODEX_STOP_COMMAND = 'sh "${PLUGIN_ROOT}/hooks/stop-check.sh" codex'
+
 CODEX_WINDOWS_WRAPPER_PATH = Path("plugin/hooks/codex-session-start.cmd")
 CODEX_WINDOWS_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-session-start.cmd"'
-CODEX_WINDOWS_WRAPPER_TEXT = (
-    "@echo off\n"
-    "setlocal DisableDelayedExpansion\n"
-    "echo You have Axiom. Load this startup front door before deciding whether any "
-    "Axiom skill applies:\n"
-    "echo(\n"
-    'type "%~dp0..\\skills\\using-axiom\\SKILL.md"\n'
-)
-CODEX_HOOK_TIMEOUT_SECONDS = 5
+CODEX_WINDOWS_PROMPT_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-prompt-submit.cmd"'
+CODEX_WINDOWS_STOP_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-stop-check.cmd"'
+CODEX_WINDOWS_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\necho You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:\necho(\ntype "%~dp0..\\skills\\using-axiom\\SKILL.md"\n'
+CODEX_WINDOWS_PROMPT_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\necho Axiom: before acting, decide whether this request has a material ambiguity that context cannot resolve. If it does, clarify it first as the routing gate directs; if not, proceed. Tentative wording alone is not ambiguity.\n'
+CODEX_WINDOWS_STOP_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\n"%SystemRoot%\\System32\\findstr.exe" /R "stop_hook_active.:true stop_hook_active.:.true" >nul\nif not errorlevel 1 goto allow\necho {"decision":"block","reason":"Axiom check before you end: Is the original request met against its own criteria? Does each completion claim rest on evidence observed in this session rather than recalled or summarized? Is anything unresolved, deferred, or risky that the user should hear? Is the final summary in the language of the request? If a claim rests on recalled facts, verify it first. Then end, or continue."}\nexit /b 0\n:allow\necho {}\nexit /b 0\n'
+STOP_SCRIPT_TEXT = '#!/bin/sh\n# Axiom Stop check. Argument: claude or codex. Reads the host\'s Stop event JSON on stdin and prints JSON only.\n# When the host reports stop_hook_active true, this turn was already continued once: print an empty object and let it end.\ninput=$(cat)\ncase "$input" in\n  *\'"stop_hook_active":true\'*|*\'"stop_hook_active": true\'*) printf \'{}\\n\'; exit 0 ;;\nesac\ntext=\'Axiom check before you end: Is the original request met against its own criteria? Does each completion claim rest on evidence observed in this session rather than recalled or summarized? Is anything unresolved, deferred, or risky that the user should hear? Is the final summary in the language of the request? If a claim rests on recalled facts, verify it first. Then end, or continue.\'\ncase "$1" in\n  claude) printf \'{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"%s"}}\\n\' "$text" ;;\n  codex) printf \'{"decision":"block","reason":"%s"}\\n\' "$text" ;;\n  *) printf \'{}\\n\' ;;\nesac\n'
+
+# Every packaged hook script, pinned byte for byte. A reviewer compares an installed
+# copy with these texts; the Hook Reference renders each one verbatim.
+PACKAGED_WRAPPERS: dict[str, str] = {
+    "plugin/hooks/codex-session-start.cmd": CODEX_WINDOWS_WRAPPER_TEXT,
+    "plugin/hooks/codex-prompt-submit.cmd": CODEX_WINDOWS_PROMPT_WRAPPER_TEXT,
+    "plugin/hooks/codex-stop-check.cmd": CODEX_WINDOWS_STOP_WRAPPER_TEXT,
+    "plugin/hooks/stop-check.sh": STOP_SCRIPT_TEXT,
+}
+
+SESSION_START_MATCHER = "startup|resume|clear|compact|fork"
 APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
     "plugin/hooks/codex-hooks.json": {
         "SessionStart": {
-            "matcher": "startup|resume|clear|compact|fork",
+            "matcher": SESSION_START_MATCHER,
             "handler": {
                 "type": "command",
                 "command": CODEX_COMMAND,
                 "commandWindows": CODEX_WINDOWS_COMMAND,
-                "timeout": CODEX_HOOK_TIMEOUT_SECONDS,
+                "timeout": HOOK_TIMEOUT_SECONDS,
                 "statusMessage": "Loading Axiom routing",
+            },
+        },
+        "UserPromptSubmit": {
+            "handler": {
+                "type": "command",
+                "command": PROMPT_COMMAND,
+                "commandWindows": CODEX_WINDOWS_PROMPT_COMMAND,
+                "timeout": HOOK_TIMEOUT_SECONDS,
+                "statusMessage": "Axiom prompt check",
+            },
+        },
+        "Stop": {
+            "handler": {
+                "type": "command",
+                "command": CODEX_STOP_COMMAND,
+                "commandWindows": CODEX_WINDOWS_STOP_COMMAND,
+                "timeout": HOOK_TIMEOUT_SECONDS,
+                "statusMessage": "Axiom completion check",
             },
         },
     },
     "plugin/hooks/claude-hooks.json": {
         "SessionStart": {
-            "matcher": "startup|resume|clear|compact|fork",
+            "matcher": SESSION_START_MATCHER,
             "handler": {
                 "type": "command",
                 "command": CLAUDE_COMMAND,
-                "timeout": CLAUDE_HOOK_TIMEOUT_SECONDS,
+                "timeout": HOOK_TIMEOUT_SECONDS,
                 "statusMessage": "Loading Axiom routing",
+            },
+        },
+        "UserPromptSubmit": {
+            "handler": {
+                "type": "command",
+                "command": PROMPT_COMMAND,
+                "timeout": HOOK_TIMEOUT_SECONDS,
+                "statusMessage": "Axiom prompt check",
+            },
+        },
+        "Stop": {
+            "handler": {
+                "type": "command",
+                "command": CLAUDE_STOP_COMMAND,
+                "timeout": HOOK_TIMEOUT_SECONDS,
+                "statusMessage": "Axiom completion check",
             },
         },
     },
@@ -146,18 +200,21 @@ def check_exact_hook_shapes(
                 continue
 
             group = groups[0]
-            expected_group_keys = {"matcher", "hooks"}
+            expected_group_keys = (
+                {"matcher", "hooks"} if "matcher" in approved_event else {"hooks"}
+            )
             if set(group) != expected_group_keys:
                 failures.append(
                     f"{label}[0] keys changed; expected {sorted(expected_group_keys)}, "
                     f"found {sorted(group)}"
                 )
-            expected_matcher = approved_event["matcher"]
-            if group.get("matcher") != expected_matcher:
-                failures.append(
-                    f"{label}[0].matcher is {group.get('matcher')!r}; "
-                    f"expected {expected_matcher!r}"
-                )
+            if "matcher" in approved_event:
+                expected_matcher = approved_event["matcher"]
+                if group.get("matcher") != expected_matcher:
+                    failures.append(
+                        f"{label}[0].matcher is {group.get('matcher')!r}; "
+                        f"expected {expected_matcher!r}"
+                    )
 
             handlers = group.get("hooks")
             if not isinstance(handlers, list):
@@ -197,47 +254,46 @@ def check_exact_hook_shapes(
 def check_codex_windows_hook_security(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> None:
-    """Pin the Windows hook to its packaged wrapper and a short timeout."""
+    """Pin every Windows handler to its packaged wrapper, a short timeout, and exact script bytes."""
     document = documents.get("plugin/hooks/codex-hooks.json")
-    if not isinstance(document, dict):
-        return
-    try:
-        handler = document["hooks"]["SessionStart"][0]["hooks"][0]
-    except (KeyError, IndexError, TypeError):
-        return
-    if not isinstance(handler, dict):
-        return
+    if isinstance(document, dict):
+        approved_events = APPROVED_HOOKS["plugin/hooks/codex-hooks.json"]
+        hooks = document.get("hooks")
+        for event_name, approved_event in approved_events.items():
+            try:
+                handler = hooks[event_name][0]["hooks"][0]
+            except (KeyError, IndexError, TypeError):
+                continue
+            if not isinstance(handler, dict):
+                continue
+            label = f"plugin/hooks/codex-hooks.json hooks.{event_name}[0].hooks[0]"
+            if handler.get("commandWindows") != approved_event["handler"]["commandWindows"]:
+                failures.append(
+                    f"{label}.commandWindows must invoke only the approved packaged wrapper"
+                )
+            timeout = handler.get("timeout")
+            if type(timeout) is not int or timeout != HOOK_TIMEOUT_SECONDS:
+                failures.append(
+                    f"{label}.timeout must be exactly {HOOK_TIMEOUT_SECONDS} seconds"
+                )
 
-    label = "plugin/hooks/codex-hooks.json hooks.SessionStart[0].hooks[0]"
-    windows_command = handler.get("commandWindows")
-    if windows_command != CODEX_WINDOWS_COMMAND:
-        failures.append(
-            f"{label}.commandWindows must invoke only the approved packaged wrapper"
-        )
-
-    timeout = handler.get("timeout")
-    if type(timeout) is not int or timeout != CODEX_HOOK_TIMEOUT_SECONDS:
-        failures.append(
-            f"{label}.timeout must be exactly {CODEX_HOOK_TIMEOUT_SECONDS} seconds"
-        )
-
-    wrapper_path = REPOSITORY_ROOT / CODEX_WINDOWS_WRAPPER_PATH
-    if wrapper_path.is_symlink():
-        failures.append(
-            f"{display_path(wrapper_path)} must be a regular packaged file, not a symlink"
-        )
-        return
-    try:
-        wrapper_text = wrapper_path.read_text(encoding="utf-8")
-    except OSError as error:
-        failures.append(f"cannot read {display_path(wrapper_path)}: {error}")
-        return
-    if wrapper_text != CODEX_WINDOWS_WRAPPER_TEXT:
-        failures.append(
-            f"{display_path(wrapper_path)} must contain only the approved cmd.exe "
-            "built-in wrapper"
-        )
-
+    for relative_path, approved_text in PACKAGED_WRAPPERS.items():
+        wrapper_path = REPOSITORY_ROOT / relative_path
+        if wrapper_path.is_symlink():
+            failures.append(
+                f"{display_path(wrapper_path)} must be a regular packaged file, not a symlink"
+            )
+            continue
+        try:
+            wrapper_text = wrapper_path.read_text(encoding="utf-8")
+        except OSError as error:
+            failures.append(f"cannot read {display_path(wrapper_path)}: {error}")
+            continue
+        if wrapper_text != approved_text:
+            failures.append(
+                f"{display_path(wrapper_path)} must contain only the approved packaged "
+                "hook script"
+            )
 
 def hook_commands(
     relative_path: str, document: dict[str, Any], failures: list[str]

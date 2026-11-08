@@ -40,7 +40,7 @@ Claude Code 插件加载同一套技能与路由。用自然语言或 `/axiom:<s
 
 ## 信任 Hook
 
-Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定义：在新会话中打开 `/hooks`，阅读 Axiom 条目并信任它。Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤：插件加载后，其 Hook 会在下一次 `SessionStart` 事件时运行，例如新会话、`/clear`、`/resume`、分叉或压缩，而 `/hooks` 会显示已加载的条目。将已安装的定义与 [Hook 参考](../../en/reference/hooks.md)比对是审阅者的可选检查；[信任模型](../trust-model.md#hook-信任边界)说明了它在何时重要，以及定义不一致时该怎么做。
+Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定义：在新会话中打开 `/hooks`，阅读三个 Axiom 条目（`SessionStart`、`UserPromptSubmit` 与 `Stop`）并信任它们。Axiom 的路由在这一步之后才开始。Claude Code 没有单独的 Hook 信任步骤：插件加载后，`SessionStart` Hook 会在下一次会话事件时运行，例如新会话、`/clear`、`/resume`、分叉或压缩，`UserPromptSubmit` Hook 在每条提示之前运行，`Stop` Hook 在每轮结束之前运行，而 `/hooks` 会显示已加载的条目。将已安装的定义与 [Hook 参考](../../en/reference/hooks.md)比对是审阅者的可选检查；[信任模型](../trust-model.md#hook-信任边界)说明了它在何时重要，以及定义不一致时该怎么做。
 
 ## 尝试一个路由请求
 

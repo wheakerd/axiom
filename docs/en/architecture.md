@@ -1,6 +1,6 @@
 # Architecture
 
-Axiom is a foreground routing layer built from host plugin metadata, startup hooks, Markdown Skills, and on-demand references. Codex and Claude Code each load the same Skills through their own manifest and hook. After routing, the host uses its normal tools and permissions. When the gate selects a route, or a route hands off to another installed skill or tool, one visible text line names it, `axiom:<skill-name>` for a bundled skill; working output stays English unless the user asks otherwise, and the final conclusion of a turn uses the language of the user's request. Axiom adds no execution service, daemon, watcher, automatic updater, or hidden persistent component.
+Axiom is a foreground routing layer built from host plugin metadata, lifecycle hooks, Markdown Skills, and on-demand references. Codex and Claude Code each load the same Skills through their own manifest and hooks: `SessionStart` delivers the routing gate, `UserPromptSubmit` asks the model to judge material ambiguity before acting, and `Stop` asks once, before the turn ends, whether the request is really complete. After routing, the host uses its normal tools and permissions. When the gate selects a route, or a route hands off to another installed skill or tool, one visible text line names it, `axiom:<skill-name>` for a bundled skill; working output stays English unless the user asks otherwise, and the final conclusion of a turn uses the language of the user's request. Axiom adds no execution service, daemon, watcher, automatic updater, or hidden persistent component.
 
 ```mermaid
 flowchart TD
@@ -22,14 +22,14 @@ flowchart TD
 | [Installed plugin root](../../plugin) | The only subtree a host installs: manifests, Hooks, Skills, artwork, and a license copy |
 | [Codex manifest](../../plugin/.codex-plugin/plugin.json) | Codex plugin identity, `./skills/`, and explicit hook path |
 | [Codex marketplace descriptor](../../.agents/plugins/marketplace.json) | Codex installation and catalog metadata for this repository root |
-| [Codex hook definition](../../plugin/hooks/codex-hooks.json) | Codex `SessionStart` handler for `startup`, `resume`, `clear`, `compact`, and `fork` |
+| [Codex hook definition](../../plugin/hooks/codex-hooks.json) | Codex `SessionStart` handler for `startup`, `resume`, `clear`, `compact`, and `fork`, plus the `UserPromptSubmit` and `Stop` handlers, each with a POSIX command and a packaged Windows wrapper |
 | [Claude Code manifest](../../plugin/.claude-plugin/plugin.json) | Claude Code plugin identity, `./skills/`, and hook path |
 | [Claude Code catalog](../../.claude-plugin/marketplace.json) | Claude Code installation and catalog metadata for this repository |
-| [Claude Code hook definition](../../plugin/hooks/claude-hooks.json) | Claude Code `SessionStart` handler for the same five sources |
+| [Claude Code hook definition](../../plugin/hooks/claude-hooks.json) | Claude Code `SessionStart` handler for the same five sources, plus the `UserPromptSubmit` and `Stop` handlers sharing the same static texts |
 | [Routing gate](../../plugin/skills/using-axiom/SKILL.md) | Request matching, route ownership, composition, and no-match continuation |
 | [Packaged Skills](../../plugin/skills) | Direct public entries with parent-owned references and optional agent metadata |
 
-Each hook prints a loading message and reads the gate using the host-provided plugin root. Its bounded foreground command performs no writes, network requests, background launches, or updates. It exposes instructions; it does not select a task route or authorize an action. The [Hook Reference](reference/hooks.md) renders the exact declarations, including the Codex Windows wrapper, for comparison with the installed definition.
+The `SessionStart` hook prints a loading message and reads the gate using the host-provided plugin root; the `UserPromptSubmit` and `Stop` hooks print Axiom's own static text, and the Stop script reads the host's event only to continue the turn at most once. Every bounded foreground command performs no writes, network requests, background launches, or updates. A hook exposes instructions or asks a question; it does not select a task route or authorize an action. The [Hook Reference](reference/hooks.md) renders the exact declarations and scripts, including the Codex Windows wrappers, for comparison with the installed definition.
 
 ## Route Selection
 

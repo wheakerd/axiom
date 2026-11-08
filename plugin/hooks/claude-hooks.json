@@ -1,5 +1,5 @@
 {
-  "description": "Load Axiom's documented routing gate at Claude Code session start.",
+  "description": "Load Axiom's documented routing gate at Claude Code session start, and print Axiom's static checks when a prompt arrives and before the turn ends.",
   "hooks": {
     "SessionStart": [
       {
@@ -10,6 +10,30 @@
             "command": "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door before deciding whether any Axiom skill applies:'; cat \"${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md\"",
             "timeout": 5,
             "statusMessage": "Loading Axiom routing"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '%s\\n' 'Axiom: before acting, decide whether this request has a material ambiguity that context cannot resolve. If it does, clarify it first as the routing gate directs; if not, proceed. Tentative wording alone is not ambiguity.'",
+            "timeout": 5,
+            "statusMessage": "Axiom prompt check"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh\" claude",
+            "timeout": 5,
+            "statusMessage": "Axiom completion check"
           }
         ]
       }
