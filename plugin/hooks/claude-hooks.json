@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '%s\\n' 'Axiom: before acting, decide whether this request has a material ambiguity that context cannot resolve. If it does, clarify it first as the routing gate directs; if not, proceed. Tentative wording alone is not ambiguity.'",
+            "command": "printf '%s\\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting.'",
             "timeout": 5,
             "statusMessage": "Axiom prompt check"
           }
