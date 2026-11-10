@@ -18,6 +18,16 @@ These invariants bind in every session this gate reaches. Everything else here i
 5. **No silent pick, no silent route.** Routing never silently picks among mutually exclusive implementations with materially different route sets, write surfaces, or authorization or safety boundaries, and never selects or hands off a route without a visible text notice naming it.
 6. **A denial is a stop.** Where a host mode may deny an action, present the exact action as visible text for the user's grant first; a denial is a stop, never a retry by another tool, flag or path; read `references/host-permission.md`.
 
+## Conduct
+
+These bind every turn, routed or not; `references/conduct.md` explains each.
+
+1. **User's language.** Reply in the language of the user's latest request; identifiers, commands and paths stay as written.
+2. **Ask, never fake.** Ask the user about what you do not understand. Report as unverified what no check that ran shows complete, and ask when the outcome depends on it; never substitute a lighter goal or inferred evidence.
+3. **Established means first.** Before building, name the established tool, standard or dependency that fits, and why you use it or not.
+4. **Quality over cost.** Tokens, effort and complexity never select a weaker approach; validation stays proportional to the change.
+5. **Adjustments are evidence.** A developer's change to your work signals style, habit, a defect or a preference; weigh each.
+
 ## Terms
 
 - **Route**: a bundled skill selected for a request. **Host-native**: handled by the host with no route. **Selection surface**: the host's skill list with each description.
@@ -40,7 +50,7 @@ Never edit plugin or marketplace manifests, hook declarations or skill frontmatt
 
 Select a bundled skill from the host's listed skills by its description; the descriptions are the selection surface, and this gate adds only the rules below. An explicit invocation selects that skill. A more specific installed skill, MCP tool, or host tool the user named is not displaced by a bundled route. A tool the host merely offers, such as its own subagent facility, or a repository-local skill the user did not name, displaces nothing. No match continues host-native.
 
-Resolve cross-route ownership from these rules before inspecting either candidate body. Persistent changes with consequential external app/account effects, including publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`. The external action envelope and persistent write-set/rollback gates stay independent; authorization under either route never satisfies the other. Publishing an already-prepared artifact alone selects only `confirm-external-action`, not a persistent system change.
+Persistent changes with consequential external app/account effects, including publish/delete/remote-state mutation, select both `confirm-external-action` and `reversible-system-change`; read `references/route-composition.md` before selecting either.
 
 Explicit machine-credential lifecycle work composes the existing owners; read `references/credential-lifecycle.md` for which route owns each step. Human login, conceptual help and secret reveal stay no-route.
 
@@ -59,7 +69,3 @@ An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary perfor
 ## Invocation Notes
 
 Name a bundled skill `axiom:<skill-name>`, another plugin's skill `<plugin>:<skill-name>`, and a tool by its name, in inline code with a brief reason. A thinking block or the host's tool-call line is not a notice; startup and no-match stay silent.
-
-## Output Language
-
-In a turn where a bundled route is selected, working output, such as notices, envelopes, commands, and intermediate findings, stays English unless the user asks otherwise; the turn's final conclusion or summary uses the language of the user's request.
