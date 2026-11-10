@@ -32,8 +32,7 @@ Classify each candidate into exactly one category:
 - Cross-cutting safety or risk rule leaf: an evidence-backed concern or risk
   route.
 - Project fact or human documentation: keep in canonical docs and link from `.agents/`.
-- Temporary task information: the Git-metadata state directory in
-  `memory-and-state.md`, only when needed; never under `.agents/`.
+- Temporary task information, a postponed decision, or a plan: the memory class and home that `memory-and-state.md` resolves; never a rule owner.
 - Invalid or redundant content: delete, merge, or leave outside AGENTS.
 - Axiom packaged skill protocol or trigger content: leave in the installed Axiom plugin, not in the target AGENTS system.
 
@@ -67,8 +66,8 @@ Reject rules that fail any gate.
   supporting material.
 - Prefer `git mv` for tracked file moves.
 - Preserve full human docs in canonical locations.
-- Move only agent-executable rules into `.agents/`.
-- Move only project-specific rules into `.agents/`; do not migrate Axiom packaged skill load policies, trigger definitions, validation protocols, or reporting formats into the target repository.
+- Move only agent-executable rules into rule owners under `.agents/`; the memory homes that `memory-and-state.md` lists hold their own classes.
+- Move only project-specific rules into rule owners; do not migrate Axiom packaged skill load policies, trigger definitions, validation protocols, or reporting formats into the target repository.
 - Keep surfaces covered by the parent skill's protected-metadata boundary out of
   AGENTS routing unless the user explicitly asks for plugin or skill
   maintenance.
@@ -100,9 +99,8 @@ safe-stop and report its exact path and observed precedence.
 
 - Track team-shared durable root and `.agents/**` instructions when they are meant for the repository.
 - Put personal rules under `.agents/local/`.
-- Prefer `.git/info/exclude` for user-local ignores.
-- Put runtime and generated artifacts in the Git-metadata state directory that
-  `memory-and-state.md` resolves, never under `.agents/`.
+
+- Keep task records and other local memory under `.agents/local/`, ignored by the `.gitignore` file inside that directory as `memory-and-state.md` describes; do not edit Git metadata for it.
 - Add ignores to `.gitignore` only when all contributors should ignore them.
 
 ## Prohibited actions

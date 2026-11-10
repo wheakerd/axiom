@@ -24,7 +24,7 @@ Write only candidates with:
 - Persistent future reuse.
 - Clear path, task, domain, risk, workflow, or skill scope.
 - Concrete agent action, prohibition, routing condition, or validation step.
-- Verifiable evidence from code, config, tests, commands, authoritative docs, or repeated task history.
+- Verifiable evidence from code, config, tests, commands, authoritative docs, or repeated task history; or the user's own signals: an explicit statement of preference, a correction repeated across tasks or sessions, visible impatience at repeating an instruction, or a consistent adjustment to delivered work. A preference the user states outright is evidence on its own; an inferred signal, such as a correction, impatience, or an adjustment, needs repetition.
 - Target-project specificity rather than restating Axiom packaged skill protocol.
 - One canonical home.
 - Verified AGENTS ownership: the nearest owning index, rule leaf, closer
@@ -38,7 +38,7 @@ Write only candidates with:
   replacing direct inspection of mutable source.
 - No secrets, credentials, personal data, raw transcripts, or transient logs.
 
-Reject or report temporary, speculative, duplicated, too broad, unsupported, or human-doc-only candidates.
+Reject or report speculative, duplicated, too broad, unsupported, or human-doc-only candidates. A candidate that is real but not durable is placed, not dropped: a task-only fact goes to the task record, a postponed item to deferred decisions, and a preference inferred from one occurrence stays in the task record until the user repeats or states it. `../memory-and-state.md` owns those classes.
 
 Before applying a task-context update, require a context-evidence result whose
 review window, decision dispositions, and coverage fields satisfy that
@@ -66,11 +66,8 @@ project constraints, and removal of avoidable rediscovery.
 ## Canonical homes
 
 - Root `AGENTS.md`: true global constraints, priority, routing entry points, and minimum verification.
-- `.agents/**`: routed group indexes, direct domain entries, rule leaves,
-  cross-cutting safety or risk rule leaves, parent-owned references, and the
-  flat registry.
-- Task state: the Git-metadata directory that `../memory-and-state.md`
-  resolves; never a canonical home for rules.
+- `.agents/**`: routed group indexes, direct domain entries, rule leaves, cross-cutting safety or risk rule leaves, parent-owned references, the flat registry, and the working agreements.
+- Deferred decisions, plans, and task records: the homes that `../memory-and-state.md` resolves; never a canonical home for rules.
 - `.agents/skills/<skill-name>/SKILL.md` for Codex or
   `.claude/skills/<skill-name>/SKILL.md` for Claude Code: repo-local skills for repeatable repository workflows only when explicitly requested or already part of the target repository design.
 - Project docs: human source-of-truth facts that are not agent-executable guidance.
@@ -109,4 +106,4 @@ project constraints, and removal of avoidable rediscovery.
   internal routes, validation protocols, or reporting formats into target
   `AGENTS.md` files.
 - Do not create or update repo-local skills as local copies of Axiom packaged skills.
-- Do not persist one-off task discoveries.
+- Do not persist a one-off task discovery as a durable rule or a working agreement.

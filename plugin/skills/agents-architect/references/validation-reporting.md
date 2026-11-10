@@ -42,6 +42,7 @@ Add only checks triggered by the changed surface:
 - Root, nested entry, or discovery changes: verify the applicable instruction chain and current host behavior when safely available.
 - Metadata or document-role changes: read [instruction document contracts](instruction-document-contracts.md) and validate the schema in [routed rule shape](routed-rule-shape.md).
 - Size or split changes: measure root, key indexes, selected owners, and representative active chains; do not use a host size limit such as Codex `project_doc_max_bytes` as an authoring target.
+- Project-memory changes: validate that each class has one home, that the registry lists every home that exists, that `.agents/local/` is ignored and untracked, and that no automatic class holds a rule.
 - Migration: validate the source-to-owner mapping and that no independently editable duplicate remains.
 - Repo-local Skill changes: validate discovery metadata, frontmatter, direct routes, and resources. Check the AGENTS selector only for a declared AGENTS-to-Skill route; standalone Skills need none. Discovery proves neither explicit-route reachability nor body loading.
 - Implementation reconciliation: validate explicit activation, recorded working-tree or ref baseline, per-rule evidence status and disposition, active-chain authority, collaboration separation, preview/apply authorization, and the selected maintenance or migration terminal owner.

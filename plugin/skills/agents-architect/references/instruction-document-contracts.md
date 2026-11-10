@@ -38,8 +38,7 @@ generic Axiom request/language/runtime/size protocols.
 
 ## Evidence-Driven Optional Rules
 
-Add request handling, canonical command/language rules, runtime capsules,
-durable-update modes, or repository-local size budgets only when the user or
+Add request handling, canonical command/language rules, project-memory homes, durable-update modes, or repository-local size budgets only when the user or
 current project evidence establishes them as repository policy. Axiom may apply
 its own authoring and active-set limits while producing files without copying
 those limits into the target repository.

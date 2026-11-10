@@ -58,7 +58,7 @@ If the user explicitly delegates the choice ("choose one", "your call") and ever
 
 Assess ambiguity before any delegation. When intent is unresolved, this gate selects `clarify-intent`, never `delegate-simple-task`. A permission-bypass mode resolves no intent and expands no authority.
 
-An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary performance work does not. Ordinary AGENTS audits select only `agents-architect`.
+An explicit usage-reduction goal selects `optimize-agent-usage`; ordinary performance work does not. Ordinary AGENTS audits and a completed task's memory maintenance select only `agents-architect`.
 
 - With a native prompt, exact existing authorization needs no reconfirmation unless scope changes.
 - Prior refusal or assistant prose creates no policy.
