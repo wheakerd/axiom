@@ -39,7 +39,7 @@ Describe the outcome you want, or name a skill. Axiom selects a bundled skill fr
 | [`task-planning`](plugin/skills/task-planning/SKILL.md) | Create and revise plans around current requirements |
 | [`continuous-progress`](plugin/skills/continuous-progress/SKILL.md) | Supervised progress on a native scheduler |
 | [`local-web-search`](plugin/skills/local-web-search/SKILL.md) | Constrain local searches and stop at site challenges |
-| [`agents-architect`](plugin/skills/agents-architect/SKILL.md) | Initialize, maintain, and validate scoped AGENTS.md systems |
+| [`agents-architect`](plugin/skills/agents-architect/SKILL.md) | Maintain scoped AGENTS.md systems and project memory |
 | [`agent-plugin-architect`](plugin/skills/agent-plugin-architect/SKILL.md) | Design and audit packaged plugin architecture |
 | [`optimize-agent-usage`](plugin/skills/optimize-agent-usage/SKILL.md) | Reduce agent context and workflow overhead |
 | [`review-axiom-task`](plugin/skills/review-axiom-task/SKILL.md) | Audit Axiom decisions from observable evidence |

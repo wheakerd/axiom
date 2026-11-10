@@ -70,7 +70,7 @@ Hosts discover and load instruction sources differently. Determine the active ho
 - Do not read full logs or large source files for instruction design unless a targeted rule depends on them.
 - Do not migrate, rewrite, or validate protected plugin or skill metadata as AGENTS routing content.
 - Do not import unrelated historical notes into the durable instruction system.
-- Do not create a runtime capsule during a strictly read-only task.
+- Do not create a plan or a task record during a strictly read-only task.
 
 ## Validation
 

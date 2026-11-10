@@ -50,7 +50,7 @@ Keep machine-information disclosure bounded, browse serially, preserve browser i
 
 [Agents Architect](../../plugin/skills/agents-architect/SKILL.md) inventories metadata, loads the relevant topic, and limits edits to the authorized instruction system. It distinguishes active instructions from copied or historical material and keeps host-discovered non-AGENTS instruction candidates read-only. This request does not authorize unrelated source edits, protected plugin metadata, commits, or pushes.
 
-Task state such as a session capsule lives in the repository's Git metadata, outside the indexed working tree; the [memory-and-state reference](../../plugin/skills/agents-architect/references/memory-and-state.md) owns that location, the memory tiers, and the flat registry.
+Project memory lives in `AGENTS.md` and routed `.agents/` files: durable rules, working agreements, deferred decisions, and plans are tracked, and task records stay local under `.agents/local/`. The [memory-and-state reference](../../plugin/skills/agents-architect/references/memory-and-state.md) owns the classes, their homes, and the flat registry.
 
 Explicit `effective-instructions:reconcile-preview` requests a read-only comparison with implementation; `effective-instructions:reconcile` requests an authorized instruction-system update. Ordinary maintenance, rollback, or compaction does not implicitly select these modes.
 

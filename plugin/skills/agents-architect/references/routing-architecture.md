@@ -32,8 +32,7 @@ justify more structure.
   and rule leaves reached through explicit `AGENTS.md` routing.
 - Cross-cutting layer: safety or risk rule leaves selected only by explicit
   concern or risk signals.
-- Runtime layer: task state outside the working tree, placed by
-  `memory-and-state.md`; it is never an AGENTS branch.
+- Memory layer: working agreements, deferred decisions, plans, and local task records, placed by `memory-and-state.md` and listed in the registry; only durable rules are routed as rule owners.
 - Protected metadata layer: the parent skill's canonical protected-metadata
   boundary. It is not an AGENTS routing branch.
 - Plugin capability layer: installed Axiom skills own Axiom triggers, load

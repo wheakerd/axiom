@@ -19,7 +19,7 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
   instruction source could control the same scope.
 - The task asks to reorganize, rewrite, migrate, or audit existing AGENTS guidance.
 - The task only validates an existing instruction system.
-- The task is about temporary session memory, effective-instruction updates, or runtime capsules.
+- The task is about a task record, a plan, a deferred decision, or an effective-instruction update.
 
 ## Required actions
 
@@ -73,7 +73,7 @@ Initialize a fresh, scoped AGENTS instruction system for a repository that has n
 - Do not invent commands, ownership, frameworks, domains, or validation steps.
 - Do not encode secrets, credentials, personal data, or temporary task discoveries.
 - Do not make AGENTS docs a substitute for checking impacted implementation files and tests.
-- Do not generate a validator harness, test suite, or runtime capsule by default.
+- Do not generate a validator harness, a test suite, or an empty memory home by default; a memory class gets its home and its registry line when it first has content.
 - Do not create nested `AGENTS.md` files unless a stable subproject boundary and a common host start path justify auto-loading them.
 - Do not create, edit, move, delete, migrate, or recommend a native host
   auto-load entry whose filename is not `AGENTS.md`.
