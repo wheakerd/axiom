@@ -29,13 +29,13 @@ Choose the smallest matching chain below. Every packaged reference is directly d
 - Audit instruction discovery or current structure: `references/inventory-audit.md`.
 - Initialize a repository with no writable AGENTS system: `references/project-initialization.md`.
 - Design or change route topology: `references/routing-architecture.md`.
-- Define document roles, metadata, references, or size contracts: `references/instruction-document-contracts.md`.
+- Define document roles, metadata, references, or size contracts: `references/instruction-document-contracts.md`; for a routed rule's frontmatter or body sections, also `references/routed-rule-shape.md`.
 - Migrate mixed or oversized existing guidance: `references/migration-policy.md`; add the document contract, and topology only when those decisions are part of the migration.
 - Maintain an existing system: read `references/maintenance/context-evidence.md` when the scope includes current or supplied task history, retrieval friction, or compacted evidence. Read `references/maintenance/authorization-and-safety.md` for unclear provenance or shadowing. Then select exactly one terminal owner: `references/maintenance/maintenance-application.md` for AGENTS guidance or `references/maintenance/repo-local-skills.md` for a supporting repo-local Skill.
 - Reconcile existing AGENTS guidance with current implementation only on an explicit `effective-instructions:reconcile` or `effective-instructions:reconcile-preview` invocation, or an explicit unambiguous request for that same operation. Read `references/maintenance/implementation-reconciliation.md`; this route may begin in a later fresh session.
 - Handle runtime capsules or a durable update trigger during or after ordinary work in the current task: `references/runtime-and-updates.md`; capsules live where `references/memory-and-state.md` places them. For `effective-instructions` and its preview, also read the context-evidence reference to establish the review window before selecting a terminal owner.
 - Decide where task state lives, size a grown instruction memory, or simplify addressing: `references/memory-and-state.md`.
-- Validate completed file changes or an explicitly requested route audit: `references/validation-reporting.md`, plus only the changed surface's contract owner.
+- Validate completed file changes or an explicitly requested route audit: `references/validation-reporting.md`, `references/routing-scenarios.md` for the scenario set that covers the change, and only the changed surface's contract owner.
 
 Conceptual or simple factual questions use this file only. A reference may narrow scope, permissions, or evidence; it cannot broaden authorization or weaken this file. Packaged Skill maintenance uses its owning product workflow instead.
 

@@ -20,9 +20,9 @@ Axiom 在宿主既有的信任模型之内提供工作流指令。它不为智�
 
 ## Hook 信任边界
 
-签入的处理器覆盖三个宿主文档记载的事件。`SessionStart` 从已安装的插件根目录读取 `skills/using-axiom/SKILL.md`；`UserPromptSubmit` 打印一句静态文本；`Stop` 从标准输入读取宿主的 Stop 事件，打印一个静态 JSON 对象，在每轮最多一次地陈述完成所依据的条件。在 POSIX 上，每个处理器只使用 shell 内建命令、`printf` 与 `cat`。在 Windows 上，Codex 调用由命令行内建命令构成的固定打包封装脚本；Stop 封装脚本还会以绝对系统路径运行 `findstr.exe`，没有任何封装脚本从工作目录或 `PATH` 解析程序。Claude Code 在 macOS 与 Linux 上把每条 POSIX 命令交给 `sh -c`，在 Windows 上交给 Git Bash。没有 Git Bash 时，Claude Code 会回退到 PowerShell，而这些命令不支持 PowerShell。每个处理器有五秒超时。确切命令与脚本见 [Hook 参考](../en/reference/hooks.md)。
+签入的处理器覆盖两个宿主文档记载的事件。`SessionStart` 从已安装的插件根目录读取 `skills/using-axiom/SKILL.md`；`UserPromptSubmit` 打印一句静态陈述。没有任何处理器读取宿主的事件输入、返回决定或让一轮继续。在 POSIX 上，每个处理器只使用 shell 内建命令、`printf` 与 `cat`。在 Windows 上，Codex 调用由命令行内建命令构成的固定打包封装脚本，没有任何封装脚本从工作目录或 `PATH` 解析程序。Claude Code 在 macOS 与 Linux 上把每条 POSIX 命令交给 `sh -c`，在 Windows 上交给 Git Bash。没有 Git Bash 时，Claude Code 会回退到 PowerShell，而这些命令不支持 PowerShell。每个处理器有五秒超时。确切命令与脚本见 [Hook 参考](../en/reference/hooks.md)。
 
-这些定义不包含写入、网络命令、后台启动、服务安装或更新器，也不会把会话中的任何内容读入上下文：提示与 Stop 输入只用于决定是否打印静态文本。Hook 给出一句陈述，由宿主模型决定；没有任何 Hook 会自行选择路由或授权动作。这里描述的是签入的文件；已安装的副本是另一个对象。Codex 会跳过新的或已更改的 Hook，直到你在 `/hooks` 中审阅并信任它，包括声明不变但打包脚本有改动的情况。Claude Code 没有按 Hook 的信任步骤；一旦 Axiom 在会话开始、会话内安装或插件重新加载时加载，其各个 Hook 会在各自的下一次事件时运行。
+这些定义不包含写入、网络命令、后台启动、服务安装或更新器，也不读取会话中的任何内容：没有任何处理器使用提示或其他事件输入。Hook 给出一句陈述，由宿主模型决定；没有任何 Hook 会自行选择路由或授权动作。这里描述的是签入的文件；已安装的副本是另一个对象。Codex 会跳过新的或已更改的 Hook，直到你在 `/hooks` 中审阅并信任它，包括声明不变但打包脚本有改动的情况。Claude Code 没有按 Hook 的信任步骤；一旦 Axiom 在会话开始、会话内安装或插件重新加载时加载，其各个 Hook 会在各自的下一次事件时运行。
 
 验证已安装的 Hook 是可选的。这是一项供应链检查，面向希望排除本仓库与已安装副本之间被篡改的审阅者，例如被修改的市场镜像、插件缓存或安装路径。把已安装的事件、匹配器、命令、路径、脚本与超时同 [Hook 参考](../en/reference/hooks.md)比对：在 Codex 中于 `/hooks` 信任该条目之前比对，在 Claude Code 中则在终端安装之后、会话开始之前，阅读 `~/.claude/plugins/cache/axiom/axiom/<version>/` 下已安装的 `hooks/claude-hooks.json`。如果二者不一致，在包与源码一致之前，在 Codex 中保持该 Hook 不受信任，或在 Claude Code 中禁用 Axiom，并且不要运行被更改的命令来探究它做什么。
 

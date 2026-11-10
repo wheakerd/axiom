@@ -7,7 +7,7 @@ import unittest
 import zlib
 from pathlib import Path
 
-from axiom_validation.context import EXPECTED_RELEASE_VERSION
+from axiom_validation.context import EXPECTED_RELEASE_VERSION, REPOSITORY_ROOT
 from axiom_validation.release_versions import (
     PRODUCTION_RELEASE_VERSION_CASES,
     parse_production_release_tag,
@@ -22,6 +22,7 @@ from axiom_validation.manifests import (
     catalog_source,
     catalog_source_keys,
     check_branding_image_file,
+    check_claude_directory_icon,
     check_codex_interface,
     check_distribution_identity,
     check_manifest_capability_schema,
@@ -273,6 +274,47 @@ class ManifestPolicyTests(unittest.TestCase):
         exact_failures = []
         check_codex_interface(documents, exact_failures)
         self.assertTrue(any("brandColor" in failure for failure in exact_failures))
+
+
+class ClaudeDirectoryIconTests(unittest.TestCase):
+    def validate(self, data: bytes | None, declared: str = "./assets/axiom-icon.png") -> list[str]:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            assets = root / "plugin" / "assets"
+            assets.mkdir(parents=True)
+            if data is not None:
+                (assets / "axiom-icon.png").write_bytes(data)
+            failures: list[str] = []
+            check_claude_directory_icon({"icon": declared}, root, failures)
+            return failures
+
+    def test_square_png_inside_the_directory_bounds_is_accepted(self):
+        for side in (512, 1024, 2048):
+            with self.subTest(side=side):
+                self.assertEqual([], self.validate(png_bytes(side, side)))
+
+    def test_out_of_bounds_missing_or_undeclared_icons_are_rejected(self):
+        cases = {
+            "too-small": (png_bytes(511, 511), "./assets/axiom-icon.png", "must be between"),
+            "too-large": (png_bytes(2049, 2049), "./assets/axiom-icon.png", "must be between"),
+            "not-square": (png_bytes(1024, 512), "./assets/axiom-icon.png", "must be square"),
+            "not-png": (jpeg_bytes(1024, 1024), "./assets/axiom-icon.png", "does not match PNG"),
+            "missing-file": (None, "./assets/axiom-icon.png", "existing regular file"),
+            "other-path": (png_bytes(1024, 1024), "./assets/axiom-mark.svg", "must be './assets/axiom-icon.png'"),
+        }
+        for name, (data, declared, expected) in cases.items():
+            with self.subTest(case=name):
+                failures = self.validate(data, declared)
+                self.assertTrue(any(expected in failure for failure in failures), failures)
+
+    def test_checked_in_icon_is_declared_and_valid(self):
+        failures: list[str] = []
+        check_claude_directory_icon(
+            load_json(REPOSITORY_ROOT / "plugin/.claude-plugin/plugin.json", failures),
+            REPOSITORY_ROOT,
+            failures,
+        )
+        self.assertEqual([], failures)
 
 
 class BrandingAssetPolicyTests(unittest.TestCase):

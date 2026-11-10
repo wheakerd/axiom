@@ -129,7 +129,7 @@ claude plugin uninstall axiom@axiom
 如果预期的 Axiom 能力不可用，或某个请求被错误地路由：
 
 1. 确认 Axiom 已安装并在宿主的插件列表中启用。
-2. 打开 `/hooks`，确认 `SessionStart`、`UserPromptSubmit` 与 `Stop` Hook 都存在且与[签入的参考](../../en/reference/hooks.md)一致；在 Codex 中，还要确认每一个都已被信任。
+2. 打开 `/hooks`，确认 `SessionStart` 与 `UserPromptSubmit` Hook 都存在且与[签入的参考](../../en/reference/hooks.md)一致；在 Codex 中，还要确认每一个都已被信任。
 3. 确认已安装的 Axiom 版本就是你打算测试的版本。
 4. 在任一宿主中开启一个新会话。
 5. 重试[快速开始](getting-started.md)中的一个只读路由请求与一个无路由对照请求。

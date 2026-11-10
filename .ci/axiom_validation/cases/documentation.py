@@ -140,8 +140,6 @@ def _hook_reference_drift() -> list[str]:
             "plugin/hooks/claude-hooks.json",
             "plugin/hooks/codex-session-start.cmd",
             "plugin/hooks/codex-prompt-submit.cmd",
-            "plugin/hooks/codex-stop-check.cmd",
-            "plugin/hooks/stop-check.sh",
             "docs/en/reference/hooks.md",
         ):
             destination = root / relative_path

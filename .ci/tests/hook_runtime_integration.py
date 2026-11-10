@@ -24,7 +24,7 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY_ROOT / ".ci"))
-from axiom_validation.hooks import PACKAGED_WRAPPERS, PROMPT_TEXT, STOP_TEXT  # noqa: E402
+from axiom_validation.hooks import PACKAGED_WRAPPERS, PROMPT_TEXT  # noqa: E402
 # The repository keeps the installed plugin under plugin/; the paths below are
 # relative to that plugin root, as each host resolves them after installation.
 PLUGIN_SOURCE_ROOT = REPOSITORY_ROOT / "plugin"
@@ -34,15 +34,12 @@ WINDOWS_WRAPPER = Path("hooks/codex-session-start.cmd")
 PACKAGED_SCRIPTS = tuple(
     Path(relative_path.removeprefix("plugin/")) for relative_path in PACKAGED_WRAPPERS
 )
-STOP_INACTIVE_INPUT = (
-    b'{"session_id":"s","hook_event_name":"Stop","stop_hook_active":false,'
-    b'"last_assistant_message":"OK"}'
+PROMPT_EVENT_CANARY = b"prompt-canary-7f3a"
+PROMPT_EVENT_INPUT = (
+    b'{"session_id":"s","hook_event_name":"UserPromptSubmit","prompt":"'
+    + PROMPT_EVENT_CANARY
+    + b'"}'
 )
-STOP_ACTIVE_INPUT = (
-    b'{"session_id":"s","hook_event_name":"Stop","stop_hook_active":true,'
-    b'"last_assistant_message":"The request is complete."}'
-)
-STOP_ACTIVE_SPACED_INPUT = b'{"hook_event_name": "Stop", "stop_hook_active": true}'
 SKILL_PATH = Path("skills/using-axiom/SKILL.md")
 HEADING = (
     "You have Axiom. Load this startup front door before deciding whether any "
@@ -404,14 +401,6 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
             claude,
         )
 
-    @staticmethod
-    def _json_object(result: HookResult) -> dict[str, object]:
-        text = result.stdout.decode("utf-8", errors="strict")
-        parsed = json.loads(text)
-        if not isinstance(parsed, dict):
-            raise AssertionError(f"hook stdout is not one JSON object: {text!r}")
-        return parsed
-
     def test_prompt_hooks_print_exactly_the_static_text(self) -> None:
         for invocation in self._lifecycle_invocations("UserPromptSubmit"):
             with self.subTest(hook=invocation.name):
@@ -423,30 +412,22 @@ class HookRuntimeIntegrationTests(unittest.TestCase):
                 self.assertFalse((self.home / "profile-ran").exists())
                 self.assertEqual([], list(self.workspace.iterdir()))
 
-    def test_stop_hooks_continue_once_then_allow_the_turn_to_end(self) -> None:
-        for invocation in self._lifecycle_invocations("Stop"):
-            with self.subTest(hook=invocation.name, stop_hook_active=False):
-                result = self._run(invocation, stdin_bytes=STOP_INACTIVE_INPUT)
+    def test_prompt_hooks_ignore_the_host_event_on_standard_input(self) -> None:
+        for invocation in self._lifecycle_invocations("UserPromptSubmit"):
+            with self.subTest(hook=invocation.name):
+                result = self._run(invocation, stdin_bytes=PROMPT_EVENT_INPUT)
                 self.assertEqual(0, result.returncode, result.stderr)
                 self.assertEqual(b"", result.stderr)
-                payload = self._json_object(result)
-                if invocation.name.startswith("claude"):
-                    self.assertEqual(
-                        {"hookSpecificOutput": {"hookEventName": "Stop", "additionalContext": STOP_TEXT}},
-                        payload,
-                    )
-                else:
-                    self.assertEqual({"decision": "block", "reason": STOP_TEXT}, payload)
-            for label, stdin_bytes in (
-                ("compact", STOP_ACTIVE_INPUT),
-                ("spaced", STOP_ACTIVE_SPACED_INPUT),
-            ):
-                with self.subTest(hook=invocation.name, stop_hook_active=label):
-                    result = self._run(invocation, stdin_bytes=stdin_bytes)
-                    self.assertEqual(0, result.returncode, result.stderr)
-                    self.assertEqual(b"", result.stderr)
-                    self.assertEqual({}, self._json_object(result))
-            self.assertEqual([], list(self.workspace.iterdir()))
+                self.assertNotIn(PROMPT_EVENT_CANARY, result.stdout)
+                lines = result.stdout.decode("utf-8", errors="strict").splitlines()
+                self.assertEqual([PROMPT_TEXT], lines)
+                self.assertEqual([], list(self.workspace.iterdir()))
+
+    def test_no_stop_event_is_declared_on_either_host(self) -> None:
+        self.assertNotIn("Stop", self.codex_handlers)
+        self.assertNotIn("Stop", self.claude_handlers)
+        self.assertEqual({"SessionStart", "UserPromptSubmit"}, set(self.codex_handlers))
+        self.assertEqual({"SessionStart", "UserPromptSubmit"}, set(self.claude_handlers))
 
     def test_exact_commands_expand_spaced_roots_and_preserve_skill_bytes(self) -> None:
         for invocation in self._invocations():

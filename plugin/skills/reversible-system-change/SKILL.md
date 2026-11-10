@@ -51,7 +51,7 @@ Command success, upload acceptance, a configuration write, or a process start pr
 
 ## Resume And Compaction Handoff
 
-After resume or compaction, reobserve the target and drift-sensitive state. Then fail closed unless host-native task context and current direct evidence from the owning system reconstruct the active phase, the exact current user authority, the frozen action envelope and complete write set, prior mutations and attempt identifiers, and the idempotency status. The same evidence must show phase-appropriate recovery evidence. Preparation resumes through its isolation and disposal gate; candidate or active-state mutation still requires current full rollback validation. If any required field is missing, stale, or inconsistent, perform zero new mutations. Never adopt post-change state as the prior rollback baseline. An unknown external outcome enters Verify only and must not be resent. Reestablish changed or missing evidence and obtain renewed authority; only an informed waiver that current host-native context still shows lifts its rollback requirement. Do not add a daemon, cache, telemetry, or persistent handoff tool to reconstruct the handoff.
+After resume or compaction, mutate nothing and read `references/resume-handoff.md` first. It owns what must be reconstructed, how an unknown outcome and an informed waiver are treated, and when renewed authority is required.
 
 ## Safety And Handoff
 

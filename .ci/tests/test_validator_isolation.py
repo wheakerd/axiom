@@ -32,7 +32,7 @@ EXPECTED_SUCCESS_SUMMARY = (
     f"{RUNTIME_INPUT_COUNT} canonical installed-runtime inputs, "
     "11 critical-path CODEOWNERS entries, 102 validator parser fixtures, "
     f"{TREE_VERSION}, 27 manifest schema fixtures, "
-    "13 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
+    "14 hook lifecycle fixtures, 3 pull-request event-graph fixtures, "
     "48 release-provenance fixtures, 20 immutable external action and image pins "
     "(0 Dockerfile base-image pins; 0 other Dockerfile input pins), hooks, and "
     "packaged skills."

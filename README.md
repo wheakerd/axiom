@@ -71,7 +71,7 @@ claude plugin install axiom@axiom
 
 Both marketplaces select the `release` branch, which holds only published versions: CI adds a version to it when its release is cut, and development commits on `main` never reach it.
 
-In Codex, start a new session and trust the three Hooks in `/hooks`: Codex skips a new or changed Hook until you do, and Axiom's routing begins after that step. Claude Code has no separate Hook trust step and runs each Hook at its next event after the plugin loads. On Windows, Claude Code needs Git Bash for the Hooks, and neither host has a recorded Windows observation yet; see [Compatibility](docs/en/compatibility.md#current-bounded-status). Verifying an installed Hook against its checked-in definition is an optional reviewer step described in the [Trust Model](docs/en/trust-model.md#hook-trust-boundary). The [Getting Started guide](docs/en/guides/getting-started.md) owns the full installation and first-use procedure.
+In Codex, start a new session and trust the two Hooks in `/hooks`: Codex skips a new or changed Hook until you do, and Axiom's routing begins after that step. Claude Code has no separate Hook trust step and runs each Hook at its next event after the plugin loads. On Windows, Claude Code needs Git Bash for the Hooks, and neither host has a recorded Windows observation yet; see [Compatibility](docs/en/compatibility.md#current-bounded-status). Verifying an installed Hook against its checked-in definition is an optional reviewer step described in the [Trust Model](docs/en/trust-model.md#hook-trust-boundary). The [Getting Started guide](docs/en/guides/getting-started.md) owns the full installation and first-use procedure.
 
 ## Updating
 
