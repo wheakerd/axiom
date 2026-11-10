@@ -22,10 +22,10 @@ HOOK_TIMEOUT_SECONDS = 5
 CLAUDE_HOOK_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS
 CODEX_HOOK_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS
 
-# The exact static texts the lifecycle hooks print. The Stop text travels as a JSON
-# string on both hosts, so it stays ASCII without quotes or backslashes.
-PROMPT_TEXT = 'Axiom: material ambiguity that context cannot resolve is clarified before acting.'
-STOP_TEXT = 'Axiom: completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'
+# The exact static text the UserPromptSubmit hook prints on both hosts. It stays ASCII
+# without quotes, backslashes, or command-shell special characters, so one text serves
+# the POSIX commands and the Windows wrapper.
+PROMPT_TEXT = 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'
 
 CLAUDE_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door "
@@ -37,25 +37,18 @@ CODEX_COMMAND = (
     "whether any Axiom skill applies:'; cat \"${PLUGIN_ROOT}/skills/using-axiom/SKILL.md\""
 )
 PROMPT_COMMAND = "printf '%s\\n' '" + PROMPT_TEXT + "'"
-CLAUDE_STOP_COMMAND = 'sh "${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh" claude'
-CODEX_STOP_COMMAND = 'sh "${PLUGIN_ROOT}/hooks/stop-check.sh" codex'
 
 CODEX_WINDOWS_WRAPPER_PATH = Path("plugin/hooks/codex-session-start.cmd")
 CODEX_WINDOWS_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-session-start.cmd"'
 CODEX_WINDOWS_PROMPT_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-prompt-submit.cmd"'
-CODEX_WINDOWS_STOP_COMMAND = r'"%PLUGIN_ROOT%\hooks\codex-stop-check.cmd"'
 CODEX_WINDOWS_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\necho You have Axiom. Load this startup front door before deciding whether any Axiom skill applies:\necho(\ntype "%~dp0..\\skills\\using-axiom\\SKILL.md"\n'
-CODEX_WINDOWS_PROMPT_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\necho Axiom: material ambiguity that context cannot resolve is clarified before acting.\n'
-CODEX_WINDOWS_STOP_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\n"%SystemRoot%\\System32\\findstr.exe" /R "stop_hook_active.:true stop_hook_active.:.true" >nul\nif not errorlevel 1 goto allow\necho {"decision":"block","reason":"Axiom: completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request."}\nexit /b 0\n:allow\necho {}\nexit /b 0\n'
-STOP_SCRIPT_TEXT = '#!/bin/sh\n# Axiom Stop check. Argument: claude or codex. Reads the host\'s Stop event JSON on stdin and prints JSON only.\n# When the host reports stop_hook_active true, this turn was already continued once: print an empty object and let it end.\ninput=$(cat)\ncase "$input" in\n  *\'"stop_hook_active":true\'*|*\'"stop_hook_active": true\'*) printf \'{}\\n\'; exit 0 ;;\nesac\ntext=\'Axiom: completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.\'\ncase "$1" in\n  claude) printf \'{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"%s"}}\\n\' "$text" ;;\n  codex) printf \'{"decision":"block","reason":"%s"}\\n\' "$text" ;;\n  *) printf \'{}\\n\' ;;\nesac\n'
+CODEX_WINDOWS_PROMPT_WRAPPER_TEXT = '@echo off\nsetlocal DisableDelayedExpansion\necho ' + PROMPT_TEXT + '\n'
 
 # Every packaged hook script, pinned byte for byte. A reviewer compares an installed
 # copy with these texts; the Hook Reference renders each one verbatim.
 PACKAGED_WRAPPERS: dict[str, str] = {
     "plugin/hooks/codex-session-start.cmd": CODEX_WINDOWS_WRAPPER_TEXT,
     "plugin/hooks/codex-prompt-submit.cmd": CODEX_WINDOWS_PROMPT_WRAPPER_TEXT,
-    "plugin/hooks/codex-stop-check.cmd": CODEX_WINDOWS_STOP_WRAPPER_TEXT,
-    "plugin/hooks/stop-check.sh": STOP_SCRIPT_TEXT,
 }
 
 SESSION_START_MATCHER = "startup|resume|clear|compact|fork"
@@ -80,15 +73,6 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
                 "statusMessage": "Axiom prompt check",
             },
         },
-        "Stop": {
-            "handler": {
-                "type": "command",
-                "command": CODEX_STOP_COMMAND,
-                "commandWindows": CODEX_WINDOWS_STOP_COMMAND,
-                "timeout": HOOK_TIMEOUT_SECONDS,
-                "statusMessage": "Axiom completion check",
-            },
-        },
     },
     "plugin/hooks/claude-hooks.json": {
         "SessionStart": {
@@ -106,14 +90,6 @@ APPROVED_HOOKS: dict[str, dict[str, dict[str, Any]]] = {
                 "command": PROMPT_COMMAND,
                 "timeout": HOOK_TIMEOUT_SECONDS,
                 "statusMessage": "Axiom prompt check",
-            },
-        },
-        "Stop": {
-            "handler": {
-                "type": "command",
-                "command": CLAUDE_STOP_COMMAND,
-                "timeout": HOOK_TIMEOUT_SECONDS,
-                "statusMessage": "Axiom completion check",
             },
         },
     },

@@ -15,9 +15,9 @@ def check_hook_lifecycle_fixtures(
     documents: dict[str, dict[str, Any]], failures: list[str]
 ) -> int:
     """Prove the hook contract rejects event, command, matcher, and wrapper drift."""
-    required = {"plugin/hooks/codex-hooks.json"}
+    required = {"plugin/hooks/codex-hooks.json", "plugin/hooks/claude-hooks.json"}
     if not required.issubset(documents):
-        failures.append("hook lifecycle fixtures require the Codex hook document")
+        failures.append("hook lifecycle fixtures require both hook documents")
         return 0
 
     fixtures: list[tuple[str, dict[str, dict[str, Any]], str]] = []
@@ -72,14 +72,14 @@ def check_hook_lifecycle_fixtures(
         ] = command
         fixtures.append((name, fixture, "must invoke only the approved packaged wrapper"))
 
-    stop_windows_powershell = json.loads(json.dumps(documents))
-    stop_windows_powershell["plugin/hooks/codex-hooks.json"]["hooks"]["Stop"][0]["hooks"][0][
-        "commandWindows"
-    ] = "powershell -NoProfile -Command echo unsafe"
+    prompt_windows_powershell = json.loads(json.dumps(documents))
+    prompt_windows_powershell["plugin/hooks/codex-hooks.json"]["hooks"]["UserPromptSubmit"][0][
+        "hooks"
+    ][0]["commandWindows"] = "powershell -NoProfile -Command echo unsafe"
     fixtures.append(
         (
-            "codex-stop-windows-powershell",
-            stop_windows_powershell,
+            "codex-prompt-windows-powershell",
+            prompt_windows_powershell,
             "must invoke only the approved packaged wrapper",
         )
     )
@@ -90,15 +90,27 @@ def check_hook_lifecycle_fixtures(
     ]["command"] += "; curl https://example.invalid/update"
     fixtures.append(("codex-prompt-network-expansion", prompt_network, ".command changed"))
 
-    stop_with_matcher = json.loads(json.dumps(documents))
-    stop_with_matcher["plugin/hooks/codex-hooks.json"]["hooks"]["Stop"][0]["matcher"] = ".*"
-    fixtures.append(("codex-stop-unexpected-matcher", stop_with_matcher, "keys changed"))
+    prompt_with_matcher = json.loads(json.dumps(documents))
+    prompt_with_matcher["plugin/hooks/codex-hooks.json"]["hooks"]["UserPromptSubmit"][0][
+        "matcher"
+    ] = ".*"
+    fixtures.append(("codex-prompt-unexpected-matcher", prompt_with_matcher, "keys changed"))
 
-    claude_stop_plain_cat = json.loads(json.dumps(documents))
-    claude_stop_plain_cat["plugin/hooks/claude-hooks.json"]["hooks"]["Stop"][0]["hooks"][0][
-        "command"
-    ] = 'cat "${CLAUDE_PLUGIN_ROOT}/skills/using-axiom/SKILL.md"'
-    fixtures.append(("claude-stop-gate-injection", claude_stop_plain_cat, ".command changed"))
+    for hook_file in ("plugin/hooks/codex-hooks.json", "plugin/hooks/claude-hooks.json"):
+        restored_stop = json.loads(json.dumps(documents))
+        restored_stop[hook_file]["hooks"]["Stop"] = [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "printf '%s\\n' '{\"decision\":\"block\",\"reason\":\"continue\"}'",
+                        "timeout": 5,
+                    }
+                ]
+            }
+        ]
+        host = "codex" if "codex" in hook_file else "claude"
+        fixtures.append((f"{host}-stop-continuation-restored", restored_stop, "event set changed"))
 
     unbounded_timeout = json.loads(json.dumps(documents))
     unbounded_timeout["plugin/hooks/codex-hooks.json"]["hooks"]["SessionStart"][0]["hooks"][

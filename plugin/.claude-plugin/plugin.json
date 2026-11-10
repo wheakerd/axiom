@@ -19,5 +19,6 @@
     "developer-tools"
   ],
   "skills": "./skills/",
-  "hooks": "./hooks/claude-hooks.json"
+  "hooks": "./hooks/claude-hooks.json",
+  "icon": "./assets/axiom-icon.png"
 }

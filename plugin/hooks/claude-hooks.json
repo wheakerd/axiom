@@ -1,5 +1,5 @@
 {
-  "description": "Load Axiom's documented routing gate at Claude Code session start, and print Axiom's static checks when a prompt arrives and before the turn ends.",
+  "description": "Load Axiom's documented routing gate at Claude Code session start, and print Axiom's static statement when a prompt arrives.",
   "hooks": {
     "SessionStart": [
       {
@@ -19,21 +19,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '%s\\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting.'",
+            "command": "printf '%s\\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'",
             "timeout": 5,
             "statusMessage": "Axiom prompt check"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh\" claude",
-            "timeout": 5,
-            "statusMessage": "Axiom completion check"
           }
         ]
       }

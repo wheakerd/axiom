@@ -40,7 +40,7 @@ The Claude Code plugin loads the same skills and routes. Invoke any skill in pla
 
 ## Trust The Hook
 
-Codex skips a new or changed Hook until you review and trust its exact definition: in the new session, open `/hooks`, read the three Axiom entries (`SessionStart`, `UserPromptSubmit`, and `Stop`), and trust them. Axiom's routing begins after that step. Claude Code has no separate Hook trust step: once the plugin loads, the `SessionStart` Hook runs at the next session event, such as a new session, `/clear`, `/resume`, a fork, or compaction, the `UserPromptSubmit` Hook runs before each prompt, the `Stop` Hook runs before each turn ends, and `/hooks` shows the loaded entries. Verifying the installed definition against the [Hook Reference](../reference/hooks.md) is an optional check for reviewers; the [Trust Model](../trust-model.md#hook-trust-boundary) describes when it matters and what to do if the definitions differ.
+Codex skips a new or changed Hook until you review and trust its exact definition: in the new session, open `/hooks`, read the two Axiom entries (`SessionStart` and `UserPromptSubmit`), and trust them. Axiom's routing begins after that step. Claude Code has no separate Hook trust step: once the plugin loads, the `SessionStart` Hook runs at the next session event, such as a new session, `/clear`, `/resume`, a fork, or compaction, the `UserPromptSubmit` Hook runs before each prompt, and `/hooks` shows the loaded entries. Verifying the installed definition against the [Hook Reference](../reference/hooks.md) is an optional check for reviewers; the [Trust Model](../trust-model.md#hook-trust-boundary) describes when it matters and what to do if the definitions differ.
 
 ## Try One Routed Request
 

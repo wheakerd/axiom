@@ -78,56 +78,9 @@ A group index contains no coding standards, architecture summaries, copied rule
 bodies, validation matrices, or descendant catalogs. Create one only for an
 evidence-backed stable axis with multiple reachable owners.
 
-## Routed Rule Metadata
+## Routed Rule Shape
 
-Use compact frontmatter and remove empty fields:
-
-```yaml
----
-id: domain.example.implementation
-kind: group-index | domain-entry | rule-leaf | risk-rule-leaf | maintenance
-scope:
-  paths:
-    - "src/example/**"
-  tasks:
-    - feature
-load_when:
-  - "Modify production code under src/example"
-do_not_load_when:
-  - "Only editing unrelated docs"
-requires:
-  - concern.security
-source_of_truth:
-  - "docs/example-architecture.md"
----
-```
-
-Keep IDs globally unique and keep `requires` acyclic. Omit fields that do not
-improve routing.
-
-`last_verified` is optional. Add it only as the receipt of a completed semantic
-audit that names what was checked. A date, modification time, or copied value
-does not prove that instructions remain correct.
-
-## Rule Body Contract
-
-Use only the sections needed by the responsibility:
-
-- Purpose.
-- Apply when.
-- Do not apply when.
-- Required actions.
-- Prohibited actions.
-- Validation.
-- References.
-
-Write short imperative rules with concrete scope and verifiable actions. Link
-to authoritative project docs rather than copying them. Do not invent commands,
-owners, paths, frameworks, or validation steps.
-
-A direct domain entry is a terminal rule leaf reached directly by one unique,
-evidence-backed domain signal. A risk-rule leaf contains only cross-cutting
-safety or risk constraints and loads only from an explicit matching signal.
+Before writing or validating a routed rule's frontmatter or body sections, read `routed-rule-shape.md`. It owns the metadata schema, the `requires` and `last_verified` rules, the body sections, and the definitions of a direct domain entry and a risk-rule leaf.
 
 ## Parent-Owned Reference Contract
 
@@ -197,6 +150,7 @@ These are Axiom authoring rules, not claims about a universal host hard limit.
 
 ## References
 
+- `routed-rule-shape.md`
 - `routing-architecture.md`
 - `project-initialization.md`
 - `migration-policy.md`

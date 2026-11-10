@@ -10,7 +10,6 @@ from axiom_validation.hooks import (
     CODEX_WINDOWS_WRAPPER_TEXT,
     PACKAGED_WRAPPERS,
     PROMPT_TEXT,
-    STOP_TEXT,
     check_codex_windows_hook_security,
     check_declared_hook_paths,
     check_exact_hook_shapes,
@@ -41,7 +40,7 @@ class HookPolicyTests(unittest.TestCase):
     def test_lifecycle_mutations_are_rejected(self):
         failures = []
         count = check_hook_lifecycle_fixtures(self.documents(), failures)
-        self.assertEqual(13, count)
+        self.assertEqual(14, count)
         self.assertEqual([], failures)
 
     def test_windows_hook_uses_packaged_wrapper_with_bounded_timeout(self):
@@ -66,19 +65,24 @@ class HookPolicyTests(unittest.TestCase):
                 self.assertNotIn("powershell", approved_text.casefold())
                 self.assertNotIn("curl", approved_text.casefold())
 
-    def test_lifecycle_texts_are_plain_json_safe_ascii(self):
-        for text in (PROMPT_TEXT, STOP_TEXT):
-            with self.subTest(text=text[:24]):
-                self.assertTrue(text.isascii())
-                for forbidden in ('"', "\\", "&", "|", "<", ">", "^", "%", "!", "(", ")"):
-                    self.assertNotIn(forbidden, text)
-                self.assertLess(len(text), 600)
+    def test_prompt_text_is_plain_shell_safe_ascii(self):
+        self.assertTrue(PROMPT_TEXT.isascii())
+        for forbidden in ('"', "'", "\\", "&", "|", "<", ">", "^", "%", "!", "(", ")"):
+            self.assertNotIn(forbidden, PROMPT_TEXT)
+        self.assertLess(len(PROMPT_TEXT), 600)
         for document_path in ("plugin/hooks/codex-hooks.json", "plugin/hooks/claude-hooks.json"):
             hooks = self.documents()[document_path]["hooks"]
-            self.assertEqual({"SessionStart", "UserPromptSubmit", "Stop"}, set(hooks))
-            for event in ("UserPromptSubmit", "Stop"):
-                self.assertNotIn("matcher", hooks[event][0])
+            self.assertEqual({"SessionStart", "UserPromptSubmit"}, set(hooks))
+            self.assertNotIn("matcher", hooks["UserPromptSubmit"][0])
 
+    def test_no_handler_continues_a_turn(self):
+        for document_path in ("plugin/hooks/codex-hooks.json", "plugin/hooks/claude-hooks.json"):
+            text = (REPOSITORY_ROOT / document_path).read_text(encoding="utf-8")
+            with self.subTest(document=document_path):
+                self.assertNotIn("decision", text)
+                self.assertNotIn("additionalContext", text)
+        self.assertFalse((REPOSITORY_ROOT / "plugin/hooks/stop-check.sh").exists())
+        self.assertFalse((REPOSITORY_ROOT / "plugin/hooks/codex-stop-check.cmd").exists())
 
 if __name__ == "__main__":
     unittest.main()

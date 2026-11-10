@@ -85,8 +85,7 @@ def check_documented_hook_command_text(
         for block in block_set
         if "PLUGIN_ROOT" in block
         or "%~dp0" in block
-        or "stop_hook_active" in block
-        or "Axiom: before acting" in block
+        or "Axiom:" in block
     }
     for command in sorted(documented_hook_commands - set(expected)):
         failures.append(

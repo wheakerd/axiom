@@ -98,8 +98,16 @@ CLAUDE_MANIFEST_KEYS = frozenset(
         "keywords",
         "skills",
         "hooks",
+        "icon",
     }
 )
+# Anthropic's plugin directory reads this listing icon; Claude Code itself does not.
+# The bounds follow the strict validator of Claude Code 2.1.311: a square PNG, 512 to
+# 2048 pixels on each side, under 2 MB.
+EXPECTED_CLAUDE_ICON_PATH = "./assets/axiom-icon.png"
+CLAUDE_ICON_MIN_DIMENSION = 512
+CLAUDE_ICON_MAX_DIMENSION = 2048
+CLAUDE_ICON_MAX_BYTES = 2 * 1000 * 1000
 CLAUDE_MARKETPLACE_KEYS = frozenset({"name", "owner", "description", "plugins"})
 CLAUDE_MARKETPLACE_PLUGIN_KEYS = frozenset({"name", "source", "description", "category"})
 EXPECTED_CLAUDE_CATEGORY = "productivity"
@@ -723,6 +731,39 @@ def check_branding_image_file(path: Path, label: str, failures: list[str]) -> No
         )
 
 
+def check_claude_directory_icon(
+    manifest: dict[str, Any], repository_root: Path, failures: list[str]
+) -> None:
+    label = "plugin/.claude-plugin/plugin.json.icon"
+    raw_path = manifest.get("icon")
+    if raw_path != EXPECTED_CLAUDE_ICON_PATH:
+        failures.append(f"{label} must be {EXPECTED_CLAUDE_ICON_PATH!r}")
+    path = resolve_declared_asset(repository_root / "plugin", raw_path, label, failures)
+    if path is None:
+        return
+    if path.suffix != ".png":
+        failures.append(f"{label} must reference a .png file")
+        return
+    try:
+        data = path.read_bytes()
+    except OSError as error:
+        failures.append(f"{label} cannot be read: {error}")
+        return
+    if len(data) >= CLAUDE_ICON_MAX_BYTES:
+        failures.append(f"{label} must be smaller than {CLAUDE_ICON_MAX_BYTES} bytes")
+    dimensions = _check_png(data, label, failures)
+    if dimensions is None:
+        return
+    width, height = dimensions
+    if width != height:
+        failures.append(f"{label} must be square; found {width}x{height}")
+    if not CLAUDE_ICON_MIN_DIMENSION <= width <= CLAUDE_ICON_MAX_DIMENSION:
+        failures.append(
+            f"{label} must be between {CLAUDE_ICON_MIN_DIMENSION} and "
+            f"{CLAUDE_ICON_MAX_DIMENSION} pixels on each side; found {width}x{height}"
+        )
+
+
 def check_codex_listing_contract(
     interface: dict[str, Any], repository_root: Path, failures: list[str]
 ) -> None:
@@ -959,6 +1000,7 @@ def check_manifest_capability_schema(
         if author is not None:
             require_json_strings(author, AUTHOR_KEYS, f"{claude_path}.author", failures)
         require_json_string_list(claude.get("keywords"), f"{claude_path}.keywords", failures)
+        check_claude_directory_icon(claude, repository_root, failures)
 
     check_claude_marketplace(documents, failures, repository_root)
 

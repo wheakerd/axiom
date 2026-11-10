@@ -129,7 +129,7 @@ After a change on either host, start a new session. In Claude Code, `/reload-plu
 If expected Axiom capabilities are unavailable or a request routes incorrectly:
 
 1. Confirm that Axiom is installed and enabled in the host's plugin list.
-2. Open `/hooks` and confirm that the `SessionStart`, `UserPromptSubmit`, and `Stop` Hooks are present and identical to the [checked-in reference](../reference/hooks.md); in Codex, also confirm that each is trusted.
+2. Open `/hooks` and confirm that the `SessionStart` and `UserPromptSubmit` Hooks are present and identical to the [checked-in reference](../reference/hooks.md); in Codex, also confirm that each is trusted.
 3. Confirm that the installed Axiom version is the version you intended to test.
 4. Start a fresh session in either host.
 5. Retry one read-only routed request and one no-route control from [Getting Started](getting-started.md).
