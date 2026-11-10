@@ -2,14 +2,15 @@
 
 ## Purpose
 
-Handle long-task state and user-triggered durable instruction updates.
+Handle durable instruction updates, whether the user triggers one or a completed task does, and say where task state is kept.
 
 ## Apply when
 
 - An AGENTS Architect workflow is already active for a target repository's AGENTS instruction architecture.
 - A durable update trigger follows ordinary work in the current task, even when
   AGENTS Architect was not active for the earlier work.
-- The active AGENTS task risks context compaction.
+- A task that changed files completes in a clone with accepted project memory; `completion-maintenance.md` owns that step.
+- A task risks context compaction; `task-records.md` owns the record.
 - During that active task, the user says exactly `effective-instructions`.
 - During that active task, the user says exactly `effective-instructions:preview`.
 - During that active task, the user says exactly `effective-instructions:refactor`.
@@ -25,7 +26,7 @@ Handle long-task state and user-triggered durable instruction updates.
 
 ## Do not apply when
 
-- No trigger phrase is present and the task is short.
+- No mode was explicitly requested, and the task was read-only or ended with nothing to record. An explicitly requested mode still runs after a read-only investigation.
 - Reconciliation was not explicitly requested. Implementation drift or an
   execution or context discontinuity is only possible evidence after
   activation, never an activation signal.
@@ -34,14 +35,9 @@ Handle long-task state and user-triggered durable instruction updates.
 - The task is Axiom repository maintenance; follow the active repository's higher-priority maintenance instructions instead of this target-repository workflow unless the user explicitly invokes the agents-architect skill for a target AGENTS architecture task.
 - The task would update protected plugin or skill metadata as AGENTS routing content.
 
-## Runtime capsules
+## Task records
 
-Create a capsule only for a mutating, long-running AGENTS task that risks
-losing critical state, never during a strictly read-only task. Its location,
-contents, size target, and lifecycle are defined once in `memory-and-state.md`:
-resolve the state directory through Git metadata, never under `.agents/`.
-Delete or mark obsolete when complete. Future sessions must not auto-load old
-capsules.
+A task that changes files and may outlive its session keeps a plan and a task record; a read-only or one-step task keeps neither. `memory-and-state.md` owns where they live and `task-records.md` owns their contents, when they are written, how a later session restores from them, and their removal at completion. A session opens a task record only for the task it continues.
 
 ## Effective instruction modes
 
@@ -103,8 +99,7 @@ already loaded for the current run. Treat the edit as durable input for later
 in-scope runs. Report fresh host loading as verified only when it was directly
 checked in a new run or session; otherwise say it was not checked or could
 not be checked.
-A runtime capsule, when justified, carries current-task state; a durable AGENTS
-update does not replace that role.
+A task record carries current-task state; a durable AGENTS update does not replace that role.
 
 ## Report required
 
@@ -117,7 +112,7 @@ For every triggered update, report:
 - Affected routes.
 - Byte changes.
 - Git tracking or ignore state.
-- Task-state location when a capsule or generated file was created or removed.
+- Plans, task records, and deferred entries created, updated, or removed, with their paths.
 - Validation results.
 - Current-run versus later-run activation status, including whether fresh host
   loading was verified, not checked, or could not be checked.
@@ -129,7 +124,7 @@ defined by `maintenance/implementation-reconciliation.md` instead.
 ## Prohibited actions
 
 - Do not persist secrets.
-- Do not persist single-task preferences by default.
+- Do not write a single-task preference as a durable rule or a working agreement; it stays in the task record until the user repeats or states it.
 - Do not keep conflicting durable versions.
 - Do not use file counts, tool counts, duration, or context compaction alone as
   evidence that AGENTS guidance is incomplete.

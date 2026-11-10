@@ -50,7 +50,7 @@
 
 [Agents Architect](../../plugin/skills/agents-architect/SKILL.md) 清点元数据、加载相关主题，并把编辑限制在获授权的指令系统之内。它区分生效中的指令与复制或历史材料，并对宿主发现的非 AGENTS 指令候选保持只读。该请求不授权无关的源码编辑、受保护的插件元数据、提交或推送。
 
-会话胶囊之类的任务状态位于仓库的 Git 元数据中，在被索引的工作树之外；[记忆与状态参考](../../plugin/skills/agents-architect/references/memory-and-state.md)负责该位置、记忆层级与扁平注册表。
+项目记忆位于 `AGENTS.md` 与被路由到的 `.agents/` 文件中：持久规则、工作约定、暂缓决定与计划受 Git 跟踪，任务记录则留在本地的 `.agents/local/` 下。[记忆与状态参考](../../plugin/skills/agents-architect/references/memory-and-state.md)负责这些类别、它们的存放位置与扁平注册表。
 
 显式的 `effective-instructions:reconcile-preview` 请求一次与实现的只读比较；`effective-instructions:reconcile` 请求一次获授权的指令系统更新。普通的维护、回滚或压缩不会隐式选中这些模式。
 

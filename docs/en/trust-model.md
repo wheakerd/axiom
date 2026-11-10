@@ -16,7 +16,7 @@ Axiom provides workflow instructions within the host's existing trust model. It 
 | Evidence | Observe the layer that owns the outcome; a plan, artifact, accepted request, or successful command alone may be insufficient |
 | Usage measurement | Host metrics apply only to their stated scope; bytes, words, route sizes, and tool calls are proxies |
 | Updates | Codex or Claude Code controls refresh and installation; Axiom does not run an updater |
-| Repository state | Two routes keep task state in a target repository's Git metadata directory and backup refs; it stays until you remove it |
+| Repository state | `traceable-git-submit` keeps task state in a target repository's Git metadata directory and backup refs, and `agents-architect` keeps project memory in `AGENTS.md` and `.agents/`; both stay until removed |
 
 ## Hook Trust Boundary
 
@@ -62,10 +62,9 @@ Startup routing is read-only and foreground. Axiom installs no daemon, watcher, 
 
 ## Repository State Written By Routes
 
-Two routes keep task state inside the target repository's Git metadata directory. They resolve the location through `git rev-parse --git-path` instead of a hand-built path, so `git status`, `.gitignore`, and code search never show it:
+`traceable-git-submit` keeps task state inside the target repository's Git metadata directory. It resolves the location through `git rev-parse --git-path` instead of a hand-built path, so `git status`, `.gitignore`, and code search never show it:
 
 - `traceable-git-submit` writes `axiom/traceable-git-submit-baseline.json`, an advisory cache of the last pushed upstream state, and `axiom/traceable-git-submit-active-checkpoints.json`, the active checkpoint record, under the Git directory during a checkpoint, baseline, consolidation, or recovery workflow. Before a history-replacing operation it creates one backup ref under `refs/axiom/backups/traceable-git-submit/<unique-id>`.
-- `agents-architect` writes session capsules named `session-<unique-id>.md` and generated material under `axiom/agents-architect/` in the Git directory during instruction-system maintenance, and deletes them or marks them obsolete at completion.
 
 Nothing removes these files when a task stops early, and the baseline cache is meant to persist between tasks. A backup ref keeps its objects reachable and travels with `git push --mirror` and `git clone --mirror`. List them with:
 
@@ -74,4 +73,6 @@ git rev-parse --path-format=absolute --git-path axiom
 git for-each-ref refs/axiom/
 ```
 
-Remove a state file with your shell when no Axiom task is active, and delete a verified backup ref with `git update-ref -d <ref>`. Task state never goes under the installed plugin root or the repository's `.agents/`, `.claude/`, or `.codex/` directories. `agents-architect` edits instruction files there only as the requested change, and may list user-local rule directories such as `.agents/local/` in `.git/info/exclude`.
+Remove a state file with your shell when no Axiom task is active, and delete a verified backup ref with `git update-ref -d <ref>`.
+
+`agents-architect` keeps project memory in the working tree, inside `AGENTS.md` and routed `.agents/` files only. In a clone where you accepted project memory, it writes three classes without asking when a task that changed files completes, and reports each write: deferred decisions and plans, tracked under `.agents/memory/`, and task records under `.agents/local/`, which a `.gitignore` file inside that directory keeps out of Git. It proposes a durable rule or a working agreement and writes it only after you confirm. It never edits code, tests, documentation, or Git metadata as memory maintenance, writes nothing in a repository without project memory, asks once before its first automatic write in a clone where project memory exists but you have not accepted it, and stores nothing under the installed plugin root, `.claude/`, `.codex/`, or a host's private memory. Versions before this one kept session capsules under `axiom/agents-architect/` in the Git directory; a later task carries a live one into its task record and reports its path, and removing the capsule is your own step.

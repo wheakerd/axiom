@@ -1,11 +1,11 @@
 ---
 name: agents-architect
-description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, and repo-local .agents/skills or .claude/skills. Also run an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Writes only AGENTS.md; a Claude Code project that has a CLAUDE.md does not load AGENTS.md, so there the skill stops and says so. Not for packaged plugin Skills or plain documentation.
+description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, project memory, and repo-local .agents/skills or .claude/skills, including memory maintenance when a task that changed files completes in a repository that has project memory and leaves something to record, propose, or remove. Also run an explicit effective-instructions, effective-instructions:preview, effective-instructions:refactor, effective-instructions:force, effective-instructions:reconcile, or effective-instructions:reconcile-preview mode. Writes only AGENTS.md and routed .agents files; a Claude Code project that has a CLAUDE.md does not load AGENTS.md, so there the skill stops and says so. Not for packaged plugin Skills or plain documentation.
 ---
 
 # AGENTS Architect
 
-Build a scoped instruction system in which root `AGENTS.md` is a small control plane and detailed project rules have explicit, on-demand owners. Axiom supplies the options; the host's model makes the decisions and records each departure from a default with its reason.
+Build a scoped instruction system in which root `AGENTS.md` is a small control plane, detailed project rules have explicit, on-demand owners, and project memory stays current. Axiom supplies the options; the host's model makes the decisions and records each departure from a default with its reason.
 
 ## Invariants
 
@@ -15,8 +15,10 @@ These invariants bind in every phase, including the references that phase loads.
 2. **Only `AGENTS.md` is written.** Create, edit, move, or recommend only files named `AGENTS.md` as native auto-load entries. Treat host-discovered non-`AGENTS.md` instruction sources as read-only, and safe-stop with the exact path when one shadows the intended result.
 3. **Loading is proven, not assumed.** Do not recursively read Markdown or `.agents/`, assume include syntax, or treat filesystem presence as proof that the current session loaded a file. For a scoped ignored instruction file, resolve its tracked or ignored state and exact ignore owner, then compare direct content before and after; a clean tracked diff is insufficient.
 4. **One owner per rule, nothing of Axiom's.** Root receives repository-wide constraints and each scoped rule lives in one routed owner, parent reference, or closer nested `AGENTS.md`. Never copy Axiom triggers, generic routing, language handling, validation protocols, report templates, or packaged Skill rules into a target system, and never fill a visible host limit merely because space is available.
-5. **Unrelated work and durable evidence.** Do not reset, stash, clean, auto-commit, auto-push, rewrite history, or create a validator harness unless explicitly authorized. Persist only durable project evidence admitted by the active update route; never turn one-off task discoveries into permanent instructions.
+5. **Unrelated work and durable evidence.** Do not reset, stash, clean, auto-commit, auto-push, rewrite history, or create a validator harness unless explicitly authorized. Admit to durable rules and working agreements only durable project evidence, through the active update route; task state goes to its own memory class, and a one-off task discovery never becomes a permanent instruction.
 6. **Protected metadata is not an AGENTS branch.** `.codex-plugin/**`, `.claude-plugin/**`, `.agents/plugins/**`, `skills/**`, `hooks/**`, plugin assets, `.app.json`, `.mcp.json`, and installed or plugin Skill resources are protected plugin metadata. Repo-local `.agents/skills/**` and `.claude/skills/**` enter this workflow only when the user explicitly scopes them as part of the target repository's AGENTS system.
+
+7. **Memory writes are tiered and bounded.** In a clone whose project memory the user accepted, deferred decisions, plans, and task records are written without asking and reported; a route or files that merely exist are not acceptance. A durable rule or a working agreement is written only after the user confirms it. Proactive writes touch only `AGENTS.md` and routed `.agents/**`; obsolete code, tests, or documents are reported, never removed by this skill.
 
 ## First Action
 
@@ -33,8 +35,10 @@ Choose the smallest matching chain below. Every packaged reference is directly d
 - Migrate mixed or oversized existing guidance: `references/migration-policy.md`; add the document contract, and topology only when those decisions are part of the migration.
 - Maintain an existing system: read `references/maintenance/context-evidence.md` when the scope includes current or supplied task history, retrieval friction, or compacted evidence. Read `references/maintenance/authorization-and-safety.md` for unclear provenance or shadowing. Then select exactly one terminal owner: `references/maintenance/maintenance-application.md` for AGENTS guidance or `references/maintenance/repo-local-skills.md` for a supporting repo-local Skill.
 - Reconcile existing AGENTS guidance with current implementation only on an explicit `effective-instructions:reconcile` or `effective-instructions:reconcile-preview` invocation, or an explicit unambiguous request for that same operation. Read `references/maintenance/implementation-reconciliation.md`; this route may begin in a later fresh session.
-- Handle runtime capsules or a durable update trigger during or after ordinary work in the current task: `references/runtime-and-updates.md`; capsules live where `references/memory-and-state.md` places them. For `effective-instructions` and its preview, also read the context-evidence reference to establish the review window before selecting a terminal owner.
-- Decide where task state lives, size a grown instruction memory, or simplify addressing: `references/memory-and-state.md`.
+- A task that changed files completes, or the user asks to update project memory: `references/completion-maintenance.md`.
+- Create, restore, or expire a plan or a task record, including before and after compaction, or record a deferred decision: `references/task-records.md`.
+- Run an `effective-instructions` mode or handle another durable update trigger in the current task: `references/runtime-and-updates.md`. For `effective-instructions` and its preview, also read the context-evidence reference to establish the review window before selecting a terminal owner.
+- Decide where a memory class lives, register it, size a grown instruction memory, or simplify addressing: `references/memory-and-state.md`.
 - Validate completed file changes or an explicitly requested route audit: `references/validation-reporting.md`, `references/routing-scenarios.md` for the scenario set that covers the change, and only the changed surface's contract owner.
 
 Conceptual or simple factual questions use this file only. A reference may narrow scope, permissions, or evidence; it cannot broaden authorization or weaken this file. Packaged Skill maintenance uses its owning product workflow instead.

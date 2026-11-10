@@ -16,7 +16,7 @@ Axiom 在宿主既有的信任模型之内提供工作流指令。它不为智�
 | 证据 | 观察拥有该结果的那一层；仅有计划、产物、被接受的请求或成功的命令可能并不充分 |
 | 用量度量 | 宿主指标只适用于其声明的范围；字节数、词数、路由大小与工具调用次数都是代理指标 |
 | 更新 | 由 Codex 或 Claude Code 控制刷新与安装；Axiom 不运行更新器 |
-| 仓库状态 | 两条路由把任务状态保存在目标仓库的 Git 元数据目录与备份引用中；在你移除之前它会一直保留 |
+| 仓库状态 | `traceable-git-submit` 把任务状态保存在目标仓库的 Git 元数据目录与备份引用中，`agents-architect` 把项目记忆保存在 `AGENTS.md` 与 `.agents/` 中；在被移除之前两者都会一直保留 |
 
 ## Hook 信任边界
 
@@ -62,10 +62,9 @@ Axiom 不捆绑凭证存储或认证服务。凭证仍归拥有它们的宿主�
 
 ## 路由写入的仓库状态
 
-两条路由把任务状态保存在目标仓库的 Git 元数据目录之内。它们通过 `git rev-parse --git-path` 解析位置，而不是手工拼出路径，因此 `git status`、`.gitignore` 与代码搜索永远不会显示它：
+`traceable-git-submit` 把任务状态保存在目标仓库的 Git 元数据目录之内。它通过 `git rev-parse --git-path` 解析位置，而不是手工拼出路径，因此 `git status`、`.gitignore` 与代码搜索永远不会显示它：
 
 - `traceable-git-submit` 在检查点、基线、合并整理或恢复工作流期间，在 Git 目录下写入 `axiom/traceable-git-submit-baseline.json`，即最近一次已推送上游状态的参考性缓存，以及 `axiom/traceable-git-submit-active-checkpoints.json`，即活动检查点记录。在替换历史的操作之前，它会在 `refs/axiom/backups/traceable-git-submit/<unique-id>` 下创建一个备份引用。
-- `agents-architect` 在指令系统维护期间，在 Git 目录的 `axiom/agents-architect/` 下写入名为 `session-<unique-id>.md` 的会话胶囊与生成材料，并在完成时删除它们或将其标记为过时。
 
 任务提前停止时没有任何东西会移除这些文件，而基线缓存本来就是要在任务之间持续存在的。备份引用保持其对象可达，并会随 `git push --mirror` 与 `git clone --mirror` 一起传播。用以下命令列出它们：
 
@@ -74,4 +73,6 @@ git rev-parse --path-format=absolute --git-path axiom
 git for-each-ref refs/axiom/
 ```
 
-在没有 Axiom 任务处于活动状态时，用你的 shell 移除状态文件，并用 `git update-ref -d <ref>` 删除已验证的备份引用。任务状态绝不会放在已安装的插件根目录下，也不会放在仓库的 `.agents/`、`.claude/` 或 `.codex/` 目录中。`agents-architect` 只会把那里的指令文件作为被请求的变更来编辑，并且可以把 `.agents/local/` 这类用户本地规则目录列入 `.git/info/exclude`。
+在没有 Axiom 任务处于活动状态时，用你的 shell 移除状态文件，并用 `git update-ref -d <ref>` 删除已验证的备份引用。
+
+`agents-architect` 把项目记忆保存在工作树中，并且只写入 `AGENTS.md` 与被路由到的 `.agents/` 文件。在你已接受项目记忆的克隆里，当一个修改过文件的任务完成时，它会不经询问地写入三类内容并逐一报告：受 Git 跟踪、位于 `.agents/memory/` 下的暂缓决定与计划，以及位于 `.agents/local/` 下的任务记录，该目录内的一个 `.gitignore` 文件使其不进入 Git。持久规则或工作约定由它提出，只有在你确认之后才写入。它绝不会以记忆维护的名义编辑代码、测试、文档或 Git 元数据，在没有项目记忆的仓库里不写入任何东西，在存在项目记忆但你尚未接受的克隆里会在第一次自动写入之前询问一次，也不会把任何东西存放在已安装的插件根目录、`.claude/`、`.codex/` 或宿主的私有记忆中。此前的版本把会话胶囊保存在 Git 目录的 `axiom/agents-architect/` 下；之后的任务会把仍然有效的胶囊并入其任务记录并报告它的路径，移除该胶囊由你自己完成。

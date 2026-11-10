@@ -50,7 +50,7 @@ The [Skill sources](../../plugin/skills) and [routing gate](../../plugin/skills/
 | `task-planning` | Revise existing task plans, or create one on explicit invocation, while preserving specialized planning ownership |
 | `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |
-| `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, local Skills, and task-state placement |
+| `agents-architect` | Maintain repo-local `AGENTS.md`, `.agents/` guidance, local Skills, and project memory, including its upkeep when a task that changed files completes |
 | `agent-plugin-architect` | Design or audit packaged plugin architecture and read-only release readiness |
 | `optimize-agent-usage` | Reduce or diagnose agent usage without weakening required quality or safety |
 | `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |

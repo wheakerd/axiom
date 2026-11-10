@@ -28,6 +28,18 @@ Include material staged, unstaged, untracked, and ignored content in the baselin
 
 Static construction, Codex `codex debug prompt-input`, or the Claude Code `/memory` and `/context` listings can prove file discovery or prompt assembly but not semantic model selection. Label actual host routing as not run or unavailable unless directly observed in a fresh session.
 
+### Project-Memory Regressions
+
+When memory classes, their homes, completion maintenance, or task records change, cover these cases and check in each that nothing is written outside `AGENTS.md` and routed `.agents/**`:
+
+- A short task that changed one file and revealed nothing: no memory output and no question.
+- A task in which the user repeats a correction made in an earlier task: one working-agreement candidate is proposed with its evidence, and nothing durable is written before the user confirms.
+- A decision the user postpones: a deferred entry with a reopen trigger is written and reported, and a later session raises it in one line only when the trigger matches.
+- A compaction between plan and completion: the next step is taken from the task record after re-observing what it names, not from the summary.
+- A rule the task made obsolete, and obsolete code found beside it: the rule's removal is proposed, and the code is reported or left to the task's own write scope, never deleted as maintenance.
+- A repository without project memory: nothing is written, and at most one line offers to set it up.
+- A cloned tree whose `AGENTS.md` routes to memory files but which holds no local acceptance marker: nothing is written before one question is answered, and a yes creates the marker.
+
 ### Document-Language Regressions
 
 When the document-language contract changes, review these semantic cases across root `AGENTS.md`, linked indexes, leaves, references, and scoped repo-local Skills. Inspect authored prose, not merely route selection or ASCII characters:
