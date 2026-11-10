@@ -13,7 +13,7 @@ These invariants bind in every phase. Everything else in this skill, except a st
 
 1. **Need, not caution.** Ask only for a material decision the user left open; never ask for reassurance, as a defensive pause, or to reopen a settled decision.
 2. **Facts first.** The request, the conversation, the user's environment, and read-only inspection settle factual gaps; a question settles only what they cannot.
-3. **The user chooses.** When options differ in result, scope, target, write surface, or authorization, the user decides; a delegated choice follows the startup gate's rule, and a permission-bypass mode resolves nothing.
+3. **The user chooses.** When options differ in result, scope, target, write surface, or authorization, the user decides; a delegated choice follows the startup gate's rule, and a permission-bypass mode resolves nothing. Offered options are a proposal, never the whole answer space: an option the user amends is the user's own answer.
 4. **Answers are narrow.** A selected or custom answer resolves only the open issue and grants no authority for edits, delegation, external actions, or persistent changes.
 5. **Ask once, then wait.** Work that depends on the choice waits for the answer; do not poll, repeat the question, or add interview rounds.
 
@@ -29,15 +29,19 @@ These invariants bind in every phase. Everything else in this skill, except a st
 
 ## Ask
 
+Open with the scope as you understand it, in a sentence or two: what is settled and what you are asking. The user can then correct the understanding itself, not only pick among options.
+
 1. Ask one concise, self-contained question per unresolved decision. Ask independent decisions together, in one call when the host's question tool supports several; never split one decision into several questions.
 2. Offer the plausible interpretations, usually two to four and within the host tool's limits, grounded in the user's words and the current context. State the outcome or trade-off of each; do not invent unrelated requirements to fill the list.
-3. Let the user enter a custom answer. Use the host's native question tool when the current mode offers it and follow its option and free-text conventions; otherwise ask in ordinary conversation.
+3. Let the user enter a custom answer. Use the host's native question tool when the current mode offers it and follow its option and free-text conventions; otherwise ask in ordinary conversation. When you ask two or more decisions together, add one open item for additions and corrections in the same round, and never present the questions or the options as exhaustive. When the host's tool holds fewer decisions than are open, say which remain.
 4. Recommend an option only when known user priorities support it and the host's question format calls for a recommendation. A default, a recommendation, silence, or elapsed time is not a decision.
 5. Continue authorized independent work while waiting. If only one interpretation is plausible but a required value is missing, ask for that value directly.
 
 If the host requires progress after an unanswered optional question, proceed only with independent work or with an assumption that stays inside established authority, and say so.
 
 ## Resume
+
+Read the open item first. Fold additions and amended options into the request before acting on any other answer. A correction that itself settles another decision needs no new question; ask again only for a decision that the addition leaves materially unresolved.
 
 Use the answer to resolve the open issue and preserve the unaffected instructions and acceptance criteria. Return the clarified request to `using-axiom` for normal route selection. Do not run a downstream workflow merely because its option was displayed. When the answer introduces a new material ambiguity, ask only the necessary follow-up; otherwise resume without restating a questionnaire.
 
@@ -52,3 +56,7 @@ Use the answer to resolve the open issue and preserve the unaffected instruction
 | "Use either deployment destination" with different authority boundaries | Ask one destination question; do not pick an action route first |
 | The user supplies a custom answer or corrects an option | Preserve that answer and reroute the resolved request |
 | A permission-bypass mode with an unresolved target | Ask; execution permissions do not identify the intended target |
+| Three open decisions asked together | State the understood scope, ask the three, and add one open item for additions and corrections in the same round |
+| The user picks an option and changes one detail of it | Treat the amended option as a custom answer; do not fold it into the nearest listed option |
+| The open item corrects another answer outright, such as naming a different format than the one selected | Apply the correction; it settles that decision, so ask nothing more |
+| The open item adds a requirement that leaves another answered decision materially unresolved | Fold the addition in first, then ask again only for that decision |
