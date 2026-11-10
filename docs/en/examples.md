@@ -122,7 +122,7 @@ If you later ask to execute and current restore validation cannot run, the skill
 
 ## Notices And Language
 
-When the gate selects `confirm-external-action` for a request to publish a prepared release note, the turn opens with one visible line such as `axiom:confirm-external-action` followed by the reason, for example binding the exact publish target before execution. The working lines that follow, the envelope, the command, and the verification, are English; when the request was written in another language, the closing summary uses that language. A request that selects no route carries no notice, and a notice inside a thinking block does not count.
+When the gate selects `confirm-external-action` for a request to publish a prepared release note, the turn opens with one visible line such as `axiom:confirm-external-action` followed by the reason, for example binding the exact publish target before execution. The lines that follow, the envelope, the verification, and the closing summary, use the language of the request; the command, identifiers, and paths stay as written. A request that selects no route carries no notice, and a notice inside a thinking block does not count.
 
 ## Requests That Should Not Route
 

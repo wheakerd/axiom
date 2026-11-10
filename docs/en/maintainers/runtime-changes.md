@@ -30,7 +30,7 @@ When editing a route, review its direct references and examples for accidental p
 
 ## Always-Loaded Context
 
-The always-loaded cost has two halves: the startup gate, and the bundled skill descriptions that each host lists on every turn. Every byte of either is paid in every session, routed or not, so add only what selection or a binding rule needs.
+The always-loaded cost has two halves: the startup gate, and the bundled skill descriptions that each host lists on every turn. Every byte of either is paid in every session, routed or not, so add only what selection or a binding rule needs. The gate's Conduct section holds the rules that bind a turn when no skill is selected; add one there only when it must hold in unrouted work, keep each to one statement, and put its explanation in `plugin/skills/using-axiom/references/conduct.md`.
 
 Keep at least 10% headroom below the 8,192-byte authoring boundary for the gate. This is an engineering reserve, not a platform limit. The publication aggregate rejects a gate over 7,372 UTF-8 bytes (`8192 * 90 // 100`). Each host also caps hook output on its own terms: Codex about 2,500 tokens per message by default, Claude Code 10,000 characters of stdout. Do not rewrite stable routing merely to preserve an earlier file size, and do not remove a safety, authorization, stop, or evidence rule or weaken quality merely to meet a size target. A passing size check does not replace review of the changed text.
 
