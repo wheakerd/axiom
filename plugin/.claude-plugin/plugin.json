@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.28.1",
+  "version": "0.28.2",
   "description": "Think before AI thinks.",
   "author": {
     "name": "wheakerd",
@@ -20,5 +20,6 @@
     "developer-tools"
   ],
   "skills": "./skills/",
-  "hooks": "./hooks/claude-hooks.json"
+  "hooks": "./hooks/claude-hooks.json",
+  "icon": "./assets/axiom-icon.png"
 }
