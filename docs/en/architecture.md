@@ -56,7 +56,7 @@ The [Skill sources](../../plugin/skills) and [routing gate](../../plugin/skills/
 | `review-axiom-task` | Review scoped observable task evidence without rerunning the task or exposing hidden reasoning |
 | `verify-completion` | Verify completion or progress claims against current direct evidence on request or before a claim, advising before complying |
 | `confirm-external-action` | Bind, authorize, execute once, and verify a consequential external effect |
-| `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared plugin releases, and explicitly traceable or hardened Git submission |
+| `traceable-git-submit` | Handle checkpoints, baselines, consolidation, recovery, combined commit/tag/push of prepared releases, and explicitly traceable or hardened Git submission |
 | `reversible-system-change` | Plan, rehearse, or execute persistent changes with verified recovery and completion boundaries |
 
 `agent-plugin-architect` can design another project's Codex or Claude Code plugin. Axiom itself supports both hosts with the same routes; see [Compatibility](compatibility.md). The skill's [route and trigger contracts](../../plugin/skills/agent-plugin-architect/references/route-and-trigger-contracts.md) state the boundary.
@@ -73,12 +73,7 @@ After resume (including a fork) or compaction, active routes are reselected from
 
 ## Git Workflow Routing
 
-Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they
-include neither a tag nor a traceable trigger. A combined commit, tag, and push of an
-already-prepared plugin release selects `traceable-git-submit`'s prepared-release phase.
-The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint,
-baseline, consolidation, recovery, multi-target, force, and history replacement. Merely
-mentioning `submit`, `publish`, or `push` does not select the route.
+Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they include neither a tag nor a traceable trigger. A combined commit, tag, and push of an already-prepared release selects `traceable-git-submit`'s prepared-release phase. The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint, baseline, consolidation, recovery, multi-target, force, and history replacement. A force request selects the route and stops there: no phase force-pushes, and that push is left to the user. Merely mentioning `submit`, `publish`, or `push` does not select the route.
 
 The paragraph above names the explicit invocation in its Codex form; in Claude Code the same trigger is `/axiom:traceable-git-submit`, or the skill named in plain words on either host. Route selection does not authorize Git mutation; the current request and host permissions still govern the action.
 

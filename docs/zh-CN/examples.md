@@ -104,11 +104,11 @@
 
 显式调用选中轻量的直接提交阶段。它保持钩子生效，推送一次，不创建 Axiom 溯源元数据，并以正常的 Git 结果作为主要证据。确定性的结果不需要额外查询；实质上含义不清的结果最多允许对拥有该远程的一方查询一次。
 
-> Commit the prepared plugin changes, create the agreed release tag, and push the branch and tag.
+> Commit the prepared release changes, create the agreed release tag, and push the branch and tag.
 
 这个组合请求会选中[已备妥发布的提交](../../plugin/skills/traceable-git-submit/references/prepared-release-submit.md)。冻结获授权的变更、提交信息、确切标签、签名要求与推送目标。在允许直接创建标签的地方，把确切的分支与标签原子地推送到每个获授权的端点，然后验证两个引用。如果某个仓库控制器负责受保护标签的创建，就把该操作交给其单独授权的所有者。该阶段不创建检查点或基线元数据，也不授予 GitHub Release、市场或安装操作。不确定的推送结果允许验证，而不是自动重试。
 
-普通的“commit the staged change and git push origin main”留在宿主原生处理。预期中的、已获授权的暂存集是正常情况，不是人为制造的冲突。额外的路径、目标漂移、强制推送、重试或清理需要各自的权限与检查。合并整理与恢复的细节属于该技能而不是本示例。
+普通的“commit the staged change and git push origin main”留在宿主原生处理。预期中的、已获授权的暂存集是正常情况，不是人为制造的冲突。额外的路径、目标漂移、重试或清理需要各自的权限与检查。没有任何阶段会强制推送：需要强制推送的请求会停下，这次推送留给你自己执行。合并整理与恢复的细节属于该技能而不是本示例。
 
 ## `reversible-system-change`
 
