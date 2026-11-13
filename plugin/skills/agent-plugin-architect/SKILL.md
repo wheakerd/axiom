@@ -1,6 +1,6 @@
 ---
 name: agent-plugin-architect
-description: Design, audit, or migrate a packaged Codex or Claude Code plugin's architecture across shared Skills, routes, manifests, and hooks. Use only for explicit packaged agent-plugin architecture work. Do not use for evaluating or reviewing an individual Skill or Skill proposal, repository-local AGENTS.md, .agents/skills, or .claude/skills systems, host installation, publication, deployment, or Git submission.
+description: Design, audit, or migrate a packaged Codex or Claude Code plugin's architecture across shared Skills, routes, manifests, and hooks. Use only for explicit packaged agent-plugin architecture work. Do not use for a generic request to review or improve a plugin, evaluating or reviewing an individual Skill or Skill proposal, repository-local AGENTS.md, .agents/skills, or .claude/skills systems, host installation, publication, deployment, or Git submission.
 ---
 
 # Agent Plugin Architect
