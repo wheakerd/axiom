@@ -1,6 +1,6 @@
 # Prepared Release Submission
 
-Own a combined request to commit already-prepared plugin changes, create one exact release tag, and push that branch and tag. This is ordinary release history, not checkpoint consolidation. Read `git-values.md` and the repository, push-identity, and target sections of `remote-targets.md` first; this file owns preparation and the branch and tag updates instead of that file's existing-commit push.
+Own a combined request to commit already-prepared release changes, create one exact release tag, and push that branch and tag. This is ordinary release history, not checkpoint consolidation. Read `git-values.md` and the repository, push-identity, and target sections of `remote-targets.md` first; this file owns preparation and the branch and tag updates instead of that file's existing-commit push.
 
 Freeze the exact repository, branch, prepared path set and tree, commit message, tag name, type, and message, version, signing requirements, ordered push targets, destination branch, and the authority for each action. The user's exact combined request may cover all three actions; do not reconfirm unchanged authority, and leave an absent action unperformed. Do not alter versions, release content, other refs, GitHub Releases, marketplaces, or installation state to make this phase pass. When a repository's protected-tag workflow or publication controller owns tag creation, hand that action to its owner instead of pushing a tag past it.
 
@@ -10,7 +10,7 @@ Freeze the exact repository, branch, prepared path set and tree, commit message,
 2. Inspect the repository's commit and tag signing requirements and release rules before creating anything; stop rather than create an invalid object when required signing or a required controller is unavailable.
 3. Require an empty index or one that already matches the authorized path set exactly, stage only those paths, read the staged set back, require exact equality, and freeze its tree with `git write-tree`. Leave unrelated worktree and index state alone; never stash or broaden staging.
 4. Validate the tag ref `refs/tags/<name>` with `git check-ref-format` and freeze the tag type, message, and signature policy. Require the local tag absent before the commit exists; a tag already bound to this recorded attempt enters resume instead.
-5. Inventory the targets through `remote-targets.md`. For each, bind its branch `liveBaselineSha` as a locally present ancestor of `oldHead` and prove the tag absent with `git ls-remote <push-url> refs/tags/<name>`. An ambiguous query or an unexpected existing tag stops with zero remote writes. Several targets need the user's exact ordered authorization and the acknowledgement that atomicity holds per target, not across the set.
+5. Inventory the targets through `remote-targets.md`. For each, bind its branch `liveBaselineSha` as a locally present ancestor of `oldHead` and prove the tag absent with `git ls-remote <target> refs/tags/<name>`, naming `<target>` as `git-values.md` says. An ambiguous query or an unexpected existing tag stops with zero remote writes. Several targets need the user's exact ordered authorization and the acknowledgement that atomicity holds per target, not across the set.
 
 ## Construct Local Objects
 

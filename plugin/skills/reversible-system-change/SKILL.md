@@ -1,6 +1,6 @@
 ---
 name: reversible-system-change
-description: Plan, rehearse, or execute a persistent system change with verified rollback and postconditions for an install, upgrade, deployment, migration, destructive retention action, version promotion, or credential lifecycle step with rollback, data, service, or activation risk. Plans and rehearsals stay read-only; recovery preparation needs bounded write authority. Not for ordinary edits, Git, or status queries.
+description: Plan, rehearse, or execute a persistent system change with verified rollback and postconditions when the change carries rollback, data, service, or activation risk and is an install, upgrade, deployment, migration, destructive retention action, version promotion, or credential lifecycle step. Plans and rehearsals stay read-only; recovery preparation needs bounded write authority. Not for ordinary edits, Git, or status queries.
 ---
 
 # Reversible System Change

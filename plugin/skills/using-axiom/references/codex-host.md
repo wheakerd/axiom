@@ -9,7 +9,7 @@ Verified against Codex CLI 0.166.0 on 2026-10-30 from its installed help output 
 - User instructions outrank persistent repository instructions (docs).
 - Bundled skills appear in the skill list, and `$skill-name` names one explicitly. Repo-local `.agents/skills/**/SKILL.md` files may be discovered as skill metadata, which proves neither body loading nor selection (docs).
 - The plugin's `SessionStart` Hook delivers the gate only after the user trusts that exact Hook entry in `/hooks`; the `features.hooks` flag must keep its default for Hooks to run. Trust binds to the hash of the declaration and the packaged script, so a changed script needs a new review.
-- The hooks documentation (`https://developers.openai.com/codex/hooks`, read 2026-11-08) lists `UserPromptSubmit` and `Stop` among its current events. `UserPromptSubmit` receives `prompt` and adds plain stdout as developer context. `Stop` receives `stop_hook_active` and `last_assistant_message`, requires JSON on stdout, and treats `decision: block` with `reason` as a continuation prompt that acts as a new user prompt; no continuation cap is documented, so the `stop_hook_active` guard is the only loop protection. `PreCompact` and `PostCompact` ignore plain stdout and carry only `trigger`.
+- The hooks documentation (`https://developers.openai.com/codex/hooks`, read 2026-11-08) lists `UserPromptSubmit` among its current events. It receives `prompt` and adds plain stdout as developer context. `PreCompact` and `PostCompact` ignore plain stdout and carry only `trigger`.
 
 ## Permission And Sandbox
 
