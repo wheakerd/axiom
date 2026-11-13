@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '%s\\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'",
+            "command": "printf '%s\\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session and names what remains unresolved; replies use the language of the request.'",
             "commandWindows": "\"%PLUGIN_ROOT%\\hooks\\codex-prompt-submit.cmd\"",
             "timeout": 5,
             "statusMessage": "Axiom prompt check"
