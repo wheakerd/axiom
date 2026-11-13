@@ -1,4 +1,4 @@
 interface:
   display_name: "Continuous Progress"
   short_description: "Supervised progress on a native scheduler"
-  default_prompt: "Use $continuous-progress to pursue my stated outcome. Create fresh execution and successor chats as needed, register an independent supervisor on the host's native scheduler (a Desktop or cloud scheduled task or GitHub Actions; a CLI session alone cannot wake it), and supervise recovery until verified completion or my cancellation, within my stated scope and the host's limits."
+  default_prompt: "Use $continuous-progress to pursue my stated outcome. Create fresh execution and successor chats as needed, register an independent supervisor on the host's native scheduler (the Desktop app's automation tool; a CLI session alone cannot wake it), and supervise recovery until verified completion or my cancellation, within my stated scope and the host's limits."

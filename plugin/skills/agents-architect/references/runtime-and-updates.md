@@ -81,7 +81,7 @@ redefining them here.
 
 - Treat supplied content as high-priority.
 - Still check scope, conflicts, safety, and canonical placement.
-- If temporary, put it in a runtime note, not durable rules.
+- If temporary, put it in the task record, not durable rules.
 
 `effective-instructions:reconcile` and
 `effective-instructions:reconcile-preview`:
