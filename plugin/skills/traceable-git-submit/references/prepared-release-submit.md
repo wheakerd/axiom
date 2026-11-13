@@ -1,6 +1,6 @@
 # Prepared Release Submission
 
-Own a combined request to commit already-prepared plugin changes, create one exact release tag, and push that branch and tag. This is ordinary release history, not checkpoint consolidation. Read `git-values.md` and the repository, push-identity, and target sections of `remote-targets.md` first; this file owns preparation and the branch and tag updates instead of that file's existing-commit push.
+Own a combined request to commit already-prepared release changes, create one exact release tag, and push that branch and tag. This is ordinary release history, not checkpoint consolidation. Read `git-values.md` and the repository, push-identity, and target sections of `remote-targets.md` first; this file owns preparation and the branch and tag updates instead of that file's existing-commit push.
 
 Freeze the exact repository, branch, prepared path set and tree, commit message, tag name, type, and message, version, signing requirements, ordered push targets, destination branch, and the authority for each action. The user's exact combined request may cover all three actions; do not reconfirm unchanged authority, and leave an absent action unperformed. Do not alter versions, release content, other refs, GitHub Releases, marketplaces, or installation state to make this phase pass. When a repository's protected-tag workflow or publication controller owns tag creation, hand that action to its owner instead of pushing a tag past it.
 
