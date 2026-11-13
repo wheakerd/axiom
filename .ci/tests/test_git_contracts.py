@@ -436,6 +436,319 @@ class GitContractTests(unittest.TestCase):
             self.assertEqual(old_head, self.run_git(repository, "rev-parse", "--verify", "refs/remotes/origin/main").stdout.strip())
             self.assertEqual(str(remote), seen.read_text(encoding="utf-8").strip())
 
+    def fixture_git_version(self):
+        token = subprocess.run(
+            ("git", "version"), env=self.fixture_environment(),
+            check=True, capture_output=True, text=True, timeout=10,
+        ).stdout.split()[2]
+        return tuple(int(part) for part in token.split(".")[:2])
+
+    def leased_push_fixture(self, root: Path):
+        """A client on a rewritten branch whose origin still holds the two commits it drops."""
+        repository = root / "client"
+        remote = root / "remote.git"
+        self.initialize_fixture(repository)
+        remote.mkdir()
+        self.fixture_git(remote, "init", "--bare", "--quiet", "--initial-branch=main")
+        self.fixture_git(repository, "remote", "add", "origin", str(remote))
+        base = self.fixture_commit(repository, "base")
+        self.fixture_commit(repository, "discarded one")
+        live = self.fixture_commit(repository, "discarded two")
+        self.fixture_git(repository, "push", "--quiet", "origin", "refs/heads/main:refs/heads/main")
+        self.fixture_git(repository, "update-ref", "--no-deref", "refs/heads/main", base, live)
+        new = self.fixture_commit(repository, "replacement")
+        return repository, remote, base, live, new
+
+    def commit_on_remote(self, remote: Path, parent: str, subject: str) -> str:
+        """Another writer's commit, created in the remote itself and installed as its `main`."""
+        tree = self.fixture_git(remote, "rev-parse", f"{parent}^{{tree}}").stdout.strip()
+        commit = self.fixture_git(
+            remote, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid",
+            "commit-tree", "-p", parent, "-m", subject, tree).stdout.strip()
+        self.fixture_git(remote, "update-ref", "--no-deref", "refs/heads/main", commit, parent)
+        return commit
+
+    def discarded_commits(self, repository: Path, new: str, live: str, *git_options: str):
+        """Run the documented listing; return its subjects after checking that it starts at the live tip."""
+        lines = self.fixture_git(
+            repository, *git_options, "log", "--format=%h %s", f"{new}..{live}").stdout.splitlines()
+        if lines:
+            self.assertEqual(live, self.fixture_git(
+                repository, "rev-parse", "--verify", f"{lines[0].split(' ', 1)[0]}^{{commit}}").stdout.strip())
+        return [line.split(" ", 1)[1] for line in lines]
+
+    def leased_push(self, repository: Path, target: str, merge_ref: str, expected: str, source: str):
+        return self.fixture_git(
+            repository, "push", "--no-follow-tags", "--recurse-submodules=no",
+            f"--force-with-lease={merge_ref}:{expected}", target, f"{source}:{merge_ref}", check=False,
+        )
+
+    def test_leased_force_push_replaces_history_only_while_the_lease_holds(self):
+        """Execute the leased force-push phase's read, backup, push, read-back, and restore commands against a fixture."""
+        merge_ref = "refs/heads/main"
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            root = Path(temporary)
+            repository, remote, base, live, new = self.leased_push_fixture(root)
+
+            # The live read returns one object line, HEAD reports the default branch, and an absent branch returns nothing.
+            def live_read(ref):
+                return self.fixture_git(repository, "ls-remote", "--symref", "origin", ref).stdout
+            self.assertEqual(f"{live}\t{merge_ref}\n", live_read(merge_ref))
+            self.assertEqual(f"ref: {merge_ref}\tHEAD\n{live}\tHEAD\n", live_read("HEAD"))
+            self.assertEqual("", live_read("refs/heads/absent"))
+
+            # The live tip is no ancestor of the replacement; the listing names what is discarded, and all of it is local.
+            history = ("--no-replace-objects",)
+            self.assertEqual(1, self.fixture_git(
+                repository, *history, "merge-base", "--is-ancestor", live, new, check=False).returncode)
+            self.assertEqual(0, self.fixture_git(
+                repository, *history, "merge-base", "--is-ancestor", base, new, check=False).returncode)
+            self.assertEqual(["discarded two", "discarded one"],
+                             self.discarded_commits(repository, new, live, *history))
+            self.fixture_git(repository, *history, "rev-list", "--quiet", "--objects", f"{new}..{live}")
+
+            # The backup is create-only: an existing ref makes the second attempt fail.
+            backup = "refs/axiom/backups/traceable-git-submit/fixture"
+            create = ("update-ref", "--no-deref", backup, live, "0" * 40)
+            self.fixture_git(repository, *create)
+            self.assertNotEqual(0, self.fixture_git(repository, *create, check=False).returncode)
+
+            # One leased push, with the pre-push hook running and the replacement named by its
+            # object ID: a branch that moves after the freeze does not change what is sent.
+            seen = repository / ".git" / "pre-push.log"
+            self.write_hook(repository, "pre-push", "echo pre-push >> .git/pre-push.log\n")
+            self.assertNotEqual(new, self.fixture_commit(repository, "moved after the freeze"))
+            self.assertEqual(0, self.leased_push(repository, "origin", merge_ref, live, new).returncode)
+            self.assertEqual(["pre-push"], seen.read_text(encoding="utf-8").split())
+            self.assertEqual(f"{new}\t{merge_ref}\n", live_read(merge_ref))
+            self.assertEqual(new, self.fixture_git(repository, "rev-parse", "refs/remotes/origin/main").stdout.strip())
+
+            # The restoring push is the same command with the two commits exchanged.
+            self.assertEqual(0, self.leased_push(repository, "origin", merge_ref, new, live).returncode)
+            self.assertEqual(f"{live}\t{merge_ref}\n", live_read(merge_ref))
+
+            # Another writer moves the remote, and a background fetch brings that tip into the tracking
+            # ref. The lease bound to the tip the user saw is stale, and the remote keeps the other tip.
+            moved = self.commit_on_remote(remote, live, "pushed from elsewhere")
+            self.fixture_git(repository, "fetch", "--quiet", "origin")
+            self.assertEqual(moved, self.fixture_git(repository, "rev-parse", "refs/remotes/origin/main").stdout.strip())
+            stale = self.leased_push(repository, "origin", merge_ref, live, new)
+            self.assertNotEqual(0, stale.returncode)
+            self.assertIn("stale info", stale.stderr)
+            self.assertEqual(f"{moved}\t{merge_ref}\n", live_read(merge_ref))
+
+            # A lease without an expected value reads that tracking ref, so the same fetch defeats it.
+            self.fixture_git(repository, "push", "--quiet", "--no-follow-tags", "--recurse-submodules=no",
+                             f"--force-with-lease={merge_ref}", "origin", f"{new}:{merge_ref}")
+            self.assertEqual(f"{new}\t{merge_ref}\n", live_read(merge_ref))
+
+            # The backup still names the old tip and is deleted by compare-and-swap only.
+            self.assertEqual(live, self.fixture_git(repository, "rev-parse", backup).stdout.strip())
+            self.assertNotEqual(0, self.fixture_git(
+                repository, "update-ref", "--no-deref", "-d", backup, new, check=False).returncode)
+            self.fixture_git(repository, "update-ref", "--no-deref", "-d", backup, live)
+            self.assertNotEqual(0, self.fixture_git(
+                repository, "rev-parse", "--verify", "--quiet", backup, check=False).returncode)
+
+    def test_leased_force_push_ends_on_a_hook_failure_or_a_protection_rejection(self):
+        merge_ref = "refs/heads/main"
+        backup = "refs/axiom/backups/traceable-git-submit/fixture"
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            repository, remote, _, live, new = self.leased_push_fixture(Path(temporary))
+            self.fixture_git(repository, "update-ref", "--no-deref", backup, live, "0" * 40)
+
+            def attempt_ended(result):
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual(live, self.fixture_git(remote, "rev-parse", merge_ref).stdout.strip())
+                self.assertEqual(live, self.fixture_git(repository, "rev-parse", backup).stdout.strip())
+
+            # The lease is correct both times; the hook, then the receiver's own rule, refuses the push.
+            self.write_hook(repository, "pre-push", "exit 1\n")
+            attempt_ended(self.leased_push(repository, "origin", merge_ref, live, new))
+            self.write_hook(repository, "pre-push", "exit 0\n")
+            self.fixture_git(remote, "config", "receive.denyNonFastForwards", "true")
+            attempt_ended(self.leased_push(repository, "origin", merge_ref, live, new))
+
+    def test_leased_force_push_sees_a_symbolic_remote_branch_only_as_the_protocol_reports_it(self):
+        alias = "refs/heads/alias"
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            repository, remote, _, live, new = self.leased_push_fixture(Path(temporary))
+            self.fixture_git(remote, "symbolic-ref", alias, "refs/heads/main")
+
+            def live_read(version, ref):
+                return self.fixture_git(repository, "-c", f"protocol.version={version}",
+                                        "ls-remote", "--symref", "origin", ref).stdout
+            self.assertEqual(f"ref: refs/heads/main\t{alias}\n{live}\t{alias}\n", live_read(2, alias))
+            for version in (0, 1):
+                with self.subTest(version=version):
+                    # An older protocol reports a symbolic ref for HEAD only, so the
+                    # phase compares the branch's tip with the tip the HEAD query prints.
+                    self.assertEqual(f"{live}\t{alias}\n", live_read(version, alias))
+                    self.assertEqual(f"ref: refs/heads/main\tHEAD\n{live}\tHEAD\n", live_read(version, "HEAD"))
+
+            # A push to the symbolic branch lands on the branch it points at.
+            self.assertEqual(0, self.leased_push(repository, "origin", alias, live, new).returncode)
+            self.assertEqual(new, self.fixture_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
+
+    def test_leased_force_push_exact_refresh_moves_no_tracking_ref(self):
+        merge_ref = "refs/heads/main"
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            repository, remote, _, live, _ = self.leased_push_fixture(Path(temporary))
+            moved = self.commit_on_remote(remote, live, "pushed from elsewhere")
+            present = ("cat-file", "-e", f"{moved}^{{commit}}")
+            self.assertNotEqual(0, self.fixture_git(repository, *present, check=False).returncode)
+
+            self.fixture_git(repository, "fetch", "--no-tags", "--no-recurse-submodules", "--refmap=", "origin", merge_ref)
+            self.assertEqual(moved, self.fixture_git(repository, "rev-parse", "--verify", "FETCH_HEAD").stdout.strip())
+            self.fixture_git(repository, *present)
+            self.assertEqual(live, self.fixture_git(repository, "rev-parse", "refs/remotes/origin/main").stdout.strip())
+
+    def test_fetch_bundle_uri_makes_an_exact_refresh_write_bundle_refs(self):
+        if self.fixture_git_version() < (2, 40):
+            self.skipTest("this Git has no fetch.bundleURI")
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            root = Path(temporary)
+            repository, _, base, _, _ = self.leased_push_fixture(root)
+            read = ("config", "--get", "fetch.bundleURI")
+            self.assertEqual(1, self.fixture_git(repository, *read, check=False).returncode)
+
+            bundle = root / "side.bundle"
+            self.fixture_git(repository, "branch", "side", base)
+            self.fixture_git(repository, "bundle", "create", "--quiet", str(bundle), "side")
+            listing = root / "bundle-list"
+            for key, value in (("bundle.version", "1"), ("bundle.mode", "all"),
+                               ("bundle.heuristic", "creationToken"),
+                               ("bundle.side.uri", str(bundle)), ("bundle.side.creationToken", "1")):
+                self.fixture_git(root, "config", "--file", str(listing), key, value)
+            self.fixture_git(repository, "config", "fetch.bundleURI", str(listing))
+            self.assertEqual(f"{listing}\n", self.fixture_git(repository, *read).stdout)
+
+            self.assertEqual("", self.fixture_git(repository, "for-each-ref", "refs/bundles/").stdout)
+            self.fixture_git(repository, "fetch", "--no-tags", "--no-recurse-submodules", "--refmap=", "origin", "refs/heads/main")
+            self.assertNotEqual("", self.fixture_git(repository, "for-each-ref", "refs/bundles/").stdout)
+
+    def test_leased_force_push_history_stops_are_detectable(self):
+        partial_keys = r"^(extensions\.partialclone|remote\..*\.(promisor|partialclonefilter))$"
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            root = Path(temporary)
+            repository, remote, base, live, new = self.leased_push_fixture(root)
+
+            def alternates(checkout):
+                relative = self.fixture_git(checkout, "rev-parse", "--git-path", "objects/info/alternates").stdout.strip()
+                path = checkout / relative
+                return path.read_text(encoding="utf-8") if path.exists() else ""
+
+            # A complete repository shows none of the conditions.
+            self.assertEqual("false\n", self.fixture_git(repository, "rev-parse", "--is-shallow-repository").stdout)
+            self.assertEqual(1, self.fixture_git(repository, "config", "--get-regexp", partial_keys, check=False).returncode)
+            self.assertEqual("", alternates(repository))
+
+            shallow = root / "shallow"
+            self.fixture_git(root, "clone", "--quiet", "--depth=1", remote.as_uri(), str(shallow))
+            self.assertEqual("true\n", self.fixture_git(shallow, "rev-parse", "--is-shallow-repository").stdout)
+
+            # Git records a partial clone under the remote; the extension alone is the third declaration.
+            self.fixture_git(remote, "config", "uploadpack.allowFilter", "true")
+            partial = root / "partial"
+            self.fixture_git(root, "clone", "--quiet", "--no-checkout", "--filter=blob:none", remote.as_uri(), str(partial))
+            listed = self.fixture_git(partial, "config", "--get-regexp", partial_keys).stdout.splitlines()
+            self.assertLessEqual({"remote.origin.promisor", "remote.origin.partialclonefilter"},
+                                 {line.split(" ", 1)[0] for line in listed})
+            declared = root / "declared"
+            self.initialize_fixture(declared)
+            self.fixture_git(declared, "config", "extensions.partialClone", "origin")
+            self.assertEqual("extensions.partialclone origin\n", self.fixture_git(
+                declared, "config", "--get-regexp", partial_keys).stdout)
+
+            borrowed = root / "borrowed"
+            self.fixture_git(root, "clone", "--quiet", "--reference", str(repository), str(remote), str(borrowed))
+            self.assertNotEqual("", alternates(borrowed).strip())
+
+            # The environment can lend objects too, and no file shows it.
+            empty = root / "empty"
+            self.initialize_fixture(empty)
+            present = ("cat-file", "-e", f"{live}^{{commit}}")
+            # The variable is a path list; Git reads a double-quoted entry as one C-style quoted path.
+            objects = str(repository / ".git" / "objects").replace("\\", "\\\\").replace('"', '\\"')
+            lent = {"GIT_ALTERNATE_OBJECT_DIRECTORIES": f'"{objects}"'}
+            self.assertNotEqual(0, self.fixture_git(empty, *present, check=False).returncode)
+            self.fixture_git(empty, *present, environment=lent)
+            self.assertEqual("", alternates(empty))
+
+            # A grafts file rewrites the history that the listing walks.
+            grafted = root / "grafted"
+            self.fixture_git(root, "clone", "--quiet", str(remote), str(grafted))
+            grafts = grafted / self.fixture_git(grafted, "rev-parse", "--git-path", "info/grafts").stdout.strip()
+            self.assertFalse(grafts.exists())
+            self.assertEqual(["discarded two", "discarded one"], self.discarded_commits(grafted, base, live))
+            grafts.parent.mkdir(exist_ok=True)
+            grafts.write_text(f"{live}\n", encoding="utf-8")
+            self.assertEqual(["discarded two"], self.discarded_commits(grafted, base, live, "--no-replace-objects"))
+
+            # A commit whose blob was never stored passes the backup and fails the connectivity check.
+            connected = ("--no-replace-objects", "rev-list", "--quiet", "--objects")
+            lost = self.run_git(repository, "hash-object", "--stdin", stdin="never stored\n").stdout.strip()
+            self.fixture_git(repository, "update-index", "--add", "--cacheinfo", f"100644,{lost},lost.txt")
+            tree = self.fixture_git(repository, "write-tree", "--missing-ok").stdout.strip()
+            incomplete = self.fixture_git(repository, "commit-tree", "-p", base, "-m", "incomplete", tree).stdout.strip()
+            self.fixture_git(repository, "read-tree", "HEAD")
+            self.fixture_git(repository, "update-ref", "--no-deref",
+                             "refs/axiom/backups/traceable-git-submit/incomplete", incomplete, "0" * 40)
+            self.assertNotEqual(0, self.fixture_git(repository, *connected, f"{new}..{incomplete}", check=False).returncode)
+            self.fixture_git(repository, *connected, f"{new}..{live}")
+
+            # A replace ref hides the discarded commits unless the history commands ignore it.
+            self.fixture_git(repository, "replace", live, base)
+            self.assertEqual(["base"], self.discarded_commits(repository, new, live))
+            self.assertEqual(["discarded two", "discarded one"],
+                             self.discarded_commits(repository, new, live, "--no-replace-objects"))
+
+    def test_push_named_by_a_rewritten_url_reaches_another_repository(self):
+        rewrite_rules = r"^url\..*\.(insteadof|pushinsteadof)$"
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            root = Path(temporary)
+            repository, remote, _, _, new = self.leased_push_fixture(root)
+            other = root / "other.git"
+            other.mkdir()
+            self.fixture_git(other, "init", "--bare", "--quiet", "--initial-branch=main")
+            self.assertEqual(1, self.fixture_git(repository, "config", "--get-regexp", rewrite_rules, check=False).returncode)
+
+            self.fixture_git(repository, "config", f"url.{other}.pushInsteadOf", str(remote))
+            self.assertEqual(f"url.{other}.pushinsteadof {remote}\n", self.fixture_git(
+                repository, "config", "--get-regexp", rewrite_rules).stdout)
+            self.fixture_git(repository, "push", "--quiet", "--no-follow-tags", str(remote), f"{new}:refs/heads/rewritten")
+            self.assertEqual(new, self.fixture_git(other, "rev-parse", "refs/heads/rewritten").stdout.strip())
+            self.assertNotEqual(0, self.fixture_git(
+                remote, "rev-parse", "--verify", "--quiet", "refs/heads/rewritten", check=False).returncode)
+
+    def test_push_to_a_remote_group_reaches_every_member(self):
+        if self.fixture_git_version() < (2, 55):
+            self.skipTest("this Git does not push to a remote group")
+        with tempfile.TemporaryDirectory(prefix="axiom-leased-push-") as temporary:
+            root = Path(temporary)
+            repository, remote, _, _, new = self.leased_push_fixture(root)
+            member = root / "member.git"
+            member.mkdir()
+            self.fixture_git(member, "init", "--bare", "--quiet", "--initial-branch=main")
+            self.fixture_git(repository, "remote", "add", "member", str(member))
+
+            def group(name):
+                return self.fixture_git(repository, "config", "--get-all", f"remotes.{name}", check=False)
+            self.assertEqual(1, group("origin").returncode)
+
+            self.fixture_git(repository, "config", "remotes.both", "origin member")
+            self.assertEqual("origin member\n", group("both").stdout)
+            self.fixture_git(repository, "push", "--quiet", "--no-follow-tags", "both", f"{new}:refs/heads/grouped")
+            for receiver in (remote, member):
+                self.assertEqual(new, self.fixture_git(receiver, "rev-parse", "refs/heads/grouped").stdout.strip())
+
+            # A group may shadow the remote's own name. Git 2.56.0 was then observed to
+            # start one push per member again and again until a timeout, without reaching
+            # that remote, so the fixture reads the declaration the phase stops on and
+            # does not run the push.
+            self.fixture_git(repository, "config", "remotes.origin", "origin member")
+            self.assertEqual("origin member\n", group("origin").stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
