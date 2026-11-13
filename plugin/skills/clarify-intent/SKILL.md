@@ -33,9 +33,9 @@ Open with the scope as you understand it, in a sentence or two: what is settled 
 
 1. Ask one concise, self-contained question per unresolved decision. Ask independent decisions together, in one call when the host's question tool supports several; never split one decision into several questions.
 2. Offer the plausible interpretations, usually two to four and within the host tool's limits, grounded in the user's words and the current context. State the outcome or trade-off of each; do not invent unrelated requirements to fill the list.
-3. Let the user enter a custom answer. Use the host's native question tool when the current mode offers it and follow its option and free-text conventions; otherwise ask in ordinary conversation. When you ask two or more decisions together, add one open item for additions and corrections in the same round, and never present the questions or the options as exhaustive. When the host's tool holds fewer decisions than are open, say which remain.
+3. Let the user enter a custom answer. Use the host's native question tool when the current mode offers it and follow its option and free-text conventions; otherwise ask in ordinary conversation. End every round, a single question included, with one open item for additions and corrections, and never present the questions or the options as exhaustive. The open item is room, not a question: an empty one means nothing to add, and it never delays work that the answered decision unblocks. When the host's tool holds fewer decisions than are open, say which remain.
 4. Recommend an option only when known user priorities support it and the host's question format calls for a recommendation. A default, a recommendation, silence, or elapsed time is not a decision.
-5. Continue authorized independent work while waiting. If only one interpretation is plausible but a required value is missing, ask for that value directly.
+5. Continue authorized independent work while waiting. If only one interpretation is plausible but a required value is missing, ask for that value directly; that round carries the open item too.
 
 If the host requires progress after an unanswered optional question, proceed only with independent work or with an assumption that stays inside established authority, and say so.
 
@@ -56,7 +56,8 @@ Use the answer to resolve the open issue and preserve the unaffected instruction
 | "Use either deployment destination" with different authority boundaries | Ask one destination question; do not pick an action route first |
 | The user supplies a custom answer or corrects an option | Preserve that answer and reroute the resolved request |
 | A permission-bypass mode with an unresolved target | Ask; execution permissions do not identify the intended target |
-| Three open decisions asked together | State the understood scope, ask the three, and add one open item for additions and corrections in the same round |
+| One open decision | State the understood scope, ask the one question, and end with the open item; an empty open item means nothing to add |
+| Three open decisions asked together | State the understood scope, ask the three, and end with one open item for additions and corrections in the same round |
 | The user picks an option and changes one detail of it | Treat the amended option as a custom answer; do not fold it into the nearest listed option |
 | The open item corrects another answer outright, such as naming a different format than the one selected | Apply the correction; it settles that decision, so ask nothing more |
 | The open item adds a requirement that leaves another answered decision materially unresolved | Fold the addition in first, then ask again only for that decision |

@@ -10,7 +10,7 @@
 
 > Clean up the old records.
 
-如果上下文让归档、去重与删除成为实质上不同的结果，门控会选中 [Clarify Intent](../../plugin/skills/clarify-intent/SKILL.md)。在依赖性工作之前，针对每个待定决定提出一个聚焦的问题，给出合理的选项与自定义回答；彼此独立的决定在同一轮中一起询问。当更正很明确时，“Maybe fix this identified typo”不需要澄清。权限绕过模式不能解决意图。
+如果上下文让归档、去重与删除成为实质上不同的结果，门控会选中 [Clarify Intent](../../plugin/skills/clarify-intent/SKILL.md)。在依赖性工作之前，针对每个待定决定提出一个聚焦的问题，给出合理的选项与自定义回答；彼此独立的决定在同一轮中一起询问，并且每一轮都以一个用于补充与更正的开放项结束。当更正很明确时，“Maybe fix this identified typo”不需要澄清。权限绕过模式不能解决意图。
 
 ## `delegate-simple-task`
 
