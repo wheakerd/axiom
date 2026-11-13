@@ -25,7 +25,7 @@ CODEX_HOOK_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS
 # The exact static text the UserPromptSubmit hook prints on both hosts. It stays ASCII
 # without quotes, backslashes, or command-shell special characters, so one text serves
 # the POSIX commands and the Windows wrapper.
-PROMPT_TEXT = 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'
+PROMPT_TEXT = 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session and names what remains unresolved; replies use the language of the request.'
 
 CLAUDE_COMMAND = (
     "printf '%s\\n\\n' 'You have Axiom in Claude Code. Load this startup front door "

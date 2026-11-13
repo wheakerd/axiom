@@ -35,7 +35,7 @@ type "%~dp0..\skills\using-axiom\SKILL.md"
 No matcher; the handler runs for every prompt. On Linux and macOS, the exact checked-in command is:
 
 ```bash
-printf '%s\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'
+printf '%s\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session and names what remains unresolved; replies use the language of the request.'
 ```
 
 On Windows, the exact checked-in command invokes the packaged wrapper:
@@ -49,7 +49,7 @@ The wrapper contains only command-shell built-ins:
 ```bat
 @echo off
 setlocal DisableDelayedExpansion
-echo Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.
+echo Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session and names what remains unresolved; replies use the language of the request.
 ```
 
 ## Claude Code SessionStart
@@ -67,7 +67,7 @@ The preamble names the host before the session reads the same routing gate.
 No matcher; the handler runs for every prompt, including a scheduled task firing, a background subagent reporting back, or a message from another session. The exact checked-in command prints the same static statement:
 
 ```bash
-printf '%s\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session, names what remains unresolved, and replies in the language of the request.'
+printf '%s\n' 'Axiom: material ambiguity that context cannot resolve is clarified before acting; completion rests on evidence observed in this session and names what remains unresolved; replies use the language of the request.'
 ```
 
 ## Bounded Behavior
