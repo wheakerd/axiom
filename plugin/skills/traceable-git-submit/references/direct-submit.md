@@ -125,4 +125,4 @@ conditional query was needed, and what the final check showed.
 
 ## Stop Conditions
 
-Stop before mutation for an unknown or changed target, multiple destinations, force or widened refs, unresolved mechanism conflict, or in-progress operation. Stop after the one attempt for divergence, hook or Git failure, ambiguous verification, or drift. Fetch, retry, multi-target submission, checkpoint publication, consolidation, and recovery require their separately selected owners and authority. A force push has no owner in this skill; the entry file's stop applies.
+Stop before mutation for an unknown or changed target, multiple destinations, force or widened refs, unresolved mechanism conflict, or in-progress operation. Stop after the one attempt for divergence, hook or Git failure, ambiguous verification, or drift. Fetch, retry, multi-target submission, checkpoint publication, consolidation, and recovery require their separately selected owners and authority. A force push belongs to the leased force-push phase, which the entry file selects.
