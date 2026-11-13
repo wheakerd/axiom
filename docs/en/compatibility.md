@@ -64,6 +64,8 @@ Unless a current immutable result states otherwise, do not assume:
 
 Static workflow execution on native runners is useful process-boundary evidence for the exact checked-in commands, but it is not an installed-plugin or model- session observation.
 
+Route selection also depends on the host's skill list. Axiom routes are selected from their descriptions in that list, and the routing gate carries no route catalog. Each host budgets the list. With many skills installed, Claude Code keeps every skill name and drops descriptions, starting with the skills invoked least; Codex shortens descriptions first and may omit skills from its initial list. A shortened description may lose the conditions that bound a route, and a missing one leaves no description to match. An explicit invocation names the skill and does not rely on the listed description. Axiom does not detect an over-budget list. Each host documents this behavior and the setting that raises the budget: [Claude Code](https://code.claude.com/docs/en/skills#skill-descriptions-are-cut-short) and [Codex](https://learn.chatgpt.com/docs/build-skills#how-chatgpt-and-codex-use-skills).
+
 ## Report A Compatibility Result
 
 Report what you observed in a host session. Report a pass, a failure, an unknown result, and a case you did not run as different outcomes.
