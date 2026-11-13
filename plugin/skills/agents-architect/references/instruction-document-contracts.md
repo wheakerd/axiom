@@ -95,44 +95,28 @@ Before writing or validating a routed rule's frontmatter or body sections, read 
 
 ## Size And Active-Set Contract
 
-- Platform fact: a visible host size limit, such as Codex
-  `project_doc_max_bytes`, is truncation protection or configuration evidence,
-  not Axiom's authoring budget.
-- Axiom authoring rule: keep root `AGENTS.md` below 8192 bytes.
-- Keep every other AGENTS or skill instruction document below 8192 bytes. If a
-  document reaches or exceeds that boundary, split by canonical owner or move
-  scoped examples, schemas, and protocols to a directly routed reference.
-- Never reduce rule precision, delete executable detail, or merge independent
-  owners merely to satisfy the byte boundary.
+- Platform fact: a visible host size limit, such as Codex `project_doc_max_bytes`, is truncation protection or configuration evidence, not Axiom's authoring budget.
+- Axiom authoring rule: keep every auto-loaded `AGENTS.md`, root or nested, below 8192 bytes.
+- Keep every routed `.agents` document and every repo-local skill instruction document below 16384 bytes, because they load on demand. If a document reaches or exceeds its boundary, split by canonical owner or move scoped examples, schemas, and protocols to a directly routed reference.
+- Never reduce rule precision, delete executable detail, or merge independent owners merely to satisfy a byte boundary.
 - Keep indexes small route-only jump nodes.
-- Keep domain entries, rule leaves, and risk-rule leaves scoped to one
-  responsibility and small enough to load with their parent indexes.
-- Normal active set: root, an optional startup/front-door node, zero to two
-  branch indexes, and one to three rule leaves.
-- Complex active set: at most six `.agents` documents unless repository
-  evidence requires and the final report explains an exception.
-- For AGENTS changes, report root, key index, rule-leaf, and representative
-  scenario active-set byte totals.
+- Keep domain entries, rule leaves, and risk-rule leaves scoped to one responsibility and small enough to load with their parent indexes.
+- Normal active set: root, an optional startup/front-door node, zero to two branch indexes, and one to three rule leaves.
+- Complex active set: at most six `.agents` documents unless repository evidence requires and the final report explains an exception.
+- For AGENTS changes, report root, key index, rule-leaf, and representative scenario active-set byte totals.
 
 These are Axiom authoring rules, not claims about a universal host hard limit.
 
 ## Validation Contract
 
 - Verify every link target or mark it explicitly as future work.
-- Resolve declarative metadata paths from the target repository root. Resolve
-  Markdown links from the directory containing the Markdown file, unless the
-  document explicitly declares another base.
-- Verify unique IDs, canonical ownership, route reachability, and acyclic
-  `requires`. Every exact `requires` target must exist and be reachable from
-  the current route before structural writes or final acceptance. A missing or
-  unreachable target permits read-only assessment only.
+- Resolve declarative metadata paths from the target repository root. Resolve Markdown links from the directory containing the Markdown file, unless the document explicitly declares another base.
+- Verify unique IDs, canonical ownership, route reachability, and acyclic `requires`. Every exact `requires` target must exist and be reachable from the current route before structural writes or final acceptance. A missing or unreachable target permits read-only assessment only.
 - Verify root rules are global and indexes are route-only.
 - Verify no independently maintained duplicate or unresolved conflict remains.
-- Check generated target guidance for leaked Axiom triggers, load policies,
-  internal route names, generic runtime/request protocols, validation matrices,
-  and reporting formats.
+- Check generated target guidance for leaked Axiom triggers, load policies, internal route names, generic runtime/request protocols, validation matrices, and reporting formats.
 - Verify representative scenarios load intended rule owners without siblings.
-- Verify no instruction document reaches 8192 bytes.
+- Verify no auto-loaded `AGENTS.md` reaches 8192 bytes and no other instruction document reaches 16384 bytes.
 - Report actual loading only when it was directly tested.
 
 ## Prohibited Actions
