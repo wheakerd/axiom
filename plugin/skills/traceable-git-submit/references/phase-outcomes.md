@@ -12,4 +12,6 @@ For consolidation, require every unpublished commit to match the active record, 
 
 For combined consolidation submission or its recovery, recheck every target before the push, bind the push remote once, verify every target and the refreshed upstream, then persist `cleanupReady`. Cleanup requires separate exact authority. Drift, partial state, or uncertainty retains the recovery state.
 
+For a leased force push, use `leased-force-push.md`: the user's statement covers the branch and that its remote history is replaced, the live tip the user was shown is backed up before the push, the lease names that tip, and the read-back equals the replacement commit. A lease rejection, an incomplete set of destinations, or an unknown result keeps the backup and is reported as it is.
+
 For a prepared-release submission, use `prepared-release-submit.md`: every requested branch and tag must match the frozen commit and tag object on each authorized target. Partial or unknown state retains the local candidate; never infer a GitHub Release, marketplace publication, or cleanup outcome.

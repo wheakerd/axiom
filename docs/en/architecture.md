@@ -73,7 +73,7 @@ After resume (including a fork) or compaction, active routes are reselected from
 
 ## Git Workflow Routing
 
-Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they include neither a tag nor a traceable trigger. A combined commit, tag, and push of an already-prepared release selects `traceable-git-submit`'s prepared-release phase. The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint, baseline, consolidation, recovery, multi-target, force, and history replacement. A force request selects the route and stops there: no phase force-pushes, and that push is left to the user. Merely mentioning `submit`, `publish`, or `push` does not select the route.
+Ordinary named-remote, non-force staging, commits, and pushes stay host-native when they include neither a tag nor a traceable trigger. A combined commit, tag, and push of an already-prepared release selects `traceable-git-submit`'s prepared-release phase. The traceable triggers are an explicit `$traceable-git-submit` invocation, checkpoint, baseline, consolidation, recovery, multi-target, force, and history replacement. A request to force-push, or to replace the remote history of, one branch selects the leased force-push phase, which pushes under a lease on the live tip the user was shown; no other phase force-pushes. Merely mentioning `submit`, `publish`, or `push` does not select the route.
 
 The paragraph above names the explicit invocation in its Codex form; in Claude Code the same trigger is `/axiom:traceable-git-submit`, or the skill named in plain words on either host. Route selection does not authorize Git mutation; the current request and host permissions still govern the action.
 
