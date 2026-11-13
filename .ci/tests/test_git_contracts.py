@@ -352,9 +352,11 @@ class GitContractTests(unittest.TestCase):
             repository = root / "repo"
             self.initialize_fixture(repository)
             base = self.fixture_commit(repository, "base")
-            log = root / "hooks.log"
-            self.write_hook(repository, "pre-commit", f"echo pre-commit >> '{log}'\n")
-            self.write_hook(repository, "commit-msg", f"echo commit-msg >> '{log}'\n")
+            # Hooks run at the root of the working tree, so a fixed relative path
+            # keeps the temporary directory's name out of the hook text.
+            log = repository / ".git" / "hooks.log"
+            self.write_hook(repository, "pre-commit", "echo pre-commit >> .git/hooks.log\n")
+            self.write_hook(repository, "commit-msg", "echo commit-msg >> .git/hooks.log\n")
 
             # 1 and 2: ordinary git commit from the verified index runs both hooks and
             # carries the recorded tree and parent.
@@ -429,8 +431,8 @@ class GitContractTests(unittest.TestCase):
             remote.mkdir()
             self.run_git(remote, "init", "--bare", "--quiet")
             self.run_git(repository, "remote", "add", "origin", str(remote))
-            seen = root / "pre-push.log"
-            self.write_hook(repository, "pre-push", f"printf '%s\\n' \"$1\" >> '{seen}'\n")
+            seen = repository / ".git" / "pre-push.log"
+            self.write_hook(repository, "pre-push", "printf '%s\\n' \"$1\" >> .git/pre-push.log\n")
             self.run_git(repository, "push", "--quiet", "--no-follow-tags", str(remote), "refs/heads/main:refs/heads/main")
             self.assertEqual(old_head, self.run_git(remote, "rev-parse", "refs/heads/main").stdout.strip())
             self.assertEqual(old_head, self.run_git(repository, "rev-parse", "--verify", "refs/remotes/origin/main").stdout.strip())
