@@ -108,7 +108,11 @@ The explicit invocation selects the lightweight direct-submit phase. It keeps ho
 
 This combined request selects [prepared-release submission](../../plugin/skills/traceable-git-submit/references/prepared-release-submit.md). Freeze the authorized changes, commit message, exact tag, signing requirements, and push targets. Where direct tag creation is permitted, push the exact branch and tag atomically to each authorized endpoint, then verify both refs. If a repository controller owns protected tag creation, hand that action to its separately authorized owner. This phase creates no checkpoint or baseline metadata and grants no GitHub Release, marketplace, or installation action. An uncertain push result permits verification, not an automatic retry.
 
-An ordinary "commit the staged change and git push origin main" stays host-native. An expected authorized staged set is normal, not a manufactured conflict. Additional paths, target drift, retries, or cleanup need their own authority and checks. No phase force-pushes: a request that needs a force push stops, and that push is left to you. Consolidation and recovery details belong to the Skill rather than this example.
+> Force-push my rebased search-filters branch to origin and replace its remote history.
+
+This request selects the [leased force-push phase](../../plugin/skills/traceable-git-submit/references/leased-force-push.md). It reads the branch's live remote tip, shows the commits that would be discarded, keeps that tip under a backup ref, and pushes once with a lease on the tip you were shown, so the remote refuses the push if it has moved. The remote's default branch needs its own name in your request, and a remote with several push destinations is your decision before any write. The report gives the command that would restore the old tip.
+
+An ordinary "commit the staged change and git push origin main" stays host-native. An expected authorized staged set is normal, not a manufactured conflict. Additional paths, target drift, retries, or cleanup need their own authority and checks, and push authority never implies a force push. Consolidation and recovery details belong to the Skill rather than this example.
 
 ## `reversible-system-change`
 

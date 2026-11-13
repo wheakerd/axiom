@@ -108,7 +108,11 @@
 
 这个组合请求会选中[已备妥发布的提交](../../plugin/skills/traceable-git-submit/references/prepared-release-submit.md)。冻结获授权的变更、提交信息、确切标签、签名要求与推送目标。在允许直接创建标签的地方，把确切的分支与标签原子地推送到每个获授权的端点，然后验证两个引用。如果某个仓库控制器负责受保护标签的创建，就把该操作交给其单独授权的所有者。该阶段不创建检查点或基线元数据，也不授予 GitHub Release、市场或安装操作。不确定的推送结果允许验证，而不是自动重试。
 
-普通的“commit the staged change and git push origin main”留在宿主原生处理。预期中的、已获授权的暂存集是正常情况，不是人为制造的冲突。额外的路径、目标漂移、重试或清理需要各自的权限与检查。没有任何阶段会强制推送：需要强制推送的请求会停下，这次推送留给你自己执行。合并整理与恢复的细节属于该技能而不是本示例。
+> Force-push my rebased search-filters branch to origin and replace its remote history.
+
+这个请求会选中[带租约的强制推送阶段](../../plugin/skills/traceable-git-submit/references/leased-force-push.md)。它读取该分支在远端的当前提交，展示将被丢弃的提交，把这个提交保存在备份引用下，然后只推送一次，并以你看到的那个提交作为租约，这样远端一旦变动就会拒绝这次推送。远端的默认分支需要在你的请求里写出它自己的名字；远程配置了多个推送地址时，在任何写入之前由你决定如何处理。报告里会给出恢复旧提交的命令。
+
+普通的“commit the staged change and git push origin main”留在宿主原生处理。预期中的、已获授权的暂存集是正常情况，不是人为制造的冲突。额外的路径、目标漂移、重试或清理需要各自的权限与检查，推送权限绝不隐含强制推送。合并整理与恢复的细节属于该技能而不是本示例。
 
 ## `reversible-system-change`
 
