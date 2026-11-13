@@ -11,12 +11,19 @@ import unittest
 from axiom_validation.context import REPOSITORY_ROOT
 from axiom_validation.repository_policy import (
     CRITICAL_CODEOWNER_PATTERNS,
+    INSTRUCTION_MAX_BYTES,
+    ROUTING_GATE_MAX_BYTES,
+    ROUTING_GATE_RELATIVE,
+    SKILL_DESCRIPTION_MAX_CHARACTERS,
     check_critical_path_owners,
     check_critical_path_targets,
+    check_instruction_file_sizes,
     check_packaged_skills,
     check_repository_governance_contract,
     check_required_files,
+    check_routing_gate_size,
     check_skill_contracts,
+    check_skill_description,
 )
 
 
@@ -52,6 +59,90 @@ class RepositoryPolicyTests(unittest.TestCase):
         check_packaged_skills(failures)
         check_skill_contracts(failures)
         self.assertEqual([], failures)
+
+    def _instruction_files(self, root, sizes):
+        for relative_path, size in sizes.items():
+            target = root / relative_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"x" * size)
+
+    def test_size_boundaries_keep_their_decided_values(self):
+        self.assertEqual(16384, INSTRUCTION_MAX_BYTES)
+        self.assertEqual(7372, ROUTING_GATE_MAX_BYTES)
+        self.assertEqual(1024, SKILL_DESCRIPTION_MAX_CHARACTERS)
+
+    def test_instruction_sizes_accept_files_below_the_on_demand_boundary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._instruction_files(
+                root,
+                {
+                    "plugin/skills/fixture/SKILL.md": INSTRUCTION_MAX_BYTES - 1,
+                    "plugin/skills/fixture/references/detail.md": INSTRUCTION_MAX_BYTES - 1,
+                },
+            )
+
+            failures = []
+            check_instruction_file_sizes(failures, root)
+            self.assertEqual([], failures)
+
+    def test_instruction_sizes_reject_an_entry_file_and_a_reference_at_the_boundary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._instruction_files(
+                root,
+                {
+                    "plugin/skills/fixture/SKILL.md": INSTRUCTION_MAX_BYTES,
+                    "plugin/skills/fixture/references/detail.md": INSTRUCTION_MAX_BYTES + 1,
+                },
+            )
+
+            failures = []
+            check_instruction_file_sizes(failures, root)
+            self.assertEqual(
+                [
+                    "plugin/skills/fixture/SKILL.md is 16384 bytes; "
+                    "instruction files must stay below 16384",
+                    "plugin/skills/fixture/references/detail.md is 16385 bytes; "
+                    "instruction files must stay below 16384",
+                ],
+                sorted(failures),
+            )
+
+    def test_routing_gate_size_accepts_the_ceiling_and_rejects_one_byte_more(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._instruction_files(root, {ROUTING_GATE_RELATIVE: ROUTING_GATE_MAX_BYTES})
+
+            failures = []
+            check_routing_gate_size(failures, root)
+            self.assertEqual([], failures)
+
+            self._instruction_files(root, {ROUTING_GATE_RELATIVE: ROUTING_GATE_MAX_BYTES + 1})
+            check_routing_gate_size(failures, root)
+            self.assertEqual(
+                [
+                    "plugin/skills/using-axiom/SKILL.md has 7373 bytes; "
+                    "the routing gate must stay within 7372 bytes"
+                ],
+                failures,
+            )
+
+    def test_skill_description_accepts_the_limit_and_rejects_one_character_more(self):
+        failures = []
+        check_skill_description("fixture", "x" * SKILL_DESCRIPTION_MAX_CHARACTERS, failures)
+        self.assertEqual([], failures)
+
+        check_skill_description("fixture", "x" * (SKILL_DESCRIPTION_MAX_CHARACTERS + 1), failures)
+        check_skill_description("fixture", "", failures)
+        self.assertEqual(
+            [
+                "fixture description has 1025 characters; "
+                "a skill description must contain at most 1024",
+                "fixture description must be non-empty",
+            ],
+            failures,
+        )
 
     def test_repository_governance_and_codeowners_contract(self):
         failures = []

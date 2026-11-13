@@ -76,7 +76,12 @@ BUNDLED_SKILL_ORDER = (
     "traceable-git-submit",
     "reversible-system-change",
 )
-INSTRUCTION_MAX_BYTES = 8192
+# Text a host loads in every session keeps the smaller boundary; an instruction
+# file that loads only after selection, an entry file or a reference, has the larger.
+ALWAYS_LOADED_MAX_BYTES = 8192
+INSTRUCTION_MAX_BYTES = 16384
+# The Agent Skills specification's limit for a skill description.
+SKILL_DESCRIPTION_MAX_CHARACTERS = 1024
 GOVERNANCE_OWNER = "@wheakerd"
 CRITICAL_CODEOWNER_PATTERNS = (
     "/.github/CODEOWNERS",
@@ -108,6 +113,28 @@ def parse_skill_frontmatter(path: Path, failures: list[str]) -> dict[str, str] |
         return None
 
 
+def check_skill_description(label: str, description: str, failures: list[str]) -> None:
+    """Require a non-empty description within the specification's length limit."""
+    if not description:
+        failures.append(f"{label} description must be non-empty")
+    elif len(description) > SKILL_DESCRIPTION_MAX_CHARACTERS:
+        failures.append(
+            f"{label} description has {len(description)} characters; a skill description "
+            f"must contain at most {SKILL_DESCRIPTION_MAX_CHARACTERS}"
+        )
+
+
+def check_instruction_file_sizes(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
+    """Keep every packaged instruction file below the on-demand byte boundary."""
+    for path in sorted((root / "plugin" / "skills").rglob("*.md")):
+        byte_count = len(path.read_bytes())
+        if byte_count >= INSTRUCTION_MAX_BYTES:
+            failures.append(
+                f"{path.relative_to(root).as_posix()} is {byte_count} bytes; "
+                f"instruction files must stay below {INSTRUCTION_MAX_BYTES}"
+            )
+
+
 def check_skill_contracts(failures: list[str]) -> None:
     for skill_name in EXPECTED_DIRECT_SKILLS:
         skill_root = REPOSITORY_ROOT / "plugin" / "skills" / skill_name
@@ -121,8 +148,7 @@ def check_skill_contracts(failures: list[str]) -> None:
             )
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", fields["name"]):
             failures.append(f"{display_path(main_path)} has a non-kebab-case name")
-        if not fields["description"]:
-            failures.append(f"{display_path(main_path)} description must be non-empty")
+        check_skill_description(display_path(main_path), fields["description"], failures)
 
         main_text = main_path.read_text(encoding="utf-8")
         for reference in sorted((skill_root / "references").rglob("*.md")) if (skill_root / "references").is_dir() else ():
@@ -151,13 +177,7 @@ def check_skill_contracts(failures: list[str]) -> None:
                         f"{display_path(metadata_path)} default_prompt must mention ${skill_name}"
                     )
 
-    for path in sorted((REPOSITORY_ROOT / "plugin" / "skills").rglob("*.md")):
-        byte_count = len(path.read_bytes())
-        if byte_count >= INSTRUCTION_MAX_BYTES:
-            failures.append(
-                f"{display_path(path)} is {byte_count} bytes; instruction files must stay below "
-                f"{INSTRUCTION_MAX_BYTES}"
-            )
+    check_instruction_file_sizes(failures)
 
     if tuple(sorted(BUNDLED_SKILL_ORDER)) != EXPECTED_DIRECT_SKILLS:
         failures.append(
@@ -291,14 +311,14 @@ def check_packaged_skills(failures: list[str]) -> None:
 
 ROUTING_GATE_RELATIVE = "plugin/skills/using-axiom/SKILL.md"
 # Both hosts deliver the gate through a startup hook; the ceiling keeps 10% headroom
-# below the 8192-byte instruction-file limit.
-ROUTING_GATE_MAX_BYTES = 8192 * 90 // 100
+# below the 8192-byte boundary for always-loaded text.
+ROUTING_GATE_MAX_BYTES = ALWAYS_LOADED_MAX_BYTES * 90 // 100
 
 
-def check_routing_gate_size(failures: list[str]) -> None:
+def check_routing_gate_size(failures: list[str], root: Path = REPOSITORY_ROOT) -> None:
     """Keep the startup gate under its byte ceiling."""
     try:
-        size = len((REPOSITORY_ROOT / ROUTING_GATE_RELATIVE).read_bytes())
+        size = len((root / ROUTING_GATE_RELATIVE).read_bytes())
     except OSError as error:
         failures.append(f"cannot read {ROUTING_GATE_RELATIVE}: {error}")
         return
