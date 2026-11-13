@@ -1,6 +1,6 @@
 ---
 name: local-web-search
-description: Use before web search or page access through the user's own browser, CLI, script, or HTTP client, or that the user says runs on their machine, including a fallback from cloud search to such a client. A host's built-in web tool, confirmed cloud search, and web app actions stay outside.
+description: Use before web search or page access through the user's own browser, CLI, script, or HTTP client, or a tool the user says runs on their machine, including a fallback from cloud search to such a client. A host's built-in web tool, confirmed cloud search, and web app actions stay outside.
 ---
 
 # Local Web Search

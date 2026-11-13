@@ -1,6 +1,6 @@
 ---
 name: continuous-progress
-description: Supervised progress across host sessions by explicit invocation only, pursuing a defined outcome through fresh sessions, coordinator handoffs, compaction, and recovery. Activation needs a native scheduler for the supervisor, a Desktop or cloud scheduled task or GitHub Actions rather than a CLI session alone, and existing authority. Not for ordinary continuation, one-off work, or native Goals alone.
+description: Supervised progress across host sessions by explicit invocation only, pursuing a defined outcome through fresh sessions, coordinator handoffs, compaction, and recovery. Activation needs the host's native scheduler for the supervisor, which a CLI session alone cannot provide, and existing authority. Not for ordinary continuation, one-off work, or native Goals alone.
 ---
 
 # Continuous Progress
