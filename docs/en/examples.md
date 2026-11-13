@@ -10,7 +10,7 @@ A request that names a skill uses Codex's `$skill-name` form here. In Claude Cod
 
 > Clean up the old records.
 
-If context leaves archiving, deduplication, and deletion as materially different outcomes, the gate selects [Clarify Intent](../../plugin/skills/clarify-intent/SKILL.md). Ask one focused question per open decision, with plausible options and a custom answer, before dependent work; ask independent decisions together in one round. "Maybe fix this identified typo" needs no clarification when the correction is clear. A permission-bypass mode does not resolve intent.
+If context leaves archiving, deduplication, and deletion as materially different outcomes, the gate selects [Clarify Intent](../../plugin/skills/clarify-intent/SKILL.md). Ask one focused question per open decision, with plausible options and a custom answer, before dependent work; ask independent decisions together in one round, and end every round with one open item for additions and corrections. "Maybe fix this identified typo" needs no clarification when the correction is clear. A permission-bypass mode does not resolve intent.
 
 ## `delegate-simple-task`
 
