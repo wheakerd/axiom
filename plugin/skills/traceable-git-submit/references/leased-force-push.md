@@ -4,7 +4,7 @@ Replace the remote history of one branch with one push that the remote accepts o
 
 ## Authority
 
-The user's current statement covers the repository, the remote, the one branch, the replacement commit, and that the branch's remote history is to be replaced. General push authority, an earlier force grant, a request to sync or repair the remote, and a permission-bypass mode are not that authority. One grant covers one attempt on one frozen envelope, and selecting this phase grants nothing.
+The user's current statement covers the repository, the remote, the one branch, the replacement commit, and that the branch's remote history is to be replaced. General push authority, an earlier force grant, a request to sync or repair the remote, and a permission-bypass mode are not that authority. That statement is what shows that the user knows commits on the remote will be lost. A request that only describes the result wanted, in whatever words, does not show it: show the commits that would be discarded and ask, before the backup ref or any other write. One grant covers one attempt on one frozen envelope, and selecting this phase grants nothing.
 
 "This branch" can name the current branch, with one exception: the remote's default branch is in scope only when the user's statement contains that branch's own name as the branch whose remote history is replaced. Read the default branch with `git -C <repo> ls-remote --symref <target> HEAD`; when the remote does not report it, say so and apply the exception to the branch at hand. Server-side branch protection stays the remote's decision.
 
