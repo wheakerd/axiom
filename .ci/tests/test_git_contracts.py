@@ -775,6 +775,12 @@ class GitContractTests(unittest.TestCase):
             self.fixture_git(repository, "config", "--add", "remote.origin.pushurl", backup)
             self.assertEqual(f"{primary}\n{backup}\n", listing("origin").stdout)
 
+            # Several fetch URLs and no push URL: each is a destination, and the plain query prints the first.
+            self.fixture_git(repository, "remote", "add", "mirrors", primary)
+            self.fixture_git(repository, "config", "--add", "remote.mirrors.url", backup)
+            self.assertEqual(f"{primary}\n", self.fixture_git(repository, "remote", "get-url", "mirrors").stdout)
+            self.assertEqual(f"{primary}\n{backup}\n", listing("mirrors").stdout)
+
             # A name that is no configured remote fails and lists nothing.
             absent = listing("absent", check=False)
             self.assertNotEqual(0, absent.returncode)
