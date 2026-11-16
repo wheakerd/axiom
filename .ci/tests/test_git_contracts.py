@@ -751,6 +751,35 @@ class GitContractTests(unittest.TestCase):
             self.fixture_git(repository, "config", "remotes.origin", "origin member")
             self.assertEqual("origin member\n", group("origin").stdout)
 
+    def test_destination_listing_prints_each_push_url_in_configuration_order(self):
+        fetch = "ssh://fetch.example.invalid/axiom.git"
+        primary = "ssh://primary.example.invalid/axiom.git"
+        backup = "ssh://backup.example.invalid/axiom.git"
+        with tempfile.TemporaryDirectory(prefix="axiom-destinations-") as temporary:
+            repository = Path(temporary) / "repository"
+            self.initialize_fixture(repository)
+
+            def listing(remote, check=True):
+                return self.fixture_git(repository, "remote", "get-url", "--push", "--all", remote, check=check)
+
+            # One URL and no push URL: the fetch URL is the one destination.
+            self.fixture_git(repository, "remote", "add", "origin", fetch)
+            self.assertEqual(f"{fetch}\n", listing("origin").stdout)
+
+            # A push URL replaces it as the destination, and the first fetch URL stays readable.
+            self.fixture_git(repository, "config", "--add", "remote.origin.pushurl", primary)
+            self.assertEqual(f"{primary}\n", listing("origin").stdout)
+            self.assertEqual(f"{fetch}\n", self.fixture_git(repository, "remote", "get-url", "origin").stdout)
+
+            # Two push URLs are two destinations, in configuration order and not sorted.
+            self.fixture_git(repository, "config", "--add", "remote.origin.pushurl", backup)
+            self.assertEqual(f"{primary}\n{backup}\n", listing("origin").stdout)
+
+            # A name that is no configured remote fails and lists nothing.
+            absent = listing("absent", check=False)
+            self.assertNotEqual(0, absent.returncode)
+            self.assertEqual("", absent.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
