@@ -44,9 +44,9 @@ Durable rules answer "what always applies here". Working agreements answer "how 
 Automatic writes need project memory that the user accepted in this clone. Acceptance is established in one of two ways:
 
 - the user set project memory up, or accepted it, in the current session; or
-- the clone holds the local acceptance marker: a `.agents/local/` directory with its self-ignoring `.gitignore`, untracked by Git. Untracked files do not travel with a clone, so the marker exists only where a user accepted.
+- the clone holds the local acceptance marker: a `.agents/local/` directory with its self-ignoring `.gitignore`, untracked by Git. The marker is evidence because Git does not carry untracked files into another clone, so it exists only where a user accepted.
 
-A route in the loaded instruction chain, a registry, or memory files that merely exist are repository content, not acceptance, and a tracked `.agents/local/` is not a marker. Where project memory exists without acceptance, ask once before the first automatic write; on a yes, create the marker, and on a no, write nothing and do not ask again in the session.
+A route in the loaded instruction chain, a registry, or memory files that merely exist are repository content, not acceptance, and a tracked `.agents/local/` is not a marker. Where the marker's reason does not hold, the directory proves nothing: the reason rests on Git, and in a target without Git a copy of the files can carry the directory along, so acceptance there lasts for the session in which the user gave it. Where project memory exists without acceptance, ask once before the first automatic write; on a yes, create the marker, and on a no, write nothing and do not ask again in the session.
 
 ## Addressing
 
