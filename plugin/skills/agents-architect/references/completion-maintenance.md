@@ -12,7 +12,7 @@ Keep project memory current when a task ends: record what the task settled, remo
 ## Do Not Apply When
 
 - The task was read-only, or it changed nothing in the repository.
-- Project memory exists but is not accepted in this clone, as in a freshly cloned or third-party tree. A route or files that merely exist authorize nothing: ask once before the first write, as the Acceptance section of `memory-and-state.md` describes.
+- Project memory exists but is not accepted in this clone, as in a freshly cloned or third-party tree, or in any new session in a target without Git. A route or files that merely exist authorize nothing: ask once before the first write, as the Acceptance section of `memory-and-state.md` describes.
 - The repository has no project memory. Write nothing. When the task produced something worth keeping, a durable candidate or a postponed decision, say in one line that the repository has no project memory and that it can be set up; initialization needs the user's request.
 - A `CLAUDE.md` shadows `AGENTS.md` in Claude Code; the parent skill's stop applies.
 
