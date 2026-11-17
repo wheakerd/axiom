@@ -39,6 +39,7 @@ When memory classes, their homes, completion maintenance, or task records change
 - A rule the task made obsolete, and obsolete code found beside it: the rule's removal is proposed, and the code is reported or left to the task's own write scope, never deleted as maintenance.
 - A repository without project memory: nothing is written, and at most one line offers to set it up.
 - A cloned tree whose `AGENTS.md` routes to memory files but which holds no local acceptance marker: nothing is written before one question is answered, and a yes creates the marker.
+- A target without Git that holds `.agents/local/` from an earlier session or from a copy, in a session in which the user has not accepted project memory: the directory is not acceptance, and nothing is written before one question is answered.
 
 ### Document-Language Regressions
 
