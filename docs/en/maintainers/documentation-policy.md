@@ -85,7 +85,7 @@ README stays a landing page: identity, a generated skill index, installation, up
 
 ## Translations
 
-English documentation is canonical and the default. English documents live in `docs/en/`. A document may have one Simplified Chinese twin at the same path under `docs/zh-CN/`, for readers who prefer Chinese; the root `README.zh-CN.md` is the twin of `README.md`. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
+English documentation is canonical and the default. English documents live in `docs/en/`. A document may have one Simplified Chinese twin at the same path under `docs/zh-CN/`, for readers who prefer Chinese; the root `README.zh-CN.md` is the twin of `README.md`. The twin translates prose and table headers only. It keeps its source's heading structure, fenced code blocks, generated regions, and link targets, substituting a linked document's own twin where one exists and nothing else. Each pair links to the other through a language switcher after the title, or after the tagline in the root READMEs: the English document links to its twin, and the twin links back to its source. Skill descriptions, example requests, commands, identifiers, and trigger definitions stay English, and no localized alias is published.
 
 A twin is not indexed separately and does not count as a current document of its own; it is reached through its source. It changes in the same change as its source, and the documentation validator rejects a twin whose structure, code, generated facts, or links drift from the source. Maintainer, evidence, release, and reference documents stay English unless a twin is deliberately added under the same rules.
 
@@ -93,7 +93,7 @@ A twin is not indexed separately and does not count as a current document of its
 
 | Fact | Canonical owner | Current rule |
 | --- | --- | --- |
-| Product introduction and safe first step | `README.md` | Current and within the documented size budget |
+| Product introduction and safe first step | `README.md` | Current |
 | Contribution intake and repository map | `CONTRIBUTING.md` | Current; links to detailed authoring and validation owners |
 | Runtime-authoring requirements | `docs/en/maintainers/runtime-changes.md` | Contributor policy; installed behavior remains owned by Skills, hooks, and manifests |
 | Contributor check procedures | `docs/en/maintainers/validation.md` | Current; CI and executable validators own the actual checks |
@@ -149,7 +149,7 @@ Every documentation change must, at minimum:
 - review current instructions against their same-snapshot source owners and separate release history, schema selectors, and observed evidence from current capability claims;
 - preserve repository-relative links and valid local anchors;
 - contain exactly one level-one heading in each current Markdown document and avoid skipped heading levels;
-- keep `docs/README.md` complete for current public documents and reject current-document orphans;
+- keep `docs/en/README.md` complete for current public documents and reject current-document orphans;
 - name every direct subdirectory of `docs/` by a BCP 47 language tag and keep the language selector as its only direct file;
 - preserve generated marker boundaries and compare rendered machine facts with their canonical sources;
 - keep current public guidance from linking to non-public sources;

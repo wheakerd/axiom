@@ -61,4 +61,4 @@ A repository-only change creates no package tag, GitHub Release, Latest change, 
 
 ## What The Identity Does Not Prove
 
-A version or matching digest proves neither installation nor publication; the tag, the GitHub Release, and the `release` branch are the publication state. An unchanged digest identifies unchanged bytes and creates no host observation. See [Compatibility](compatibility.md) for the support boundary and for [reporting a host result](compatibility.md#report-a-compatibility-result).
+A version or matching digest proves neither installation nor publication; the tag, the GitHub Release, and the `release` branch are the publication state. An unchanged digest identifies unchanged included runtime inputs after normalization under the same schema and creates no host observation. See [Compatibility](compatibility.md) for the support boundary and for [reporting a host result](compatibility.md#report-a-compatibility-result).

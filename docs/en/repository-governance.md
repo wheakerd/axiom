@@ -77,7 +77,7 @@ No moving `ubuntu-latest` compatibility canary is currently defined. This omissi
 
 `Unit and integration tests` produces the exact `unit-and-integration-tests` check. It runs the complete standard-library unittest discovery command in the fixed blocking environment and remains separate from package and publication-policy validation. The active `main` ruleset requires these two checks plus `hook-runtime-gate` and accepts all three only from GitHub Actions.
 
-`Cross-platform hook runtime integration` separately executes the exact checked-in Codex and Claude Code `SessionStart` command strings on `ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and `hook-runtime-macos-15`. They use no repository secret, do not persist checkout credentials, and exercise only temporary roots through `cmd.exe` or no-profile Bash, as applicable to the checked-in command.
+`Cross-platform hook runtime integration` separately executes the exact checked-in Codex and Claude Code `SessionStart` and `UserPromptSubmit` command strings on `ubuntu-24.04`, `windows-2025`, and `macos-15`. Its three read-only matrix checks are `hook-runtime-ubuntu-24.04`, `hook-runtime-windows-2025`, and `hook-runtime-macos-15`. They use no repository secret, do not persist checkout credentials, and exercise only temporary roots through `cmd.exe` or no-profile Bash, as applicable to the checked-in command.
 
 ### Hook Runtime Gate
 
@@ -98,7 +98,7 @@ It runs these gates in order and writes nothing until all of them pass:
 1. the tag name is strict SemVer `vX.Y.Z`, and an annotated tag carries a verified signature;
 2. the tagged commit is `main`'s head or an ancestor of it, and has a valid signature made with GitHub's signing key;
 3. `repository-guards`, `unit-and-integration-tests`, `hook-runtime-gate`, `Verify signed main history`, and `Verify created release tag` succeeded on the tagged commit;
-4. the version is the immediate patch, minor, or major successor of GitHub Latest, and Latest is the highest published release;
+4. the version is the immediate patch, minor, or major successor of the highest release tag below it, if one exists, and GitHub Latest, when present, is the highest published release below it;
 5. the installed-runtime digest of the tagged tree differs from the one recorded in Latest's evidence asset, except for the bootstrap release that runs while `release` holds no release commit yet;
 6. no Release uses the tag, and the release branch passes its [shape check](#release-branch-policy) with an older version; and
 7. the tagged tree with both manifests stamped passes `python3 -B .ci/check.py --release-version X.Y.Z` in a disposable worktree.
@@ -127,7 +127,7 @@ Commits made with `GITHUB_TOKEN` start no other workflow run. A manual push to `
 
 Immutable releases are enabled for `wheakerd/axiom`. The setting applies to Releases published after it was enabled.
 
-The checkout cannot prove that this remote setting remains enabled. The release workflow reads it before any mutation, immediately before publication, and after publication. Final acceptance also requires GitHub's Release response itself to report `immutable: true`.
+The checkout cannot prove that this remote setting remains enabled, and neither workflow checks the setting. Before writing, the Release workflow requires an existing GitHub Latest Release to report `immutable: true`. The publisher reads the target Release's `immutable` field when preparing and rechecking its state and after publication; if publication leaves that Release mutable, it deletes that exact Release and fails. Final acceptance requires GitHub's Release response itself to report `immutable: true`.
 
 GitHub's documented immutable-release guarantees cover the associated tag and uploaded assets, and GitHub attaches its own release attestation to an immutable Release. They do not document the Release title, body, Latest marker, or Release object as immutable. Axiom's content-addressed evidence asset, `axiom-vX.Y.Z-release-evidence-<sha256>.json`, binds the tag, which is the exact title, and the release-notes SHA-256, and later verification fails on metadata drift. That is durable detection, not a claim that the platform blocks every metadata edit or Release deletion.
 

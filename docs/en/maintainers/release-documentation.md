@@ -17,14 +17,14 @@ No surface grants commit, tag, Release, asset-upload, publication, or Latest aut
 
 1. Merge the change to `main` through the normal signed pull request, and wait until `repository-guards`, `unit-and-integration-tests`, `hook-runtime-gate`, and `Verify signed main history` have passed on the merge commit.
 2. Classify the change and choose the version with [Runtime Identity](../runtime-identity.md#classify-a-change). A repository-only change creates no tag.
-3. Write the release notes as the message of a signed annotated tag on that commit, and push the tag:
+3. Write the release notes to `notes.md`, use that file as the message of a signed annotated tag on that commit, and push the tag:
 
    ```bash
-   git tag -s vX.Y.Z -m "Release notes in Markdown" <commit>
+   git tag -s vX.Y.Z -F notes.md <commit>
    git push origin vX.Y.Z
    ```
 
-   For longer notes, write them to a file and use `git tag -s vX.Y.Z -F notes.md <commit>`. A lightweight tag on a GitHub-signed commit also releases; its notes are then the commit's full message.
+   A lightweight tag on a GitHub-signed commit also releases; its notes are then the commit's full message.
 
 The [Release workflow](../../../.github/workflows/release.yml) starts on the tag push. Watch its run; its job summary names the Release, the tagged commit, the `release` commit, the installed tree, the zip digest, and the runtime digest.
 
@@ -56,7 +56,7 @@ The Release body is the annotated tag's message when the tag is annotated, other
 Each Release carries two assets and GitHub's own release attestation:
 
 - `axiom-vX.Y.Z-plugin.zip`: the stamped `plugin/` tree, members relative to the plugin root, sorted, stored without compression, with the fixed timestamp 1980-01-01 00:00 and Unix mode 0644. Equal trees give byte-identical zips; the publisher rebuilds it from the tag and compares bytes.
-- `axiom-vX.Y.Z-release-evidence-<sha256>.json`: written by the publisher after it validates the Draft, and the one record of the release's facts, each stated once. `subject` holds the version, tag, tag object, tagged commit and tree, `release` commit and stamped tree, zip name, SHA-256, and size, previous release tag, notes SHA-256, and whether the release was the bootstrap release. `runtimeContract.digest` holds the runtime digest, `verification` names the four required checks and the validator, and `evidenceScope` states what the record covers. Every value is derived from the tag, so the same tag always gives the same bytes. The next release reads the digest from here; when Latest's evidence asset records no digest, the Release workflow computes Latest's digest with the same generator on Latest's tagged tree.
+- `axiom-vX.Y.Z-release-evidence-<sha256>.json`: written by the publisher after it validates the Draft, and the one record of the release's facts, each stated once. `subject` holds the version, tag, tag object, tagged commit and tree, `release` commit and stamped tree, zip name, SHA-256, and size, previous release tag, notes SHA-256, and whether the release was the bootstrap release. `runtimeContract.digest` holds the runtime digest, `verification` names the four required checks and the validator, and `evidenceScope` states what the record covers. The evidence also uses the live `release` commit, its parent, and the previous published release; the same subject and evidence format give the same bytes. The next release reads the digest from here; when Latest's evidence asset records no digest, the Release workflow computes Latest's digest with the same generator on Latest's tagged tree.
 
 Verify a published Release and each downloaded asset with GitHub's attestation:
 
