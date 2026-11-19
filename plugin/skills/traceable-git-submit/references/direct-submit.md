@@ -5,7 +5,7 @@
 Perform one explicitly invoked, ordinary named-remote, one-branch, non-force
 Git push through the repository's normal Git mechanism. Keep this path
 host-native and proportional. It owns no checkpoint, provenance, consolidation,
-raw-target, multi-target, recovery, force, fetch, or retry workflow.
+multi-target, recovery, force, fetch, or retry workflow.
 
 ## Scope
 

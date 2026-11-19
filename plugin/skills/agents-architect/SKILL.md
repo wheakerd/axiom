@@ -1,6 +1,6 @@
 ---
 name: agents-architect
-description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, project memory, and repo-local .agents/skills or .claude/skills, including memory maintenance when a task that changed files completes in a repository that has project memory and leaves something to record, propose, or remove. Also run any explicit effective-instructions mode, such as effective-instructions:preview or effective-instructions:reconcile. Writes only AGENTS.md and routed .agents files; a Claude Code project that has a CLAUDE.md does not load AGENTS.md, so there the skill stops and says so. Not for packaged plugin Skills or plain documentation.
+description: Design, audit, split, or maintain a repository's AGENTS.md system, routed .agents guidance, project memory, and repo-local .agents/skills or .claude/skills, including memory maintenance when a task that changed files completes in a repository that has project memory and leaves something to record, propose, or remove. Also run any explicit effective-instructions mode, such as effective-instructions:preview or effective-instructions:reconcile. Proactive writes stay in AGENTS.md and routed .agents files; requested repo-local skills also get host entries; a Claude Code project that has a CLAUDE.md does not load AGENTS.md, so there the skill stops and says so. Not for packaged plugin Skills or plain documentation.
 ---
 
 # AGENTS Architect
