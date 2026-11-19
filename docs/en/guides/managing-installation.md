@@ -27,11 +27,11 @@ Whether updates are checked or installed automatically, and their timing, are co
 
 ## Version Selection
 
-The [marketplace entry](../../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and the `release` branch as its `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's published source independently. A normal `main` commit leaves that selection unchanged.
+The [marketplace entry](../../../.agents/plugins/marketplace.json) uses Codex's official `git-subdir` source: the repository `url`, the installed plugin root `./plugin` as its `path`, and the `release` branch as its `ref`. The default marketplace remains discoverable from the repository's default branch, while the entry selects the plugin's source independently. A normal `main` commit leaves that selection unchanged.
 
 The Claude Code catalog in `.claude-plugin/marketplace.json` uses the same repository and `release` `ref` through its `git-subdir` source with `path` `plugin`.
 
-Each published version adds one commit to `release` whose plugin manifests carry that version, so a marketplace refresh resolves the newest published version; the catalogs themselves never change for a release. A GitHub Release, its Latest marker, and a Git tag literally named `latest` are different objects; the client does not infer one from the others.
+Each staged version adds one commit to `release` whose plugin manifests carry that version, so a marketplace refresh resolves the version at the branch head, which may have no Release; the catalogs themselves never change for a release. A GitHub Release, its Latest marker, and a Git tag literally named `latest` are different objects; the client does not infer one from the others.
 
 For an existing default-branch registration, use the native marketplace upgrade above, then inspect the installed version. In Codex, run:
 

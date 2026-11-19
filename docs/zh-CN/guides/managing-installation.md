@@ -27,11 +27,11 @@ Claude Code 运行更新后的 Hook 不需要单独的信任步骤，会在插�
 
 ## 版本选择
 
-[市场条目](../../../.agents/plugins/marketplace.json)使用 Codex 官方的 `git-subdir` 源：仓库 `url`、作为其 `path` 的已安装插件根目录 `./plugin`，以及作为其 `ref` 的 `release` 分支。默认市场仍可从仓库的默认分支发现，而该条目独立地选定插件的已发布源。一次普通的 `main` 提交不会改变该选择。
+[市场条目](../../../.agents/plugins/marketplace.json)使用 Codex 官方的 `git-subdir` 源：仓库 `url`、作为其 `path` 的已安装插件根目录 `./plugin`，以及作为其 `ref` 的 `release` 分支。默认市场仍可从仓库的默认分支发现，而该条目独立地选定插件源。一次普通的 `main` 提交不会改变该选择。
 
 `.claude-plugin/marketplace.json` 中的 Claude Code 目录通过其 `git-subdir` 源使用同一仓库与 `release` `ref`，`path` 为 `plugin`。
 
-每个已发布版本都会向 `release` 添加一个提交，其插件清单带有该版本号，因此刷新市场即可解析到最新的已发布版本；发布时目录本身从不改变。GitHub Release、其 Latest 标记以及字面名为 `latest` 的 Git 标签是不同的对象；客户端不会从其中一个推断另一个。
+每个暂存版本都会向 `release` 添加一个提交，其插件清单带有该版本号，因此刷新市场即可解析到分支顶端的版本，该版本可能尚无 Release；发布时目录本身从不改变。GitHub Release、其 Latest 标记以及字面名为 `latest` 的 Git 标签是不同的对象；客户端不会从其中一个推断另一个。
 
 对于已有的默认分支注册，先使用上面的原生市场升级，再检查已安装的版本。在 Codex 中运行：
 
