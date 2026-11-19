@@ -36,7 +36,7 @@ Classify each candidate into exactly one category:
 - Invalid or redundant content: delete, merge, or leave outside AGENTS.
 - Axiom packaged skill protocol or trigger content: leave in the installed Axiom plugin, not in the target AGENTS system.
 
-## Admission gate
+## Migration gate
 
 Before writing a durable rule, require:
 

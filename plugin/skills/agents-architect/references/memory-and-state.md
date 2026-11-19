@@ -20,13 +20,13 @@ Decide where each kind of project knowledge lives, keep every owner reachable fr
 
 | Class | Holds | Default home | In Git | Written |
 | --- | --- | --- | --- | --- |
-| Durable rules | Constraints and routed guidance the team shares | Root `AGENTS.md` and routed `.agents/**` owners | Tracked | Proposed; after the user confirms, through the admission gate |
-| Working agreements | How the team or developer wants work done: style, habits, preferences | `.agents/memory/agreements.md` | Tracked | Proposed; after the user confirms, through the admission gate |
+| Durable rules | Constraints and routed guidance the team shares | Root `AGENTS.md` and routed `.agents/**` owners | Tracked | Proposed; after the user confirms, through the durable update gate in `maintenance/maintenance-application.md` |
+| Working agreements | How the team or developer wants work done: style, habits, preferences | `.agents/memory/agreements.md` | Tracked | Proposed; after the user confirms, through the durable update gate in `maintenance/maintenance-application.md` |
 | Deferred decisions | "Not now" items: the decision, its owner, the trigger that reopens it, its state | `.agents/memory/deferred.md` | Tracked | Automatically, and reported |
 | Plans | What was agreed for a task that outlives one session: goal, dated decisions, steps, acceptance | `.agents/memory/plans/<slug>.md` | Tracked | Automatically, and reported |
 | Task records | Progress, the handoff across compaction or resume, temporary notes | `.agents/local/tasks/<slug>.md` | Local | Automatically, and reported |
 
-Durable rules answer "what always applies here". Working agreements answer "how this team wants it done". Deferred decisions answer "what was postponed, and when to raise it". Plans answer "what was agreed". Task records answer "where was I". An automatically written class is never a rule and is never promoted without the admission gate in `maintenance/maintenance-application.md`. `task-records.md` owns the contents and lifecycle of plans, task records, and deferred entries.
+Durable rules answer "what always applies here". Working agreements answer "how this team wants it done". Deferred decisions answer "what was postponed, and when to raise it". Plans answer "what was agreed". Task records answer "where was I". An automatically written class is never a rule and is never promoted without the durable update gate in `maintenance/maintenance-application.md`. `task-records.md` owns the contents and lifecycle of plans, task records, and deferred entries.
 
 ## Homes
 
@@ -88,6 +88,6 @@ For every state or memory action, report the homes used, the memory files create
 ## Prohibited Actions
 
 - Do not write project memory outside `AGENTS.md` and routed `.agents/**` files.
-- Do not promote an automatically written class to a durable rule or a working agreement without the admission gate.
+- Do not promote an automatically written class to a durable rule or a working agreement without the durable update gate in `maintenance/maintenance-application.md`.
 - Do not create registries, group indexes, or memory homes for symmetry.
 - Do not track `.agents/local/` content in Git, and do not put shared decisions there.

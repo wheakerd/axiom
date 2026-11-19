@@ -41,7 +41,7 @@ Only after that compare-and-swap succeeded, commit the index with the message on
 git -C <repo> commit --quiet --no-status -F -
 ```
 
-If the commit does not complete for any reason, including a hook failure, a signing failure, a timeout, or a host denial, the branch is at `upstreamSha` with the index intact: restore it with `git -C <repo> update-ref --no-deref <branch-ref> <old-head> <upstream-sha>`, keep the backup, and stop.
+If the commit's outcome was not observed, read `HEAD` before deciding which path applies; a timeout does not prove that no commit was created. If `HEAD` is still at `upstreamSha`, restore it with `git -C <repo> update-ref --no-deref <branch-ref> <old-head> <upstream-sha>`, keep the backup, and stop.
 
 ```text
 <type>: <concise final summary>

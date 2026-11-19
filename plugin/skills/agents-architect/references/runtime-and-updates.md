@@ -56,7 +56,8 @@ redefining them here.
 `effective-instructions`:
 
 - Extract durable candidates from the established review window.
-- Apply the admission gate.
+- Apply the durable update gate in
+  `maintenance/maintenance-application.md`.
 - Update the smallest canonical leaf.
 - Update indexes only when routing changes.
 - Update root only for true global hard constraints.

@@ -62,7 +62,7 @@ Establish repository facts and narrow the reading scope before designing instruc
 
 ## Host discovery boundaries
 
-Hosts discover and load instruction sources differently. Determine the active host's behavior from its current documentation and observable state before making a loading claim. The dated host facts in `../../using-axiom/references/codex-host.md` and `../../using-axiom/references/claude-code-host.md` summarize how Codex and Claude Code build their instruction chains; they do not replace that check. Each directory contributes at most one host-recognized instruction source, a recognized non-`AGENTS.md` source may replace the same-directory `AGENTS.md` rather than add to it, and a visible host size limit is a truncation guard, not an authoring budget.
+Hosts discover and load instruction sources differently. Determine the active host's behavior from its current documentation and observable state before making a loading claim. The dated host facts in `../../using-axiom/references/codex-host.md` and `../../using-axiom/references/claude-code-host.md` summarize how Codex and Claude Code build their instruction chains; they do not replace that check. Use those host facts for same-directory discovery and precedence; a visible host size limit is a truncation guard, not an authoring budget.
 
 ## Prohibited actions
 
