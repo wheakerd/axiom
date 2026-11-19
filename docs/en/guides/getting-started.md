@@ -17,7 +17,7 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-The [marketplace entry](../../../.agents/plugins/marketplace.json) selects the `release` branch through its Git source `ref`, and that branch holds only published versions. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
+The [marketplace entry](../../../.agents/plugins/marketplace.json) selects the `release` branch through its Git source `ref`, and CI stages versions there before their Releases are published. Fetching the marketplace from the default branch does not install that branch's development plugin files. See [version selection](managing-installation.md#version-selection) for fixed sources and existing installations.
 
 The official `--sparse` option limits the marketplace checkout to its catalog directory. The catalog's `git-subdir` source fetches the plugin separately, so the plugin's Skills and Hook do not need additional marketplace sparse paths. This CLI option follows the official [marketplace registration documentation](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If `axiom` is already registered without sparse checkout, follow the [migration procedure](managing-installation.md#marketplace-clone-timeouts).
 
@@ -48,7 +48,7 @@ Use this read-only request:
 
 > Audit this repository's AGENTS.md instruction system. Report findings only; do not modify files.
 
-The expected contract is selection of `agents-architect`, a read-only evidence report, and no file mutation. A route selection is not permission to change the repository. With `using-axiom` active, the model and host may explain the invocation according to your output-verbosity preferences. For example:
+The expected contract is selection of `agents-architect`, a read-only evidence report, and no file mutation. A route selection is not permission to change the repository. With `using-axiom` active, the invocation notice is required; the model chooses how to arrange the surrounding output according to your output-verbosity preferences. For example:
 
 `axiom:agents-architect` Review the repository's instruction structure.
 

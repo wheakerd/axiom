@@ -71,13 +71,13 @@ A host-provided package validator or package read is an additional parsing signa
 
 If a native validator is available, run it against a disposable copy when it may write files. A bounded app-server `plugin/read` can check local package discovery, but it is not a strict schema validator or an installed-session test. Report the exact host version and only the components actually returned. See [Compatibility](../compatibility.md#codex-package-format-and-validation) for the supported package contract.
 
-When Claude Code is installed, run its strict validator from a disposable copy:
+When Claude Code is installed, insert a placeholder `version` such as `"version": "0.0.0"` into `plugin/.claude-plugin/plugin.json` in a disposable repository copy, then run its strict validator from that copy's `plugin/` root (`.`):
 
 ```bash
 claude plugin validate --strict .
 ```
 
-It checks the Claude Code manifest and shared Skill metadata against the installed Claude Code version; record that version with the result. It does not install the plugin or run its Hook. See [Compatibility](../compatibility.md#claude-code-package-format-and-validation).
+It checks the Claude Code manifest and shared Skill metadata against the installed Claude Code version; record that version with the result. An unstamped `main` copy always reports the missing-version diagnostic, which `--strict` treats as a failure. It does not install the plugin or run its Hook. See [Compatibility](../compatibility.md#claude-code-package-format-and-validation).
 
 The repository aggregate owns Axiom's strict package checks. A missing tool is `unavailable`, not `passed`. Do not install, update, or patch system tooling merely to satisfy a contribution check.
 

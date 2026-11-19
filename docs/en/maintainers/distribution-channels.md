@@ -35,10 +35,10 @@ The Codex manifest's `interface.shortDescription` and `interface.longDescription
 
 ## Codex Directory Listing Variant
 
-The OpenAI plugin directory does not accept lifecycle hooks, while the marketplace package keeps Axiom's startup Hook. `.ci/scripts/build-listing-variant.py` derives a hook-less variant from the `plugin/` tree of one tree-ish whose manifests carry a version: the `release` branch, or the release commit of the version to be listed. The same tree is in that Release's `axiom-vX.Y.Z-plugin.zip`.
+The OpenAI plugin directory does not accept lifecycle hooks, while the marketplace package keeps Axiom's `SessionStart` and `UserPromptSubmit` Hooks. `.ci/scripts/build-listing-variant.py` derives a hook-less variant from the `plugin/` tree of one tree-ish whose manifests carry a version: the `release` branch, or the release commit of the version to be listed. For a published version, the same tree is in that Release's `axiom-vX.Y.Z-plugin.zip`.
 
 ```bash
-python3 -B .ci/scripts/build-listing-variant.py --tree-ish origin/release --output /tmp/axiom-variant
+python3 -B .ci/scripts/build-listing-variant.py --tree-ish origin/release --output /path/to/axiom-variant
 ```
 
 The build keeps `.codex-plugin/plugin.json` with every field except `hooks`, copies `skills/`, `assets/`, and `LICENSE` byte for byte, and excludes `hooks/` and `.claude-plugin/` because the directory lists Codex plugins only. It writes `axiom-<version>-codex-directory-variant.zip` (stored entries in sorted order with fixed timestamps) and a JSON build manifest that names the source commit, the `plugin/` tree, the plugin version, every file digest, the removed paths and fields, and the archive digest. Two clean builds of the same tree are byte-identical; `.ci/tests/test_listing_variant.py` proves the exclusions and the determinism.

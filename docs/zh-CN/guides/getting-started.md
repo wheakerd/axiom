@@ -17,7 +17,7 @@ codex plugin marketplace add wheakerd/axiom --sparse .agents/plugins
 codex plugin add axiom@axiom
 ```
 
-[市场条目](../../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定 `release` 分支，该分支只包含已发布的版本。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.md#版本选择)。
+[市场条目](../../../.agents/plugins/marketplace.json)通过其 Git 源的 `ref` 选定 `release` 分支，CI 在版本的 Release 发布之前将版本放入该分支。从默认分支获取市场并不会安装该分支上的开发中插件文件。固定来源与既有安装见[版本选择](managing-installation.md#版本选择)。
 
 官方的 `--sparse` 选项把市场检出限制在存放市场目录的子目录中。目录的 `git-subdir` 源会单独获取插件，因此插件的技能与 Hook 不需要额外的市场稀疏路径。该 CLI 选项依据官方的[市场注册文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。如果 `axiom` 已在没有稀疏检出的情况下注册，请按[迁移流程](managing-installation.md#市场克隆超时)操作。
 
@@ -48,13 +48,13 @@ Codex 会跳过新的或已更改的 Hook，直到你审阅并信任其确切定
 
 > Audit this repository's AGENTS.md instruction system. Report findings only; do not modify files.
 
-预期契约是选中 `agents-architect`、给出只读的证据报告，且不改动任何文件。路由选择不是修改仓库的许可。在 `using-axiom` 生效时，模型与宿主可以按你的输出详细程度偏好说明这次调用。例如：
+预期契约是选中 `agents-architect`、给出只读的证据报告，且不改动任何文件。路由选择不是修改仓库的许可。在 `using-axiom` 生效时，调用通知是必需的；模型按你的输出详细程度偏好决定如何安排周围的输出。例如：
 
 `axiom:agents-architect` Review the repository's instruction structure.
 
-整个 Axiom 技能标记是行内代码。外部或仓库本地的技能、插件或 MCP 能力保留其自身的行内代码名称和简短原因，不加 `axiom:` 前缀。模型自行决定是否说明调用以及如何安排周围的输出。
+整个 Axiom 技能标记是行内代码。外部或仓库本地的技能、插件或 MCP 能力保留其自身的行内代码名称和简短原因，不加 `axiom:` 前缀。根据门控的第五条不变量，每当选中或移交路由时，都必须给出通知；模型只决定如何安排周围的输出。
 
-这项可选指引属于 `using-axiom`：它通过已启用的启动门控或对该技能的显式调用生效。门控被禁用时，单独调用另一个 Axiom 技能并不会激活通知指引。
+这项通知规则属于 `using-axiom`：它通过已启用的启动门控或对该技能的显式调用生效。门控被禁用时，单独调用另一个 Axiom 技能并不会激活通知规则。
 
 ## 尝试一个对照请求
 

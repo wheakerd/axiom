@@ -12,7 +12,7 @@ Ask questions and discuss early ideas in [GitHub Discussions](https://github.com
 | [plugin/skills/](plugin/skills) | Skill source shared by both hosts, with supporting resources loaded on demand |
 | [plugin/.codex-plugin/plugin.json](plugin/.codex-plugin/plugin.json) | Codex plugin manifest |
 | [plugin/.claude-plugin/plugin.json](plugin/.claude-plugin/plugin.json) | Claude Code plugin manifest |
-| [plugin/hooks/](plugin/hooks) | Codex and Claude Code startup Hook declarations and packaged wrappers |
+| [plugin/hooks/](plugin/hooks) | Codex and Claude Code `SessionStart` and `UserPromptSubmit` Hook declarations and packaged wrappers |
 | [plugin/assets/](plugin/assets) | Codex plugin interface artwork |
 | [.agents/plugins/marketplace.json](.agents/plugins/marketplace.json) | Codex marketplace wrapper |
 | [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) | Claude Code marketplace catalog |
@@ -44,7 +44,7 @@ Hosts install only `plugin/`; the rest of the repository supports development, v
 | Repository controls or release provenance | [Repository Governance](docs/en/repository-governance.md) |
 | Releases, release notes, or release evidence | [Release Documentation And Evidence](docs/en/maintainers/release-documentation.md) |
 
-English documentation is canonical and lives in `docs/en/`. A document may have a Simplified Chinese twin at the same path under `docs/zh-CN/` (the root `README.zh-CN.md` is the twin of `README.md`) that translates prose and table headers only, keeps the same headings, code blocks, generated regions, and link targets, and changes in the same change as its source; the documentation validator rejects drift. Keep descriptions, examples, commands, and trigger definitions in English, and publish no localized aliases. Use `Axiom` for the brand and `axiom` for plugin, marketplace, route, path, and command identifiers. Link to the canonical owner of a fact instead of maintaining a second copy. The [documentation index](docs/en/README.md) provides task-oriented navigation across these references.
+English documentation is canonical and lives in `docs/en/`. A document may have a Simplified Chinese twin at the same path under `docs/zh-CN/` (the root `README.zh-CN.md` is the twin of `README.md`) that translates prose and table headers only, keeps the same heading structure, code blocks, generated regions, and link targets, and changes in the same change as its source; the documentation validator rejects drift. Keep descriptions, examples, commands, and trigger definitions in English, and publish no localized aliases. Use `Axiom` for the brand and `axiom` for plugin, marketplace, route, path, and command identifiers. Link to the canonical owner of a fact instead of maintaining a second copy. The [documentation index](docs/en/README.md) provides task-oriented navigation across these references.
 
 Write current guides and references for the implementation in the same source snapshot, and update them with the code or contract they explain. Put change narratives in the release notes. Preserve exact versions for schemas and compatibility requirements; source support alone does not establish a published release or host observation. Follow the [source and version rules](docs/en/maintainers/documentation-policy.md#source-and-version-scope) when deciding whether a version belongs in current guidance.
 
