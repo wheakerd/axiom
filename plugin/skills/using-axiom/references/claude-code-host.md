@@ -1,6 +1,6 @@
 # Claude Code Host Facts
 
-Verified against Claude Code 2.1.308 on 2026-10-30 from its installed help output and sessions the maintainers observed; items dated 2026-11-02 were observed on 2.1.309. Items marked (docs) restate the host documentation as read for that release and need a recheck on a newer version. Run `claude --help` for the current commands and flags; this file never replaces it.
+Verified against Claude Code 2.1.308 on 2026-10-30 from its installed help output and sessions the maintainers observed; items dated 2026-11-02 were observed on 2.1.309, and the hooks documentation was read on 2026-11-08. Items marked (docs) restate the host documentation as read for that release and need a recheck on a newer version. Run `claude --help` for the current commands and flags; this file never replaces it.
 
 ## Instructions And Skills
 

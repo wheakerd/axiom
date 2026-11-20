@@ -64,13 +64,13 @@ Immediately before the commit, recheck that `HEAD` is the symbolic ref `branchRe
 git -C <repo> commit --quiet --no-status -F -
 ```
 
-For an empty checkpoint the user asked for, add `--allow-empty`; Git otherwise refuses a commit whose tree equals its parent's. If the commit does not complete for any reason, including a hook failure, a signing failure, a timeout, or a host denial, `HEAD` stays at `parentSha`: stop with the index as it is and report the result. After the commit, verify with `git cat-file -p` and `git diff-tree` that `HEAD` has exactly one parent `parentSha`, tree `stagedTreeSha`, the frozen message, and the frozen changed path set, and record it as `candidateCommitSha`; a hook that rewrote the index or the message makes this proof fail. If any proof fails, restore the branch with compare-and-swap, record the rejected commit's OID, and stop:
+For an empty checkpoint the user asked for, add `--allow-empty`; Git otherwise refuses a commit whose tree equals its parent's. If the commit's outcome was not observed, read `HEAD` before deciding which path applies; a timeout does not prove that no commit was created. If `HEAD` is still at `parentSha`, stop with the index as it is and report the result. After the commit, verify with `git cat-file -p` and `git diff-tree` that `HEAD` has exactly one parent `parentSha`, tree `stagedTreeSha`, the frozen message, and the frozen changed path set, and record it as `candidateCommitSha`; a hook that rewrote the index or the message makes this proof fail. If any proof fails, restore the branch with compare-and-swap, record the rejected commit's OID, and stop:
 
 ```bash
 git -C <repo> update-ref --no-deref <branch-ref> <parent-sha> <candidate-commit-sha>
 ```
 
-A failed restore is branch drift: keep every record and never retry. After a commit whose proofs passed, require `HEAD` and `branchRef` to resolve to the candidate and repeat the parent, tree, message, and path proofs. Capture the index and status before and after the transaction; the write-tree recheck and the tree proof reject a concurrent index change instead of committing it. Append the SHA to `checkpointShas` and remove `pendingCheckpoint` in one record replacement. Do not update the baseline cache after a local checkpoint.
+A failed restore is branch drift: keep every record and never retry. After a commit whose proofs passed, require `HEAD` and `branchRef` to resolve to the candidate and repeat the parent, tree, message, and path proofs. Capture the index and status before and after the transaction; the write-tree recheck and the tree proof reject a concurrent index change instead of keeping a commit that contains it. Append the SHA to `checkpointShas` and remove `pendingCheckpoint` in one record replacement. Do not update the baseline cache after a local checkpoint.
 
 ## Failure And Recovery
 
