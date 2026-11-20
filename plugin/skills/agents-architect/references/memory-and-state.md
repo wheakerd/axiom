@@ -28,6 +28,8 @@ Decide where each kind of project knowledge lives, keep every owner reachable fr
 
 Durable rules answer "what always applies here". Working agreements answer "how this team wants it done". Deferred decisions answer "what was postponed, and when to raise it". Plans answer "what was agreed". Task records answer "where was I". An automatically written class is never a rule and is never promoted without the durable update gate in `maintenance/maintenance-application.md`. `task-records.md` owns the contents and lifecycle of plans, task records, and deferred entries.
 
+Give recorded decisions and observations absolute dates so a later session can tell when each applied.
+
 ## Homes
 
 - The homes above are defaults. A repository with an established shape keeps it; the registry points at what exists.
