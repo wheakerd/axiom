@@ -22,6 +22,12 @@ After authorized activation, the skill assesses the first available candidate wh
 
 A verified permission-bypass mode cannot replace invocation consent. After activation, it permits assignment within existing task authority and host restrictions. Otherwise, use existing assignment approval or obtain it. Missing model preferences require a decision; unavailable delegation may fall back to the main session. This Skill does not invoke clarification itself: the startup gate resolves material ambiguity before delegation.
 
+## `coordinate-sessions`
+
+> Split this documentation review between two agents. Have one check the installation commands and the other check the links. Keep the review read-only and verify both reports here.
+
+[Coordinate Sessions](../../plugin/skills/coordinate-sessions/SKILL.md) keeps this conversation responsible for the review. Consent covers one proposal identifying both collaborators, their scopes and models, and how many run at once. You get directions for opening and stopping each one. Before reporting a finding, the lead checks the command against its source or inspects the link target itself.
+
 ## `task-planning`
 
 > Use the task-planning skill to create an implementation plan for search with acceptance criteria.

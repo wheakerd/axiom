@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coordinate Sessions"
+  short_description: "Coordinate several agents under one lead session"
+  default_prompt: "Use $coordinate-sessions to split this task among several agents. Show me the collaborators, their scopes and models, and how many would run at once. Keep this session responsible for verifying their work."

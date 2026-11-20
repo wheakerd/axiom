@@ -22,6 +22,12 @@
 
 经验证的权限绕过模式不能替代调用同意。激活之后，它允许在既有任务权限与宿主限制之内进行分派。否则，使用既有的分派批准，或先取得批准。缺失的模型偏好需要一个决定；委托不可用时可以回退到主会话。该技能自身不会发起澄清：启动门控会在委托之前解决实质性的歧义。
 
+## `coordinate-sessions`
+
+> Split this documentation review between two agents. Have one check the installation commands and the other check the links. Keep the review read-only and verify both reports here.
+
+使用 [Coordinate Sessions](../../plugin/skills/coordinate-sessions/SKILL.md) 时，发起审阅的会话始终负责这项任务。你一次确认本轮方案，包括两位协作者分别负责什么、使用哪个模型，以及最多同时运行几位。主会话会说明如何进入和停止每位协作者。在向你报告发现之前，主会话会对照来源核实命令，或直接检查链接目标。
+
 ## `task-planning`
 
 > Use the task-planning skill to create an implementation plan for search with acceptance criteria.

@@ -19,6 +19,7 @@
 | 查看路由示例 | [示例](examples.md) | 用户与审阅者 |
 | 解决一个不明确的请求 | [Clarify Intent 示例](examples.md#clarify-intent) | 用户 |
 | 在不更换主模型的情况下委托简单工作 | [Delegate Simple Task 示例](examples.md#delegate-simple-task) | 用户 |
+| 将一项任务分给多个智能体并核实各自的结果 | [Coordinate Sessions 示例](examples.md#coordinate-sessions) | 用户 |
 | 创建或修订任务计划 | [Task Planning 示例](examples.md#task-planning) | 用户 |
 | 显式地跨会话延续一项任务 | [Continuous Progress](../../plugin/skills/continuous-progress/SKILL.md) | 用户 |
 | 通过本地浏览器或客户端做检索 | [Local Web Search 示例](examples.md#local-web-search) | 用户 |

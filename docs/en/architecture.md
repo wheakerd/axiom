@@ -47,6 +47,7 @@ The [Skill sources](../../plugin/skills) and [routing gate](../../plugin/skills/
 | --- | --- |
 | `clarify-intent` | Resolve material ambiguity with one focused question per open decision, plausible options, and a custom answer |
 | `delegate-simple-task` | Select on explicit invocation or a clear delegation request; take consent from the invocation, a standing policy, or the one model-and-brief confirmation; when the startup gate was not delivered, say so and assess ambiguity first; let the main session judge fit; preserve the main model and assignment boundaries |
+| `coordinate-sessions` | Split one requested task among agreed collaborators. The originating session owns the outcome, assigns one owner per effect, and checks each report against the system that owns the result |
 | `task-planning` | Revise existing task plans, or create one on explicit invocation, while preserving specialized planning ownership |
 | `continuous-progress` | Explicitly pursue a defined outcome through fresh workers, coordinator handoffs, and verified host-owned supervision |
 | `local-web-search` | Constrain local research, machine-information disclosure, browsing sequence, and challenged-site handoff |
