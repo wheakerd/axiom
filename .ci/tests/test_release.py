@@ -98,6 +98,7 @@ class FakeGitHub:
         }
         self.releases: list[dict] = [self.latest]
         self.runs: dict[str, list[dict]] = {}
+        self.dispatches: list[tuple[str, dict]] = []
 
     def _add_commit(self, files: dict[str, bytes], parents: list[str]) -> str:
         sha = hashlib.sha1(repr((sorted(files.items()), parents)).encode()).hexdigest()
@@ -129,8 +130,10 @@ class FakeGitHub:
         if path.startswith(f"/compare/{RELEASE_BRANCH_ROOT}..."):
             return {"merge_base_commit": {"sha": RELEASE_BRANCH_ROOT}, "status": "ahead"}
         if path.startswith(f"/commits/{self.commit}/check-runs"):
+            # Existing successful checks may belong to another tag on the same commit.
             names = ("repository-guards", "unit-and-integration-tests", "hook-runtime-gate",
-                     "Verify signed main history", "Verify created release tag", "Observe published immutable release")
+                     "Verify signed main history", "Verify created release tag",
+                     "Verify release branch commit", "Observe published immutable release")
             return {"check_runs": [{"id": index + 1, "name": name, "status": "completed", "conclusion": "success",
                                     "app": {"id": GITHUB_ACTIONS_APP_ID}} for index, name in enumerate(names)]}
         if "/check-runs" in path:
@@ -184,6 +187,7 @@ class FakeGitHub:
             return release
         if path.endswith("/dispatches"):
             workflow = path.split("/")[3]
+            self.dispatches.append((workflow, payload))
             self.runs.setdefault(workflow, []).append({"id": len(self.writes), "status": "completed", "conclusion": "success"})
             if workflow == "publish-immutable-release.yml":
                 draft = next(r for r in self.releases if r["id"] == 700)
@@ -355,10 +359,23 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(["axiom-v1.2.3-plugin.zip"], [asset["name"] for asset in draft["assets"]])
         self.assertEqual(
             ["/git/refs", "createCommitOnBranch", "/releases", "UPLOAD",
-             "publish-immutable-release.yml", "release-signature-guard.yml"],
+             "publish-immutable-release.yml", "release-signature-guard.yml", "release-signature-guard.yml"],
             [path.removeprefix(f"/repos/{REPOSITORY}").split("/")[3] if path.endswith("/dispatches")
              else ("UPLOAD" if method == "UPLOAD" else path.removeprefix(f"/repos/{REPOSITORY}"))
              for method, path in api.writes],
+        )
+
+    def test_release_dispatches_both_observations_for_its_tag_despite_old_checks(self):
+        api = FakeGitHub(self.root, self.commit)
+        self.run_release(api)
+
+        self.assertEqual(
+            [
+                ("publish-immutable-release.yml", {"ref": api.tag, "inputs": {"tag": api.tag}}),
+                ("release-signature-guard.yml", {"ref": api.tag, "inputs": {"phase": "release-branch"}}),
+                ("release-signature-guard.yml", {"ref": api.tag, "inputs": {"phase": "published-release"}}),
+            ],
+            api.dispatches,
         )
 
     def test_next_release_fast_forwards_from_the_previous_release_commit(self):
