@@ -25,6 +25,8 @@ Both manifests point to `./skills/` inside the installed plugin root `plugin/`, 
 
 Codex holds a new or changed Hook until you trust it in `/hooks`; Claude Code runs each Hook at its next event once the plugin loads. The [Hook Reference](reference/hooks.md) renders the exact checked-in commands and scripts for an optional comparison with an installed copy.
 
+`coordinate-sessions` requires a collaborator the user can see, enter, and stop under permissions no broader than the lead's. The available form and approval channel depend on the current host. When you authorize another provider under a separate login, its session applies its own permission settings. Treat its action approvals as separate from approvals in the lead session. Consult the dated [Codex host facts](../../plugin/skills/using-axiom/references/codex-host.md) and [Claude Code host facts](../../plugin/skills/using-axiom/references/claude-code-host.md) for the respective controls.
+
 ## Claude Code Package Format And Validation
 
 `claude plugin validate --strict` validates the Claude Code manifest and each Skill's metadata; it does not prove installation or execution. The manifest declares only fields that strict validation accepts.

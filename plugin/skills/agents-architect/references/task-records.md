@@ -34,6 +34,8 @@ A task record is where the work stands, local to the clone. Keep it in two parts
 
 Write it at each completed step and before a long operation starts, never only at the end, so a compaction never holds the only copy. Aim for under 2 KiB and keep it under 4 KiB. Exclude long logs, large code, and guesses, in addition to the content exclusions that `memory-and-state.md` sets for every class.
 
+When the user asks the originating session to split one task among collaborators and remain responsible, that session alone writes the shared task record. For each collaborator, keep its assigned part, the identifier returned by its host, its state, and a pointer to its report when available. After resume or compaction, reconcile these entries with the host's current list before further dispatch. If the lead cannot reconstruct which collaborators this task started, dispatch nothing more.
+
 ## Restore
 
 After compaction, a resume, or a new session that continues the task:

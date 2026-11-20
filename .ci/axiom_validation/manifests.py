@@ -50,7 +50,7 @@ EXPECTED_CODEX_INTERFACE = {
     "displayName": EXPECTED_DISPLAY_NAME,
     "shortDescription": "Route before the agent acts",
     "longDescription": (
-        "Axiom routes focused workflows for intent clarification, simple-task delegation, task planning, explicitly supervised progress across sessions, local web research, repository instructions, plugin architecture, usage optimization, "
+        "Axiom routes focused workflows for intent clarification, simple-task delegation, coordinating several agents under one lead, task planning, explicitly supervised progress across sessions, local web research, repository instructions, plugin architecture, usage optimization, "
         "task review, evidence-bound completion verification, confirmed external actions, traceable Git submission, and reversible "
         "persistent system changes. Route selection never grants mutation authority. Axiom adds instructions, not enforcement: it does not sandbox the agent, grant credentials, or block actions."
     ),
