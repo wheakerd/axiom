@@ -587,11 +587,6 @@ def wait_for_checks(
         clock.sleep(POLL_SECONDS)
 
 
-def check_succeeded(api: Api, repository: str, commit: str, name: str) -> bool:
-    run = _actions_check(list_check_runs(api, repository, commit), name)
-    return bool(run and run.get("status") == "completed" and run.get("conclusion") == "success")
-
-
 def is_final_release(release: Any, tag: str | None = None) -> bool:
     return (
         isinstance(release, dict)
@@ -1142,15 +1137,15 @@ def run_release(
         f"GitHub Latest does not identify the {tag} Release",
     )
     # The release branch holds no workflow files, so both observations run on
-    # the tag and attach to the tagged commit.
+    # the tag and attach to the tagged commit. Dispatch both for this release;
+    # a succeeded check on that commit may belong to another tag or attempt.
     for phase, check in (
         ("release-branch", RELEASE_BRANCH_CHECK),
         ("published-release", PUBLISHED_RELEASE_CHECK),
     ):
-        if not check_succeeded(api, repository, commit, check):
-            dispatch_and_wait(
-                api, repository, SIGNATURE_GUARD_WORKFLOW, tag, {"phase": phase}, commit, clock, check
-            )
+        dispatch_and_wait(
+            api, repository, SIGNATURE_GUARD_WORKFLOW, tag, {"phase": phase}, commit, clock, check
+        )
     reporter.summary(
         f"## Published {tag}\n\n"
         "| Field | Value |\n| --- | --- |\n"

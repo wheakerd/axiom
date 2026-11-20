@@ -355,7 +355,8 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(["axiom-v1.2.3-plugin.zip"], [asset["name"] for asset in draft["assets"]])
         self.assertEqual(
             ["/git/refs", "createCommitOnBranch", "/releases", "UPLOAD",
-             "publish-immutable-release.yml", "release-signature-guard.yml"],
+             "publish-immutable-release.yml", "release-signature-guard.yml",
+             "release-signature-guard.yml"],
             [path.removeprefix(f"/repos/{REPOSITORY}").split("/")[3] if path.endswith("/dispatches")
              else ("UPLOAD" if method == "UPLOAD" else path.removeprefix(f"/repos/{REPOSITORY}"))
              for method, path in api.writes],
